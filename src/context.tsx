@@ -5,7 +5,7 @@ import {
   type Dispatch,
   type SetStateAction,
 } from 'react'
-import type { Nodes } from './lib/nodes'
+import { createDefaultNode, type Nodes, type Node } from './lib/nodes'
 
 type MainContext = {
   nodes: Nodes
@@ -14,29 +14,29 @@ type MainContext = {
 
 const MainContext = createContext<MainContext | undefined>(undefined)
 
+// FIXME: For testing only
+function createInitialNodes(count: number): Nodes {
+  const nodes: Nodes = {}
+  const ids: string[] = []
+
+  for (let i = 0; i < count; i++) {
+    const id = Math.random().toString()
+    const node = createDefaultNode('context')
+
+    // First node has no dependencies, others randomly depend on an existing node
+    if (ids.length > 0) {
+      node.dependencies = [ids[Math.floor(Math.random() * ids.length)]]
+    }
+
+    nodes[id] = node
+    ids.push(id)
+  }
+
+  return nodes
+}
+
 export function Wrapper({ children }: { children: React.ReactNode }) {
-  const [nodes, setNodes] = useState<Nodes>({
-    test: {
-      dependencies: [],
-      rule: {
-        type: 'context',
-        entries: [
-          {
-            type: 'number',
-            id: '1',
-            name: 'a',
-            feel: '1',
-          },
-          {
-            type: 'number',
-            id: '2',
-            name: '_return',
-            feel: 'a + 1',
-          },
-        ],
-      },
-    },
-  })
+  const [nodes, setNodes] = useState<Nodes>(() => createInitialNodes(5))
 
   return (
     <MainContext.Provider value={{ nodes, setNodes }}>

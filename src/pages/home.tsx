@@ -1,18 +1,17 @@
 import { useMainContext } from '@/context'
-import { Node } from '@/components/node'
+import { Rows } from '@/components/node'
+import { ToolBar } from '@/components/tool-bar'
+import { nodeRows } from '@/lib/nodes'
 
 export function HomePage() {
   const { nodes } = useMainContext()
 
-  const rows = [
-    ['a', 'b', 'c'],
-  ]
+  const rows: string[][] = nodeRows(nodes)
 
   return (
-    <div>
-      {Object.keys(nodes).map((id) => (
-        <Node id={id} key={id} />
-      ))}
+    <div className="flex flex-col gap-5">
+      <ToolBar />
+      <Rows rows={rows} />
     </div>
   )
 }

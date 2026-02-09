@@ -18,7 +18,7 @@ import { Wrapper } from './context'
 const rootRoute = createRootRoute({
   component: () => (
     <Wrapper>
-      <main className="max-w-7xl mx-auto">
+      <main>
         <Outlet />
       </main>
     </Wrapper>
