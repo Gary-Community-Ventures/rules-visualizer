@@ -22,10 +22,14 @@ export function Wrapper({ children }: { children: React.ReactNode }) {
         type: 'context',
         entries: [
           {
+            type: 'number',
+            id: '1',
             name: 'a',
             feel: '1',
           },
           {
+            type: 'number',
+            id: '2',
             name: '_return',
             feel: 'a + 1',
           },
