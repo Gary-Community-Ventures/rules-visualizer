@@ -17,7 +17,6 @@ This project is a frontend template built with the following technologies:
 - **ESLint**: A pluggable linting utility for JavaScript and JSX.
 - **Git**: A distributed version control system.
 
-
 ## Getting Started
 
 To run the project locally, follow these steps:
