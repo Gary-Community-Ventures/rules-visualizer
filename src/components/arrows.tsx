@@ -1,0 +1,142 @@
+import { useEffect, useState } from 'react'
+import { useMainContext } from '@/context'
+import { nodeElementId } from './node'
+
+type ArrowProps = {
+  fromId: string
+  toId: string
+  rows: string[][]
+}
+
+function Arrow({ fromId, toId, rows }: ArrowProps) {
+  const { nodes } = useMainContext()
+  const [path, setPath] = useState<string>('')
+  const [isDashed, setIsDashed] = useState(false)
+  const [color] = useState('#001970')
+
+  // Get all visible node IDs from rows
+  const visibleNodeIds = rows.flat()
+
+  // Check if both nodes are visible
+  const isFromVisible = visibleNodeIds.includes(fromId)
+  const isToVisible = visibleNodeIds.includes(toId)
+
+  useEffect(() => {
+    const updateArrow = () => {
+      if (!isFromVisible || !isToVisible) {
+        setPath('')
+        return
+      }
+
+      const fromElement = document.getElementById(nodeElementId(fromId))
+      const toElement = document.getElementById(nodeElementId(toId))
+
+      if (!fromElement || !toElement) {
+        return
+      }
+
+      const fromRect = fromElement.getBoundingClientRect()
+      const toRect = toElement.getBoundingClientRect()
+
+      // All arrows from this node start at the center
+      const fromX = fromRect.left + fromRect.width / 2
+
+      const fromY = fromRect.top + fromRect.height
+      const toX = toRect.left + toRect.width / 2
+      const toY = toRect.top
+
+      // Find which row each node is in the filtered rows
+      let fromRowIndex = -1
+      let toRowIndex = -1
+      for (let i = 0; i < rows.length; i++) {
+        if (rows[i].includes(fromId)) fromRowIndex = i
+        if (rows[i].includes(toId)) toRowIndex = i
+      }
+
+      // Check if rows are adjacent in the filtered view
+      const isAdjacent = Math.abs(toRowIndex - fromRowIndex) === 1
+
+      let pathData: string
+      if (isAdjacent) {
+        // Adjacent rows (or no visible rows in between) - use elbows with staggered midpoints based on target node
+        const verticalDistance = toY - fromY
+
+        // Find the index of the fromId node within its row (source-based stagger)
+        const fromNodeIndex = rows[fromRowIndex].indexOf(fromId)
+        const totalNodesInFromRow = rows[fromRowIndex].length
+
+        // Calculate stagger offset: spread across 70% of the vertical distance
+        const staggerRange = verticalDistance * 0.7
+        const staggerStep = staggerRange / (totalNodesInFromRow + 1)
+        const staggerOffset = staggerStep * (fromNodeIndex + 1) - staggerRange / 2
+
+        // Midpoint with stagger
+        const midY = fromY + verticalDistance * 0.5 + staggerOffset
+
+        // Elbow path: down to staggered midpoint, across, then down to target
+        pathData = `M ${fromX} ${fromY} V ${midY} H ${toX} V ${toY}`
+        setIsDashed(false)
+      } else {
+        // Multiple visible rows in between - use straight line, dashed
+        pathData = `M ${fromX} ${fromY} L ${toX} ${toY}`
+        setIsDashed(true)
+      }
+
+      setPath(pathData)
+    }
+
+    updateArrow()
+
+    window.addEventListener('resize', updateArrow)
+    window.addEventListener('scroll', updateArrow)
+
+    return () => {
+      window.removeEventListener('resize', updateArrow)
+      window.removeEventListener('scroll', updateArrow)
+    }
+  }, [fromId, toId, rows, nodes, isFromVisible, isToVisible, visibleNodeIds])
+
+  if (!path) {
+    return null
+  }
+
+  return (
+    <svg
+      className="fixed top-0 left-0 w-full h-full pointer-events-none"
+      style={{ zIndex: -1 }}
+    >
+      <path
+        d={path}
+        stroke={color}
+        strokeWidth="2"
+        fill="none"
+        strokeDasharray={isDashed ? '5,5' : undefined}
+      />
+    </svg>
+  )
+}
+
+type ArrowsProps = {
+  rows: string[][]
+}
+
+export function Arrows({ rows }: ArrowsProps) {
+  const { nodes } = useMainContext()
+
+  // Collect all arrows: for each node, draw arrows from its dependencies to it
+  const arrows: { fromId: string; toId: string }[] = []
+
+  for (const [nodeId, node] of Object.entries(nodes)) {
+    for (const depId of node.dependencies) {
+      arrows.push({ fromId: depId, toId: nodeId })
+    }
+  }
+
+  return (
+    <>
+      {arrows.map(({ fromId, toId }) => (
+        <Arrow key={`${fromId}-${toId}`} fromId={fromId} toId={toId} rows={rows} />
+      ))}
+    </>
+  )
+}
