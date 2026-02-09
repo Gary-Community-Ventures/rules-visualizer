@@ -6,19 +6,19 @@ import {
   navigationMenuTriggerStyle,
 } from '@/components/ui/navigation-menu'
 import { Link } from '@tanstack/react-router'
-import {
-  SignedIn,
-  SignedOut,
-  SignInButton,
-  UserButton,
-} from '@clerk/clerk-react'
+// import {
+//   SignedIn,
+//   SignedOut,
+//   SignInButton,
+//   UserButton,
+// } from '@clerk/clerk-react'
 import { Text, useLanguageContext, LANGUAGES } from '@/translations/wrapper'
 import { translations } from '@/translations/text'
 import { Button } from './ui/button'
 
 export const NavBar = () => {
   const t = translations.navBar
-  const { lang, setLang } = useLanguageContext()
+  const { setLang } = useLanguageContext()
 
   return (
     <NavigationMenu>
@@ -37,7 +37,7 @@ export const NavBar = () => {
             </Link>
           </NavigationMenuLink>
         </NavigationMenuItem>
-        <NavigationMenuItem>
+        {/*<NavigationMenuItem>
           <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
             <div>
               <SignedOut>
@@ -48,7 +48,7 @@ export const NavBar = () => {
               </SignedIn>
             </div>
           </NavigationMenuLink>
-        </NavigationMenuItem>
+        </NavigationMenuItem>*/}
         <NavigationMenuItem>
           <Button
             onClick={() => {
