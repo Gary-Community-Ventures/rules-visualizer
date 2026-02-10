@@ -106,10 +106,12 @@ function Arrow({ fromId, toId, rows }: ArrowProps) {
 
     window.addEventListener('resize', updateArrow)
     window.addEventListener('scroll', updateArrow)
+    window.addEventListener('pan', updateArrow)
 
     return () => {
       window.removeEventListener('resize', updateArrow)
       window.removeEventListener('scroll', updateArrow)
+      window.removeEventListener('pan', updateArrow)
     }
   }, [fromId, toId, rows, nodes, isFromVisible, isToVisible, visibleNodeIds, parentShowsChildren])
 

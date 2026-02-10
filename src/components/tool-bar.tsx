@@ -41,7 +41,7 @@ export function ToolBar() {
   // FIXME: End for testing only
 
   return (
-    <div className="border-b flex gap-5 p-2">
+    <div className="border-b flex gap-5 p-2 bg-background relative z-10">
       <Button onClick={() => addNode(Math.random().toString(), newNode())}>
         Add Node
       </Button>
@@ -54,7 +54,7 @@ export function ToolBar() {
             </ComboboxChip>
           ))}
           <ComboboxChipsInput
-            placeholder={selectedNodes.length === 0 ? 'Select nodes...' : ''}
+            placeholder={selectedNodes.length === 0 ? 'Search...' : ''}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
