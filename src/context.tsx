@@ -5,7 +5,7 @@ import {
   type Dispatch,
   type SetStateAction,
 } from 'react'
-import type { Model, ModelElement } from './lib/model'
+import type { Model, ModelNode } from './lib/model'
 import { generateId, createDefaultDecision } from './lib/model'
 
 type MainContext = {
@@ -20,7 +20,7 @@ export function Wrapper({ children }: { children: React.ReactNode }) {
     id: generateId('model'),
     name: 'Benefits Eligibility',
     namespace: 'https://example.com/model',
-    elements: {
+    nodes: {
       test: createDefaultDecision('test', 'test'),
     },
   })
@@ -42,41 +42,41 @@ export function useMainContext(): MainContext {
   return context
 }
 
-export function useElement(id: string): ModelElement {
+export function useNode(id: string): ModelNode {
   const { model } = useMainContext()
 
-  const element = model.elements[id]
+  const node = model.nodes[id]
 
-  if (element === undefined) {
-    throw new Error(`Element with id '${id}' not found`)
+  if (node === undefined) {
+    throw new Error(`Node with id '${id}' not found`)
   }
 
-  return element
+  return node
 }
 
-export function useUpdateElement() {
+export function useUpdateNode() {
   const { setModel } = useMainContext()
 
-  return (id: string, updater: (element: ModelElement) => ModelElement) => {
+  return (id: string, updater: (node: ModelNode) => ModelNode) => {
     setModel((model) => ({
       ...model,
-      elements: {
-        ...model.elements,
-        [id]: updater(model.elements[id]),
+      nodes: {
+        ...model.nodes,
+        [id]: updater(model.nodes[id]),
       },
     }))
   }
 }
 
-export function useAddElement() {
+export function useAddNode() {
   const { setModel } = useMainContext()
 
-  return (id: string, element: ModelElement) => {
+  return (id: string, node: ModelNode) => {
     setModel((model) => ({
       ...model,
-      elements: {
-        ...model.elements,
-        [id]: element,
+      nodes: {
+        ...model.nodes,
+        [id]: node,
       },
     }))
   }

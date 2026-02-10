@@ -6,7 +6,7 @@ export function HomePage() {
 
   return (
     <div>
-      {Object.keys(model.elements).map((id) => (
+      {Object.keys(model.nodes).map((id) => (
         <Node id={id} key={id} />
       ))}
     </div>

@@ -1,5 +1,5 @@
 import type { FeelDataType, DecisionTable } from './expressions'
-import type { DecisionElement, InputDataElement } from './elements'
+import type { DecisionNode, InputNode } from './nodes'
 
 export function generateId(prefix?: string): string {
   const uuid = crypto.randomUUID().replace(/-/g, '').slice(0, 12)
@@ -17,10 +17,7 @@ export function createDefaultDecisionTable(): DecisionTable {
   }
 }
 
-export function createDefaultDecision(
-  id: string,
-  name: string
-): DecisionElement {
+export function createDefaultDecision(id: string, name: string): DecisionNode {
   return {
     type: 'decision',
     id,
@@ -40,7 +37,7 @@ export function createConstantDecision(
   name: string,
   feelText: string,
   typeRef?: FeelDataType
-): DecisionElement {
+): DecisionNode {
   return {
     type: 'decision',
     id,
@@ -57,10 +54,7 @@ export function createConstantDecision(
   }
 }
 
-export function createDefaultInputData(
-  id: string,
-  name: string
-): InputDataElement {
+export function createDefaultInputData(id: string, name: string): InputNode {
   return {
     type: 'inputData',
     id,

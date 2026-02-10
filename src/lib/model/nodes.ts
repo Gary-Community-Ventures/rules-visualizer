@@ -1,25 +1,25 @@
 import type { FeelDataType, Expression } from './expressions'
 
-// ─── Element Types ───────────────────────────────────────────────
+// ─── Node Types ─────────────────────────────────────────────────
 
-export type InputDataElement = {
+export type InputNode = {
   type: 'inputData'
   id: string
   name: string
   typeRef?: FeelDataType
 }
 
-export type DecisionElement = {
+export type DecisionNode = {
   type: 'decision'
   id: string
   name: string
   typeRef?: FeelDataType
   expression: Expression
-  dependencies: string[] // IDs of InputData or Decision elements this depends on
+  dependencies: string[] // IDs of InputNode or DecisionNode this depends on
   isConstant: boolean // editor-only, not exported to DMN XML
 }
 
-export type ModelElement = InputDataElement | DecisionElement
+export type ModelNode = InputNode | DecisionNode
 
 // ─── Top-Level Model ─────────────────────────────────────────────
 
@@ -27,15 +27,15 @@ export type Model = {
   id: string
   name: string
   namespace: string
-  elements: Record<string, ModelElement>
+  nodes: Record<string, ModelNode>
 }
 
 // ─── Type Guards ─────────────────────────────────────────────────
 
-export function isInputData(el: ModelElement): el is InputDataElement {
-  return el.type === 'inputData'
+export function isInputData(node: ModelNode): node is InputNode {
+  return node.type === 'inputData'
 }
 
-export function isDecision(el: ModelElement): el is DecisionElement {
-  return el.type === 'decision'
+export function isDecision(node: ModelNode): node is DecisionNode {
+  return node.type === 'decision'
 }
