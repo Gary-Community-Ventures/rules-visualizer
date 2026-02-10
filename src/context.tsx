@@ -12,6 +12,8 @@ type MainContext = {
   setNodes: Dispatch<SetStateAction<Nodes>>
   hoveredNodeId: string | null
   setHoveredNodeId: Dispatch<SetStateAction<string | null>>
+  selectedNodes: string[]
+  setSelectedNodes: Dispatch<SetStateAction<string[]>>
 }
 
 const MainContext = createContext<MainContext | undefined>(undefined)
@@ -40,10 +42,18 @@ function createInitialNodes(count: number): Nodes {
 export function Wrapper({ children }: { children: React.ReactNode }) {
   const [nodes, setNodes] = useState<Nodes>(() => createInitialNodes(5))
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null)
+  const [selectedNodes, setSelectedNodes] = useState<string[]>([])
 
   return (
     <MainContext.Provider
-      value={{ nodes, setNodes, hoveredNodeId, setHoveredNodeId }}
+      value={{
+        nodes,
+        setNodes,
+        hoveredNodeId,
+        setHoveredNodeId,
+        selectedNodes,
+        setSelectedNodes,
+      }}
     >
       {children}
     </MainContext.Provider>

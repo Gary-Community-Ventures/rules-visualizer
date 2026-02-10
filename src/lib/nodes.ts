@@ -1,6 +1,7 @@
 export type Node = {
   rule: Rule
   dependencies: string[]
+  showChildren: boolean
 }
 
 export type Types = 'context'
@@ -36,6 +37,7 @@ export function createDefaultNode(type: Types): Node {
   return {
     rule: rule,
     dependencies: [],
+    showChildren: false,
   }
 }
 
@@ -45,7 +47,7 @@ export function findRootNodes(nodes: Nodes): string[] {
     .map(([id]) => id)
 }
 
-function getDependents(nodeId: string, nodes: Nodes): string[] {
+export function getDependents(nodeId: string, nodes: Nodes): string[] {
   return Object.entries(nodes)
     .filter(([_, node]) => node.dependencies.includes(nodeId))
     .map(([id]) => id)
@@ -58,6 +60,10 @@ function getOrdering(
   nodes: Nodes
 ): string[] {
   const dependents = getDependents(currentNode, nodes)
+
+  if (!nodes[currentNode].showChildren) {
+    return currentOrdering
+  }
 
   for (const dependent of dependents) {
     const index = currentOrdering.indexOf(dependent)
@@ -86,16 +92,17 @@ function compressRows(rows: string[][], nodes: Nodes): string[][] {
 
         let dependsOnPreviousRow = false
         for (const previousItem of previousRow) {
-          // Check if item depends on previousItem - if so, item must stay below
-          // Collapsibility not implemented yet - would also check visibleChildren here
-          if (nodes[item].dependencies.includes(previousItem)) {
+          if (
+            nodes[item].dependencies.includes(previousItem) &&
+            nodes[previousItem].showChildren
+          ) {
             dependsOnPreviousRow = true
             break
           }
         }
 
         if (dependsOnPreviousRow) {
-          break
+          continue
         }
 
         row.splice(j, 1)

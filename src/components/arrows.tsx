@@ -27,9 +27,12 @@ function Arrow({ fromId, toId, rows }: ArrowProps) {
   const isFromVisible = visibleNodeIds.includes(fromId)
   const isToVisible = visibleNodeIds.includes(toId)
 
+  // Don't show arrow if parent isn't showing children
+  const parentShowsChildren = nodes[fromId]?.showChildren !== false
+
   useEffect(() => {
     const updateArrow = () => {
-      if (!isFromVisible || !isToVisible) {
+      if (!isFromVisible || !isToVisible || !parentShowsChildren) {
         setPath('')
         return
       }
@@ -46,9 +49,17 @@ function Arrow({ fromId, toId, rows }: ArrowProps) {
 
       // All arrows from this node start at the center
       const fromX = fromRect.left + fromRect.width / 2
-
       const fromY = fromRect.top + fromRect.height
-      const toX = toRect.left + toRect.width / 2
+
+      // Stagger the toX based on which dependency this is
+      const toDeps = nodes[toId].dependencies
+      const depIndex = toDeps.indexOf(fromId)
+      const totalDeps = toDeps.length
+      const staggerWidth = 5
+      const staggerStep = totalDeps > 1 ? staggerWidth / (totalDeps - 1) : 0
+      const toXOffset = totalDeps > 1 ? depIndex * staggerStep - staggerWidth / 2 : 0
+
+      const toX = toRect.left + toRect.width / 2 + toXOffset
       const toY = toRect.top
 
       // Find which row each node is in the filtered rows
@@ -100,7 +111,7 @@ function Arrow({ fromId, toId, rows }: ArrowProps) {
       window.removeEventListener('resize', updateArrow)
       window.removeEventListener('scroll', updateArrow)
     }
-  }, [fromId, toId, rows, nodes, isFromVisible, isToVisible, visibleNodeIds])
+  }, [fromId, toId, rows, nodes, isFromVisible, isToVisible, visibleNodeIds, parentShowsChildren])
 
   if (!path) {
     return null
