@@ -1,14 +1,22 @@
 import { useMainContext } from '@/context'
-import { Node } from '@/components/node'
+import { Rows } from '@/components/node'
+import { Arrows } from '@/components/arrows'
+import { ToolBar } from '@/components/tool-bar'
+import { PanContainer } from '@/components/pan-container'
+import { nodeRows } from '@/lib/graph'
 
 export function HomePage() {
-  const { model } = useMainContext()
+  const { model, selectedNodes, showChildren } = useMainContext()
+
+  const rows: string[][] = nodeRows(model.nodes, showChildren, selectedNodes)
 
   return (
-    <div>
-      {Object.keys(model.nodes).map((id) => (
-        <Node id={id} key={id} />
-      ))}
+    <div className="flex flex-col h-screen">
+      <ToolBar />
+      <PanContainer>
+        <Rows rows={rows} />
+      </PanContainer>
+      <Arrows rows={rows} />
     </div>
   )
 }

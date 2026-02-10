@@ -20,6 +20,7 @@ export type DecisionNode = {
 }
 
 export type ModelNode = InputNode | DecisionNode
+export type ModelNodes = Record<string, ModelNode>
 
 // ─── Top-Level Model ─────────────────────────────────────────────
 
@@ -27,7 +28,7 @@ export type Model = {
   id: string
   name: string
   namespace: string
-  nodes: Record<string, ModelNode>
+  nodes: ModelNodes
 }
 
 // ─── Type Guards ─────────────────────────────────────────────────
