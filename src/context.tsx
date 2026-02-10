@@ -10,6 +10,8 @@ import { createDefaultNode, type Nodes, type Node } from './lib/nodes'
 type MainContext = {
   nodes: Nodes
   setNodes: Dispatch<SetStateAction<Nodes>>
+  hoveredNodeId: string | null
+  setHoveredNodeId: Dispatch<SetStateAction<string | null>>
 }
 
 const MainContext = createContext<MainContext | undefined>(undefined)
@@ -37,9 +39,12 @@ function createInitialNodes(count: number): Nodes {
 
 export function Wrapper({ children }: { children: React.ReactNode }) {
   const [nodes, setNodes] = useState<Nodes>(() => createInitialNodes(5))
+  const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null)
 
   return (
-    <MainContext.Provider value={{ nodes, setNodes }}>
+    <MainContext.Provider
+      value={{ nodes, setNodes, hoveredNodeId, setHoveredNodeId }}
+    >
       {children}
     </MainContext.Provider>
   )
@@ -94,4 +99,29 @@ export function useAddNode() {
       }
     })
   }
+}
+
+export function useIsHoveredRelated(id: string) {
+  const { hoveredNodeId, nodes } = useMainContext()
+
+  if (hoveredNodeId === id) {
+    return true
+  }
+
+  const node = nodes[id]
+  const hoveredNode = nodes[hoveredNodeId ?? '']
+
+  if (hoveredNode === undefined) {
+    return true
+  }
+
+  if (hoveredNode.dependencies.includes(id)) {
+    return true
+  }
+
+  if (node.dependencies.includes(hoveredNodeId ?? '')) {
+    return true
+  }
+
+  return false
 }

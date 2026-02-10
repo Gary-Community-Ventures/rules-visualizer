@@ -1,3 +1,6 @@
+import { useIsHoveredRelated, useMainContext, useNode } from '@/context'
+import { cn } from '@/lib/utils'
+
 type NodeProps = {
   id: string
 }
@@ -7,8 +10,17 @@ export function nodeElementId(id: string) {
 }
 
 export function Node({ id }: NodeProps) {
+  const { setHoveredNodeId } = useMainContext()
+  const isHoveredRelated = useIsHoveredRelated(id)
+
+  const className = cn('bg-white/90', !isHoveredRelated && 'opacity-50')
+
   return (
-    <div className="bg-white/90">
+    <div
+      className={className}
+      onMouseEnter={() => setHoveredNodeId(id)}
+      onMouseLeave={() => setHoveredNodeId(null)}
+    >
       <div id={nodeElementId(id)} className="border p-5 h-full relative">
         <div className="text-center font-medium">{id}</div>
       </div>

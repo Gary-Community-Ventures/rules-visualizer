@@ -9,10 +9,16 @@ type ArrowProps = {
 }
 
 function Arrow({ fromId, toId, rows }: ArrowProps) {
-  const { nodes } = useMainContext()
+  const { nodes, hoveredNodeId } = useMainContext()
   const [path, setPath] = useState<string>('')
   const [isDashed, setIsDashed] = useState(false)
   const [color] = useState('#001970')
+
+  // Arrow is related if nothing is hovered, or if it directly connects to the hovered node
+  const isRelated =
+    hoveredNodeId === null ||
+    fromId === hoveredNodeId ||
+    toId === hoveredNodeId
 
   // Get all visible node IDs from rows
   const visibleNodeIds = rows.flat()
@@ -100,17 +106,29 @@ function Arrow({ fromId, toId, rows }: ArrowProps) {
     return null
   }
 
+  const isHoverAnimated = isRelated && hoveredNodeId !== null
+
   return (
     <svg
       className="fixed top-0 left-0 w-full h-full pointer-events-none"
       style={{ zIndex: -1 }}
     >
+      <style>
+        {`
+          @keyframes flow {
+            from { stroke-dashoffset: 0; }
+            to { stroke-dashoffset: 16; }
+          }
+        `}
+      </style>
       <path
         d={path}
         stroke={color}
         strokeWidth="2"
         fill="none"
-        strokeDasharray={isDashed ? '5,5' : undefined}
+        strokeDasharray={isDashed || isHoverAnimated ? '8,8' : undefined}
+        opacity={isRelated ? 1 : 0.2}
+        style={isHoverAnimated ? { animation: 'flow 0.5s linear infinite' } : undefined}
       />
     </svg>
   )
