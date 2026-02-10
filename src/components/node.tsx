@@ -8,6 +8,14 @@ import { cn } from '@/lib/utils'
 import { Button } from './ui/button'
 import { Minus, Plus } from 'lucide-react'
 import { getDependents } from '@/lib/nodes'
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from './ui/sheet'
 
 type NodeProps = {
   id: string
@@ -37,7 +45,17 @@ export function Node({ id }: NodeProps) {
       onMouseLeave={() => setHoveredNodeId(null)}
     >
       <div id={nodeElementId(id)} className="border p-5 h-full relative">
-        <div className="text-center font-medium">{id}</div>
+        <Sheet>
+          <SheetTrigger>
+            <div className="text-center font-medium">{id}</div>
+          </SheetTrigger>
+          <SheetContent>
+            <SheetHeader>
+              <SheetTitle>Are you absolutely sure?</SheetTitle>
+              <SheetDescription>This action cannot be undone.</SheetDescription>
+            </SheetHeader>
+          </SheetContent>
+        </Sheet>
         {hasDependents && (
           <Button
             variant="outline"

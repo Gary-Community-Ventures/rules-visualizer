@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { cn } from '@/lib/utils'
 import { Button } from './ui/button'
+import { ButtonGroup } from './ui/button-group'
 import { Minus, Plus, RotateCcw } from 'lucide-react'
 
 type PanContainerProps = {
@@ -53,13 +54,37 @@ export function PanContainer({ children, className }: PanContainerProps) {
   }
 
   const zoomIn = () => {
+    const container = containerRef.current
+    if (!container) return
+
+    const rect = container.getBoundingClientRect()
+    const centerX = rect.width / 2
+    const centerY = rect.height / 2
+
     const newScale = Math.min(MAX_SCALE, scale + ZOOM_STEP)
+    const scaleRatio = newScale / scale
+    const newOffsetX = centerX - (centerX - offset.x) * scaleRatio
+    const newOffsetY = centerY - (centerY - offset.y) * scaleRatio
+
     setScale(newScale)
+    setOffset({ x: newOffsetX, y: newOffsetY })
   }
 
   const zoomOut = () => {
+    const container = containerRef.current
+    if (!container) return
+
+    const rect = container.getBoundingClientRect()
+    const centerX = rect.width / 2
+    const centerY = rect.height / 2
+
     const newScale = Math.max(MIN_SCALE, scale - ZOOM_STEP)
+    const scaleRatio = newScale / scale
+    const newOffsetX = centerX - (centerX - offset.x) * scaleRatio
+    const newOffsetY = centerY - (centerY - offset.y) * scaleRatio
+
     setScale(newScale)
+    setOffset({ x: newOffsetX, y: newOffsetY })
   }
 
   const resetView = () => {
@@ -133,18 +158,18 @@ export function PanContainer({ children, className }: PanContainerProps) {
       </div>
 
       {/* Zoom controls */}
-      <div className="absolute bottom-4 right-4 flex gap-1 bg-background border rounded-md shadow-sm">
+      <ButtonGroup orientation="vertical" className="absolute bottom-4 right-4 shadow-sm">
         <Button
-          variant="ghost"
+          variant="outline"
           size="icon"
-          onClick={zoomOut}
+          onClick={zoomIn}
           data-no-pan
           className="h-8 w-8"
         >
-          <Minus className="h-4 w-4" />
+          <Plus className="h-4 w-4" />
         </Button>
         <Button
-          variant="ghost"
+          variant="outline"
           size="icon"
           onClick={resetView}
           data-no-pan
@@ -153,15 +178,15 @@ export function PanContainer({ children, className }: PanContainerProps) {
           <RotateCcw className="h-4 w-4" />
         </Button>
         <Button
-          variant="ghost"
+          variant="outline"
           size="icon"
-          onClick={zoomIn}
+          onClick={zoomOut}
           data-no-pan
           className="h-8 w-8"
         >
-          <Plus className="h-4 w-4" />
+          <Minus className="h-4 w-4" />
         </Button>
-      </div>
+      </ButtonGroup>
     </div>
   )
 }
