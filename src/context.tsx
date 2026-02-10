@@ -5,37 +5,28 @@ import {
   type Dispatch,
   type SetStateAction,
 } from 'react'
-import type { Nodes } from './lib/nodes'
+import type { Model, ModelElement } from './lib/model'
+import { generateId, createDefaultDecision } from './lib/model'
 
 type MainContext = {
-  nodes: Nodes
-  setNodes: Dispatch<SetStateAction<Nodes>>
+  model: Model
+  setModel: Dispatch<SetStateAction<Model>>
 }
 
 const MainContext = createContext<MainContext | undefined>(undefined)
 
 export function Wrapper({ children }: { children: React.ReactNode }) {
-  const [nodes, setNodes] = useState<Nodes>({
-    test: {
-      dependencies: [],
-      rule: {
-        type: 'context',
-        entries: [
-          {
-            name: 'a',
-            feel: '1',
-          },
-          {
-            name: '_return',
-            feel: 'a + 1',
-          },
-        ],
-      },
+  const [model, setModel] = useState<Model>({
+    id: generateId('model'),
+    name: 'Benefits Eligibility',
+    namespace: 'https://example.com/model',
+    elements: {
+      test: createDefaultDecision('test', 'test'),
     },
   })
 
   return (
-    <MainContext.Provider value={{ nodes, setNodes }}>
+    <MainContext.Provider value={{ model, setModel }}>
       {children}
     </MainContext.Provider>
   )
@@ -51,43 +42,42 @@ export function useMainContext(): MainContext {
   return context
 }
 
-export function useNode(id: string) {
-  const { nodes } = useMainContext()
+export function useElement(id: string): ModelElement {
+  const { model } = useMainContext()
 
-  const node = nodes[id]
+  const element = model.elements[id]
 
-  if (node === undefined) {
-    throw new Error(`Node with id '${id}' not found`)
+  if (element === undefined) {
+    throw new Error(`Element with id '${id}' not found`)
   }
 
-  return node
+  return element
 }
 
-export function useUpdateNode() {
-  const { setNodes } = useMainContext()
+export function useUpdateElement() {
+  const { setModel } = useMainContext()
 
-  return (id: string, update: Partial<Node>) => {
-    setNodes((nodes) => {
-      return {
-        ...nodes,
-        [id]: {
-          ...nodes[id],
-          ...update,
-        },
-      }
-    })
+  return (id: string, updater: (element: ModelElement) => ModelElement) => {
+    setModel((model) => ({
+      ...model,
+      elements: {
+        ...model.elements,
+        [id]: updater(model.elements[id]),
+      },
+    }))
   }
 }
 
-export function useAddNode() {
-  const { setNodes } = useMainContext()
+export function useAddElement() {
+  const { setModel } = useMainContext()
 
-  return (id: string, node: Node) => {
-    setNodes((nodes) => {
-      return {
-        ...nodes,
-        [id]: node,
-      }
-    })
+  return (id: string, element: ModelElement) => {
+    setModel((model) => ({
+      ...model,
+      elements: {
+        ...model.elements,
+        [id]: element,
+      },
+    }))
   }
 }

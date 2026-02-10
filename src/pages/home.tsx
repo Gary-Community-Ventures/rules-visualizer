@@ -2,11 +2,11 @@ import { useMainContext } from '@/context'
 import { Node } from '@/components/node'
 
 export function HomePage() {
-  const { nodes } = useMainContext()
+  const { model } = useMainContext()
 
   return (
     <div>
-      {Object.keys(nodes).map((id) => (
+      {Object.keys(model.elements).map((id) => (
         <Node id={id} key={id} />
       ))}
     </div>
