@@ -130,11 +130,6 @@ export function PanContainer({ children, className }: PanContainerProps) {
     return () => container.removeEventListener('wheel', onWheel)
   }, [scale, offset])
 
-  // Dispatch pan event for arrows to update
-  useEffect(() => {
-    window.dispatchEvent(new CustomEvent('pan'))
-  }, [offset, scale])
-
   return (
     <div
       ref={containerRef}

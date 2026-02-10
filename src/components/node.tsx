@@ -29,10 +29,8 @@ export function Node({ id }: NodeProps) {
   const { setHoveredNodeId, nodes } = useMainContext()
   const node = useNode(id)
   const updateNode = useUpdateNode()
-  const isHoveredRelated = useIsHoveredRelated(id)
 
   const hasDependents = getDependents(id, nodes).length > 0
-  const className = cn('bg-white/90', !isHoveredRelated && 'opacity-50')
 
   const toggleShowChildren = () => {
     updateNode(id, { showChildren: !node.showChildren })
@@ -40,7 +38,7 @@ export function Node({ id }: NodeProps) {
 
   return (
     <div
-      className={className}
+      className="bg-white/90"
       onMouseEnter={() => setHoveredNodeId(id)}
       onMouseLeave={() => setHoveredNodeId(null)}
     >

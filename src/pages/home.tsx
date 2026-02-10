@@ -14,9 +14,9 @@ export function HomePage() {
     <div className="flex flex-col h-screen">
       <ToolBar />
       <PanContainer>
+        <Arrows rows={rows} />
         <Rows rows={rows} />
       </PanContainer>
-      <Arrows rows={rows} />
     </div>
   )
 }

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useMainContext } from '@/context'
 import { nodeElementId } from './node'
 
@@ -6,9 +6,10 @@ type ArrowProps = {
   fromId: string
   toId: string
   rows: string[][]
+  containerRef: React.RefObject<HTMLDivElement | null>
 }
 
-function Arrow({ fromId, toId, rows }: ArrowProps) {
+function Arrow({ fromId, toId, rows, containerRef }: ArrowProps) {
   const { nodes, hoveredNodeId } = useMainContext()
   const [path, setPath] = useState<string>('')
   const [isDashed, setIsDashed] = useState(false)
@@ -37,19 +38,21 @@ function Arrow({ fromId, toId, rows }: ArrowProps) {
         return
       }
 
+      const container = containerRef.current
       const fromElement = document.getElementById(nodeElementId(fromId))
       const toElement = document.getElementById(nodeElementId(toId))
 
-      if (!fromElement || !toElement) {
+      if (!container || !fromElement || !toElement) {
         return
       }
 
+      const containerRect = container.getBoundingClientRect()
       const fromRect = fromElement.getBoundingClientRect()
       const toRect = toElement.getBoundingClientRect()
 
-      // All arrows from this node start at the center
-      const fromX = fromRect.left + fromRect.width / 2
-      const fromY = fromRect.top + fromRect.height
+      // Calculate positions relative to container
+      const fromX = fromRect.left - containerRect.left + fromRect.width / 2
+      const fromY = fromRect.top - containerRect.top + fromRect.height
 
       // Stagger the toX based on which dependency this is
       const toDeps = nodes[toId].dependencies
@@ -59,8 +62,8 @@ function Arrow({ fromId, toId, rows }: ArrowProps) {
       const staggerStep = totalDeps > 1 ? staggerWidth / (totalDeps - 1) : 0
       const toXOffset = totalDeps > 1 ? depIndex * staggerStep - staggerWidth / 2 : 0
 
-      const toX = toRect.left + toRect.width / 2 + toXOffset
-      const toY = toRect.top
+      const toX = toRect.left - containerRect.left + toRect.width / 2 + toXOffset
+      const toY = toRect.top - containerRect.top
 
       // Find which row each node is in the filtered rows
       let fromRowIndex = -1
@@ -105,15 +108,11 @@ function Arrow({ fromId, toId, rows }: ArrowProps) {
     updateArrow()
 
     window.addEventListener('resize', updateArrow)
-    window.addEventListener('scroll', updateArrow)
-    window.addEventListener('pan', updateArrow)
 
     return () => {
       window.removeEventListener('resize', updateArrow)
-      window.removeEventListener('scroll', updateArrow)
-      window.removeEventListener('pan', updateArrow)
     }
-  }, [fromId, toId, rows, nodes, isFromVisible, isToVisible, visibleNodeIds, parentShowsChildren])
+  }, [fromId, toId, rows, nodes, isFromVisible, isToVisible, visibleNodeIds, parentShowsChildren, containerRef])
 
   if (!path) {
     return null
@@ -122,28 +121,15 @@ function Arrow({ fromId, toId, rows }: ArrowProps) {
   const isHoverAnimated = isRelated && hoveredNodeId !== null
 
   return (
-    <svg
-      className="fixed top-0 left-0 w-full h-full pointer-events-none"
-      style={{ zIndex: -1 }}
-    >
-      <style>
-        {`
-          @keyframes flow {
-            from { stroke-dashoffset: 0; }
-            to { stroke-dashoffset: 16; }
-          }
-        `}
-      </style>
-      <path
-        d={path}
-        stroke={color}
-        strokeWidth="2"
-        fill="none"
-        strokeDasharray={isDashed || isHoverAnimated ? '8,8' : undefined}
-        opacity={isRelated ? 1 : 0.2}
-        style={isHoverAnimated ? { animation: 'flow 0.5s linear infinite' } : undefined}
-      />
-    </svg>
+    <path
+      d={path}
+      stroke={color}
+      strokeWidth="2"
+      fill="none"
+      strokeDasharray={isDashed || isHoverAnimated ? '8,8' : undefined}
+      opacity={isRelated ? 1 : 0.2}
+      style={isHoverAnimated ? { animation: 'flow 0.5s linear infinite' } : undefined}
+    />
   )
 }
 
@@ -153,6 +139,7 @@ type ArrowsProps = {
 
 export function Arrows({ rows }: ArrowsProps) {
   const { nodes } = useMainContext()
+  const containerRef = useRef<HTMLDivElement>(null)
 
   // Collect all arrows: for each node, draw arrows from its dependencies to it
   const arrows: { fromId: string; toId: string }[] = []
@@ -164,10 +151,26 @@ export function Arrows({ rows }: ArrowsProps) {
   }
 
   return (
-    <>
-      {arrows.map(({ fromId, toId }) => (
-        <Arrow key={`${fromId}-${toId}`} fromId={fromId} toId={toId} rows={rows} />
-      ))}
-    </>
+    <div ref={containerRef} className="absolute inset-0 pointer-events-none" style={{ zIndex: -1 }}>
+      <svg className="w-full h-full overflow-visible">
+        <style>
+          {`
+            @keyframes flow {
+              from { stroke-dashoffset: 0; }
+              to { stroke-dashoffset: 16; }
+            }
+          `}
+        </style>
+        {arrows.map(({ fromId, toId }) => (
+          <Arrow
+            key={`${fromId}-${toId}`}
+            fromId={fromId}
+            toId={toId}
+            rows={rows}
+            containerRef={containerRef}
+          />
+        ))}
+      </svg>
+    </div>
   )
 }
