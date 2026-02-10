@@ -1,5 +1,4 @@
-import { useIsHoveredRelated, useMainContext, useNode } from '@/context'
-import { cn } from '@/lib/utils'
+import { useMainContext, useNode } from '@/context'
 import { Button } from './ui/button'
 import { Minus, Plus } from 'lucide-react'
 import { getDependents } from '@/lib/graph'
@@ -24,10 +23,8 @@ export function Node({ id }: NodeProps) {
   const { setHoveredNodeId, model, showChildren, setShowChildren } =
     useMainContext()
   const node = useNode(id)
-  const isHoveredRelated = useIsHoveredRelated(id)
 
   const hasDependents = getDependents(id, model.nodes).length > 0
-  const className = cn('bg-white/90', !isHoveredRelated && 'opacity-50')
 
   const toggleShowChildren = () => {
     setShowChildren((prev) => ({ ...prev, [id]: !prev[id] }))
@@ -35,7 +32,7 @@ export function Node({ id }: NodeProps) {
 
   return (
     <div
-      className={className}
+      className="bg-white/90"
       onMouseEnter={() => setHoveredNodeId(id)}
       onMouseLeave={() => setHoveredNodeId(null)}
     >
