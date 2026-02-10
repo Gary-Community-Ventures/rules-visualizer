@@ -117,8 +117,13 @@ function compressRows(rows: string[][], nodes: Nodes): string[][] {
   return rows
 }
 
-export function nodeRows(nodes: Nodes): string[][] {
-  const roots = findRootNodes(nodes)
+export function nodeRows(nodes: Nodes, selected?: string[]): string[][] {
+  let roots: string[]
+  if (selected === undefined || selected.length === 0) {
+    roots = findRootNodes(nodes)
+  } else {
+    roots = selected
+  }
 
   if (roots.length === 0) {
     return []

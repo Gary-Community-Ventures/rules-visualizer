@@ -5,9 +5,9 @@ import { ToolBar } from '@/components/tool-bar'
 import { nodeRows } from '@/lib/nodes'
 
 export function HomePage() {
-  const { nodes } = useMainContext()
+  const { nodes, selectedNodes } = useMainContext()
 
-  const rows: string[][] = nodeRows(nodes)
+  const rows: string[][] = nodeRows(nodes, selectedNodes)
 
   return (
     <div className="flex flex-col gap-5">
