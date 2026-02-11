@@ -3,12 +3,12 @@ import { Rows } from '@/components/node'
 import { Arrows } from '@/components/arrows'
 import { ToolBar } from '@/components/tool-bar'
 import { PanContainer } from '@/components/pan-container'
-import { nodeRows } from '@/lib/nodes'
+import { nodeRows } from '@/lib/graph'
 
 export function HomePage() {
-  const { nodes, selectedNodes } = useMainContext()
+  const { model, selectedNodes, showChildren } = useMainContext()
 
-  const rows: string[][] = nodeRows(nodes, selectedNodes)
+  const rows: string[][] = nodeRows(model.nodes, showChildren, selectedNodes)
 
   return (
     <div className="flex flex-col h-screen">

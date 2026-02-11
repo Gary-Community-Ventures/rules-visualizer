@@ -1,53 +1,12 @@
-export type Node = {
-  rule: Rule
-  dependencies: string[]
-  showChildren: boolean
-}
+import type { ModelNodes } from './model'
 
-export type Types = 'context'
-export type Rule = Context
-
-export type Context = {
-  type: 'context'
-  entries: ContextEntry[]
-}
-
-export type ContextEntry = {
-  id: string
-  type: 'number' | 'string' | 'date'
-  name: string
-  feel: string
-}
-
-export type Nodes = {
-  [key: string]: Node
-}
-
-export function createDefaultNode(type: Types): Node {
-  let rule: Rule
-  if (type === 'context') {
-    rule = {
-      type: 'context',
-      entries: [],
-    }
-  } else {
-    throw new Error(`Unknown node type '${type}'`)
-  }
-
-  return {
-    rule: rule,
-    dependencies: [],
-    showChildren: false,
-  }
-}
-
-export function findRootNodes(nodes: Nodes): string[] {
+export function findRootNodes(nodes: ModelNodes): string[] {
   return Object.entries(nodes)
     .filter(([_, node]) => node.dependencies.length === 0)
     .map(([id]) => id)
 }
 
-export function getDependents(nodeId: string, nodes: Nodes): string[] {
+export function getDependents(nodeId: string, nodes: ModelNodes): string[] {
   return Object.entries(nodes)
     .filter(([_, node]) => node.dependencies.includes(nodeId))
     .map(([id]) => id)
@@ -57,29 +16,33 @@ export function getDependents(nodeId: string, nodes: Nodes): string[] {
 function getOrdering(
   currentNode: string,
   currentOrdering: string[],
-  nodes: Nodes
+  nodes: ModelNodes,
+  showChildren: Record<string, boolean>
 ): string[] {
   const dependents = getDependents(currentNode, nodes)
 
-  if (!nodes[currentNode].showChildren) {
+  if (!showChildren[currentNode]) {
     return currentOrdering
   }
 
   for (const dependent of dependents) {
     const index = currentOrdering.indexOf(dependent)
     if (index !== -1) {
-      // if dependent is already in currentOrdering remove it and move it to the end
       currentOrdering.splice(index, 1)
     }
     currentOrdering.push(dependent)
 
-    getOrdering(dependent, currentOrdering, nodes)
+    getOrdering(dependent, currentOrdering, nodes, showChildren)
   }
 
   return currentOrdering
 }
 
-function compressRows(rows: string[][], nodes: Nodes): string[][] {
+function compressRows(
+  rows: string[][],
+  nodes: ModelNodes,
+  showChildren: Record<string, boolean>
+): string[][] {
   let changed = true
   while (changed) {
     changed = false
@@ -94,7 +57,7 @@ function compressRows(rows: string[][], nodes: Nodes): string[][] {
         for (const previousItem of previousRow) {
           if (
             nodes[item].dependencies.includes(previousItem) &&
-            nodes[previousItem].showChildren
+            showChildren[previousItem]
           ) {
             dependsOnPreviousRow = true
             break
@@ -117,7 +80,11 @@ function compressRows(rows: string[][], nodes: Nodes): string[][] {
   return rows
 }
 
-export function nodeRows(nodes: Nodes, selected?: string[]): string[][] {
+export function nodeRows(
+  nodes: ModelNodes,
+  showChildren: Record<string, boolean>,
+  selected?: string[]
+): string[][] {
   let roots: string[]
   if (selected === undefined || selected.length === 0) {
     roots = findRootNodes(nodes)
@@ -132,10 +99,10 @@ export function nodeRows(nodes: Nodes, selected?: string[]): string[][] {
   const ordering = [...roots]
 
   for (const root of roots) {
-    getOrdering(root, ordering, nodes)
+    getOrdering(root, ordering, nodes, showChildren)
   }
 
   const rows = ordering.map((node) => [node])
 
-  return compressRows(rows, nodes)
+  return compressRows(rows, nodes, showChildren)
 }

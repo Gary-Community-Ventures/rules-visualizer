@@ -5,29 +5,31 @@ import {
   type Dispatch,
   type SetStateAction,
 } from 'react'
-import { createDefaultNode, type Nodes, type Node } from './lib/nodes'
+import type { Model, ModelNode, ModelNodes } from './lib/model'
+import { generateId, createNode } from './lib/model'
 
 type MainContext = {
-  nodes: Nodes
-  setNodes: Dispatch<SetStateAction<Nodes>>
+  model: Model
+  setModel: Dispatch<SetStateAction<Model>>
   hoveredNodeId: string | null
   setHoveredNodeId: Dispatch<SetStateAction<string | null>>
   selectedNodes: string[]
   setSelectedNodes: Dispatch<SetStateAction<string[]>>
+  showChildren: Record<string, boolean>
+  setShowChildren: Dispatch<SetStateAction<Record<string, boolean>>>
 }
 
 const MainContext = createContext<MainContext | undefined>(undefined)
 
 // FIXME: For testing only
-function createInitialNodes(count: number): Nodes {
-  const nodes: Nodes = {}
+function createInitialNodes(count: number): ModelNodes {
+  const nodes: ModelNodes = {}
   const ids: string[] = []
 
   for (let i = 0; i < count; i++) {
     const id = Math.random().toString()
-    const node = createDefaultNode('context')
+    const node = createNode(id, id)
 
-    // First node has no dependencies, others randomly depend on an existing node
     if (ids.length > 0) {
       node.dependencies = [ids[Math.floor(Math.random() * ids.length)]]
     }
@@ -40,19 +42,27 @@ function createInitialNodes(count: number): Nodes {
 }
 
 export function Wrapper({ children }: { children: React.ReactNode }) {
-  const [nodes, setNodes] = useState<Nodes>(() => createInitialNodes(5))
+  const [model, setModel] = useState<Model>({
+    id: generateId('model'),
+    name: 'Benefits Eligibility',
+    namespace: 'https://example.com/model',
+    nodes: createInitialNodes(5),
+  })
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null)
   const [selectedNodes, setSelectedNodes] = useState<string[]>([])
+  const [showChildren, setShowChildren] = useState<Record<string, boolean>>({})
 
   return (
     <MainContext.Provider
       value={{
-        nodes,
-        setNodes,
+        model,
+        setModel,
         hoveredNodeId,
         setHoveredNodeId,
         selectedNodes,
         setSelectedNodes,
+        showChildren,
+        setShowChildren,
       }}
     >
       {children}
@@ -70,10 +80,10 @@ export function useMainContext(): MainContext {
   return context
 }
 
-export function useNode(id: string) {
-  const { nodes } = useMainContext()
+export function useNode(id: string): ModelNode {
+  const { model } = useMainContext()
 
-  const node = nodes[id]
+  const node = model.nodes[id]
 
   if (node === undefined) {
     throw new Error(`Node with id '${id}' not found`)
@@ -83,55 +93,29 @@ export function useNode(id: string) {
 }
 
 export function useUpdateNode() {
-  const { setNodes } = useMainContext()
+  const { setModel } = useMainContext()
 
-  return (id: string, update: Partial<Node>) => {
-    setNodes((nodes) => {
-      return {
-        ...nodes,
-        [id]: {
-          ...nodes[id],
-          ...update,
-        },
-      }
-    })
+  return (id: string, updater: (node: ModelNode) => ModelNode) => {
+    setModel((model) => ({
+      ...model,
+      nodes: {
+        ...model.nodes,
+        [id]: updater(model.nodes[id]),
+      },
+    }))
   }
 }
 
 export function useAddNode() {
-  const { setNodes } = useMainContext()
+  const { setModel } = useMainContext()
 
-  return (id: string, node: Node) => {
-    setNodes((nodes) => {
-      return {
-        ...nodes,
+  return (id: string, node: ModelNode) => {
+    setModel((model) => ({
+      ...model,
+      nodes: {
+        ...model.nodes,
         [id]: node,
-      }
-    })
+      },
+    }))
   }
-}
-
-export function useIsHoveredRelated(id: string) {
-  const { hoveredNodeId, nodes } = useMainContext()
-
-  if (hoveredNodeId === id) {
-    return true
-  }
-
-  const node = nodes[id]
-  const hoveredNode = nodes[hoveredNodeId ?? '']
-
-  if (hoveredNode === undefined) {
-    return true
-  }
-
-  if (hoveredNode.dependencies.includes(id)) {
-    return true
-  }
-
-  if (node.dependencies.includes(hoveredNodeId ?? '')) {
-    return true
-  }
-
-  return false
 }

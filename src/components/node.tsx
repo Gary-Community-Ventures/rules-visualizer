@@ -1,7 +1,7 @@
-import { useMainContext, useNode, useUpdateNode } from '@/context'
+import { useMainContext, useNode } from '@/context'
 import { Button } from './ui/button'
 import { Minus, Plus } from 'lucide-react'
-import { getDependents } from '@/lib/nodes'
+import { getDependents } from '@/lib/graph'
 import {
   Sheet,
   SheetContent,
@@ -20,14 +20,14 @@ export function nodeElementId(id: string) {
 }
 
 export function Node({ id }: NodeProps) {
-  const { setHoveredNodeId, nodes } = useMainContext()
+  const { setHoveredNodeId, model, showChildren, setShowChildren } =
+    useMainContext()
   const node = useNode(id)
-  const updateNode = useUpdateNode()
 
-  const hasDependents = getDependents(id, nodes).length > 0
+  const hasDependents = getDependents(id, model.nodes).length > 0
 
   const toggleShowChildren = () => {
-    updateNode(id, { showChildren: !node.showChildren })
+    setShowChildren((prev) => ({ ...prev, [id]: !prev[id] }))
   }
 
   return (
@@ -39,12 +39,12 @@ export function Node({ id }: NodeProps) {
       <div id={nodeElementId(id)} className="border p-5 h-full relative">
         <Sheet>
           <SheetTrigger>
-            <div className="text-center font-medium">{id}</div>
+            <div className="text-center font-medium">{node.name}</div>
           </SheetTrigger>
           <SheetContent>
             <SheetHeader>
-              <SheetTitle>Are you absolutely sure?</SheetTitle>
-              <SheetDescription>This action cannot be undone.</SheetDescription>
+              <SheetTitle>{node.name}</SheetTitle>
+              <SheetDescription>{node.id}</SheetDescription>
             </SheetHeader>
           </SheetContent>
         </Sheet>
@@ -55,7 +55,7 @@ export function Node({ id }: NodeProps) {
             className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-white h-6 w-6"
             onClick={toggleShowChildren}
           >
-            {node.showChildren ? (
+            {showChildren[id] ? (
               <Minus className="w-3 h-3" />
             ) : (
               <Plus className="w-3 h-3" />
