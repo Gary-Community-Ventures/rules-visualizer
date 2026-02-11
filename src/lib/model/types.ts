@@ -10,20 +10,15 @@ export type FeelDataType =
   | 'dayTimeDuration'
   | 'yearMonthDuration'
 
-// ─── Literal Expression ──────────────────────────────────────────
-
-// Simplified — no longer a discriminated union member, just a value container
-export type LiteralExpression = {
-  text: string
-  typeRef?: FeelDataType
-}
-
 // ─── Context Entry ───────────────────────────────────────────────
 
 export type ContextEntry = {
   id: string
   name: string
-  expression: LiteralExpression
+  expression: {
+    text: string
+    typeRef?: FeelDataType
+  }
 }
 
 // ─── Decision Table Sub-Types ────────────────────────────────────

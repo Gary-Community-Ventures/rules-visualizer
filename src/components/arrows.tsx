@@ -77,7 +77,7 @@ function Arrow({ fromId, toId, rows, scale, strokeWidth }: ArrowProps) {
 
       let pathData: string
       if (isAdjacent) {
-        // Adjacent rows - use elbows with staggered midpoints based on target node
+        // Adjacent rows (or no visible rows in between) - use elbows with staggered midpoints based on target node
         const verticalDistance = toY - fromY
 
         // Find the index of the fromId node within its row (source-based stagger)
