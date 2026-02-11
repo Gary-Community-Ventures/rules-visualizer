@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useAddNode, useMainContext } from '@/context'
 import { Button } from './ui/button'
-import { createDefaultDecision } from '@/lib/model'
+import { createNode } from '@/lib/model'
 import {
   Combobox,
   ComboboxChips,
@@ -30,7 +30,7 @@ export function ToolBar() {
   // FIXME: For testing only
   const newNode = () => {
     const id = Math.random().toString()
-    const base = createDefaultDecision(id, id)
+    const base = createNode(id, id)
 
     const numDeps = Math.min(Math.floor(Math.random() * 3) + 1, nodeIds.length)
 

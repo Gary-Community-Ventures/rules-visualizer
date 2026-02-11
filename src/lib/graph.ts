@@ -1,18 +1,14 @@
-import type { ModelNode, ModelNodes } from './model'
-
-function getNodeDependencies(node: ModelNode): string[] {
-  return node.type === 'decision' ? node.dependencies : []
-}
+import type { ModelNodes } from './model'
 
 export function findRootNodes(nodes: ModelNodes): string[] {
   return Object.entries(nodes)
-    .filter(([_, node]) => getNodeDependencies(node).length === 0)
+    .filter(([_, node]) => node.dependencies.length === 0)
     .map(([id]) => id)
 }
 
 export function getDependents(nodeId: string, nodes: ModelNodes): string[] {
   return Object.entries(nodes)
-    .filter(([_, node]) => getNodeDependencies(node).includes(nodeId))
+    .filter(([_, node]) => node.dependencies.includes(nodeId))
     .map(([id]) => id)
 }
 
@@ -60,7 +56,7 @@ function compressRows(
         let dependsOnPreviousRow = false
         for (const previousItem of previousRow) {
           if (
-            getNodeDependencies(nodes[item]).includes(previousItem) &&
+            nodes[item].dependencies.includes(previousItem) &&
             showChildren[previousItem]
           ) {
             dependsOnPreviousRow = true

@@ -1,15 +1,48 @@
-import type { FeelDataType, DecisionTable } from './expressions'
-import type { DecisionNode, InputNode } from './nodes'
+import type { FeelDataType } from './expressions'
+import type {
+  ModelNode,
+  NodeContent,
+  Input,
+  Context,
+  Constant,
+  DecisionTable,
+} from './nodes'
 
 export function generateId(prefix?: string): string {
   const uuid = crypto.randomUUID().replace(/-/g, '').slice(0, 12)
   return prefix ? `_${prefix}_${uuid}` : `_${uuid}`
 }
 
+// ─── Content Factories ───────────────────────────────────────────
+
+export function createInput(): Input {
+  return { type: 'input' }
+}
+
+export function createDefaultContext(): Context {
+  return {
+    type: 'context',
+    id: generateId('ctx'),
+    entries: [],
+  }
+}
+
+export function createDefaultConstant(
+  text: string,
+  typeRef?: FeelDataType
+): Constant {
+  return {
+    type: 'constant',
+    id: generateId('const'),
+    text,
+    typeRef,
+  }
+}
+
 export function createDefaultDecisionTable(): DecisionTable {
   return {
-    id: generateId('dt'),
     type: 'decisionTable',
+    id: generateId('dt'),
     hitPolicy: 'UNIQUE',
     inputClauses: [],
     outputClauses: [],
@@ -17,47 +50,17 @@ export function createDefaultDecisionTable(): DecisionTable {
   }
 }
 
-export function createDefaultDecision(id: string, name: string): DecisionNode {
-  return {
-    type: 'decision',
-    id,
-    name,
-    expression: {
-      id: generateId('ctx'),
-      type: 'context',
-      entries: [],
-    },
-    dependencies: [],
-    isConstant: false,
-  }
-}
+// ─── Node Factory ────────────────────────────────────────────────
 
-export function createConstantDecision(
+export function createNode(
   id: string,
   name: string,
-  feelText: string,
-  typeRef?: FeelDataType
-): DecisionNode {
+  content?: NodeContent
+): ModelNode {
   return {
-    type: 'decision',
     id,
     name,
-    typeRef,
-    expression: {
-      id: generateId('le'),
-      type: 'literalExpression',
-      text: feelText,
-      typeRef,
-    },
     dependencies: [],
-    isConstant: true,
-  }
-}
-
-export function createDefaultInputData(id: string, name: string): InputNode {
-  return {
-    type: 'inputData',
-    id,
-    name,
+    content: content ?? createDefaultContext(),
   }
 }

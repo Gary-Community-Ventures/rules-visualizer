@@ -12,14 +12,21 @@ export type FeelDataType =
 
 // ─── Literal Expression ──────────────────────────────────────────
 
+// Simplified — no longer a discriminated union member, just a value container
 export type LiteralExpression = {
-  id: string
-  type: 'literalExpression'
   text: string
   typeRef?: FeelDataType
 }
 
-// ─── Decision Table ──────────────────────────────────────────────
+// ─── Context Entry ───────────────────────────────────────────────
+
+export type ContextEntry = {
+  id: string
+  name: string
+  expression: LiteralExpression
+}
+
+// ─── Decision Table Sub-Types ────────────────────────────────────
 
 export type HitPolicy =
   | 'UNIQUE'
@@ -52,32 +59,3 @@ export type DecisionTableRule = {
   outputEntries: string[] // FEEL expressions, one per output clause
   annotationEntries: string[]
 }
-
-export type DecisionTable = {
-  id: string
-  type: 'decisionTable'
-  hitPolicy: HitPolicy
-  aggregation?: Aggregation // only valid when hitPolicy is COLLECT
-  inputClauses: InputClause[]
-  outputClauses: OutputClause[]
-  rules: DecisionTableRule[]
-}
-
-// ─── Context Expression ──────────────────────────────────────────
-
-export type ContextEntry = {
-  id: string
-  name: string
-  expression: LiteralExpression // restricted to LiteralExpression for now
-}
-
-export type ContextExpression = {
-  id: string
-  type: 'context'
-  entries: ContextEntry[]
-  // Convention: entry named '_return' is the final result
-}
-
-// ─── Expression Union ────────────────────────────────────────────
-
-export type Expression = LiteralExpression | DecisionTable | ContextExpression

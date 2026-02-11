@@ -1,42 +1,58 @@
-import type { FeelDataType, Expression } from './expressions'
+import type {
+  FeelDataType,
+  ContextEntry,
+  HitPolicy,
+  Aggregation,
+  InputClause,
+  OutputClause,
+  DecisionTableRule,
+} from './expressions'
 
-// ─── Node Types ─────────────────────────────────────────────────
+// ─── Node Content Types (discriminated on `type`) ────────────────
 
-export type InputNode = {
-  type: 'inputData'
+export type Input = { type: 'input' }
+
+export type Constant = {
+  type: 'constant'
   id: string
-  name: string
+  text: string
   typeRef?: FeelDataType
 }
 
-export type DecisionNode = {
-  type: 'decision'
+export type Context = {
+  type: 'context'
+  id: string
+  entries: ContextEntry[]
+  // Convention: entry named '_return' is the final result
+}
+
+export type DecisionTable = {
+  type: 'decisionTable'
+  id: string
+  hitPolicy: HitPolicy
+  aggregation?: Aggregation
+  inputClauses: InputClause[]
+  outputClauses: OutputClause[]
+  rules: DecisionTableRule[]
+}
+
+export type NodeContent = Input | Constant | Context | DecisionTable
+
+// ─── Node & Model ────────────────────────────────────────────────
+
+export type ModelNode = {
   id: string
   name: string
   typeRef?: FeelDataType
-  expression: Expression
-  dependencies: string[] // IDs of InputNode or DecisionNode this depends on
-  isConstant: boolean // editor-only, not exported to DMN XML
+  dependencies: string[]
+  content: NodeContent
 }
 
-export type ModelNode = InputNode | DecisionNode
 export type ModelNodes = Record<string, ModelNode>
-
-// ─── Top-Level Model ─────────────────────────────────────────────
 
 export type Model = {
   id: string
   name: string
   namespace: string
   nodes: ModelNodes
-}
-
-// ─── Type Guards ─────────────────────────────────────────────────
-
-export function isInputData(node: ModelNode): node is InputNode {
-  return node.type === 'inputData'
-}
-
-export function isDecision(node: ModelNode): node is DecisionNode {
-  return node.type === 'decision'
 }

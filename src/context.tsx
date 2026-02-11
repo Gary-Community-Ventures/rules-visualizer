@@ -6,7 +6,7 @@ import {
   type SetStateAction,
 } from 'react'
 import type { Model, ModelNode, ModelNodes } from './lib/model'
-import { generateId, createDefaultDecision } from './lib/model'
+import { generateId, createNode } from './lib/model'
 
 type MainContext = {
   model: Model
@@ -28,7 +28,7 @@ function createInitialNodes(count: number): ModelNodes {
 
   for (let i = 0; i < count; i++) {
     const id = Math.random().toString()
-    const node = createDefaultDecision(id, id)
+    const node = createNode(id, id)
 
     if (ids.length > 0) {
       node.dependencies = [ids[Math.floor(Math.random() * ids.length)]]
@@ -118,34 +118,4 @@ export function useAddNode() {
       },
     }))
   }
-}
-
-export function useIsHoveredRelated(id: string) {
-  const { hoveredNodeId, model } = useMainContext()
-  const nodes = model.nodes
-
-  if (hoveredNodeId === id) {
-    return true
-  }
-
-  const node = nodes[id]
-  const hoveredNode = nodes[hoveredNodeId ?? '']
-
-  if (hoveredNode === undefined) {
-    return true
-  }
-
-  const hoveredDeps =
-    hoveredNode.type === 'decision' ? hoveredNode.dependencies : []
-  const nodeDeps = node.type === 'decision' ? node.dependencies : []
-
-  if (hoveredDeps.includes(id)) {
-    return true
-  }
-
-  if (nodeDeps.includes(hoveredNodeId ?? '')) {
-    return true
-  }
-
-  return false
 }

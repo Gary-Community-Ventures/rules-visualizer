@@ -19,9 +19,7 @@ function Arrow({ fromId, toId, rows, scale, strokeWidth }: ArrowProps) {
 
   // Arrow is related if nothing is hovered, or if it directly connects to the hovered node
   const isRelated =
-    hoveredNodeId === null ||
-    fromId === hoveredNodeId ||
-    toId === hoveredNodeId
+    hoveredNodeId === null || fromId === hoveredNodeId || toId === hoveredNodeId
 
   // Get all visible node IDs from rows
   const visibleNodeIds = rows.flat()
@@ -55,12 +53,13 @@ function Arrow({ fromId, toId, rows, scale, strokeWidth }: ArrowProps) {
 
       // Stagger the toX based on which dependency this is
       const toNode = nodes[toId]
-      const toDeps = toNode.type === 'decision' ? toNode.dependencies : []
+      const toDeps = toNode.dependencies
       const depIndex = toDeps.indexOf(fromId)
       const totalDeps = toDeps.length
       const staggerWidth = 5
       const staggerStep = totalDeps > 1 ? staggerWidth / (totalDeps - 1) : 0
-      const toXOffset = totalDeps > 1 ? depIndex * staggerStep - staggerWidth / 2 : 0
+      const toXOffset =
+        totalDeps > 1 ? depIndex * staggerStep - staggerWidth / 2 : 0
 
       const toX = toRect.left + toRect.width / 2 + toXOffset
       const toY = toRect.top
@@ -88,7 +87,8 @@ function Arrow({ fromId, toId, rows, scale, strokeWidth }: ArrowProps) {
         // Calculate stagger offset: spread across 70% of the vertical distance
         const staggerRange = verticalDistance * 0.7
         const staggerStep = staggerRange / (totalNodesInFromRow + 1)
-        const staggerOffset = staggerStep * (fromNodeIndex + 1) - staggerRange / 2
+        const staggerOffset =
+          staggerStep * (fromNodeIndex + 1) - staggerRange / 2
 
         // Midpoint with stagger
         const midY = fromY + verticalDistance * 0.5 + staggerOffset
@@ -114,7 +114,17 @@ function Arrow({ fromId, toId, rows, scale, strokeWidth }: ArrowProps) {
       window.removeEventListener('resize', updateArrow)
       window.removeEventListener('transform', updateArrow)
     }
-  }, [fromId, toId, rows, nodes, isFromVisible, isToVisible, visibleNodeIds, parentShowsChildren, scale])
+  }, [
+    fromId,
+    toId,
+    rows,
+    nodes,
+    isFromVisible,
+    isToVisible,
+    visibleNodeIds,
+    parentShowsChildren,
+    scale,
+  ])
 
   if (!path) {
     return null
@@ -130,9 +140,13 @@ function Arrow({ fromId, toId, rows, scale, strokeWidth }: ArrowProps) {
       stroke={color}
       strokeWidth={strokeWidth}
       fill="none"
-      strokeDasharray={isDashed || isHoverAnimated ? `${dashSize},${dashSize}` : undefined}
+      strokeDasharray={
+        isDashed || isHoverAnimated ? `${dashSize},${dashSize}` : undefined
+      }
       opacity={isRelated ? 1 : 0.2}
-      style={isHoverAnimated ? { animation: 'flow 0.5s linear infinite' } : undefined}
+      style={
+        isHoverAnimated ? { animation: 'flow 0.5s linear infinite' } : undefined
+      }
     />
   )
 }
@@ -151,15 +165,15 @@ export function Arrows({ rows }: ArrowsProps) {
       setScale(e.detail.scale)
     }
     window.addEventListener('transform', handleTransform as EventListener)
-    return () => window.removeEventListener('transform', handleTransform as EventListener)
+    return () =>
+      window.removeEventListener('transform', handleTransform as EventListener)
   }, [])
 
   // Collect all arrows: for each node, draw arrows from its dependencies to it
   const arrows: { fromId: string; toId: string }[] = []
 
   for (const [nodeId, node] of Object.entries(nodes)) {
-    const deps = node.type === 'decision' ? node.dependencies : []
-    for (const depId of deps) {
+    for (const depId of node.dependencies) {
       arrows.push({ fromId: depId, toId: nodeId })
     }
   }
