@@ -6,7 +6,7 @@ import type {
   InputClause,
   OutputClause,
   DecisionTableRule,
-} from './expressions'
+} from './types'
 
 // ─── Node Content Types (discriminated on `type`) ────────────────
 

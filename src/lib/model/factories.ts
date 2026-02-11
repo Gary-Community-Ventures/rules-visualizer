@@ -1,4 +1,4 @@
-import type { FeelDataType } from './expressions'
+import type { FeelDataType } from './types'
 import type {
   ModelNode,
   NodeContent,
