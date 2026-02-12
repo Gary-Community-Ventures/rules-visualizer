@@ -6,6 +6,7 @@ import {
 } from '@tanstack/react-router'
 import { HomePage } from './pages/home'
 import { Wrapper } from './context'
+import {  Test } from './components/table'
 // import type { UserResource, GetToken, LoadedClerk } from '@clerk/types'
 
 // export type RouterContext = {
@@ -31,7 +32,13 @@ export const homeRoute = createRoute({
   component: HomePage,
 })
 
-export const routeTree = rootRoute.addChildren([homeRoute])
+export const testRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/test',
+  component: Test,
+})
+
+export const routeTree = rootRoute.addChildren([homeRoute, testRoute])
 
 export const router = new Router({ routeTree })
 
