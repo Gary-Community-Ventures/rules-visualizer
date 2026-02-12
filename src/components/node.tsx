@@ -10,6 +10,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from './ui/sheet'
+import { Editor } from './inputs/editor'
 
 type NodeProps = {
   id: string
@@ -46,6 +47,7 @@ export function Node({ id }: NodeProps) {
               <SheetTitle>{node.name}</SheetTitle>
               <SheetDescription>{node.id}</SheetDescription>
             </SheetHeader>
+            <Editor node={node} />
           </SheetContent>
         </Sheet>
         {hasDependents && (

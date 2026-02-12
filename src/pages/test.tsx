@@ -43,7 +43,7 @@ import { useState } from 'react'
 // }
 
 export function TestPage() {
-  const context: Context = {
+  const [context, setContext] = useState<Context>({
     id: 'test',
     type: 'context',
     entries: [
@@ -62,7 +62,7 @@ export function TestPage() {
         },
       },
     ],
-  }
+  })
 
-  return <ContextInput context={context} />
+  return <ContextInput context={context} updateContext={setContext} />
 }
