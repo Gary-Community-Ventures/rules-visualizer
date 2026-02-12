@@ -14,21 +14,18 @@ export type Input = { type: 'input', id: string }
 
 export type Constant = {
   type: 'constant'
-  id: string
   text: string
   typeRef?: FeelDataType
 }
 
 export type Context = {
   type: 'context'
-  id: string
   entries: ContextEntry[]
   // Convention: entry named '_return' is the final result
 }
 
 export type DecisionTable = {
   type: 'decisionTable'
-  id: string
   hitPolicy: HitPolicy
   aggregation?: Aggregation
   inputClauses: InputClause[]

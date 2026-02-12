@@ -133,9 +133,8 @@ export function ToolBar() {
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
-              onSelect={(e) => {
-                e.preventDefault()
-                fileInputRef.current?.click()
+              onSelect={() => {
+                setTimeout(() => fileInputRef.current?.click(), 0)
               }}
             >
               <Upload className="size-4" />

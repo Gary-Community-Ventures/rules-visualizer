@@ -82,9 +82,9 @@ function renderInformationRequirements(
     })
 }
 
-function renderLiteralExpression(constant: Constant): string {
+function renderLiteralExpression(constant: Constant, nodeId: string): string {
   return [
-    `    <literalExpression id="${xmlId(constant.id)}"${optAttr('typeRef', constant.typeRef)}>`,
+    `    <literalExpression id="${subId(nodeId, 'expr')}"${optAttr('typeRef', constant.typeRef)}>`,
     `      <text>${xmlText(constant.text)}</text>`,
     `    </literalExpression>`,
   ].join('\n')
@@ -113,20 +113,21 @@ function renderContextEntry(
   return lines.join('\n')
 }
 
-function renderContext(context: Context): string {
+function renderContext(context: Context, nodeId: string): string {
+  const exprId = subId(nodeId, 'expr')
   const lines: string[] = []
-  lines.push(`    <context id="${xmlId(context.id)}">`)
+  lines.push(`    <context id="${exprId}">`)
   for (let i = 0; i < context.entries.length; i++) {
-    lines.push(renderContextEntry(context.entries[i], '      ', context.id, i))
+    lines.push(renderContextEntry(context.entries[i], '      ', exprId, i))
   }
   lines.push(`    </context>`)
   return lines.join('\n')
 }
 
-function renderDecisionTable(dt: DecisionTable): string {
+function renderDecisionTable(dt: DecisionTable, nodeId: string): string {
   const lines: string[] = []
   lines.push(
-    `    <decisionTable id="${xmlId(dt.id)}" hitPolicy="${xmlEscape(dt.hitPolicy)}"${optAttr('aggregation', dt.aggregation)}>`
+    `    <decisionTable id="${subId(nodeId, 'expr')}" hitPolicy="${xmlEscape(dt.hitPolicy)}"${optAttr('aggregation', dt.aggregation)}>`
   )
 
   for (const input of dt.inputClauses) {
@@ -181,11 +182,11 @@ function renderDecision(node: ModelNode, model: Model): string {
 
   const content = node.content
   if (content.type === 'constant') {
-    lines.push(renderLiteralExpression(content))
+    lines.push(renderLiteralExpression(content, node.id))
   } else if (content.type === 'context') {
-    lines.push(renderContext(content))
+    lines.push(renderContext(content, node.id))
   } else if (content.type === 'decisionTable') {
-    lines.push(renderDecisionTable(content))
+    lines.push(renderDecisionTable(content, node.id))
   }
 
   lines.push(`  </decision>`)
