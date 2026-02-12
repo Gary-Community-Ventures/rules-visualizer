@@ -3,7 +3,7 @@ import { Table, TableInputCell, TableRow, TableTextCell } from '../table'
 
 type ContextInputProps = {
   context: Context
-  updateContext: (context: Partial<Context>) => void
+  updateContext: (context: Context) => void
 }
 
 export function ContextInput({ context }: ContextInputProps) {
