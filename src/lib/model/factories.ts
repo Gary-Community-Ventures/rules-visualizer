@@ -19,10 +19,19 @@ export function createInput(): Input {
   return { type: 'input' }
 }
 
+export const RETURN_NAME = '_return'
+
 export function createDefaultContext(): Context {
   return {
     type: 'context',
-    entries: [],
+    id: generateId('ctx'),
+    entries: [
+      {
+        id: generateId(),
+        name: RETURN_NAME,
+        expression: { text: '' },
+      },
+    ],
   }
 }
 

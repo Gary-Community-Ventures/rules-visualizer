@@ -11,7 +11,13 @@ import {
   type PropsWithChildren,
   type ReactNode,
 } from 'react'
-
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuGroup,
+  ContextMenuItem,
+  ContextMenuTrigger,
+} from './ui/context-menu'
 
 type InputCellProps = {
   value: string
@@ -40,7 +46,7 @@ export function TableTextCell({ children, className }: TableTextCellProps) {
   return (
     <div
       className={cn(
-        'bg-primary text-primary-foreground border p-2 w-full break-words',
+        'bg-primary text-primary-foreground border p-2 w-full break-words h-full',
         className
       )}
     >
@@ -61,7 +67,7 @@ export function TableRow({ children }: PropsWithChildren) {
     >
       {Children.map(children, (child, index) => {
         if (isValidElement(child)) {
-          return <TableCell index={index}>{cloneElement(child)}</TableCell>
+          return <TableCell x={index} y={0}>{cloneElement(child)}</TableCell>
         }
         return child
       })}
@@ -69,21 +75,28 @@ export function TableRow({ children }: PropsWithChildren) {
   )
 }
 
+type GetActions = (
+  x: number,
+  y: number
+) => { name: string; action: () => void }[][]
+
 type TableContext = {
   columnWidths: number[]
   setColumnWidth: (index: number, width: number) => void
   columnCount: number
+  getActions: GetActions
 }
 
 const TableContext = createContext<TableContext | undefined>(undefined)
 
 type TableProps = PropsWithChildren<{
   columns: number
+  getActions?: GetActions
 }>
 
 const MIN_COLUMN_WIDTH = 50
 
-export function Table({ children, columns }: TableProps) {
+export function Table({ children, columns, getActions }: TableProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [columnWidths, setColumnWidths] = useState<number[]>([])
 
@@ -104,7 +117,12 @@ export function Table({ children, columns }: TableProps) {
 
   return (
     <TableContext.Provider
-      value={{ columnWidths, setColumnWidth, columnCount: columns }}
+      value={{
+        columnWidths,
+        setColumnWidth,
+        columnCount: columns,
+        getActions: getActions ?? (() => []),
+      }}
     >
       <div ref={containerRef} className="flex flex-col">
         {children}
@@ -125,16 +143,33 @@ export function useTableContext(): TableContext {
 
 type TableCellProps = {
   children: ReactNode
-  index?: number
+  x: number
+  y: number
   className?: string
 }
 
-function TableCell({ children, index = 0, className }: TableCellProps) {
+function TableCell({ children, x, y, className }: TableCellProps) {
+  const { getActions } = useTableContext()
   return (
-    <div className={cn('relative', className)}>
-      {children}
-      <ResizeHandle columnIndex={index} />
-    </div>
+    <ContextMenu>
+      <ContextMenuTrigger>
+        <div className={cn('relative', className)}>
+          {children}
+          <ResizeHandle columnIndex={x} />
+        </div>
+      </ContextMenuTrigger>
+      <ContextMenuContent>
+        {getActions(x, x).map((actions, i) => (
+          <ContextMenuGroup key={i}>
+            {actions.map(({ name, action }) => (
+              <ContextMenuItem key={name} onClick={action}>
+                {name}
+              </ContextMenuItem>
+            ))}
+          </ContextMenuGroup>
+        ))}
+      </ContextMenuContent>
+    </ContextMenu>
   )
 }
 

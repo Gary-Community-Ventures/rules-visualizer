@@ -33,38 +33,38 @@ export function Node({ id }: NodeProps) {
 
   return (
     <div
-      className="bg-white/90"
+      className="bg-white/90 relative"
       onMouseEnter={() => setHoveredNodeId(id)}
       onMouseLeave={() => setHoveredNodeId(null)}
     >
-      <div id={nodeElementId(id)} className="border p-5 h-full relative">
-        <Sheet>
-          <SheetTrigger>
+      <Sheet>
+        <SheetTrigger>
+          <div id={nodeElementId(id)} className="border p-5 h-full">
             <div className="text-center font-medium">{node.name}</div>
-          </SheetTrigger>
-          <SheetContent>
-            <SheetHeader>
-              <SheetTitle>{node.name}</SheetTitle>
-              <SheetDescription>{node.id}</SheetDescription>
-            </SheetHeader>
-            <Editor node={node} />
-          </SheetContent>
-        </Sheet>
-        {hasDependents && (
-          <Button
-            variant="outline"
-            size="icon"
-            className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-white h-6 w-6"
-            onClick={toggleShowChildren}
-          >
-            {showChildren[id] ? (
-              <Minus className="w-3 h-3" />
-            ) : (
-              <Plus className="w-3 h-3" />
-            )}
-          </Button>
-        )}
-      </div>
+          </div>
+        </SheetTrigger>
+        <SheetContent side="left">
+          <SheetHeader>
+            <SheetTitle>{node.name}</SheetTitle>
+            <SheetDescription>{node.id}</SheetDescription>
+          </SheetHeader>
+          <Editor node={node} />
+        </SheetContent>
+      </Sheet>
+      {hasDependents && (
+        <Button
+          variant="outline"
+          size="icon"
+          className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-white h-6 w-6"
+          onClick={toggleShowChildren}
+        >
+          {showChildren[id] ? (
+            <Minus className="w-3 h-3" />
+          ) : (
+            <Plus className="w-3 h-3" />
+          )}
+        </Button>
+      )}
     </div>
   )
 }

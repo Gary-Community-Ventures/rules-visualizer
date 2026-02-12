@@ -21,8 +21,14 @@ export function ContextInput({ context, updateContext }: ContextInputProps) {
     updateContext({ ...context, entries })
   }
 
+  const getActions = (x, y) => {
+    let actions = []
+
+    return []
+  }
+
   return (
-    <Table columns={2}>
+    <Table columns={2} getActions={getActions}>
       <TableRow>
         <TableTextCell>Name</TableTextCell>
         <TableTextCell>Value</TableTextCell>
