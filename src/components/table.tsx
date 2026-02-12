@@ -13,29 +13,33 @@ import {
 } from 'react'
 
 export function Test() {
+  const [value, setValue] = useState('test')
   return (
     <div className="p-10">
       <Table columns={4}>
         <TableRow>
-          <TableInputCell
-            value="testtesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttest"
-            onChange={() => {}}
-          />
-          <TableInputCell value="test" onChange={() => {}} />
-          <TableInputCell value="test" onChange={() => {}} />
-          <TableInputCell value="test" onChange={() => {}} />
+          <TableTextCell value="test" />
+          <TableTextCell value="test" />
+          <TableTextCell value="test" />
+          <TableTextCell value="test" />
         </TableRow>
         <TableRow>
-          <TableInputCell value="test" onChange={() => {}} />
-          <TableInputCell value="test" onChange={() => {}} />
-          <TableInputCell value="test" onChange={() => {}} />
-          <TableInputCell value="test" onChange={() => {}} />
+          <TableInputCell value={value} onChange={(v) => setValue(v)} />
+          <TableInputCell value={value} onChange={(v) => setValue(v)} />
+          <TableInputCell value={value} onChange={(v) => setValue(v)} />
+          <TableInputCell value={'test'} onChange={(v) => setValue(v)} />
         </TableRow>
         <TableRow>
-          <TableInputCell value="test" onChange={() => {}} />
-          <TableInputCell value="test" onChange={() => {}} />
-          <TableInputCell value="test" onChange={() => {}} />
-          <TableInputCell value="test" onChange={() => {}} />
+          <TableInputCell value={value} onChange={(v) => setValue(v)} />
+          <TableInputCell value={value} onChange={(v) => setValue(v)} />
+          <TableInputCell value={value} onChange={(v) => setValue(v)} />
+          <TableInputCell value={value} onChange={(v) => setValue(v)} />
+        </TableRow>
+        <TableRow>
+          <TableTextCell value="return" />
+          <TableInputCell value={value} onChange={(v) => setValue(v)} />
+          <TableInputCell value={value} onChange={(v) => setValue(v)} />
+          <TableInputCell value={value} onChange={(v) => setValue(v)} />
         </TableRow>
       </Table>
     </div>
@@ -50,9 +54,9 @@ type InputCellProps = {
 
 export function TableInputCell({ value, onChange, className }: InputCellProps) {
   return (
-    <textarea
+    <TextBox
       className={cn(
-        'block border rounded-none m-0 resize-none w-full h-full',
+        'block border rounded-none m-0 p-2 w-full box-border',
         className
       )}
       value={value}
@@ -61,9 +65,29 @@ export function TableInputCell({ value, onChange, className }: InputCellProps) {
   )
 }
 
-export function TableRow({ children }: PropsWithChildren) {
+type TableTextCellProps = {
+  value: string
+  className?: string
+}
+
+export function TableTextCell({ value, className }: TableTextCellProps) {
   return (
-    <div className="flex flex-nowrap">
+    <div className={cn('bg-primary text-primary-foreground border p-2 w-full', className)}>
+      {value}
+    </div>
+  )
+}
+
+export function TableRow({ children }: PropsWithChildren) {
+  const { columnWidths } = useTableContext()
+
+  return (
+    <div
+      className="grid"
+      style={{
+        gridTemplateColumns: columnWidths.map((w) => `${w}px`).join(' '),
+      }}
+    >
       {Children.map(children, (child, index) => {
         if (isValidElement(child)) {
           return <TableCell index={index}>{cloneElement(child)}</TableCell>
@@ -135,14 +159,8 @@ type TableCellProps = {
 }
 
 function TableCell({ children, index = 0, className }: TableCellProps) {
-  const { columnWidths } = useTableContext()
-  const width = columnWidths[index]
-
   return (
-    <div
-      className={cn('relative flex-shrink-0', className)}
-      style={{ width: width ? `${width}px` : undefined }}
-    >
+    <div className={cn('relative', className)}>
       {children}
       <ResizeHandle columnIndex={index} />
     </div>
@@ -192,6 +210,47 @@ function ResizeHandle({ columnIndex }: ResizeHandleProps) {
         isDragging && 'bg-primary'
       )}
       onMouseDown={handleMouseDown}
+    />
+  )
+}
+
+const TEXT_LINE_HEIGHT = 19
+
+type TextBoxProps = React.ComponentProps<'textarea'>
+
+export function TextBox({ value, style, ...props }: TextBoxProps) {
+  const { columnWidths } = useTableContext()
+  const ref = useRef<HTMLTextAreaElement>(null)
+
+  const recalculateHeight = (textarea: HTMLTextAreaElement) => {
+    textarea.style.height = '0'
+    textarea.style.minHeight = '0'
+    const scrollHeight = textarea.scrollHeight
+    textarea.style.minHeight = `${scrollHeight}px`
+    textarea.style.height = '100%'
+  }
+
+  useEffect(() => {
+    const textarea = ref.current
+    if (textarea) {
+      recalculateHeight(textarea)
+    }
+  }, [columnWidths, value])
+
+  return (
+    <textarea
+      ref={ref}
+      rows={1}
+      value={value}
+      {...props}
+      style={{
+        height: '100%',
+        minHeight: 0,
+        resize: 'none',
+        lineHeight: TEXT_LINE_HEIGHT + 'px',
+        overflow: 'hidden',
+        ...style,
+      }}
     />
   )
 }
