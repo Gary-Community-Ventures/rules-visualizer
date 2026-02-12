@@ -1,6 +1,7 @@
 import type { ModelNode, NodeContent } from '@/lib/model'
 import { ContextInput } from './context'
 import { useUpdateNode } from '@/context'
+import { ConstantInput } from './constant'
 
 type EditorProps = {
   node: ModelNode
@@ -14,6 +15,14 @@ export function Editor({ node }: EditorProps) {
     }
 
     return <ContextInput context={node.content} updateContext={updateContext} />
+  }
+  if (node.content.type === 'constant') {
+    const updateConstant = (constant: NodeContent) => {
+      updateNode(node.id, (node) => ({ ...node, content: constant }))
+    }
+    return (
+      <ConstantInput constant={node.content} updateConstant={updateConstant} />
+    )
   }
 
   return <div>Not implemented</div>
