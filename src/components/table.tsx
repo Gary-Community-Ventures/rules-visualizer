@@ -116,16 +116,48 @@ export function Table({ children, columns, getActions }: TableProps) {
   const [columnWidths, setColumnWidths] = useState<number[]>([])
 
   useEffect(() => {
-    if (containerRef.current) {
-      const width = containerRef.current.clientWidth / columns
+    const container = containerRef.current
+    if (!container) return
+
+    const initWidths = () => {
+      const width = container.clientWidth / columns
       setColumnWidths(Array(columns).fill(width))
     }
+
+    initWidths()
+
+    const observer = new ResizeObserver(() => {
+      // Scale existing widths proportionally to new container size
+      setColumnWidths((prev) => {
+        if (prev.length === 0) return prev
+        const oldTotal = prev.reduce((sum, w) => sum + w, 0)
+        const newTotal = container.clientWidth
+        const scale = newTotal / oldTotal
+        return prev.map((w) => w * scale)
+      })
+    })
+
+    observer.observe(container)
+    return () => observer.disconnect()
   }, [columns])
 
   const setColumnWidth = (index: number, width: number) => {
     setColumnWidths((prev) => {
+      const nextIndex = index + 1
+      if (nextIndex >= prev.length) return prev
+
+      const delta = width - prev[index]
+      const newWidth = prev[index] + delta
+      const newNextWidth = prev[nextIndex] - delta
+
+      // Enforce minimum widths
+      if (newWidth < MIN_COLUMN_WIDTH || newNextWidth < MIN_COLUMN_WIDTH) {
+        return prev
+      }
+
       const next = [...prev]
-      next[index] = Math.max(MIN_COLUMN_WIDTH, width)
+      next[index] = newWidth
+      next[nextIndex] = newNextWidth
       return next
     })
   }
@@ -139,7 +171,7 @@ export function Table({ children, columns, getActions }: TableProps) {
         getActions: getActions ?? (() => []),
       }}
     >
-      <div ref={containerRef} className="flex flex-col">
+      <div ref={containerRef} className="flex flex-col w-full">
         {Children.map(children, (child, rowIndex) => {
           if (isValidElement(child)) {
             return cloneElement(child, { rowIndex } as { rowIndex: number })
@@ -169,13 +201,15 @@ type TableCellProps = {
 }
 
 function TableCell({ children, x, y, className }: TableCellProps) {
-  const { getActions } = useTableContext()
+  const { getActions, columnCount } = useTableContext()
+  const isLastColumn = x === columnCount - 1
+
   return (
     <ContextMenu>
       <ContextMenuTrigger className="h-full">
         <div className={cn('relative h-full', className)}>
           {children}
-          <ResizeHandle columnIndex={x} />
+          {!isLastColumn && <ResizeHandle columnIndex={x} />}
         </div>
       </ContextMenuTrigger>
       <ContextMenuContent>

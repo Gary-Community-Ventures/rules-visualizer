@@ -10,6 +10,8 @@ import {
   ResizablePanelGroup,
 } from '@/components/ui/resizable'
 import type { PropsWithChildren } from 'react'
+import { X } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 
 export function HomePage() {
   const { model, selectedNodes, showChildren } = useMainContext()
@@ -20,7 +22,7 @@ export function HomePage() {
     <div className="flex flex-col h-screen">
       <ToolBar />
       <NodeMapLayout>
-        <PanContainer className='h-full'>
+        <PanContainer className="h-full">
           <Rows rows={rows} />
         </PanContainer>
         <Arrows rows={rows} />
@@ -30,7 +32,7 @@ export function HomePage() {
 }
 
 export function NodeMapLayout({ children }: PropsWithChildren) {
-  const { openNode } = useMainContext()
+  const { openNode, setOpenNode } = useMainContext()
 
   if (openNode === null) {
     return <>{children}</>
@@ -42,11 +44,25 @@ export function NodeMapLayout({ children }: PropsWithChildren) {
 
   return (
     <ResizablePanelGroup onLayoutChange={handleLayoutChange}>
-      <ResizablePanel defaultSize="50%">
-        <NodeViewer id={openNode} />
+      <ResizablePanel defaultSize="50%" minSize="20%">
+        <div className="relative h-full p-5 bg-background">
+          <Button
+            variant="outline"
+            size="icon"
+            className="absolute top-3 right-3 origin-top-right"
+            onClick={() => setOpenNode(null)}
+          >
+            <X />
+          </Button>
+          <div className="mt-5">
+            <NodeViewer id={openNode} />
+          </div>
+        </div>
       </ResizablePanel>
       <ResizableHandle withHandle />
-      <ResizablePanel defaultSize="50%">{children}</ResizablePanel>
+      <ResizablePanel defaultSize="50%" minSize="20%">
+        {children}
+      </ResizablePanel>
     </ResizablePanelGroup>
   )
 }
