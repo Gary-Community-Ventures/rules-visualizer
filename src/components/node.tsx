@@ -21,8 +21,13 @@ export function nodeElementId(id: string) {
 }
 
 export function Node({ id }: NodeProps) {
-  const { setHoveredNodeId, model, showChildren, setShowChildren } =
-    useMainContext()
+  const {
+    setHoveredNodeId,
+    model,
+    showChildren,
+    setShowChildren,
+    setOpenNode,
+  } = useMainContext()
   const node = useNode(id)
 
   const hasDependents = getDependents(id, model.nodes).length > 0
@@ -37,20 +42,15 @@ export function Node({ id }: NodeProps) {
       onMouseEnter={() => setHoveredNodeId(id)}
       onMouseLeave={() => setHoveredNodeId(null)}
     >
-      <Sheet>
-        <SheetTrigger>
-          <div id={nodeElementId(id)} className="border p-5 h-full">
-            <div className="text-center font-medium">{node.name}</div>
-          </div>
-        </SheetTrigger>
-        <SheetContent side="left">
-          <SheetHeader>
-            <SheetTitle>{node.name}</SheetTitle>
-            <SheetDescription>{node.id}</SheetDescription>
-          </SheetHeader>
-          <Editor node={node} />
-        </SheetContent>
-      </Sheet>
+      <div
+        id={nodeElementId(id)}
+        className="border p-5 h-full"
+        onClick={() => {
+          setOpenNode(id)
+        }}
+      >
+        <div className="text-center font-medium">{node.name}</div>
+      </div>
       {hasDependents && (
         <Button
           variant="outline"
@@ -66,6 +66,21 @@ export function Node({ id }: NodeProps) {
         </Button>
       )}
     </div>
+  )
+}
+
+type NodeViewerProps = {
+  id: string
+}
+
+export function NodeViewer({ id }: NodeViewerProps) {
+  const node = useNode(id)
+  return (
+    <section>
+      <h2>{node.name}</h2>
+      <p>{node.id}</p>
+      <Editor node={node} />
+    </section>
   )
 }
 

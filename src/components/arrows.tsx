@@ -109,10 +109,12 @@ function Arrow({ fromId, toId, rows, scale, strokeWidth }: ArrowProps) {
 
     window.addEventListener('resize', updateArrow)
     window.addEventListener('transform', updateArrow)
+    window.addEventListener('containerresize', updateArrow)
 
     return () => {
       window.removeEventListener('resize', updateArrow)
       window.removeEventListener('transform', updateArrow)
+      window.removeEventListener('containerresize', updateArrow)
     }
   }, [
     fromId,

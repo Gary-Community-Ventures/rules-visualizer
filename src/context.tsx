@@ -17,6 +17,8 @@ type MainContext = {
   setSelectedNodes: Dispatch<SetStateAction<string[]>>
   showChildren: Record<string, boolean>
   setShowChildren: Dispatch<SetStateAction<Record<string, boolean>>>
+  openNode: string | null
+  setOpenNode: Dispatch<SetStateAction<string | null>>
 }
 
 const MainContext = createContext<MainContext | undefined>(undefined)
@@ -51,6 +53,7 @@ export function Wrapper({ children }: { children: React.ReactNode }) {
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null)
   const [selectedNodes, setSelectedNodes] = useState<string[]>([])
   const [showChildren, setShowChildren] = useState<Record<string, boolean>>({})
+  const [openNode, setOpenNode] = useState<string | null>(null)
 
   return (
     <MainContext.Provider
@@ -63,6 +66,8 @@ export function Wrapper({ children }: { children: React.ReactNode }) {
         setSelectedNodes,
         showChildren,
         setShowChildren,
+        openNode,
+        setOpenNode,
       }}
     >
       {children}
