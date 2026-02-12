@@ -10,12 +10,15 @@ import {
   useRef,
   type PropsWithChildren,
   type ReactNode,
+  type ComponentType,
+  Fragment,
 } from 'react'
 import {
   ContextMenu,
   ContextMenuContent,
   ContextMenuGroup,
   ContextMenuItem,
+  ContextMenuSeparator,
   ContextMenuTrigger,
 } from './ui/context-menu'
 
@@ -55,7 +58,11 @@ export function TableTextCell({ children, className }: TableTextCellProps) {
   )
 }
 
-export function TableRow({ children }: PropsWithChildren) {
+type TableRowProps = PropsWithChildren<{
+  rowIndex?: number
+}>
+
+export function TableRow({ children, rowIndex = 0 }: TableRowProps) {
   const { columnWidths } = useTableContext()
 
   return (
@@ -65,9 +72,13 @@ export function TableRow({ children }: PropsWithChildren) {
         gridTemplateColumns: columnWidths.map((w) => `${w}px`).join(' '),
       }}
     >
-      {Children.map(children, (child, index) => {
+      {Children.map(children, (child, colIndex) => {
         if (isValidElement(child)) {
-          return <TableCell x={index} y={0}>{cloneElement(child)}</TableCell>
+          return (
+            <TableCell x={colIndex} y={rowIndex}>
+              {cloneElement(child)}
+            </TableCell>
+          )
         }
         return child
       })}
@@ -78,7 +89,7 @@ export function TableRow({ children }: PropsWithChildren) {
 type GetActions = (
   x: number,
   y: number
-) => { name: string; action: () => void }[][]
+) => { name: string; Icon: ComponentType; action: () => void }[][]
 
 type TableContext = {
   columnWidths: number[]
@@ -125,7 +136,12 @@ export function Table({ children, columns, getActions }: TableProps) {
       }}
     >
       <div ref={containerRef} className="flex flex-col">
-        {children}
+        {Children.map(children, (child, rowIndex) => {
+          if (isValidElement(child)) {
+            return cloneElement(child, { rowIndex } as { rowIndex: number })
+          }
+          return child
+        })}
       </div>
     </TableContext.Provider>
   )
@@ -152,21 +168,25 @@ function TableCell({ children, x, y, className }: TableCellProps) {
   const { getActions } = useTableContext()
   return (
     <ContextMenu>
-      <ContextMenuTrigger>
-        <div className={cn('relative', className)}>
+      <ContextMenuTrigger className="h-full">
+        <div className={cn('relative h-full', className)}>
           {children}
           <ResizeHandle columnIndex={x} />
         </div>
       </ContextMenuTrigger>
       <ContextMenuContent>
-        {getActions(x, x).map((actions, i) => (
-          <ContextMenuGroup key={i}>
-            {actions.map(({ name, action }) => (
-              <ContextMenuItem key={name} onClick={action}>
-                {name}
-              </ContextMenuItem>
-            ))}
-          </ContextMenuGroup>
+        {getActions(x, y).map((actions, i) => (
+          <Fragment key={i}>
+            {i > 0 && <ContextMenuSeparator />}
+            <ContextMenuGroup key={i}>
+              {actions.map(({ name, action, Icon }) => (
+                <ContextMenuItem key={i} onClick={action}>
+                  <Icon />
+                  {name}
+                </ContextMenuItem>
+              ))}
+            </ContextMenuGroup>
+          </Fragment>
         ))}
       </ContextMenuContent>
     </ContextMenu>

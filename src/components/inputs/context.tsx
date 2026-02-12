@@ -1,5 +1,6 @@
 import type { Context } from '@/lib/model'
 import { Table, TableInputCell, TableRow, TableTextCell } from '../table'
+import { CopyIcon, Edit } from 'lucide-react'
 
 type ContextInputProps = {
   context: Context
@@ -23,8 +24,32 @@ export function ContextInput({ context, updateContext }: ContextInputProps) {
 
   const getActions = (x, y) => {
     let actions = []
-
-    return []
+    return [
+      [
+        {
+          name: String(x + y) + ' testing',
+          action: () => console.log(x, y),
+          Icon: CopyIcon,
+        },
+        {
+          name: String(x + y) + ' testing',
+          action: () => console.log(x, y),
+          Icon: CopyIcon,
+        },
+      ],
+      [
+        {
+          name: String(x + y) + ' testing',
+          action: () => console.log(x, y),
+          Icon: CopyIcon,
+        },
+        {
+          name: String(x + y) + ' testing',
+          action: () => console.log(x, y),
+          Icon: CopyIcon,
+        },
+      ],
+    ]
   }
 
   return (
