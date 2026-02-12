@@ -6,7 +6,7 @@ import {
 } from '@tanstack/react-router'
 import { HomePage } from './pages/home'
 import { Wrapper } from './context'
-import {  Test } from './components/table'
+import { TestPage } from './pages/test'
 // import type { UserResource, GetToken, LoadedClerk } from '@clerk/types'
 
 // export type RouterContext = {
@@ -35,7 +35,7 @@ export const homeRoute = createRoute({
 export const testRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/test',
-  component: Test,
+  component: TestPage,
 })
 
 export const routeTree = rootRoute.addChildren([homeRoute, testRoute])

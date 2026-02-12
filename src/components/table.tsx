@@ -12,39 +12,6 @@ import {
   type ReactNode,
 } from 'react'
 
-export function Test() {
-  const [value, setValue] = useState('test')
-  return (
-    <div className="p-10">
-      <Table columns={4}>
-        <TableRow>
-          <TableTextCell value="test" />
-          <TableTextCell value="test" />
-          <TableTextCell value="test" />
-          <TableTextCell value="test" />
-        </TableRow>
-        <TableRow>
-          <TableInputCell value={value} onChange={(v) => setValue(v)} />
-          <TableInputCell value={value} onChange={(v) => setValue(v)} />
-          <TableInputCell value={value} onChange={(v) => setValue(v)} />
-          <TableInputCell value={'test'} onChange={(v) => setValue(v)} />
-        </TableRow>
-        <TableRow>
-          <TableInputCell value={value} onChange={(v) => setValue(v)} />
-          <TableInputCell value={value} onChange={(v) => setValue(v)} />
-          <TableInputCell value={value} onChange={(v) => setValue(v)} />
-          <TableInputCell value={value} onChange={(v) => setValue(v)} />
-        </TableRow>
-        <TableRow>
-          <TableTextCell value="return" />
-          <TableInputCell value={value} onChange={(v) => setValue(v)} />
-          <TableInputCell value={value} onChange={(v) => setValue(v)} />
-          <TableInputCell value={value} onChange={(v) => setValue(v)} />
-        </TableRow>
-      </Table>
-    </div>
-  )
-}
 
 type InputCellProps = {
   value: string
@@ -65,15 +32,19 @@ export function TableInputCell({ value, onChange, className }: InputCellProps) {
   )
 }
 
-type TableTextCellProps = {
-  value: string
+type TableTextCellProps = PropsWithChildren<{
   className?: string
-}
+}>
 
-export function TableTextCell({ value, className }: TableTextCellProps) {
+export function TableTextCell({ children, className }: TableTextCellProps) {
   return (
-    <div className={cn('bg-primary text-primary-foreground border p-2 w-full', className)}>
-      {value}
+    <div
+      className={cn(
+        'bg-primary text-primary-foreground border p-2 w-full break-words',
+        className
+      )}
+    >
+      {children}
     </div>
   )
 }
