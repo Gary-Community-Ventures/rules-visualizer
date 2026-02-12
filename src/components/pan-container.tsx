@@ -26,7 +26,8 @@ export function PanContainer({ children, className }: PanContainerProps) {
     if (e.button !== 0) return
 
     // Skip panning when clicking on interactive elements
-    if ((e.target as HTMLElement).closest('button, input, [data-no-pan]')) return
+    if ((e.target as HTMLElement).closest('button, input, [data-no-pan]'))
+      return
 
     setIsPanning(true)
     dragStart.current = {
@@ -115,7 +116,10 @@ export function PanContainer({ children, className }: PanContainerProps) {
 
       // Calculate new scale
       const delta = -e.deltaY * ZOOM_SENSITIVITY
-      const newScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, scale * (1 + delta)))
+      const newScale = Math.min(
+        MAX_SCALE,
+        Math.max(MIN_SCALE, scale * (1 + delta))
+      )
 
       // Adjust offset to zoom towards mouse position
       const scaleRatio = newScale / scale
@@ -158,7 +162,10 @@ export function PanContainer({ children, className }: PanContainerProps) {
       </div>
 
       {/* Zoom controls */}
-      <ButtonGroup orientation="vertical" className="absolute bottom-4 right-4 shadow-sm">
+      <ButtonGroup
+        orientation="vertical"
+        className="absolute bottom-4 right-4 shadow-sm"
+      >
         <Button
           variant="outline"
           size="icon"

@@ -6,7 +6,7 @@ import {
 } from '@tanstack/react-router'
 import { HomePage } from './pages/home'
 import { Wrapper } from './context'
-import {  Test } from './components/table'
+import { Test } from './components/table'
 // import type { UserResource, GetToken, LoadedClerk } from '@clerk/types'
 
 // export type RouterContext = {
