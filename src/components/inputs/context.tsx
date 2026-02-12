@@ -1,12 +1,7 @@
 import type { Context } from '@/lib/model'
 import { createEntry } from '@/lib/model'
 import { Table, TableInputCell, TableRow, TableTextCell } from '../table'
-import {
-  ArrowDownIcon,
-  ArrowUpIcon,
-  PlusIcon,
-  TrashIcon,
-} from 'lucide-react'
+import { ArrowDownIcon, ArrowUpIcon, PlusIcon, TrashIcon } from 'lucide-react'
 
 type ContextInputProps = {
   context: Context

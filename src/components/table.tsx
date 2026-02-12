@@ -110,6 +110,7 @@ type TableProps = PropsWithChildren<{
 }>
 
 const MIN_COLUMN_WIDTH = 50
+const RELOAD_KEY = Math.random()
 
 export function Table({ children, columns, getActions }: TableProps) {
   const containerRef = useRef<HTMLDivElement>(null)
@@ -132,6 +133,9 @@ export function Table({ children, columns, getActions }: TableProps) {
         if (prev.length === 0) return prev
         const oldTotal = prev.reduce((sum, w) => sum + w, 0)
         const newTotal = container.clientWidth
+        if (oldTotal < 1) {
+          return Array(columns).fill(newTotal / columns)
+        }
         const scale = newTotal / oldTotal
         return prev.map((w) => w * scale)
       })
@@ -139,7 +143,7 @@ export function Table({ children, columns, getActions }: TableProps) {
 
     observer.observe(container)
     return () => observer.disconnect()
-  }, [columns])
+  }, [columns, RELOAD_KEY])
 
   const setColumnWidth = (index: number, width: number) => {
     setColumnWidths((prev) => {

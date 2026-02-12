@@ -34,32 +34,32 @@ export function HomePage() {
 export function NodeMapLayout({ children }: PropsWithChildren) {
   const { openNode, setOpenNode } = useMainContext()
 
-  if (openNode === null) {
-    return <>{children}</>
-  }
-
   const handleLayoutChange = () => {
     window.dispatchEvent(new CustomEvent('containerresize'))
   }
 
   return (
     <ResizablePanelGroup onLayoutChange={handleLayoutChange}>
-      <ResizablePanel defaultSize="50%" minSize="20%">
-        <div className="relative h-full p-5 bg-background">
-          <Button
-            variant="outline"
-            size="icon"
-            className="absolute top-3 right-3 origin-top-right"
-            onClick={() => setOpenNode(null)}
-          >
-            <X />
-          </Button>
-          <div className="mt-5">
-            <NodeViewer id={openNode} />
-          </div>
-        </div>
-      </ResizablePanel>
-      <ResizableHandle withHandle />
+      {openNode !== null && (
+        <>
+          <ResizablePanel defaultSize="50%" minSize="20%">
+            <div className="relative h-full p-5 bg-background">
+              <Button
+                variant="outline"
+                size="icon"
+                className="absolute top-3 right-3 origin-top-right"
+                onClick={() => setOpenNode(null)}
+              >
+                <X />
+              </Button>
+              <div className="mt-5">
+                <NodeViewer id={openNode} />
+              </div>
+            </div>
+          </ResizablePanel>
+          <ResizableHandle withHandle />
+        </>
+      )}
       <ResizablePanel defaultSize="50%" minSize="20%">
         {children}
       </ResizablePanel>
