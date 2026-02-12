@@ -86,10 +86,14 @@ export function TableRow({ children, rowIndex = 0 }: TableRowProps) {
   )
 }
 
-type GetActions = (
-  x: number,
-  y: number
-) => { name: string; Icon: ComponentType; action: () => void }[][]
+type Action = {
+  name: string
+  Icon: ComponentType
+  action: () => void
+  variant?: 'default' | 'destructive'
+}
+
+type GetActions = (x: number, y: number) => Action[][]
 
 type TableContext = {
   columnWidths: number[]
@@ -179,8 +183,8 @@ function TableCell({ children, x, y, className }: TableCellProps) {
           <Fragment key={i}>
             {i > 0 && <ContextMenuSeparator />}
             <ContextMenuGroup key={i}>
-              {actions.map(({ name, action, Icon }) => (
-                <ContextMenuItem key={i} onClick={action}>
+              {actions.map(({ name, action, Icon, variant }) => (
+                <ContextMenuItem key={name} onClick={action} variant={variant}>
                   <Icon />
                   {name}
                 </ContextMenuItem>

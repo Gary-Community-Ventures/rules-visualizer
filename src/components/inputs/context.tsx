@@ -1,6 +1,12 @@
 import type { Context } from '@/lib/model'
+import { createEntry } from '@/lib/model'
 import { Table, TableInputCell, TableRow, TableTextCell } from '../table'
-import { CopyIcon, Edit } from 'lucide-react'
+import {
+  ArrowDownIcon,
+  ArrowUpIcon,
+  PlusIcon,
+  TrashIcon,
+} from 'lucide-react'
 
 type ContextInputProps = {
   context: Context
@@ -22,33 +28,127 @@ export function ContextInput({ context, updateContext }: ContextInputProps) {
     updateContext({ ...context, entries })
   }
 
-  const getActions = (x, y) => {
-    let actions = []
+  const insertRowAbove = (entryIndex: number) => {
+    const entries = [...context.entries]
+    entries.splice(entryIndex, 0, createEntry())
+    updateContext({ ...context, entries })
+  }
+
+  const insertRowBelow = (entryIndex: number) => {
+    const entries = [...context.entries]
+    entries.splice(entryIndex + 1, 0, createEntry())
+    updateContext({ ...context, entries })
+  }
+
+  const deleteRow = (entryIndex: number) => {
+    const entries = context.entries.filter((_, i) => i !== entryIndex)
+    updateContext({ ...context, entries })
+  }
+
+  const shiftUp = (entryIndex: number) => {
+    const entries = [...context.entries]
+    ;[entries[entryIndex - 1], entries[entryIndex]] = [
+      entries[entryIndex],
+      entries[entryIndex - 1],
+    ]
+    updateContext({ ...context, entries })
+  }
+
+  const shiftDown = (entryIndex: number) => {
+    const entries = [...context.entries]
+    ;[entries[entryIndex], entries[entryIndex + 1]] = [
+      entries[entryIndex + 1],
+      entries[entryIndex],
+    ]
+    updateContext({ ...context, entries })
+  }
+
+  const getActions = (_x: number, y: number) => {
+    // y=0 is header row, y=entries.length is return row
+    const isHeader = y === 0
+    const isReturnRow = y === context.entries.length
+    const entryIndex = y - 1
+
+    // Header can only insert below (at index 0)
+    if (isHeader) {
+      return [
+        [
+          {
+            name: 'Insert row below',
+            action: () => insertRowAbove(0),
+            Icon: PlusIcon,
+          },
+        ],
+      ]
+    }
+
+    // Return row can only insert above
+    if (isReturnRow) {
+      return [
+        [
+          {
+            name: 'Insert row above',
+            action: () => insertRowAbove(entryIndex),
+            Icon: PlusIcon,
+          },
+        ],
+      ]
+    }
+
+    const isFirstDataRow = y === 1
+    const isLastDataRow = y === context.entries.length - 1
+
+    const insertActions = [
+      {
+        name: 'Insert row above',
+        action: () => insertRowAbove(entryIndex),
+        Icon: PlusIcon,
+      },
+      ...(!isLastDataRow
+        ? [
+            {
+              name: 'Insert row below',
+              action: () => insertRowBelow(entryIndex),
+              Icon: PlusIcon,
+            },
+          ]
+        : []),
+    ]
+
+    const shiftActions = [
+      ...(!isFirstDataRow
+        ? [
+            {
+              name: 'Shift up',
+              action: () => shiftUp(entryIndex),
+              Icon: ArrowUpIcon,
+            },
+          ]
+        : []),
+      ...(!isLastDataRow
+        ? [
+            {
+              name: 'Shift down',
+              action: () => shiftDown(entryIndex),
+              Icon: ArrowDownIcon,
+            },
+          ]
+        : []),
+    ]
+
+    const deleteActions = [
+      {
+        name: 'Delete row',
+        action: () => deleteRow(entryIndex),
+        Icon: TrashIcon,
+        variant: 'destructive' as const,
+      },
+    ]
+
     return [
-      [
-        {
-          name: String(x + y) + ' testing',
-          action: () => console.log(x, y),
-          Icon: CopyIcon,
-        },
-        {
-          name: String(x + y) + ' testing',
-          action: () => console.log(x, y),
-          Icon: CopyIcon,
-        },
-      ],
-      [
-        {
-          name: String(x + y) + ' testing',
-          action: () => console.log(x, y),
-          Icon: CopyIcon,
-        },
-        {
-          name: String(x + y) + ' testing',
-          action: () => console.log(x, y),
-          Icon: CopyIcon,
-        },
-      ],
+      insertActions,
+      ...(shiftActions.length > 0 ? [shiftActions] : []),
+      deleteActions,
     ]
   }
 

@@ -1,4 +1,4 @@
-import type { FeelDataType } from './types'
+import type { ContextEntry, FeelDataType } from './types'
 import type {
   ModelNode,
   NodeContent,
@@ -21,17 +21,19 @@ export function createInput(): Input {
 
 export const RETURN_NAME = '_return'
 
+export function createEntry(name = '', text = ''): ContextEntry {
+  return {
+    id: generateId(),
+    name,
+    expression: { text },
+  }
+}
+
 export function createDefaultContext(): Context {
   return {
     type: 'context',
     id: generateId('ctx'),
-    entries: [
-      {
-        id: generateId(),
-        name: RETURN_NAME,
-        expression: { text: '' },
-      },
-    ],
+    entries: [createEntry(RETURN_NAME)],
   }
 }
 
