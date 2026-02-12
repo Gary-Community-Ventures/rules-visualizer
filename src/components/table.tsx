@@ -50,16 +50,14 @@ type InputCellProps = {
 
 export function TableInputCell({ value, onChange, className }: InputCellProps) {
   return (
-    <TableCell>
-      <textarea
-        className={cn(
-          'block border rounded-none m-0 resize-none w-full h-full',
-          className
-        )}
-        value={value}
-        onChange={(e) => onChange(e.target.value.replace(/\n/g, ''))}
-      />
-    </TableCell>
+    <textarea
+      className={cn(
+        'block border rounded-none m-0 resize-none w-full h-full',
+        className
+      )}
+      value={value}
+      onChange={(e) => onChange(e.target.value.replace(/\n/g, ''))}
+    />
   )
 }
 
@@ -68,7 +66,7 @@ export function TableRow({ children }: PropsWithChildren) {
     <div className="flex flex-nowrap">
       {Children.map(children, (child, index) => {
         if (isValidElement(child)) {
-          return cloneElement(child, { index } as Partial<TableCellProps>)
+          return <TableCell index={index}>{cloneElement(child)}</TableCell>
         }
         return child
       })}
