@@ -27,8 +27,8 @@ function createInitialNodes(count: number): ModelNodes {
   const ids: string[] = []
 
   for (let i = 0; i < count; i++) {
-    const id = Math.random().toString()
-    const node = createNode(id, id)
+    const id = generateId('node')
+    const node = createNode(id, `Node ${i + 1}`)
 
     if (ids.length > 0) {
       node.dependencies = [ids[Math.floor(Math.random() * ids.length)]]

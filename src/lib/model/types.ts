@@ -32,7 +32,7 @@ export type HitPolicy =
   | 'RULE ORDER'
   | 'COLLECT'
 
-export type Aggregation = 'SUM' | 'COUNT' | 'MIN' | 'MAX' | 'NONE'
+export type Aggregation = 'SUM' | 'COUNT' | 'MIN' | 'MAX'
 
 export type InputClause = {
   id: string
