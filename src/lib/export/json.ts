@@ -48,20 +48,17 @@ const inputSchema = z.object({ type: z.literal('input') })
 
 const constantSchema = z.object({
   type: z.literal('constant'),
-  id: z.string().min(1),
   text: z.string(),
   typeRef: feelDataTypeSchema.optional(),
 })
 
 const contextSchema = z.object({
   type: z.literal('context'),
-  id: z.string().min(1),
   entries: z.array(contextEntrySchema),
 })
 
 const decisionTableSchema = z.object({
   type: z.literal('decisionTable'),
-  id: z.string().min(1),
   hitPolicy: z.enum([
     'UNIQUE',
     'ANY',

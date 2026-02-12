@@ -22,7 +22,6 @@ export function createInput(): Input {
 export function createDefaultContext(): Context {
   return {
     type: 'context',
-    id: generateId('ctx'),
     entries: [],
   }
 }
@@ -33,7 +32,6 @@ export function createDefaultConstant(
 ): Constant {
   return {
     type: 'constant',
-    id: generateId('const'),
     text,
     typeRef,
   }
@@ -42,7 +40,6 @@ export function createDefaultConstant(
 export function createDefaultDecisionTable(): DecisionTable {
   return {
     type: 'decisionTable',
-    id: generateId('dt'),
     hitPolicy: 'UNIQUE',
     inputClauses: [],
     outputClauses: [],
