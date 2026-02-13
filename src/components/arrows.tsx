@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useMainContext } from '@/context'
 import { nodeElementId } from './node'
+import type { ModelNodes } from '@/lib/model'
 
 type ArrowProps = {
   fromId: string
@@ -8,9 +9,17 @@ type ArrowProps = {
   rows: string[][]
   scale: number
   strokeWidth: number
+  parentMap: Record<string, string[]>
 }
 
-function Arrow({ fromId, toId, rows, scale, strokeWidth }: ArrowProps) {
+function Arrow({
+  fromId,
+  toId,
+  rows,
+  scale,
+  strokeWidth,
+  parentMap,
+}: ArrowProps) {
   const { model, hoveredNodeId, showChildren } = useMainContext()
   const nodes = model.nodes
   const [path, setPath] = useState<string>('')
@@ -21,8 +30,8 @@ function Arrow({ fromId, toId, rows, scale, strokeWidth }: ArrowProps) {
   const isRelated =
     hoveredNodeId === null || fromId === hoveredNodeId || toId === hoveredNodeId
 
-  // Get all visible node IDs from rows
-  const visibleNodeIds = rows.flat()
+  // Get all visible node IDs from rows (stable reference via JSON comparison)
+  const visibleNodeIds = useMemo(() => rows.flat(), [rows])
 
   // Check if both nodes are visible
   const isFromVisible = visibleNodeIds.includes(fromId)
@@ -51,11 +60,10 @@ function Arrow({ fromId, toId, rows, scale, strokeWidth }: ArrowProps) {
       const fromX = fromRect.left + fromRect.width / 2
       const fromY = fromRect.top + fromRect.height
 
-      // Stagger the toX based on which dependency this is
-      const toNode = nodes[toId]
-      const toDeps = toNode.dependencies
-      const depIndex = toDeps.indexOf(fromId)
-      const totalDeps = toDeps.length
+      // Stagger the toX based on how many parents point to this node
+      const toParents = parentMap[toId] ?? []
+      const depIndex = toParents.indexOf(fromId)
+      const totalDeps = toParents.length
       const staggerWidth = 5
       const staggerStep = totalDeps > 1 ? staggerWidth / (totalDeps - 1) : 0
       const toXOffset =
@@ -123,9 +131,9 @@ function Arrow({ fromId, toId, rows, scale, strokeWidth }: ArrowProps) {
     nodes,
     isFromVisible,
     isToVisible,
-    visibleNodeIds,
     parentShowsChildren,
     scale,
+    parentMap,
   ])
 
   if (!path) {
@@ -157,6 +165,18 @@ type ArrowsProps = {
   rows: string[][]
 }
 
+/** Build a map: nodeId -> list of parent nodeIds that depend on it */
+function buildParentMap(nodes: ModelNodes): Record<string, string[]> {
+  const map: Record<string, string[]> = {}
+  for (const [nodeId, node] of Object.entries(nodes)) {
+    for (const depId of node.dependencies) {
+      if (!map[depId]) map[depId] = []
+      map[depId].push(nodeId)
+    }
+  }
+  return map
+}
+
 export function Arrows({ rows }: ArrowsProps) {
   const { model } = useMainContext()
   const nodes = model.nodes
@@ -171,12 +191,15 @@ export function Arrows({ rows }: ArrowsProps) {
       window.removeEventListener('transform', handleTransform as EventListener)
   }, [])
 
-  // Collect all arrows: for each node, draw arrows from its dependencies to it
+  // Pre-compute parent map once when nodes change (O(N) instead of O(N²) per arrow)
+  const parentMap = useMemo(() => buildParentMap(nodes), [nodes])
+
+  // Collect all arrows: from parent node down to its dependencies
   const arrows: { fromId: string; toId: string }[] = []
 
   for (const [nodeId, node] of Object.entries(nodes)) {
     for (const depId of node.dependencies) {
-      arrows.push({ fromId: depId, toId: nodeId })
+      arrows.push({ fromId: nodeId, toId: depId })
     }
   }
 
@@ -203,6 +226,7 @@ export function Arrows({ rows }: ArrowsProps) {
           rows={rows}
           scale={scale}
           strokeWidth={strokeWidth}
+          parentMap={parentMap}
         />
       ))}
     </svg>

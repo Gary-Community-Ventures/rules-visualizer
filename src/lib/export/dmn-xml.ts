@@ -31,7 +31,7 @@ function optAttr(name: string, value?: string): string {
 /** Sanitize a string to a valid XML NCName for use as an xsd:ID attribute.
  *  - Replaces non-alphanumeric/underscore/hyphen/dot chars with '_'
  *  - Prepends '_' if it starts with a digit, hyphen, or dot */
-function xmlId(id: string): string {
+export function xmlId(id: string): string {
   if (!id) return '_empty'
   let sanitized = id.replace(/[^a-zA-Z0-9_\-\.]/g, '_')
   if (/^[^a-zA-Z_]/.test(sanitized)) {

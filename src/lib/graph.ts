@@ -1,9 +1,14 @@
 import type { ModelNodes } from './model'
 
 export function findRootNodes(nodes: ModelNodes): string[] {
-  return Object.entries(nodes)
-    .filter(([_, node]) => node.dependencies.length === 0)
-    .map(([id]) => id)
+  // Root nodes are outputs — nodes that no other node depends on
+  const dependedOn = new Set<string>()
+  for (const node of Object.values(nodes)) {
+    for (const dep of node.dependencies) {
+      dependedOn.add(dep)
+    }
+  }
+  return Object.keys(nodes).filter((id) => !dependedOn.has(id))
 }
 
 export function getDependents(nodeId: string, nodes: ModelNodes): string[] {
@@ -19,20 +24,21 @@ function getOrdering(
   nodes: ModelNodes,
   showChildren: Record<string, boolean>
 ): string[] {
-  const dependents = getDependents(currentNode, nodes)
+  // Expand into dependencies (what this node needs) — they appear below
+  const children = nodes[currentNode]?.dependencies ?? []
 
   if (!showChildren[currentNode]) {
     return currentOrdering
   }
 
-  for (const dependent of dependents) {
-    const index = currentOrdering.indexOf(dependent)
+  for (const child of children) {
+    const index = currentOrdering.indexOf(child)
     if (index !== -1) {
       currentOrdering.splice(index, 1)
     }
-    currentOrdering.push(dependent)
+    currentOrdering.push(child)
 
-    getOrdering(dependent, currentOrdering, nodes, showChildren)
+    getOrdering(child, currentOrdering, nodes, showChildren)
   }
 
   return currentOrdering
@@ -53,18 +59,19 @@ function compressRows(
       for (let j = row.length - 1; j >= 0; j--) {
         const item = row[j]
 
-        let dependsOnPreviousRow = false
+        // Can't move up if a node in the row above depends on this item
+        let neededByPreviousRow = false
         for (const previousItem of previousRow) {
           if (
-            nodes[item].dependencies.includes(previousItem) &&
+            nodes[previousItem].dependencies.includes(item) &&
             showChildren[previousItem]
           ) {
-            dependsOnPreviousRow = true
+            neededByPreviousRow = true
             break
           }
         }
 
-        if (dependsOnPreviousRow) {
+        if (neededByPreviousRow) {
           continue
         }
 

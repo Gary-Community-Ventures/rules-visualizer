@@ -9,10 +9,7 @@ import {
 
 import { cn } from '@/lib/utils'
 
-const ResizablePanelGroup = ({
-  className,
-  ...props
-}: GroupProps) => (
+const ResizablePanelGroup = ({ className, ...props }: GroupProps) => (
   <Group
     className={cn(
       'flex h-full w-full data-[panel-group-direction=vertical]:flex-col',

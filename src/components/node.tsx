@@ -1,16 +1,9 @@
 import { useMainContext, useNode } from '@/context'
 import { Button } from './ui/button'
 import { Minus, Plus } from 'lucide-react'
-import { getDependents } from '@/lib/graph'
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from './ui/sheet'
 import { Editor } from './inputs/editor'
+import { NodeInput } from './node-input'
+import { NodeResultBadge } from './node-result'
 
 type NodeProps = {
   id: string
@@ -21,16 +14,12 @@ export function nodeElementId(id: string) {
 }
 
 export function Node({ id }: NodeProps) {
-  const {
-    setHoveredNodeId,
-    model,
-    showChildren,
-    setShowChildren,
-    setOpenNode,
-  } = useMainContext()
+  const { setHoveredNodeId, showChildren, setShowChildren, setOpenNode } =
+    useMainContext()
   const node = useNode(id)
 
-  const hasDependents = getDependents(id, model.nodes).length > 0
+  const hasChildren = node.dependencies.length > 0
+  const isInput = node.content.type === 'input'
 
   const toggleShowChildren = () => {
     setShowChildren((prev) => ({ ...prev, [id]: !prev[id] }))
@@ -44,14 +33,16 @@ export function Node({ id }: NodeProps) {
     >
       <div
         id={nodeElementId(id)}
-        className="border p-5 h-full"
+        className="border p-5 h-full relative flex flex-col items-center"
         onClick={() => {
           setOpenNode(id)
         }}
       >
         <div className="text-center font-medium">{node.name}</div>
+        <NodeResultBadge nodeId={id} />
+        {isInput && <NodeInput nodeId={id} />}
       </div>
-      {hasDependents && (
+      {hasChildren && (
         <Button
           variant="outline"
           size="icon"

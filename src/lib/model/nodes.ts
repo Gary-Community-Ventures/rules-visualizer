@@ -10,7 +10,7 @@ import type {
 
 // ─── Node Content Types (discriminated on `type`) ────────────────
 
-export type Input = { type: 'input', id: string }
+export type Input = { type: 'input'; id: string }
 
 export type Constant = {
   type: 'constant'

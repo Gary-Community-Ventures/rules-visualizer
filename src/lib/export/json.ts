@@ -44,7 +44,10 @@ const decisionTableRuleSchema = z.object({
   annotationEntries: z.array(z.string()),
 })
 
-const inputSchema = z.object({ type: z.literal('input') })
+const inputSchema = z.object({
+  type: z.literal('input'),
+  id: z.string().min(1),
+})
 
 const constantSchema = z.object({
   type: z.literal('constant'),
