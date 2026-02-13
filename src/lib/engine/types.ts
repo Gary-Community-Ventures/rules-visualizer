@@ -14,5 +14,9 @@ export type ExecutionResult = {
 }
 
 export interface DmnEngine {
-  execute(model: Model, inputs: ExecutionInputs): Promise<ExecutionResult>
+  execute(
+    model: Model,
+    inputs: ExecutionInputs,
+    signal?: AbortSignal
+  ): Promise<ExecutionResult>
 }

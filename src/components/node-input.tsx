@@ -1,17 +1,17 @@
 import { useMainContext, useNode } from '@/context'
-import { useExecution } from '@/hooks/use-execution'
+import { coerceNumber } from '@/lib/coerce'
 import { Input } from './ui/input'
 
 export function NodeInput({ nodeId }: { nodeId: string }) {
   const node = useNode(nodeId)
-  const { inputValues, setInputValues, setResultStale } = useMainContext()
-  const { debouncedExecute } = useExecution()
+  const { inputValues, setInputValues, setResultStale, execution } =
+    useMainContext()
 
-  const value = inputValues[node.name]
+  const value = inputValues[nodeId]
 
   const commit = () => {
     setResultStale(true)
-    debouncedExecute()
+    execution.debouncedExecute()
   }
 
   if (node.typeRef === 'boolean') {
@@ -23,7 +23,7 @@ export function NodeInput({ nodeId }: { nodeId: string }) {
           onChange={(e) => {
             setInputValues((prev) => ({
               ...prev,
-              [node.name]: e.target.checked,
+              [nodeId]: e.target.checked,
             }))
             commit()
           }}
@@ -40,13 +40,8 @@ export function NodeInput({ nodeId }: { nodeId: string }) {
       value={value !== undefined ? String(value) : ''}
       onChange={(e) => {
         const raw = e.target.value
-        const parsed =
-          node.typeRef === 'number' && raw !== ''
-            ? Number.isNaN(Number(raw))
-              ? raw
-              : Number(raw)
-            : raw
-        setInputValues((prev) => ({ ...prev, [node.name]: parsed }))
+        const parsed = node.typeRef === 'number' ? coerceNumber(raw) : raw
+        setInputValues((prev) => ({ ...prev, [nodeId]: parsed }))
         commit()
       }}
       placeholder={node.typeRef ?? 'value'}

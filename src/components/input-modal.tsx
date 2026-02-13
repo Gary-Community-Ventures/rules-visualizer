@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { ClipboardList } from 'lucide-react'
 import { useMainContext } from '@/context'
-import { useExecution } from '@/hooks/use-execution'
+import { coerceNumber } from '@/lib/coerce'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
 import {
@@ -15,23 +15,23 @@ import {
 } from './ui/dialog'
 
 export function InputModal() {
-  const { model, inputValues, setInputValues } = useMainContext()
-  const { execute, isExecuting } = useExecution()
+  const { model, inputValues, setInputValues, isExecuting, execution } =
+    useMainContext()
   const [open, setOpen] = useState(false)
 
   const inputNodes = Object.values(model.nodes).filter(
     (n) => n.content.type === 'input'
   )
 
-  const handleChange = (name: string, value: unknown, typeRef?: string) => {
+  const handleChange = (id: string, value: unknown, typeRef?: string) => {
     setInputValues((prev) => ({
       ...prev,
-      [name]: typeRef === 'number' ? coerceNumber(value) : value,
+      [id]: typeRef === 'number' ? coerceNumber(value) : value,
     }))
   }
 
-  const handleExecute = async () => {
-    await execute()
+  const handleExecute = () => {
+    execution.execute()
     setOpen(false)
   }
 
@@ -58,23 +58,23 @@ export function InputModal() {
                 <label className="flex items-center gap-2 text-sm">
                   <input
                     type="checkbox"
-                    checked={!!inputValues[node.name]}
+                    checked={!!inputValues[node.id]}
                     onChange={(e) =>
-                      handleChange(node.name, e.target.checked, node.typeRef)
+                      handleChange(node.id, e.target.checked, node.typeRef)
                     }
                   />
-                  {inputValues[node.name] ? 'true' : 'false'}
+                  {inputValues[node.id] ? 'true' : 'false'}
                 </label>
               ) : (
                 <Input
                   type={node.typeRef === 'number' ? 'number' : 'text'}
                   value={
-                    inputValues[node.name] !== undefined
-                      ? String(inputValues[node.name])
+                    inputValues[node.id] !== undefined
+                      ? String(inputValues[node.id])
                       : ''
                   }
                   onChange={(e) =>
-                    handleChange(node.name, e.target.value, node.typeRef)
+                    handleChange(node.id, e.target.value, node.typeRef)
                   }
                   placeholder={node.typeRef ?? 'string'}
                 />
@@ -90,12 +90,4 @@ export function InputModal() {
       </DialogContent>
     </Dialog>
   )
-}
-
-function coerceNumber(value: unknown): number | string {
-  if (typeof value === 'number') return value
-  const str = String(value)
-  if (str === '') return ''
-  const num = Number(str)
-  return Number.isNaN(num) ? str : num
 }

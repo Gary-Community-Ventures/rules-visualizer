@@ -16,7 +16,7 @@ export function NodeResultBadge({ nodeId }: { nodeId: string }) {
     return (
       <div
         className={`mt-1 inline-flex items-center gap-1 rounded-full bg-blue-100 text-blue-800 px-2 py-0.5 text-xs font-medium ${staleClass}`}
-        title={JSON.stringify(nodeResult.result)}
+        title={safeStringify(nodeResult.result)}
       >
         {display}
       </div>
@@ -57,8 +57,16 @@ export function NodeResultBadge({ nodeId }: { nodeId: string }) {
   )
 }
 
+function safeStringify(value: unknown): string {
+  try {
+    return JSON.stringify(value)
+  } catch {
+    return String(value)
+  }
+}
+
 function formatResult(value: unknown): string {
   if (value === null || value === undefined) return 'null'
-  const str = typeof value === 'object' ? JSON.stringify(value) : String(value)
+  const str = typeof value === 'object' ? safeStringify(value) : String(value)
   return str.length > 30 ? str.slice(0, 27) + '...' : str
 }

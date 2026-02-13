@@ -36,7 +36,8 @@ export function createKieEngine(baseUrl: string): DmnEngine {
   return {
     async execute(
       model: Model,
-      inputs: ExecutionInputs
+      inputs: ExecutionInputs,
+      signal?: AbortSignal
     ): Promise<ExecutionResult> {
       const xmlString = exportModelToDmnXml(model)
 
@@ -52,6 +53,7 @@ export function createKieEngine(baseUrl: string): DmnEngine {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ model: xmlString, context: inputs }),
+        signal,
       })
 
       if (!response.ok) {
@@ -62,7 +64,6 @@ export function createKieEngine(baseUrl: string): DmnEngine {
       }
 
       const data: KieResponse = await response.json()
-      console.log('[KIE] Raw response:', data)
 
       // Collect top-level messages to attach to failed nodes with no messages
       const topMessages = (data.messages ?? []).map((m) =>

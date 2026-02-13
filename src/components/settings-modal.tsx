@@ -11,17 +11,24 @@ import {
   DialogTrigger,
   DialogDescription,
 } from './ui/dialog'
-
-export function getKieServerUrl(): string {
-  return localStorage.getItem('kie-server-url') || 'http://localhost:8080'
-}
+import { getKieDisplayUrl, setKieBaseUrl } from '@/lib/engine'
 
 export function SettingsModal() {
   const [open, setOpen] = useState(false)
-  const [url, setUrl] = useState(() => getKieServerUrl())
+  const [url, setUrl] = useState(() => getKieDisplayUrl())
+  const [error, setError] = useState<string | null>(null)
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog
+      open={open}
+      onOpenChange={(v) => {
+        setOpen(v)
+        if (v) {
+          setUrl(getKieDisplayUrl())
+          setError(null)
+        }
+      }}
+    >
       <DialogTrigger asChild>
         <Button variant="outline" size="icon" aria-label="Settings">
           <Settings className="size-4" />
@@ -31,7 +38,8 @@ export function SettingsModal() {
         <DialogHeader>
           <DialogTitle>KIE Server Settings</DialogTitle>
           <DialogDescription>
-            Configure the KIE JIT Executor connection.
+            Configure the KIE JIT Executor connection. Leave empty to use the
+            default.
           </DialogDescription>
         </DialogHeader>
         <div className="flex flex-col gap-2">
@@ -41,15 +49,23 @@ export function SettingsModal() {
           <Input
             id="kie-url"
             value={url}
-            onChange={(e) => setUrl(e.target.value)}
+            onChange={(e) => {
+              setUrl(e.target.value)
+              setError(null)
+            }}
             placeholder="http://localhost:8080"
           />
+          {error && <p className="text-xs text-red-600">{error}</p>}
         </div>
         <DialogFooter>
           <Button
             onClick={() => {
-              localStorage.setItem('kie-server-url', url)
-              setOpen(false)
+              try {
+                setKieBaseUrl(url)
+                setOpen(false)
+              } catch (err) {
+                setError(err instanceof Error ? err.message : 'Invalid URL')
+              }
             }}
           >
             Save
