@@ -57,7 +57,8 @@ export function createKieEngine(baseUrl: string): DmnEngine {
       })
 
       if (!response.ok) {
-        const text = await response.text().catch(() => '')
+        const raw = await response.text().catch(() => '')
+        const text = raw.length > 500 ? raw.slice(0, 500) + '...' : raw
         throw new Error(
           `KIE execution failed (${response.status}): ${text || response.statusText}`
         )

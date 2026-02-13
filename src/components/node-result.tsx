@@ -31,7 +31,10 @@ export function NodeResultBadge({ nodeId }: { nodeId: string }) {
     return (
       <div className={`mt-1 flex flex-col items-center ${staleClass}`}>
         <button
-          onClick={() => setExpanded(!expanded)}
+          onClick={(e) => {
+            e.stopPropagation()
+            setExpanded(!expanded)
+          }}
           className="inline-flex items-center gap-1 rounded-full bg-red-100 text-red-800 px-2 py-0.5 text-xs font-medium hover:bg-red-200 transition-colors"
         >
           <CircleAlert className="size-3" />

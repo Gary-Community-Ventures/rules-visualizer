@@ -17,6 +17,7 @@ import { createDemoModel } from './lib/demo-data'
 type ExecutionActions = {
   execute: () => void
   debouncedExecute: () => void
+  reset: () => void
 }
 
 type MainContext = {
@@ -84,12 +85,16 @@ export function Wrapper({ children }: { children: React.ReactNode }) {
     const currentInputValues = inputValuesRef.current
     const nameInputs: Record<string, unknown> = {}
     for (const node of Object.values(currentModel.nodes)) {
-      if (
-        node.content.type === 'input' &&
-        currentInputValues[node.id] !== undefined
-      ) {
-        nameInputs[node.name] = currentInputValues[node.id]
+      if (node.content.type !== 'input') continue
+      const val = currentInputValues[node.id]
+      // Skip undefined and empty strings (cleared inputs)
+      if (val === undefined || val === '') continue
+      if (node.name in nameInputs) {
+        console.warn(
+          `Duplicate input node name "${node.name}" — only the last value will be sent to KIE`
+        )
       }
+      nameInputs[node.name] = val
     }
 
     const baseUrl = getKieBaseUrl()
@@ -111,10 +116,11 @@ export function Wrapper({ children }: { children: React.ReactNode }) {
         console.error('Execution failed:', err)
       })
       .finally(() => {
-        if (controller.signal.aborted) return
-        setIsExecuting(false)
+        // Only reset state if this controller is still the active one.
+        // If a newer execute() replaced us, it owns isExecuting now.
         if (abortRef.current === controller) {
           abortRef.current = null
+          setIsExecuting(false)
         }
       })
   }, [])
@@ -128,6 +134,17 @@ export function Wrapper({ children }: { children: React.ReactNode }) {
     }, 500)
   }, [execute])
 
+  const reset = useCallback(() => {
+    if (abortRef.current) abortRef.current.abort()
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    setExecutionResult(null)
+    setIsExecuting(false)
+    setInputValues({})
+    setLastRunTimestamp(null)
+    setResultStale(false)
+    setLastError(null)
+  }, [])
+
   // Cleanup on unmount
   useEffect(() => {
     return () => {
@@ -137,8 +154,8 @@ export function Wrapper({ children }: { children: React.ReactNode }) {
   }, [])
 
   const execution = useMemo(
-    () => ({ execute, debouncedExecute }),
-    [execute, debouncedExecute]
+    () => ({ execute, debouncedExecute, reset }),
+    [execute, debouncedExecute, reset]
   )
 
   const value = useMemo(

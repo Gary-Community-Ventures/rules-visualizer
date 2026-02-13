@@ -87,8 +87,14 @@ function LastRunDisplay() {
 }
 
 export function ToolBar() {
-  const { model, setModel, selectedNodes, setSelectedNodes, setShowChildren } =
-    useMainContext()
+  const {
+    model,
+    setModel,
+    selectedNodes,
+    setSelectedNodes,
+    setShowChildren,
+    execution,
+  } = useMainContext()
   const addNode = useAddNode()
   const [search, setSearch] = useState('')
   const anchorRef = useComboboxAnchor()
@@ -215,6 +221,7 @@ export function ToolBar() {
               const imported = importModelFromJson(text)
               setSelectedNodes([])
               setShowChildren({})
+              execution.reset()
               setModel(imported)
             } catch (err) {
               console.error('Failed to import JSON:', err)

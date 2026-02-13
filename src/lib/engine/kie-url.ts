@@ -27,6 +27,25 @@ export function setKieBaseUrl(url: string): void {
   }
 }
 
+/** Check if a URL appears to target a non-local host */
+export function isExternalUrl(url: string): boolean {
+  if (!url) return false
+  try {
+    const parsed = new URL(url)
+    const host = parsed.hostname
+    return (
+      host !== 'localhost' &&
+      host !== '127.0.0.1' &&
+      host !== '::1' &&
+      !host.startsWith('192.168.') &&
+      !host.startsWith('10.') &&
+      !host.match(/^172\.(1[6-9]|2\d|3[01])\./)
+    )
+  } catch {
+    return false
+  }
+}
+
 function isValidUrl(url: string): boolean {
   try {
     const parsed = new URL(url)

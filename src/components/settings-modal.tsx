@@ -11,7 +11,7 @@ import {
   DialogTrigger,
   DialogDescription,
 } from './ui/dialog'
-import { getKieDisplayUrl, setKieBaseUrl } from '@/lib/engine'
+import { getKieDisplayUrl, setKieBaseUrl, isExternalUrl } from '@/lib/engine'
 
 export function SettingsModal() {
   const [open, setOpen] = useState(false)
@@ -56,6 +56,12 @@ export function SettingsModal() {
             placeholder="http://localhost:8080"
           />
           {error && <p className="text-xs text-red-600">{error}</p>}
+          {!error && isExternalUrl(url) && (
+            <p className="text-xs text-amber-600">
+              Warning: This URL points to an external server. Your DMN model
+              data will be sent to this host during execution.
+            </p>
+          )}
         </div>
         <DialogFooter>
           <Button

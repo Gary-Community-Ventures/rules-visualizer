@@ -30,8 +30,8 @@ function Arrow({
   const isRelated =
     hoveredNodeId === null || fromId === hoveredNodeId || toId === hoveredNodeId
 
-  // Get all visible node IDs from rows
-  const visibleNodeIds = rows.flat()
+  // Get all visible node IDs from rows (stable reference via JSON comparison)
+  const visibleNodeIds = useMemo(() => rows.flat(), [rows])
 
   // Check if both nodes are visible
   const isFromVisible = visibleNodeIds.includes(fromId)
@@ -131,7 +131,6 @@ function Arrow({
     nodes,
     isFromVisible,
     isToVisible,
-    visibleNodeIds,
     parentShowsChildren,
     scale,
     parentMap,
