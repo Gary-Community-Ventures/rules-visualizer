@@ -5,8 +5,9 @@ import {
   type Dispatch,
   type SetStateAction,
 } from 'react'
-import type { Model, ModelNode, ModelNodes } from './lib/model'
-import { generateId, createNode } from './lib/model'
+import type { Model, ModelNode } from './lib/model'
+import type { ExecutionResult, NodeResult } from './lib/engine'
+import { createDemoModel } from './lib/demo-data'
 
 type MainContext = {
   model: Model
@@ -19,41 +20,35 @@ type MainContext = {
   setShowChildren: Dispatch<SetStateAction<Record<string, boolean>>>
   openNode: string | null
   setOpenNode: Dispatch<SetStateAction<string | null>>
+  executionResult: ExecutionResult | null
+  setExecutionResult: Dispatch<SetStateAction<ExecutionResult | null>>
+  isExecuting: boolean
+  setIsExecuting: Dispatch<SetStateAction<boolean>>
+  inputValues: Record<string, unknown>
+  setInputValues: Dispatch<SetStateAction<Record<string, unknown>>>
+  lastRunTimestamp: number | null
+  setLastRunTimestamp: Dispatch<SetStateAction<number | null>>
+  resultStale: boolean
+  setResultStale: Dispatch<SetStateAction<boolean>>
+  lastError: string | null
+  setLastError: Dispatch<SetStateAction<string | null>>
 }
 
 const MainContext = createContext<MainContext | undefined>(undefined)
 
-// FIXME: For testing only
-function createInitialNodes(count: number): ModelNodes {
-  const nodes: ModelNodes = {}
-  const ids: string[] = []
-
-  for (let i = 0; i < count; i++) {
-    const id = generateId('node')
-    const node = createNode(id, `Node ${i + 1}`)
-
-    if (ids.length > 0) {
-      node.dependencies = [ids[Math.floor(Math.random() * ids.length)]]
-    }
-
-    nodes[id] = node
-    ids.push(id)
-  }
-
-  return nodes
-}
-
 export function Wrapper({ children }: { children: React.ReactNode }) {
-  const [model, setModel] = useState<Model>({
-    id: generateId('model'),
-    name: 'Benefits Eligibility',
-    namespace: 'https://example.com/model',
-    nodes: createInitialNodes(5),
-  })
+  const [model, setModel] = useState<Model>(createDemoModel)
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null)
   const [selectedNodes, setSelectedNodes] = useState<string[]>([])
   const [showChildren, setShowChildren] = useState<Record<string, boolean>>({})
   const [openNode, setOpenNode] = useState<string | null>(null)
+  const [executionResult, setExecutionResult] =
+    useState<ExecutionResult | null>(null)
+  const [isExecuting, setIsExecuting] = useState(false)
+  const [inputValues, setInputValues] = useState<Record<string, unknown>>({})
+  const [lastRunTimestamp, setLastRunTimestamp] = useState<number | null>(null)
+  const [resultStale, setResultStale] = useState(false)
+  const [lastError, setLastError] = useState<string | null>(null)
 
   return (
     <MainContext.Provider
@@ -68,6 +63,18 @@ export function Wrapper({ children }: { children: React.ReactNode }) {
         setShowChildren,
         openNode,
         setOpenNode,
+        executionResult,
+        setExecutionResult,
+        isExecuting,
+        setIsExecuting,
+        inputValues,
+        setInputValues,
+        lastRunTimestamp,
+        setLastRunTimestamp,
+        resultStale,
+        setResultStale,
+        lastError,
+        setLastError,
       }}
     >
       {children}
@@ -123,4 +130,14 @@ export function useAddNode() {
       },
     }))
   }
+}
+
+export function useNodeResult(nodeId: string): NodeResult | undefined {
+  const { executionResult } = useMainContext()
+  return executionResult?.nodeResults[nodeId]
+}
+
+export function useInputValue(nodeName: string): unknown {
+  const { inputValues } = useMainContext()
+  return inputValues[nodeName]
 }

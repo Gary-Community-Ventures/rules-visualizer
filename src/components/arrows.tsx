@@ -51,11 +51,12 @@ function Arrow({ fromId, toId, rows, scale, strokeWidth }: ArrowProps) {
       const fromX = fromRect.left + fromRect.width / 2
       const fromY = fromRect.top + fromRect.height
 
-      // Stagger the toX based on which dependency this is
-      const toNode = nodes[toId]
-      const toDeps = toNode.dependencies
-      const depIndex = toDeps.indexOf(fromId)
-      const totalDeps = toDeps.length
+      // Stagger the toX based on how many parents point to this node
+      const toParents = Object.entries(nodes)
+        .filter(([_, n]) => n.dependencies.includes(toId))
+        .map(([id]) => id)
+      const depIndex = toParents.indexOf(fromId)
+      const totalDeps = toParents.length
       const staggerWidth = 5
       const staggerStep = totalDeps > 1 ? staggerWidth / (totalDeps - 1) : 0
       const toXOffset =
@@ -171,12 +172,12 @@ export function Arrows({ rows }: ArrowsProps) {
       window.removeEventListener('transform', handleTransform as EventListener)
   }, [])
 
-  // Collect all arrows: for each node, draw arrows from its dependencies to it
+  // Collect all arrows: from parent node down to its dependencies
   const arrows: { fromId: string; toId: string }[] = []
 
   for (const [nodeId, node] of Object.entries(nodes)) {
     for (const depId of node.dependencies) {
-      arrows.push({ fromId: depId, toId: nodeId })
+      arrows.push({ fromId: nodeId, toId: depId })
     }
   }
 

@@ -1,7 +1,7 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useAddNode, useMainContext } from '@/context'
 import { Button } from './ui/button'
-import { Download, Upload, Menu } from 'lucide-react'
+import { Download, Upload, Menu, CircleAlert, X } from 'lucide-react'
 import { createNode, generateId } from '@/lib/model'
 import {
   downloadFile,
@@ -29,6 +29,62 @@ import {
   ComboboxList,
   useComboboxAnchor,
 } from './ui/combobox'
+import { InputModal } from './input-modal'
+import { SettingsModal } from './settings-modal'
+
+function ExecutionError() {
+  const { lastError, setLastError } = useMainContext()
+
+  if (!lastError) return null
+
+  return (
+    <div className="flex items-center gap-1.5 rounded-md bg-red-50 border border-red-200 text-red-700 px-2.5 py-1 text-xs max-w-md">
+      <CircleAlert className="size-3.5 shrink-0" />
+      <span className="truncate" title={lastError}>
+        {lastError}
+      </span>
+      <button
+        onClick={() => setLastError(null)}
+        className="shrink-0 hover:text-red-900"
+      >
+        <X className="size-3" />
+      </button>
+    </div>
+  )
+}
+
+function LastRunDisplay() {
+  const { lastRunTimestamp, resultStale } = useMainContext()
+  const [, setTick] = useState(0)
+
+  useEffect(() => {
+    if (lastRunTimestamp === null) return
+    const interval = setInterval(() => setTick((t) => t + 1), 30_000)
+    return () => clearInterval(interval)
+  }, [lastRunTimestamp])
+
+  if (lastRunTimestamp === null) return null
+
+  const seconds = Math.floor((Date.now() - lastRunTimestamp) / 1000)
+  let display: string
+  if (seconds < 10) {
+    display = 'just now'
+  } else if (seconds < 60) {
+    display = '<1m ago'
+  } else if (seconds < 3600) {
+    display = `${Math.floor(seconds / 60)}m ago`
+  } else {
+    display = `${Math.floor(seconds / 3600)}h ago`
+  }
+
+  return (
+    <span
+      className={`text-xs ${resultStale ? 'text-amber-600' : 'text-muted-foreground'}`}
+    >
+      Last run: {display}
+    </span>
+  )
+}
 
 export function ToolBar() {
   const { model, setModel, selectedNodes, setSelectedNodes, setShowChildren } =
@@ -41,7 +97,7 @@ export function ToolBar() {
   const nodeIds = Object.keys(model.nodes)
   const filteredNodeIds = nodeIds.filter(
     (id) =>
-      id.toLowerCase().includes(search.toLowerCase()) &&
+      model.nodes[id].name.toLowerCase().includes(search.toLowerCase()) &&
       !selectedNodes.includes(id)
   )
 
@@ -74,7 +130,7 @@ export function ToolBar() {
         <ComboboxChips ref={anchorRef}>
           {selectedNodes.map((nodeId) => (
             <ComboboxChip key={nodeId} value={nodeId}>
-              {nodeId.slice(0, 8)}...
+              {model.nodes[nodeId]?.name ?? nodeId}
             </ComboboxChip>
           ))}
           <ComboboxChipsInput
@@ -87,7 +143,7 @@ export function ToolBar() {
           <ComboboxList>
             {filteredNodeIds.map((nodeId) => (
               <ComboboxItem key={nodeId} value={nodeId}>
-                {nodeId}
+                {model.nodes[nodeId].name}
               </ComboboxItem>
             ))}
           </ComboboxList>
@@ -97,7 +153,11 @@ export function ToolBar() {
         </ComboboxContent>
       </Combobox>
 
-      <div className="ml-auto">
+      <div className="ml-auto flex items-center gap-3">
+        <ExecutionError />
+        <LastRunDisplay />
+        <InputModal />
+        <SettingsModal />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
