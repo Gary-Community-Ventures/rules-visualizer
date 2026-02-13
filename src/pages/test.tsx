@@ -1,10 +1,4 @@
 import { ContextInput } from '@/components/inputs/context'
-import {
-  Table,
-  TableInputCell,
-  TableRow,
-  TableTextCell,
-} from '@/components/table'
 import type { Context } from '@/lib/model'
 import { useState } from 'react'
 
@@ -44,7 +38,6 @@ import { useState } from 'react'
 
 export function TestPage() {
   const [context, setContext] = useState<Context>({
-    id: 'test',
     type: 'context',
     entries: [
       {

@@ -16,7 +16,7 @@ export function generateId(prefix?: string): string {
 // ─── Content Factories ───────────────────────────────────────────
 
 export function createInput(): Input {
-  return { type: 'input' }
+  return { type: 'input', id: generateId('input') }
 }
 
 export const RETURN_NAME = '_return'
@@ -32,7 +32,6 @@ export function createEntry(name = '', text = ''): ContextEntry {
 export function createDefaultContext(): Context {
   return {
     type: 'context',
-    id: generateId('ctx'),
     entries: [createEntry(RETURN_NAME)],
   }
 }

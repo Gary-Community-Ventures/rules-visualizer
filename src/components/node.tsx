@@ -1,14 +1,6 @@
 import { useMainContext, useNode } from '@/context'
 import { Button } from './ui/button'
 import { Minus, Plus } from 'lucide-react'
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from './ui/sheet'
 import { Editor } from './inputs/editor'
 import { NodeInput } from './node-input'
 import { NodeResultBadge } from './node-result'
