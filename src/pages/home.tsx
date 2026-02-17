@@ -43,16 +43,19 @@ export function NodeMapLayout({ children }: PropsWithChildren) {
       {openNode !== null && (
         <>
           <ResizablePanel defaultSize="50%" minSize="20%">
-            <div className="relative h-full p-5 bg-background">
-              <Button
-                variant="outline"
-                size="icon"
-                className="absolute top-3 right-3 origin-top-right"
-                onClick={() => setOpenNode(null)}
-              >
-                <X />
-              </Button>
-              <div className="mt-5">
+            <div className="flex flex-col h-full bg-background">
+              <div className="flex items-center justify-between px-5 py-3 border-b shrink-0">
+                <h2 className="text-sm font-semibold">Edit Node</h2>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7"
+                  onClick={() => setOpenNode(null)}
+                >
+                  <X className="size-4" />
+                </Button>
+              </div>
+              <div className="flex-1 overflow-y-auto p-5">
                 <NodeViewer id={openNode} />
               </div>
             </div>
