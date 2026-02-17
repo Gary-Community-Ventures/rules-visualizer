@@ -91,6 +91,58 @@ export function createDefaultDecisionTable(): DecisionTable {
   }
 }
 
+// ─── Clone ──────────────────────────────────────────────────────
+
+export function cloneContent(content: NodeContent): NodeContent {
+  switch (content.type) {
+    case 'input':
+      return { type: 'input', id: generateId('input') }
+    case 'constant':
+      return { ...content }
+    case 'context':
+      return {
+        ...content,
+        entries: content.entries.map((e) => ({
+          ...e,
+          id: generateId('ce'),
+          expression: { ...e.expression },
+        })),
+      }
+    case 'decisionTable':
+      return {
+        ...content,
+        inputClauses: content.inputClauses.map((c) => ({
+          ...c,
+          id: generateId('ic'),
+        })),
+        outputClauses: content.outputClauses.map((c) => ({
+          ...c,
+          id: generateId('oc'),
+        })),
+        rules: content.rules.map((r) => ({
+          ...r,
+          id: generateId('rule'),
+          inputEntries: [...r.inputEntries],
+          outputEntries: [...r.outputEntries],
+          annotationEntries: [...r.annotationEntries],
+        })),
+      }
+  }
+}
+
+export function uniqueName(
+  baseName: string,
+  existingNames: Set<string>
+): string {
+  let candidate = `${baseName}_copy`
+  let i = 2
+  while (existingNames.has(candidate)) {
+    candidate = `${baseName}_copy_${i}`
+    i++
+  }
+  return candidate
+}
+
 // ─── Node Factory ────────────────────────────────────────────────
 
 export function createNode(

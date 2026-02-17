@@ -1,4 +1,4 @@
-import { useDeleteNode, useMainContext } from '@/context'
+import { useAddNode, useDeleteNode, useMainContext } from '@/context'
 import { NodeViewer, Rows } from '@/components/node'
 import { Arrows } from '@/components/arrows'
 import { ToolBar } from '@/components/tool-bar'
@@ -10,7 +10,7 @@ import {
   ResizablePanelGroup,
 } from '@/components/ui/resizable'
 import { useState, type PropsWithChildren } from 'react'
-import { Trash2, X } from 'lucide-react'
+import { Copy, EllipsisVertical, Trash2, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -20,6 +20,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { cloneContent, generateId, uniqueName } from '@/lib/model'
 
 export function HomePage() {
   const { model, selectedNodes, showChildren } = useMainContext()
@@ -41,6 +48,7 @@ export function HomePage() {
 
 export function NodeMapLayout({ children }: PropsWithChildren) {
   const { model, openNode, setOpenNode, setSelectedNodes } = useMainContext()
+  const addNode = useAddNode()
   const deleteNode = useDeleteNode()
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
 
@@ -60,6 +68,21 @@ export function NodeMapLayout({ children }: PropsWithChildren) {
     setShowDeleteDialog(false)
   }
 
+  const handleDuplicate = () => {
+    if (!openNode || !openNodeData) return
+    const existingNames = new Set(Object.values(model.nodes).map((n) => n.name))
+    const newId = generateId('node')
+    const newName = uniqueName(openNodeData.name, existingNames)
+    addNode(newId, {
+      id: newId,
+      name: newName,
+      typeRef: openNodeData.typeRef,
+      dependencies: [],
+      content: cloneContent(openNodeData.content),
+    })
+    setOpenNode(newId)
+  }
+
   return (
     <ResizablePanelGroup onLayoutChange={handleLayoutChange}>
       {openNode !== null && openNodeData !== null && (
@@ -69,14 +92,26 @@ export function NodeMapLayout({ children }: PropsWithChildren) {
               <div className="flex items-center justify-between px-5 py-3 border-b shrink-0">
                 <h2 className="text-sm font-semibold">Edit Node</h2>
                 <div className="flex items-center gap-1">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                    onClick={() => setShowDeleteDialog(true)}
-                  >
-                    <Trash2 className="size-4" />
-                  </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-7 w-7">
+                        <EllipsisVertical className="size-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onSelect={handleDuplicate}>
+                        <Copy className="size-4" />
+                        Duplicate
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onSelect={() => setShowDeleteDialog(true)}
+                        className="text-destructive focus:text-destructive"
+                      >
+                        <Trash2 className="size-4" />
+                        Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                   <Button
                     variant="ghost"
                     size="icon"
