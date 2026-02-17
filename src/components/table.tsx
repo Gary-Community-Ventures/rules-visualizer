@@ -33,7 +33,7 @@ export function TableInputCell({ value, onChange, className }: InputCellProps) {
   return (
     <TextBox
       className={cn(
-        'block border rounded-none m-0 p-2 w-full box-border',
+        'block border rounded-none m-0 p-2 w-full box-border text-sm',
         className
       )}
       value={value}
@@ -74,7 +74,7 @@ export function TableTextCell({ children, className }: TableTextCellProps) {
   return (
     <div
       className={cn(
-        'bg-primary text-primary-foreground border p-2 w-full break-words h-full',
+        'bg-primary text-primary-foreground border p-2 w-full break-words h-full text-sm',
         className
       )}
     >

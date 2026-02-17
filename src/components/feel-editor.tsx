@@ -15,7 +15,7 @@ import { useCodeMirror } from '@/lib/use-codemirror'
 import { cn } from '@/lib/utils'
 
 export const feelEditorTheme = EditorView.theme({
-  '&': { backgroundColor: 'transparent' },
+  '&': { backgroundColor: 'transparent', fontSize: '14px' },
   '&.cm-focused': { outline: 'none' },
   '.cm-content': { padding: '8px', lineHeight: '19px', fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace' },
   '.cm-line': { padding: '0' },
