@@ -51,6 +51,7 @@ import {
 } from './ui/combobox'
 import { InputModal } from './input-modal'
 import { SettingsModal } from './settings-modal'
+import { Link } from '@tanstack/react-router'
 
 function ExecutionError() {
   const { lastError, setLastError } = useMainContext()
@@ -227,6 +228,11 @@ export function ToolBar() {
       <div className="ml-auto flex items-center gap-3">
         <ExecutionError />
         <LastRunDisplay />
+        <Button variant="outline" size="icon" title="Constants" asChild>
+          <Link to="/constants">
+            <Hash className="size-4" />
+          </Link>
+        </Button>
         <InputModal />
         <SettingsModal />
         <DropdownMenu>

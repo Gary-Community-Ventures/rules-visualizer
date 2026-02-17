@@ -7,6 +7,7 @@ import {
 import { HomePage } from './pages/home'
 import { Wrapper } from './context'
 import { TestPage } from './pages/test'
+import { ConstantsPage } from './pages/constants'
 // import type { UserResource, GetToken, LoadedClerk } from '@clerk/types'
 
 // export type RouterContext = {
@@ -38,7 +39,17 @@ export const testRoute = createRoute({
   component: TestPage,
 })
 
-export const routeTree = rootRoute.addChildren([homeRoute, testRoute])
+export const constantsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/constants',
+  component: ConstantsPage,
+})
+
+export const routeTree = rootRoute.addChildren([
+  homeRoute,
+  testRoute,
+  constantsRoute,
+])
 
 export const router = new Router({ routeTree })
 
