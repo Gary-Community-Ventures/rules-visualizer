@@ -24,11 +24,11 @@ function Arrow({
   const nodes = model.nodes
   const [path, setPath] = useState<string>('')
   const [isDashed, setIsDashed] = useState(false)
-  const [color] = useState('#001970')
 
   // Arrow is related if nothing is hovered, or if it directly connects to the hovered node
   const isRelated =
     hoveredNodeId === null || fromId === hoveredNodeId || toId === hoveredNodeId
+  const color = isRelated ? '#001970' : '#c0c0d8'
 
   // Get all visible node IDs from rows (stable reference via JSON comparison)
   const visibleNodeIds = useMemo(() => rows.flat(), [rows])
@@ -153,7 +153,6 @@ function Arrow({
       strokeDasharray={
         isDashed || isHoverAnimated ? `${dashSize},${dashSize}` : undefined
       }
-      opacity={isRelated ? 1 : 0.2}
       style={
         isHoverAnimated ? { animation: 'flow 0.5s linear infinite' } : undefined
       }
@@ -178,7 +177,7 @@ function buildParentMap(nodes: ModelNodes): Record<string, string[]> {
 }
 
 export function Arrows({ rows }: ArrowsProps) {
-  const { model } = useMainContext()
+  const { model, hoveredNodeId } = useMainContext()
   const nodes = model.nodes
   const [scale, setScale] = useState(1)
 
@@ -203,6 +202,19 @@ export function Arrows({ rows }: ArrowsProps) {
     }
   }
 
+  // Sort so related arrows render last (on top in SVG)
+  const sortedArrows = [...arrows].sort((a, b) => {
+    const aRelated =
+      hoveredNodeId === null ||
+      a.fromId === hoveredNodeId ||
+      a.toId === hoveredNodeId
+    const bRelated =
+      hoveredNodeId === null ||
+      b.fromId === hoveredNodeId ||
+      b.toId === hoveredNodeId
+    return aRelated === bRelated ? 0 : aRelated ? 1 : -1
+  })
+
   const strokeWidth = 2 * scale
 
   return (
@@ -218,7 +230,7 @@ export function Arrows({ rows }: ArrowsProps) {
           }
         `}
       </style>
-      {arrows.map(({ fromId, toId }) => (
+      {sortedArrows.map(({ fromId, toId }) => (
         <Arrow
           key={`${fromId}-${toId}`}
           fromId={fromId}
