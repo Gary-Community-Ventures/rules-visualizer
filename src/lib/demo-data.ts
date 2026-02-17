@@ -232,8 +232,13 @@ export function createDemoModel(): DemoData {
   }
 
   const finalNode = nodes[idG]
+  const minIncomeNode = nodes[idMinIncomeEmployed]
   const diffs: ModelNode[] = [
     { ...finalNode, name: finalNode.name + ' (modified)' },
+    {
+      ...minIncomeNode,
+      content: { type: 'constant', text: '35000', typeRef: 'number' },
+    },
   ]
 
   return { model, diffs }

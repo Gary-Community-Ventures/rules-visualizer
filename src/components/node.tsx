@@ -78,11 +78,11 @@ export function NodeViewer({ id }: NodeViewerProps) {
   const updateDiff = useUpdateDiff()
 
   let nameDiff:
-    | { text: string; update: (newValue: string) => void }
+    | { new: string; update: (newValue: string) => void }
     | undefined = undefined
   if (diff !== undefined) {
     nameDiff = {
-      text: diff.name,
+      new: diff.name,
       update: (newValue) =>
         updateDiff(id, (diff) => ({ ...diff, name: newValue })),
     }

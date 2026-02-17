@@ -1,14 +1,21 @@
-import type { ModelNode, NodeContent } from '@/lib/model'
+import type { Constant, ModelNode, NodeContent } from '@/lib/model'
 import { ContextInput } from './context'
-import { useUpdateNode } from '@/context'
+import { useDiff, useUpdateDiff, useUpdateNode } from '@/context'
 import { ConstantInput } from './constant'
 import { DecisionTableInput } from './decition-table'
 
 type EditorProps = {
   node: ModelNode
 }
+
 export function Editor({ node }: EditorProps) {
   const updateNode = useUpdateNode()
+  const diff = useDiff(node.id)
+  const updateDiff = useUpdateDiff()
+
+  if (diff !== undefined && diff.content.type !== node.content.type) {
+    throw new Error('nodes cannot change type (yet)')
+  }
 
   if (node.content.type === 'context') {
     const updateContext = (context: NodeContent) => {
@@ -21,8 +28,22 @@ export function Editor({ node }: EditorProps) {
     const updateConstant = (constant: NodeContent) => {
       updateNode(node.id, (node) => ({ ...node, content: constant }))
     }
+    let constDiff:
+      | { new: Constant; update: (newValue: Constant) => void }
+      | undefined = undefined
+    if (diff !== undefined && diff.content.type === 'constant') {
+      constDiff = {
+        new: diff.content,
+        update: (newValue) =>
+          updateDiff(node.id, (diff) => ({ ...diff, content: newValue })),
+      }
+    }
     return (
-      <ConstantInput constant={node.content} updateConstant={updateConstant} />
+      <ConstantInput
+        constant={node.content}
+        updateConstant={updateConstant}
+        diff={constDiff}
+      />
     )
   }
   if (node.content.type === 'decisionTable') {

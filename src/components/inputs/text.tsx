@@ -4,7 +4,7 @@ type TextInputProps = {
   text: string
   updateText: (name: string) => void
   diff?: {
-    text: string
+    new: string
     update: (newValue: string) => void
   }
 }
@@ -25,7 +25,7 @@ export function TextInput({ text, updateText, diff }: TextInputProps) {
           className={diff !== undefined ? 'bg-gray-100' : ''}
         />
         {diff !== undefined && (
-          <TableInputCell value={diff.text} onChange={(v) => diff.update(v)} />
+          <TableInputCell value={diff.new} onChange={(v) => diff.update(v)} />
         )}
       </TableRow>
     </Table>
