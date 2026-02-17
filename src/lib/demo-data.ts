@@ -80,7 +80,7 @@ export function createDemoModel(): DemoData {
       id: idD,
       name: 'Income_Threshold',
       typeRef: 'boolean',
-      dependencies: [idB, idC, idMinIncomeEmployed, idMinIncomeSelfEmployed],
+      dependencies: [],
       content: {
         type: 'decisionTable',
         hitPolicy: 'FIRST',
@@ -132,7 +132,7 @@ export function createDemoModel(): DemoData {
       id: idE,
       name: 'Age_Eligibility',
       typeRef: 'boolean',
-      dependencies: [idA, idMinAge, idMaxAge],
+      dependencies: [],
       content: {
         type: 'decisionTable',
         hitPolicy: 'UNIQUE',
@@ -180,7 +180,7 @@ export function createDemoModel(): DemoData {
       id: idF,
       name: 'Eligibility_Factors',
       typeRef: 'boolean',
-      dependencies: [idD, idE],
+      dependencies: [],
       content: {
         type: 'context',
         entries: [
@@ -208,7 +208,7 @@ export function createDemoModel(): DemoData {
       id: idG,
       name: 'Final_Recommendation',
       typeRef: 'string',
-      dependencies: [idF],
+      dependencies: [],
       content: {
         type: 'context',
         entries: [

@@ -1,7 +1,6 @@
-import type { Context } from '@/lib/model'
+import type { Context, ContextEntry } from '@/lib/model'
 import { createEntry } from '@/lib/model'
-import { useMainContext } from '@/context'
-import { useMemo } from 'react'
+import { useKnownNames } from '@/lib/use-known-names'
 import {
   Table,
   TableFeelCell,
@@ -14,24 +13,17 @@ import { ArrowDownIcon, ArrowUpIcon, PlusIcon, TrashIcon } from 'lucide-react'
 type ContextInputProps = {
   context: Context
   updateContext: (context: Context) => void
+  diff?: {
+    new: Context
+    update: (newValue: Context) => void
+  }
 }
 
-export function ContextInput({ context, updateContext }: ContextInputProps) {
-  const { model } = useMainContext()
-  const entryNames = context.entries
-    .filter((e) => e.name !== '_return')
-    .map((e) => e.name)
-    .filter(Boolean)
-    .join('\0')
-  const knownNames = useMemo(
-    () => [
-      ...Object.values(model.nodes).map((n) => n.name),
-      ...entryNames.split('\0').filter(Boolean),
-    ],
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [model.nodes, entryNames]
-  )
-
+export function ContextInput({
+  context,
+  updateContext,
+  diff,
+}: ContextInputProps) {
   const updateName = (index: number, name: string) => {
     const entries = [...context.entries]
     entries[index] = { ...entries[index], name }
@@ -180,29 +172,62 @@ export function ContextInput({ context, updateContext }: ContextInputProps) {
           Value
         </TableTextCell>
       </TableRow>
-      {context.entries.map(({ name, expression }, i) => (
-        <TableRow key={i}>
-          {i < context.entries.length - 1 ? (
-            <TableInputCell
-              className="font-mono!"
-              value={name}
-              onChange={(v) => {
-                updateName(i, v.replace(/ /g, '_'))
-              }}
-            />
-          ) : (
-            <TableTextCell className="bg-cyan-100 text-black">
-              return
-            </TableTextCell>
-          )}
-          <TableFeelCell
-            value={expression.text}
-            onChange={(v) => updateExpression(i, v)}
-            dialect="expression"
-            knownNames={knownNames}
-          />
-        </TableRow>
+      {context.entries.map((entry, i) => (
+        <ContextRow
+          key={i}
+          entry={entry}
+          prevEntries={context.entries
+            .slice(0, i)
+            .map((e) => e.name)
+            .filter(Boolean)}
+          isLast={i === context.entries.length - 1}
+          updateName={(v) => updateName(i, v)}
+          updateExpression={(v) => updateExpression(i, v)}
+        />
       ))}
     </Table>
+  )
+}
+
+function ContextRow({
+  entry,
+  diff,
+  prevEntries,
+  isLast,
+  updateName,
+  updateExpression,
+}: {
+  entry: ContextEntry
+  diff?: {
+    new: ContextEntry
+    update: (newValue: ContextEntry) => void
+  }
+  prevEntries: string[]
+  isLast: boolean
+  updateName: (newValue: string) => void
+  updateExpression: (newValue: string) => void
+}) {
+  const knownNames = useKnownNames(prevEntries)
+
+  return (
+    <TableRow>
+      {isLast ? (
+        <TableTextCell className="bg-cyan-100 text-black">return</TableTextCell>
+      ) : (
+        <TableInputCell
+          className="font-mono"
+          value={entry.name}
+          onChange={(v) => {
+            updateName(v.replace(/ /g, '_'))
+          }}
+        />
+      )}
+      <TableFeelCell
+        value={entry.expression.text}
+        onChange={(v) => updateExpression(v)}
+        dialect="expression"
+        knownNames={knownNames}
+      />
+    </TableRow>
   )
 }
