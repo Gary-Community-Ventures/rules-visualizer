@@ -309,3 +309,19 @@ export function useUpdateDiff() {
     )
   }
 }
+
+export function useResolveDiff() {
+  const { diffs, setDiffs } = useMainContext()
+  const updateNode = useUpdateNode()
+
+  return (id: string, accept: boolean) => {
+    if (accept) {
+      const diff = diffs.find((d) => d.id === id)
+      if (diff) {
+        updateNode(id, () => diff)
+      }
+    }
+
+    setDiffs((diffs) => diffs.filter((diff) => diff.id !== id))
+  }
+}

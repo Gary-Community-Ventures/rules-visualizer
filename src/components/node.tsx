@@ -2,6 +2,7 @@ import {
   useDiff,
   useMainContext,
   useNode,
+  useResolveDiff,
   useUpdateDiff,
   useUpdateNode,
 } from '@/context'
@@ -13,6 +14,8 @@ import {
   Hash,
   Braces,
   Table as TableIcon,
+  Check,
+  X,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Editor } from './inputs/editor'
@@ -126,6 +129,7 @@ export function NodeViewer({ id }: NodeViewerProps) {
   const updateNode = useUpdateNode()
   const diff = useDiff(id)
   const updateDiff = useUpdateDiff()
+  const resolveDiff = useResolveDiff()
 
   const config = NODE_TYPE_CONFIG[node.content.type]
   const Icon = config.icon
@@ -137,7 +141,10 @@ export function NodeViewer({ id }: NodeViewerProps) {
     nameDiff = {
       new: diff.name,
       update: (newValue) =>
-        updateDiff(id, (diff) => ({ ...diff, name: newValue })),
+        updateDiff(id, (diff) => ({
+          ...diff,
+          name: newValue.replace(/ /g, '_'),
+        })),
     }
   }
 
@@ -184,6 +191,26 @@ export function NodeViewer({ id }: NodeViewerProps) {
             Content
           </label>
           <Editor node={node} />
+        </div>
+      )}
+      {diff !== undefined && (
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            className="flex-1 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
+            onClick={() => resolveDiff(id, true)}
+          >
+            <Check className="size-4 mr-2" />
+            Accept
+          </Button>
+          <Button
+            variant="outline"
+            className="flex-1 text-red-600 hover:text-red-700 hover:bg-red-50"
+            onClick={() => resolveDiff(id, false)}
+          >
+            <X className="size-4 mr-2" />
+            Reject
+          </Button>
         </div>
       )}
     </section>
