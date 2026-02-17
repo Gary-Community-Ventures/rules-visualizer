@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useAddNode, useMainContext } from '@/context'
 import { Button } from './ui/button'
 import {
@@ -109,21 +109,78 @@ function LastRunDisplay() {
 }
 
 function AlertsPopover() {
-  const { diffs, setOpenNode } = useMainContext()
+  const { model, diffs, setOpenNode } = useMainContext()
   const [open, setOpen] = useState(false)
 
   const handleClick = (id: string) => {
     setOpenNode(id)
   }
 
+  // Compute duplicate names
+  const duplicateNames = useMemo(() => {
+    const nameToIds: Record<string, string[]> = {}
+    for (const node of Object.values(model.nodes)) {
+      if (!nameToIds[node.name]) {
+        nameToIds[node.name] = []
+      }
+      nameToIds[node.name].push(node.id)
+    }
+    return Object.entries(nameToIds)
+      .filter(([, ids]) => ids.length > 1)
+      .map(([name, ids]) => ({ name, ids }))
+  }, [model.nodes])
+
+  // Detect circular dependencies
+  const circularDependencies = useMemo(() => {
+    const cycles: string[][] = []
+    const visited = new Set<string>()
+    const inStack = new Set<string>()
+    const path: string[] = []
+
+    const dfs = (nodeId: string) => {
+      if (inStack.has(nodeId)) {
+        // Found a cycle - extract it from path
+        const cycleStart = path.indexOf(nodeId)
+        const cycle = path.slice(cycleStart)
+        cycles.push(cycle)
+        return
+      }
+      if (visited.has(nodeId)) return
+
+      visited.add(nodeId)
+      inStack.add(nodeId)
+      path.push(nodeId)
+
+      const node = model.nodes[nodeId]
+      if (node) {
+        for (const depId of node.dependencies) {
+          dfs(depId)
+        }
+      }
+
+      path.pop()
+      inStack.delete(nodeId)
+    }
+
+    for (const nodeId of Object.keys(model.nodes)) {
+      if (!visited.has(nodeId)) {
+        dfs(nodeId)
+      }
+    }
+
+    return cycles
+  }, [model.nodes])
+
+  const totalAlerts = diffs.length + duplicateNames.length + circularDependencies.length
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button variant="outline" size="icon" title="Alerts" className="relative">
           <Bell className="size-4" />
-          {diffs.length > 0 && (
+          {totalAlerts > 0 && (
             <span className="absolute -top-1 -right-1 size-4 rounded-full bg-red-500 text-white text-xs flex items-center justify-center">
-              {diffs.length}
+              {totalAlerts}
             </span>
           )}
         </Button>
@@ -133,19 +190,72 @@ function AlertsPopover() {
           <h4 className="font-semibold text-sm">Alerts</h4>
         </div>
         <div className="flex flex-col max-h-80 overflow-y-auto">
-          {diffs.length === 0 ? (
+          {totalAlerts === 0 ? (
             <p className="text-sm text-muted-foreground p-3">No pending changes</p>
           ) : (
-            diffs.map((diff) => (
-              <button
-                key={diff.id}
-                onClick={() => handleClick(diff.id)}
-                className="flex items-center gap-3 p-3 hover:bg-muted text-left transition-colors border-b last:border-b-0"
-              >
-                <Plus className="size-4 text-blue-500 shrink-0" />
-                <span className="font-medium text-sm truncate">{diff.name}</span>
-              </button>
-            ))
+            <>
+              {/* Circular dependency errors */}
+              {circularDependencies.map((cycle, i) => (
+                <div key={`cycle-${i}`} className="border-b last:border-b-0">
+                  <div className="flex items-center gap-3 p-3 text-red-600">
+                    <CircleAlert className="size-4 shrink-0" />
+                    <span className="font-medium text-sm">Circular dependency</span>
+                  </div>
+                  <div className="pl-10 pb-2 flex flex-wrap items-center gap-1">
+                    {cycle.map((id, j) => (
+                      <span key={id} className="flex items-center gap-1">
+                        <button
+                          onClick={() => handleClick(id)}
+                          className="text-xs text-muted-foreground hover:text-foreground"
+                        >
+                          {model.nodes[id]?.name ?? id}
+                        </button>
+                        <span className="text-xs text-muted-foreground">→</span>
+                      </span>
+                    ))}
+                    <button
+                      onClick={() => handleClick(cycle[0])}
+                      className="text-xs text-muted-foreground hover:text-foreground"
+                    >
+                      {model.nodes[cycle[0]]?.name ?? cycle[0]}
+                    </button>
+                  </div>
+                </div>
+              ))}
+              {/* Duplicate name errors */}
+              {duplicateNames.map(({ name, ids }) => (
+                <div key={`dup-${name}`} className="border-b last:border-b-0">
+                  <div className="flex items-center gap-3 p-3 text-red-600">
+                    <CircleAlert className="size-4 shrink-0" />
+                    <span className="font-medium text-sm">
+                      Duplicate name: "{name}"
+                    </span>
+                  </div>
+                  <div className="pl-10 pb-2">
+                    {ids.map((id) => (
+                      <button
+                        key={id}
+                        onClick={() => handleClick(id)}
+                        className="block text-xs text-muted-foreground hover:text-foreground py-0.5"
+                      >
+                        {model.nodes[id]?.name ?? id}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+              {/* Pending diffs */}
+              {diffs.map((diff) => (
+                <button
+                  key={diff.id}
+                  onClick={() => handleClick(diff.id)}
+                  className="flex items-center gap-3 p-3 hover:bg-muted text-left transition-colors border-b last:border-b-0"
+                >
+                  <Plus className="size-4 text-blue-500 shrink-0" />
+                  <span className="font-medium text-sm truncate">{diff.name}</span>
+                </button>
+              ))}
+            </>
           )}
         </div>
       </PopoverContent>
