@@ -57,7 +57,7 @@ export function TableFeelCell({
 }) {
   return (
     <FeelEditor
-      className={cn('block border rounded-none m-0 w-full box-border', className)}
+      className={cn('block border rounded-none m-0 w-full h-full box-border', className)}
       value={value}
       onChange={onChange}
       dialect={dialect}
