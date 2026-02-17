@@ -14,6 +14,7 @@ import {
   Hash,
   Braces,
   Table as TableIcon,
+  Bell,
 } from 'lucide-react'
 import {
   createNode,
@@ -51,6 +52,7 @@ import {
 import { InputModal } from './input-modal'
 import { SettingsModal } from './settings-modal'
 import { Link } from '@tanstack/react-router'
+import { Popover, PopoverContent, PopoverTrigger } from './ui/popover'
 
 function ExecutionError() {
   const { lastError, setLastError } = useMainContext()
@@ -103,6 +105,51 @@ function LastRunDisplay() {
     >
       Last run: {display}
     </span>
+  )
+}
+
+function AlertsPopover() {
+  const { diffs, setOpenNode } = useMainContext()
+  const [open, setOpen] = useState(false)
+
+  const handleClick = (id: string) => {
+    setOpenNode(id)
+  }
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button variant="outline" size="icon" title="Alerts" className="relative">
+          <Bell className="size-4" />
+          {diffs.length > 0 && (
+            <span className="absolute -top-1 -right-1 size-4 rounded-full bg-red-500 text-white text-xs flex items-center justify-center">
+              {diffs.length}
+            </span>
+          )}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent align="end" className="w-80 p-0">
+        <div className="p-3 border-b">
+          <h4 className="font-semibold text-sm">Alerts</h4>
+        </div>
+        <div className="flex flex-col max-h-80 overflow-y-auto">
+          {diffs.length === 0 ? (
+            <p className="text-sm text-muted-foreground p-3">No pending changes</p>
+          ) : (
+            diffs.map((diff) => (
+              <button
+                key={diff.id}
+                onClick={() => handleClick(diff.id)}
+                className="flex items-center gap-3 p-3 hover:bg-muted text-left transition-colors border-b last:border-b-0"
+              >
+                <Plus className="size-4 text-blue-500 shrink-0" />
+                <span className="font-medium text-sm truncate">{diff.name}</span>
+              </button>
+            ))
+          )}
+        </div>
+      </PopoverContent>
+    </Popover>
   )
 }
 
@@ -231,6 +278,7 @@ export function ToolBar() {
             <Hash className="size-4" />
           </Link>
         </Button>
+        <AlertsPopover />
         <InputModal />
         <SettingsModal />
         <DropdownMenu>
