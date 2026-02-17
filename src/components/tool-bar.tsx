@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useAddNode, useMainContext } from '@/context'
 import { Button } from './ui/button'
-import { Download, Upload, Menu, CircleAlert, X } from 'lucide-react'
+import { Download, Upload, Menu, CircleAlert, X, Maximize2, Minimize2 } from 'lucide-react'
 import { createNode, generateId } from '@/lib/model'
 import {
   downloadFile,
@@ -158,6 +158,31 @@ export function ToolBar() {
           )}
         </ComboboxContent>
       </Combobox>
+
+      <div className="flex gap-1">
+        <Button
+          variant="outline"
+          size="icon"
+          title="Expand all"
+          onClick={() => {
+            const all: Record<string, boolean> = {}
+            for (const id of Object.keys(model.nodes)) {
+              all[id] = true
+            }
+            setShowChildren(all)
+          }}
+        >
+          <Maximize2 className="size-4" />
+        </Button>
+        <Button
+          variant="outline"
+          size="icon"
+          title="Collapse all"
+          onClick={() => setShowChildren({})}
+        >
+          <Minimize2 className="size-4" />
+        </Button>
+      </div>
 
       <div className="ml-auto flex items-center gap-3">
         <ExecutionError />
