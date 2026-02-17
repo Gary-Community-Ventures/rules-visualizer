@@ -21,13 +21,33 @@ import { NodeResultBadge } from './node-result'
 import { TextInput } from './inputs/text'
 
 const NODE_TYPE_CONFIG = {
-  input: { icon: CircleDot, bg: 'bg-blue-50', border: 'border-blue-200' },
-  constant: { icon: Hash, bg: 'bg-amber-50', border: 'border-amber-200' },
-  context: { icon: Braces, bg: 'bg-purple-50', border: 'border-purple-200' },
+  input: {
+    icon: CircleDot,
+    bg: 'bg-blue-50',
+    border: 'border-blue-200',
+    label: 'Input',
+    badgeBg: 'bg-blue-100 text-blue-700',
+  },
+  constant: {
+    icon: Hash,
+    bg: 'bg-amber-50',
+    border: 'border-amber-200',
+    label: 'Constant',
+    badgeBg: 'bg-amber-100 text-amber-700',
+  },
+  context: {
+    icon: Braces,
+    bg: 'bg-purple-50',
+    border: 'border-purple-200',
+    label: 'Decision',
+    badgeBg: 'bg-purple-100 text-purple-700',
+  },
   decisionTable: {
     icon: TableIcon,
     bg: 'bg-orange-50',
     border: 'border-orange-200',
+    label: 'Decision Table',
+    badgeBg: 'bg-orange-100 text-orange-700',
   },
 }
 
@@ -107,6 +127,9 @@ export function NodeViewer({ id }: NodeViewerProps) {
   const diff = useDiff(id)
   const updateDiff = useUpdateDiff()
 
+  const config = NODE_TYPE_CONFIG[node.content.type]
+  const Icon = config.icon
+
   let nameDiff:
     | { new: string; update: (newValue: string) => void }
     | undefined = undefined
@@ -119,19 +142,50 @@ export function NodeViewer({ id }: NodeViewerProps) {
   }
 
   return (
-    <section className="flex flex-col gap-10">
-      <div>
-        Name:
+    <section className="flex flex-col gap-6">
+      {/* Type badge */}
+      <div className="flex items-center gap-2">
+        <span
+          className={cn(
+            'inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium',
+            config.badgeBg
+          )}
+        >
+          <Icon className="size-3" />
+          {config.label}
+        </span>
+      </div>
+
+      {/* Name section */}
+      <div className="flex flex-col gap-1.5">
+        <label className="text-sm font-medium text-muted-foreground">
+          Name
+        </label>
         <TextInput
           text={node.name}
-          updateText={(name) => updateNode(id, (node) => ({ ...node, name }))}
+          updateText={(name) =>
+            updateNode(id, (node) => ({
+              ...node,
+              name: name.replace(/ /g, '_'),
+            }))
+          }
           diff={nameDiff}
         />
       </div>
-      <div>
-        Editor:
-        <Editor node={node} />
-      </div>
+
+      {/* Content section */}
+      {node.content.type === 'input' ? (
+        <p className="text-sm text-muted-foreground">
+          This node receives external input at execution time.
+        </p>
+      ) : (
+        <div className="flex flex-col gap-1.5">
+          <label className="text-sm font-medium text-muted-foreground">
+            Content
+          </label>
+          <Editor node={node} />
+        </div>
+      )}
     </section>
   )
 }

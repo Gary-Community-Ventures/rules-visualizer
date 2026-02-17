@@ -32,6 +32,7 @@ function getOrdering(
   }
 
   for (const child of children) {
+    if (!nodes[child]) continue
     const index = currentOrdering.indexOf(child)
     if (index !== -1) {
       currentOrdering.splice(index, 1)
@@ -63,7 +64,7 @@ function compressRows(
         let neededByPreviousRow = false
         for (const previousItem of previousRow) {
           if (
-            nodes[previousItem].dependencies.includes(item) &&
+            nodes[previousItem]?.dependencies.includes(item) &&
             showChildren[previousItem]
           ) {
             neededByPreviousRow = true

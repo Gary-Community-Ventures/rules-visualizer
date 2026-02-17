@@ -272,6 +272,17 @@ export function useAddNode() {
   }
 }
 
+export function useDeleteNode() {
+  const { setModel } = useMainContext()
+
+  return (id: string) => {
+    setModel((model) => {
+      const { [id]: _, ...remaining } = model.nodes
+      return { ...model, nodes: remaining }
+    })
+  }
+}
+
 export function useNodeResult(nodeId: string): NodeResult | undefined {
   const { executionResult } = useMainContext()
   return executionResult?.nodeResults[nodeId]
