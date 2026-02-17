@@ -31,6 +31,7 @@ export function ConstantInput({
         />
         {diff !== undefined && (
           <TableInputCell
+            className={diff.new.text !== constant.text ? 'bg-emerald-100' : ''}
             value={diff.new.text}
             onChange={(v) => diff.update({ ...constant, text: v })}
           />

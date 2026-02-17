@@ -25,7 +25,11 @@ export function TextInput({ text, updateText, diff }: TextInputProps) {
           className={diff !== undefined ? 'bg-gray-100' : ''}
         />
         {diff !== undefined && (
-          <TableInputCell value={diff.new} onChange={(v) => diff.update(v)} />
+          <TableInputCell
+            className={diff.new !== text ? 'bg-emerald-100' : ''}
+            value={diff.new}
+            onChange={(v) => diff.update(v)}
+          />
         )}
       </TableRow>
     </Table>
