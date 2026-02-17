@@ -69,7 +69,10 @@ export function createOutputClause(): OutputClause {
   }
 }
 
-export function createRule(inputCount: number, outputCount: number): DecisionTableRule {
+export function createRule(
+  inputCount: number,
+  outputCount: number
+): DecisionTableRule {
   return {
     id: generateId('rule'),
     inputEntries: Array(inputCount).fill('-'),

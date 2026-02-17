@@ -48,7 +48,11 @@ export function DecisionTableInput({
     updateDecisionTable({ ...decisionTable, outputClauses })
   }
 
-  const updateRuleInput = (ruleIndex: number, entryIndex: number, value: string) => {
+  const updateRuleInput = (
+    ruleIndex: number,
+    entryIndex: number,
+    value: string
+  ) => {
     const rules = [...decisionTable.rules]
     const inputEntries = [...rules[ruleIndex].inputEntries]
     inputEntries[entryIndex] = value
@@ -56,7 +60,11 @@ export function DecisionTableInput({
     updateDecisionTable({ ...decisionTable, rules })
   }
 
-  const updateRuleOutput = (ruleIndex: number, entryIndex: number, value: string) => {
+  const updateRuleOutput = (
+    ruleIndex: number,
+    entryIndex: number,
+    value: string
+  ) => {
     const rules = [...decisionTable.rules]
     const outputEntries = [...rules[ruleIndex].outputEntries]
     outputEntries[entryIndex] = value
@@ -71,7 +79,11 @@ export function DecisionTableInput({
     inputClauses.splice(index, 0, createInputClause())
     const rules = decisionTable.rules.map((rule) => ({
       ...rule,
-      inputEntries: [...rule.inputEntries.slice(0, index), '-', ...rule.inputEntries.slice(index)],
+      inputEntries: [
+        ...rule.inputEntries.slice(0, index),
+        '-',
+        ...rule.inputEntries.slice(index),
+      ],
     }))
     updateDecisionTable({ ...decisionTable, inputClauses, rules })
   }
@@ -81,17 +93,27 @@ export function DecisionTableInput({
     inputClauses.splice(index + 1, 0, createInputClause())
     const rules = decisionTable.rules.map((rule) => ({
       ...rule,
-      inputEntries: [...rule.inputEntries.slice(0, index + 1), '-', ...rule.inputEntries.slice(index + 1)],
+      inputEntries: [
+        ...rule.inputEntries.slice(0, index + 1),
+        '-',
+        ...rule.inputEntries.slice(index + 1),
+      ],
     }))
     updateDecisionTable({ ...decisionTable, inputClauses, rules })
   }
 
   const shiftInputLeft = (index: number) => {
     const inputClauses = [...decisionTable.inputClauses]
-    ;[inputClauses[index - 1], inputClauses[index]] = [inputClauses[index], inputClauses[index - 1]]
+    ;[inputClauses[index - 1], inputClauses[index]] = [
+      inputClauses[index],
+      inputClauses[index - 1],
+    ]
     const rules = decisionTable.rules.map((rule) => {
       const inputEntries = [...rule.inputEntries]
-      ;[inputEntries[index - 1], inputEntries[index]] = [inputEntries[index], inputEntries[index - 1]]
+      ;[inputEntries[index - 1], inputEntries[index]] = [
+        inputEntries[index],
+        inputEntries[index - 1],
+      ]
       return { ...rule, inputEntries }
     })
     updateDecisionTable({ ...decisionTable, inputClauses, rules })
@@ -99,17 +121,25 @@ export function DecisionTableInput({
 
   const shiftInputRight = (index: number) => {
     const inputClauses = [...decisionTable.inputClauses]
-    ;[inputClauses[index], inputClauses[index + 1]] = [inputClauses[index + 1], inputClauses[index]]
+    ;[inputClauses[index], inputClauses[index + 1]] = [
+      inputClauses[index + 1],
+      inputClauses[index],
+    ]
     const rules = decisionTable.rules.map((rule) => {
       const inputEntries = [...rule.inputEntries]
-      ;[inputEntries[index], inputEntries[index + 1]] = [inputEntries[index + 1], inputEntries[index]]
+      ;[inputEntries[index], inputEntries[index + 1]] = [
+        inputEntries[index + 1],
+        inputEntries[index],
+      ]
       return { ...rule, inputEntries }
     })
     updateDecisionTable({ ...decisionTable, inputClauses, rules })
   }
 
   const deleteInput = (index: number) => {
-    const inputClauses = decisionTable.inputClauses.filter((_, i) => i !== index)
+    const inputClauses = decisionTable.inputClauses.filter(
+      (_, i) => i !== index
+    )
     const rules = decisionTable.rules.map((rule) => ({
       ...rule,
       inputEntries: rule.inputEntries.filter((_, i) => i !== index),
@@ -124,7 +154,11 @@ export function DecisionTableInput({
     outputClauses.splice(index, 0, createOutputClause())
     const rules = decisionTable.rules.map((rule) => ({
       ...rule,
-      outputEntries: [...rule.outputEntries.slice(0, index), '', ...rule.outputEntries.slice(index)],
+      outputEntries: [
+        ...rule.outputEntries.slice(0, index),
+        '',
+        ...rule.outputEntries.slice(index),
+      ],
     }))
     updateDecisionTable({ ...decisionTable, outputClauses, rules })
   }
@@ -134,17 +168,27 @@ export function DecisionTableInput({
     outputClauses.splice(index + 1, 0, createOutputClause())
     const rules = decisionTable.rules.map((rule) => ({
       ...rule,
-      outputEntries: [...rule.outputEntries.slice(0, index + 1), '', ...rule.outputEntries.slice(index + 1)],
+      outputEntries: [
+        ...rule.outputEntries.slice(0, index + 1),
+        '',
+        ...rule.outputEntries.slice(index + 1),
+      ],
     }))
     updateDecisionTable({ ...decisionTable, outputClauses, rules })
   }
 
   const shiftOutputLeft = (index: number) => {
     const outputClauses = [...decisionTable.outputClauses]
-    ;[outputClauses[index - 1], outputClauses[index]] = [outputClauses[index], outputClauses[index - 1]]
+    ;[outputClauses[index - 1], outputClauses[index]] = [
+      outputClauses[index],
+      outputClauses[index - 1],
+    ]
     const rules = decisionTable.rules.map((rule) => {
       const outputEntries = [...rule.outputEntries]
-      ;[outputEntries[index - 1], outputEntries[index]] = [outputEntries[index], outputEntries[index - 1]]
+      ;[outputEntries[index - 1], outputEntries[index]] = [
+        outputEntries[index],
+        outputEntries[index - 1],
+      ]
       return { ...rule, outputEntries }
     })
     updateDecisionTable({ ...decisionTable, outputClauses, rules })
@@ -152,17 +196,25 @@ export function DecisionTableInput({
 
   const shiftOutputRight = (index: number) => {
     const outputClauses = [...decisionTable.outputClauses]
-    ;[outputClauses[index], outputClauses[index + 1]] = [outputClauses[index + 1], outputClauses[index]]
+    ;[outputClauses[index], outputClauses[index + 1]] = [
+      outputClauses[index + 1],
+      outputClauses[index],
+    ]
     const rules = decisionTable.rules.map((rule) => {
       const outputEntries = [...rule.outputEntries]
-      ;[outputEntries[index], outputEntries[index + 1]] = [outputEntries[index + 1], outputEntries[index]]
+      ;[outputEntries[index], outputEntries[index + 1]] = [
+        outputEntries[index + 1],
+        outputEntries[index],
+      ]
       return { ...rule, outputEntries }
     })
     updateDecisionTable({ ...decisionTable, outputClauses, rules })
   }
 
   const deleteOutput = (index: number) => {
-    const outputClauses = decisionTable.outputClauses.filter((_, i) => i !== index)
+    const outputClauses = decisionTable.outputClauses.filter(
+      (_, i) => i !== index
+    )
     const rules = decisionTable.rules.map((rule) => ({
       ...rule,
       outputEntries: rule.outputEntries.filter((_, i) => i !== index),
@@ -215,20 +267,53 @@ export function DecisionTableInput({
         const isLast = x === inputCount - 1
 
         const insertActions = [
-          { name: 'Insert input left', action: () => insertInputLeft(x), Icon: PlusIcon },
-          { name: 'Insert input right', action: () => insertInputRight(x), Icon: PlusIcon },
+          {
+            name: 'Insert input left',
+            action: () => insertInputLeft(x),
+            Icon: PlusIcon,
+          },
+          {
+            name: 'Insert input right',
+            action: () => insertInputRight(x),
+            Icon: PlusIcon,
+          },
         ]
 
         const shiftActions = [
-          ...(!isFirst ? [{ name: 'Shift left', action: () => shiftInputLeft(x), Icon: ArrowLeftIcon }] : []),
-          ...(!isLast ? [{ name: 'Shift right', action: () => shiftInputRight(x), Icon: ArrowRightIcon }] : []),
+          ...(!isFirst
+            ? [
+                {
+                  name: 'Shift left',
+                  action: () => shiftInputLeft(x),
+                  Icon: ArrowLeftIcon,
+                },
+              ]
+            : []),
+          ...(!isLast
+            ? [
+                {
+                  name: 'Shift right',
+                  action: () => shiftInputRight(x),
+                  Icon: ArrowRightIcon,
+                },
+              ]
+            : []),
         ]
 
         const deleteActions = [
-          { name: 'Delete input', action: () => deleteInput(x), Icon: TrashIcon, variant: 'destructive' as const },
+          {
+            name: 'Delete input',
+            action: () => deleteInput(x),
+            Icon: TrashIcon,
+            variant: 'destructive' as const,
+          },
         ]
 
-        return [insertActions, ...(shiftActions.length > 0 ? [shiftActions] : []), deleteActions]
+        return [
+          insertActions,
+          ...(shiftActions.length > 0 ? [shiftActions] : []),
+          deleteActions,
+        ]
       } else {
         // Output header actions
         const outputIndex = x - inputCount
@@ -236,20 +321,53 @@ export function DecisionTableInput({
         const isLast = outputIndex === outputCount - 1
 
         const insertActions = [
-          { name: 'Insert output left', action: () => insertOutputLeft(outputIndex), Icon: PlusIcon },
-          { name: 'Insert output right', action: () => insertOutputRight(outputIndex), Icon: PlusIcon },
+          {
+            name: 'Insert output left',
+            action: () => insertOutputLeft(outputIndex),
+            Icon: PlusIcon,
+          },
+          {
+            name: 'Insert output right',
+            action: () => insertOutputRight(outputIndex),
+            Icon: PlusIcon,
+          },
         ]
 
         const shiftActions = [
-          ...(!isFirst ? [{ name: 'Shift left', action: () => shiftOutputLeft(outputIndex), Icon: ArrowLeftIcon }] : []),
-          ...(!isLast ? [{ name: 'Shift right', action: () => shiftOutputRight(outputIndex), Icon: ArrowRightIcon }] : []),
+          ...(!isFirst
+            ? [
+                {
+                  name: 'Shift left',
+                  action: () => shiftOutputLeft(outputIndex),
+                  Icon: ArrowLeftIcon,
+                },
+              ]
+            : []),
+          ...(!isLast
+            ? [
+                {
+                  name: 'Shift right',
+                  action: () => shiftOutputRight(outputIndex),
+                  Icon: ArrowRightIcon,
+                },
+              ]
+            : []),
         ]
 
         const deleteActions = [
-          { name: 'Delete output', action: () => deleteOutput(outputIndex), Icon: TrashIcon, variant: 'destructive' as const },
+          {
+            name: 'Delete output',
+            action: () => deleteOutput(outputIndex),
+            Icon: TrashIcon,
+            variant: 'destructive' as const,
+          },
         ]
 
-        return [insertActions, ...(shiftActions.length > 0 ? [shiftActions] : []), deleteActions]
+        return [
+          insertActions,
+          ...(shiftActions.length > 0 ? [shiftActions] : []),
+          deleteActions,
+        ]
       }
     } else {
       // Rule row actions
@@ -257,20 +375,53 @@ export function DecisionTableInput({
       const isLastRule = ruleIndex === decisionTable.rules.length - 1
 
       const insertActions = [
-        { name: 'Insert rule above', action: () => insertRuleAbove(ruleIndex), Icon: PlusIcon },
-        { name: 'Insert rule below', action: () => insertRuleBelow(ruleIndex), Icon: PlusIcon },
+        {
+          name: 'Insert rule above',
+          action: () => insertRuleAbove(ruleIndex),
+          Icon: PlusIcon,
+        },
+        {
+          name: 'Insert rule below',
+          action: () => insertRuleBelow(ruleIndex),
+          Icon: PlusIcon,
+        },
       ]
 
       const shiftActions = [
-        ...(!isFirstRule ? [{ name: 'Shift up', action: () => shiftRuleUp(ruleIndex), Icon: ArrowUpIcon }] : []),
-        ...(!isLastRule ? [{ name: 'Shift down', action: () => shiftRuleDown(ruleIndex), Icon: ArrowDownIcon }] : []),
+        ...(!isFirstRule
+          ? [
+              {
+                name: 'Shift up',
+                action: () => shiftRuleUp(ruleIndex),
+                Icon: ArrowUpIcon,
+              },
+            ]
+          : []),
+        ...(!isLastRule
+          ? [
+              {
+                name: 'Shift down',
+                action: () => shiftRuleDown(ruleIndex),
+                Icon: ArrowDownIcon,
+              },
+            ]
+          : []),
       ]
 
       const deleteActions = [
-        { name: 'Delete rule', action: () => deleteRule(ruleIndex), Icon: TrashIcon, variant: 'destructive' as const },
+        {
+          name: 'Delete rule',
+          action: () => deleteRule(ruleIndex),
+          Icon: TrashIcon,
+          variant: 'destructive' as const,
+        },
       ]
 
-      return [insertActions, ...(shiftActions.length > 0 ? [shiftActions] : []), deleteActions]
+      return [
+        insertActions,
+        ...(shiftActions.length > 0 ? [shiftActions] : []),
+        deleteActions,
+      ]
     }
   }
 
