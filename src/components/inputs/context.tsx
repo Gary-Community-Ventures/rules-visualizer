@@ -178,7 +178,7 @@ export function ContextInput({ context, updateContext }: ContextInputProps) {
         <TableRow key={i}>
           {i < context.entries.length - 1 ? (
             <TableInputCell
-              className="font-mono"
+              className="font-mono!"
               value={name}
               onChange={(v) => {
                 updateName(i, v.replace(/ /g, '_'))
