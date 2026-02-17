@@ -17,11 +17,10 @@ import {
 } from 'lucide-react'
 import {
   createNode,
-  generateId,
   createInput,
-  createDefaultConstant,
-  createDefaultContext,
-  createDefaultDecisionTable,
+  createConstant,
+  createContext,
+  createDecisionTable,
 } from '@/lib/model'
 import {
   downloadFile,
@@ -131,16 +130,15 @@ export function ToolBar() {
   const addTypedNode = (
     type: 'input' | 'constant' | 'context' | 'decisionTable'
   ) => {
-    const id = generateId('node')
     const contentMap = {
       input: createInput(),
-      constant: createDefaultConstant(''),
-      context: createDefaultContext(),
-      decisionTable: createDefaultDecisionTable(),
+      constant: createConstant(),
+      context: createContext(),
+      decisionTable: createDecisionTable(),
     }
-    const node = createNode(id, '', contentMap[type])
-    addNode(id, node)
-    setOpenNode(id)
+    const node = createNode({ content: contentMap[type] })
+    addNode(node.id, node)
+    setOpenNode(node.id)
   }
 
   return (

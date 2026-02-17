@@ -1,4 +1,4 @@
-import type { Constant, ModelNode, NodeContent } from '@/lib/model'
+import type { Constant, Context, ModelNode, NodeContent } from '@/lib/model'
 import { ContextInput } from './context'
 import { useDiff, useUpdateDiff, useUpdateNode } from '@/context'
 import { ConstantInput } from './constant'
@@ -21,8 +21,24 @@ export function Editor({ node }: EditorProps) {
     const updateContext = (context: NodeContent) => {
       updateNode(node.id, (node) => ({ ...node, content: context }))
     }
+    let contextDiff:
+      | { new: Context; update: (newValue: Context) => void }
+      | undefined = undefined
+    if (diff !== undefined && diff.content.type === 'context') {
+      contextDiff = {
+        new: diff.content,
+        update: (newValue) =>
+          updateDiff(node.id, (diff) => ({ ...diff, content: newValue })),
+      }
+    }
 
-    return <ContextInput context={node.content} updateContext={updateContext} />
+    return (
+      <ContextInput
+        context={node.content}
+        updateContext={updateContext}
+        diff={contextDiff}
+      />
+    )
   }
   if (node.content.type === 'constant') {
     const updateConstant = (constant: NodeContent) => {

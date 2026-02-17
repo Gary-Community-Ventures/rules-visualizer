@@ -76,6 +76,7 @@ type FeelEditorProps = {
   className?: string
   dialect?: 'expression' | 'unaryTests'
   knownNames?: string[]
+  disabled?: boolean
 }
 
 function nameCompletionSource(knownNames: string[]): CompletionSource {
@@ -135,14 +136,18 @@ export function FeelEditor({
   className,
   dialect = 'expression',
   knownNames = [],
+  disabled = false,
 }: FeelEditorProps) {
   const containerRef = useRef<HTMLDivElement>(null)
 
   const stableNames = useMemo(() => knownNames.join('\0'), [knownNames])
   const extensions = useMemo(
-    () => createFeelExtensions(dialect, knownNames),
+    () => [
+      ...createFeelExtensions(dialect, knownNames),
+      EditorView.editable.of(!disabled),
+    ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [dialect, stableNames]
+    [dialect, stableNames, disabled]
   )
 
   useCodeMirror({
