@@ -25,21 +25,21 @@ export function createDemoModel(): DemoData {
     // ─── Inputs ───────────────────────────────────────────────
     [idA]: {
       id: idA,
-      name: 'Applicant Age',
+      name: 'Applicant_Age',
       typeRef: 'number',
       dependencies: [],
       content: { type: 'input', id: generateId('input') },
     },
     [idB]: {
       id: idB,
-      name: 'Annual Income',
+      name: 'Annual_Income',
       typeRef: 'number',
       dependencies: [],
       content: { type: 'input', id: generateId('input') },
     },
     [idC]: {
       id: idC,
-      name: 'Employment Status',
+      name: 'Employment_Status',
       typeRef: 'string',
       dependencies: [],
       content: { type: 'input', id: generateId('input') },
@@ -48,28 +48,28 @@ export function createDemoModel(): DemoData {
     // ─── Constants ────────────────────────────────────────────
     [idMinIncomeEmployed]: {
       id: idMinIncomeEmployed,
-      name: 'Min Income Employed',
+      name: 'Min_Income_Employed',
       typeRef: 'number',
       dependencies: [],
       content: { type: 'constant', text: '30000', typeRef: 'number' },
     },
     [idMinIncomeSelfEmployed]: {
       id: idMinIncomeSelfEmployed,
-      name: 'Min Income Self Employed',
+      name: 'Min_Income_Self_Employed',
       typeRef: 'number',
       dependencies: [],
       content: { type: 'constant', text: '20000', typeRef: 'number' },
     },
     [idMinAge]: {
       id: idMinAge,
-      name: 'Min Age',
+      name: 'Min_Age',
       typeRef: 'number',
       dependencies: [],
       content: { type: 'constant', text: '18', typeRef: 'number' },
     },
     [idMaxAge]: {
       id: idMaxAge,
-      name: 'Max Age',
+      name: 'Max_Age',
       typeRef: 'number',
       dependencies: [],
       content: { type: 'constant', text: '65', typeRef: 'number' },
@@ -78,7 +78,7 @@ export function createDemoModel(): DemoData {
     // ─── Decision Tables ──────────────────────────────────────
     [idD]: {
       id: idD,
-      name: 'Income Threshold',
+      name: 'Income_Threshold',
       typeRef: 'boolean',
       dependencies: [idB, idC, idMinIncomeEmployed, idMinIncomeSelfEmployed],
       content: {
@@ -87,35 +87,35 @@ export function createDemoModel(): DemoData {
         inputClauses: [
           {
             id: generateId('ic'),
-            label: 'Annual Income',
-            inputExpression: 'Annual Income',
+            label: 'Annual_Income',
+            inputExpression: 'Annual_Income',
             inputExpressionTypeRef: 'number',
           },
           {
             id: generateId('ic'),
-            label: 'Employment Status',
-            inputExpression: 'Employment Status',
+            label: 'Employment_Status',
+            inputExpression: 'Employment_Status',
             inputExpressionTypeRef: 'string',
           },
         ],
         outputClauses: [
           {
             id: generateId('oc'),
-            label: 'Income Eligible',
-            name: 'Income Eligible',
+            label: 'Income_Eligible',
+            name: 'Income_Eligible',
             typeRef: 'boolean',
           },
         ],
         rules: [
           {
             id: generateId('rule'),
-            inputEntries: ['>= Min Income Employed', '"employed"'],
+            inputEntries: ['>= Min_Income_Employed', '"employed"'],
             outputEntries: ['true'],
             annotationEntries: [],
           },
           {
             id: generateId('rule'),
-            inputEntries: ['>= Min Income Self Employed', '"self-employed"'],
+            inputEntries: ['>= Min_Income_Self_Employed', '"self-employed"'],
             outputEntries: ['true'],
             annotationEntries: [],
           },
@@ -130,7 +130,7 @@ export function createDemoModel(): DemoData {
     },
     [idE]: {
       id: idE,
-      name: 'Age Eligibility',
+      name: 'Age_Eligibility',
       typeRef: 'boolean',
       dependencies: [idA, idMinAge, idMaxAge],
       content: {
@@ -139,35 +139,35 @@ export function createDemoModel(): DemoData {
         inputClauses: [
           {
             id: generateId('ic'),
-            label: 'Applicant Age',
-            inputExpression: 'Applicant Age',
+            label: 'Applicant_Age',
+            inputExpression: 'Applicant_Age',
             inputExpressionTypeRef: 'number',
           },
         ],
         outputClauses: [
           {
             id: generateId('oc'),
-            label: 'Age Eligible',
-            name: 'Age Eligible',
+            label: 'Age_Eligible',
+            name: 'Age_Eligible',
             typeRef: 'boolean',
           },
         ],
         rules: [
           {
             id: generateId('rule'),
-            inputEntries: ['[Min Age..Max Age]'],
+            inputEntries: ['[Min_Age..Max_Age]'],
             outputEntries: ['true'],
             annotationEntries: [],
           },
           {
             id: generateId('rule'),
-            inputEntries: ['< Min Age'],
+            inputEntries: ['< Min_Age'],
             outputEntries: ['false'],
             annotationEntries: [],
           },
           {
             id: generateId('rule'),
-            inputEntries: ['> Max Age'],
+            inputEntries: ['> Max_Age'],
             outputEntries: ['false'],
             annotationEntries: [],
           },
@@ -178,7 +178,7 @@ export function createDemoModel(): DemoData {
     // ─── Context ──────────────────────────────────────────────
     [idF]: {
       id: idF,
-      name: 'Eligibility Factors',
+      name: 'Eligibility_Factors',
       typeRef: 'boolean',
       dependencies: [idD, idE],
       content: {
@@ -186,18 +186,18 @@ export function createDemoModel(): DemoData {
         entries: [
           {
             id: generateId('ce'),
-            name: 'Income Check',
-            expression: { text: 'Income Threshold', typeRef: 'boolean' },
+            name: 'Income_Check',
+            expression: { text: 'Income_Threshold', typeRef: 'boolean' },
           },
           {
             id: generateId('ce'),
-            name: 'Age Check',
-            expression: { text: 'Age Eligibility', typeRef: 'boolean' },
+            name: 'Age_Check',
+            expression: { text: 'Age_Eligibility', typeRef: 'boolean' },
           },
           {
             id: generateId('ce'),
             name: '_return',
-            expression: { text: 'Income Check and Age Check' },
+            expression: { text: 'Income_Check and Age_Check' },
           },
         ],
       },
@@ -206,7 +206,7 @@ export function createDemoModel(): DemoData {
     // ─── Final Decision ───────────────────────────────────────
     [idG]: {
       id: idG,
-      name: 'Final Recommendation',
+      name: 'Final_Recommendation',
       typeRef: 'string',
       dependencies: [idF],
       content: {
@@ -216,7 +216,7 @@ export function createDemoModel(): DemoData {
             id: generateId('ce'),
             name: '_return',
             expression: {
-              text: 'if Eligibility Factors then "Approved" else "Denied"',
+              text: 'if Eligibility_Factors then "Approved" else "Denied"',
             },
           },
         ],
@@ -226,7 +226,7 @@ export function createDemoModel(): DemoData {
 
   const model: Model = {
     id: generateId('model'),
-    name: 'Benefits Eligibility',
+    name: 'Benefits_Eligibility',
     namespace: 'https://example.com/benefits-eligibility',
     nodes,
   }
