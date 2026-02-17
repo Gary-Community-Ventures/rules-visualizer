@@ -25,10 +25,16 @@ import {
 type InputCellProps = {
   value: string
   onChange: (value: string) => void
+  disabled?: boolean
   className?: string
 }
 
-export function TableInputCell({ value, onChange, className }: InputCellProps) {
+export function TableInputCell({
+  value,
+  onChange,
+  className,
+  ...props
+}: InputCellProps) {
   return (
     <TextBox
       className={cn(
@@ -36,6 +42,7 @@ export function TableInputCell({ value, onChange, className }: InputCellProps) {
         className
       )}
       value={value}
+      {...props}
       onChange={(e) => onChange(e.target.value.replace(/\n/g, ''))}
     />
   )

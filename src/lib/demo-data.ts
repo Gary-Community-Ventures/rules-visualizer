@@ -1,7 +1,12 @@
-import type { Model, ModelNodes } from './model'
+import type { Model, ModelNode, ModelNodes } from './model'
 import { generateId } from './model'
 
-export function createDemoModel(): Model {
+type DemoData = {
+  model: Model
+  diffs: ModelNode[]
+}
+
+export function createDemoModel(): DemoData {
   // Generate stable IDs
   const idA = generateId('node')
   const idB = generateId('node')
@@ -219,10 +224,17 @@ export function createDemoModel(): Model {
     },
   }
 
-  return {
+  const model: Model = {
     id: generateId('model'),
     name: 'Benefits Eligibility',
     namespace: 'https://example.com/benefits-eligibility',
     nodes,
   }
+
+  const finalNode = nodes[idG]
+  const diffs: ModelNode[] = [
+    { ...finalNode, name: finalNode.name + ' (modified)' },
+  ]
+
+  return { model, diffs }
 }

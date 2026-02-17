@@ -1,9 +1,16 @@
-import { useMainContext, useNode } from '@/context'
+import {
+  useDiff,
+  useMainContext,
+  useNode,
+  useUpdateDiff,
+  useUpdateNode,
+} from '@/context'
 import { Button } from './ui/button'
 import { Minus, Plus } from 'lucide-react'
 import { Editor } from './inputs/editor'
 import { NodeInput } from './node-input'
 import { NodeResultBadge } from './node-result'
+import { TextInput } from './inputs/text'
 
 type NodeProps = {
   id: string
@@ -66,11 +73,35 @@ type NodeViewerProps = {
 
 export function NodeViewer({ id }: NodeViewerProps) {
   const node = useNode(id)
+  const updateNode = useUpdateNode()
+  const diff = useDiff(id)
+  const updateDiff = useUpdateDiff()
+
+  let nameDiff:
+    | { text: string; update: (newValue: string) => void }
+    | undefined = undefined
+  if (diff !== undefined) {
+    nameDiff = {
+      text: diff.name,
+      update: (newValue) =>
+        updateDiff(id, (diff) => ({ ...diff, name: newValue })),
+    }
+  }
+
   return (
-    <section>
-      <h2>{node.name}</h2>
-      <p>{node.id}</p>
-      <Editor node={node} />
+    <section className="flex flex-col gap-10">
+      <div>
+        Name:
+        <TextInput
+          text={node.name}
+          updateText={(name) => updateNode(id, (node) => ({ ...node, name }))}
+          diff={nameDiff}
+        />
+      </div>
+      <div>
+        Editor:
+        <Editor node={node} />
+      </div>
     </section>
   )
 }

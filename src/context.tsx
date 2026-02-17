@@ -31,6 +31,8 @@ type MainContext = {
   setShowChildren: Dispatch<SetStateAction<Record<string, boolean>>>
   openNode: string | null
   setOpenNode: Dispatch<SetStateAction<string | null>>
+  diffs: ModelNode[]
+  setDiffs: Dispatch<SetStateAction<ModelNode[]>>
   executionResult: ExecutionResult | null
   isExecuting: boolean
   inputValues: Record<string, unknown> // keyed by node ID
@@ -46,11 +48,14 @@ type MainContext = {
 const MainContext = createContext<MainContext | undefined>(undefined)
 
 export function Wrapper({ children }: { children: React.ReactNode }) {
-  const [model, setModel] = useState<Model>(createDemoModel)
+  const { model: demoModel, diffs: demoDiffs } = createDemoModel()
+
+  const [model, setModel] = useState<Model>(demoModel)
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null)
   const [selectedNodes, setSelectedNodes] = useState<string[]>([])
   const [showChildren, setShowChildren] = useState<Record<string, boolean>>({})
   const [openNode, setOpenNode] = useState<string | null>(null)
+  const [diffs, setDiffs] = useState<ModelNode[]>(demoDiffs)
   const [executionResult, setExecutionResult] =
     useState<ExecutionResult | null>(null)
   const [isExecuting, setIsExecuting] = useState(false)
@@ -158,45 +163,30 @@ export function Wrapper({ children }: { children: React.ReactNode }) {
     [execute, debouncedExecute, reset]
   )
 
-  const value = useMemo(
-    () => ({
-      model,
-      setModel,
-      hoveredNodeId,
-      setHoveredNodeId,
-      selectedNodes,
-      setSelectedNodes,
-      showChildren,
-      setShowChildren,
-      openNode,
-      setOpenNode,
-      executionResult,
-      isExecuting,
-      inputValues,
-      setInputValues,
-      lastRunTimestamp,
-      resultStale,
-      setResultStale,
-      lastError,
-      setLastError,
-      execution,
-    }),
-    [
-      model,
-      hoveredNodeId,
-      selectedNodes,
-      showChildren,
-      openNode,
-      executionResult,
-      isExecuting,
-      inputValues,
-      lastRunTimestamp,
-      resultStale,
-      lastError,
-      execution,
-    ]
-  )
-
+  const value = {
+    model,
+    setModel,
+    hoveredNodeId,
+    setHoveredNodeId,
+    selectedNodes,
+    setSelectedNodes,
+    showChildren,
+    setShowChildren,
+    openNode,
+    setOpenNode,
+    diffs,
+    setDiffs,
+    executionResult,
+    isExecuting,
+    inputValues,
+    setInputValues,
+    lastRunTimestamp,
+    resultStale,
+    setResultStale,
+    lastError,
+    setLastError,
+    execution,
+  }
   return <MainContext.Provider value={value}>{children}</MainContext.Provider>
 }
 
@@ -253,4 +243,26 @@ export function useAddNode() {
 export function useNodeResult(nodeId: string): NodeResult | undefined {
   const { executionResult } = useMainContext()
   return executionResult?.nodeResults[nodeId]
+}
+
+export function useDiff(nodeId: string) {
+  const { diffs } = useMainContext()
+
+  return diffs.find((diff) => diff.id === nodeId)
+}
+
+export function useUpdateDiff() {
+  const { setDiffs } = useMainContext()
+
+  return (id: string, updater: (diff: ModelNode) => ModelNode) => {
+    setDiffs((diffs) =>
+      diffs.map((diff) => {
+        if (diff.id !== id) {
+          return diff
+        }
+
+        return updater(diff)
+      })
+    )
+  }
 }
