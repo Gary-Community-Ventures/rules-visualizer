@@ -1,6 +1,8 @@
 import type { DecisionTable } from '@/lib/model'
 import { createInputClause, createOutputClause, createRule } from '@/lib/model'
-import { Table, TableInputCell, TableRow } from '../table'
+import { useMainContext } from '@/context'
+import { useMemo } from 'react'
+import { Table, TableFeelCell, TableInputCell, TableRow } from '../table'
 import {
   ArrowLeftIcon,
   ArrowRightIcon,
@@ -22,6 +24,12 @@ export function DecisionTableInput({
   decisionTable,
   updateDecisionTable,
 }: DecisionTableInputProps) {
+  const { model } = useMainContext()
+  const knownNames = useMemo(
+    () => Object.values(model.nodes).map((n) => n.name),
+    [model.nodes]
+  )
+
   const inputCount = decisionTable.inputClauses.length
   const outputCount = decisionTable.outputClauses.length
   const columns = inputCount + outputCount
@@ -270,36 +278,42 @@ export function DecisionTableInput({
     <Table columns={columns} getActions={getActions}>
       <TableRow>
         {decisionTable.inputClauses.map((input, i) => (
-          <TableInputCell
+          <TableFeelCell
             key={input.id}
             className={INPUT_HEADER_COLOR}
             value={input.inputExpression}
             onChange={(v) => updateInputClause(i, v)}
+            dialect="expression"
+            knownNames={knownNames}
           />
         ))}
         {decisionTable.outputClauses.map((output, i) => (
           <TableInputCell
             key={output.id}
-            className={OUTPUT_HEADER_COLOR}
+            className={`${OUTPUT_HEADER_COLOR} font-mono`}
             value={output.name}
-            onChange={(v) => updateOutputClause(i, v)}
+            onChange={(v) => updateOutputClause(i, v.replace(/ /g, '_'))}
           />
         ))}
       </TableRow>
       {decisionTable.rules.map((rule, ruleIndex) => (
         <TableRow key={rule.id}>
           {rule.inputEntries.map((input, entryIndex) => (
-            <TableInputCell
+            <TableFeelCell
               key={`${rule.id}-in-${entryIndex}`}
               value={input}
               onChange={(v) => updateRuleInput(ruleIndex, entryIndex, v)}
+              dialect="unaryTests"
+              knownNames={knownNames}
             />
           ))}
           {rule.outputEntries.map((output, entryIndex) => (
-            <TableInputCell
+            <TableFeelCell
               key={`${rule.id}-out-${entryIndex}`}
               value={output}
               onChange={(v) => updateRuleOutput(ruleIndex, entryIndex, v)}
+              dialect="expression"
+              knownNames={knownNames}
             />
           ))}
         </TableRow>

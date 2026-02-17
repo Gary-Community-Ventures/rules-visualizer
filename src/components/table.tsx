@@ -1,4 +1,5 @@
 import { cn } from '@/lib/utils'
+import { FeelEditor } from './feel-editor'
 import {
   Children,
   cloneElement,
@@ -37,6 +38,30 @@ export function TableInputCell({ value, onChange, className }: InputCellProps) {
       )}
       value={value}
       onChange={(e) => onChange(e.target.value.replace(/\n/g, ''))}
+    />
+  )
+}
+
+export function TableFeelCell({
+  value,
+  onChange,
+  className,
+  dialect,
+  knownNames,
+}: {
+  value: string
+  onChange: (value: string) => void
+  className?: string
+  dialect?: 'expression' | 'unaryTests'
+  knownNames?: string[]
+}) {
+  return (
+    <FeelEditor
+      className={cn('block border rounded-none m-0 w-full box-border', className)}
+      value={value}
+      onChange={onChange}
+      dialect={dialect}
+      knownNames={knownNames}
     />
   )
 }

@@ -1,6 +1,8 @@
 import type { Context } from '@/lib/model'
 import { createEntry } from '@/lib/model'
-import { Table, TableInputCell, TableRow, TableTextCell } from '../table'
+import { useMainContext } from '@/context'
+import { useMemo } from 'react'
+import { Table, TableFeelCell, TableInputCell, TableRow, TableTextCell } from '../table'
 import { ArrowDownIcon, ArrowUpIcon, PlusIcon, TrashIcon } from 'lucide-react'
 
 type ContextInputProps = {
@@ -9,6 +11,18 @@ type ContextInputProps = {
 }
 
 export function ContextInput({ context, updateContext }: ContextInputProps) {
+  const { model } = useMainContext()
+  const knownNames = useMemo(
+    () => [
+      ...Object.values(model.nodes).map((n) => n.name),
+      ...context.entries
+        .filter((e) => e.name !== '_return')
+        .map((e) => e.name)
+        .filter(Boolean),
+    ],
+    [model.nodes, context.entries]
+  )
+
   const updateName = (index: number, name: string) => {
     const entries = [...context.entries]
     entries[index] = { ...entries[index], name }
@@ -161,9 +175,10 @@ export function ContextInput({ context, updateContext }: ContextInputProps) {
         <TableRow key={i}>
           {i < context.entries.length - 1 ? (
             <TableInputCell
+              className="font-mono"
               value={name}
               onChange={(v) => {
-                updateName(i, v)
+                updateName(i, v.replace(/ /g, '_'))
               }}
             />
           ) : (
@@ -171,9 +186,11 @@ export function ContextInput({ context, updateContext }: ContextInputProps) {
               return
             </TableTextCell>
           )}
-          <TableInputCell
+          <TableFeelCell
             value={expression.text}
             onChange={(v) => updateExpression(i, v)}
+            dialect="expression"
+            knownNames={knownNames}
           />
         </TableRow>
       ))}
