@@ -10,8 +10,14 @@ export function createDemoModel(): Model {
   const idE = generateId('node')
   const idF = generateId('node')
   const idG = generateId('node')
+  // Constants
+  const idMinIncomeEmployed = generateId('node')
+  const idMinIncomeSelfEmployed = generateId('node')
+  const idMinAge = generateId('node')
+  const idMaxAge = generateId('node')
 
   const nodes: ModelNodes = {
+    // ─── Inputs ───────────────────────────────────────────────
     [idA]: {
       id: idA,
       name: 'Applicant Age',
@@ -33,11 +39,43 @@ export function createDemoModel(): Model {
       dependencies: [],
       content: { type: 'input', id: generateId('input') },
     },
+
+    // ─── Constants ────────────────────────────────────────────
+    [idMinIncomeEmployed]: {
+      id: idMinIncomeEmployed,
+      name: 'Min Income Employed',
+      typeRef: 'number',
+      dependencies: [],
+      content: { type: 'constant', text: '30000', typeRef: 'number' },
+    },
+    [idMinIncomeSelfEmployed]: {
+      id: idMinIncomeSelfEmployed,
+      name: 'Min Income Self Employed',
+      typeRef: 'number',
+      dependencies: [],
+      content: { type: 'constant', text: '20000', typeRef: 'number' },
+    },
+    [idMinAge]: {
+      id: idMinAge,
+      name: 'Min Age',
+      typeRef: 'number',
+      dependencies: [],
+      content: { type: 'constant', text: '18', typeRef: 'number' },
+    },
+    [idMaxAge]: {
+      id: idMaxAge,
+      name: 'Max Age',
+      typeRef: 'number',
+      dependencies: [],
+      content: { type: 'constant', text: '65', typeRef: 'number' },
+    },
+
+    // ─── Decision Tables ──────────────────────────────────────
     [idD]: {
       id: idD,
       name: 'Income Threshold',
       typeRef: 'boolean',
-      dependencies: [idB, idC],
+      dependencies: [idB, idC, idMinIncomeEmployed, idMinIncomeSelfEmployed],
       content: {
         type: 'decisionTable',
         hitPolicy: 'FIRST',
@@ -66,13 +104,13 @@ export function createDemoModel(): Model {
         rules: [
           {
             id: generateId('rule'),
-            inputEntries: ['>= 30000', '"employed"'],
+            inputEntries: ['>= Min Income Employed', '"employed"'],
             outputEntries: ['true'],
             annotationEntries: [],
           },
           {
             id: generateId('rule'),
-            inputEntries: ['>= 20000', '"self-employed"'],
+            inputEntries: ['>= Min Income Self Employed', '"self-employed"'],
             outputEntries: ['true'],
             annotationEntries: [],
           },
@@ -89,7 +127,7 @@ export function createDemoModel(): Model {
       id: idE,
       name: 'Age Eligibility',
       typeRef: 'boolean',
-      dependencies: [idA],
+      dependencies: [idA, idMinAge, idMaxAge],
       content: {
         type: 'decisionTable',
         hitPolicy: 'UNIQUE',
@@ -112,25 +150,27 @@ export function createDemoModel(): Model {
         rules: [
           {
             id: generateId('rule'),
-            inputEntries: ['[18..65]'],
+            inputEntries: ['[Min Age..Max Age]'],
             outputEntries: ['true'],
             annotationEntries: [],
           },
           {
             id: generateId('rule'),
-            inputEntries: ['< 18'],
+            inputEntries: ['< Min Age'],
             outputEntries: ['false'],
             annotationEntries: [],
           },
           {
             id: generateId('rule'),
-            inputEntries: ['> 65'],
+            inputEntries: ['> Max Age'],
             outputEntries: ['false'],
             annotationEntries: [],
           },
         ],
       },
     },
+
+    // ─── Context ──────────────────────────────────────────────
     [idF]: {
       id: idF,
       name: 'Eligibility Factors',
@@ -157,15 +197,24 @@ export function createDemoModel(): Model {
         ],
       },
     },
+
+    // ─── Final Decision ───────────────────────────────────────
     [idG]: {
       id: idG,
       name: 'Final Recommendation',
       typeRef: 'string',
       dependencies: [idF],
       content: {
-        type: 'constant',
-        text: 'if Eligibility Factors then "Approved" else "Denied"',
-        typeRef: 'string',
+        type: 'context',
+        entries: [
+          {
+            id: generateId('ce'),
+            name: '_return',
+            expression: {
+              text: 'if Eligibility Factors then "Approved" else "Denied"',
+            },
+          },
+        ],
       },
     },
   }
