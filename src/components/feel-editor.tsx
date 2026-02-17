@@ -10,8 +10,8 @@ import {
 } from '@codemirror/view'
 import { EditorState, type Extension } from '@codemirror/state'
 import { defaultHighlightStyle, syntaxHighlighting } from '@codemirror/language'
-import { type CompletionSource } from '@codemirror/autocomplete'
-import { feel } from 'lang-feel'
+import { autocompletion, type CompletionSource } from '@codemirror/autocomplete'
+import { feel, feelLanguage } from 'lang-feel'
 import { useCodeMirror } from '@/lib/use-codemirror'
 import { cn } from '@/lib/utils'
 
@@ -98,14 +98,18 @@ export function createFeelExtensions(
   knownNames: string[] = []
 ): Extension[] {
   return [
-    feel({
-      dialect,
-      completions:
-        knownNames.length > 0 ? [nameCompletionSource(knownNames)] : [],
-    }),
+    feel({ dialect }),
+    autocompletion(),
     syntaxHighlighting(defaultHighlightStyle),
     feelEditorTheme,
     nameHighlighter(knownNames),
+    ...(knownNames.length > 0
+      ? [
+          feelLanguage.data.of({
+            autocomplete: nameCompletionSource(knownNames),
+          }),
+        ]
+      : []),
     keymap.of([{ key: 'Enter', run: () => true }]),
     EditorState.transactionFilter.of((tr) => {
       if (!tr.docChanged) return tr
