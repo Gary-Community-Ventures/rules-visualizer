@@ -45,7 +45,7 @@ export function Node({ id }: NodeProps) {
           setOpenNode(id)
         }}
       >
-        <div className="text-center font-medium">{node.name}</div>
+        <div className="text-center font-medium whitespace-nowrap">{node.name}</div>
         <NodeResultBadge nodeId={id} />
         {isInput && <NodeInput nodeId={id} />}
       </div>
