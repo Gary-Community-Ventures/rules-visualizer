@@ -5,6 +5,7 @@ import {
   ViewPlugin,
   Decoration,
   type DecorationSet,
+  type ViewUpdate,
   MatchDecorator,
 } from '@codemirror/view'
 import { EditorState, type Extension } from '@codemirror/state'
@@ -21,16 +22,22 @@ export const feelEditorTheme = EditorView.theme({
   '.cm-gutters': { display: 'none' },
   '.cm-scroller': { overflow: 'auto' },
   '.cm-known-name': { color: '#7c3aed', fontWeight: '600' },
-  '.cm-unknown-name': { textDecoration: 'wavy underline red' },
 })
+
+// Cache shared plugin instances by serialized name list
+const pluginCache = new Map<string, Extension>()
 
 function nameHighlighter(knownNames: string[]): Extension {
   if (knownNames.length === 0) return []
 
-  const nameSet = new Set(knownNames)
+  const cacheKey = knownNames.join('\0')
+  const cached = pluginCache.get(cacheKey)
+  if (cached) return cached
 
-  // Build regex matching any identifier-like token (letters, digits, underscores)
-  const escaped = knownNames.map((n) =>
+  // Sort by descending length so longer names match before shorter overlapping ones
+  const sorted = [...knownNames].sort((a, b) => b.length - a.length)
+
+  const escaped = sorted.map((n) =>
     n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
   )
   const pattern = new RegExp(`\\b(${escaped.join('|')})\\b`, 'g')
@@ -39,24 +46,24 @@ function nameHighlighter(knownNames: string[]): Extension {
 
   const matcher = new MatchDecorator({
     regexp: pattern,
-    decoration: (match) => {
-      if (nameSet.has(match[0])) return knownMark
-      return Decoration.mark({})
-    },
+    decoration: () => knownMark,
   })
 
-  return ViewPlugin.fromClass(
+  const plugin = ViewPlugin.fromClass(
     class {
       decorations: DecorationSet
       constructor(view: EditorView) {
         this.decorations = matcher.createDeco(view)
       }
-      update(update: import('@codemirror/view').ViewUpdate) {
+      update(update: ViewUpdate) {
         this.decorations = matcher.updateDeco(update, this.decorations)
       }
     },
     { decorations: (instance) => instance.decorations }
   )
+
+  pluginCache.set(cacheKey, plugin)
+  return plugin
 }
 
 type FeelEditorProps = {
@@ -79,18 +86,21 @@ export function createFeelExtensions(
     keymap.of([{ key: 'Enter', run: () => true }]),
     EditorState.transactionFilter.of((tr) => {
       if (!tr.docChanged) return tr
-      const newDoc = tr.newDoc.toString()
-      if (newDoc.includes('\n')) {
-        return {
-          ...tr,
-          changes: {
-            from: 0,
-            to: tr.startState.doc.length,
-            insert: newDoc.replace(/\n/g, ''),
-          },
-        }
-      }
-      return tr
+      let hasNewline = false
+      tr.changes.iterChanges((_fromA, _toA, _fromB, _toB, inserted) => {
+        if (inserted.toString().includes('\n')) hasNewline = true
+      })
+      if (!hasNewline) return tr
+      // Rebuild changes with newlines stripped from each insertion
+      const changes: { from: number; to: number; insert: string }[] = []
+      tr.changes.iterChanges((fromA, toA, _fromB, _toB, inserted) => {
+        changes.push({
+          from: fromA,
+          to: toA,
+          insert: inserted.toString().replace(/\n/g, ''),
+        })
+      })
+      return { changes }
     }),
     EditorView.lineWrapping,
   ]

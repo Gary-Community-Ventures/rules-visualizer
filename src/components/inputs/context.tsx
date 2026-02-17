@@ -12,15 +12,18 @@ type ContextInputProps = {
 
 export function ContextInput({ context, updateContext }: ContextInputProps) {
   const { model } = useMainContext()
+  const entryNames = context.entries
+    .filter((e) => e.name !== '_return')
+    .map((e) => e.name)
+    .filter(Boolean)
+    .join('\0')
   const knownNames = useMemo(
     () => [
       ...Object.values(model.nodes).map((n) => n.name),
-      ...context.entries
-        .filter((e) => e.name !== '_return')
-        .map((e) => e.name)
-        .filter(Boolean),
+      ...entryNames.split('\0').filter(Boolean),
     ],
-    [model.nodes, context.entries]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [model.nodes, entryNames]
   )
 
   const updateName = (index: number, name: string) => {
