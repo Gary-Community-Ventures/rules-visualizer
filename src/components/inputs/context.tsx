@@ -150,8 +150,12 @@ export function ContextInput({ context, updateContext }: ContextInputProps) {
   return (
     <Table columns={2} getActions={getActions}>
       <TableRow>
-        <TableTextCell>Name</TableTextCell>
-        <TableTextCell>Value</TableTextCell>
+        <TableTextCell className="bg-fuchsia-100 text-black">
+          Name
+        </TableTextCell>
+        <TableTextCell className="bg-fuchsia-100 text-black">
+          Value
+        </TableTextCell>
       </TableRow>
       {context.entries.map(({ name, expression }, i) => (
         <TableRow key={i}>
@@ -163,7 +167,9 @@ export function ContextInput({ context, updateContext }: ContextInputProps) {
               }}
             />
           ) : (
-            <TableTextCell>return</TableTextCell>
+            <TableTextCell className="bg-cyan-100 text-black">
+              return
+            </TableTextCell>
           )}
           <TableInputCell
             value={expression.text}

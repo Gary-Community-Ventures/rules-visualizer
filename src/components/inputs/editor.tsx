@@ -40,5 +40,5 @@ export function Editor({ node }: EditorProps) {
     return null
   }
 
-  return <div>Not implemented</div>
+  throw new Error(`Editor not implemented node '${JSON.stringify(node)}'`)
 }
