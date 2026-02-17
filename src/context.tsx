@@ -13,6 +13,7 @@ import type { Model, ModelNode } from './lib/model'
 import type { ExecutionResult, NodeResult } from './lib/engine'
 import { createKieEngine, getKieBaseUrl } from './lib/engine'
 import { createDemoModel } from './lib/demo-data'
+import { useLocalStorage } from './lib/use-local-storage'
 import { computeNodeDependencies } from './lib/graph'
 
 type ExecutionActions = {
@@ -54,7 +55,9 @@ export function Wrapper({ children }: { children: React.ReactNode }) {
   const [model, setModel] = useState<Model>(demoModel)
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null)
   const [selectedNodes, setSelectedNodes] = useState<string[]>([])
-  const [showChildren, setShowChildren] = useState<Record<string, boolean>>({})
+  const [showChildren, setShowChildren] = useLocalStorage<
+    Record<string, boolean>
+  >('showChildren', {})
   const [openNode, setOpenNode] = useState<string | null>(null)
   const [diffs, setDiffs] = useState<ModelNode[]>(demoDiffs)
   const [executionResult, setExecutionResult] =

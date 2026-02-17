@@ -7,19 +7,19 @@ type DemoData = {
 }
 
 export function createDemoModel(): DemoData {
-  // Generate stable IDs
-  const idA = generateId('node')
-  const idB = generateId('node')
-  const idC = generateId('node')
-  const idD = generateId('node')
-  const idE = generateId('node')
-  const idF = generateId('node')
-  const idG = generateId('node')
+  // Use stable IDs so localStorage showChildren state persists across reloads
+  const idA = '_node_applicant_age'
+  const idB = '_node_annual_income'
+  const idC = '_node_employment_status'
+  const idD = '_node_income_threshold'
+  const idE = '_node_age_eligibility'
+  const idF = '_node_eligibility_factors'
+  const idG = '_node_final_recommendation'
   // Constants
-  const idMinIncomeEmployed = generateId('node')
-  const idMinIncomeSelfEmployed = generateId('node')
-  const idMinAge = generateId('node')
-  const idMaxAge = generateId('node')
+  const idMinIncomeEmployed = '_node_min_income_employed'
+  const idMinIncomeSelfEmployed = '_node_min_income_self_employed'
+  const idMinAge = '_node_min_age'
+  const idMaxAge = '_node_max_age'
 
   const nodes: ModelNodes = {
     // ─── Inputs ───────────────────────────────────────────────

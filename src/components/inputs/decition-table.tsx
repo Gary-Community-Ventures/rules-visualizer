@@ -1,7 +1,6 @@
 import type { DecisionTable } from '@/lib/model'
 import { createInputClause, createOutputClause, createRule } from '@/lib/model'
-import { useMainContext } from '@/context'
-import { useMemo } from 'react'
+import { useKnownNames } from '@/lib/use-known-names'
 import { Table, TableFeelCell, TableInputCell, TableRow } from '../table'
 import {
   ArrowLeftIcon,
@@ -24,11 +23,7 @@ export function DecisionTableInput({
   decisionTable,
   updateDecisionTable,
 }: DecisionTableInputProps) {
-  const { model } = useMainContext()
-  const knownNames = useMemo(
-    () => Object.values(model.nodes).map((n) => n.name),
-    [model.nodes]
-  )
+  const knownNames = useKnownNames()
 
   const inputCount = decisionTable.inputClauses.length
   const outputCount = decisionTable.outputClauses.length
