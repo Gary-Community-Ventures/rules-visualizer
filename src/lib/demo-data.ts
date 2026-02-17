@@ -231,13 +231,69 @@ export function createDemoModel(): DemoData {
     nodes,
   }
 
-  const finalNode = nodes[idG]
   const minIncomeNode = nodes[idMinIncomeEmployed]
   const eligibilityNode = nodes[idF]
+  const incomeThresholdNode = nodes[idD]
   const diffs: ModelNode[] = [
     {
       ...minIncomeNode,
       content: { type: 'constant', text: '35000', typeRef: 'number' },
+    },
+    {
+      ...incomeThresholdNode,
+      content: {
+        type: 'decisionTable',
+        hitPolicy: 'FIRST',
+        inputClauses: [
+          {
+            id: generateId('ic'),
+            label: 'Annual_Income',
+            inputExpression: 'Annual_Income',
+            inputExpressionTypeRef: 'number',
+          },
+          {
+            id: generateId('ic'),
+            label: 'Employment_Status',
+            inputExpression: 'Employment_Status',
+            inputExpressionTypeRef: 'string',
+          },
+        ],
+        outputClauses: [
+          {
+            id: generateId('oc'),
+            label: 'Income_Eligible',
+            name: 'Income_Eligible',
+            typeRef: 'boolean',
+          },
+        ],
+        rules: [
+          {
+            id: generateId('rule'),
+            inputEntries: ['>= Min_Income_Employed', '"employed"'],
+            outputEntries: ['true'],
+            annotationEntries: [],
+          },
+          {
+            id: generateId('rule'),
+            inputEntries: ['>= Min_Income_Self_Employed', '"self-employed"'],
+            outputEntries: ['true'],
+            annotationEntries: [],
+          },
+          // Added: new rule for contractors
+          {
+            id: generateId('rule'),
+            inputEntries: ['>= 40000', '"contractor"'],
+            outputEntries: ['true'],
+            annotationEntries: [],
+          },
+          {
+            id: generateId('rule'),
+            inputEntries: ['-', '-'],
+            outputEntries: ['false'],
+            annotationEntries: [],
+          },
+        ],
+      },
     },
     {
       ...eligibilityNode,

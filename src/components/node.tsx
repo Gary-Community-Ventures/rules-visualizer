@@ -197,19 +197,19 @@ export function NodeViewer({ id }: NodeViewerProps) {
         <div className="flex gap-2">
           <Button
             variant="outline"
-            className="flex-1 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
-            onClick={() => resolveDiff(id, true)}
-          >
-            <Check className="size-4 mr-2" />
-            Accept
-          </Button>
-          <Button
-            variant="outline"
             className="flex-1 text-red-600 hover:text-red-700 hover:bg-red-50"
             onClick={() => resolveDiff(id, false)}
           >
             <X className="size-4 mr-2" />
             Reject
+          </Button>
+          <Button
+            variant="outline"
+            className="flex-1 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
+            onClick={() => resolveDiff(id, true)}
+          >
+            <Check className="size-4 mr-2" />
+            Accept
           </Button>
         </div>
       )}

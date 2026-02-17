@@ -1,4 +1,10 @@
-import type { Constant, Context, ModelNode, NodeContent } from '@/lib/model'
+import type {
+  Constant,
+  Context,
+  DecisionTable,
+  ModelNode,
+  NodeContent,
+} from '@/lib/model'
 import { ContextInput } from './context'
 import { useDiff, useUpdateDiff, useUpdateNode } from '@/context'
 import { ConstantInput } from './constant'
@@ -66,6 +72,37 @@ export function Editor({ node }: EditorProps) {
     const updateDecisionTable = (decisionTable: NodeContent) => {
       updateNode(node.id, (node) => ({ ...node, content: decisionTable }))
     }
+
+    if (diff !== undefined && diff.content.type === 'decisionTable') {
+      const updateDiffTable = (decisionTable: DecisionTable) => {
+        updateDiff(node.id, (diff) => ({ ...diff, content: decisionTable }))
+      }
+      return (
+        <div className="flex flex-col gap-4">
+          <div>
+            <label className="text-sm font-medium text-muted-foreground mb-1.5 block">
+              Original
+            </label>
+            <div className="opacity-60 pointer-events-none">
+              <DecisionTableInput
+                decisionTable={node.content}
+                updateDecisionTable={updateDecisionTable}
+              />
+            </div>
+          </div>
+          <div>
+            <label className="text-sm font-medium text-muted-foreground mb-1.5 block">
+              Proposed Changes
+            </label>
+            <DecisionTableInput
+              decisionTable={diff.content}
+              updateDecisionTable={updateDiffTable}
+            />
+          </div>
+        </div>
+      )
+    }
+
     return (
       <DecisionTableInput
         decisionTable={node.content}
