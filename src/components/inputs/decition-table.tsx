@@ -436,7 +436,7 @@ export function DecisionTableInput({
         {decisionTable.outputClauses.map((output, i) => (
           <TableInputCell
             key={output.id}
-            className={`${OUTPUT_HEADER_COLOR} font-mono!`}
+            className={`${OUTPUT_HEADER_COLOR}`}
             value={output.name}
             onChange={(v) => updateOutputClause(i, v.replace(/ /g, '_'))}
           />

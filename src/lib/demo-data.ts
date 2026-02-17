@@ -185,17 +185,17 @@ export function createDemoModel(): DemoData {
         type: 'context',
         entries: [
           {
-            id: generateId('ce'),
+            id: '_ce_income_check',
             name: 'Income_Check',
             expression: { text: 'Income_Threshold', typeRef: 'boolean' },
           },
           {
-            id: generateId('ce'),
+            id: '_ce_age_check',
             name: 'Age_Check',
             expression: { text: 'Age_Eligibility', typeRef: 'boolean' },
           },
           {
-            id: generateId('ce'),
+            id: '_ce_return',
             name: '_return',
             expression: { text: 'Income_Check and Age_Check' },
           },
@@ -233,11 +233,38 @@ export function createDemoModel(): DemoData {
 
   const finalNode = nodes[idG]
   const minIncomeNode = nodes[idMinIncomeEmployed]
+  const eligibilityNode = nodes[idF]
   const diffs: ModelNode[] = [
-    { ...finalNode, name: finalNode.name + ' (modified)' },
     {
       ...minIncomeNode,
       content: { type: 'constant', text: '35000', typeRef: 'number' },
+    },
+    {
+      ...eligibilityNode,
+      content: {
+        type: 'context',
+        entries: [
+          // Modified: changed name and expression
+          {
+            id: '_ce_income_check',
+            name: 'Income_Eligible',
+            expression: { text: 'Income_Threshold = true', typeRef: 'boolean' },
+          },
+          // Removed: Age_Check (not included)
+          // Added: new entry
+          {
+            id: '_ce_credit_check',
+            name: 'Credit_Check',
+            expression: { text: 'Credit_Score > 650' },
+          },
+          // Modified: updated return expression
+          {
+            id: '_ce_return',
+            name: '_return',
+            expression: { text: 'Income_Eligible and Credit_Check' },
+          },
+        ],
+      },
     },
   ]
 

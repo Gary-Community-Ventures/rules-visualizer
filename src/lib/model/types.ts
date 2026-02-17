@@ -12,13 +12,15 @@ export type FeelDataType =
 
 // ─── Context Entry ───────────────────────────────────────────────
 
+export type FeelExpression = {
+  text: string
+  typeRef?: FeelDataType
+}
+
 export type ContextEntry = {
   id: string
   name: string
-  expression: {
-    text: string
-    typeRef?: FeelDataType
-  }
+  expression: FeelExpression
 }
 
 // ─── Decision Table Sub-Types ────────────────────────────────────

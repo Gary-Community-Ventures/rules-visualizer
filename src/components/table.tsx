@@ -26,8 +26,8 @@ import {
 type InputCellProps = {
   value: string
   onChange: (value: string) => void
-  disabled?: boolean
   className?: string
+  disabled?: boolean
 }
 
 export function TableInputCell({
@@ -39,7 +39,7 @@ export function TableInputCell({
   return (
     <TextBox
       className={cn(
-        'block border rounded-none m-0 p-2 w-full box-border text-sm',
+        'block border rounded-none m-0 p-2 w-full box-border text-sm font-mono',
         className
       )}
       value={value}
@@ -55,12 +55,14 @@ export function TableFeelCell({
   className,
   dialect,
   knownNames,
+  disabled,
 }: {
   value: string
   onChange: (value: string) => void
   className?: string
   dialect?: 'expression' | 'unaryTests'
   knownNames?: string[]
+  disabled?: boolean
 }) {
   return (
     <FeelEditor
@@ -72,6 +74,7 @@ export function TableFeelCell({
       onChange={onChange}
       dialect={dialect}
       knownNames={knownNames}
+      disabled={disabled}
     />
   )
 }
