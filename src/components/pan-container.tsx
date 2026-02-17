@@ -11,7 +11,7 @@ type PanContainerProps = {
 
 const MIN_SCALE = 0.1
 const MAX_SCALE = 3
-const ZOOM_SENSITIVITY = 0.001
+const ZOOM_SENSITIVITY = 0.005
 const ZOOM_STEP = 0.2
 
 export function PanContainer({ children, className }: PanContainerProps) {
