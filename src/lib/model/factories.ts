@@ -1,4 +1,10 @@
-import type { ContextEntry, FeelDataType } from './types'
+import type {
+  ContextEntry,
+  FeelDataType,
+  InputClause,
+  OutputClause,
+  DecisionTableRule,
+} from './types'
 import type {
   ModelNode,
   NodeContent,
@@ -44,6 +50,31 @@ export function createDefaultConstant(
     type: 'constant',
     text,
     typeRef,
+  }
+}
+
+export function createInputClause(): InputClause {
+  return {
+    id: generateId('input'),
+    label: '',
+    inputExpression: '',
+  }
+}
+
+export function createOutputClause(): OutputClause {
+  return {
+    id: generateId('output'),
+    label: '',
+    name: '',
+  }
+}
+
+export function createRule(inputCount: number, outputCount: number): DecisionTableRule {
+  return {
+    id: generateId('rule'),
+    inputEntries: Array(inputCount).fill('-'),
+    outputEntries: Array(outputCount).fill(''),
+    annotationEntries: [],
   }
 }
 

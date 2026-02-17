@@ -2,6 +2,7 @@ import type { ModelNode, NodeContent } from '@/lib/model'
 import { ContextInput } from './context'
 import { useUpdateNode } from '@/context'
 import { ConstantInput } from './constant'
+import { DecisionTableInput } from './decition-table'
 
 type EditorProps = {
   node: ModelNode
@@ -23,6 +24,20 @@ export function Editor({ node }: EditorProps) {
     return (
       <ConstantInput constant={node.content} updateConstant={updateConstant} />
     )
+  }
+  if (node.content.type === 'decisionTable') {
+    const updateDecisionTable = (decisionTable: NodeContent) => {
+      updateNode(node.id, (node) => ({ ...node, content: decisionTable }))
+    }
+    return (
+      <DecisionTableInput
+        decisionTable={node.content}
+        updateDecisionTable={updateDecisionTable}
+      />
+    )
+  }
+  if (node.content.type === 'input') {
+    return null
   }
 
   return <div>Not implemented</div>
