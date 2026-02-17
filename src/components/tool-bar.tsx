@@ -1,8 +1,28 @@
 import { useEffect, useRef, useState } from 'react'
 import { useAddNode, useMainContext } from '@/context'
 import { Button } from './ui/button'
-import { Download, Upload, Menu, CircleAlert, X, Maximize2, Minimize2 } from 'lucide-react'
-import { createNode, generateId } from '@/lib/model'
+import {
+  Download,
+  Upload,
+  Menu,
+  CircleAlert,
+  X,
+  Maximize2,
+  Minimize2,
+  Plus,
+  CircleDot,
+  Hash,
+  Braces,
+  Table as TableIcon,
+} from 'lucide-react'
+import {
+  createNode,
+  generateId,
+  createInput,
+  createDefaultConstant,
+  createDefaultContext,
+  createDefaultDecisionTable,
+} from '@/lib/model'
 import {
   downloadFile,
   readFileAsText,
@@ -93,6 +113,7 @@ export function ToolBar() {
     selectedNodes,
     setSelectedNodes,
     setShowChildren,
+    setOpenNode,
     execution,
   } = useMainContext()
   const addNode = useAddNode()
@@ -107,30 +128,49 @@ export function ToolBar() {
       !selectedNodes.includes(id)
   )
 
-  // FIXME: For testing only
-  const newNode = () => {
+  const addTypedNode = (
+    type: 'input' | 'constant' | 'context' | 'decisionTable'
+  ) => {
     const id = generateId('node')
-    const base = createNode(id, id)
-
-    const numDeps = Math.min(Math.floor(Math.random() * 3) + 1, nodeIds.length)
-
-    const shuffled = [...nodeIds].sort(() => Math.random() - 0.5)
-    base.dependencies = shuffled.slice(0, numDeps)
-
-    return { id, node: base }
+    const contentMap = {
+      input: createInput(),
+      constant: createDefaultConstant(''),
+      context: createDefaultContext(),
+      decisionTable: createDefaultDecisionTable(),
+    }
+    const node = createNode(id, '', contentMap[type])
+    addNode(id, node)
+    setOpenNode(id)
   }
-  // FIXME: End for testing only
 
   return (
     <div className="border-b flex items-center gap-5 p-2 bg-background relative z-10">
-      <Button
-        onClick={() => {
-          const { id, node } = newNode()
-          addNode(id, node)
-        }}
-      >
-        Add Node
-      </Button>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button>
+            <Plus className="size-4" />
+            Add Node
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" sideOffset={6}>
+          <DropdownMenuItem onSelect={() => addTypedNode('input')}>
+            <CircleDot className="size-4" />
+            Input
+          </DropdownMenuItem>
+          <DropdownMenuItem onSelect={() => addTypedNode('constant')}>
+            <Hash className="size-4" />
+            Constant
+          </DropdownMenuItem>
+          <DropdownMenuItem onSelect={() => addTypedNode('context')}>
+            <Braces className="size-4" />
+            Decision
+          </DropdownMenuItem>
+          <DropdownMenuItem onSelect={() => addTypedNode('decisionTable')}>
+            <TableIcon className="size-4" />
+            Decision Table
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
 
       <Combobox multiple value={selectedNodes} onValueChange={setSelectedNodes}>
         <ComboboxChips ref={anchorRef}>

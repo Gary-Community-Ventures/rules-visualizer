@@ -13,6 +13,7 @@ import type { Model, ModelNode } from './lib/model'
 import type { ExecutionResult, NodeResult } from './lib/engine'
 import { createKieEngine, getKieBaseUrl } from './lib/engine'
 import { createDemoModel } from './lib/demo-data'
+import { computeNodeDependencies } from './lib/graph'
 
 type ExecutionActions = {
   execute: () => void
@@ -157,6 +158,34 @@ export function Wrapper({ children }: { children: React.ReactNode }) {
       if (abortRef.current) abortRef.current.abort()
     }
   }, [])
+
+  // Auto-recompute node dependencies from FEEL expression content
+  useEffect(() => {
+    const nameToId = new Map<string, string>()
+    for (const node of Object.values(model.nodes)) {
+      nameToId.set(node.name, node.id)
+    }
+
+    let changed = false
+    const updatedNodes = { ...model.nodes }
+
+    for (const [id, node] of Object.entries(model.nodes)) {
+      const newDeps = computeNodeDependencies(node.content, nameToId, id)
+      const oldSorted = [...node.dependencies].sort()
+      const newSorted = [...newDeps].sort()
+      if (
+        oldSorted.length !== newSorted.length ||
+        oldSorted.some((v, i) => v !== newSorted[i])
+      ) {
+        updatedNodes[id] = { ...node, dependencies: newDeps }
+        changed = true
+      }
+    }
+
+    if (changed) {
+      setModel((m) => ({ ...m, nodes: updatedNodes }))
+    }
+  }, [model])
 
   const execution = useMemo(
     () => ({ execute, debouncedExecute, reset }),

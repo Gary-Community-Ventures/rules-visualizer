@@ -1,4 +1,4 @@
-import type { ModelNodes } from './model'
+import type { ModelNodes, NodeContent } from './model'
 
 export function findRootNodes(nodes: ModelNodes): string[] {
   // Root nodes are outputs — nodes that no other node depends on
@@ -112,4 +112,44 @@ export function nodeRows(
   const rows = ordering.map((node) => [node])
 
   return compressRows(rows, nodes, showChildren)
+}
+
+export function extractFeelText(content: NodeContent): string[] {
+  switch (content.type) {
+    case 'input':
+    case 'constant':
+      return []
+    case 'context':
+      return content.entries.map((e) => e.expression.text)
+    case 'decisionTable':
+      return [
+        ...content.inputClauses.map((c) => c.inputExpression),
+        ...content.rules.flatMap((r) => [
+          ...r.inputEntries,
+          ...r.outputEntries,
+        ]),
+      ]
+  }
+}
+
+export function computeNodeDependencies(
+  content: NodeContent,
+  nameToId: Map<string, string>,
+  selfId: string
+): string[] {
+  const texts = extractFeelText(content)
+  const depIds = new Set<string>()
+
+  for (const text of texts) {
+    for (const [name, id] of nameToId) {
+      if (id === selfId) continue
+      const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+      const re = new RegExp(`\\b${escaped}\\b`)
+      if (re.test(text)) {
+        depIds.add(id)
+      }
+    }
+  }
+
+  return [...depIds]
 }

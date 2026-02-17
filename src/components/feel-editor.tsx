@@ -10,6 +10,7 @@ import {
 } from '@codemirror/view'
 import { EditorState, type Extension } from '@codemirror/state'
 import { defaultHighlightStyle, syntaxHighlighting } from '@codemirror/language'
+import { type CompletionSource } from '@codemirror/autocomplete'
 import { feel } from 'lang-feel'
 import { useCodeMirror } from '@/lib/use-codemirror'
 import { cn } from '@/lib/utils'
@@ -77,12 +78,31 @@ type FeelEditorProps = {
   knownNames?: string[]
 }
 
+function nameCompletionSource(knownNames: string[]): CompletionSource {
+  return (context) => {
+    const word = context.matchBefore(/[\w]+/)
+    if (!word && !context.explicit) return null
+    return {
+      from: word?.from ?? context.pos,
+      options: knownNames.map((name) => ({
+        label: name,
+        type: 'variable',
+      })),
+      validFor: /^[\w]*$/,
+    }
+  }
+}
+
 export function createFeelExtensions(
   dialect: 'expression' | 'unaryTests' = 'expression',
   knownNames: string[] = []
 ): Extension[] {
   return [
-    feel({ dialect }),
+    feel({
+      dialect,
+      completions:
+        knownNames.length > 0 ? [nameCompletionSource(knownNames)] : [],
+    }),
     syntaxHighlighting(defaultHighlightStyle),
     feelEditorTheme,
     nameHighlighter(knownNames),

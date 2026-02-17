@@ -6,11 +6,30 @@ import {
   useUpdateNode,
 } from '@/context'
 import { Button } from './ui/button'
-import { Minus, Plus } from 'lucide-react'
+import {
+  Minus,
+  Plus,
+  CircleDot,
+  Hash,
+  Braces,
+  Table as TableIcon,
+} from 'lucide-react'
+import { cn } from '@/lib/utils'
 import { Editor } from './inputs/editor'
 import { NodeInput } from './node-input'
 import { NodeResultBadge } from './node-result'
 import { TextInput } from './inputs/text'
+
+const NODE_TYPE_CONFIG = {
+  input: { icon: CircleDot, bg: 'bg-blue-50', border: 'border-blue-200' },
+  constant: { icon: Hash, bg: 'bg-amber-50', border: 'border-amber-200' },
+  context: { icon: Braces, bg: 'bg-purple-50', border: 'border-purple-200' },
+  decisionTable: {
+    icon: TableIcon,
+    bg: 'bg-orange-50',
+    border: 'border-orange-200',
+  },
+}
 
 type NodeProps = {
   id: string
@@ -28,24 +47,35 @@ export function Node({ id }: NodeProps) {
   const hasChildren = node.dependencies.length > 0
   const isInput = node.content.type === 'input'
 
+  const config = NODE_TYPE_CONFIG[node.content.type]
+  const Icon = config.icon
+
   const toggleShowChildren = () => {
     setShowChildren((prev) => ({ ...prev, [id]: !prev[id] }))
   }
 
   return (
     <div
-      className="bg-white/90 relative"
+      className={cn(config.bg, 'relative')}
       onMouseEnter={() => setHoveredNodeId(id)}
       onMouseLeave={() => setHoveredNodeId(null)}
     >
       <div
         id={nodeElementId(id)}
-        className="border p-5 h-full relative flex flex-col items-center"
+        className={cn(
+          config.border,
+          'border p-5 h-full relative flex flex-col items-center'
+        )}
         onClick={() => {
           setOpenNode(id)
         }}
       >
-        <div className="text-center font-medium whitespace-nowrap">{node.name}</div>
+        <div className="flex items-center gap-1.5">
+          <Icon className="size-3.5 text-muted-foreground" />
+          <span className="text-center font-medium whitespace-nowrap">
+            {node.name}
+          </span>
+        </div>
         <NodeResultBadge nodeId={id} />
         {isInput && <NodeInput nodeId={id} />}
       </div>
