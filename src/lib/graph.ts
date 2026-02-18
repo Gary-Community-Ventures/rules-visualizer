@@ -1,5 +1,5 @@
 import { deepCopy } from './utils'
-import type { ModelNode, ModelNodes, NodeContent } from './model'
+import type { Model, ModelNode, ModelNodes, NodeContent } from './model'
 
 export function findRootNodes(nodes: ModelNodes): string[] {
   // Root nodes are outputs — nodes that no other node depends on
@@ -175,4 +175,52 @@ export function computeNodeDependencies(
   }
 
   return [...depIds]
+}
+
+export function applyDiffs(model: Model, diffs: ModelNode[]): Model {
+  const result = deepCopy(model)
+
+  for (const diff of diffs) {
+    if (diff.deletedVersion !== undefined) {
+      delete result.nodes[diff.id]
+    } else {
+      result.nodes[diff.id] = deepCopy(diff)
+    }
+  }
+
+  return result
+}
+
+export function buildNameToIdMap(nodes: ModelNodes, diffs?: ModelNode[]): Map<string, string> {
+  const nameToId = new Map<string, string>()
+  for (const node of Object.values(nodes)) {
+    nameToId.set(node.name, node.id)
+  }
+  for (const diff of diffs ?? []) {
+    nameToId.set(diff.name, diff.id)
+  }
+  return nameToId
+}
+
+function depsEqual(a: string[], b: string[]): boolean {
+  if (a.length !== b.length) return false
+  const sortedA = [...a].sort()
+  const sortedB = [...b].sort()
+  return sortedA.every((v, i) => v === sortedB[i])
+}
+
+export function recomputeDependencies<T extends ModelNode>(
+  nodes: T[],
+  nameToId: Map<string, string>
+): { nodes: T[]; changed: boolean } {
+  let changed = false
+  const updated = nodes.map((node) => {
+    const newDeps = computeNodeDependencies(node.content, nameToId, node.id)
+    if (!depsEqual(node.dependencies, newDeps)) {
+      changed = true
+      return { ...node, dependencies: newDeps }
+    }
+    return node
+  })
+  return { nodes: updated, changed }
 }

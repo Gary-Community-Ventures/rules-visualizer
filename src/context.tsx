@@ -14,7 +14,7 @@ import type { ExecutionResult, NodeResult } from './lib/engine'
 import { createKieEngine, getKieBaseUrl } from './lib/engine'
 import { createDemoModel } from './lib/demo-data'
 import { useLocalStorage } from './lib/use-local-storage'
-import { computeNodeDependencies } from './lib/graph'
+import { buildNameToIdMap, recomputeDependencies } from './lib/graph'
 
 type ExecutionActions = {
   execute: () => void
@@ -164,31 +164,28 @@ export function Wrapper({ children }: { children: React.ReactNode }) {
 
   // Auto-recompute node dependencies from FEEL expression content
   useEffect(() => {
-    const nameToId = new Map<string, string>()
-    for (const node of Object.values(model.nodes)) {
-      nameToId.set(node.name, node.id)
-    }
-
-    let changed = false
-    const updatedNodes = { ...model.nodes }
-
-    for (const [id, node] of Object.entries(model.nodes)) {
-      const newDeps = computeNodeDependencies(node.content, nameToId, id)
-      const oldSorted = [...node.dependencies].sort()
-      const newSorted = [...newDeps].sort()
-      if (
-        oldSorted.length !== newSorted.length ||
-        oldSorted.some((v, i) => v !== newSorted[i])
-      ) {
-        updatedNodes[id] = { ...node, dependencies: newDeps }
-        changed = true
-      }
-    }
-
+    const nameToId = buildNameToIdMap(model.nodes)
+    const { nodes, changed } = recomputeDependencies(
+      Object.values(model.nodes),
+      nameToId
+    )
     if (changed) {
+      const updatedNodes: Record<string, (typeof nodes)[number]> = {}
+      for (const node of nodes) {
+        updatedNodes[node.id] = node
+      }
       setModel((m) => ({ ...m, nodes: updatedNodes }))
     }
   }, [model])
+
+  // Auto-recompute diff dependencies from FEEL expression content
+  useEffect(() => {
+    const nameToId = buildNameToIdMap(model.nodes, diffs)
+    const { nodes: updatedDiffs, changed } = recomputeDependencies(diffs, nameToId)
+    if (changed) {
+      setDiffs(updatedDiffs)
+    }
+  }, [diffs, model.nodes])
 
   const execution = useMemo(
     () => ({ execute, debouncedExecute, reset }),
