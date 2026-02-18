@@ -265,28 +265,30 @@ export function AlertsPopover() {
       <PopoverContent align="end" className="w-80 p-0">
         <div className="p-3 border-b flex items-center justify-between">
           <h4 className="font-semibold text-sm">Alerts</h4>
-          <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer">
-            <span>Auto-advance</span>
-            <button
-              onClick={() => {
-                const newValue = !autoAdvance
-                setAutoAdvance(newValue)
-                if (newValue && alerts.length > 0) {
-                  setOpenNode(getFirstAlertNodeId(alerts[0]))
-                  setCurrentAlertId(alerts[0].id)
-                }
-              }}
-              className={`relative w-8 h-4 rounded-full transition-colors ${
-                autoAdvance ? 'bg-blue-500' : 'bg-gray-300'
-              }`}
-            >
-              <span
-                className={`absolute top-0.5 left-0.5 w-3 h-3 rounded-full bg-white transition-transform ${
-                  autoAdvance ? 'translate-x-4' : ''
+          {alerts.length > 0 && (
+            <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer">
+              <span>Auto-advance</span>
+              <button
+                onClick={() => {
+                  const newValue = !autoAdvance
+                  setAutoAdvance(newValue)
+                  if (newValue && alerts.length > 0) {
+                    setOpenNode(getFirstAlertNodeId(alerts[0]))
+                    setCurrentAlertId(alerts[0].id)
+                  }
+                }}
+                className={`relative w-8 h-4 rounded-full transition-colors ${
+                  autoAdvance ? 'bg-blue-500' : 'bg-gray-300'
                 }`}
-              />
-            </button>
-          </label>
+              >
+                <span
+                  className={`absolute top-0.5 left-0.5 w-3 h-3 rounded-full bg-white transition-transform ${
+                    autoAdvance ? 'translate-x-4' : ''
+                  }`}
+                />
+              </button>
+            </label>
+          )}
         </div>
         <div className="flex flex-col max-h-80 overflow-y-auto">
           {alerts.length === 0 ? (
