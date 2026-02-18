@@ -1,34 +1,30 @@
 import { useState } from 'react'
-import { Settings } from 'lucide-react'
+import { Settings, Copy, Check } from 'lucide-react'
 import { Button } from './ui/button'
-import { Input } from './ui/input'
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
   DialogTrigger,
   DialogDescription,
 } from './ui/dialog'
-import { getKieDisplayUrl, setKieBaseUrl, isExternalUrl } from '@/lib/engine'
+
+const DOCKER_COMMAND =
+  'docker run -p 8347:8080 docker.io/apache/incubator-kie-kogito-jit-runner:10.0.x-20241208'
 
 export function SettingsModal() {
   const [open, setOpen] = useState(false)
-  const [url, setUrl] = useState(() => getKieDisplayUrl())
-  const [error, setError] = useState<string | null>(null)
+  const [copied, setCopied] = useState(false)
+
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(DOCKER_COMMAND)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
 
   return (
-    <Dialog
-      open={open}
-      onOpenChange={(v) => {
-        setOpen(v)
-        if (v) {
-          setUrl(getKieDisplayUrl())
-          setError(null)
-        }
-      }}
-    >
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="outline" size="icon" aria-label="Settings">
           <Settings className="size-4" />
@@ -36,47 +32,33 @@ export function SettingsModal() {
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>KIE Server Settings</DialogTitle>
+          <DialogTitle>KIE Server Setup</DialogTitle>
           <DialogDescription>
-            Configure the KIE JIT Executor connection. Leave empty to use the
-            default.
+            Run the following command to start the KIE JIT Executor:
           </DialogDescription>
         </DialogHeader>
         <div className="flex flex-col gap-2">
-          <label htmlFor="kie-url" className="text-sm font-medium">
-            KIE Server URL
-          </label>
-          <Input
-            id="kie-url"
-            value={url}
-            onChange={(e) => {
-              setUrl(e.target.value)
-              setError(null)
-            }}
-            placeholder="http://localhost:8080"
-          />
-          {error && <p className="text-xs text-red-600">{error}</p>}
-          {!error && isExternalUrl(url) && (
-            <p className="text-xs text-amber-600">
-              Warning: This URL points to an external server. Your DMN model
-              data will be sent to this host during execution.
-            </p>
-          )}
+          <div className="relative">
+            <pre className="bg-muted p-3 pr-10 rounded-md text-xs overflow-x-auto whitespace-pre-wrap break-all">
+              {DOCKER_COMMAND}
+            </pre>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute top-1.5 right-1.5 h-7 w-7"
+              onClick={handleCopy}
+            >
+              {copied ? (
+                <Check className="size-3.5 text-green-600" />
+              ) : (
+                <Copy className="size-3.5" />
+              )}
+            </Button>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            The server will be available at http://localhost:8347
+          </p>
         </div>
-        <DialogFooter>
-          <Button
-            onClick={() => {
-              try {
-                setKieBaseUrl(url)
-                setOpen(false)
-              } catch (err) {
-                setError(err instanceof Error ? err.message : 'Invalid URL')
-              }
-            }}
-          >
-            Save
-          </Button>
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   )

@@ -1,7 +1,7 @@
 const STORAGE_KEY = 'kie-server-url'
 
 const DEV_DEFAULT = '' // Uses Vite proxy
-const PROD_DEFAULT = 'http://localhost:8080'
+const PROD_DEFAULT = 'http://localhost:8347'
 
 export function getKieBaseUrl(): string {
   const stored = localStorage.getItem(STORAGE_KEY)

@@ -43,6 +43,7 @@ export type ModelNode = {
   typeRef?: FeelDataType
   dependencies: string[]
   content: NodeContent
+  deletedVersion?: string
 }
 
 export type ModelNodes = Record<string, ModelNode>
