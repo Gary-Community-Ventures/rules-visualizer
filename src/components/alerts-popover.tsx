@@ -5,14 +5,14 @@ import { Bell, CircleAlert, Plus } from 'lucide-react'
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover'
 
 type Alert =
-  | { type: 'diff'; id: string; name: string }
-  | { type: 'circular'; cycle: string[] }
-  | { type: 'duplicate'; name: string; ids: string[] }
-  | { type: 'island'; id: string; name: string }
+  | { type: 'diff'; id: string; nodeId: string; name: string }
+  | { type: 'circular'; id: string; cycle: string[] }
+  | { type: 'duplicate'; id: string; name: string; nodeIds: string[] }
+  | { type: 'island'; id: string; nodeId: string; name: string }
 
 type AlertRendererProps = {
   alert: Alert
-  onNavigate: (id: string) => void
+  onNavigate: (nodeId: string, alertId: string) => void
   getNodeName: (id: string) => string
 }
 
@@ -21,7 +21,7 @@ function AlertRenderer({ alert, onNavigate, getNodeName }: AlertRendererProps) {
     case 'diff':
       return (
         <button
-          onClick={() => onNavigate(alert.id)}
+          onClick={() => onNavigate(alert.nodeId, alert.id)}
           className="flex items-center gap-3 p-3 hover:bg-muted text-left transition-colors border-b last:border-b-0"
         >
           <Plus className="size-4 text-blue-500 shrink-0" />
@@ -37,19 +37,19 @@ function AlertRenderer({ alert, onNavigate, getNodeName }: AlertRendererProps) {
             <span className="font-medium text-sm">Circular dependency</span>
           </div>
           <div className="pl-10 pb-2 flex flex-wrap items-center gap-1">
-            {alert.cycle.map((id) => (
-              <span key={id} className="flex items-center gap-1">
+            {alert.cycle.map((nodeId) => (
+              <span key={nodeId} className="flex items-center gap-1">
                 <button
-                  onClick={() => onNavigate(id)}
+                  onClick={() => onNavigate(nodeId, alert.id)}
                   className="text-xs text-muted-foreground hover:text-foreground"
                 >
-                  {getNodeName(id)}
+                  {getNodeName(nodeId)}
                 </button>
                 <span className="text-xs text-muted-foreground">→</span>
               </span>
             ))}
             <button
-              onClick={() => onNavigate(alert.cycle[0])}
+              onClick={() => onNavigate(alert.cycle[0], alert.id)}
               className="text-xs text-muted-foreground hover:text-foreground"
             >
               {getNodeName(alert.cycle[0])}
@@ -68,13 +68,13 @@ function AlertRenderer({ alert, onNavigate, getNodeName }: AlertRendererProps) {
             </span>
           </div>
           <div className="pl-10 pb-2">
-            {alert.ids.map((id) => (
+            {alert.nodeIds.map((nodeId) => (
               <button
-                key={id}
-                onClick={() => onNavigate(id)}
+                key={nodeId}
+                onClick={() => onNavigate(nodeId, alert.id)}
                 className="block text-xs text-muted-foreground hover:text-foreground py-0.5"
               >
-                {getNodeName(id)}
+                {getNodeName(nodeId)}
               </button>
             ))}
           </div>
@@ -84,7 +84,7 @@ function AlertRenderer({ alert, onNavigate, getNodeName }: AlertRendererProps) {
     case 'island':
       return (
         <button
-          onClick={() => onNavigate(alert.id)}
+          onClick={() => onNavigate(alert.nodeId, alert.id)}
           className="flex items-center gap-3 p-3 hover:bg-muted text-left transition-colors border-b last:border-b-0"
         >
           <CircleAlert className="size-4 text-amber-500 shrink-0" />
@@ -99,29 +99,16 @@ function AlertRenderer({ alert, onNavigate, getNodeName }: AlertRendererProps) {
   }
 }
 
-function getAlertKey(alert: Alert, index: number): string {
+function getFirstAlertNodeId(alert: Alert): string {
   switch (alert.type) {
     case 'diff':
-      return `diff-${alert.id}`
+      return alert.nodeId
     case 'circular':
-      return `circular-${index}`
+      return alert.cycle[0]
     case 'duplicate':
-      return `duplicate-${alert.name}`
+      return alert.nodeIds[0]
     case 'island':
-      return `island-${alert.id}`
-  }
-}
-
-function getAlertNodeIds(alert: Alert): string[] {
-  switch (alert.type) {
-    case 'diff':
-      return [alert.id]
-    case 'circular':
-      return alert.cycle
-    case 'duplicate':
-      return alert.ids
-    case 'island':
-      return [alert.id]
+      return alert.nodeId
   }
 }
 
@@ -141,7 +128,12 @@ export function AlertsPopover() {
 
     // Diffs first
     for (const diff of diffs) {
-      result.push({ type: 'diff', id: diff.id, name: diff.name })
+      result.push({
+        type: 'diff',
+        id: `diff-${diff.id}`,
+        nodeId: diff.id,
+        name: diff.name,
+      })
     }
 
     // Circular dependencies
@@ -179,8 +171,12 @@ export function AlertsPopover() {
       }
     }
 
-    for (const cycle of cycles) {
-      result.push({ type: 'circular', cycle })
+    for (let i = 0; i < cycles.length; i++) {
+      result.push({
+        type: 'circular',
+        id: `circular-${i}`,
+        cycle: cycles[i],
+      })
     }
 
     // Duplicate names
@@ -191,9 +187,14 @@ export function AlertsPopover() {
       }
       nameToIds[node.name].push(node.id)
     }
-    for (const [name, ids] of Object.entries(nameToIds)) {
-      if (ids.length > 1) {
-        result.push({ type: 'duplicate', name, ids })
+    for (const [name, nodeIds] of Object.entries(nameToIds)) {
+      if (nodeIds.length > 1) {
+        result.push({
+          type: 'duplicate',
+          id: `duplicate-${name}`,
+          name,
+          nodeIds,
+        })
       }
     }
 
@@ -206,38 +207,42 @@ export function AlertsPopover() {
     }
     for (const node of Object.values(model.nodes)) {
       if (node.dependencies.length === 0 && !hasDependent.has(node.id)) {
-        result.push({ type: 'island', id: node.id, name: node.name })
+        result.push({
+          type: 'island',
+          id: `island-${node.id}`,
+          nodeId: node.id,
+          name: node.name,
+        })
       }
     }
 
     return result
   }, [diffs, model.nodes])
 
-  // Build list of all alert node IDs for auto-advance
-  const allAlertIds = useMemo(() => {
-    const ids: string[] = []
-    for (const alert of alerts) {
-      for (const id of getAlertNodeIds(alert)) {
-        if (!ids.includes(id)) ids.push(id)
-      }
-    }
-    return ids
-  }, [alerts])
-
   // Auto-advance when current alert is resolved
   useEffect(() => {
-    if (!autoAdvance) {
+    if (!autoAdvance || alerts.length === 0) {
+      setCurrentAlertId(undefined)
+      setAutoAdvance(false)
       return
     }
 
-    if (allAlertIds.length > 0 && currentAlertId !== allAlertIds[0]) {
-      setOpenNode(allAlertIds[0])
-      setCurrentAlertId(allAlertIds[0])
-    }
-  }, [autoAdvance, allAlertIds, currentAlertId])
+    // Check if the current alert still exists in the list
+    const currentAlertExists = alerts.some(
+      (alert) => alert.id === currentAlertId
+    )
 
-  const handleNavigate = (id: string) => {
-    setOpenNode(id)
+    if (!currentAlertExists) {
+      // Advance to the first alert
+      const nextAlert = alerts[0]
+      setOpenNode(getFirstAlertNodeId(nextAlert))
+      setCurrentAlertId(nextAlert.id)
+    }
+  }, [autoAdvance, alerts, currentAlertId])
+
+  const handleNavigate = (nodeId: string, alertId: string) => {
+    setOpenNode(nodeId)
+    setCurrentAlertId(alertId)
   }
 
   return (
@@ -266,8 +271,9 @@ export function AlertsPopover() {
               onClick={() => {
                 const newValue = !autoAdvance
                 setAutoAdvance(newValue)
-                if (newValue && allAlertIds.length > 0) {
-                  setOpenNode(allAlertIds[0])
+                if (newValue && alerts.length > 0) {
+                  setOpenNode(getFirstAlertNodeId(alerts[0]))
+                  setCurrentAlertId(alerts[0].id)
                 }
               }}
               className={`relative w-8 h-4 rounded-full transition-colors ${
@@ -288,9 +294,9 @@ export function AlertsPopover() {
               No pending changes
             </p>
           ) : (
-            alerts.map((alert, index) => (
+            alerts.map((alert) => (
               <AlertRenderer
-                key={getAlertKey(alert, index)}
+                key={alert.id}
                 alert={alert}
                 onNavigate={handleNavigate}
                 getNodeName={getNodeName}
