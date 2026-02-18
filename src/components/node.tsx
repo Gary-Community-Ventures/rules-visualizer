@@ -1,7 +1,6 @@
 import {
   useDiff,
   useMainContext,
-  useNode,
   useResolveDiff,
   useUpdateDiff,
   useUpdateNode,
@@ -22,6 +21,7 @@ import { Editor } from './inputs/editor'
 import { NodeInput } from './node-input'
 import { NodeResultBadge } from './node-result'
 import { TextInput } from './inputs/text'
+import type { ModelNode } from '@/lib/model'
 
 const NODE_TYPE_CONFIG = {
   input: {
@@ -55,17 +55,16 @@ const NODE_TYPE_CONFIG = {
 }
 
 type NodeProps = {
-  id: string
+  node: ModelNode
 }
 
 export function nodeElementId(id: string) {
   return `node-${id}`
 }
 
-export function Node({ id }: NodeProps) {
+export function Node({ node }: NodeProps) {
   const { setHoveredNodeId, showChildren, setShowChildren, setOpenNode } =
     useMainContext()
-  const node = useNode(id)
 
   const hasChildren = node.dependencies.length > 0
   const isInput = node.content.type === 'input'
@@ -74,23 +73,23 @@ export function Node({ id }: NodeProps) {
   const Icon = config.icon
 
   const toggleShowChildren = () => {
-    setShowChildren((prev) => ({ ...prev, [id]: !prev[id] }))
+    setShowChildren((prev) => ({ ...prev, [node.id]: !prev[node.id] }))
   }
 
   return (
     <div
       className={cn(config.bg, 'relative')}
-      onMouseEnter={() => setHoveredNodeId(id)}
+      onMouseEnter={() => setHoveredNodeId(node.id)}
       onMouseLeave={() => setHoveredNodeId(null)}
     >
       <div
-        id={nodeElementId(id)}
+        id={nodeElementId(node.id)}
         className={cn(
           config.border,
           'border p-5 h-full relative flex flex-col items-center'
         )}
         onClick={() => {
-          setOpenNode(id)
+          setOpenNode(node.id)
         }}
       >
         <div className="flex items-center gap-1.5">
@@ -99,8 +98,8 @@ export function Node({ id }: NodeProps) {
             {node.name}
           </span>
         </div>
-        <NodeResultBadge nodeId={id} />
-        {isInput && <NodeInput nodeId={id} />}
+        <NodeResultBadge nodeId={node.id} />
+        {isInput && <NodeInput node={node} />}
       </div>
       {hasChildren && (
         <Button
@@ -109,7 +108,7 @@ export function Node({ id }: NodeProps) {
           className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-white h-6 w-6"
           onClick={toggleShowChildren}
         >
-          {showChildren[id] ? (
+          {showChildren[node.id] ? (
             <Minus className="w-3 h-3" />
           ) : (
             <Plus className="w-3 h-3" />
@@ -121,13 +120,12 @@ export function Node({ id }: NodeProps) {
 }
 
 type NodeViewerProps = {
-  id: string
+  node: ModelNode
 }
 
-export function NodeViewer({ id }: NodeViewerProps) {
-  const node = useNode(id)
+export function NodeViewer({ node }: NodeViewerProps) {
   const updateNode = useUpdateNode()
-  const diff = useDiff(id)
+  const diff = useDiff(node.id)
   const updateDiff = useUpdateDiff()
   const resolveDiff = useResolveDiff()
 
@@ -141,7 +139,7 @@ export function NodeViewer({ id }: NodeViewerProps) {
     nameDiff = {
       new: diff.name,
       update: (newValue) =>
-        updateDiff(id, (diff) => ({
+        updateDiff(node.id, (diff) => ({
           ...diff,
           name: newValue.replace(/ /g, '_'),
         })),
@@ -171,7 +169,7 @@ export function NodeViewer({ id }: NodeViewerProps) {
         <TextInput
           text={node.name}
           updateText={(name) =>
-            updateNode(id, (node) => ({
+            updateNode(node.id, (node) => ({
               ...node,
               name: name.replace(/ /g, '_'),
             }))
@@ -198,7 +196,7 @@ export function NodeViewer({ id }: NodeViewerProps) {
           <Button
             variant="outline"
             className="flex-1 text-red-600 hover:text-red-700 hover:bg-red-50"
-            onClick={() => resolveDiff(id, false)}
+            onClick={() => resolveDiff(node.id, false)}
           >
             <X className="size-4 mr-2" />
             Reject
@@ -206,7 +204,7 @@ export function NodeViewer({ id }: NodeViewerProps) {
           <Button
             variant="outline"
             className="flex-1 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
-            onClick={() => resolveDiff(id, true)}
+            onClick={() => resolveDiff(node.id, true)}
           >
             <Check className="size-4 mr-2" />
             Accept
@@ -222,13 +220,21 @@ type RowsProps = {
 }
 
 export function Rows({ rows }: RowsProps) {
+  const { model, diffs } = useMainContext()
+
   return (
     <div className="flex flex-col gap-20">
       {rows.map((row, i) => {
         return (
           <div key={i} className="flex gap-10 justify-center">
             {row.map((id) => {
-              return <Node id={id} key={id} />
+              let node = model.nodes[id]
+              const diff = diffs.find((d) => d.id === id)
+              if (node === undefined && diff !== undefined) {
+                node = diff
+              }
+
+              return <Node node={node} key={id} />
             })}
           </div>
         )

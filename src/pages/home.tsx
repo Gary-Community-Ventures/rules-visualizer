@@ -3,7 +3,7 @@ import { NodeViewer, Rows } from '@/components/node'
 import { Arrows } from '@/components/arrows'
 import { ToolBar } from '@/components/tool-bar'
 import { PanContainer } from '@/components/pan-container'
-import { getDependents, nodeRows } from '@/lib/graph'
+import { addNodeDependencies, getDependents, nodeRows } from '@/lib/graph'
 import {
   ResizableHandle,
   ResizablePanel,
@@ -29,9 +29,13 @@ import {
 import { cloneContent, generateId, uniqueName } from '@/lib/model'
 
 export function HomePage() {
-  const { model, selectedNodes, showChildren } = useMainContext()
+  const { model, selectedNodes, showChildren, diffs } = useMainContext()
 
-  const rows: string[][] = nodeRows(model.nodes, showChildren, selectedNodes)
+  const rows: string[][] = nodeRows(
+    addNodeDependencies(model.nodes, diffs),
+    showChildren,
+    selectedNodes
+  )
 
   return (
     <div className="flex flex-col h-screen">
@@ -123,7 +127,7 @@ export function NodeMapLayout({ children }: PropsWithChildren) {
                 </div>
               </div>
               <div className="flex-1 overflow-y-auto p-5">
-                <NodeViewer id={openNode} />
+                <NodeViewer node={model.nodes[openNode]} />
               </div>
             </div>
           </ResizablePanel>

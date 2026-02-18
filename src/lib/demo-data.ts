@@ -234,7 +234,17 @@ export function createDemoModel(): DemoData {
   const minIncomeNode = nodes[idMinIncomeEmployed]
   const eligibilityNode = nodes[idF]
   const incomeThresholdNode = nodes[idD]
+  // New node proposed by diff
+  const idCreditScore = '_node_credit_score'
   const diffs: ModelNode[] = [
+    // New node: Credit_Score input
+    {
+      id: idCreditScore,
+      name: 'Credit_Score',
+      typeRef: 'number',
+      dependencies: [],
+      content: { type: 'input', id: generateId('input') },
+    },
     {
       ...minIncomeNode,
       content: { type: 'constant', text: '35000', typeRef: 'number' },

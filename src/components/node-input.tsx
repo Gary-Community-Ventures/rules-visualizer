@@ -1,13 +1,13 @@
-import { useMainContext, useNode } from '@/context'
+import { useMainContext } from '@/context'
 import { coerceNumber } from '@/lib/coerce'
 import { Input } from './ui/input'
+import type { ModelNode } from '@/lib/model'
 
-export function NodeInput({ nodeId }: { nodeId: string }) {
-  const node = useNode(nodeId)
+export function NodeInput({ node }: { node: ModelNode }) {
   const { inputValues, setInputValues, setResultStale, execution } =
     useMainContext()
 
-  const value = inputValues[nodeId]
+  const value = inputValues[node.id]
 
   const commit = () => {
     setResultStale(true)
@@ -30,7 +30,7 @@ export function NodeInput({ nodeId }: { nodeId: string }) {
           onChange={(e) => {
             setInputValues((prev) => ({
               ...prev,
-              [nodeId]: e.target.checked,
+              [node.id]: e.target.checked,
             }))
             commit()
           }}
@@ -49,7 +49,7 @@ export function NodeInput({ nodeId }: { nodeId: string }) {
       onChange={(e) => {
         const raw = e.target.value
         const parsed = node.typeRef === 'number' ? coerceNumber(raw) : raw
-        setInputValues((prev) => ({ ...prev, [nodeId]: parsed }))
+        setInputValues((prev) => ({ ...prev, [node.id]: parsed }))
         commit()
       }}
       placeholder={node.typeRef ?? 'value'}

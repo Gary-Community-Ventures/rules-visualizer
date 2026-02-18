@@ -1,4 +1,5 @@
-import type { ModelNodes, NodeContent } from './model'
+import { deepCopy } from './utils'
+import type { ModelNode, ModelNodes, NodeContent } from './model'
 
 export function findRootNodes(nodes: ModelNodes): string[] {
   // Root nodes are outputs — nodes that no other node depends on
@@ -113,6 +114,27 @@ export function nodeRows(
   const rows = ordering.map((node) => [node])
 
   return compressRows(rows, nodes, showChildren)
+}
+
+export function addNodeDependencies(
+  a: ModelNodes,
+  b: ModelNode[] | undefined
+): ModelNodes {
+  const nodes = deepCopy(a)
+
+  for (const node of b ?? []) {
+    const id = node.id
+    if (id in nodes) {
+      nodes[id] = {
+        ...nodes[id],
+        dependencies: [...nodes[id].dependencies, ...node.dependencies],
+      }
+    } else {
+      nodes[id] = node
+    }
+  }
+
+  return nodes
 }
 
 export function extractFeelText(content: NodeContent): string[] {

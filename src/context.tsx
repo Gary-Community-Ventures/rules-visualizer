@@ -232,18 +232,6 @@ export function useMainContext(): MainContext {
   return context
 }
 
-export function useNode(id: string): ModelNode {
-  const { model } = useMainContext()
-
-  const node = model.nodes[id]
-
-  if (node === undefined) {
-    throw new Error(`Node with id '${id}' not found`)
-  }
-
-  return node
-}
-
 export function useUpdateNode() {
   const { setModel } = useMainContext()
 
@@ -289,7 +277,11 @@ export function useNodeResult(nodeId: string): NodeResult | undefined {
 }
 
 export function useDiff(nodeId: string) {
-  const { diffs } = useMainContext()
+  const { diffs, model } = useMainContext()
+
+  if (model.nodes[nodeId] === undefined) {
+    return undefined
+  }
 
   return diffs.find((diff) => diff.id === nodeId)
 }
