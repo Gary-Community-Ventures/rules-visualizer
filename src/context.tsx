@@ -317,3 +317,18 @@ export function useResolveDiff() {
     setDiffs((diffs) => diffs.filter((diff) => diff.id !== id))
   }
 }
+
+export function useFindNode(nodeId: string | null): ModelNode | undefined {
+  const { model, diffs } = useMainContext()
+
+  if (nodeId === null) {
+    return undefined
+  }
+
+  const modelNode = model.nodes[nodeId]
+  if (modelNode !== undefined) {
+    return modelNode
+  }
+
+  return diffs.find((d) => d.id === nodeId)
+}

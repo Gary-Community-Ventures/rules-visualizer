@@ -124,6 +124,7 @@ type NodeViewerProps = {
 }
 
 export function NodeViewer({ node }: NodeViewerProps) {
+  const { diffs } = useMainContext()
   const updateNode = useUpdateNode()
   const diff = useDiff(node.id)
   const updateDiff = useUpdateDiff()
@@ -191,7 +192,7 @@ export function NodeViewer({ node }: NodeViewerProps) {
           <Editor node={node} />
         </div>
       )}
-      {diff !== undefined && (
+      {diffs.find((d) => d.id === node.id) !== undefined && (
         <div className="flex gap-2">
           <Button
             variant="outline"

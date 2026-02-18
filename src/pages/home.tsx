@@ -1,4 +1,9 @@
-import { useAddNode, useDeleteNode, useMainContext } from '@/context'
+import {
+  useAddNode,
+  useDeleteNode,
+  useFindNode,
+  useMainContext,
+} from '@/context'
 import { NodeViewer, Rows } from '@/components/node'
 import { Arrows } from '@/components/arrows'
 import { ToolBar } from '@/components/tool-bar'
@@ -54,13 +59,12 @@ export function NodeMapLayout({ children }: PropsWithChildren) {
   const { model, openNode, setOpenNode, setSelectedNodes } = useMainContext()
   const addNode = useAddNode()
   const deleteNode = useDeleteNode()
+  const openNodeData = useFindNode(openNode)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
 
   const handleLayoutChange = () => {
     window.dispatchEvent(new CustomEvent('containerresize'))
   }
-
-  const openNodeData = openNode ? model.nodes[openNode] : null
   const dependentIds = openNode ? getDependents(openNode, model.nodes) : []
   const dependentNames = dependentIds.map((id) => model.nodes[id]?.name ?? id)
 
@@ -89,7 +93,7 @@ export function NodeMapLayout({ children }: PropsWithChildren) {
 
   return (
     <ResizablePanelGroup onLayoutChange={handleLayoutChange}>
-      {openNode !== null && openNodeData !== null && (
+      {openNode !== null && openNodeData !== undefined && (
         <>
           <ResizablePanel defaultSize="50%" minSize="20%">
             <div className="flex flex-col h-full bg-background">
@@ -127,7 +131,7 @@ export function NodeMapLayout({ children }: PropsWithChildren) {
                 </div>
               </div>
               <div className="flex-1 overflow-y-auto p-5">
-                <NodeViewer node={model.nodes[openNode]} />
+                <NodeViewer node={openNodeData} />
               </div>
             </div>
           </ResizablePanel>
