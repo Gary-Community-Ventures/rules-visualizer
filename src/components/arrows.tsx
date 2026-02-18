@@ -77,10 +77,12 @@ function Arrow({
       const toParents = parentMap[toId] ?? []
       const depIndex = toParents.indexOf(fromId)
       const totalDeps = toParents.length
-      const staggerWidth = 5
-      const staggerStep = totalDeps > 1 ? staggerWidth / (totalDeps - 1) : 0
+      const gapPerArrow = 6
+      const maxStaggerWidth = Math.min(toRect.width * 0.5, 30)
+      const toStaggerWidth = Math.min((totalDeps - 1) * gapPerArrow, maxStaggerWidth)
+      const toStaggerStep = totalDeps > 1 ? toStaggerWidth / (totalDeps - 1) : 0
       const toXOffset =
-        totalDeps > 1 ? depIndex * staggerStep - staggerWidth / 2 : 0
+        totalDeps > 1 ? depIndex * toStaggerStep - toStaggerWidth / 2 : 0
 
       const toX = toRect.left + toRect.width / 2 + toXOffset
       const toY = toRect.top
@@ -177,27 +179,41 @@ type ArrowsProps = {
   rows: string[][]
 }
 
-/** Build a map: nodeId -> list of parent nodeIds that depend on it */
+/** Build a map: childId -> list of parent nodeIds that depend on it (for staggering) */
 function buildParentMap(
   nodes: ModelNodes,
   diffs: ModelNode[]
 ): Record<string, string[]> {
   const map: Record<string, string[]> = {}
+  const diffMap = new Map(diffs.map((d) => [d.id, d]))
+
+  // Add dependencies from model nodes
   for (const [nodeId, node] of Object.entries(nodes)) {
     for (const depId of node.dependencies) {
       if (!map[depId]) map[depId] = []
-      map[depId].push(nodeId)
+      if (!map[depId].includes(nodeId)) map[depId].push(nodeId)
+    }
+
+    // Also add diff-added dependencies for this node
+    const diff = diffMap.get(nodeId)
+    if (diff) {
+      for (const depId of diff.dependencies) {
+        if (!map[depId]) map[depId] = []
+        if (!map[depId].includes(nodeId)) map[depId].push(nodeId)
+      }
     }
   }
-  // Include diff dependencies for new nodes
+
+  // Include dependencies from new nodes (nodes only in diffs)
   for (const diff of diffs) {
     if (!(diff.id in nodes)) {
       for (const depId of diff.dependencies) {
         if (!map[depId]) map[depId] = []
-        map[depId].push(diff.id)
+        if (!map[depId].includes(diff.id)) map[depId].push(diff.id)
       }
     }
   }
+
   return map
 }
 
@@ -234,7 +250,7 @@ export function Arrows({ rows }: ArrowsProps) {
     return { newNodeIds, deletedNodeIds, diffMap }
   }, [diffs, nodes])
 
-  // Pre-compute parent map once when nodes change (O(N) instead of O(N²) per arrow)
+  // Pre-compute parent map once when nodes change
   const parentMap = useMemo(() => buildParentMap(nodes, diffs), [nodes, diffs])
 
   // Collect all arrows with their status
