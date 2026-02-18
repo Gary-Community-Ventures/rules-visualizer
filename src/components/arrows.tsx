@@ -231,6 +231,15 @@ export function Arrows({ rows }: ArrowsProps) {
       window.removeEventListener('transform', handleTransform as EventListener)
   }, [])
 
+  // Trigger arrow recalculation when model or diffs change
+  useEffect(() => {
+    // Use requestAnimationFrame to wait for DOM to update
+    const frameId = requestAnimationFrame(() => {
+      window.dispatchEvent(new Event('containerresize'))
+    })
+    return () => cancelAnimationFrame(frameId)
+  }, [nodes, diffs])
+
   // Build sets for diff analysis
   const { newNodeIds, deletedNodeIds, diffMap } = useMemo(() => {
     const newNodeIds = new Set<string>()
