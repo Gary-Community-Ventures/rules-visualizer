@@ -231,10 +231,8 @@ export function createDemoModel(): DemoData {
     nodes,
   }
 
-  const minIncomeNode = nodes[idMinIncomeEmployed]
   const eligibilityNode = nodes[idF]
-  const incomeThresholdNode = nodes[idD]
-  // New node proposed by diff
+  const ageEligibilityNode = nodes[idE]
   const idCreditScore = '_node_credit_score'
   const diffs: ModelNode[] = [
     // New node: Credit_Score input
@@ -245,92 +243,34 @@ export function createDemoModel(): DemoData {
       dependencies: [],
       content: { type: 'input', id: generateId('input') },
     },
-    {
-      ...minIncomeNode,
-      content: { type: 'constant', text: '35000', typeRef: 'number' },
-    },
-    {
-      ...incomeThresholdNode,
-      content: {
-        type: 'decisionTable',
-        hitPolicy: 'FIRST',
-        inputClauses: [
-          {
-            id: generateId('ic'),
-            label: 'Annual_Income',
-            inputExpression: 'Annual_Income',
-            inputExpressionTypeRef: 'number',
-          },
-          {
-            id: generateId('ic'),
-            label: 'Employment_Status',
-            inputExpression: 'Employment_Status',
-            inputExpressionTypeRef: 'string',
-          },
-        ],
-        outputClauses: [
-          {
-            id: generateId('oc'),
-            label: 'Income_Eligible',
-            name: 'Income_Eligible',
-            typeRef: 'boolean',
-          },
-        ],
-        rules: [
-          {
-            id: generateId('rule'),
-            inputEntries: ['>= Min_Income_Employed', '"employed"'],
-            outputEntries: ['true'],
-            annotationEntries: [],
-          },
-          {
-            id: generateId('rule'),
-            inputEntries: ['>= Min_Income_Self_Employed', '"self-employed"'],
-            outputEntries: ['true'],
-            annotationEntries: [],
-          },
-          // Added: new rule for contractors
-          {
-            id: generateId('rule'),
-            inputEntries: ['>= 40000', '"contractor"'],
-            outputEntries: ['true'],
-            annotationEntries: [],
-          },
-          {
-            id: generateId('rule'),
-            inputEntries: ['-', '-'],
-            outputEntries: ['false'],
-            annotationEntries: [],
-          },
-        ],
-      },
-    },
+    // Modified: replace Age_Check with Credit_Check
     {
       ...eligibilityNode,
       content: {
         type: 'context',
         entries: [
-          // Modified: changed name and expression
           {
             id: '_ce_income_check',
-            name: 'Income_Eligible',
-            expression: { text: 'Income_Threshold = true', typeRef: 'boolean' },
+            name: 'Income_Check',
+            expression: { text: 'Income_Threshold', typeRef: 'boolean' },
           },
-          // Removed: Age_Check (not included)
-          // Added: new entry
           {
             id: '_ce_credit_check',
             name: 'Credit_Check',
             expression: { text: 'Credit_Score > 650' },
           },
-          // Modified: updated return expression
           {
             id: '_ce_return',
             name: '_return',
-            expression: { text: 'Income_Eligible and Credit_Check' },
+            expression: { text: 'Income_Check and Credit_Check' },
           },
         ],
       },
+    },
+    // Deleted: Age_Eligibility no longer needed
+    {
+      ...ageEligibilityNode,
+      deletedVersion: '2.0.0',
     },
   ]
 

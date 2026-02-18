@@ -22,6 +22,7 @@ import { NodeInput } from './node-input'
 import { NodeResultBadge } from './node-result'
 import { TextInput } from './inputs/text'
 import type { ModelNode } from '@/lib/model'
+import { useMemo } from 'react'
 
 const NODE_TYPE_CONFIG = {
   input: {
@@ -63,11 +64,31 @@ export function nodeElementId(id: string) {
 }
 
 export function Node({ node }: NodeProps) {
-  const { setHoveredNodeId, showChildren, setShowChildren, setOpenNode } =
-    useMainContext()
+  const {
+    setHoveredNodeId,
+    showChildren,
+    setShowChildren,
+    setOpenNode,
+    diffs,
+    model,
+  } = useMainContext()
 
   const hasChildren = node.dependencies.length > 0
   const isInput = node.content.type === 'input'
+
+  const diffBorderClass = useMemo(() => {
+    const alreadyExists = model.nodes[node.id] !== undefined
+    const diff = diffs.find((d) => d.id === node.id)
+
+    if (!alreadyExists && diff !== undefined) {
+      return 'border-emerald-400 border-2'
+    }
+
+    if (alreadyExists && diff?.deletedVersion !== undefined) {
+      return 'border-red-400 border-2'
+    }
+    return null
+  }, [diffs, model, node])
 
   const config = NODE_TYPE_CONFIG[node.content.type]
   const Icon = config.icon
@@ -86,7 +107,8 @@ export function Node({ node }: NodeProps) {
         id={nodeElementId(node.id)}
         className={cn(
           config.border,
-          'border p-5 h-full relative flex flex-col items-center'
+          'border p-5 h-full relative flex flex-col items-center',
+          diffBorderClass
         )}
         onClick={() => {
           setOpenNode(node.id)

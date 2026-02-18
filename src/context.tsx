@@ -305,11 +305,14 @@ export function useUpdateDiff() {
 export function useResolveDiff() {
   const { diffs, setDiffs } = useMainContext()
   const updateNode = useUpdateNode()
+  const deleteNode = useDeleteNode()
 
   return (id: string, accept: boolean) => {
     if (accept) {
       const diff = diffs.find((d) => d.id === id)
-      if (diff) {
+      if (diff && diff.deletedVersion !== undefined) {
+        deleteNode(id)
+      } else if (diff) {
         updateNode(id, () => diff)
       }
     }
