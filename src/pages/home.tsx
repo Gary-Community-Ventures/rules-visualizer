@@ -14,7 +14,7 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
 } from '@/components/ui/resizable'
-import { useState, type PropsWithChildren } from 'react'
+import { useEffect, useState, type PropsWithChildren } from 'react'
 import { Copy, EllipsisVertical, Trash2, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -65,6 +65,14 @@ export function NodeMapLayout({ children }: PropsWithChildren) {
   const handleLayoutChange = () => {
     window.dispatchEvent(new CustomEvent('containerresize'))
   }
+
+  // Trigger arrow recalculation when sidebar opens/closes
+  useEffect(() => {
+    const frameId = requestAnimationFrame(() => {
+      window.dispatchEvent(new CustomEvent('containerresize'))
+    })
+    return () => cancelAnimationFrame(frameId)
+  }, [openNode])
   const dependentIds = openNode ? getDependents(openNode, model.nodes) : []
   const dependentNames = dependentIds.map((id) => model.nodes[id]?.name ?? id)
 
