@@ -305,126 +305,98 @@ export function createDemoModel(): DemoData {
     nodes,
   }
 
-  const minIncomeNode = nodes[idMinIncomeEmployed]
   const eligibilityNode = nodes[idF]
-  const incomeThresholdNode = nodes[idD]
+  const ageEligibilityNode = nodes[idE]
+  const finalRecommendationNode = nodes[idG]
+  const idCreditScore = '_node_credit_score'
   const diffs: ModelNode[] = [
+    // New node: Credit_Score input
     {
-      ...minIncomeNode,
-      content: { type: 'constant', text: '35000', typeRef: 'number' },
+      id: idCreditScore,
+      name: 'Credit_Score',
+      typeRef: 'number',
+      dependencies: [],
+      content: { type: 'input', id: generateId('input') },
     },
-    {
-      ...incomeThresholdNode,
-      content: {
-        type: 'decisionTable',
-        hitPolicy: 'FIRST',
-        inputClauses: [
-          {
-            id: generateId('ic'),
-            label: 'Annual_Income',
-            inputExpression: 'Annual_Income',
-            inputExpressionTypeRef: 'number',
-          },
-          {
-            id: generateId('ic'),
-            label: 'Employment_Status',
-            inputExpression: 'Employment_Status',
-            inputExpressionTypeRef: 'string',
-          },
-        ],
-        outputClauses: [
-          {
-            id: generateId('oc'),
-            label: 'Income_Eligible',
-            name: 'Income_Eligible',
-            typeRef: 'boolean',
-          },
-        ],
-        rules: [
-          {
-            id: generateId('rule'),
-            inputEntries: ['>= Min_Income_Employed', '"employed"'],
-            outputEntries: ['true'],
-            annotationEntries: [],
-          },
-          {
-            id: generateId('rule'),
-            inputEntries: ['>= Min_Income_Self_Employed', '"self-employed"'],
-            outputEntries: ['true'],
-            annotationEntries: [],
-          },
-          // Added: new rule for contractors
-          {
-            id: generateId('rule'),
-            inputEntries: ['>= 40000', '"contractor"'],
-            outputEntries: ['true'],
-            annotationEntries: [],
-          },
-          {
-            id: generateId('rule'),
-            inputEntries: ['-', '-'],
-            outputEntries: ['false'],
-            annotationEntries: [],
-          },
-        ],
-      },
-      tests: [
-        // Modified: raised income from 50k to 60k, renamed
-        {
-          id: '_test_income_employed_pass',
-          name: 'employed well above threshold',
-          inputs: { [idB]: 60000, [idC]: 'employed' },
-          expected: 'true',
-        },
-        // Unchanged: kept as-is
-        {
-          id: '_test_income_employed_fail',
-          name: 'employed below threshold',
-          inputs: { [idB]: 20000, [idC]: 'employed' },
-          expected: 'false',
-        },
-        // Added: new test for the contractor rule
-        {
-          id: '_test_income_contractor_pass',
-          name: 'contractor above 40k',
-          inputs: { [idB]: 45000, [idC]: 'contractor' },
-          expected: 'true',
-        },
-        // Added: contractor below threshold
-        {
-          id: '_test_income_contractor_fail',
-          name: 'contractor below 40k',
-          inputs: { [idB]: 30000, [idC]: 'contractor' },
-          expected: 'false',
-        },
-      ],
-    },
+    // Modified: replace Age_Check with Credit_Check
+    // Arrow removed: Eligibility_Factors -> Age_Eligibility (red)
+    // Arrow added: Eligibility_Factors -> Credit_Score (green)
     {
       ...eligibilityNode,
       content: {
         type: 'context',
         entries: [
-          // Modified: changed name and expression
           {
             id: '_ce_income_check',
-            name: 'Income_Eligible',
-            expression: { text: 'Income_Threshold = true', typeRef: 'boolean' },
+            name: 'Income_Check',
+            expression: { text: 'Income_Threshold', typeRef: 'boolean' },
           },
-          // Removed: Age_Check (not included)
-          // Added: new entry
           {
             id: '_ce_credit_check',
             name: 'Credit_Check',
             expression: { text: 'Credit_Score > 650' },
           },
-          // Modified: updated return expression
           {
             id: '_ce_return',
             name: '_return',
-            expression: { text: 'Income_Eligible and Credit_Check' },
+            expression: { text: 'Income_Check and Credit_Check' },
           },
         ],
       },
+      tests: [
+        // Unchanged
+        {
+          id: '_test_elig_both_pass',
+          name: 'both factors pass',
+          inputs: { [idD]: true, [idCreditScore]: 700 },
+          expected: 'true',
+        },
+        // Modified: replaced Age_Eligibility input with Credit_Score
+        {
+          id: '_test_elig_income_fail',
+          name: 'income fails',
+          inputs: { [idD]: false, [idCreditScore]: 700 },
+          expected: 'false',
+        },
+        // Modified: was "age fails", now "credit fails"
+        {
+          id: '_test_elig_age_fail',
+          name: 'credit fails',
+          inputs: { [idD]: true, [idCreditScore]: 500 },
+          expected: 'false',
+        },
+        // Removed: '_test_elig_both_fail' not in diff (removed)
+        // Added: new test for credit edge case
+        {
+          id: '_test_elig_credit_edge',
+          name: 'credit at boundary',
+          inputs: { [idD]: true, [idCreditScore]: 650 },
+          expected: 'false',
+        },
+      ],
+    },
+    // Modified: also check Income_Threshold directly
+    // Arrow added: Final_Recommendation -> Income_Threshold (green)
+    {
+      ...finalRecommendationNode,
+      content: {
+        type: 'context',
+        entries: [
+          {
+            id: generateId('ce'),
+            name: '_return',
+            expression: {
+              text: 'if Eligibility_Factors and Income_Threshold then "Approved" else "Denied"',
+            },
+          },
+        ],
+      },
+    },
+    // Deleted: Age_Eligibility no longer needed
+    // Arrows to this node shown as red
+    {
+      ...ageEligibilityNode,
+      deletedVersion: '2.0.0',
     },
   ]
 

@@ -1,4 +1,5 @@
-import type { ModelNodes, NodeContent } from './model'
+import { deepCopy } from './utils'
+import type { Model, ModelNode, ModelNodes, NodeContent } from './model'
 
 export function findRootNodes(nodes: ModelNodes): string[] {
   // Root nodes are outputs — nodes that no other node depends on
@@ -115,6 +116,27 @@ export function nodeRows(
   return compressRows(rows, nodes, showChildren)
 }
 
+export function addNodeDependencies(
+  a: ModelNodes,
+  b: ModelNode[] | undefined
+): ModelNodes {
+  const nodes = deepCopy(a)
+
+  for (const node of b ?? []) {
+    const id = node.id
+    if (id in nodes) {
+      nodes[id] = {
+        ...nodes[id],
+        dependencies: [...nodes[id].dependencies, ...node.dependencies],
+      }
+    } else {
+      nodes[id] = node
+    }
+  }
+
+  return nodes
+}
+
 export function extractFeelText(content: NodeContent): string[] {
   switch (content.type) {
     case 'input':
@@ -153,4 +175,52 @@ export function computeNodeDependencies(
   }
 
   return [...depIds]
+}
+
+export function applyDiffs(model: Model, diffs: ModelNode[]): Model {
+  const result = deepCopy(model)
+
+  for (const diff of diffs) {
+    if (diff.deletedVersion !== undefined) {
+      delete result.nodes[diff.id]
+    } else {
+      result.nodes[diff.id] = deepCopy(diff)
+    }
+  }
+
+  return result
+}
+
+export function buildNameToIdMap(nodes: ModelNodes, diffs?: ModelNode[]): Map<string, string> {
+  const nameToId = new Map<string, string>()
+  for (const node of Object.values(nodes)) {
+    nameToId.set(node.name, node.id)
+  }
+  for (const diff of diffs ?? []) {
+    nameToId.set(diff.name, diff.id)
+  }
+  return nameToId
+}
+
+function depsEqual(a: string[], b: string[]): boolean {
+  if (a.length !== b.length) return false
+  const sortedA = [...a].sort()
+  const sortedB = [...b].sort()
+  return sortedA.every((v, i) => v === sortedB[i])
+}
+
+export function recomputeDependencies<T extends ModelNode>(
+  nodes: T[],
+  nameToId: Map<string, string>
+): { nodes: T[]; changed: boolean } {
+  let changed = false
+  const updated = nodes.map((node) => {
+    const newDeps = computeNodeDependencies(node.content, nameToId, node.id)
+    if (!depsEqual(node.dependencies, newDeps)) {
+      changed = true
+      return { ...node, dependencies: newDeps }
+    }
+    return node
+  })
+  return { nodes: updated, changed }
 }

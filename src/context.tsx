@@ -14,7 +14,7 @@ import type { ExecutionResult, NodeResult } from './lib/engine'
 import { createKieEngine, getKieBaseUrl } from './lib/engine'
 import { createDemoModel } from './lib/demo-data'
 import { useLocalStorage } from './lib/use-local-storage'
-import { computeNodeDependencies } from './lib/graph'
+import { buildNameToIdMap, recomputeDependencies } from './lib/graph'
 
 type ExecutionActions = {
   execute: () => void
@@ -164,31 +164,28 @@ export function Wrapper({ children }: { children: React.ReactNode }) {
 
   // Auto-recompute node dependencies from FEEL expression content
   useEffect(() => {
-    const nameToId = new Map<string, string>()
-    for (const node of Object.values(model.nodes)) {
-      nameToId.set(node.name, node.id)
-    }
-
-    let changed = false
-    const updatedNodes = { ...model.nodes }
-
-    for (const [id, node] of Object.entries(model.nodes)) {
-      const newDeps = computeNodeDependencies(node.content, nameToId, id)
-      const oldSorted = [...node.dependencies].sort()
-      const newSorted = [...newDeps].sort()
-      if (
-        oldSorted.length !== newSorted.length ||
-        oldSorted.some((v, i) => v !== newSorted[i])
-      ) {
-        updatedNodes[id] = { ...node, dependencies: newDeps }
-        changed = true
-      }
-    }
-
+    const nameToId = buildNameToIdMap(model.nodes)
+    const { nodes, changed } = recomputeDependencies(
+      Object.values(model.nodes),
+      nameToId
+    )
     if (changed) {
+      const updatedNodes: Record<string, (typeof nodes)[number]> = {}
+      for (const node of nodes) {
+        updatedNodes[node.id] = node
+      }
       setModel((m) => ({ ...m, nodes: updatedNodes }))
     }
   }, [model])
+
+  // Auto-recompute diff dependencies from FEEL expression content
+  useEffect(() => {
+    const nameToId = buildNameToIdMap(model.nodes, diffs)
+    const { nodes: updatedDiffs, changed } = recomputeDependencies(diffs, nameToId)
+    if (changed) {
+      setDiffs(updatedDiffs)
+    }
+  }, [diffs, model.nodes])
 
   const execution = useMemo(
     () => ({ execute, debouncedExecute, reset }),
@@ -230,18 +227,6 @@ export function useMainContext(): MainContext {
   }
 
   return context
-}
-
-export function useNode(id: string): ModelNode {
-  const { model } = useMainContext()
-
-  const node = model.nodes[id]
-
-  if (node === undefined) {
-    throw new Error(`Node with id '${id}' not found`)
-  }
-
-  return node
 }
 
 export function useUpdateNode() {
@@ -289,7 +274,11 @@ export function useNodeResult(nodeId: string): NodeResult | undefined {
 }
 
 export function useDiff(nodeId: string) {
-  const { diffs } = useMainContext()
+  const { diffs, model } = useMainContext()
+
+  if (model.nodes[nodeId] === undefined) {
+    return undefined
+  }
 
   return diffs.find((diff) => diff.id === nodeId)
 }
@@ -311,21 +300,46 @@ export function useUpdateDiff() {
 }
 
 export function useResolveDiff() {
-  const { diffs, setDiffs } = useMainContext()
+  const { diffs, setDiffs, model } = useMainContext()
   const updateNode = useUpdateNode()
+  const addNode = useAddNode()
+  const deleteNode = useDeleteNode()
 
   return (id: string, accept: boolean) => {
     if (accept) {
       const diff = diffs.find((d) => d.id === id)
-      if (diff) {
-        // Preserve existing tests when the diff doesn't include them
-        updateNode(id, (node) => ({
-          ...diff,
-          tests: diff.tests ?? node.tests,
-        }))
+      if (diff && diff.deletedVersion !== undefined) {
+        deleteNode(id)
+      } else if (diff) {
+        const existing = model.nodes[id]
+        if (existing) {
+          // Preserve existing tests when the diff doesn't include them
+          updateNode(id, (node) => ({
+            ...diff,
+            tests: diff.tests ?? node.tests,
+          }))
+        } else {
+          // New node from diff — add it directly
+          addNode(id, diff)
+        }
       }
     }
 
     setDiffs((diffs) => diffs.filter((diff) => diff.id !== id))
   }
+}
+
+export function useFindNode(nodeId: string | null): ModelNode | undefined {
+  const { model, diffs } = useMainContext()
+
+  if (nodeId === null) {
+    return undefined
+  }
+
+  const modelNode = model.nodes[nodeId]
+  if (modelNode !== undefined) {
+    return modelNode
+  }
+
+  return diffs.find((d) => d.id === nodeId)
 }
