@@ -233,6 +233,7 @@ export function createDemoModel(): DemoData {
 
   const eligibilityNode = nodes[idF]
   const ageEligibilityNode = nodes[idE]
+  const finalRecommendationNode = nodes[idG]
   const idCreditScore = '_node_credit_score'
   const diffs: ModelNode[] = [
     // New node: Credit_Score input
@@ -244,6 +245,8 @@ export function createDemoModel(): DemoData {
       content: { type: 'input', id: generateId('input') },
     },
     // Modified: replace Age_Check with Credit_Check
+    // Arrow removed: Eligibility_Factors -> Age_Eligibility (red)
+    // Arrow added: Eligibility_Factors -> Credit_Score (green)
     {
       ...eligibilityNode,
       content: {
@@ -267,7 +270,25 @@ export function createDemoModel(): DemoData {
         ],
       },
     },
+    // Modified: also check Income_Threshold directly
+    // Arrow added: Final_Recommendation -> Income_Threshold (green)
+    {
+      ...finalRecommendationNode,
+      content: {
+        type: 'context',
+        entries: [
+          {
+            id: generateId('ce'),
+            name: '_return',
+            expression: {
+              text: 'if Eligibility_Factors and Income_Threshold then "Approved" else "Denied"',
+            },
+          },
+        ],
+      },
+    },
     // Deleted: Age_Eligibility no longer needed
+    // Arrows to this node shown as red
     {
       ...ageEligibilityNode,
       deletedVersion: '2.0.0',

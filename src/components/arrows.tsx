@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useMainContext } from '@/context'
 import { nodeElementId } from './node'
-import type { ModelNodes } from '@/lib/model'
+import type { ModelNode, ModelNodes } from '@/lib/model'
+
+type ArrowStatus = 'normal' | 'added' | 'removed' | 'to-new' | 'to-deleted'
 
 type ArrowProps = {
   fromId: string
@@ -10,6 +12,15 @@ type ArrowProps = {
   scale: number
   strokeWidth: number
   parentMap: Record<string, string[]>
+  status: ArrowStatus
+}
+
+const STATUS_COLORS: Record<ArrowStatus, { active: string; inactive: string }> = {
+  normal: { active: '#001970', inactive: '#c0c0d8' },
+  added: { active: '#10b981', inactive: '#a7f3d0' }, // emerald
+  removed: { active: '#ef4444', inactive: '#fecaca' }, // red
+  'to-new': { active: '#10b981', inactive: '#a7f3d0' }, // emerald
+  'to-deleted': { active: '#ef4444', inactive: '#fecaca' }, // red
 }
 
 function Arrow({
@@ -19,6 +30,7 @@ function Arrow({
   scale,
   strokeWidth,
   parentMap,
+  status,
 }: ArrowProps) {
   const { model, hoveredNodeId, showChildren } = useMainContext()
   const nodes = model.nodes
@@ -28,7 +40,8 @@ function Arrow({
   // Arrow is related if nothing is hovered, or if it directly connects to the hovered node
   const isRelated =
     hoveredNodeId === null || fromId === hoveredNodeId || toId === hoveredNodeId
-  const color = isRelated ? '#001970' : '#c0c0d8'
+  const colors = STATUS_COLORS[status]
+  const color = isRelated ? colors.active : colors.inactive
 
   // Get all visible node IDs from rows (stable reference via JSON comparison)
   const visibleNodeIds = useMemo(() => rows.flat(), [rows])
@@ -165,7 +178,10 @@ type ArrowsProps = {
 }
 
 /** Build a map: nodeId -> list of parent nodeIds that depend on it */
-function buildParentMap(nodes: ModelNodes): Record<string, string[]> {
+function buildParentMap(
+  nodes: ModelNodes,
+  diffs: ModelNode[]
+): Record<string, string[]> {
   const map: Record<string, string[]> = {}
   for (const [nodeId, node] of Object.entries(nodes)) {
     for (const depId of node.dependencies) {
@@ -173,11 +189,20 @@ function buildParentMap(nodes: ModelNodes): Record<string, string[]> {
       map[depId].push(nodeId)
     }
   }
+  // Include diff dependencies for new nodes
+  for (const diff of diffs) {
+    if (!(diff.id in nodes)) {
+      for (const depId of diff.dependencies) {
+        if (!map[depId]) map[depId] = []
+        map[depId].push(diff.id)
+      }
+    }
+  }
   return map
 }
 
 export function Arrows({ rows }: ArrowsProps) {
-  const { model, hoveredNodeId } = useMainContext()
+  const { model, diffs, hoveredNodeId } = useMainContext()
   const nodes = model.nodes
   const [scale, setScale] = useState(1)
 
@@ -190,30 +215,96 @@ export function Arrows({ rows }: ArrowsProps) {
       window.removeEventListener('transform', handleTransform as EventListener)
   }, [])
 
-  // Pre-compute parent map once when nodes change (O(N) instead of O(N²) per arrow)
-  const parentMap = useMemo(() => buildParentMap(nodes), [nodes])
+  // Build sets for diff analysis
+  const { newNodeIds, deletedNodeIds, diffMap } = useMemo(() => {
+    const newNodeIds = new Set<string>()
+    const deletedNodeIds = new Set<string>()
+    const diffMap = new Map<string, ModelNode>()
 
-  // Collect all arrows: from parent node down to its dependencies
-  const arrows: { fromId: string; toId: string }[] = []
-
-  for (const [nodeId, node] of Object.entries(nodes)) {
-    for (const depId of node.dependencies) {
-      arrows.push({ fromId: nodeId, toId: depId })
+    for (const diff of diffs) {
+      diffMap.set(diff.id, diff)
+      if (!(diff.id in nodes)) {
+        newNodeIds.add(diff.id)
+      }
+      if (diff.deletedVersion !== undefined) {
+        deletedNodeIds.add(diff.id)
+      }
     }
-  }
+
+    return { newNodeIds, deletedNodeIds, diffMap }
+  }, [diffs, nodes])
+
+  // Pre-compute parent map once when nodes change (O(N) instead of O(N²) per arrow)
+  const parentMap = useMemo(() => buildParentMap(nodes, diffs), [nodes, diffs])
+
+  // Collect all arrows with their status
+  const arrows = useMemo(() => {
+    const arrowMap = new Map<string, { fromId: string; toId: string; status: ArrowStatus }>()
+    const key = (from: string, to: string) => `${from}->${to}`
+
+    // Add arrows from model nodes
+    for (const [nodeId, node] of Object.entries(nodes)) {
+      const diff = diffMap.get(nodeId)
+      const diffDeps = new Set(diff?.dependencies ?? [])
+      const originalDeps = new Set(node.dependencies)
+
+      for (const depId of node.dependencies) {
+        let status: ArrowStatus = 'normal'
+
+        if (deletedNodeIds.has(depId)) {
+          status = 'to-deleted'
+        } else if (diff && !diffDeps.has(depId)) {
+          // Arrow exists in original but not in diff - being removed
+          status = 'removed'
+        }
+
+        arrowMap.set(key(nodeId, depId), { fromId: nodeId, toId: depId, status })
+      }
+
+      // Add arrows that are in diff but not in original (being added)
+      if (diff) {
+        for (const depId of diff.dependencies) {
+          if (!originalDeps.has(depId)) {
+            let status: ArrowStatus = 'added'
+            if (newNodeIds.has(depId)) {
+              status = 'to-new'
+            }
+            arrowMap.set(key(nodeId, depId), { fromId: nodeId, toId: depId, status })
+          }
+        }
+      }
+    }
+
+    // Add arrows from new nodes (nodes only in diffs)
+    for (const diff of diffs) {
+      if (newNodeIds.has(diff.id)) {
+        for (const depId of diff.dependencies) {
+          let status: ArrowStatus = 'to-new'
+          if (newNodeIds.has(depId)) {
+            status = 'to-new'
+          }
+          arrowMap.set(key(diff.id, depId), { fromId: diff.id, toId: depId, status })
+        }
+      }
+    }
+
+    return [...arrowMap.values()]
+  }, [nodes, diffs, diffMap, newNodeIds, deletedNodeIds])
 
   // Sort so related arrows render last (on top in SVG)
-  const sortedArrows = [...arrows].sort((a, b) => {
-    const aRelated =
-      hoveredNodeId === null ||
-      a.fromId === hoveredNodeId ||
-      a.toId === hoveredNodeId
-    const bRelated =
-      hoveredNodeId === null ||
-      b.fromId === hoveredNodeId ||
-      b.toId === hoveredNodeId
-    return aRelated === bRelated ? 0 : aRelated ? 1 : -1
-  })
+  const sortedArrows = useMemo(() => {
+    return [...arrows].sort((a, b) => {
+      const aRelated =
+        hoveredNodeId === null ||
+        a.fromId === hoveredNodeId ||
+        a.toId === hoveredNodeId
+      const bRelated =
+        hoveredNodeId === null ||
+        b.fromId === hoveredNodeId ||
+        b.toId === hoveredNodeId
+      return aRelated === bRelated ? 0 : aRelated ? 1 : -1
+    })
+  }, [arrows, hoveredNodeId])
 
   const strokeWidth = 2 * scale
 
@@ -230,7 +321,7 @@ export function Arrows({ rows }: ArrowsProps) {
           }
         `}
       </style>
-      {sortedArrows.map(({ fromId, toId }) => (
+      {sortedArrows.map(({ fromId, toId, status }) => (
         <Arrow
           key={`${fromId}-${toId}`}
           fromId={fromId}
@@ -239,6 +330,7 @@ export function Arrows({ rows }: ArrowsProps) {
           scale={scale}
           strokeWidth={strokeWidth}
           parentMap={parentMap}
+          status={status}
         />
       ))}
     </svg>
