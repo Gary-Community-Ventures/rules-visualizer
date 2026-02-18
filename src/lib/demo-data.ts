@@ -127,6 +127,20 @@ export function createDemoModel(): DemoData {
           },
         ],
       },
+      tests: [
+        {
+          id: '_test_income_employed_pass',
+          name: 'employed above threshold',
+          inputs: { [idB]: 50000, [idC]: 'employed' },
+          expected: 'true',
+        },
+        {
+          id: '_test_income_employed_fail',
+          name: 'employed below threshold',
+          inputs: { [idB]: 20000, [idC]: 'employed' },
+          expected: 'false',
+        },
+      ],
     },
     [idE]: {
       id: idE,
@@ -173,6 +187,26 @@ export function createDemoModel(): DemoData {
           },
         ],
       },
+      tests: [
+        {
+          id: '_test_age_eligible',
+          name: 'adult eligible',
+          inputs: { [idA]: 30 },
+          expected: 'true',
+        },
+        {
+          id: '_test_age_too_young',
+          name: 'too young',
+          inputs: { [idA]: 15 },
+          expected: 'false',
+        },
+        {
+          id: '_test_age_too_old',
+          name: 'too old',
+          inputs: { [idA]: 70 },
+          expected: 'false',
+        },
+      ],
     },
 
     // ─── Context ──────────────────────────────────────────────
@@ -201,6 +235,32 @@ export function createDemoModel(): DemoData {
           },
         ],
       },
+      tests: [
+        {
+          id: '_test_elig_both_pass',
+          name: 'both factors pass',
+          inputs: { [idD]: true, [idE]: true },
+          expected: 'true',
+        },
+        {
+          id: '_test_elig_income_fail',
+          name: 'income fails',
+          inputs: { [idD]: false, [idE]: true },
+          expected: 'false',
+        },
+        {
+          id: '_test_elig_age_fail',
+          name: 'age fails',
+          inputs: { [idD]: true, [idE]: false },
+          expected: 'false',
+        },
+        {
+          id: '_test_elig_both_fail',
+          name: 'both fail',
+          inputs: { [idD]: false, [idE]: false },
+          expected: 'false',
+        },
+      ],
     },
 
     // ─── Final Decision ───────────────────────────────────────
@@ -221,6 +281,20 @@ export function createDemoModel(): DemoData {
           },
         ],
       },
+      tests: [
+        {
+          id: '_test_final_approved',
+          name: 'eligible applicant',
+          inputs: { [idF]: true },
+          expected: 'Approved',
+        },
+        {
+          id: '_test_final_denied',
+          name: 'ineligible applicant',
+          inputs: { [idF]: false },
+          expected: 'Denied',
+        },
+      ],
     },
   }
 
@@ -294,6 +368,36 @@ export function createDemoModel(): DemoData {
           },
         ],
       },
+      tests: [
+        // Modified: raised income from 50k to 60k, renamed
+        {
+          id: '_test_income_employed_pass',
+          name: 'employed well above threshold',
+          inputs: { [idB]: 60000, [idC]: 'employed' },
+          expected: 'true',
+        },
+        // Unchanged: kept as-is
+        {
+          id: '_test_income_employed_fail',
+          name: 'employed below threshold',
+          inputs: { [idB]: 20000, [idC]: 'employed' },
+          expected: 'false',
+        },
+        // Added: new test for the contractor rule
+        {
+          id: '_test_income_contractor_pass',
+          name: 'contractor above 40k',
+          inputs: { [idB]: 45000, [idC]: 'contractor' },
+          expected: 'true',
+        },
+        // Added: contractor below threshold
+        {
+          id: '_test_income_contractor_fail',
+          name: 'contractor below 40k',
+          inputs: { [idB]: 30000, [idC]: 'contractor' },
+          expected: 'false',
+        },
+      ],
     },
     {
       ...eligibilityNode,

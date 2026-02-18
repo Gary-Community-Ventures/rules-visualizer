@@ -318,7 +318,11 @@ export function useResolveDiff() {
     if (accept) {
       const diff = diffs.find((d) => d.id === id)
       if (diff) {
-        updateNode(id, () => diff)
+        // Preserve existing tests when the diff doesn't include them
+        updateNode(id, (node) => ({
+          ...diff,
+          tests: diff.tests ?? node.tests,
+        }))
       }
     }
 

@@ -84,12 +84,20 @@ const nodeContentSchema = z.discriminatedUnion('type', [
   decisionTableSchema,
 ])
 
+const nodeTestCaseSchema = z.object({
+  id: z.string().min(1),
+  name: z.string(),
+  inputs: z.record(z.string(), z.unknown()),
+  expected: z.string(),
+})
+
 const modelNodeSchema = z.object({
   id: z.string().min(1),
   name: z.string().min(1),
   typeRef: feelDataTypeSchema.optional(),
   dependencies: z.array(z.string()),
   content: nodeContentSchema,
+  tests: z.array(nodeTestCaseSchema).optional(),
 })
 
 const modelSchema = z

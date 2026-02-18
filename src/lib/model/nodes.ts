@@ -35,6 +35,15 @@ export type DecisionTable = {
 
 export type NodeContent = Input | Constant | Context | DecisionTable
 
+// ─── Test Cases ─────────────────────────────────────────────────
+
+export type NodeTestCase = {
+  id: string
+  name: string
+  inputs: Record<string, unknown>
+  expected: string
+}
+
 // ─── Node & Model ────────────────────────────────────────────────
 
 export type ModelNode = {
@@ -43,6 +52,7 @@ export type ModelNode = {
   typeRef?: FeelDataType
   dependencies: string[]
   content: NodeContent
+  tests?: NodeTestCase[]
   deletedVersion?: string
 }
 

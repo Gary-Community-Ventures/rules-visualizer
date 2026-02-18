@@ -11,6 +11,7 @@ import type {
   Context,
   Constant,
   DecisionTable,
+  NodeTestCase,
 } from './nodes'
 
 export function generateId(prefix?: string): string {
@@ -30,7 +31,9 @@ export function createInput(partial: Partial<Input> = {}): Input {
   }
 }
 
-export function createExpression(partial: Partial<FeelExpression> = {}): FeelExpression {
+export function createExpression(
+  partial: Partial<FeelExpression> = {}
+): FeelExpression {
   return {
     text: '',
     ...partial,
@@ -62,7 +65,9 @@ export function createConstant(partial: Partial<Constant> = {}): Constant {
   }
 }
 
-export function createInputClause(partial: Partial<InputClause> = {}): InputClause {
+export function createInputClause(
+  partial: Partial<InputClause> = {}
+): InputClause {
   return {
     id: generateId('input'),
     label: '',
@@ -71,7 +76,9 @@ export function createInputClause(partial: Partial<InputClause> = {}): InputClau
   }
 }
 
-export function createOutputClause(partial: Partial<OutputClause> = {}): OutputClause {
+export function createOutputClause(
+  partial: Partial<OutputClause> = {}
+): OutputClause {
   return {
     id: generateId('output'),
     label: '',
@@ -94,13 +101,27 @@ export function createRule(
   }
 }
 
-export function createDecisionTable(partial: Partial<DecisionTable> = {}): DecisionTable {
+export function createDecisionTable(
+  partial: Partial<DecisionTable> = {}
+): DecisionTable {
   return {
     type: 'decisionTable',
     hitPolicy: 'UNIQUE',
     inputClauses: [],
     outputClauses: [],
     rules: [],
+    ...partial,
+  }
+}
+
+export function createTestCase(
+  partial: Partial<NodeTestCase> = {}
+): NodeTestCase {
+  return {
+    id: generateId('test'),
+    name: '',
+    inputs: {},
+    expected: '',
     ...partial,
   }
 }

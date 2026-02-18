@@ -22,6 +22,7 @@ import { Editor } from './inputs/editor'
 import { NodeInput } from './node-input'
 import { NodeResultBadge } from './node-result'
 import { TextInput } from './inputs/text'
+import { NodeTests } from './inputs/node-tests'
 
 const NODE_TYPE_CONFIG = {
   input: {
@@ -125,6 +126,7 @@ type NodeViewerProps = {
 }
 
 export function NodeViewer({ id }: NodeViewerProps) {
+  const { model } = useMainContext()
   const node = useNode(id)
   const updateNode = useUpdateNode()
   const diff = useDiff(id)
@@ -192,6 +194,10 @@ export function NodeViewer({ id }: NodeViewerProps) {
           </label>
           <Editor node={node} />
         </div>
+      )}
+      {/* Tests section (non-input nodes only) */}
+      {node.content.type !== 'input' && (
+        <NodeTests node={node} allNodes={model.nodes} diff={diff} />
       )}
       {diff !== undefined && (
         <div className="flex gap-2">

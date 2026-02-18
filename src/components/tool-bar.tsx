@@ -171,12 +171,18 @@ function AlertsPopover() {
     return cycles
   }, [model.nodes])
 
-  const totalAlerts = diffs.length + duplicateNames.length + circularDependencies.length
+  const totalAlerts =
+    diffs.length + duplicateNames.length + circularDependencies.length
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button variant="outline" size="icon" title="Alerts" className="relative">
+        <Button
+          variant="outline"
+          size="icon"
+          title="Alerts"
+          className="relative"
+        >
           <Bell className="size-4" />
           {totalAlerts > 0 && (
             <span className="absolute -top-1 -right-1 size-4 rounded-full bg-red-500 text-white text-xs flex items-center justify-center">
@@ -191,7 +197,9 @@ function AlertsPopover() {
         </div>
         <div className="flex flex-col max-h-80 overflow-y-auto">
           {totalAlerts === 0 ? (
-            <p className="text-sm text-muted-foreground p-3">No pending changes</p>
+            <p className="text-sm text-muted-foreground p-3">
+              No pending changes
+            </p>
           ) : (
             <>
               {/* Circular dependency errors */}
@@ -199,7 +207,9 @@ function AlertsPopover() {
                 <div key={`cycle-${i}`} className="border-b last:border-b-0">
                   <div className="flex items-center gap-3 p-3 text-red-600">
                     <CircleAlert className="size-4 shrink-0" />
-                    <span className="font-medium text-sm">Circular dependency</span>
+                    <span className="font-medium text-sm">
+                      Circular dependency
+                    </span>
                   </div>
                   <div className="pl-10 pb-2 flex flex-wrap items-center gap-1">
                     {cycle.map((id, j) => (
@@ -252,7 +262,9 @@ function AlertsPopover() {
                   className="flex items-center gap-3 p-3 hover:bg-muted text-left transition-colors border-b last:border-b-0"
                 >
                   <Plus className="size-4 text-blue-500 shrink-0" />
-                  <span className="font-medium text-sm truncate">{diff.name}</span>
+                  <span className="font-medium text-sm truncate">
+                    {diff.name}
+                  </span>
                 </button>
               ))}
             </>
