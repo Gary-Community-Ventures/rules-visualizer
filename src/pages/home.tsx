@@ -1,8 +1,10 @@
 import {
   useAddNode,
   useDeleteNode,
+  useDiff,
   useFindNode,
   useMainContext,
+  useResolveDiff,
 } from '@/context'
 import { NodeViewer, Rows } from '@/components/node'
 import { Arrows } from '@/components/arrows'
@@ -15,7 +17,7 @@ import {
   ResizablePanelGroup,
 } from '@/components/ui/resizable'
 import { useEffect, useState, type PropsWithChildren } from 'react'
-import { Copy, EllipsisVertical, Trash2, X } from 'lucide-react'
+import { Check, Copy, EllipsisVertical, Trash2, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -60,6 +62,8 @@ export function NodeMapLayout({ children }: PropsWithChildren) {
   const addNode = useAddNode()
   const deleteNode = useDeleteNode()
   const openNodeData = useFindNode(openNode)
+  const diff = useDiff(openNode ?? '')
+  const resolveDiff = useResolveDiff()
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
 
   const handleLayoutChange = () => {
@@ -141,6 +145,26 @@ export function NodeMapLayout({ children }: PropsWithChildren) {
               <div className="flex-1 overflow-y-auto p-5">
                 <NodeViewer node={openNodeData} />
               </div>
+              {diff !== undefined && (
+                <div className="shrink-0 border-t p-4 flex gap-2">
+                  <Button
+                    variant="outline"
+                    className="flex-1 text-red-600 hover:text-red-700 hover:bg-red-50"
+                    onClick={() => resolveDiff(openNode!, false)}
+                  >
+                    <X className="size-4 mr-2" />
+                    Reject
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="flex-1 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
+                    onClick={() => resolveDiff(openNode!, true)}
+                  >
+                    <Check className="size-4 mr-2" />
+                    Accept
+                  </Button>
+                </div>
+              )}
             </div>
           </ResizablePanel>
           <ResizableHandle withHandle />

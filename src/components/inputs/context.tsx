@@ -26,6 +26,10 @@ export function ContextInput({
 }: ContextInputProps) {
   const entries = getContextEntries(context.entries, diff?.new.entries)
 
+  // Use diff entries/update when diff exists, otherwise use context
+  const targetContext = diff?.new ?? context
+  const updateTarget = diff?.update ?? updateContext
+
   const updateName = (index: number, name: string) => {
     const entries = [...context.entries]
     entries[index] = { ...entries[index], name }
@@ -41,45 +45,53 @@ export function ContextInput({
   }
 
   const insertRowAbove = (entryIndex: number) => {
-    const entries = [...context.entries]
-    entries.splice(entryIndex, 0, createEntry())
-    updateContext({ ...context, entries })
+    const newEntries = [...targetContext.entries]
+    newEntries.splice(entryIndex, 0, createEntry())
+    updateTarget({ ...targetContext, entries: newEntries })
   }
 
   const insertRowBelow = (entryIndex: number) => {
-    const entries = [...context.entries]
-    entries.splice(entryIndex + 1, 0, createEntry())
-    updateContext({ ...context, entries })
+    const newEntries = [...targetContext.entries]
+    newEntries.splice(entryIndex + 1, 0, createEntry())
+    updateTarget({ ...targetContext, entries: newEntries })
   }
 
   const deleteRow = (entryIndex: number) => {
-    const entries = context.entries.filter((_, i) => i !== entryIndex)
-    updateContext({ ...context, entries })
+    const newEntries = targetContext.entries.filter((_, i) => i !== entryIndex)
+    updateTarget({ ...targetContext, entries: newEntries })
   }
 
   const shiftUp = (entryIndex: number) => {
-    const entries = [...context.entries]
-    ;[entries[entryIndex - 1], entries[entryIndex]] = [
-      entries[entryIndex],
-      entries[entryIndex - 1],
-    ]
-    updateContext({ ...context, entries })
+    const newEntries = [...targetContext.entries]
+    const temp = newEntries[entryIndex - 1]
+    newEntries[entryIndex - 1] = newEntries[entryIndex]
+    newEntries[entryIndex] = temp
+    updateTarget({ ...targetContext, entries: newEntries })
   }
 
   const shiftDown = (entryIndex: number) => {
-    const entries = [...context.entries]
-    ;[entries[entryIndex], entries[entryIndex + 1]] = [
-      entries[entryIndex + 1],
-      entries[entryIndex],
-    ]
-    updateContext({ ...context, entries })
+    const newEntries = [...targetContext.entries]
+    const temp = newEntries[entryIndex]
+    newEntries[entryIndex] = newEntries[entryIndex + 1]
+    newEntries[entryIndex + 1] = temp
+    updateTarget({ ...targetContext, entries: newEntries })
   }
 
   const getActions = (_x: number, y: number) => {
-    // y=0 is header row, y=entries.length is return row
+    // y=0 is header row, last row is return row
     const isHeader = y === 0
-    const isReturnRow = y === context.entries.length
-    const entryIndex = y - 1
+    const visualIndex = y - 1 // index in the merged entries array
+
+    // Map visual index to actual index in targetContext.entries
+    const getTargetIndex = (visIdx: number): number => {
+      if (visIdx < 0 || visIdx >= entries.length) return -1
+      const entry = entries[visIdx]
+      // Use the new entry ID if it exists (for diff), otherwise old
+      const entryId = entry.new?.id ?? entry.old.id
+      return targetContext.entries.findIndex((e) => e.id === entryId)
+    }
+
+    const entryIndex = getTargetIndex(visualIndex)
 
     // Header can only insert below (at index 0)
     if (isHeader) {
@@ -94,7 +106,13 @@ export function ContextInput({
       ]
     }
 
+    // Skip actions if entry doesn't exist in target (e.g., deleted row in diff view)
+    if (entryIndex === -1) {
+      return []
+    }
+
     // Return row can only insert above
+    const isReturnRow = entryIndex === targetContext.entries.length - 1
     if (isReturnRow) {
       return [
         [
@@ -107,8 +125,9 @@ export function ContextInput({
       ]
     }
 
-    const isFirstDataRow = y === 1
-    const isLastDataRow = y === context.entries.length - 1
+    // Use target index for boundary checks on operations
+    const isFirstDataRow = entryIndex === 0
+    const isLastDataRow = entryIndex === targetContext.entries.length - 2 // -2 because last is return
 
     const insertActions = [
       {
@@ -227,6 +246,7 @@ function ContextRow({
   isLast,
   updateName,
   updateExpression,
+  rowIndex,
 }: {
   entry: ContextEntry
   diff?: {
@@ -237,6 +257,7 @@ function ContextRow({
   isLast: boolean
   updateName: (newValue: string) => void
   updateExpression: (newValue: string) => void
+  rowIndex?: number
 }) {
   const knownNames = useKnownNames(prevEntries)
 
@@ -255,7 +276,7 @@ function ContextRow({
   }
 
   return (
-    <TableRow>
+    <TableRow rowIndex={rowIndex}>
       {isLast ? (
         <TableTextCell className="bg-cyan-100 text-black">return</TableTextCell>
       ) : (

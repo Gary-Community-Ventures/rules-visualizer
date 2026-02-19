@@ -274,11 +274,7 @@ export function useNodeResult(nodeId: string): NodeResult | undefined {
 }
 
 export function useDiff(nodeId: string) {
-  const { diffs, model } = useMainContext()
-
-  if (model.nodes[nodeId] === undefined) {
-    return undefined
-  }
+  const { diffs } = useMainContext()
 
   return diffs.find((diff) => diff.id === nodeId)
 }

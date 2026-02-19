@@ -231,6 +231,9 @@ export function createDemoModel(): DemoData {
     nodes,
   }
 
+  const applicantAgeNode = nodes[idA]
+  const minAgeNode = nodes[idMinAge]
+  const maxAgeNode = nodes[idMaxAge]
   const eligibilityNode = nodes[idF]
   const ageEligibilityNode = nodes[idE]
   const finalRecommendationNode = nodes[idG]
@@ -291,6 +294,21 @@ export function createDemoModel(): DemoData {
     // Arrows to this node shown as red
     {
       ...ageEligibilityNode,
+      deletedVersion: '2.0.0',
+    },
+    // Deleted: Applicant_Age no longer needed
+    {
+      ...applicantAgeNode,
+      deletedVersion: '2.0.0',
+    },
+    // Deleted: Min_Age no longer needed
+    {
+      ...minAgeNode,
+      deletedVersion: '2.0.0',
+    },
+    // Deleted: Max_Age no longer needed
+    {
+      ...maxAgeNode,
       deletedVersion: '2.0.0',
     },
   ]
