@@ -38,14 +38,12 @@ export type Aggregation = 'SUM' | 'COUNT' | 'MIN' | 'MAX'
 
 export type InputClause = {
   id: string
-  label: string
   inputExpression: string // FEEL expression evaluated against input
   inputExpressionTypeRef?: FeelDataType
 }
 
 export type OutputClause = {
   id: string
-  label: string
   name: string
   typeRef?: FeelDataType
 }

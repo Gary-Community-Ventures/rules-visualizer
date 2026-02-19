@@ -87,13 +87,11 @@ export function createDemoModel(): DemoData {
         inputClauses: [
           {
             id: generateId('ic'),
-            label: 'Annual_Income',
             inputExpression: 'Annual_Income',
             inputExpressionTypeRef: 'number',
           },
           {
             id: generateId('ic'),
-            label: 'Employment_Status',
             inputExpression: 'Employment_Status',
             inputExpressionTypeRef: 'string',
           },
@@ -101,7 +99,6 @@ export function createDemoModel(): DemoData {
         outputClauses: [
           {
             id: generateId('oc'),
-            label: 'Income_Eligible',
             name: 'Income_Eligible',
             typeRef: 'boolean',
           },
@@ -139,7 +136,6 @@ export function createDemoModel(): DemoData {
         inputClauses: [
           {
             id: generateId('ic'),
-            label: 'Applicant_Age',
             inputExpression: 'Applicant_Age',
             inputExpressionTypeRef: 'number',
           },
@@ -147,7 +143,6 @@ export function createDemoModel(): DemoData {
         outputClauses: [
           {
             id: generateId('oc'),
-            label: 'Age_Eligible',
             name: 'Age_Eligible',
             typeRef: 'boolean',
           },

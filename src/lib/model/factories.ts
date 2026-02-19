@@ -66,7 +66,6 @@ export function createConstant(partial: Partial<Constant> = {}): Constant {
 export function createInputClause(partial: Partial<InputClause> = {}): InputClause {
   return {
     id: generateId('input'),
-    label: '',
     inputExpression: '',
     ...partial,
   }
@@ -75,7 +74,6 @@ export function createInputClause(partial: Partial<InputClause> = {}): InputClau
 export function createOutputClause(partial: Partial<OutputClause> = {}): OutputClause {
   return {
     id: generateId('output'),
-    label: '',
     name: '',
     ...partial,
   }

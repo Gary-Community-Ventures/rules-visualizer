@@ -25,14 +25,12 @@ const contextEntrySchema = z.object({
 
 const inputClauseSchema = z.object({
   id: z.string().min(1),
-  label: z.string(),
   inputExpression: z.string(),
   inputExpressionTypeRef: feelDataTypeSchema.optional(),
 })
 
 const outputClauseSchema = z.object({
   id: z.string().min(1),
-  label: z.string(),
   name: z.string().min(1),
   typeRef: feelDataTypeSchema.optional(),
 })
