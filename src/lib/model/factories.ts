@@ -26,6 +26,7 @@ export function createInput(partial: Partial<Input> = {}): Input {
   return {
     type: 'input',
     id: generateId('input'),
+    defaultValue: '',
     ...partial,
   }
 }
@@ -110,7 +111,7 @@ export function createDecisionTable(partial: Partial<DecisionTable> = {}): Decis
 export function cloneContent(content: NodeContent): NodeContent {
   switch (content.type) {
     case 'input':
-      return { type: 'input', id: generateId('input') }
+      return { type: 'input', id: generateId('input'), defaultValue: content.defaultValue }
     case 'constant':
       return { ...content }
     case 'context':

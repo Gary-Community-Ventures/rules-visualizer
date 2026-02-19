@@ -28,21 +28,21 @@ export function createDemoModel(): DemoData {
       name: 'Applicant_Age',
       typeRef: 'number',
       dependencies: [],
-      content: { type: 'input', id: generateId('input') },
+      content: { type: 'input', id: generateId('input'), defaultValue: '30' },
     },
     [idB]: {
       id: idB,
       name: 'Annual_Income',
       typeRef: 'number',
       dependencies: [],
-      content: { type: 'input', id: generateId('input') },
+      content: { type: 'input', id: generateId('input'), defaultValue: '50000' },
     },
     [idC]: {
       id: idC,
       name: 'Employment_Status',
       typeRef: 'string',
       dependencies: [],
-      content: { type: 'input', id: generateId('input') },
+      content: { type: 'input', id: generateId('input'), defaultValue: '"employed"' },
     },
 
     // ─── Constants ────────────────────────────────────────────
@@ -245,7 +245,7 @@ export function createDemoModel(): DemoData {
       name: 'Credit_Score',
       typeRef: 'number',
       dependencies: [],
-      content: { type: 'input', id: generateId('input') },
+      content: { type: 'input', id: generateId('input'), defaultValue: '700' },
     },
     // Modified: replace Age_Check with Credit_Check
     // Arrow removed: Eligibility_Factors -> Age_Eligibility (red)

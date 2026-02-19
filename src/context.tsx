@@ -95,8 +95,12 @@ export function Wrapper({ children }: { children: React.ReactNode }) {
     const nameInputs: Record<string, unknown> = {}
     for (const node of Object.values(currentModel.nodes)) {
       if (node.content.type !== 'input') continue
-      const val = currentInputValues[node.id]
-      // Skip undefined and empty strings (cleared inputs)
+      // Use user-entered value, or fall back to default value
+      let val = currentInputValues[node.id]
+      if (val === undefined || val === '') {
+        val = node.content.defaultValue
+      }
+      // Skip if still empty after fallback
       if (val === undefined || val === '') continue
       if (node.name in nameInputs) {
         console.warn(
