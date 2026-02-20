@@ -14,7 +14,11 @@ import type { ExecutionResult, NodeResult } from './lib/engine'
 import { createKieEngine, getKieBaseUrl } from './lib/engine'
 import { createDemoModel } from './lib/demo-data'
 import { useLocalStorage } from './lib/use-local-storage'
+import { useDebounce } from './lib/use-debounce'
 import { buildNameToIdMap, recomputeDependencies } from './lib/graph'
+import { useSocket, useSocketEvent } from './lib/sockets'
+import { deepCopy } from './lib/utils'
+import type { Socket } from 'socket.io-client'
 
 type ExecutionActions = {
   execute: () => void
@@ -45,6 +49,7 @@ type MainContext = {
   lastError: string | null
   setLastError: Dispatch<SetStateAction<string | null>>
   execution: ExecutionActions
+  socket: Socket
 }
 
 const MainContext = createContext<MainContext | undefined>(undefined)
@@ -70,7 +75,7 @@ export function Wrapper({ children }: { children: React.ReactNode }) {
 
   // Single shared refs for execution
   const abortRef = useRef<AbortController | null>(null)
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const debounce = useDebounce(500)
   // Use refs for latest values so execute closure doesn't go stale
   const modelRef = useRef(model)
   modelRef.current = model
@@ -139,17 +144,11 @@ export function Wrapper({ children }: { children: React.ReactNode }) {
   }, [])
 
   const debouncedExecute = useCallback(() => {
-    if (debounceRef.current) {
-      clearTimeout(debounceRef.current)
-    }
-    debounceRef.current = setTimeout(() => {
-      execute()
-    }, 500)
-  }, [execute])
+    debounce(() => execute())
+  }, [debounce, execute])
 
   const reset = useCallback(() => {
     if (abortRef.current) abortRef.current.abort()
-    if (debounceRef.current) clearTimeout(debounceRef.current)
     setExecutionResult(null)
     setIsExecuting(false)
     setInputValues({})
@@ -161,7 +160,6 @@ export function Wrapper({ children }: { children: React.ReactNode }) {
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current)
       if (abortRef.current) abortRef.current.abort()
     }
   }, [])
@@ -185,7 +183,10 @@ export function Wrapper({ children }: { children: React.ReactNode }) {
   // Auto-recompute diff dependencies from FEEL expression content
   useEffect(() => {
     const nameToId = buildNameToIdMap(model.nodes, diffs)
-    const { nodes: updatedDiffs, changed } = recomputeDependencies(diffs, nameToId)
+    const { nodes: updatedDiffs, changed } = recomputeDependencies(
+      diffs,
+      nameToId
+    )
     if (changed) {
       setDiffs(updatedDiffs)
     }
@@ -194,6 +195,54 @@ export function Wrapper({ children }: { children: React.ReactNode }) {
   const execution = useMemo(
     () => ({ execute, debouncedExecute, reset }),
     [execute, debouncedExecute, reset]
+  )
+
+  const socket = useSocket()
+
+  useSocketEvent(socket, 'model', ({ data }: { data: Model }) => {
+    setModel(data)
+  })
+  useSocketEvent(
+    socket,
+    'diffs',
+    ({
+      data,
+      isDiff,
+      resolvedDiffs,
+    }: {
+      data: ModelNode[]
+      isDiff: boolean
+      resolvedDiffs: string[]
+    }) => {
+      if (isDiff) {
+        setDiffs((d) => {
+          const newDiffs = deepCopy(d)
+          for (const newDiff of data) {
+            const existingDiff = newDiffs.find((d) => d.id === newDiff.id)
+            if (existingDiff) {
+              newDiffs.splice(newDiffs.indexOf(existingDiff), 1, newDiff)
+            } else {
+              newDiffs.push(newDiff)
+            }
+          }
+
+          return newDiffs.filter((d) => !resolvedDiffs.includes(d.id))
+        })
+      } else {
+        setModel((m) => {
+          const newModel = deepCopy(m)
+          for (const diff of data) {
+            if (diff.deletedVersion !== undefined) {
+              delete newModel.nodes[diff.id]
+              continue
+            }
+
+            newModel.nodes[diff.id] = diff
+          }
+          return newModel
+        })
+      }
+    }
   )
 
   const value = {
@@ -219,6 +268,7 @@ export function Wrapper({ children }: { children: React.ReactNode }) {
     lastError,
     setLastError,
     execution,
+    socket,
   }
   return <MainContext.Provider value={value}>{children}</MainContext.Provider>
 }
@@ -233,22 +283,30 @@ export function useMainContext(): MainContext {
   return context
 }
 
+const SAVE_DEBOUNCE = 1_000
+
 export function useUpdateNode() {
-  const { setModel } = useMainContext()
+  const { setModel, model, socket } = useMainContext()
+  const debounce = useDebounce(SAVE_DEBOUNCE)
 
   return (id: string, updater: (node: ModelNode) => ModelNode) => {
-    setModel((model) => ({
+    const updated = updater(model.nodes[id])
+    setModel({
       ...model,
       nodes: {
         ...model.nodes,
-        [id]: updater(model.nodes[id]),
+        [id]: updated,
       },
-    }))
+    })
+    // debounce to avoid sending on every keystroke
+    debounce(() => {
+      socket.emit('model-update', { updates: [updated], isDiff: false })
+    })
   }
 }
 
 export function useAddNode() {
-  const { setModel } = useMainContext()
+  const { setModel, socket } = useMainContext()
 
   return (id: string, node: ModelNode) => {
     setModel((model) => ({
@@ -258,16 +316,23 @@ export function useAddNode() {
         [id]: node,
       },
     }))
+    socket.emit('model-update', { updates: [node], isDiff: false })
   }
 }
 
 export function useDeleteNode() {
-  const { setModel } = useMainContext()
+  const { setModel, model, socket } = useMainContext()
 
   return (id: string) => {
     setModel((model) => {
       const { [id]: _, ...remaining } = model.nodes
       return { ...model, nodes: remaining }
+    })
+
+    const node = model.nodes[id]
+    socket.emit('model-update', {
+      updates: [{ ...node, deletedVersion: 'TODO' }], // TODO: use real version
+      isDiff: false,
     })
   }
 }
@@ -284,23 +349,33 @@ export function useDiff(nodeId: string) {
 }
 
 export function useUpdateDiff() {
-  const { setDiffs } = useMainContext()
+  const { setDiffs, diffs, socket } = useMainContext()
+  const debounce = useDebounce(SAVE_DEBOUNCE)
 
   return (id: string, updater: (diff: ModelNode) => ModelNode) => {
+    const diff = diffs.find((d) => d.id === id)
+    if (diff === undefined) {
+      return
+    }
+    const updated = updater(diff)
     setDiffs((diffs) =>
       diffs.map((diff) => {
         if (diff.id !== id) {
           return diff
         }
 
-        return updater(diff)
+        return updated
       })
     )
+    // debounce to avoid sending on every keystroke
+    debounce(() => {
+      socket.emit('model-update', { updates: [updated], isDiff: true })
+    })
   }
 }
 
 export function useResolveDiff() {
-  const { diffs, setDiffs } = useMainContext()
+  const { diffs, setDiffs, socket } = useMainContext()
   const updateNode = useUpdateNode()
   const deleteNode = useDeleteNode()
 
@@ -315,6 +390,11 @@ export function useResolveDiff() {
     }
 
     setDiffs((diffs) => diffs.filter((diff) => diff.id !== id))
+    socket.emit('model-update', {
+      updates: [],
+      isDiff: true,
+      resolvedDiffs: [id],
+    })
   }
 }
 

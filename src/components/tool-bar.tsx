@@ -116,6 +116,7 @@ export function ToolBar() {
     setShowChildren,
     setOpenNode,
     execution,
+    diffs,
   } = useMainContext()
   const addNode = useAddNode()
   const [search, setSearch] = useState('')
@@ -208,6 +209,9 @@ export function ToolBar() {
             const all: Record<string, boolean> = {}
             for (const id of Object.keys(model.nodes)) {
               all[id] = true
+            }
+            for (const diff of diffs) {
+              all[diff.id] = true
             }
             setShowChildren(all)
           }}
