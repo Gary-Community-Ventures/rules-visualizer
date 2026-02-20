@@ -28,21 +28,21 @@ export function createDemoModel(): DemoData {
       name: 'Applicant_Age',
       typeRef: 'number',
       dependencies: [],
-      content: { type: 'input', id: generateId('input') },
+      content: { type: 'input', id: generateId('input'), defaultValue: '30' },
     },
     [idB]: {
       id: idB,
       name: 'Annual_Income',
       typeRef: 'number',
       dependencies: [],
-      content: { type: 'input', id: generateId('input') },
+      content: { type: 'input', id: generateId('input'), defaultValue: '50000' },
     },
     [idC]: {
       id: idC,
       name: 'Employment_Status',
       typeRef: 'string',
       dependencies: [],
-      content: { type: 'input', id: generateId('input') },
+      content: { type: 'input', id: generateId('input'), defaultValue: '"employed"' },
     },
 
     // ─── Constants ────────────────────────────────────────────
@@ -87,13 +87,11 @@ export function createDemoModel(): DemoData {
         inputClauses: [
           {
             id: generateId('ic'),
-            label: 'Annual_Income',
             inputExpression: 'Annual_Income',
             inputExpressionTypeRef: 'number',
           },
           {
             id: generateId('ic'),
-            label: 'Employment_Status',
             inputExpression: 'Employment_Status',
             inputExpressionTypeRef: 'string',
           },
@@ -101,7 +99,6 @@ export function createDemoModel(): DemoData {
         outputClauses: [
           {
             id: generateId('oc'),
-            label: 'Income_Eligible',
             name: 'Income_Eligible',
             typeRef: 'boolean',
           },
@@ -153,7 +150,6 @@ export function createDemoModel(): DemoData {
         inputClauses: [
           {
             id: generateId('ic'),
-            label: 'Applicant_Age',
             inputExpression: 'Applicant_Age',
             inputExpressionTypeRef: 'number',
           },
@@ -161,7 +157,6 @@ export function createDemoModel(): DemoData {
         outputClauses: [
           {
             id: generateId('oc'),
-            label: 'Age_Eligible',
             name: 'Age_Eligible',
             typeRef: 'boolean',
           },
@@ -305,6 +300,9 @@ export function createDemoModel(): DemoData {
     nodes,
   }
 
+  const applicantAgeNode = nodes[idA]
+  const minAgeNode = nodes[idMinAge]
+  const maxAgeNode = nodes[idMaxAge]
   const eligibilityNode = nodes[idF]
   const ageEligibilityNode = nodes[idE]
   const finalRecommendationNode = nodes[idG]
@@ -316,7 +314,7 @@ export function createDemoModel(): DemoData {
       name: 'Credit_Score',
       typeRef: 'number',
       dependencies: [],
-      content: { type: 'input', id: generateId('input') },
+      content: { type: 'input', id: generateId('input'), defaultValue: '700' },
     },
     // Modified: replace Age_Check with Credit_Check
     // Arrow removed: Eligibility_Factors -> Age_Eligibility (red)
@@ -396,6 +394,21 @@ export function createDemoModel(): DemoData {
     // Arrows to this node shown as red
     {
       ...ageEligibilityNode,
+      deletedVersion: '2.0.0',
+    },
+    // Deleted: Applicant_Age no longer needed
+    {
+      ...applicantAgeNode,
+      deletedVersion: '2.0.0',
+    },
+    // Deleted: Min_Age no longer needed
+    {
+      ...minAgeNode,
+      deletedVersion: '2.0.0',
+    },
+    // Deleted: Max_Age no longer needed
+    {
+      ...maxAgeNode,
       deletedVersion: '2.0.0',
     },
   ]

@@ -2,6 +2,7 @@ import type {
   Constant,
   Context,
   DecisionTable,
+  Input,
   ModelNode,
   NodeContent,
 } from '@/lib/model'
@@ -9,6 +10,7 @@ import { ContextInput } from './context'
 import { useDiff, useUpdateDiff, useUpdateNode } from '@/context'
 import { ConstantInput } from './constant'
 import { DecisionTableInput } from './decition-table'
+import { InputDefault } from './input-default'
 
 type EditorProps = {
   node: ModelNode
@@ -39,11 +41,16 @@ export function Editor({ node }: EditorProps) {
     }
 
     return (
-      <ContextInput
-        context={node.content}
-        updateContext={updateContext}
-        diff={contextDiff}
-      />
+      <div className="flex flex-col gap-1.5">
+        <label className="text-sm font-medium text-muted-foreground">
+          Content
+        </label>
+        <ContextInput
+          context={node.content}
+          updateContext={updateContext}
+          diff={contextDiff}
+        />
+      </div>
     )
   }
   if (node.content.type === 'constant') {
@@ -61,11 +68,16 @@ export function Editor({ node }: EditorProps) {
       }
     }
     return (
-      <ConstantInput
-        constant={node.content}
-        updateConstant={updateConstant}
-        diff={constDiff}
-      />
+      <div className="flex flex-col gap-1.5">
+        <label className="text-sm font-medium text-muted-foreground">
+          Content
+        </label>
+        <ConstantInput
+          constant={node.content}
+          updateConstant={updateConstant}
+          diff={constDiff}
+        />
+      </div>
     )
   }
   if (node.content.type === 'decisionTable') {
@@ -78,40 +90,74 @@ export function Editor({ node }: EditorProps) {
         updateDiff(node.id, (diff) => ({ ...diff, content: decisionTable }))
       }
       return (
-        <div className="flex flex-col gap-4">
-          <div>
-            <label className="text-sm font-medium text-muted-foreground mb-1.5 block">
-              Original
-            </label>
-            <div className="opacity-60 pointer-events-none">
+        <div className="flex flex-col gap-1.5">
+          <label className="text-sm font-medium text-muted-foreground">
+            Content
+          </label>
+          <div className="flex flex-col gap-4">
+            <div>
+              <label className="text-sm font-medium text-muted-foreground mb-1.5 block">
+                Original
+              </label>
+              <div className="opacity-60 pointer-events-none">
+                <DecisionTableInput
+                  decisionTable={node.content}
+                  updateDecisionTable={updateDecisionTable}
+                />
+              </div>
+            </div>
+            <div>
+              <label className="text-sm font-medium text-muted-foreground mb-1.5 block">
+                Proposed Changes
+              </label>
               <DecisionTableInput
-                decisionTable={node.content}
-                updateDecisionTable={updateDecisionTable}
+                decisionTable={diff.content}
+                updateDecisionTable={updateDiffTable}
               />
             </div>
-          </div>
-          <div>
-            <label className="text-sm font-medium text-muted-foreground mb-1.5 block">
-              Proposed Changes
-            </label>
-            <DecisionTableInput
-              decisionTable={diff.content}
-              updateDecisionTable={updateDiffTable}
-            />
           </div>
         </div>
       )
     }
 
     return (
-      <DecisionTableInput
-        decisionTable={node.content}
-        updateDecisionTable={updateDecisionTable}
-      />
+      <div className="flex flex-col gap-1.5">
+        <label className="text-sm font-medium text-muted-foreground">
+          Content
+        </label>
+        <DecisionTableInput
+          decisionTable={node.content}
+          updateDecisionTable={updateDecisionTable}
+        />
+      </div>
     )
   }
   if (node.content.type === 'input') {
-    return null
+    const updateInput = (input: NodeContent) => {
+      updateNode(node.id, (node) => ({ ...node, content: input }))
+    }
+    let inputDiff:
+      | { new: Input; update: (newValue: Input) => void }
+      | undefined = undefined
+    if (diff !== undefined && diff.content.type === 'input') {
+      inputDiff = {
+        new: diff.content,
+        update: (newValue) =>
+          updateDiff(node.id, (diff) => ({ ...diff, content: newValue })),
+      }
+    }
+    return (
+      <div className="flex flex-col gap-1.5">
+        <label className="text-sm font-medium text-muted-foreground">
+          Default Value
+        </label>
+        <InputDefault
+          input={node.content}
+          updateInput={updateInput}
+          diff={inputDiff}
+        />
+      </div>
+    )
   }
 
   throw new Error(`Editor not implemented node '${JSON.stringify(node)}'`)

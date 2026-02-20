@@ -1,7 +1,6 @@
 import {
   useDiff,
   useMainContext,
-  useResolveDiff,
   useUpdateDiff,
   useUpdateNode,
 } from '@/context'
@@ -13,8 +12,6 @@ import {
   Hash,
   Braces,
   Table as TableIcon,
-  Check,
-  X,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Editor } from './inputs/editor'
@@ -151,7 +148,6 @@ export function NodeViewer({ node }: NodeViewerProps) {
   const updateNode = useUpdateNode()
   const diff = useDiff(node.id)
   const updateDiff = useUpdateDiff()
-  const resolveDiff = useResolveDiff()
 
   const config = NODE_TYPE_CONFIG[node.content.type]
   const Icon = config.icon

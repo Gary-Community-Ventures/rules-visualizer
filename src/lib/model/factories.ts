@@ -27,6 +27,7 @@ export function createInput(partial: Partial<Input> = {}): Input {
   return {
     type: 'input',
     id: generateId('input'),
+    defaultValue: '',
     ...partial,
   }
 }
@@ -70,7 +71,6 @@ export function createInputClause(
 ): InputClause {
   return {
     id: generateId('input'),
-    label: '',
     inputExpression: '',
     ...partial,
   }
@@ -81,7 +81,6 @@ export function createOutputClause(
 ): OutputClause {
   return {
     id: generateId('output'),
-    label: '',
     name: '',
     ...partial,
   }
@@ -131,7 +130,7 @@ export function createTestCase(
 export function cloneContent(content: NodeContent): NodeContent {
   switch (content.type) {
     case 'input':
-      return { type: 'input', id: generateId('input') }
+      return { type: 'input', id: generateId('input'), defaultValue: content.defaultValue }
     case 'constant':
       return { ...content }
     case 'context':

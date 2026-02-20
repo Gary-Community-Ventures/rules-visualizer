@@ -1,5 +1,5 @@
 import type { Constant } from '@/lib/model'
-import { Table, TableInputCell, TableRow } from '../table'
+import { Table, TableFeelCell, TableRow } from '../table'
 
 type ConstantInputProps = {
   constant: Constant
@@ -23,17 +23,19 @@ export function ConstantInput({
   return (
     <Table columns={columns}>
       <TableRow>
-        <TableInputCell
+        <TableFeelCell
           value={constant.text}
           onChange={(v) => updateConstant({ ...constant, text: v })}
+          dialect="expression"
           disabled={diff !== undefined}
           className={diff !== undefined ? 'bg-gray-100' : ''}
         />
         {diff !== undefined && (
-          <TableInputCell
+          <TableFeelCell
             className={diff.new.text !== constant.text ? 'bg-emerald-100' : ''}
             value={diff.new.text}
-            onChange={(v) => diff.update({ ...constant, text: v })}
+            onChange={(v) => diff.update({ ...diff.new, text: v })}
+            dialect="expression"
           />
         )}
       </TableRow>

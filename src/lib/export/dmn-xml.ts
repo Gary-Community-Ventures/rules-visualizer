@@ -132,7 +132,7 @@ function renderDecisionTable(dt: DecisionTable, nodeId: string): string {
 
   for (const input of dt.inputClauses) {
     lines.push(
-      `      <input id="${xmlId(input.id)}" label="${xmlEscape(input.label)}">`
+      `      <input id="${xmlId(input.id)}" label="${xmlEscape(input.inputExpression)}">`
     )
     lines.push(
       `        <inputExpression id="${subId(input.id, 'expr')}" typeRef="${xmlEscape(input.inputExpressionTypeRef ?? 'string')}">`,
@@ -144,7 +144,7 @@ function renderDecisionTable(dt: DecisionTable, nodeId: string): string {
 
   for (const output of dt.outputClauses) {
     lines.push(
-      `      <output id="${xmlId(output.id)}" label="${xmlEscape(output.label)}" name="${xmlEscape(output.name)}"${optAttr('typeRef', output.typeRef)} />`
+      `      <output id="${xmlId(output.id)}" label="${xmlEscape(output.name)}" name="${xmlEscape(output.name)}"${optAttr('typeRef', output.typeRef)} />`
     )
   }
 
