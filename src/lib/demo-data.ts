@@ -35,14 +35,22 @@ export function createDemoModel(): DemoData {
       name: 'Annual_Income',
       typeRef: 'number',
       dependencies: [],
-      content: { type: 'input', id: generateId('input'), defaultValue: '50000' },
+      content: {
+        type: 'input',
+        id: generateId('input'),
+        defaultValue: '50000',
+      },
     },
     [idC]: {
       id: idC,
       name: 'Employment_Status',
       typeRef: 'string',
       dependencies: [],
-      content: { type: 'input', id: generateId('input'), defaultValue: '"employed"' },
+      content: {
+        type: 'input',
+        id: generateId('input'),
+        defaultValue: '"employed"',
+      },
     },
 
     // ─── Constants ────────────────────────────────────────────
@@ -124,6 +132,20 @@ export function createDemoModel(): DemoData {
           },
         ],
       },
+      tests: [
+        {
+          id: '_test_income_employed_pass',
+          name: 'employed above threshold',
+          inputs: { [idB]: 50000, [idC]: 'employed' },
+          expected: 'true',
+        },
+        {
+          id: '_test_income_employed_fail',
+          name: 'employed below threshold',
+          inputs: { [idB]: 20000, [idC]: 'employed' },
+          expected: 'false',
+        },
+      ],
     },
     [idE]: {
       id: idE,
@@ -168,6 +190,26 @@ export function createDemoModel(): DemoData {
           },
         ],
       },
+      tests: [
+        {
+          id: '_test_age_eligible',
+          name: 'adult eligible',
+          inputs: { [idA]: 30 },
+          expected: 'true',
+        },
+        {
+          id: '_test_age_too_young',
+          name: 'too young',
+          inputs: { [idA]: 15 },
+          expected: 'false',
+        },
+        {
+          id: '_test_age_too_old',
+          name: 'too old',
+          inputs: { [idA]: 70 },
+          expected: 'false',
+        },
+      ],
     },
 
     // ─── Context ──────────────────────────────────────────────
@@ -196,6 +238,32 @@ export function createDemoModel(): DemoData {
           },
         ],
       },
+      tests: [
+        {
+          id: '_test_elig_both_pass',
+          name: 'both factors pass',
+          inputs: { [idD]: true, [idE]: true },
+          expected: 'true',
+        },
+        {
+          id: '_test_elig_income_fail',
+          name: 'income fails',
+          inputs: { [idD]: false, [idE]: true },
+          expected: 'false',
+        },
+        {
+          id: '_test_elig_age_fail',
+          name: 'age fails',
+          inputs: { [idD]: true, [idE]: false },
+          expected: 'false',
+        },
+        {
+          id: '_test_elig_both_fail',
+          name: 'both fail',
+          inputs: { [idD]: false, [idE]: false },
+          expected: 'false',
+        },
+      ],
     },
 
     // ─── Final Decision ───────────────────────────────────────
@@ -216,6 +284,20 @@ export function createDemoModel(): DemoData {
           },
         ],
       },
+      tests: [
+        {
+          id: '_test_final_approved',
+          name: 'eligible applicant',
+          inputs: { [idF]: true },
+          expected: 'Approved',
+        },
+        {
+          id: '_test_final_denied',
+          name: 'ineligible applicant',
+          inputs: { [idF]: false },
+          expected: 'Denied',
+        },
+      ],
     },
   }
 
@@ -267,6 +349,37 @@ export function createDemoModel(): DemoData {
           },
         ],
       },
+      tests: [
+        // Unchanged
+        {
+          id: '_test_elig_both_pass',
+          name: 'both factors pass',
+          inputs: { [idD]: true, [idCreditScore]: 700 },
+          expected: 'true',
+        },
+        // Modified: replaced Age_Eligibility input with Credit_Score
+        {
+          id: '_test_elig_income_fail',
+          name: 'income fails',
+          inputs: { [idD]: false, [idCreditScore]: 700 },
+          expected: 'false',
+        },
+        // Modified: was "age fails", now "credit fails"
+        {
+          id: '_test_elig_age_fail',
+          name: 'credit fails',
+          inputs: { [idD]: true, [idCreditScore]: 500 },
+          expected: 'false',
+        },
+        // Removed: '_test_elig_both_fail' not in diff (removed)
+        // Added: new test for credit edge case
+        {
+          id: '_test_elig_credit_edge',
+          name: 'credit at boundary',
+          inputs: { [idD]: true, [idCreditScore]: 650 },
+          expected: 'false',
+        },
+      ],
     },
     // Modified: also check Income_Threshold directly
     // Arrow added: Final_Recommendation -> Income_Threshold (green)

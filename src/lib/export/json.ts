@@ -45,6 +45,7 @@ const decisionTableRuleSchema = z.object({
 const inputSchema = z.object({
   type: z.literal('input'),
   id: z.string().min(1),
+  defaultValue: z.string(),
 })
 
 const constantSchema = z.object({
@@ -82,12 +83,27 @@ const nodeContentSchema = z.discriminatedUnion('type', [
   decisionTableSchema,
 ])
 
+const nodeTestCaseSchema = z.object({
+  id: z.string().min(1),
+  name: z.string(),
+  inputs: z.record(z.string(), z.unknown()),
+  expected: z.string(),
+})
+
+const integrationTestCaseSchema = z.object({
+  id: z.string().min(1),
+  name: z.string(),
+  inputs: z.record(z.string(), z.unknown()),
+  assertions: z.record(z.string(), z.string()),
+})
+
 const modelNodeSchema = z.object({
   id: z.string().min(1),
   name: z.string().min(1),
   typeRef: feelDataTypeSchema.optional(),
   dependencies: z.array(z.string()),
   content: nodeContentSchema,
+  tests: z.array(nodeTestCaseSchema).optional(),
 })
 
 const modelSchema = z
@@ -96,6 +112,7 @@ const modelSchema = z
     name: z.string().min(1),
     namespace: z.string().min(1),
     nodes: z.record(z.string(), modelNodeSchema),
+    integrationTests: z.array(integrationTestCaseSchema).optional(),
   })
   .refine(
     (model) =>

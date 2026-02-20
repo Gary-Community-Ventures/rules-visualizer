@@ -9,7 +9,7 @@ import {
   type Dispatch,
   type SetStateAction,
 } from 'react'
-import type { Model, ModelNode } from './lib/model'
+import type { Model, ModelNode, IntegrationTestCase } from './lib/model'
 import type { ExecutionResult, NodeResult } from './lib/engine'
 import { createKieEngine, getKieBaseUrl } from './lib/engine'
 import { createDemoModel } from './lib/demo-data'
@@ -324,9 +324,15 @@ export function useDeleteNode() {
   const { setModel, model, socket } = useMainContext()
 
   return (id: string) => {
-    setModel((model) => {
-      const { [id]: _, ...remaining } = model.nodes
-      return { ...model, nodes: remaining }
+    setModel((prev) => {
+      const { [id]: _, ...remaining } = prev.nodes
+      // Clean up stale references in integration tests
+      const integrationTests = prev.integrationTests?.map((test) => {
+        const { [id]: _input, ...restInputs } = test.inputs
+        const { [id]: _assertion, ...restAssertions } = test.assertions
+        return { ...test, inputs: restInputs, assertions: restAssertions }
+      })
+      return { ...prev, nodes: remaining, integrationTests }
     })
 
     const node = model.nodes[id]
@@ -375,8 +381,9 @@ export function useUpdateDiff() {
 }
 
 export function useResolveDiff() {
-  const { diffs, setDiffs, socket } = useMainContext()
+  const { diffs, setDiffs, model, socket } = useMainContext()
   const updateNode = useUpdateNode()
+  const addNode = useAddNode()
   const deleteNode = useDeleteNode()
 
   return (id: string, accept: boolean) => {
@@ -385,7 +392,17 @@ export function useResolveDiff() {
       if (diff && diff.deletedVersion !== undefined) {
         deleteNode(id)
       } else if (diff) {
-        updateNode(id, () => diff)
+        const existing = model.nodes[id]
+        if (existing) {
+          // Preserve existing tests when the diff doesn't include them
+          updateNode(id, (node) => ({
+            ...diff,
+            tests: diff.tests ?? node.tests,
+          }))
+        } else {
+          // New node from diff — add it directly
+          addNode(id, diff)
+        }
       }
     }
 
@@ -394,6 +411,22 @@ export function useResolveDiff() {
       updates: [],
       isDiff: true,
       resolvedDiffs: [id],
+    })
+  }
+}
+
+export function useUpdateIntegrationTests() {
+  const { setModel, socket } = useMainContext()
+  const debounce = useDebounce(SAVE_DEBOUNCE)
+
+  return (updater: (tests: IntegrationTestCase[]) => IntegrationTestCase[]) => {
+    let updated: IntegrationTestCase[]
+    setModel((prev) => {
+      updated = updater(prev.integrationTests ?? [])
+      return { ...prev, integrationTests: updated }
+    })
+    debounce(() => {
+      socket.emit('integration-tests-update', { integrationTests: updated! })
     })
   }
 }
