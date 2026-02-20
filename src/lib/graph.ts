@@ -165,7 +165,7 @@ export function computeNodeDependencies(
 
   for (const text of texts) {
     for (const [name, id] of nameToId) {
-      if (id === selfId) continue
+      if (id === selfId || name === '') continue
       const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
       const re = new RegExp(`\\b${escaped}\\b`)
       if (re.test(text)) {
@@ -191,7 +191,10 @@ export function applyDiffs(model: Model, diffs: ModelNode[]): Model {
   return result
 }
 
-export function buildNameToIdMap(nodes: ModelNodes, diffs?: ModelNode[]): Map<string, string> {
+export function buildNameToIdMap(
+  nodes: ModelNodes,
+  diffs?: ModelNode[]
+): Map<string, string> {
   const nameToId = new Map<string, string>()
   for (const node of Object.values(nodes)) {
     nameToId.set(node.name, node.id)

@@ -34,14 +34,16 @@ export const feelEditorTheme = EditorView.theme({
 const pluginCache = new Map<string, Extension>()
 
 function nameHighlighter(knownNames: string[]): Extension {
-  if (knownNames.length === 0) return []
+  // Filter empty names to prevent regex like \b(|name)\b which matches everywhere
+  const validNames = knownNames.filter((n) => n.length > 0)
+  if (validNames.length === 0) return []
 
-  const cacheKey = knownNames.join('\0')
+  const cacheKey = validNames.join('\0')
   const cached = pluginCache.get(cacheKey)
   if (cached) return cached
 
   // Sort by descending length so longer names match before shorter overlapping ones
-  const sorted = [...knownNames].sort((a, b) => b.length - a.length)
+  const sorted = [...validNames].sort((a, b) => b.length - a.length)
 
   const escaped = sorted.map((n) => n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
   const pattern = new RegExp(`\\b(${escaped.join('|')})\\b`, 'g')
@@ -80,12 +82,13 @@ type FeelEditorProps = {
 }
 
 function nameCompletionSource(knownNames: string[]): CompletionSource {
+  const validNames = knownNames.filter((n) => n.length > 0)
   return (context) => {
     const word = context.matchBefore(/[\w]+/)
     if (!word && !context.explicit) return null
     return {
       from: word?.from ?? context.pos,
-      options: knownNames.map((name) => ({
+      options: validNames.map((name) => ({
         label: name,
         type: 'variable',
       })),
