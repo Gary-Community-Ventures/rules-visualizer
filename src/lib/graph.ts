@@ -12,6 +12,23 @@ export function findRootNodes(nodes: ModelNodes): string[] {
   return Object.keys(nodes).filter((id) => !dependedOn.has(id))
 }
 
+export function getLeafNodes(nodes: ModelNodes): string[] {
+  const dependedOn = new Set<string>()
+  for (const node of Object.values(nodes)) {
+    for (const dep of node.dependencies) {
+      dependedOn.add(dep)
+    }
+  }
+  return Object.keys(nodes).filter((id) => {
+    const node = nodes[id]
+    return (
+      !dependedOn.has(id) &&
+      node.content.type !== 'input' &&
+      node.content.type !== 'constant'
+    )
+  })
+}
+
 export function getDependents(nodeId: string, nodes: ModelNodes): string[] {
   return Object.entries(nodes)
     .filter(([_, node]) => node.dependencies.includes(nodeId))
