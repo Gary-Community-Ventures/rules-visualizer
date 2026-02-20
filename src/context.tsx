@@ -9,7 +9,7 @@ import {
   type Dispatch,
   type SetStateAction,
 } from 'react'
-import type { Model, ModelNode } from './lib/model'
+import type { Model, ModelNode, IntegrationTestCase } from './lib/model'
 import type { ExecutionResult, NodeResult } from './lib/engine'
 import { createKieEngine, getKieBaseUrl } from './lib/engine'
 import { createDemoModel } from './lib/demo-data'
@@ -405,6 +405,21 @@ export function useResolveDiff() {
       updates: [],
       isDiff: true,
       resolvedDiffs: [id],
+    })
+  }
+}
+
+export function useUpdateIntegrationTests() {
+  const { setModel, model, socket } = useMainContext()
+  const debounce = useDebounce(SAVE_DEBOUNCE)
+
+  return (
+    updater: (tests: IntegrationTestCase[]) => IntegrationTestCase[]
+  ) => {
+    const updated = updater(model.integrationTests ?? [])
+    setModel({ ...model, integrationTests: updated })
+    debounce(() => {
+      socket.emit('integration-tests-update', { integrationTests: updated })
     })
   }
 }

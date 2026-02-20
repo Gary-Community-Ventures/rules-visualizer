@@ -11,3 +11,10 @@ export function parseInputValue(raw: string): unknown {
     return raw
   }
 }
+
+/** Convert a stored (parsed) value back to the raw string for display */
+export function displayInputValue(value: unknown): string {
+  if (value === undefined || value === '') return ''
+  if (typeof value === 'string') return value
+  return String(value)
+}

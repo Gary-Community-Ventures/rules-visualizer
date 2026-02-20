@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { ModelNode, ModelNodes, NodeTestCase } from '@/lib/model'
 import { createTestCase } from '@/lib/model'
 import { useUpdateNode, useUpdateDiff } from '@/context'
@@ -17,7 +17,7 @@ import {
   ChevronRight,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { parseInputValue } from '@/lib/parse-input'
+import { ParsedInput } from './parsed-input'
 
 type TestResult = {
   passed: boolean
@@ -39,6 +39,14 @@ export function NodeTests({ node, allNodes, diff }: NodeTestsProps) {
   const updateDiff = useUpdateDiff()
   const { model } = useMainContext()
   const [runState, setRunState] = useState<TestRunState>({})
+  const abortRef = useRef<AbortController | null>(null)
+
+  // Abort in-flight tests on unmount
+  useEffect(() => {
+    return () => {
+      if (abortRef.current) abortRef.current.abort()
+    }
+  }, [])
 
   const hasDiff = diff !== undefined
 
@@ -46,8 +54,10 @@ export function NodeTests({ node, allNodes, diff }: NodeTestsProps) {
   const diffTests = diff?.tests ?? []
 
   // Only show input fields for non-constant dependencies (constants are
-  // included in the mini model as-is and don't need user-provided values)
-  const depNodes = node.dependencies
+  // included in the mini model as-is and don't need user-provided values).
+  // In diff mode, use the diff's dependencies (they may have changed).
+  const activeDeps = hasDiff ? diff.dependencies : node.dependencies
+  const depNodes = activeDeps
     .map((depId) => allNodes[depId])
     .filter((dep) => dep && dep.content.type !== 'constant')
 
@@ -81,35 +91,62 @@ export function NodeTests({ node, allNodes, diff }: NodeTestsProps) {
 
   const runAllTests = async (cases: NodeTestCase[]) => {
     if (cases.length === 0) return
+    if (abortRef.current) abortRef.current.abort()
+    const controller = new AbortController()
+    abortRef.current = controller
     setIsRunningAll(true)
     for (const tc of cases) {
       setRunState((s) => ({ ...s, [tc.id]: 'running' }))
     }
-    for (const tc of cases) {
-      try {
-        const result = await executeNodeTest(node.id, tc, model)
-        setRunState((s) => ({ ...s, [tc.id]: result }))
-      } catch (err) {
-        setRunState((s) => ({
-          ...s,
-          [tc.id]: {
-            passed: false,
-            actual: '',
-            status: 'FAILED',
-            messages: [err instanceof Error ? err.message : 'Unknown error'],
-          },
-        }))
+    try {
+      for (const tc of cases) {
+        if (controller.signal.aborted) return
+        try {
+          const result = await executeNodeTest(
+            node.id,
+            tc,
+            model,
+            controller.signal
+          )
+          if (controller.signal.aborted) return
+          setRunState((s) => ({ ...s, [tc.id]: result }))
+        } catch (err) {
+          if (controller.signal.aborted) return
+          setRunState((s) => ({
+            ...s,
+            [tc.id]: {
+              passed: false,
+              actual: '',
+              status: 'FAILED',
+              messages: [err instanceof Error ? err.message : 'Unknown error'],
+            },
+          }))
+        }
+      }
+    } finally {
+      if (abortRef.current === controller) {
+        abortRef.current = null
+        setIsRunningAll(false)
       }
     }
-    setIsRunningAll(false)
   }
 
   const runTest = async (testCase: NodeTestCase) => {
+    if (abortRef.current) abortRef.current.abort()
+    const controller = new AbortController()
+    abortRef.current = controller
     setRunState((s) => ({ ...s, [testCase.id]: 'running' }))
     try {
-      const result = await executeNodeTest(node.id, testCase, model)
+      const result = await executeNodeTest(
+        node.id,
+        testCase,
+        model,
+        controller.signal
+      )
+      if (controller.signal.aborted) return
       setRunState((s) => ({ ...s, [testCase.id]: result }))
     } catch (err) {
+      if (controller.signal.aborted) return
       setRunState((s) => ({
         ...s,
         [testCase.id]: {
@@ -119,6 +156,10 @@ export function NodeTests({ node, allNodes, diff }: NodeTestsProps) {
           messages: [err instanceof Error ? err.message : 'Unknown error'],
         },
       }))
+    } finally {
+      if (abortRef.current === controller) {
+        abortRef.current = null
+      }
     }
   }
 
@@ -374,14 +415,10 @@ function TestCard({
               <label className="text-xs text-muted-foreground w-24 shrink-0 truncate">
                 {dep.name}
               </label>
-              <Input
+              <ParsedInput
                 placeholder="value"
-                value={
-                  testCase.inputs[dep.id] !== undefined
-                    ? String(testCase.inputs[dep.id])
-                    : ''
-                }
-                onChange={(e) =>
+                value={testCase.inputs[dep.id]}
+                onChange={(parsed) =>
                   onChange((prev) =>
                     prev.map((t) =>
                       t.id === testCase.id
@@ -389,7 +426,7 @@ function TestCard({
                             ...t,
                             inputs: {
                               ...t.inputs,
-                              [dep.id]: parseInputValue(e.target.value),
+                              [dep.id]: parsed,
                             },
                           }
                         : t
@@ -603,10 +640,10 @@ function DiffTestCard({
                     {oldVal}
                   </span>
                 )}
-                <Input
+                <ParsedInput
                   placeholder="value"
-                  value={newVal}
-                  onChange={(e) =>
+                  value={newTest.inputs[dep.id]}
+                  onChange={(parsed) =>
                     onUpdate((prev) =>
                       prev.map((t) =>
                         t.id === newTest.id
@@ -614,7 +651,7 @@ function DiffTestCard({
                               ...t,
                               inputs: {
                                 ...t.inputs,
-                                [dep.id]: parseInputValue(e.target.value),
+                                [dep.id]: parsed,
                               },
                             }
                           : t

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useMainContext } from '@/context'
+import { useMainContext, useUpdateIntegrationTests } from '@/context'
 import { createIntegrationTestCase } from '@/lib/model'
 import type { IntegrationTestCase } from '@/lib/model'
 import {
@@ -7,7 +7,7 @@ import {
   type IntegrationTestResult,
 } from '@/lib/engine/test-runner'
 import { getLeafNodes } from '@/lib/graph'
-import { parseInputValue } from '@/lib/parse-input'
+import { ParsedInput } from './inputs/parsed-input'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
 import {
@@ -29,7 +29,8 @@ export function IntegrationTestModal({
   open: boolean
   onOpenChange: (open: boolean) => void
 }) {
-  const { model, setModel, inputValues, executionResult } = useMainContext()
+  const { model, inputValues, executionResult } = useMainContext()
+  const updateTests = useUpdateIntegrationTests()
   const [runState, setRunState] = useState<RunState>({})
 
   const tests = model.integrationTests ?? []
@@ -40,15 +41,6 @@ export function IntegrationTestModal({
   const assertableNodes = Object.values(model.nodes).filter(
     (n) => n.content.type !== 'input' && n.content.type !== 'constant'
   )
-
-  const updateTests = (
-    updater: (tests: IntegrationTestCase[]) => IntegrationTestCase[]
-  ) => {
-    setModel((m) => ({
-      ...m,
-      integrationTests: updater(m.integrationTests ?? []),
-    }))
-  }
 
   const addTest = () => {
     updateTests((prev) => [...prev, createIntegrationTestCase()])
@@ -296,14 +288,10 @@ function IntegrationTestCard({
               <label className="text-xs text-muted-foreground w-32 shrink-0 truncate">
                 {node.name}
               </label>
-              <Input
+              <ParsedInput
                 placeholder="value"
-                value={
-                  testCase.inputs[node.id] !== undefined
-                    ? String(testCase.inputs[node.id])
-                    : ''
-                }
-                onChange={(e) =>
+                value={testCase.inputs[node.id]}
+                onChange={(parsed) =>
                   onUpdate((prev) =>
                     prev.map((t) =>
                       t.id === testCase.id
@@ -311,7 +299,7 @@ function IntegrationTestCard({
                             ...t,
                             inputs: {
                               ...t.inputs,
-                              [node.id]: parseInputValue(e.target.value),
+                              [node.id]: parsed,
                             },
                           }
                         : t
