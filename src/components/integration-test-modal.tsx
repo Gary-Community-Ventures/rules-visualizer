@@ -91,7 +91,14 @@ export function IntegrationTestModal({
     if (abortRef.current) abortRef.current.abort()
     const controller = new AbortController()
     abortRef.current = controller
-    setRunState((s) => ({ ...s, [testCase.id]: 'running' }))
+    // Clear any stuck 'running' states from the aborted test, then mark this one running
+    setRunState((s) => {
+      const next = { ...s, [testCase.id]: 'running' as const }
+      for (const [id, state] of Object.entries(next)) {
+        if (id !== testCase.id && state === 'running') delete next[id]
+      }
+      return next
+    })
     try {
       const result = await executeIntegrationTest(
         testCase,
