@@ -39,12 +39,14 @@ export function NodeTests({ node, allNodes, diff }: NodeTestsProps) {
   const updateDiff = useUpdateDiff()
   const { model } = useMainContext()
   const [runState, setRunState] = useState<TestRunState>({})
-  const abortRef = useRef<AbortController | null>(null)
+  const runAllAbortRef = useRef<AbortController | null>(null)
+  const singleAbortRef = useRef<AbortController | null>(null)
 
   // Abort in-flight tests on unmount
   useEffect(() => {
     return () => {
-      if (abortRef.current) abortRef.current.abort()
+      if (runAllAbortRef.current) runAllAbortRef.current.abort()
+      if (singleAbortRef.current) singleAbortRef.current.abort()
     }
   }, [])
 
@@ -91,9 +93,9 @@ export function NodeTests({ node, allNodes, diff }: NodeTestsProps) {
 
   const runAllTests = async (cases: NodeTestCase[]) => {
     if (cases.length === 0) return
-    if (abortRef.current) abortRef.current.abort()
+    if (runAllAbortRef.current) runAllAbortRef.current.abort()
     const controller = new AbortController()
-    abortRef.current = controller
+    runAllAbortRef.current = controller
     setIsRunningAll(true)
     for (const tc of cases) {
       setRunState((s) => ({ ...s, [tc.id]: 'running' }))
@@ -124,17 +126,17 @@ export function NodeTests({ node, allNodes, diff }: NodeTestsProps) {
         }
       }
     } finally {
-      if (abortRef.current === controller) {
-        abortRef.current = null
+      if (runAllAbortRef.current === controller) {
+        runAllAbortRef.current = null
         setIsRunningAll(false)
       }
     }
   }
 
   const runTest = async (testCase: NodeTestCase) => {
-    if (abortRef.current) abortRef.current.abort()
+    if (singleAbortRef.current) singleAbortRef.current.abort()
     const controller = new AbortController()
-    abortRef.current = controller
+    singleAbortRef.current = controller
     setRunState((s) => ({ ...s, [testCase.id]: 'running' }))
     try {
       const result = await executeNodeTest(
@@ -157,8 +159,8 @@ export function NodeTests({ node, allNodes, diff }: NodeTestsProps) {
         },
       }))
     } finally {
-      if (abortRef.current === controller) {
-        abortRef.current = null
+      if (singleAbortRef.current === controller) {
+        singleAbortRef.current = null
       }
     }
   }

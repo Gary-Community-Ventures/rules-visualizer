@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useMainContext, useUpdateIntegrationTests } from '@/context'
 import { createIntegrationTestCase } from '@/lib/model'
 import type { IntegrationTestCase } from '@/lib/model'
@@ -32,6 +32,14 @@ export function IntegrationTestModal({
   const { model, inputValues, executionResult } = useMainContext()
   const updateTests = useUpdateIntegrationTests()
   const [runState, setRunState] = useState<RunState>({})
+  const abortRef = useRef<AbortController | null>(null)
+
+  // Abort in-flight tests on unmount
+  useEffect(() => {
+    return () => {
+      if (abortRef.current) abortRef.current.abort()
+    }
+  }, [])
 
   const tests = model.integrationTests ?? []
 
@@ -80,18 +88,40 @@ export function IntegrationTestModal({
   }
 
   const runTest = async (testCase: IntegrationTestCase) => {
+    if (abortRef.current) abortRef.current.abort()
+    const controller = new AbortController()
+    abortRef.current = controller
     setRunState((s) => ({ ...s, [testCase.id]: 'running' }))
     try {
-      const result = await executeIntegrationTest(testCase, model)
+      const result = await executeIntegrationTest(
+        testCase,
+        model,
+        controller.signal
+      )
+      if (controller.signal.aborted) return
       setRunState((s) => ({ ...s, [testCase.id]: result }))
     } catch (err) {
+      if (controller.signal.aborted) return
+      // Surface the error as a failed assertion so the user sees what went wrong
+      const message = err instanceof Error ? err.message : 'Unknown error'
       setRunState((s) => ({
         ...s,
         [testCase.id]: {
           passed: false,
-          assertionResults: {},
+          assertionResults: {
+            _error: {
+              passed: false,
+              actual: message,
+              status: 'NOT_EVALUATED',
+              messages: [message],
+            },
+          },
         } satisfies IntegrationTestResult,
       }))
+    } finally {
+      if (abortRef.current === controller) {
+        abortRef.current = null
+      }
     }
   }
 

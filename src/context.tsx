@@ -324,9 +324,15 @@ export function useDeleteNode() {
   const { setModel, model, socket } = useMainContext()
 
   return (id: string) => {
-    setModel((model) => {
-      const { [id]: _, ...remaining } = model.nodes
-      return { ...model, nodes: remaining }
+    setModel((prev) => {
+      const { [id]: _, ...remaining } = prev.nodes
+      // Clean up stale references in integration tests
+      const integrationTests = prev.integrationTests?.map((test) => {
+        const { [id]: _input, ...restInputs } = test.inputs
+        const { [id]: _assertion, ...restAssertions } = test.assertions
+        return { ...test, inputs: restInputs, assertions: restAssertions }
+      })
+      return { ...prev, nodes: remaining, integrationTests }
     })
 
     const node = model.nodes[id]
@@ -410,16 +416,17 @@ export function useResolveDiff() {
 }
 
 export function useUpdateIntegrationTests() {
-  const { setModel, model, socket } = useMainContext()
+  const { setModel, socket } = useMainContext()
   const debounce = useDebounce(SAVE_DEBOUNCE)
 
-  return (
-    updater: (tests: IntegrationTestCase[]) => IntegrationTestCase[]
-  ) => {
-    const updated = updater(model.integrationTests ?? [])
-    setModel({ ...model, integrationTests: updated })
+  return (updater: (tests: IntegrationTestCase[]) => IntegrationTestCase[]) => {
+    let updated: IntegrationTestCase[]
+    setModel((prev) => {
+      updated = updater(prev.integrationTests ?? [])
+      return { ...prev, integrationTests: updated }
+    })
     debounce(() => {
-      socket.emit('integration-tests-update', { integrationTests: updated })
+      socket.emit('integration-tests-update', { integrationTests: updated! })
     })
   }
 }

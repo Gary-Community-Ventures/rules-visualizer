@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useMainContext } from '@/context'
 import { Button } from './ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover'
@@ -61,12 +61,16 @@ export function TestResultsPopover() {
     }
   }, [])
 
-  const testableNodes = Object.values(model.nodes).filter(
-    (node) =>
-      node.content.type !== 'input' &&
-      node.content.type !== 'constant' &&
-      node.tests &&
-      node.tests.length > 0
+  const testableNodes = useMemo(
+    () =>
+      Object.values(model.nodes).filter(
+        (node) =>
+          node.content.type !== 'input' &&
+          node.content.type !== 'constant' &&
+          node.tests &&
+          node.tests.length > 0
+      ),
+    [model.nodes]
   )
 
   const integrationTests = model.integrationTests ?? []
