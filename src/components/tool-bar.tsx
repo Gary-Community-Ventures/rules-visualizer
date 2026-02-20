@@ -52,6 +52,7 @@ import { InputModal } from './input-modal'
 import { SettingsModal } from './settings-modal'
 import { Link } from '@tanstack/react-router'
 import { AlertsPopover } from './alerts-popover'
+import { TestResultsPopover } from './test-results-popover'
 
 function ExecutionError() {
   const { lastError, setLastError } = useMainContext()
@@ -236,6 +237,7 @@ export function ToolBar() {
             <Hash className="size-4" />
           </Link>
         </Button>
+        <TestResultsPopover />
         <AlertsPopover />
         <InputModal />
         <SettingsModal />

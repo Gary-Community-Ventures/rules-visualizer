@@ -12,6 +12,7 @@ import type {
   Constant,
   DecisionTable,
   NodeTestCase,
+  IntegrationTestCase,
 } from './nodes'
 
 export function generateId(prefix?: string): string {
@@ -125,12 +126,28 @@ export function createTestCase(
   }
 }
 
+export function createIntegrationTestCase(
+  partial: Partial<IntegrationTestCase> = {}
+): IntegrationTestCase {
+  return {
+    id: generateId('itest'),
+    name: '',
+    inputs: {},
+    assertions: {},
+    ...partial,
+  }
+}
+
 // ─── Clone ──────────────────────────────────────────────────────
 
 export function cloneContent(content: NodeContent): NodeContent {
   switch (content.type) {
     case 'input':
-      return { type: 'input', id: generateId('input'), defaultValue: content.defaultValue }
+      return {
+        type: 'input',
+        id: generateId('input'),
+        defaultValue: content.defaultValue,
+      }
     case 'constant':
       return { ...content }
     case 'context':

@@ -1,6 +1,7 @@
 import {
   useDiff,
   useMainContext,
+  useResolveDiff,
   useUpdateDiff,
   useUpdateNode,
 } from '@/context'
@@ -12,6 +13,8 @@ import {
   Hash,
   Braces,
   Table as TableIcon,
+  X,
+  Check,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Editor } from './inputs/editor'
@@ -148,6 +151,7 @@ export function NodeViewer({ node }: NodeViewerProps) {
   const updateNode = useUpdateNode()
   const diff = useDiff(node.id)
   const updateDiff = useUpdateDiff()
+  const resolveDiff = useResolveDiff()
 
   const config = NODE_TYPE_CONFIG[node.content.type]
   const Icon = config.icon
@@ -211,8 +215,8 @@ export function NodeViewer({ node }: NodeViewerProps) {
           <Editor node={node} />
         </div>
       )}
-      {/* Tests section (non-input nodes only) */}
-      {node.content.type !== 'input' && (
+      {/* Tests section (decision and decision table nodes only) */}
+      {node.content.type !== 'input' && node.content.type !== 'constant' && (
         <NodeTests node={node} allNodes={model.nodes} diff={diff} />
       )}
       {diffs.find((d) => d.id === node.id) !== undefined && (

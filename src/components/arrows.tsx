@@ -15,13 +15,14 @@ type ArrowProps = {
   status: ArrowStatus
 }
 
-const STATUS_COLORS: Record<ArrowStatus, { active: string; inactive: string }> = {
-  normal: { active: '#001970', inactive: '#c0c0d8' },
-  added: { active: '#10b981', inactive: '#a7f3d0' }, // emerald
-  removed: { active: '#ef4444', inactive: '#fecaca' }, // red
-  'to-new': { active: '#10b981', inactive: '#a7f3d0' }, // emerald
-  'to-deleted': { active: '#ef4444', inactive: '#fecaca' }, // red
-}
+const STATUS_COLORS: Record<ArrowStatus, { active: string; inactive: string }> =
+  {
+    normal: { active: '#001970', inactive: '#c0c0d8' },
+    added: { active: '#10b981', inactive: '#a7f3d0' }, // emerald
+    removed: { active: '#ef4444', inactive: '#fecaca' }, // red
+    'to-new': { active: '#10b981', inactive: '#a7f3d0' }, // emerald
+    'to-deleted': { active: '#ef4444', inactive: '#fecaca' }, // red
+  }
 
 function Arrow({
   fromId,
@@ -79,7 +80,10 @@ function Arrow({
       const totalDeps = toParents.length
       const gapPerArrow = 6
       const maxStaggerWidth = Math.min(toRect.width * 0.5, 30)
-      const toStaggerWidth = Math.min((totalDeps - 1) * gapPerArrow, maxStaggerWidth)
+      const toStaggerWidth = Math.min(
+        (totalDeps - 1) * gapPerArrow,
+        maxStaggerWidth
+      )
       const toStaggerStep = totalDeps > 1 ? toStaggerWidth / (totalDeps - 1) : 0
       const toXOffset =
         totalDeps > 1 ? depIndex * toStaggerStep - toStaggerWidth / 2 : 0
@@ -264,7 +268,10 @@ export function Arrows({ rows }: ArrowsProps) {
 
   // Collect all arrows with their status
   const arrows = useMemo(() => {
-    const arrowMap = new Map<string, { fromId: string; toId: string; status: ArrowStatus }>()
+    const arrowMap = new Map<
+      string,
+      { fromId: string; toId: string; status: ArrowStatus }
+    >()
     const key = (from: string, to: string) => `${from}->${to}`
 
     // Add arrows from model nodes
@@ -283,7 +290,11 @@ export function Arrows({ rows }: ArrowsProps) {
           status = 'removed'
         }
 
-        arrowMap.set(key(nodeId, depId), { fromId: nodeId, toId: depId, status })
+        arrowMap.set(key(nodeId, depId), {
+          fromId: nodeId,
+          toId: depId,
+          status,
+        })
       }
 
       // Add arrows that are in diff but not in original (being added)
@@ -294,7 +305,11 @@ export function Arrows({ rows }: ArrowsProps) {
             if (newNodeIds.has(depId)) {
               status = 'to-new'
             }
-            arrowMap.set(key(nodeId, depId), { fromId: nodeId, toId: depId, status })
+            arrowMap.set(key(nodeId, depId), {
+              fromId: nodeId,
+              toId: depId,
+              status,
+            })
           }
         }
       }
@@ -308,7 +323,11 @@ export function Arrows({ rows }: ArrowsProps) {
           if (newNodeIds.has(depId)) {
             status = 'to-new'
           }
-          arrowMap.set(key(diff.id, depId), { fromId: diff.id, toId: depId, status })
+          arrowMap.set(key(diff.id, depId), {
+            fromId: diff.id,
+            toId: depId,
+            status,
+          })
         }
       }
     }

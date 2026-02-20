@@ -1,6 +1,16 @@
-import type { Model, ModelNode, NodeTestCase } from '@/lib/model'
+import type {
+  Model,
+  ModelNode,
+  NodeTestCase,
+  IntegrationTestCase,
+} from '@/lib/model'
 import { createInput } from '@/lib/model'
 import { createKieEngine, getKieBaseUrl } from '@/lib/engine'
+
+export type IntegrationTestResult = {
+  passed: boolean
+  assertionResults: Record<string, TestResult> // nodeId → result
+}
 
 export type TestResult = {
   passed: boolean
@@ -96,4 +106,62 @@ export async function executeNodeTest(
     status: nodeResult.status,
     messages: nodeResult.messages,
   }
+}
+
+/**
+ * Execute an integration test against the full model.
+ * One engine call per test — all assertions share the same execution result.
+ */
+export async function executeIntegrationTest(
+  testCase: IntegrationTestCase,
+  model: Model,
+  signal?: AbortSignal
+): Promise<IntegrationTestResult> {
+  // Convert ID-keyed inputs to name-keyed inputs (KIE expects names)
+  const nameInputs: Record<string, unknown> = {}
+  for (const [nodeId, value] of Object.entries(testCase.inputs)) {
+    const node = model.nodes[nodeId]
+    if (node) {
+      nameInputs[node.name] = value
+    }
+  }
+
+  const engine = createKieEngine(getKieBaseUrl())
+  const result = await engine.execute(model, nameInputs, signal)
+
+  const assertionResults: Record<string, TestResult> = {}
+  let allPassed = true
+
+  for (const [nodeId, expected] of Object.entries(testCase.assertions)) {
+    const nodeResult = result.nodeResults[nodeId]
+    if (!nodeResult) {
+      assertionResults[nodeId] = {
+        passed: false,
+        actual: '',
+        status: 'NOT_EVALUATED',
+        messages: ['No result returned for node'],
+      }
+      allPassed = false
+      continue
+    }
+
+    const actual =
+      typeof nodeResult.result === 'object' && nodeResult.result !== null
+        ? JSON.stringify(nodeResult.result)
+        : String(nodeResult.result ?? '')
+
+    const passed =
+      actual === expected || JSON.stringify(nodeResult.result) === expected
+
+    if (!passed) allPassed = false
+
+    assertionResults[nodeId] = {
+      passed,
+      actual,
+      status: nodeResult.status,
+      messages: nodeResult.messages,
+    }
+  }
+
+  return { passed: allPassed, assertionResults }
 }

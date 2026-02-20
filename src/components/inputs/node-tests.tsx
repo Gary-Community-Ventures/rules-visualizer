@@ -17,6 +17,7 @@ import {
   ChevronRight,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { parseInputValue } from '@/lib/parse-input'
 
 type TestResult = {
   passed: boolean
@@ -728,18 +729,4 @@ function testCasesEqual(a: NodeTestCase, b: NodeTestCase): boolean {
     if (String(a.inputs[aKeys[i]]) !== String(b.inputs[bKeys[i]])) return false
   }
   return true
-}
-
-/** Try to parse as number/boolean/JSON, fall back to string */
-function parseInputValue(raw: string): unknown {
-  if (raw === '') return ''
-  if (raw === 'true') return true
-  if (raw === 'false') return false
-  const num = Number(raw)
-  if (!isNaN(num) && raw.trim() !== '') return num
-  try {
-    return JSON.parse(raw)
-  } catch {
-    return raw
-  }
 }

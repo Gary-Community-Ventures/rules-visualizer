@@ -10,11 +10,7 @@ type InputDefaultProps = {
   }
 }
 
-export function InputDefault({
-  input,
-  updateInput,
-  diff,
-}: InputDefaultProps) {
+export function InputDefault({ input, updateInput, diff }: InputDefaultProps) {
   let columns = 1
   if (diff !== undefined) {
     columns++
@@ -32,7 +28,11 @@ export function InputDefault({
         />
         {diff !== undefined && (
           <TableFeelCell
-            className={diff.new.defaultValue !== input.defaultValue ? 'bg-emerald-100' : ''}
+            className={
+              diff.new.defaultValue !== input.defaultValue
+                ? 'bg-emerald-100'
+                : ''
+            }
             value={diff.new.defaultValue}
             onChange={(v) => diff.update({ ...diff.new, defaultValue: v })}
             dialect="expression"

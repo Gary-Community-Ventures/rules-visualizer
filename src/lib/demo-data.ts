@@ -35,14 +35,22 @@ export function createDemoModel(): DemoData {
       name: 'Annual_Income',
       typeRef: 'number',
       dependencies: [],
-      content: { type: 'input', id: generateId('input'), defaultValue: '50000' },
+      content: {
+        type: 'input',
+        id: generateId('input'),
+        defaultValue: '50000',
+      },
     },
     [idC]: {
       id: idC,
       name: 'Employment_Status',
       typeRef: 'string',
       dependencies: [],
-      content: { type: 'input', id: generateId('input'), defaultValue: '"employed"' },
+      content: {
+        type: 'input',
+        id: generateId('input'),
+        defaultValue: '"employed"',
+      },
     },
 
     // ─── Constants ────────────────────────────────────────────
