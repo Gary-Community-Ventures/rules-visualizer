@@ -199,9 +199,14 @@ export function Wrapper({ children }: { children: React.ReactNode }) {
 
   const socket = useSocket()
 
-  useSocketEvent(socket, 'model', ({ data }: { data: Model }) => {
-    setModel(data)
-  })
+  useSocketEvent(
+    socket,
+    'model',
+    ({ data, diffs }: { data: Model; diffs: ModelNode[] }) => {
+      setModel(data)
+      setDiffs(diffs)
+    }
+  )
   useSocketEvent(
     socket,
     'diffs',

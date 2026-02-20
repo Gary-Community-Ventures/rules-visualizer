@@ -7,6 +7,15 @@ type DemoData = {
 }
 
 export function createDemoModel(): DemoData {
+  return {
+    model: {
+      id: generateId('model'),
+      name: 'Benefits_Eligibility',
+      namespace: 'https://example.com/benefits-eligibility',
+      nodes: {},
+    },
+    diffs: [],
+  }
   // Use stable IDs so localStorage showChildren state persists across reloads
   const idA = '_node_applicant_age'
   const idB = '_node_annual_income'
@@ -35,14 +44,22 @@ export function createDemoModel(): DemoData {
       name: 'Annual_Income',
       typeRef: 'number',
       dependencies: [],
-      content: { type: 'input', id: generateId('input'), defaultValue: '50000' },
+      content: {
+        type: 'input',
+        id: generateId('input'),
+        defaultValue: '50000',
+      },
     },
     [idC]: {
       id: idC,
       name: 'Employment_Status',
       typeRef: 'string',
       dependencies: [],
-      content: { type: 'input', id: generateId('input'), defaultValue: '"employed"' },
+      content: {
+        type: 'input',
+        id: generateId('input'),
+        defaultValue: '"employed"',
+      },
     },
 
     // ─── Constants ────────────────────────────────────────────
