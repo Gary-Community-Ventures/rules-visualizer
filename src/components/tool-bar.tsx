@@ -27,8 +27,8 @@ import {
   readFileAsText,
   exportModelToJson,
   importModelFromJson,
-  exportModelToDmnXml,
 } from '@/lib/export'
+import { exportDmnXml } from '@/lib/api/dmn-api'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -49,7 +49,6 @@ import {
   useComboboxAnchor,
 } from './ui/combobox'
 import { InputModal } from './input-modal'
-import { SettingsModal } from './settings-modal'
 import { Link } from '@tanstack/react-router'
 import { AlertsPopover } from './alerts-popover'
 import { TestResultsPopover } from './test-results-popover'
@@ -240,7 +239,6 @@ export function ToolBar() {
         <TestResultsPopover />
         <AlertsPopover />
         <InputModal />
-        <SettingsModal />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
@@ -257,8 +255,11 @@ export function ToolBar() {
             <DropdownMenuItem
               onSelect={() => {
                 const name = model.name || 'untitled'
-                const xml = exportModelToDmnXml(model)
-                downloadFile(`${name}.dmn`, xml, 'application/xml')
+                exportDmnXml(model).then(xml => {
+                  downloadFile(`${name}.dmn`, xml, 'application/xml')
+                }).catch(err => {
+                  alert(`Export failed: ${err instanceof Error ? err.message : 'Unknown error'}`)
+                })
               }}
             >
               <Download className="size-4" />
