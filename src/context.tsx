@@ -12,7 +12,6 @@ import {
 import type { Model, ModelNode, IntegrationTestCase } from './lib/model'
 import type { ExecutionResult, NodeResult } from './lib/engine'
 import { createKieEngine, getKieBaseUrl } from './lib/engine'
-import { createDemoModel } from './lib/demo-data'
 import { useLocalStorage } from './lib/use-local-storage'
 import { useDebounce } from './lib/use-debounce'
 import { buildNameToIdMap, recomputeDependencies } from './lib/graph'
@@ -54,17 +53,17 @@ type MainContext = {
 
 const MainContext = createContext<MainContext | undefined>(undefined)
 
-export function Wrapper({ children }: { children: React.ReactNode }) {
-  const { model: demoModel, diffs: demoDiffs } = createDemoModel()
+const EMPTY_MODEL: Model = { id: '', name: '', namespace: '', nodes: {} }
 
-  const [model, setModel] = useState<Model>(demoModel)
+export function Wrapper({ children }: { children: React.ReactNode }) {
+  const [model, setModel] = useState<Model>(EMPTY_MODEL)
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null)
   const [selectedNodes, setSelectedNodes] = useState<string[]>([])
   const [showChildren, setShowChildren] = useLocalStorage<
     Record<string, boolean>
   >('showChildren', {})
   const [openNode, setOpenNode] = useState<string | null>(null)
-  const [diffs, setDiffs] = useState<ModelNode[]>(demoDiffs)
+  const [diffs, setDiffs] = useState<ModelNode[]>([])
   const [executionResult, setExecutionResult] =
     useState<ExecutionResult | null>(null)
   const [isExecuting, setIsExecuting] = useState(false)
