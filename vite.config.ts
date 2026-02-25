@@ -14,14 +14,9 @@ export default defineConfig({
   },
   server: {
     proxy: {
-      '/jitdmn': {
-        target: 'http://localhost:8347',
+      '/api': {
+        target: 'http://localhost:5000',
         changeOrigin: true,
-        configure: (proxy) => {
-          proxy.on('proxyReq', (proxyReq) => {
-            proxyReq.removeHeader('origin')
-          })
-        },
       },
     },
   },

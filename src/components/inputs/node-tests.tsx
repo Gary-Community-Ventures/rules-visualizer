@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import type { ModelNode, ModelNodes, NodeTestCase } from '@/lib/model'
 import { createTestCase } from '@/lib/model'
 import { useUpdateNode, useUpdateDiff } from '@/context'
-import { executeNodeTest } from '@/lib/engine/test-runner'
+import { runNodeTest, type TestResult } from '@/lib/api/dmn-api'
 import { useMainContext } from '@/context'
 import { Button } from '../ui/button'
 import { Input } from '../ui/input'
@@ -18,13 +18,6 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ParsedInput } from './parsed-input'
-
-type TestResult = {
-  passed: boolean
-  actual: string
-  status: string
-  messages: string[]
-}
 
 type TestRunState = Record<string, TestResult | 'running'>
 
@@ -104,10 +97,10 @@ export function NodeTests({ node, allNodes, diff }: NodeTestsProps) {
       for (const tc of cases) {
         if (controller.signal.aborted) return
         try {
-          const result = await executeNodeTest(
+          const result = await runNodeTest(
+            model,
             node.id,
             tc,
-            model,
             controller.signal
           )
           if (controller.signal.aborted) return
@@ -139,10 +132,10 @@ export function NodeTests({ node, allNodes, diff }: NodeTestsProps) {
     singleAbortRef.current = controller
     setRunState((s) => ({ ...s, [testCase.id]: 'running' }))
     try {
-      const result = await executeNodeTest(
+      const result = await runNodeTest(
+        model,
         node.id,
         testCase,
-        model,
         controller.signal
       )
       if (controller.signal.aborted) return

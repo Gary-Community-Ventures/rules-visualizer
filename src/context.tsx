@@ -11,7 +11,7 @@ import {
 } from 'react'
 import type { Model, ModelNode, IntegrationTestCase } from './lib/model'
 import type { ExecutionResult, NodeResult } from './lib/engine'
-import { createKieEngine, getKieBaseUrl } from './lib/engine'
+import { executeDmn } from './lib/api/dmn-api'
 import { createDemoModel } from './lib/demo-data'
 import { useLocalStorage } from './lib/use-local-storage'
 import { useDebounce } from './lib/use-debounce'
@@ -94,32 +94,10 @@ export function Wrapper({ children }: { children: React.ReactNode }) {
     setIsExecuting(true)
     setLastError(null)
 
-    // Build name-keyed inputs from ID-keyed inputValues for KIE
     const currentModel = modelRef.current
     const currentInputValues = inputValuesRef.current
-    const nameInputs: Record<string, unknown> = {}
-    for (const node of Object.values(currentModel.nodes)) {
-      if (node.content.type !== 'input') continue
-      // Use user-entered value, or fall back to default value
-      let val = currentInputValues[node.id]
-      if (val === undefined || val === '') {
-        val = node.content.defaultValue
-      }
-      // Skip if still empty after fallback
-      if (val === undefined || val === '') continue
-      if (node.name in nameInputs) {
-        console.warn(
-          `Duplicate input node name "${node.name}" — only the last value will be sent to KIE`
-        )
-      }
-      nameInputs[node.name] = val
-    }
 
-    const baseUrl = getKieBaseUrl()
-    const engine = createKieEngine(baseUrl)
-
-    engine
-      .execute(currentModel, nameInputs, controller.signal)
+    executeDmn(currentModel, currentInputValues, controller.signal)
       .then((result) => {
         if (controller.signal.aborted) return
         setExecutionResult(result)

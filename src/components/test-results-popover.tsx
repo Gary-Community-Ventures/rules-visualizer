@@ -13,11 +13,11 @@ import {
   Square,
 } from 'lucide-react'
 import {
-  executeNodeTest,
-  executeIntegrationTest,
+  runNodeTest,
+  runIntegrationTest,
   type TestResult,
   type IntegrationTestResult,
-} from '@/lib/engine/test-runner'
+} from '@/lib/api/dmn-api'
 import { IntegrationTestModal } from './integration-test-modal'
 
 type TestState = {
@@ -130,10 +130,10 @@ export function TestResultsPopover() {
           const testCase = node.tests![ti]
           let result: TestResult
           try {
-            result = await executeNodeTest(
+            result = await runNodeTest(
+              model,
               node.id,
               testCase,
-              model,
               controller.signal
             )
           } catch (err) {
@@ -174,9 +174,9 @@ export function TestResultsPopover() {
         const testCase = iTests[ii]
         let result: IntegrationTestResult
         try {
-          result = await executeIntegrationTest(
-            testCase,
+          result = await runIntegrationTest(
             model,
+            testCase,
             controller.signal
           )
         } catch (err) {
