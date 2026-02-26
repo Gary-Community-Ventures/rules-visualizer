@@ -3,9 +3,9 @@ import { useMainContext, useUpdateIntegrationTests } from '@/context'
 import { createIntegrationTestCase } from '@/lib/model'
 import type { IntegrationTestCase } from '@/lib/model'
 import {
-  executeIntegrationTest,
+  runIntegrationTest,
   type IntegrationTestResult,
-} from '@/lib/engine/test-runner'
+} from '@/lib/api/dmn-api'
 import { getLeafNodes } from '@/lib/graph'
 import { ParsedInput } from './inputs/parsed-input'
 import { Button } from './ui/button'
@@ -100,9 +100,9 @@ export function IntegrationTestModal({
       return next
     })
     try {
-      const result = await executeIntegrationTest(
-        testCase,
+      const result = await runIntegrationTest(
         model,
+        testCase,
         controller.signal
       )
       if (controller.signal.aborted) return
