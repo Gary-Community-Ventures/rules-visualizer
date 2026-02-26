@@ -55,6 +55,14 @@ export type IntegrationTestCase = {
   assertions: Record<string, string> // node ID → expected value (string)
 }
 
+// ─── Documentation ───────────────────────────────────────────────
+
+export type NodeLink = {
+  id: string
+  label: string
+  url: string
+}
+
 // ─── Node & Model ────────────────────────────────────────────────
 
 export type ModelNode = {
@@ -64,6 +72,8 @@ export type ModelNode = {
   dependencies: string[]
   content: NodeContent
   tests?: NodeTestCase[]
+  description?: string
+  links?: NodeLink[]
   deletedVersion?: string
 }
 

@@ -7,12 +7,14 @@ import type {
 } from './types'
 import type {
   ModelNode,
+  NodeContent,
   Input,
   Context,
   Constant,
   DecisionTable,
   NodeTestCase,
   IntegrationTestCase,
+  NodeLink,
 } from './nodes'
 
 export function generateId(prefix?: string): string {
@@ -136,6 +138,10 @@ export function createIntegrationTestCase(
     assertions: {},
     ...partial,
   }
+}
+
+export function createLink(partial: Partial<NodeLink> = {}): NodeLink {
+  return { id: generateId('link'), label: '', url: '', ...partial }
 }
 
 // ─── Clone ──────────────────────────────────────────────────────

@@ -19,6 +19,7 @@ import { NodeInput } from './node-input'
 import { NodeResultBadge } from './node-result'
 import { TextInput } from './inputs/text'
 import { NodeTests } from './inputs/node-tests'
+import { NodeDocumentation } from './inputs/node-documentation'
 import type { ModelNode } from '@/lib/model'
 import { useMemo } from 'react'
 
@@ -144,7 +145,7 @@ type NodeViewerProps = {
 }
 
 export function NodeViewer({ node }: NodeViewerProps) {
-  const { model, diffs } = useMainContext()
+  const { model } = useMainContext()
   const updateNode = useUpdateNode()
   const diff = useDiff(node.id)
   const updateDiff = useUpdateDiff()
@@ -197,6 +198,9 @@ export function NodeViewer({ node }: NodeViewerProps) {
           diff={nameDiff}
         />
       </div>
+
+      {/* Documentation section */}
+      <NodeDocumentation node={node} diff={diff} />
 
       {/* Content section */}
       <Editor node={node} />
