@@ -15,9 +15,8 @@ import type {
   IntegrationTestCase,
 } from './nodes'
 
-export function generateId(prefix?: string): string {
-  const uuid = crypto.randomUUID().replace(/-/g, '').slice(0, 12)
-  return prefix ? `_${prefix}_${uuid}` : `_${uuid}`
+export function generateId(): string {
+  return crypto.randomUUID()
 }
 
 export const RETURN_NAME = '_return'
@@ -27,7 +26,7 @@ export const RETURN_NAME = '_return'
 export function createInput(partial: Partial<Input> = {}): Input {
   return {
     type: 'input',
-    id: generateId('input'),
+    id: generateId(),
     defaultValue: '',
     ...partial,
   }
@@ -44,7 +43,7 @@ export function createExpression(
 
 export function createEntry(partial: Partial<ContextEntry> = {}): ContextEntry {
   return {
-    id: generateId('entry'),
+    id: generateId(),
     name: '',
     expression: createExpression(partial.expression),
     ...partial,
@@ -71,7 +70,7 @@ export function createInputClause(
   partial: Partial<InputClause> = {}
 ): InputClause {
   return {
-    id: generateId('input'),
+    id: generateId(),
     inputExpression: '',
     ...partial,
   }
@@ -81,7 +80,7 @@ export function createOutputClause(
   partial: Partial<OutputClause> = {}
 ): OutputClause {
   return {
-    id: generateId('output'),
+    id: generateId(),
     name: '',
     ...partial,
   }
@@ -93,7 +92,7 @@ export function createRule(
   partial: Partial<DecisionTableRule> = {}
 ): DecisionTableRule {
   return {
-    id: generateId('rule'),
+    id: generateId(),
     inputEntries: Array(inputCount).fill('-'),
     outputEntries: Array(outputCount).fill(''),
     annotationEntries: [],
@@ -118,7 +117,7 @@ export function createTestCase(
   partial: Partial<NodeTestCase> = {}
 ): NodeTestCase {
   return {
-    id: generateId('test'),
+    id: generateId(),
     name: '',
     inputs: {},
     expected: '',
@@ -130,7 +129,7 @@ export function createIntegrationTestCase(
   partial: Partial<IntegrationTestCase> = {}
 ): IntegrationTestCase {
   return {
-    id: generateId('itest'),
+    id: generateId(),
     name: '',
     inputs: {},
     assertions: {},
@@ -145,7 +144,7 @@ export function cloneContent(content: NodeContent): NodeContent {
     case 'input':
       return {
         type: 'input',
-        id: generateId('input'),
+        id: generateId(),
         defaultValue: content.defaultValue,
       }
     case 'constant':
@@ -155,7 +154,7 @@ export function cloneContent(content: NodeContent): NodeContent {
         ...content,
         entries: content.entries.map((e) => ({
           ...e,
-          id: generateId('ce'),
+          id: generateId(),
           expression: { ...e.expression },
         })),
       }
@@ -164,15 +163,15 @@ export function cloneContent(content: NodeContent): NodeContent {
         ...content,
         inputClauses: content.inputClauses.map((c) => ({
           ...c,
-          id: generateId('ic'),
+          id: generateId(),
         })),
         outputClauses: content.outputClauses.map((c) => ({
           ...c,
-          id: generateId('oc'),
+          id: generateId(),
         })),
         rules: content.rules.map((r) => ({
           ...r,
-          id: generateId('rule'),
+          id: generateId(),
           inputEntries: [...r.inputEntries],
           outputEntries: [...r.outputEntries],
           annotationEntries: [...r.annotationEntries],
@@ -198,7 +197,7 @@ export function uniqueName(
 
 export function createNode(partial: Partial<ModelNode> = {}): ModelNode {
   return {
-    id: generateId('node'),
+    id: generateId(),
     name: '',
     dependencies: [],
     content: createContext(),

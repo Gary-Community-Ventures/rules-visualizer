@@ -96,7 +96,7 @@ export function NodeMapLayout({ children }: PropsWithChildren) {
   const handleDuplicate = () => {
     if (!openNode || !openNodeData) return
     const existingNames = new Set(Object.values(model.nodes).map((n) => n.name))
-    const newId = generateId('node')
+    const newId = generateId()
     const newName = uniqueName(openNodeData.name, existingNames)
     addNode(newId, {
       id: newId,
