@@ -199,18 +199,7 @@ export function NodeViewer({ node }: NodeViewerProps) {
       </div>
 
       {/* Content section */}
-      {node.content.type === 'input' ? (
-        <p className="text-sm text-muted-foreground">
-          This node receives external input at execution time.
-        </p>
-      ) : (
-        <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-medium text-muted-foreground">
-            Content
-          </label>
-          <Editor node={node} />
-        </div>
-      )}
+      <Editor node={node} />
       {/* Tests section (decision and decision table nodes only) */}
       {node.content.type !== 'input' && node.content.type !== 'constant' && (
         <NodeTests node={node} allNodes={model.nodes} diff={diff} />
