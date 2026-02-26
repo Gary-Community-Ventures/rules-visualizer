@@ -34,6 +34,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { cloneContent, generateId, uniqueName } from '@/lib/model'
+import { cn } from '@/lib/utils'
 
 export function HomePage() {
   const { model, selectedNodes, showChildren, diffs } = useMainContext()
@@ -79,6 +80,10 @@ export function NodeMapLayout({ children }: PropsWithChildren) {
   }, [openNode])
   const dependentIds = openNode ? getDependents(openNode, model.nodes) : []
   const dependentNames = dependentIds.map((id) => model.nodes[id]?.name ?? id)
+
+  // Determine if this is a new or deleted node for styling
+  const isNewNode = openNode !== null && model.nodes[openNode] === undefined && diff !== undefined
+  const isDeletedNode = diff?.deletedVersion !== undefined
 
   const handleDelete = () => {
     if (!openNode) return
@@ -142,7 +147,13 @@ export function NodeMapLayout({ children }: PropsWithChildren) {
                   </Button>
                 </div>
               </div>
-              <div className="flex-1 overflow-y-auto p-5">
+              <div
+                className={cn(
+                  'flex-1 overflow-y-auto p-5',
+                  isNewNode && 'bg-emerald-50 border-l-4 border-emerald-400',
+                  isDeletedNode && 'bg-red-50 border-l-4 border-red-400'
+                )}
+              >
                 <NodeViewer node={openNodeData} />
               </div>
               {diff !== undefined && (

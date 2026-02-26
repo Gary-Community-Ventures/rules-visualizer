@@ -152,6 +152,10 @@ export function NodeViewer({ node }: NodeViewerProps) {
   const config = NODE_TYPE_CONFIG[node.content.type]
   const Icon = config.icon
 
+  // Determine if this is a new or deleted node
+  const isNewNode = model.nodes[node.id] === undefined && diff !== undefined
+  const isDeletedNode = diff?.deletedVersion !== undefined
+
   let nameDiff:
     | { new: string; update: (newValue: string) => void }
     | undefined = undefined
@@ -179,6 +183,16 @@ export function NodeViewer({ node }: NodeViewerProps) {
           <Icon className="size-3" />
           {config.label}
         </span>
+        {isNewNode && (
+          <span className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-emerald-100 text-emerald-700">
+            New
+          </span>
+        )}
+        {isDeletedNode && (
+          <span className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-red-100 text-red-700">
+            Deleted
+          </span>
+        )}
       </div>
 
       {/* Name section */}
