@@ -1,7 +1,6 @@
 import {
   useDiff,
   useMainContext,
-  useResolveDiff,
   useUpdateDiff,
   useUpdateNode,
 } from '@/context'
@@ -13,8 +12,6 @@ import {
   Hash,
   Braces,
   Table as TableIcon,
-  X,
-  Check,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Editor } from './inputs/editor'
@@ -151,7 +148,6 @@ export function NodeViewer({ node }: NodeViewerProps) {
   const updateNode = useUpdateNode()
   const diff = useDiff(node.id)
   const updateDiff = useUpdateDiff()
-  const resolveDiff = useResolveDiff()
 
   const config = NODE_TYPE_CONFIG[node.content.type]
   const Icon = config.icon
@@ -218,26 +214,6 @@ export function NodeViewer({ node }: NodeViewerProps) {
       {/* Tests section (decision and decision table nodes only) */}
       {node.content.type !== 'input' && node.content.type !== 'constant' && (
         <NodeTests node={node} allNodes={model.nodes} diff={diff} />
-      )}
-      {diffs.find((d) => d.id === node.id) !== undefined && (
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            className="flex-1 text-red-600 hover:text-red-700 hover:bg-red-50"
-            onClick={() => resolveDiff(node.id, false)}
-          >
-            <X className="size-4 mr-2" />
-            Reject
-          </Button>
-          <Button
-            variant="outline"
-            className="flex-1 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
-            onClick={() => resolveDiff(node.id, true)}
-          >
-            <Check className="size-4 mr-2" />
-            Accept
-          </Button>
-        </div>
       )}
     </section>
   )

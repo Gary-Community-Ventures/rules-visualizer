@@ -289,11 +289,15 @@ export function useMainContext(): MainContext {
 
 const SAVE_DEBOUNCE = 1_000
 
+type NodeUpdateConfig = {
+  noEmit?: boolean
+}
+
 export function useUpdateNode() {
   const { setModel, model, socket } = useMainContext()
   const debounce = useDebounce(SAVE_DEBOUNCE)
 
-  return (id: string, updater: (node: ModelNode) => ModelNode) => {
+  return (id: string, updater: (node: ModelNode) => ModelNode, config?: NodeUpdateConfig) => {
     const updated = updater(model.nodes[id])
     setModel({
       ...model,
@@ -302,17 +306,19 @@ export function useUpdateNode() {
         [id]: updated,
       },
     })
-    // debounce to avoid sending on every keystroke
-    debounce(() => {
-      socket.emit('model-update', { updates: [updated], isDiff: false })
-    })
+    if (!config?.noEmit) {
+      // debounce to avoid sending on every keystroke
+      debounce(() => {
+        socket.emit('model-update', { updates: [updated], isDiff: false })
+      })
+    }
   }
 }
 
 export function useAddNode() {
   const { setModel, socket } = useMainContext()
 
-  return (id: string, node: ModelNode) => {
+  return (id: string, node: ModelNode, config?: NodeUpdateConfig) => {
     setModel((model) => ({
       ...model,
       nodes: {
@@ -320,14 +326,16 @@ export function useAddNode() {
         [id]: node,
       },
     }))
-    socket.emit('model-update', { updates: [node], isDiff: false })
+    if (!config?.noEmit) {
+      socket.emit('model-update', { updates: [node], isDiff: false })
+    }
   }
 }
 
 export function useDeleteNode() {
   const { setModel, model, socket } = useMainContext()
 
-  return (id: string) => {
+  return (id: string, config?: NodeUpdateConfig) => {
     setModel((prev) => {
       const { [id]: _, ...remaining } = prev.nodes
       // Clean up stale references in integration tests
@@ -339,11 +347,13 @@ export function useDeleteNode() {
       return { ...prev, nodes: remaining, integrationTests }
     })
 
-    const node = model.nodes[id]
-    socket.emit('model-update', {
-      updates: [{ ...node, deletedVersion: 'TODO' }], // TODO: use real version
-      isDiff: false,
-    })
+    if (!config?.noEmit) {
+      const node = model.nodes[id]
+      socket.emit('model-update', {
+        updates: [{ ...node, deletedVersion: 'TODO' }], // TODO: use real version
+        isDiff: false,
+      })
+    }
   }
 }
 
@@ -394,7 +404,7 @@ export function useResolveDiff() {
     if (accept) {
       const diff = diffs.find((d) => d.id === id)
       if (diff && diff.deletedVersion !== undefined) {
-        deleteNode(id)
+        deleteNode(id, { noEmit: true })
       } else if (diff) {
         const existing = model.nodes[id]
         if (existing) {
@@ -402,10 +412,10 @@ export function useResolveDiff() {
           updateNode(id, (node) => ({
             ...diff,
             tests: diff.tests ?? node.tests,
-          }))
+          }), { noEmit: true })
         } else {
           // New node from diff — add it directly
-          addNode(id, diff)
+          addNode(id, diff, { noEmit: true })
         }
       }
     }
@@ -414,7 +424,8 @@ export function useResolveDiff() {
     socket.emit('model-update', {
       updates: [],
       isDiff: true,
-      resolvedDiffs: [id],
+      acceptedDiffs: accept ? [id] : [],
+      rejectedDiffs: accept ? [] : [id],
     })
   }
 }
