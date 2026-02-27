@@ -1,151 +1,257 @@
-import { useState, useRef, useEffect } from 'react'
+import {
+  useState,
+  useMemo,
+  createContext,
+  useContext,
+  type ReactNode,
+  type Dispatch,
+  type SetStateAction,
+} from 'react'
 import { useMainContext } from '@/context'
 import { Button } from './ui/button'
-import {
-  Combobox,
-  ComboboxChips,
-  ComboboxChip,
-  ComboboxChipsInput,
-  ComboboxContent,
-  ComboboxEmpty,
-  ComboboxItem,
-  ComboboxList,
-  useComboboxAnchor,
-} from './ui/combobox'
-import { X, Send } from 'lucide-react'
+import { X, Send, ChevronRight } from 'lucide-react'
+import { ChatEditor } from './chat-editor'
+import { cn } from '@/lib/utils'
+
+type UserMessage = {
+  type: 'userMessage'
+  message: string
+  contexts: string[]
+}
+
+type AIMessage = {
+  type: 'aiMessage'
+  message: string
+  contexts: string[]
+}
+
+type ToolCall = {
+  type: 'toolCall'
+  name: string
+  status: 'pending' | 'success' | 'error'
+  result?: string
+  contexts: string[]
+}
+
+type ChatMessage = UserMessage | AIMessage | ToolCall
+
+type ChatContextType = {
+  messages: ChatMessage[]
+  setMessages: Dispatch<SetStateAction<ChatMessage[]>>
+  addMessage: (message: ChatMessage) => void
+}
+
+const ChatContext = createContext<ChatContextType | undefined>(undefined)
+
+function useChatContext() {
+  const context = useContext(ChatContext)
+  if (!context) {
+    throw new Error('useChatContext must be used within ChatProvider')
+  }
+  return context
+}
+
+function ChatProvider({ children }: { children: ReactNode }) {
+  const [messages, setMessages] = useState<ChatMessage[]>([
+    {
+      type: 'userMessage',
+      message: 'Can you help me add a new eligibility rule?',
+      contexts: [
+        'c0000000-0000-0000-0000-000000000008',
+        'c0000000-0000-0000-0000-000000000005',
+      ],
+    },
+    {
+      type: 'aiMessage',
+      message:
+        "I'd be happy to help you add a new eligibility rule. Based on the context you've provided, I can see you're working with Income_Threshold and Age_Eligibility nodes. What kind of rule would you like to add?",
+      contexts: [
+        'c0000000-0000-0000-0000-000000000008',
+        'c0000000-0000-0000-0000-000000000005',
+      ],
+    },
+    {
+      type: 'userMessage',
+      message:
+        'Add a rule that checks if the applicant has been employed for at least 2 years',
+      contexts: [],
+    },
+    {
+      type: 'toolCall',
+      name: 'create_node',
+      status: 'success',
+      result: 'Created node: Employment_Duration',
+      contexts: ['c0000000-0000-0000-0000-00000000000a'],
+    },
+    {
+      type: 'aiMessage',
+      message:
+        "I've created a new node called Employment_Duration. Now I'll add it as a dependency to your eligibility factors.",
+      contexts: ['c0000000-0000-0000-0000-00000000000a'],
+    },
+    {
+      type: 'toolCall',
+      name: 'update_node',
+      status: 'pending',
+      contexts: [],
+    },
+  ])
+
+  const addMessage = (message: ChatMessage) => {
+    setMessages((prev) => [...prev, message])
+  }
+
+  return (
+    <ChatContext.Provider value={{ messages, setMessages, addMessage }}>
+      {children}
+    </ChatContext.Provider>
+  )
+}
 
 export function AIPanel() {
   const { setRightBar } = useMainContext()
 
   return (
-    <div className="flex flex-col h-full bg-background">
-      <div className="flex items-center justify-between px-4 py-3 border-b shrink-0">
-        <h2 className="text-sm font-semibold">AI Assistant</h2>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-7 w-7"
-          onClick={() => setRightBar(null)}
-        >
-          <X className="size-4" />
-        </Button>
+    <ChatProvider>
+      <div className="flex flex-col h-full bg-background">
+        <div className="flex items-center justify-between px-4 py-3 border-b shrink-0">
+          <h2 className="text-sm font-semibold">AI Assistant</h2>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7"
+            onClick={() => setRightBar(null)}
+          >
+            <X className="size-4" />
+          </Button>
+        </div>
+        <div className="flex-1 overflow-y-auto p-4">
+          <ChatContent />
+        </div>
+        <ChatBox />
       </div>
-      <div className="flex-1 overflow-y-auto p-4">
-        <ChatContent />
-      </div>
-      <ChatBox />
-    </div>
+    </ChatProvider>
   )
 }
 
 function ChatBox() {
-  const { model, openNode } = useMainContext()
+  const { model, setOpenNode } = useMainContext()
+  const { addMessage, setMessages } = useChatContext()
   const [message, setMessage] = useState('')
-  const [activeContext, setActiveContext] = useState<string | null>(null)
-  const [additionalContexts, setAdditionalContexts] = useState<string[]>([])
-  const [search, setSearch] = useState('')
-  const textareaRef = useRef<HTMLTextAreaElement>(null)
-  const anchorRef = useComboboxAnchor()
 
-  // Sync active context with open node
-  useEffect(() => {
-    setActiveContext(openNode)
-  }, [openNode])
+  // Build name -> id map for parsing mentions and clicking
+  const nameToId = useMemo(() => {
+    const map = new Map<string, string>()
+    for (const [id, node] of Object.entries(model.nodes)) {
+      map.set(node.name.toLowerCase(), id)
+    }
+    return map
+  }, [model.nodes])
 
-  // All contexts combined for submission
-  const allContexts = activeContext
-    ? [activeContext, ...additionalContexts.filter((id) => id !== activeContext)]
-    : additionalContexts
-
-  const nodeIds = Object.keys(model.nodes)
-  const filteredNodeIds = nodeIds.filter(
-    (id) =>
-      model.nodes[id].name.toLowerCase().includes(search.toLowerCase()) &&
-      !allContexts.includes(id)
+  const knownNames = useMemo(
+    () => Object.values(model.nodes).map((n) => n.name),
+    [model.nodes]
   )
+
+  // Parse node names from message and extract context IDs
+  const parseContexts = (text: string): string[] => {
+    const contexts: string[] = []
+    const lowerText = text.toLowerCase()
+    for (const [name, id] of nameToId.entries()) {
+      if (lowerText.includes(name)) {
+        contexts.push(id)
+      }
+    }
+    return [...new Set(contexts)]
+  }
+
+  const simulateResponse = async (contexts: string[]) => {
+    // Add pending tool call
+    addMessage({
+      type: 'toolCall',
+      name: 'analyze_model',
+      status: 'pending',
+      contexts,
+    })
+
+    // Complete first tool call after delay
+    await new Promise((r) => setTimeout(r, 800))
+    setMessages((prev) => {
+      const updated = [...prev]
+      const idx = updated.length - 1
+      if (updated[idx]?.type === 'toolCall') {
+        updated[idx] = {
+          ...updated[idx],
+          status: 'success',
+          result: 'Analyzed model structure and dependencies',
+        } as ToolCall
+      }
+      return updated
+    })
+
+    // Add second tool call
+    await new Promise((r) => setTimeout(r, 300))
+    addMessage({
+      type: 'toolCall',
+      name: 'suggest_changes',
+      status: 'pending',
+      contexts,
+    })
+
+    // Complete second tool call
+    await new Promise((r) => setTimeout(r, 600))
+    setMessages((prev) => {
+      const updated = [...prev]
+      const idx = updated.length - 1
+      if (updated[idx]?.type === 'toolCall') {
+        updated[idx] = {
+          ...updated[idx],
+          status: 'success',
+          result: 'Generated suggestions based on analysis',
+        } as ToolCall
+      }
+      return updated
+    })
+
+    // Add AI response
+    await new Promise((r) => setTimeout(r, 400))
+    addMessage({
+      type: 'aiMessage',
+      message:
+        "I've analyzed your request and made the necessary changes. The model has been updated accordingly. Is there anything else you'd like me to help with?",
+      contexts,
+    })
+  }
 
   const handleSubmit = () => {
     if (!message.trim()) return
-    // TODO: Send message with contexts
-    console.log('Send:', message, 'Contexts:', allContexts)
+    const contexts = parseContexts(message)
+    addMessage({
+      type: 'userMessage',
+      message: message.trim(),
+      contexts,
+    })
     setMessage('')
-    setAdditionalContexts([])
+    simulateResponse(contexts)
   }
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      handleSubmit()
-    }
-  }
-
-  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setMessage(e.target.value)
-    const textarea = textareaRef.current
-    if (textarea) {
-      textarea.style.height = 'auto'
-      const maxHeight = 200
-      const newHeight = Math.min(textarea.scrollHeight, maxHeight)
-      textarea.style.height = `${newHeight}px`
-      textarea.style.overflowY = textarea.scrollHeight > maxHeight ? 'auto' : 'hidden'
-    }
+  const handleNodeClick = (name: string) => {
+    const id = nameToId.get(name.toLowerCase())
+    if (id) setOpenNode(id)
   }
 
   return (
     <div className="border-t p-3 shrink-0 flex flex-col gap-2">
-      <textarea
-        ref={textareaRef}
+      <ChatEditor
         value={message}
-        onChange={handleChange}
-        onKeyDown={handleKeyDown}
+        onChange={setMessage}
+        onSubmit={handleSubmit}
+        onNodeClick={handleNodeClick}
+        knownNames={knownNames}
         placeholder="Ask about your model..."
-        className="resize-none rounded-md border px-3 py-2 text-sm overflow-hidden focus:outline-none focus:ring-1 focus:ring-ring"
-        rows={1}
       />
-      <div className="flex items-center gap-2">
-        <Combobox multiple value={additionalContexts} onValueChange={setAdditionalContexts}>
-          <ComboboxChips ref={anchorRef} className="flex-1 min-w-0">
-            {activeContext && !additionalContexts.includes(activeContext) && (
-              <span className="flex items-center gap-1 h-[calc(var(--spacing)*5.5)] px-1.5 text-xs font-medium rounded-sm bg-muted text-foreground">
-                {model.nodes[activeContext]?.name ?? activeContext}
-                <button
-                  type="button"
-                  onClick={() => setActiveContext(null)}
-                  className="opacity-50 hover:opacity-100"
-                >
-                  <X className="size-3" />
-                </button>
-              </span>
-            )}
-            {additionalContexts.map((nodeId) => (
-              <ComboboxChip key={nodeId} value={nodeId}>
-                {model.nodes[nodeId]?.name ?? nodeId}
-              </ComboboxChip>
-            ))}
-            <ComboboxChipsInput
-              placeholder={allContexts.length === 0 ? 'Add context...' : ''}
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </ComboboxChips>
-          <ComboboxContent anchor={anchorRef} side="top">
-            <ComboboxList>
-              {filteredNodeIds.map((nodeId) => (
-                <ComboboxItem key={nodeId} value={nodeId}>
-                  {model.nodes[nodeId].name}
-                </ComboboxItem>
-              ))}
-            </ComboboxList>
-            {filteredNodeIds.length === 0 && (
-              <ComboboxEmpty>No nodes found.</ComboboxEmpty>
-            )}
-          </ComboboxContent>
-        </Combobox>
-        <Button
-          size="sm"
-          onClick={handleSubmit}
-          disabled={!message.trim()}
-        >
+      <div className="flex justify-end">
+        <Button size="sm" onClick={handleSubmit} disabled={!message.trim()}>
           <Send className="size-4 mr-1" />
           Send
         </Button>
@@ -155,39 +261,26 @@ function ChatBox() {
 }
 
 function ChatContent() {
+  const { messages } = useChatContext()
+
   return (
     <div className="flex flex-col gap-4">
-      <UserMessage
-        message="Can you help me add a new eligibility rule?"
-        contexts={[
-          'c0000000-0000-0000-0000-000000000008',
-          'c0000000-0000-0000-0000-000000000005',
-        ]}
-      />
-      <AIMessage
-        message="I'd be happy to help you add a new eligibility rule. Based on the context you've provided, I can see you're working with Income_Threshold and Age_Eligibility nodes. What kind of rule would you like to add?"
-        contexts={[
-          'c0000000-0000-0000-0000-000000000008',
-          'c0000000-0000-0000-0000-000000000005',
-        ]}
-      />
-      <UserMessage
-        message="Add a rule that checks if the applicant has been employed for at least 2 years"
-        contexts={[]}
-      />
-      <ToolCall
-        name="create_node"
-        status="success"
-        result="Created node: Employment_Duration"
-        contexts={['c0000000-0000-0000-0000-00000000000a']}
-      />
-      <AIMessage
-        message="I've created a new node called Employment_Duration. Now I'll add it as a dependency to your eligibility factors."
-        contexts={['c0000000-0000-0000-0000-00000000000a']}
-      />
-      <ToolCall name="update_node" status="pending" contexts={[]} />
+      {messages.map((msg, index) => (
+        <ChatMessageView key={index} message={msg} />
+      ))}
     </div>
   )
+}
+
+function ChatMessageView({ message }: { message: ChatMessage }) {
+  switch (message.type) {
+    case 'userMessage':
+      return <UserMessageView message={message} />
+    case 'aiMessage':
+      return <AIMessageView message={message} />
+    case 'toolCall':
+      return <ToolCallView message={message} />
+  }
 }
 
 function ContextChips({ contexts }: { contexts: string[] }) {
@@ -214,72 +307,133 @@ function ContextChips({ contexts }: { contexts: string[] }) {
   )
 }
 
-type UserMessageProps = {
-  message: string
-  contexts: string[]
+function ClickableNodeText({ text }: { text: string }) {
+  const { model, setOpenNode } = useMainContext()
+
+  const nameToId = useMemo(() => {
+    const map = new Map<string, string>()
+    for (const [id, node] of Object.entries(model.nodes)) {
+      map.set(node.name.toLowerCase(), id)
+    }
+    return map
+  }, [model.nodes])
+
+  const parts = useMemo(() => {
+    const nodeNames = Object.values(model.nodes).map((n) => n.name)
+    if (nodeNames.length === 0) return [{ type: 'text' as const, content: text }]
+
+    // Sort by length descending to match longer names first
+    const sorted = [...nodeNames].sort((a, b) => b.length - a.length)
+    const escaped = sorted.map((n) => n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+    const pattern = new RegExp(`(${escaped.join('|')})`, 'gi')
+
+    const result: { type: 'text' | 'node'; content: string }[] = []
+    let lastIndex = 0
+    let match
+
+    while ((match = pattern.exec(text)) !== null) {
+      if (match.index > lastIndex) {
+        result.push({ type: 'text', content: text.slice(lastIndex, match.index) })
+      }
+      result.push({ type: 'node', content: match[1] })
+      lastIndex = pattern.lastIndex
+    }
+
+    if (lastIndex < text.length) {
+      result.push({ type: 'text', content: text.slice(lastIndex) })
+    }
+
+    return result.length > 0 ? result : [{ type: 'text' as const, content: text }]
+  }, [text, model.nodes])
+
+  return (
+    <>
+      {parts.map((part, i) =>
+        part.type === 'node' ? (
+          <button
+            key={i}
+            onClick={() => {
+              const id = nameToId.get(part.content.toLowerCase())
+              if (id) setOpenNode(id)
+            }}
+            className="text-violet-600 font-semibold hover:underline"
+          >
+            {part.content}
+          </button>
+        ) : (
+          <span key={i}>{part.content}</span>
+        )
+      )}
+    </>
+  )
 }
 
-export function UserMessage({ message, contexts }: UserMessageProps) {
+function UserMessageView({ message }: { message: UserMessage }) {
   return (
     <div className="flex flex-col items-end">
       <div className="bg-muted rounded-lg px-3 py-2 text-sm max-w-[85%]">
-        {message}
-        <ContextChips contexts={contexts} />
+        <ClickableNodeText text={message.message} />
       </div>
     </div>
   )
 }
 
-type AIMessageProps = {
-  message: string
-  contexts?: string[]
-}
-
-export function AIMessage({ message, contexts = [] }: AIMessageProps) {
+function AIMessageView({ message }: { message: AIMessage }) {
   return (
     <div className="bg-background border rounded-lg px-3 py-2 text-sm max-w-[85%]">
-      {message}
-      <ContextChips contexts={contexts} />
+      <ClickableNodeText text={message.message} />
     </div>
   )
 }
 
-type ToolCallProps = {
-  name: string
-  status: 'pending' | 'success' | 'error'
-  result?: string
-  contexts?: string[]
-}
+function ToolCallView({ message }: { message: ToolCall }) {
+  const [expanded, setExpanded] = useState(false)
+  const hasContent = message.result || message.contexts.length > 0
 
-export function ToolCall({
-  name,
-  status,
-  result,
-  contexts = [],
-}: ToolCallProps) {
   return (
     <div className="border rounded-lg overflow-hidden text-sm">
-      <div className="flex items-center gap-2 px-3 py-1.5 bg-muted/50 border-b">
-        <span className="font-mono text-xs">{name}</span>
-        {status === 'pending' && (
+      <button
+        type="button"
+        className={cn(
+          'flex items-center gap-2 px-3 py-1.5 bg-muted/50 w-full text-left',
+          hasContent && 'cursor-pointer hover:bg-muted/70',
+          expanded && 'border-b'
+        )}
+        onClick={() => hasContent && setExpanded(!expanded)}
+        disabled={!hasContent}
+      >
+        {hasContent && (
+          <ChevronRight
+            className={cn(
+              'size-3 transition-transform',
+              expanded && 'rotate-90'
+            )}
+          />
+        )}
+        <span className="font-mono text-xs">{message.name}</span>
+        {message.status === 'pending' && (
           <span className="text-xs text-muted-foreground">Running...</span>
         )}
-        {status === 'success' && (
+        {message.status === 'success' && (
           <span className="text-xs text-emerald-600">Done</span>
         )}
-        {status === 'error' && (
+        {message.status === 'error' && (
           <span className="text-xs text-red-600">Error</span>
         )}
-      </div>
-      {result && (
-        <div className="px-3 py-2 font-mono text-xs whitespace-pre-wrap bg-muted/20">
-          {result}
-        </div>
-      )}
-      {contexts.length > 0 && (
-        <div className="px-3 py-2 border-t">
-          <ContextChips contexts={contexts} />
-        </div>
+      </button>
+      {expanded && (
+        <>
+          {message.result && (
+            <div className="px-3 py-2 font-mono text-xs whitespace-pre-wrap bg-muted/20">
+              {message.result}
+            </div>
+          )}
+          {message.contexts.length > 0 && (
+            <div className="px-3 py-2 border-t">
+              <ContextChips contexts={message.contexts} />
+            </div>
+          )}
+        </>
       )}
     </div>
   )
