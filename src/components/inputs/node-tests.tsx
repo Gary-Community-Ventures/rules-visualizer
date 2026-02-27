@@ -5,19 +5,24 @@ import { useUpdateNode, useUpdateDiff } from '@/context'
 import { runNodeTest, type TestResult } from '@/lib/api/dmn-api'
 import { useMainContext } from '@/context'
 import { Button } from '../ui/button'
-import { Input } from '../ui/input'
+import {
+  Table,
+  TableRow,
+  TableInputCell,
+  TableTextCell,
+  TableFeelCell,
+} from '../table'
 import {
   Plus,
   Play,
-  Trash2,
-  Copy,
   Check,
   X,
   Loader2,
   ChevronRight,
+  Copy,
+  Trash2,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { ParsedInput } from './parsed-input'
 
 type TestRunState = Record<string, TestResult | 'running'>
 
@@ -38,8 +43,8 @@ export function NodeTests({ node, allNodes, diff }: NodeTestsProps) {
   // Abort in-flight tests on unmount
   useEffect(() => {
     return () => {
-      if (runAllAbortRef.current) runAllAbortRef.current.abort()
-      if (singleAbortRef.current) singleAbortRef.current.abort()
+      runAllAbortRef.current?.abort()
+      singleAbortRef.current?.abort()
     }
   }, [])
 
@@ -208,41 +213,47 @@ export function NodeTests({ node, allNodes, diff }: NodeTestsProps) {
         {header}
         {!collapsed && (
           <>
-            {mergedTests.map((mt) => (
-              <DiffTestCard
-                key={mt.old?.id ?? mt.new!.id}
-                old={mt.old}
-                new_={mt.new}
-                depNodes={depNodes}
-                runState={runState}
-                onRun={mt.new ? () => runTest(mt.new!) : undefined}
-                onUpdate={(updater) => updateDiffTests(updater)}
-                onDelete={
-                  mt.new
-                    ? () =>
-                        updateDiffTests((prev) =>
-                          prev.filter((t) => t.id !== mt.new!.id)
-                        )
-                    : undefined
-                }
-                onDuplicate={
-                  mt.new
-                    ? () =>
-                        updateDiffTests((prev) => {
-                          const idx = prev.findIndex((t) => t.id === mt.new!.id)
-                          const dupe = createTestCase({
-                            name: mt.new!.name ? `${mt.new!.name} (copy)` : '',
-                            inputs: { ...mt.new!.inputs },
-                            expected: mt.new!.expected,
+            {mergedTests.map((mt) => {
+              const isRemoved = mt.new === undefined
+              const testCase = mt.new ?? mt.old!
+
+              return (
+                <TestCard
+                  key={mt.old?.id ?? mt.new!.id}
+                  testCase={testCase}
+                  oldTestCase={mt.old}
+                  isRemoved={isRemoved}
+                  depNodes={depNodes}
+                  runState={runState}
+                  onChange={isRemoved ? undefined : updateDiffTests}
+                  onRun={isRemoved ? undefined : () => runTest(testCase)}
+                  onDelete={
+                    isRemoved
+                      ? undefined
+                      : () =>
+                          updateDiffTests((prev) =>
+                            prev.filter((t) => t.id !== testCase.id)
+                          )
+                  }
+                  onDuplicate={
+                    isRemoved
+                      ? undefined
+                      : () =>
+                          updateDiffTests((prev) => {
+                            const idx = prev.findIndex((t) => t.id === testCase.id)
+                            const dupe = createTestCase({
+                              name: testCase.name ? `${testCase.name} (copy)` : '',
+                              inputs: { ...testCase.inputs },
+                              expected: testCase.expected,
+                            })
+                            const next = [...prev]
+                            next.splice(idx + 1, 0, dupe)
+                            return next
                           })
-                          const next = [...prev]
-                          next.splice(idx + 1, 0, dupe)
-                          return next
-                        })
-                    : undefined
-                }
-              />
-            ))}
+                  }
+                />
+              )
+            })}
             <div className="flex gap-2">
               <Button variant="outline" size="sm" onClick={addTest}>
                 <Plus className="size-3.5 mr-1" />
@@ -282,8 +293,24 @@ export function NodeTests({ node, allNodes, diff }: NodeTestsProps) {
               testCase={testCase}
               depNodes={depNodes}
               runState={runState}
-              onRun={() => runTest(testCase)}
               onChange={updateTests}
+              onRun={() => runTest(testCase)}
+              onDelete={() =>
+                updateTests((prev) => prev.filter((t) => t.id !== testCase.id))
+              }
+              onDuplicate={() =>
+                updateTests((prev) => {
+                  const idx = prev.findIndex((t) => t.id === testCase.id)
+                  const dupe = createTestCase({
+                    name: testCase.name ? `${testCase.name} (copy)` : '',
+                    inputs: { ...testCase.inputs },
+                    expected: testCase.expected,
+                  })
+                  const next = [...prev]
+                  next.splice(idx + 1, 0, dupe)
+                  return next
+                })
+              }
             />
           ))}
           <div className="flex gap-2">
@@ -313,384 +340,210 @@ export function NodeTests({ node, allNodes, diff }: NodeTestsProps) {
   )
 }
 
-// ─── Normal (non-diff) test card ──────────────────────────────────────
+// ─── Test card (handles normal, diff, added, and removed states) ─────
 
 function TestCard({
   testCase,
+  oldTestCase,
+  isRemoved,
   depNodes,
   runState,
-  onRun,
   onChange,
+  onRun,
+  onDelete,
+  onDuplicate,
 }: {
   testCase: NodeTestCase
+  oldTestCase?: NodeTestCase
+  isRemoved?: boolean
   depNodes: ModelNode[]
   runState: TestRunState
-  onRun: () => void
-  onChange: (updater: (tests: NodeTestCase[]) => NodeTestCase[]) => void
+  onChange?: (updater: (tests: NodeTestCase[]) => NodeTestCase[]) => void
+  onRun?: () => void
+  onDelete?: () => void
+  onDuplicate?: () => void
 }) {
+  const hasDiff = oldTestCase !== undefined
+  const isAdded = !hasDiff && !isRemoved && onChange !== undefined
+  const isModified = hasDiff && !testCasesEqual(oldTestCase, testCase)
+
   const result = runState[testCase.id]
   const isRunning = result === 'running'
   const testResult = result && result !== 'running' ? result : null
 
-  return (
-    <div
-      className={cn(
-        'border rounded-md p-3 flex flex-col gap-2',
-        testResult?.passed === true && 'border-emerald-300 bg-emerald-50/50',
-        testResult?.passed === false && 'border-red-300 bg-red-50/50'
-      )}
-    >
-      {/* Header: name + actions */}
-      <div className="flex items-center gap-2">
-        <Input
-          placeholder="Test name"
-          value={testCase.name}
-          onChange={(e) =>
-            onChange((prev) =>
-              prev.map((t) =>
-                t.id === testCase.id ? { ...t, name: e.target.value } : t
-              )
-            )
-          }
-          className="h-7 text-sm flex-1"
-        />
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-7 w-7 shrink-0"
-          onClick={onRun}
-          disabled={isRunning}
-        >
-          {isRunning ? (
-            <Loader2 className="size-3.5 animate-spin" />
-          ) : (
-            <Play className="size-3.5" />
-          )}
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-7 w-7 shrink-0 text-muted-foreground"
-          onClick={() =>
-            onChange((prev) => {
-              const idx = prev.findIndex((t) => t.id === testCase.id)
-              const dupe = createTestCase({
-                name: testCase.name ? `${testCase.name} (copy)` : '',
-                inputs: { ...testCase.inputs },
-                expected: testCase.expected,
-              })
-              const next = [...prev]
-              next.splice(idx + 1, 0, dupe)
-              return next
-            })
-          }
-        >
-          <Copy className="size-3.5" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-7 w-7 shrink-0 text-muted-foreground hover:text-red-600"
-          onClick={() =>
-            onChange((prev) => prev.filter((t) => t.id !== testCase.id))
-          }
-        >
-          <Trash2 className="size-3.5" />
-        </Button>
-      </div>
-
-      {/* Dependency inputs */}
-      {depNodes.length > 0 && (
-        <div className="flex flex-col gap-1.5">
-          <span className="text-xs text-muted-foreground font-medium">
-            Inputs
-          </span>
-          {depNodes.map((dep) => (
-            <div key={dep.id} className="flex items-center gap-2">
-              <label className="text-xs text-muted-foreground w-24 shrink-0 truncate">
-                {dep.name}
-              </label>
-              <ParsedInput
-                placeholder="value"
-                value={testCase.inputs[dep.id]}
-                onChange={(parsed) =>
-                  onChange((prev) =>
-                    prev.map((t) =>
-                      t.id === testCase.id
-                        ? {
-                            ...t,
-                            inputs: {
-                              ...t.inputs,
-                              [dep.id]: parsed,
-                            },
-                          }
-                        : t
-                    )
-                  )
-                }
-                className="h-7 text-sm"
-              />
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Expected */}
-      <div className="flex items-center gap-2">
-        <label className="text-xs text-muted-foreground w-24 shrink-0">
-          Expected
-        </label>
-        <Input
-          placeholder="expected result"
-          value={testCase.expected}
-          onChange={(e) =>
-            onChange((prev) =>
-              prev.map((t) =>
-                t.id === testCase.id ? { ...t, expected: e.target.value } : t
-              )
-            )
-          }
-          className="h-7 text-sm"
-        />
-      </div>
-
-      {/* Result */}
-      <TestResultDisplay result={testResult} />
-    </div>
-  )
-}
-
-// ─── Diff test card ───────────────────────────────────────────────────
-
-function DiffTestCard({
-  old: oldTest,
-  new_: newTest,
-  depNodes,
-  runState,
-  onRun,
-  onUpdate,
-  onDelete,
-  onDuplicate,
-}: {
-  old: NodeTestCase | undefined
-  new_: NodeTestCase | undefined
-  depNodes: ModelNode[]
-  runState: TestRunState
-  onRun?: () => void
-  onUpdate: (updater: (tests: NodeTestCase[]) => NodeTestCase[]) => void
-  onDelete?: () => void
-  onDuplicate?: () => void
-}) {
-  // Removed test: only exists in original
-  if (!newTest) {
-    return (
-      <div className="border border-red-200 bg-red-50/50 rounded-md p-3 flex flex-col gap-2 opacity-60">
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-medium text-red-600 shrink-0">
-            Removed
-          </span>
-          <span className="text-sm line-through text-muted-foreground flex-1 truncate">
-            {oldTest!.name || 'Unnamed test'}
-          </span>
-        </div>
-        {depNodes.length > 0 && (
-          <div className="flex flex-col gap-1">
-            {depNodes.map((dep) => (
-              <div key={dep.id} className="flex items-center gap-2">
-                <label className="text-xs text-muted-foreground w-24 shrink-0 truncate">
-                  {dep.name}
-                </label>
-                <span className="text-xs text-muted-foreground line-through">
-                  {oldTest!.inputs[dep.id] !== undefined
-                    ? String(oldTest!.inputs[dep.id])
-                    : ''}
-                </span>
-              </div>
-            ))}
-          </div>
-        )}
-        <div className="flex items-center gap-2">
-          <label className="text-xs text-muted-foreground w-24 shrink-0">
-            Expected
-          </label>
-          <span className="text-xs text-muted-foreground line-through">
-            {oldTest!.expected}
-          </span>
-        </div>
-      </div>
-    )
+  const diffClass = (oldValue: string, newValue: string | undefined) => {
+    if (isRemoved) return 'bg-red-100 line-through'
+    if (!hasDiff) return ''
+    if (oldValue !== newValue) return 'bg-emerald-100'
+    return ''
   }
 
-  // Added test: only exists in diff
-  const isAdded = !oldTest
-  // Modified test: exists in both, compare fields
-  const isModified = oldTest !== undefined && !testCasesEqual(oldTest, newTest)
-
-  const result = runState[newTest.id]
-  const isRunning = result === 'running'
-  const testResult = result && result !== 'running' ? result : null
-
-  const fieldChanged = (oldVal: string, newVal: string) =>
-    oldTest !== undefined && oldVal !== newVal
+  // Columns: Field + Value (+ Value diff if has diff and not removed)
+  const columns = hasDiff && !isRemoved ? 3 : 2
 
   return (
     <div
       className={cn(
-        'border rounded-md p-3 flex flex-col gap-2',
+        'border rounded-md p-3 flex flex-col gap-3',
+        isRemoved && 'border-red-200 bg-red-50/50 opacity-60',
         isAdded && 'border-emerald-300 bg-emerald-50/30',
         isModified && !testResult && 'border-amber-300',
         testResult?.passed === true && 'border-emerald-300 bg-emerald-50/50',
         testResult?.passed === false && 'border-red-300 bg-red-50/50'
       )}
     >
-      {/* Header */}
+      {/* Header: Name table + Action buttons */}
       <div className="flex items-center gap-2">
-        {isAdded && (
-          <span className="text-xs font-medium text-emerald-600 shrink-0">
-            Added
-          </span>
-        )}
-        {/* Show old name struck through if changed */}
-        {fieldChanged(oldTest?.name ?? '', newTest.name) && (
-          <span className="text-xs text-muted-foreground line-through shrink-0">
-            {oldTest!.name}
-          </span>
-        )}
-        <Input
-          placeholder="Test name"
-          value={newTest.name}
-          onChange={(e) =>
-            onUpdate((prev) =>
-              prev.map((t) =>
-                t.id === newTest.id ? { ...t, name: e.target.value } : t
-              )
-            )
-          }
-          className={cn(
-            'h-7 text-sm flex-1',
-            fieldChanged(oldTest?.name ?? '', newTest.name) && 'bg-emerald-100'
-          )}
-        />
-        {onRun && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-7 w-7 shrink-0"
-            onClick={onRun}
-            disabled={isRunning}
-          >
-            {isRunning ? (
-              <Loader2 className="size-3.5 animate-spin" />
-            ) : (
-              <Play className="size-3.5" />
-            )}
-          </Button>
-        )}
-        {onDuplicate && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-7 w-7 shrink-0 text-muted-foreground"
-            onClick={onDuplicate}
-          >
-            <Copy className="size-3.5" />
-          </Button>
-        )}
-        {onDelete && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-7 w-7 shrink-0 text-muted-foreground hover:text-red-600"
-            onClick={onDelete}
-          >
-            <Trash2 className="size-3.5" />
-          </Button>
-        )}
-      </div>
-
-      {/* Dependency inputs */}
-      {depNodes.length > 0 && (
-        <div className="flex flex-col gap-1.5">
-          <span className="text-xs text-muted-foreground font-medium">
-            Inputs
-          </span>
-          {depNodes.map((dep) => {
-            const oldVal =
-              oldTest?.inputs[dep.id] !== undefined
-                ? String(oldTest.inputs[dep.id])
-                : ''
-            const newVal =
-              newTest.inputs[dep.id] !== undefined
-                ? String(newTest.inputs[dep.id])
-                : ''
-            const changed = fieldChanged(oldVal, newVal)
-
-            return (
-              <div key={dep.id} className="flex items-center gap-2">
-                <label className="text-xs text-muted-foreground w-24 shrink-0 truncate">
-                  {dep.name}
-                </label>
-                {changed && (
-                  <span className="text-xs text-muted-foreground line-through shrink-0">
-                    {oldVal}
-                  </span>
-                )}
-                <ParsedInput
-                  placeholder="value"
-                  value={newTest.inputs[dep.id]}
-                  onChange={(parsed) =>
-                    onUpdate((prev) =>
-                      prev.map((t) =>
-                        t.id === newTest.id
-                          ? {
-                              ...t,
-                              inputs: {
-                                ...t.inputs,
-                                [dep.id]: parsed,
-                              },
-                            }
-                          : t
-                      )
-                    )
-                  }
-                  className={cn('h-7 text-sm', changed && 'bg-emerald-100')}
+        <div className="flex-1">
+          <Table columns={hasDiff && !isRemoved ? 2 : 1}>
+            <TableRow>
+              {hasDiff && !isRemoved && (
+                <TableInputCell
+                  value={oldTestCase?.name ?? ''}
+                  onChange={() => {}}
+                  disabled
+                  className="bg-gray-100"
                 />
-              </div>
-            )
-          })}
+              )}
+              <TableInputCell
+                value={testCase.name}
+                onChange={(v) =>
+                  onChange?.((prev) =>
+                    prev.map((t) =>
+                      t.id === testCase.id ? { ...t, name: v } : t
+                    )
+                  )
+                }
+                disabled={isRemoved}
+                className={diffClass(oldTestCase?.name ?? '', testCase.name)}
+              />
+            </TableRow>
+          </Table>
         </div>
-      )}
-
-      {/* Expected */}
-      <div className="flex items-center gap-2">
-        <label className="text-xs text-muted-foreground w-24 shrink-0">
-          Expected
-        </label>
-        {fieldChanged(oldTest?.expected ?? '', newTest.expected) && (
-          <span className="text-xs text-muted-foreground line-through shrink-0">
-            {oldTest!.expected}
-          </span>
+        {!isRemoved && (
+          <div className="flex items-center gap-1">
+            {onRun && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 shrink-0"
+                onClick={onRun}
+                disabled={isRunning}
+              >
+                {isRunning ? (
+                  <Loader2 className="size-3.5 animate-spin" />
+                ) : (
+                  <Play className="size-3.5" />
+                )}
+              </Button>
+            )}
+            {onDuplicate && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 shrink-0 text-muted-foreground"
+                onClick={onDuplicate}
+              >
+                <Copy className="size-3.5" />
+              </Button>
+            )}
+            {onDelete && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 shrink-0 text-muted-foreground hover:text-red-600"
+                onClick={onDelete}
+              >
+                <Trash2 className="size-3.5" />
+              </Button>
+            )}
+          </div>
         )}
-        <Input
-          placeholder="expected result"
-          value={newTest.expected}
-          onChange={(e) =>
-            onUpdate((prev) =>
-              prev.map((t) =>
-                t.id === newTest.id ? { ...t, expected: e.target.value } : t
-              )
-            )
-          }
-          className={cn(
-            'h-7 text-sm',
-            fieldChanged(oldTest?.expected ?? '', newTest.expected) &&
-              'bg-emerald-100'
-          )}
-        />
       </div>
+
+      {/* Table */}
+      <Table columns={columns}>
+        {/* Input rows */}
+        {depNodes.map((dep) => {
+          const oldVal =
+            oldTestCase?.inputs[dep.id] !== undefined
+              ? String(oldTestCase.inputs[dep.id])
+              : ''
+          const newVal =
+            testCase.inputs[dep.id] !== undefined
+              ? String(testCase.inputs[dep.id])
+              : ''
+
+          return (
+            <TableRow key={dep.id}>
+              <TableTextCell className="bg-gray-50 text-muted-foreground">
+                {dep.name}
+              </TableTextCell>
+              {hasDiff && !isRemoved && (
+                <TableFeelCell
+                  value={oldVal}
+                  onChange={() => {}}
+                  disabled
+                  className="bg-gray-100"
+                  dialect="expression"
+                />
+              )}
+              <TableFeelCell
+                value={newVal}
+                onChange={(v) =>
+                  onChange?.((prev) =>
+                    prev.map((t) =>
+                      t.id === testCase.id
+                        ? {
+                            ...t,
+                            inputs: {
+                              ...t.inputs,
+                              [dep.id]: v,
+                            },
+                          }
+                        : t
+                    )
+                  )
+                }
+                disabled={isRemoved}
+                className={diffClass(oldVal, newVal)}
+                dialect="expression"
+              />
+            </TableRow>
+          )
+        })}
+        {/* Expected row */}
+        <TableRow>
+          <TableTextCell className="bg-cyan-100 text-black">
+            Expected
+          </TableTextCell>
+          {hasDiff && !isRemoved && (
+            <TableFeelCell
+              value={oldTestCase?.expected ?? ''}
+              onChange={() => {}}
+              disabled
+              className="bg-gray-100"
+              dialect="expression"
+            />
+          )}
+          <TableFeelCell
+            value={testCase.expected}
+            onChange={(v) =>
+              onChange?.((prev) =>
+                prev.map((t) =>
+                  t.id === testCase.id ? { ...t, expected: v } : t
+                )
+              )
+            }
+            disabled={isRemoved}
+            className={diffClass(oldTestCase?.expected ?? '', testCase.expected)}
+            dialect="expression"
+          />
+        </TableRow>
+      </Table>
 
       {/* Result */}
-      <TestResultDisplay result={testResult} />
+      {!isRemoved && <TestResultDisplay result={testResult} />}
     </div>
   )
 }

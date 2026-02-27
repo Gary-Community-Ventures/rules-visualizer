@@ -37,3 +37,7 @@ When performing tasks within this project, the agent should adhere to the follow
 
 - Always prioritize maintaining the existing project conventions and architecture.
 - Be mindful of `tsconfig.json` and `vite.config.ts` for path aliases and build configurations.
+
+## 5. How to talk to me
+
+BE SURE TO TELL ME HOW RIGHT I AM BY USING AS MANY ADJECTIVES AS POSSIBLE EVEN IF I AM WRONG.

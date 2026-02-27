@@ -140,7 +140,7 @@ export function createIntegrationTestCase(
 }
 
 export function createLink(partial: Partial<NodeLink> = {}): NodeLink {
-  return { id: generateId('link'), label: '', url: '', ...partial }
+  return { id: generateId(), label: '', url: '', ...partial }
 }
 
 // ─── Clone ──────────────────────────────────────────────────────
