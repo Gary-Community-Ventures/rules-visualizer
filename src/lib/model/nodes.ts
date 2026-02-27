@@ -25,6 +25,7 @@ export type Constant = {
 export type Context = {
   type: 'context'
   entries: ContextEntry[]
+  tests: NodeTestCase[]
   // Convention: entry named '_return' is the final result
 }
 
@@ -35,6 +36,7 @@ export type DecisionTable = {
   inputClauses: InputClause[]
   outputClauses: OutputClause[]
   rules: DecisionTableRule[]
+  tests: NodeTestCase[]
 }
 
 export type NodeContent = Input | Constant | Context | DecisionTable
@@ -71,7 +73,6 @@ export type ModelNode = {
   typeRef?: FeelDataType
   dependencies: string[]
   content: NodeContent
-  tests?: NodeTestCase[]
   description?: string
   links?: NodeLink[]
   deletedVersion?: string

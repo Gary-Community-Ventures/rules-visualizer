@@ -386,10 +386,9 @@ export function useResolveDiff() {
       } else if (diff) {
         const existing = model.nodes[id]
         if (existing) {
-          // Preserve existing tests/docs when the diff doesn't include them
+          // Preserve existing docs when the diff doesn't include them
           updateNode(id, (node) => ({
             ...diff,
-            tests: diff.tests ?? node.tests,
             description: diff.description ?? node.description,
             links: diff.links ?? node.links,
           }), { noEmit: true })

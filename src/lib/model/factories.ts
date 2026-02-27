@@ -17,6 +17,17 @@ import type {
   NodeLink,
 } from './nodes'
 
+// ─── Content Helpers ──────────────────────────────────────────────
+
+/** Get tests from node content (only Context and DecisionTable have tests) */
+export function getNodeTests(node: ModelNode): NodeTestCase[] {
+  const content = node.content
+  if (content.type === 'context' || content.type === 'decisionTable') {
+    return content.tests
+  }
+  return []
+}
+
 export function generateId(): string {
   return crypto.randomUUID()
 }
@@ -56,6 +67,7 @@ export function createContext(partial: Partial<Context> = {}): Context {
   return {
     type: 'context',
     entries: [createEntry({ name: RETURN_NAME })],
+    tests: [],
     ...partial,
   }
 }
@@ -111,6 +123,7 @@ export function createDecisionTable(
     inputClauses: [],
     outputClauses: [],
     rules: [],
+    tests: [],
     ...partial,
   }
 }

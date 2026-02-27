@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useMainContext } from '@/context'
+import { getNodeTests } from '@/lib/model'
 import { Button } from './ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover'
 import {
@@ -67,8 +68,7 @@ export function TestResultsPopover() {
         (node) =>
           node.content.type !== 'input' &&
           node.content.type !== 'constant' &&
-          node.tests &&
-          node.tests.length > 0
+          getNodeTests(node).length > 0
       ),
     [model.nodes]
   )
@@ -85,8 +85,7 @@ export function TestResultsPopover() {
       (node) =>
         node.content.type !== 'input' &&
         node.content.type !== 'constant' &&
-        node.tests &&
-        node.tests.length > 0
+        getNodeTests(node).length > 0
     )
 
     const iTests = model.integrationTests ?? []
@@ -97,7 +96,7 @@ export function TestResultsPopover() {
     const initial: NodeTestState[] = nodes.map((node) => ({
       nodeId: node.id,
       nodeName: node.name,
-      tests: node.tests!.map((tc) => ({
+      tests: getNodeTests(node).map((tc) => ({
         testId: tc.id,
         testName: tc.name,
         result: 'running' as const,
@@ -124,10 +123,11 @@ export function TestResultsPopover() {
       // Phase 1: Unit tests
       for (let ni = 0; ni < nodes.length; ni++) {
         const node = nodes[ni]
-        for (let ti = 0; ti < node.tests!.length; ti++) {
+        const nodeTests = getNodeTests(node)
+        for (let ti = 0; ti < nodeTests.length; ti++) {
           if (controller.signal.aborted) return
 
-          const testCase = node.tests![ti]
+          const testCase = nodeTests[ti]
           let result: TestResult
           try {
             result = await runNodeTest(

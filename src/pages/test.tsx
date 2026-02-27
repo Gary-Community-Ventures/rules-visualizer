@@ -55,6 +55,7 @@ export function TestPage() {
         },
       },
     ],
+    tests: [],
   })
 
   return <ContextInput context={context} updateContext={setContext} />

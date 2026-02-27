@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type { ModelNode, ModelNodes, NodeTestCase } from '@/lib/model'
-import { createTestCase } from '@/lib/model'
+import { createTestCase, getNodeTests } from '@/lib/model'
 import { useUpdateNode, useUpdateDiff } from '@/context'
 import { runNodeTest, type TestResult } from '@/lib/api/dmn-api'
 import { useMainContext } from '@/context'
@@ -8,10 +8,10 @@ import { Button } from '../ui/button'
 import {
   Table,
   TableRow,
-  TableInputCell,
   TableTextCell,
   TableFeelCell,
 } from '../table'
+import { TextInput } from './text'
 import {
   Plus,
   Play,
@@ -50,8 +50,8 @@ export function NodeTests({ node, allNodes, diff }: NodeTestsProps) {
 
   const hasDiff = diff !== undefined
 
-  const tests = node.tests ?? []
-  const diffTests = diff?.tests ?? []
+  const tests = getNodeTests(node)
+  const diffTests = diff ? getNodeTests(diff) : []
 
   // Only show input fields for non-constant dependencies (constants are
   // included in the mini model as-is and don't need user-provided values).
@@ -62,19 +62,31 @@ export function NodeTests({ node, allNodes, diff }: NodeTestsProps) {
     .filter((dep) => dep && dep.content.type !== 'constant')
 
   const updateTests = (updater: (tests: NodeTestCase[]) => NodeTestCase[]) => {
-    updateNode(node.id, (n) => ({
-      ...n,
-      tests: updater(n.tests ?? []),
-    }))
+    updateNode(node.id, (n) => {
+      const content = n.content
+      if (content.type === 'context' || content.type === 'decisionTable') {
+        return {
+          ...n,
+          content: { ...content, tests: updater(content.tests) },
+        }
+      }
+      return n
+    })
   }
 
   const updateDiffTests = (
     updater: (tests: NodeTestCase[]) => NodeTestCase[]
   ) => {
-    updateDiff(node.id, (d) => ({
-      ...d,
-      tests: updater(d.tests ?? []),
-    }))
+    updateDiff(node.id, (d) => {
+      const content = d.content
+      if (content.type === 'context' || content.type === 'decisionTable') {
+        return {
+          ...d,
+          content: { ...content, tests: updater(content.tests) },
+        }
+      }
+      return d
+    })
   }
 
   const addTest = () => {
@@ -392,33 +404,30 @@ function TestCard({
         testResult?.passed === false && 'border-red-300 bg-red-50/50'
       )}
     >
-      {/* Header: Name table + Action buttons */}
+      {/* Header: Name + Action buttons */}
       <div className="flex items-center gap-2">
         <div className="flex-1">
-          <Table columns={hasDiff && !isRemoved ? 2 : 1}>
-            <TableRow>
-              {hasDiff && !isRemoved && (
-                <TableInputCell
-                  value={oldTestCase?.name ?? ''}
-                  onChange={() => {}}
-                  disabled
-                  className="bg-gray-100"
-                />
-              )}
-              <TableInputCell
-                value={testCase.name}
-                onChange={(v) =>
-                  onChange?.((prev) =>
-                    prev.map((t) =>
-                      t.id === testCase.id ? { ...t, name: v } : t
-                    )
-                  )
-                }
-                disabled={isRemoved}
-                className={diffClass(oldTestCase?.name ?? '', testCase.name)}
-              />
-            </TableRow>
-          </Table>
+          <TextInput
+            text={oldTestCase?.name ?? testCase.name}
+            updateText={(v) =>
+              onChange?.((prev) =>
+                prev.map((t) => (t.id === testCase.id ? { ...t, name: v } : t))
+              )
+            }
+            diff={
+              hasDiff && !isRemoved
+                ? {
+                    new: testCase.name,
+                    update: (v) =>
+                      onChange?.((prev) =>
+                        prev.map((t) =>
+                          t.id === testCase.id ? { ...t, name: v } : t
+                        )
+                      ),
+                  }
+                : undefined
+            }
+          />
         </div>
         {!isRemoved && (
           <div className="flex items-center gap-1">
