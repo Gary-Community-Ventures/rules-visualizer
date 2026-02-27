@@ -25,6 +25,8 @@ type ExecutionActions = {
   reset: () => void
 }
 
+type RightBarOptions = 'ai' | null
+
 type MainContext = {
   model: Model
   setModel: Dispatch<SetStateAction<Model>>
@@ -49,6 +51,8 @@ type MainContext = {
   setLastError: Dispatch<SetStateAction<string | null>>
   execution: ExecutionActions
   socket: Socket
+  rightBar: RightBarOptions
+  setRightBar: Dispatch<SetStateAction<RightBarOptions>>
 }
 
 const MainContext = createContext<MainContext | undefined>(undefined)
@@ -71,6 +75,7 @@ export function Wrapper({ children }: { children: React.ReactNode }) {
   const [lastRunTimestamp, setLastRunTimestamp] = useState<number | null>(null)
   const [resultStale, setResultStale] = useState(false)
   const [lastError, setLastError] = useState<string | null>(null)
+  const [rightBar, setRightBar] = useState<RightBarOptions>(null)
 
   // Single shared refs for execution
   const abortRef = useRef<AbortController | null>(null)
@@ -251,6 +256,8 @@ export function Wrapper({ children }: { children: React.ReactNode }) {
     setLastError,
     execution,
     socket,
+    rightBar,
+    setRightBar,
   }
   return <MainContext.Provider value={value}>{children}</MainContext.Provider>
 }
@@ -275,7 +282,11 @@ export function useUpdateNode() {
   const { setModel, model, socket } = useMainContext()
   const debounce = useDebounce(SAVE_DEBOUNCE)
 
-  return (id: string, updater: (node: ModelNode) => ModelNode, config?: NodeUpdateConfig) => {
+  return (
+    id: string,
+    updater: (node: ModelNode) => ModelNode,
+    config?: NodeUpdateConfig
+  ) => {
     const updated = updater(model.nodes[id])
     setModel({
       ...model,
@@ -387,11 +398,15 @@ export function useResolveDiff() {
         const existing = model.nodes[id]
         if (existing) {
           // Preserve existing docs when the diff doesn't include them
-          updateNode(id, (node) => ({
-            ...diff,
-            description: diff.description ?? node.description,
-            links: diff.links ?? node.links,
-          }), { noEmit: true })
+          updateNode(
+            id,
+            (node) => ({
+              ...diff,
+              description: diff.description ?? node.description,
+              links: diff.links ?? node.links,
+            }),
+            { noEmit: true }
+          )
         } else {
           // New node from diff — add it directly
           addNode(id, diff, { noEmit: true })

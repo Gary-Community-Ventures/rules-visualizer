@@ -14,6 +14,7 @@ import {
   Hash,
   Braces,
   Table as TableIcon,
+  Sparkles,
 } from 'lucide-react'
 import {
   createNode,
@@ -117,6 +118,8 @@ export function ToolBar() {
     setOpenNode,
     execution,
     diffs,
+    rightBar,
+    setRightBar,
   } = useMainContext()
   const addNode = useAddNode()
   const [search, setSearch] = useState('')
@@ -239,6 +242,14 @@ export function ToolBar() {
         <TestResultsPopover />
         <AlertsPopover />
         <InputModal />
+        <Button
+          variant={rightBar === 'ai' ? 'default' : 'outline'}
+          size="icon"
+          title="AI Assistant"
+          onClick={() => setRightBar(rightBar === 'ai' ? null : 'ai')}
+        >
+          <Sparkles className="size-4" />
+        </Button>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
@@ -255,11 +266,15 @@ export function ToolBar() {
             <DropdownMenuItem
               onSelect={() => {
                 const name = model.name || 'untitled'
-                exportDmnXml(model).then(xml => {
-                  downloadFile(`${name}.dmn`, xml, 'application/xml')
-                }).catch(err => {
-                  alert(`Export failed: ${err instanceof Error ? err.message : 'Unknown error'}`)
-                })
+                exportDmnXml(model)
+                  .then((xml) => {
+                    downloadFile(`${name}.dmn`, xml, 'application/xml')
+                  })
+                  .catch((err) => {
+                    alert(
+                      `Export failed: ${err instanceof Error ? err.message : 'Unknown error'}`
+                    )
+                  })
               }}
             >
               <Download className="size-4" />

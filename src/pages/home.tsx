@@ -35,6 +35,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { cloneContent, generateId, uniqueName } from '@/lib/model'
 import { cn } from '@/lib/utils'
+import { AIPanel } from '@/components/ai-panel'
 
 export function HomePage() {
   const { model, selectedNodes, showChildren, diffs } = useMainContext()
@@ -59,7 +60,8 @@ export function HomePage() {
 }
 
 export function NodeMapLayout({ children }: PropsWithChildren) {
-  const { model, openNode, setOpenNode, setSelectedNodes } = useMainContext()
+  const { model, openNode, setOpenNode, setSelectedNodes, rightBar } =
+    useMainContext()
   const addNode = useAddNode()
   const deleteNode = useDeleteNode()
   const openNodeData = useFindNode(openNode)
@@ -77,7 +79,7 @@ export function NodeMapLayout({ children }: PropsWithChildren) {
       window.dispatchEvent(new CustomEvent('containerresize'))
     })
     return () => cancelAnimationFrame(frameId)
-  }, [openNode])
+  }, [openNode, rightBar])
   const dependentIds = openNode ? getDependents(openNode, model.nodes) : []
   const dependentNames = dependentIds.map((id) => model.nodes[id]?.name ?? id)
 
@@ -221,6 +223,14 @@ export function NodeMapLayout({ children }: PropsWithChildren) {
       <ResizablePanel defaultSize="50%" minSize="20%">
         {children}
       </ResizablePanel>
+      {rightBar !== null && (
+        <>
+          <ResizableHandle withHandle />
+          <ResizablePanel defaultSize="25%" minSize="15%">
+            {rightBar === 'ai' && <AIPanel />}
+          </ResizablePanel>
+        </>
+      )}
     </ResizablePanelGroup>
   )
 }
