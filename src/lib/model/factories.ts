@@ -23,7 +23,7 @@ import type {
 export function getNodeTests(node: ModelNode): NodeTestCase[] {
   const content = node.content
   if (content.type === 'context' || content.type === 'decisionTable') {
-    return content.tests
+    return content.tests ?? []
   }
   return []
 }
