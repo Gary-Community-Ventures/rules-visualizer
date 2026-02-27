@@ -22,6 +22,8 @@ import {
   ContextMenuSeparator,
   ContextMenuTrigger,
 } from './ui/context-menu'
+import { Popover, PopoverContent, PopoverAnchor } from './ui/popover'
+import { ExternalLink } from 'lucide-react'
 
 type InputCellProps = {
   value: string
@@ -93,6 +95,91 @@ export function TableTextCell({ children, className }: TableTextCellProps) {
     >
       {children}
     </div>
+  )
+}
+
+type TableContentCellProps = PropsWithChildren<{
+  className?: string
+}>
+
+export function TableContentCell({
+  children,
+  className,
+}: TableContentCellProps) {
+  return (
+    <div
+      className={cn(
+        'flex items-center justify-center border p-2 w-full h-full',
+        className
+      )}
+    >
+      {children}
+    </div>
+  )
+}
+
+type TableLinkCellProps = {
+  value: string
+  onChange: (value: string) => void
+  className?: string
+  disabled?: boolean
+}
+
+export function TableLinkCell({
+  value,
+  onChange,
+  className,
+  disabled,
+}: TableLinkCellProps) {
+  const [isFocused, setIsFocused] = useState(false)
+  const trimmed = value.trim()
+  const hasProtocol =
+    trimmed.startsWith('http://') || trimmed.startsWith('https://')
+  const looksLikeUrl =
+    trimmed.length > 0 && (hasProtocol || /^[\w-]+\.[\w.-]+/.test(trimmed))
+  const fullUrl = hasProtocol ? trimmed : `https://${trimmed}`
+
+  const handleClick = (e: React.MouseEvent) => {
+    if ((e.ctrlKey || e.metaKey) && looksLikeUrl) {
+      e.preventDefault()
+      window.open(fullUrl, '_blank', 'noopener,noreferrer')
+    }
+  }
+
+  return (
+    <Popover open={isFocused && looksLikeUrl}>
+      <PopoverAnchor className="h-full">
+        <TextBox
+          className={cn(
+            'block border rounded-none m-0 p-2 w-full box-border text-sm font-mono',
+            looksLikeUrl && 'text-blue-600 underline cursor-pointer',
+            className
+          )}
+          value={value}
+          disabled={disabled}
+          onChange={(e) => onChange(e.target.value.replace(/\n/g, ''))}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}
+          onClick={handleClick}
+        />
+      </PopoverAnchor>
+      <PopoverContent
+        side="top"
+        align="start"
+        className="w-auto p-2"
+        onOpenAutoFocus={(e) => e.preventDefault()}
+      >
+        <a
+          href={fullUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800 hover:underline"
+        >
+          <ExternalLink className="size-4" />
+          {fullUrl}
+        </a>
+      </PopoverContent>
+    </Popover>
   )
 }
 

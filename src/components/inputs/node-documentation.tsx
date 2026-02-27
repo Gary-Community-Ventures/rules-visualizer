@@ -3,9 +3,8 @@ import type { ModelNode, NodeLink } from '@/lib/model'
 import { createLink } from '@/lib/model'
 import { useUpdateNode, useUpdateDiff } from '@/context'
 import { Button } from '../ui/button'
-import { Input } from '../ui/input'
-import { Textarea } from '../ui/textarea'
-import { Plus, Trash2, ChevronRight } from 'lucide-react'
+import { Table, TableRow, TableInputCell, TableLinkCell } from '../table'
+import { Plus, ChevronRight, PlusIcon, ArrowUpIcon, ArrowDownIcon, TrashIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 type NodeDocumentationProps = {
@@ -23,26 +22,17 @@ export function NodeDocumentation({ node, diff }: NodeDocumentationProps) {
   const diffLinks = diff?.links ?? []
   const activeLinks = hasDiff ? diffLinks : links
 
-  const descriptionChanged =
-    hasDiff && (diff.description ?? '') !== (node.description ?? '')
-  const linksChanged =
-    hasDiff && JSON.stringify(diffLinks) !== JSON.stringify(links)
+  const oldDescription = node.description ?? ''
+  const activeDescription = hasDiff ? (diff.description ?? '') : oldDescription
 
-  // Expand by default if there's a diff with documentation changes
+  const descriptionChanged = hasDiff && activeDescription !== oldDescription
+  const linksChanged = hasDiff && JSON.stringify(diffLinks) !== JSON.stringify(links)
+
   const [collapsed, setCollapsed] = useState(
     !(hasDiff && (descriptionChanged || linksChanged))
   )
 
-  const activeDescription = hasDiff
-    ? (diff.description ?? '')
-    : (node.description ?? '')
   const hasContent = activeDescription !== '' || activeLinks.length > 0
-
-  const linkCount = activeLinks.length
-  let headerLabel = 'Documentation'
-  if (linkCount > 0) {
-    headerLabel = `Documentation (${linkCount} links)`
-  }
 
   const updateDescription = (value: string) => {
     if (hasDiff) {
@@ -60,115 +50,99 @@ export function NodeDocumentation({ node, diff }: NodeDocumentationProps) {
     }
   }
 
-  // ─── Diff mode: merge links by ID ────────────────────────────────
-  if (hasDiff) {
-    const oldDescription = node.description ?? ''
-    const oldLinksById = new Map(links.map((l) => [l.id, l]))
-    const diffLinkIds = new Set(diffLinks.map((l) => l.id))
+  // For diff mode: compute removed links and old links map
+  const oldLinksById = new Map(links.map((l) => [l.id, l]))
+  const diffLinkIds = new Set(diffLinks.map((l) => l.id))
+  const removedLinks = hasDiff ? links.filter((l) => !diffLinkIds.has(l.id)) : []
 
-    // Removed links: in original but not in diff
-    const removedLinks = links.filter((l) => !diffLinkIds.has(l.id))
+  const getLinksActions = (_x: number, y: number) => {
+    // In diff mode, skip removed links rows
+    const linkIndex = hasDiff ? y - removedLinks.length : y
+    if (linkIndex < 0) return []
 
-    return (
-      <div className="flex flex-col gap-2">
-        <Header
-          label={headerLabel}
-          hasContent={hasContent}
-          collapsed={collapsed}
-          onToggle={() => setCollapsed((c) => !c)}
-        />
-        {!collapsed && (
-          <div className="flex flex-col gap-3">
-            {/* Description */}
-            <div className="flex flex-col gap-1.5">
-              <span className="text-xs text-muted-foreground font-medium">
-                Description
-              </span>
-              {descriptionChanged && oldDescription && (
-                <span className="text-xs text-muted-foreground line-through">
-                  {oldDescription}
-                </span>
-              )}
-              <Textarea
-                placeholder="Add a description..."
-                value={activeDescription}
-                onChange={(e) => updateDescription(e.target.value)}
-                className={cn(
-                  'text-sm min-h-[60px]',
-                  descriptionChanged && 'bg-emerald-100'
-                )}
-              />
-            </div>
+    const link = activeLinks[linkIndex]
+    if (!link) return []
 
-            {/* Links */}
-            <div className="flex flex-col gap-1.5">
-              <span className="text-xs text-muted-foreground font-medium">
-                Links
-              </span>
-              {removedLinks.map((link) => (
-                <LinkRow
-                  key={`removed-${link.id}`}
-                  link={link}
-                  disabled
-                  strikethrough
-                  className="opacity-60"
-                />
-              ))}
-              {diffLinks.map((link) => {
-                const oldLink = oldLinksById.get(link.id)
-                const isNew = !oldLink
-                const labelChanged = oldLink !== undefined && oldLink.label !== link.label
-                const urlChanged = oldLink !== undefined && oldLink.url !== link.url
+    const isFirst = linkIndex === 0
+    const isLast = linkIndex === activeLinks.length - 1
 
-                return (
-                  <LinkRow
-                    key={link.id}
-                    link={link}
-                    oldLink={oldLink}
-                    labelHighlight={isNew || labelChanged}
-                    urlHighlight={isNew || urlChanged}
-                    onLabelChange={(value) =>
-                      updateLinks((prev) =>
-                        prev.map((l) =>
-                          l.id === link.id ? { ...l, label: value } : l
-                        )
-                      )
-                    }
-                    onUrlChange={(value) =>
-                      updateLinks((prev) =>
-                        prev.map((l) =>
-                          l.id === link.id ? { ...l, url: value } : l
-                        )
-                      )
-                    }
-                    onDelete={() =>
-                      updateLinks((prev) =>
-                        prev.filter((l) => l.id !== link.id)
-                      )
-                    }
-                  />
-                )
-              })}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => updateLinks((prev) => [...prev, createLink()])}
-              >
-                <Plus className="size-3.5 mr-1" />
-                Add Link
-              </Button>
-            </div>
-          </div>
-        )}
-      </div>
-    )
+    const insertActions = [
+      {
+        name: 'Insert row above',
+        Icon: PlusIcon,
+        action: () =>
+          updateLinks((prev) => {
+            const next = [...prev]
+            next.splice(linkIndex, 0, createLink())
+            return next
+          }),
+      },
+      {
+        name: 'Insert row below',
+        Icon: PlusIcon,
+        action: () =>
+          updateLinks((prev) => {
+            const next = [...prev]
+            next.splice(linkIndex + 1, 0, createLink())
+            return next
+          }),
+      },
+    ]
+
+    const shiftActions = [
+      ...(!isFirst
+        ? [
+            {
+              name: 'Shift up',
+              Icon: ArrowUpIcon,
+              action: () =>
+                updateLinks((prev) => {
+                  const next = [...prev]
+                  const temp = next[linkIndex - 1]
+                  next[linkIndex - 1] = next[linkIndex]
+                  next[linkIndex] = temp
+                  return next
+                }),
+            },
+          ]
+        : []),
+      ...(!isLast
+        ? [
+            {
+              name: 'Shift down',
+              Icon: ArrowDownIcon,
+              action: () =>
+                updateLinks((prev) => {
+                  const next = [...prev]
+                  const temp = next[linkIndex]
+                  next[linkIndex] = next[linkIndex + 1]
+                  next[linkIndex + 1] = temp
+                  return next
+                }),
+            },
+          ]
+        : []),
+    ]
+
+    const deleteActions = [
+      {
+        name: 'Delete row',
+        Icon: TrashIcon,
+        variant: 'destructive' as const,
+        action: () => updateLinks((prev) => prev.filter((l) => l.id !== link.id)),
+      },
+    ]
+
+    return [
+      insertActions,
+      ...(shiftActions.length > 0 ? [shiftActions] : []),
+      deleteActions,
+    ]
   }
 
-  // ─── Normal mode ─────────────────────────────────────────────────
   return (
     <div className="flex flex-col gap-2">
       <Header
-        label={headerLabel}
         hasContent={hasContent}
         collapsed={collapsed}
         onToggle={() => setCollapsed((c) => !c)}
@@ -180,12 +154,23 @@ export function NodeDocumentation({ node, diff }: NodeDocumentationProps) {
             <span className="text-xs text-muted-foreground font-medium">
               Description
             </span>
-            <Textarea
-              placeholder="Add a description..."
-              value={activeDescription}
-              onChange={(e) => updateDescription(e.target.value)}
-              className="text-sm min-h-[60px]"
-            />
+            <Table columns={hasDiff ? 2 : 1}>
+              <TableRow>
+                {hasDiff && (
+                  <TableInputCell
+                    value={oldDescription}
+                    onChange={() => {}}
+                    disabled
+                    className="bg-gray-100"
+                  />
+                )}
+                <TableInputCell
+                  value={activeDescription}
+                  onChange={updateDescription}
+                  className={descriptionChanged ? 'bg-emerald-100' : ''}
+                />
+              </TableRow>
+            </Table>
           </div>
 
           {/* Links */}
@@ -193,29 +178,87 @@ export function NodeDocumentation({ node, diff }: NodeDocumentationProps) {
             <span className="text-xs text-muted-foreground font-medium">
               Links
             </span>
-            {links.map((link) => (
-              <LinkRow
-                key={link.id}
-                link={link}
-                onLabelChange={(value) =>
-                  updateLinks((prev) =>
-                    prev.map((l) =>
-                      l.id === link.id ? { ...l, label: value } : l
-                    )
-                  )
-                }
-                onUrlChange={(value) =>
-                  updateLinks((prev) =>
-                    prev.map((l) =>
-                      l.id === link.id ? { ...l, url: value } : l
-                    )
-                  )
-                }
-                onDelete={() =>
-                  updateLinks((prev) => prev.filter((l) => l.id !== link.id))
-                }
-              />
-            ))}
+            <Table columns={hasDiff ? 4 : 2} getActions={getLinksActions}>
+              {/* Removed links (diff mode only) */}
+              {removedLinks.map((link) => (
+                <TableRow key={`removed-${link.id}`}>
+                  <TableInputCell
+                    value={link.label}
+                    onChange={() => {}}
+                    disabled
+                    className="bg-red-100 line-through opacity-60"
+                  />
+                  <TableInputCell
+                    value=""
+                    onChange={() => {}}
+                    disabled
+                    className="bg-gray-50"
+                  />
+                  <TableLinkCell
+                    value={link.url}
+                    onChange={() => {}}
+                    disabled
+                    className="bg-red-100 line-through opacity-60"
+                  />
+                  <TableLinkCell
+                    value=""
+                    onChange={() => {}}
+                    disabled
+                    className="bg-gray-50"
+                  />
+                </TableRow>
+              ))}
+              {/* Active links */}
+              {activeLinks.map((link) => {
+                const oldLink = oldLinksById.get(link.id)
+                const isNew = hasDiff && !oldLink
+                const labelChanged = hasDiff && oldLink && oldLink.label !== link.label
+                const urlChanged = hasDiff && oldLink && oldLink.url !== link.url
+
+                return (
+                  <TableRow key={link.id}>
+                    {hasDiff && (
+                      <TableInputCell
+                        value={oldLink?.label ?? ''}
+                        onChange={() => {}}
+                        disabled
+                        className="bg-gray-100"
+                      />
+                    )}
+                    <TableInputCell
+                      value={link.label}
+                      onChange={(v) =>
+                        updateLinks((prev) =>
+                          prev.map((l) =>
+                            l.id === link.id ? { ...l, label: v } : l
+                          )
+                        )
+                      }
+                      className={isNew || labelChanged ? 'bg-emerald-100' : ''}
+                    />
+                    {hasDiff && (
+                      <TableLinkCell
+                        value={oldLink?.url ?? ''}
+                        onChange={() => {}}
+                        disabled
+                        className="bg-gray-100"
+                      />
+                    )}
+                    <TableLinkCell
+                      value={link.url}
+                      onChange={(v) =>
+                        updateLinks((prev) =>
+                          prev.map((l) =>
+                            l.id === link.id ? { ...l, url: v } : l
+                          )
+                        )
+                      }
+                      className={isNew || urlChanged ? 'bg-emerald-100' : ''}
+                    />
+                  </TableRow>
+                )
+              })}
+            </Table>
             <Button
               variant="outline"
               size="sm"
@@ -234,12 +277,10 @@ export function NodeDocumentation({ node, diff }: NodeDocumentationProps) {
 // ─── Shared sub-components ────────────────────────────────────────────
 
 function Header({
-  label,
   hasContent,
   collapsed,
   onToggle,
 }: {
-  label: string
   hasContent: boolean
   collapsed: boolean
   onToggle: () => void
@@ -256,92 +297,10 @@ function Header({
           !collapsed && 'rotate-90'
         )}
       />
-      {label}
+      Documentation
       {hasContent && collapsed && (
         <span className="size-1.5 rounded-full bg-muted-foreground/50" />
       )}
     </button>
-  )
-}
-
-function LinkRow({
-  link,
-  oldLink,
-  disabled,
-  strikethrough,
-  className,
-  labelHighlight,
-  urlHighlight,
-  onLabelChange,
-  onUrlChange,
-  onDelete,
-}: {
-  link: NodeLink
-  oldLink?: NodeLink
-  disabled?: boolean
-  strikethrough?: boolean
-  className?: string
-  labelHighlight?: boolean
-  urlHighlight?: boolean
-  onLabelChange?: (value: string) => void
-  onUrlChange?: (value: string) => void
-  onDelete?: () => void
-}) {
-  return (
-    <div className={cn('flex flex-col gap-1', className)}>
-      {/* Show old values struck through when modified */}
-      {oldLink && (oldLink.label !== link.label || oldLink.url !== link.url) && (
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-muted-foreground line-through flex-1 truncate">
-            {oldLink.label}
-          </span>
-          <span className="text-xs text-muted-foreground line-through flex-1 truncate">
-            {oldLink.url}
-          </span>
-          <div className="w-7 shrink-0" />
-        </div>
-      )}
-      <div className="flex items-center gap-2">
-        <Input
-          placeholder="Label"
-          value={link.label}
-          disabled={disabled}
-          onChange={
-            onLabelChange ? (e) => onLabelChange(e.target.value) : undefined
-          }
-          className={cn(
-            'h-7 text-sm flex-1',
-            strikethrough && 'line-through',
-            labelHighlight && 'bg-emerald-100'
-          )}
-        />
-        <Input
-          type="url"
-          placeholder="https://example.com"
-          value={link.url}
-          disabled={disabled}
-          onChange={
-            onUrlChange ? (e) => onUrlChange(e.target.value) : undefined
-          }
-          className={cn(
-            'h-7 text-sm flex-1',
-            strikethrough && 'line-through',
-            urlHighlight && 'bg-emerald-100'
-          )}
-        />
-        {onDelete ? (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-7 w-7 shrink-0 text-muted-foreground hover:text-red-600"
-            onClick={onDelete}
-          >
-            <Trash2 className="size-3.5" />
-          </Button>
-        ) : (
-          <div className="w-7 shrink-0" />
-        )}
-      </div>
-    </div>
   )
 }
