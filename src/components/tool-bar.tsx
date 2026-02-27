@@ -49,7 +49,6 @@ import {
   useComboboxAnchor,
 } from './ui/combobox'
 import { InputModal } from './input-modal'
-import { Link } from '@tanstack/react-router'
 import { AlertsPopover } from './alerts-popover'
 import { TestResultsPopover } from './test-results-popover'
 
@@ -231,11 +230,6 @@ export function ToolBar() {
       <div className="ml-auto flex items-center gap-3">
         <ExecutionError />
         <LastRunDisplay />
-        <Button variant="outline" size="icon" title="Constants" asChild>
-          <Link to="/constants">
-            <Hash className="size-4" />
-          </Link>
-        </Button>
         <TestResultsPopover />
         <AlertsPopover />
         <InputModal />
