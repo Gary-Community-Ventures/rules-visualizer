@@ -8,6 +8,7 @@ import {
   type SetStateAction,
 } from 'react'
 import { useMainContext } from '@/context'
+import { useSocket } from '@/lib/sockets'
 import { Button } from './ui/button'
 import { X, Send, ChevronRight } from 'lucide-react'
 import { ChatEditor } from './chat-editor'
@@ -16,13 +17,11 @@ import { cn } from '@/lib/utils'
 type UserMessage = {
   type: 'userMessage'
   message: string
-  contexts: string[]
 }
 
 type AIMessage = {
   type: 'aiMessage'
   message: string
-  contexts: string[]
 }
 
 type ToolCall = {
@@ -30,10 +29,17 @@ type ToolCall = {
   name: string
   status: 'pending' | 'success' | 'error'
   result?: string
-  contexts: string[]
+  contexts?: string[]
 }
 
-type ChatMessage = UserMessage | AIMessage | ToolCall
+type SubAgent = {
+  type: 'subAgent'
+  name: string
+  status: 'pending' | 'success' | 'error'
+  messages: ChatMessage[]
+}
+
+type ChatMessage = UserMessage | AIMessage | ToolCall | SubAgent
 
 type ChatContextType = {
   messages: ChatMessage[]
@@ -56,44 +62,53 @@ function ChatProvider({ children }: { children: ReactNode }) {
     {
       type: 'userMessage',
       message: 'Can you help me add a new eligibility rule?',
-      contexts: [
-        'c0000000-0000-0000-0000-000000000008',
-        'c0000000-0000-0000-0000-000000000005',
-      ],
     },
     {
       type: 'aiMessage',
       message:
         "I'd be happy to help you add a new eligibility rule. Based on the context you've provided, I can see you're working with Income_Threshold and Age_Eligibility nodes. What kind of rule would you like to add?",
-      contexts: [
-        'c0000000-0000-0000-0000-000000000008',
-        'c0000000-0000-0000-0000-000000000005',
-      ],
     },
     {
       type: 'userMessage',
       message:
         'Add a rule that checks if the applicant has been employed for at least 2 years',
-      contexts: [],
     },
     {
       type: 'toolCall',
       name: 'create_node',
       status: 'success',
       result: 'Created node: Employment_Duration',
-      contexts: ['c0000000-0000-0000-0000-00000000000a'],
     },
     {
       type: 'aiMessage',
       message:
         "I've created a new node called Employment_Duration. Now I'll add it as a dependency to your eligibility factors.",
-      contexts: ['c0000000-0000-0000-0000-00000000000a'],
+    },
+    {
+      type: 'subAgent',
+      name: 'Research Agent',
+      status: 'success',
+      messages: [
+        {
+          type: 'aiMessage',
+          message: 'Analyzing existing eligibility rules in the model...',
+        },
+        {
+          type: 'toolCall',
+          name: 'read_node',
+          status: 'success',
+          result: 'Found 3 existing eligibility rules',
+        },
+        {
+          type: 'aiMessage',
+          message: 'Research complete. Found patterns for eligibility rules.',
+        },
+      ],
     },
     {
       type: 'toolCall',
       name: 'update_node',
       status: 'pending',
-      contexts: [],
     },
   ])
 
@@ -136,8 +151,9 @@ export function AIPanel() {
 
 function ChatBox() {
   const { model, setOpenNode } = useMainContext()
-  const { addMessage, setMessages } = useChatContext()
+  const { addMessage } = useChatContext()
   const [message, setMessage] = useState('')
+  const socket = useSocket()
 
   // Build name -> id map for parsing mentions and clicking
   const nameToId = useMemo(() => {
@@ -153,86 +169,14 @@ function ChatBox() {
     [model.nodes]
   )
 
-  // Parse node names from message and extract context IDs
-  const parseContexts = (text: string): string[] => {
-    const contexts: string[] = []
-    const lowerText = text.toLowerCase()
-    for (const [name, id] of nameToId.entries()) {
-      if (lowerText.includes(name)) {
-        contexts.push(id)
-      }
-    }
-    return [...new Set(contexts)]
-  }
-
-  const simulateResponse = async (contexts: string[]) => {
-    // Add pending tool call
-    addMessage({
-      type: 'toolCall',
-      name: 'analyze_model',
-      status: 'pending',
-      contexts,
-    })
-
-    // Complete first tool call after delay
-    await new Promise((r) => setTimeout(r, 800))
-    setMessages((prev) => {
-      const updated = [...prev]
-      const idx = updated.length - 1
-      if (updated[idx]?.type === 'toolCall') {
-        updated[idx] = {
-          ...updated[idx],
-          status: 'success',
-          result: 'Analyzed model structure and dependencies',
-        } as ToolCall
-      }
-      return updated
-    })
-
-    // Add second tool call
-    await new Promise((r) => setTimeout(r, 300))
-    addMessage({
-      type: 'toolCall',
-      name: 'suggest_changes',
-      status: 'pending',
-      contexts,
-    })
-
-    // Complete second tool call
-    await new Promise((r) => setTimeout(r, 600))
-    setMessages((prev) => {
-      const updated = [...prev]
-      const idx = updated.length - 1
-      if (updated[idx]?.type === 'toolCall') {
-        updated[idx] = {
-          ...updated[idx],
-          status: 'success',
-          result: 'Generated suggestions based on analysis',
-        } as ToolCall
-      }
-      return updated
-    })
-
-    // Add AI response
-    await new Promise((r) => setTimeout(r, 400))
-    addMessage({
-      type: 'aiMessage',
-      message:
-        "I've analyzed your request and made the necessary changes. The model has been updated accordingly. Is there anything else you'd like me to help with?",
-      contexts,
-    })
-  }
-
   const handleSubmit = () => {
     if (!message.trim()) return
-    const contexts = parseContexts(message)
     addMessage({
       type: 'userMessage',
       message: message.trim(),
-      contexts,
     })
+    socket.emit('ai-chat', { message: message.trim() })
     setMessage('')
-    simulateResponse(contexts)
   }
 
   const handleNodeClick = (name: string) => {
@@ -280,6 +224,8 @@ function ChatMessageView({ message }: { message: ChatMessage }) {
       return <AIMessageView message={message} />
     case 'toolCall':
       return <ToolCallView message={message} />
+    case 'subAgent':
+      return <SubAgentView message={message} />
   }
 }
 
@@ -388,7 +334,7 @@ function AIMessageView({ message }: { message: AIMessage }) {
 
 function ToolCallView({ message }: { message: ToolCall }) {
   const [expanded, setExpanded] = useState(false)
-  const hasContent = message.result || message.contexts.length > 0
+  const hasContent = message.result || (message.contexts && message.contexts.length > 0)
 
   return (
     <div className="border rounded-lg overflow-hidden text-sm">
@@ -428,12 +374,54 @@ function ToolCallView({ message }: { message: ToolCall }) {
               {message.result}
             </div>
           )}
-          {message.contexts.length > 0 && (
+          {message.contexts && message.contexts.length > 0 && (
             <div className="px-3 py-2 border-t">
               <ContextChips contexts={message.contexts} />
             </div>
           )}
         </>
+      )}
+    </div>
+  )
+}
+
+function SubAgentView({ message }: { message: SubAgent }) {
+  const [expanded, setExpanded] = useState(false)
+
+  return (
+    <div className="border border-dashed rounded-lg overflow-hidden text-sm">
+      <button
+        type="button"
+        className={cn(
+          'flex items-center gap-2 px-3 py-1.5 bg-muted/50 w-full text-left',
+          'cursor-pointer hover:bg-muted/70',
+          expanded && 'border-b'
+        )}
+        onClick={() => setExpanded(!expanded)}
+      >
+        <ChevronRight
+          className={cn(
+            'size-3 transition-transform',
+            expanded && 'rotate-90'
+          )}
+        />
+        <span className="text-xs font-medium">{message.name}</span>
+        {message.status === 'pending' && (
+          <span className="text-xs text-muted-foreground">Running...</span>
+        )}
+        {message.status === 'success' && (
+          <span className="text-xs text-emerald-600">Done</span>
+        )}
+        {message.status === 'error' && (
+          <span className="text-xs text-red-600">Error</span>
+        )}
+      </button>
+      {expanded && (
+        <div className="p-3 flex flex-col gap-3">
+          {message.messages.map((msg, index) => (
+            <ChatMessageView key={index} message={msg} />
+          ))}
+        </div>
       )}
     </div>
   )

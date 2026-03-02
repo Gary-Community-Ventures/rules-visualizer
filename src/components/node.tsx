@@ -1,6 +1,11 @@
+import { useState } from 'react'
 import {
+  useAddNode,
+  useDeleteNode,
   useDiff,
+  useFindNode,
   useMainContext,
+  useResolveDiff,
   useUpdateDiff,
   useUpdateNode,
 } from '@/context'
@@ -12,6 +17,11 @@ import {
   Hash,
   Braces,
   Table as TableIcon,
+  Check,
+  Copy,
+  EllipsisVertical,
+  Trash2,
+  X,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Editor } from './inputs/editor'
@@ -20,8 +30,23 @@ import { NodeResultBadge } from './node-result'
 import { TextInput } from './inputs/text'
 import { NodeTests } from './inputs/node-tests'
 import { NodeDocumentation } from './inputs/node-documentation'
-import type { ModelNode } from '@/lib/model'
+import { cloneContent, generateId, uniqueName, type ModelNode } from '@/lib/model'
+import { getDependents } from '@/lib/graph'
 import { useMemo } from 'react'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 
 const NODE_TYPE_CONFIG = {
   input: {
@@ -251,5 +276,149 @@ export function Rows({ rows }: RowsProps) {
         )
       })}
     </div>
+  )
+}
+
+export function NodePanel() {
+  const { model, openNode, setOpenNode, setSelectedNodes } = useMainContext()
+  const addNode = useAddNode()
+  const deleteNode = useDeleteNode()
+  const openNodeData = useFindNode(openNode)
+  const diff = useDiff(openNode ?? '')
+  const resolveDiff = useResolveDiff()
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+
+  if (openNode === null || openNodeData === undefined) {
+    return null
+  }
+
+  const dependentIds = getDependents(openNode, model.nodes)
+  const dependentNames = dependentIds.map((id) => model.nodes[id]?.name ?? id)
+
+  const isNewNode = model.nodes[openNode] === undefined && diff !== undefined
+  const isDeletedNode = diff?.deletedVersion !== undefined
+
+  const handleDelete = () => {
+    setSelectedNodes((prev) => prev.filter((id) => id !== openNode))
+    setOpenNode(null)
+    deleteNode(openNode)
+    setShowDeleteDialog(false)
+  }
+
+  const handleDuplicate = () => {
+    const existingNames = new Set(Object.values(model.nodes).map((n) => n.name))
+    const newId = generateId()
+    const newName = uniqueName(openNodeData.name, existingNames)
+    addNode(newId, {
+      id: newId,
+      name: newName,
+      typeRef: openNodeData.typeRef,
+      dependencies: [],
+      content: cloneContent(openNodeData.content),
+    })
+    setOpenNode(newId)
+  }
+
+  return (
+    <>
+      <div className="flex flex-col h-full bg-background">
+        <div className="flex items-center justify-between px-5 py-3 border-b shrink-0">
+          <h2 className="text-sm font-semibold">Edit Node</h2>
+          <div className="flex items-center gap-1">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-7 w-7">
+                  <EllipsisVertical className="size-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onSelect={handleDuplicate}>
+                  <Copy className="size-4" />
+                  Duplicate
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onSelect={() => setShowDeleteDialog(true)}
+                  className="text-destructive focus:text-destructive"
+                >
+                  <Trash2 className="size-4" />
+                  Delete
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7"
+              onClick={() => setOpenNode(null)}
+            >
+              <X className="size-4" />
+            </Button>
+          </div>
+        </div>
+        <div
+          className={cn(
+            'flex-1 overflow-y-auto p-5',
+            isNewNode && 'bg-emerald-50 border-l-4 border-emerald-400',
+            isDeletedNode && 'bg-red-50 border-l-4 border-red-400'
+          )}
+        >
+          <NodeViewer node={openNodeData} />
+        </div>
+        {diff !== undefined && (
+          <div className="shrink-0 border-t p-4 flex gap-2">
+            <Button
+              variant="outline"
+              className="flex-1 text-red-600 hover:text-red-700 hover:bg-red-50"
+              onClick={() => resolveDiff(openNode, false)}
+            >
+              <X className="size-4 mr-2" />
+              Reject
+            </Button>
+            <Button
+              variant="outline"
+              className="flex-1 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
+              onClick={() => resolveDiff(openNode, true)}
+            >
+              <Check className="size-4 mr-2" />
+              Accept
+            </Button>
+          </div>
+        )}
+      </div>
+
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete "{openNodeData.name}"?</DialogTitle>
+            <DialogDescription>
+              This will permanently remove this node from the model.
+            </DialogDescription>
+          </DialogHeader>
+          {dependentNames.length > 0 && (
+            <div className="rounded-md border border-amber-200 bg-amber-50 p-3">
+              <p className="text-sm font-medium text-amber-800">
+                The following nodes reference this node:
+              </p>
+              <ul className="mt-1.5 list-disc list-inside text-sm text-amber-700">
+                {dependentNames.map((name) => (
+                  <li key={name}>{name}</li>
+                ))}
+              </ul>
+              <p className="mt-1.5 text-xs text-amber-600">
+                Their dependency arrows will be removed.
+              </p>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowDeleteDialog(false)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleDelete}>
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }
