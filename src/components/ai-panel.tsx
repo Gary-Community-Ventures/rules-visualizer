@@ -21,6 +21,7 @@ import { ChatEditor } from './chat-editor'
 import { cn } from '@/lib/utils'
 import Markdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import { SnakeLoader } from './snake-game'
 
 type UserMessage = {
   type: 'userMessage'
@@ -36,6 +37,7 @@ type ToolCall = {
   type: 'toolCall'
   name: string
   status: 'pending' | 'success' | 'error'
+  id?: string
   result?: string
   contexts?: string[]
 }
@@ -57,6 +59,8 @@ type ChatContextType = {
   setScrollRef: (ref: HTMLDivElement | null) => void
   shouldAutoScroll: boolean
   setShouldAutoScroll: Dispatch<SetStateAction<boolean>>
+  isLoading: boolean
+  setIsLoading: Dispatch<SetStateAction<boolean>>
 }
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined)
@@ -69,60 +73,14 @@ function useChatContext() {
   return context
 }
 
+const GREETING: AIMessage = {
+  type: 'aiMessage',
+  message: "Hi, I'm Gloppy. How can I help you today?",
+}
+
 function ChatProvider({ children }: { children: ReactNode }) {
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      type: 'userMessage',
-      message: 'Can you help me add a new eligibility rule?',
-    },
-    {
-      type: 'aiMessage',
-      message:
-        "I'd be happy to help you add a new eligibility rule. Based on the context you've provided, I can see you're working with Income_Threshold and Age_Eligibility nodes. What kind of rule would you like to add?",
-    },
-    {
-      type: 'userMessage',
-      message:
-        'Add a rule that checks if the applicant has been employed for at least 2 years',
-    },
-    {
-      type: 'toolCall',
-      name: 'create_node',
-      status: 'success',
-      result: 'Created node: Employment_Duration',
-    },
-    {
-      type: 'aiMessage',
-      message:
-        "I've created a new node called Employment_Duration. Now I'll add it as a dependency to your eligibility factors.",
-    },
-    {
-      type: 'subAgent',
-      name: 'Research Agent',
-      status: 'success',
-      messages: [
-        {
-          type: 'aiMessage',
-          message: 'Analyzing existing eligibility rules in the model...',
-        },
-        {
-          type: 'toolCall',
-          name: 'read_node',
-          status: 'success',
-          result: 'Found 3 existing eligibility rules',
-        },
-        {
-          type: 'aiMessage',
-          message: 'Research complete. Found patterns for eligibility rules.',
-        },
-      ],
-    },
-    {
-      type: 'toolCall',
-      name: 'update_node',
-      status: 'pending',
-    },
-  ])
+  const [messages, setMessages] = useState<ChatMessage[]>([GREETING])
+  const [isLoading, setIsLoading] = useState(false)
 
   const [shouldAutoScroll, setShouldAutoScroll] = useState(true)
   const scrollRef = useRef<HTMLDivElement | null>(null)
@@ -152,6 +110,8 @@ function ChatProvider({ children }: { children: ReactNode }) {
         setScrollRef,
         shouldAutoScroll,
         setShouldAutoScroll,
+        isLoading,
+        setIsLoading,
       }}
     >
       {children}
@@ -185,9 +145,9 @@ export function AIPanel() {
 
 function ChatBox() {
   const { model, setOpenNode } = useMainContext()
-  const { addMessage, setMessages, setShouldAutoScroll } = useChatContext()
+  const { addMessage, setMessages, setShouldAutoScroll, setIsLoading } =
+    useChatContext()
   const [message, setMessage] = useState('')
-  const isStreamingRef = useRef(false)
 
   // Build name -> id map for parsing mentions and clicking
   const nameToId = useMemo(() => {
@@ -205,30 +165,62 @@ function ChatBox() {
 
   // Listen for AI response chunks
   useSocketEvent(socket, 'ai-chunk', (data: { chunk: string }) => {
-    if (!isStreamingRef.current) {
-      isStreamingRef.current = true
-      addMessage({ type: 'aiMessage', message: data.chunk })
-    } else {
-      setMessages((prev) => {
+    setMessages((prev) => {
+      const lastIdx = prev.length - 1
+      const last = prev[lastIdx]
+      // Append to existing AI message if present
+      if (last?.type === 'aiMessage') {
         const updated = [...prev]
-        const lastIdx = updated.length - 1
-        const last = updated[lastIdx]
-        if (last?.type === 'aiMessage') {
-          updated[lastIdx] = { ...last, message: last.message + data.chunk }
-        }
+        updated[lastIdx] = { ...last, message: last.message + data.chunk }
         return updated
+      }
+      // Only create new AI message if chunk has non-whitespace content
+      // (avoids empty boxes before tool calls, but preserves formatting in messages)
+      if (data.chunk.trim()) {
+        return [...prev, { type: 'aiMessage', message: data.chunk }]
+      }
+      return prev
+    })
+  })
+
+  // Listen for tool call start
+  useSocketEvent(
+    socket,
+    'ai-tool-start',
+    (data: { name: string; id: string }) => {
+      addMessage({
+        type: 'toolCall',
+        name: data.name,
+        status: 'pending',
+        id: data.id,
       })
     }
-  })
+  )
+
+  // Listen for tool call completion
+  useSocketEvent(
+    socket,
+    'ai-tool-end',
+    (data: { name: string; id: string; result: string }) => {
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.type === 'toolCall' && msg.id === data.id
+            ? { ...msg, status: 'success', result: data.result }
+            : msg
+        )
+      )
+    }
+  )
 
   // Listen for AI response completion
   useSocketEvent(socket, 'ai-done', () => {
-    isStreamingRef.current = false
+    setIsLoading(false)
   })
 
   const handleSubmit = () => {
     if (!message.trim()) return
     setShouldAutoScroll(true)
+    setIsLoading(true)
     addMessage({
       type: 'userMessage',
       message: message.trim(),
@@ -326,13 +318,18 @@ function ChatScrollArea() {
 }
 
 function ChatContent() {
-  const { messages } = useChatContext()
+  const { messages, isLoading } = useChatContext()
 
   return (
     <div className="flex flex-col gap-4">
       {messages.map((msg, index) => (
         <ChatMessageView key={index} message={msg} />
       ))}
+      {isLoading && (
+        <div className="text-muted-foreground">
+          <SnakeLoader />
+        </div>
+      )}
     </div>
   )
 }
@@ -399,7 +396,10 @@ function ClickableNodeText({ text }: { text: string }) {
     URL_PATTERN.lastIndex = 0
     while ((match = URL_PATTERN.exec(text)) !== null) {
       if (match.index > lastIndex) {
-        urlParts.push({ type: 'text', content: text.slice(lastIndex, match.index) })
+        urlParts.push({
+          type: 'text',
+          content: text.slice(lastIndex, match.index),
+        })
       }
       urlParts.push({ type: 'url', content: match[1] })
       lastIndex = URL_PATTERN.lastIndex
@@ -429,18 +429,26 @@ function ClickableNodeText({ text }: { text: string }) {
         nodePattern.lastIndex = 0
         while ((match = nodePattern.exec(part.content)) !== null) {
           if (match.index > nodeLastIndex) {
-            result.push({ type: 'text', content: part.content.slice(nodeLastIndex, match.index) })
+            result.push({
+              type: 'text',
+              content: part.content.slice(nodeLastIndex, match.index),
+            })
           }
           result.push({ type: 'node', content: match[1] })
           nodeLastIndex = nodePattern.lastIndex
         }
         if (nodeLastIndex < part.content.length) {
-          result.push({ type: 'text', content: part.content.slice(nodeLastIndex) })
+          result.push({
+            type: 'text',
+            content: part.content.slice(nodeLastIndex),
+          })
         }
       }
     }
 
-    return result.length > 0 ? result : [{ type: 'text' as const, content: text }]
+    return result.length > 0
+      ? result
+      : [{ type: 'text' as const, content: text }]
   }, [text, model.nodes])
 
   return (
@@ -655,7 +663,8 @@ function AIMessageView({ message }: { message: AIMessage }) {
 
 function ToolCallView({ message }: { message: ToolCall }) {
   const [expanded, setExpanded] = useState(false)
-  const hasContent = message.result || (message.contexts && message.contexts.length > 0)
+  const hasContent =
+    message.result || (message.contexts && message.contexts.length > 0)
 
   return (
     <div className="border rounded-lg overflow-hidden text-sm">
@@ -721,10 +730,7 @@ function SubAgentView({ message }: { message: SubAgent }) {
         onClick={() => setExpanded(!expanded)}
       >
         <ChevronRight
-          className={cn(
-            'size-3 transition-transform',
-            expanded && 'rotate-90'
-          )}
+          className={cn('size-3 transition-transform', expanded && 'rotate-90')}
         />
         <span className="text-xs font-medium">{message.name}</span>
         {message.status === 'pending' && (

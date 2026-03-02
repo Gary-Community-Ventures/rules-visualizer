@@ -7,7 +7,7 @@ import {
   useMatch,
   useParams,
 } from '@tanstack/react-router'
-import { AppProvider, ModelProvider, useAppContext } from './context'
+import { AppProvider, ModelProvider, useAppContext, type Tab } from '@/context'
 import { HomePage } from './pages/home'
 import { ProjectListPage } from './pages/project-list'
 import { ModelListPage } from './pages/model-list'
@@ -33,7 +33,7 @@ function RootLayout() {
   // Show Outlet when no model is active, OR when the active model has no
   // matching tab (e.g. brief frame after closing the last tab before
   // navigation completes).
-  const hasMatchingTab = tabs.some((t) => t.modelId === activeModelId)
+  const hasMatchingTab = tabs.some((t: Tab) => t.modelId === activeModelId)
   const showOutlet = activeModelId === null || !hasMatchingTab
 
   return (
@@ -41,7 +41,7 @@ function RootLayout() {
       {tabs.length > 0 && (
         <TabBar activeModelId={activeModelId} activeProjectId={activeProjectId} />
       )}
-      {tabs.map((tab) => (
+      {tabs.map((tab: Tab) => (
         <div
           key={tab.modelId}
           style={{
