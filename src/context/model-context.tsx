@@ -7,16 +7,18 @@ import {
   useRef,
   useState,
   type Dispatch,
+  type ReactNode,
   type SetStateAction,
 } from 'react'
-import type { Model, ModelNode, IntegrationTestCase } from './lib/model'
-import type { ExecutionResult, NodeResult } from './lib/engine'
-import { executeDmn } from './lib/api/dmn-api'
-import { useLocalStorage } from './lib/use-local-storage'
-import { useDebounce } from './lib/use-debounce'
-import { buildNameToIdMap, recomputeDependencies } from './lib/graph'
-import { useSocket, useSocketEvent } from './lib/sockets'
-import { deepCopy } from './lib/utils'
+import type { Model, ModelNode, IntegrationTestCase } from '@/lib/model'
+import type { ExecutionResult, NodeResult } from '@/lib/engine'
+import { executeDmn } from '@/lib/api/dmn-api'
+import { useLocalStorage } from '@/lib/use-local-storage'
+import { useDebounce } from '@/lib/use-debounce'
+import { buildNameToIdMap, recomputeDependencies } from '@/lib/graph'
+import { useSocketEvent } from '@/lib/sockets'
+import { deepCopy } from '@/lib/utils'
+import { useAppContext } from './app-context'
 import type { Socket } from 'socket.io-client'
 
 type ExecutionActions = {
@@ -27,7 +29,7 @@ type ExecutionActions = {
 
 type RightBarOptions = 'ai' | null
 
-type MainContext = {
+type ModelContextValue = {
   model: Model
   setModel: Dispatch<SetStateAction<Model>>
   hoveredNodeId: string | null
@@ -42,7 +44,7 @@ type MainContext = {
   setDiffs: Dispatch<SetStateAction<ModelNode[]>>
   executionResult: ExecutionResult | null
   isExecuting: boolean
-  inputValues: Record<string, unknown> // keyed by node ID
+  inputValues: Record<string, unknown>
   setInputValues: Dispatch<SetStateAction<Record<string, unknown>>>
   lastRunTimestamp: number | null
   resultStale: boolean
@@ -55,17 +57,25 @@ type MainContext = {
   setRightBar: Dispatch<SetStateAction<RightBarOptions>>
 }
 
-const MainContext = createContext<MainContext | undefined>(undefined)
+const ModelContext = createContext<ModelContextValue | undefined>(undefined)
 
 const EMPTY_MODEL: Model = { id: '', name: '', namespace: '', nodes: {} }
 
-export function Wrapper({ children }: { children: React.ReactNode }) {
+export function ModelProvider({
+  modelId,
+  children,
+}: {
+  modelId: string
+  children: ReactNode
+}) {
+  const { socket, updateTabName } = useAppContext()
+
   const [model, setModel] = useState<Model>(EMPTY_MODEL)
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null)
   const [selectedNodes, setSelectedNodes] = useState<string[]>([])
   const [showChildren, setShowChildren] = useLocalStorage<
     Record<string, boolean>
-  >('showChildren', {})
+  >(`showChildren:${modelId}`, {})
   const [openNode, setOpenNode] = useState<string | null>(null)
   const [diffs, setDiffs] = useState<ModelNode[]>([])
   const [executionResult, setExecutionResult] =
@@ -77,17 +87,83 @@ export function Wrapper({ children }: { children: React.ReactNode }) {
   const [lastError, setLastError] = useState<string | null>(null)
   const [rightBar, setRightBar] = useState<RightBarOptions>(null)
 
-  // Single shared refs for execution
+  // --- Socket room lifecycle ---
+  useEffect(() => {
+    socket.emit('join-model', { modelId })
+
+    const handleReconnect = () => {
+      socket.emit('join-model', { modelId })
+    }
+    socket.on('connect', handleReconnect)
+
+    return () => {
+      socket.emit('leave-model', { modelId })
+      socket.off('connect', handleReconnect)
+    }
+  }, [socket, modelId])
+
+  // --- Filtered socket event handlers ---
+  useSocketEvent(
+    socket,
+    'model',
+    (payload: { modelId: string; data: Model; diffs: ModelNode[] }) => {
+      if (payload.modelId !== modelId) return
+      setModel(payload.data)
+      setDiffs(payload.diffs)
+      if (payload.data.name) {
+        updateTabName(modelId, payload.data.name)
+      }
+    }
+  )
+
+  useSocketEvent(
+    socket,
+    'diffs',
+    (payload: {
+      modelId: string
+      data: ModelNode[]
+      isDiff: boolean
+      resolvedDiffs: string[]
+    }) => {
+      if (payload.modelId !== modelId) return
+      if (payload.isDiff) {
+        setDiffs((d) => {
+          const newDiffs = deepCopy(d)
+          for (const newDiff of payload.data) {
+            const existingDiff = newDiffs.find((d) => d.id === newDiff.id)
+            if (existingDiff) {
+              newDiffs.splice(newDiffs.indexOf(existingDiff), 1, newDiff)
+            } else {
+              newDiffs.push(newDiff)
+            }
+          }
+          return newDiffs.filter((d) => !payload.resolvedDiffs.includes(d.id))
+        })
+      } else {
+        setModel((m) => {
+          const newModel = deepCopy(m)
+          for (const diff of payload.data) {
+            if (diff.deletedVersion !== undefined) {
+              delete newModel.nodes[diff.id]
+              continue
+            }
+            newModel.nodes[diff.id] = diff
+          }
+          return newModel
+        })
+      }
+    }
+  )
+
+  // --- Execution logic ---
   const abortRef = useRef<AbortController | null>(null)
   const debounce = useDebounce(500)
-  // Use refs for latest values so execute closure doesn't go stale
   const modelRef = useRef(model)
   modelRef.current = model
   const inputValuesRef = useRef(inputValues)
   inputValuesRef.current = inputValues
 
   const execute = useCallback(() => {
-    // Guard against concurrent executions
     if (abortRef.current) {
       abortRef.current.abort()
     }
@@ -116,8 +192,6 @@ export function Wrapper({ children }: { children: React.ReactNode }) {
         console.error('Execution failed:', err)
       })
       .finally(() => {
-        // Only reset state if this controller is still the active one.
-        // If a newer execute() replaced us, it owns isExecuting now.
         if (abortRef.current === controller) {
           abortRef.current = null
           setIsExecuting(false)
@@ -179,60 +253,7 @@ export function Wrapper({ children }: { children: React.ReactNode }) {
     [execute, debouncedExecute, reset]
   )
 
-  const socket = useSocket()
-
-  useSocketEvent(
-    socket,
-    'model',
-    ({ data, diffs }: { data: Model; diffs: ModelNode[] }) => {
-      setModel(data)
-      setDiffs(diffs)
-    }
-  )
-  useSocketEvent(
-    socket,
-    'diffs',
-    ({
-      data,
-      isDiff,
-      resolvedDiffs,
-    }: {
-      data: ModelNode[]
-      isDiff: boolean
-      resolvedDiffs: string[]
-    }) => {
-      if (isDiff) {
-        setDiffs((d) => {
-          const newDiffs = deepCopy(d)
-          for (const newDiff of data) {
-            const existingDiff = newDiffs.find((d) => d.id === newDiff.id)
-            if (existingDiff) {
-              newDiffs.splice(newDiffs.indexOf(existingDiff), 1, newDiff)
-            } else {
-              newDiffs.push(newDiff)
-            }
-          }
-
-          return newDiffs.filter((d) => !resolvedDiffs.includes(d.id))
-        })
-      } else {
-        setModel((m) => {
-          const newModel = deepCopy(m)
-          for (const diff of data) {
-            if (diff.deletedVersion !== undefined) {
-              delete newModel.nodes[diff.id]
-              continue
-            }
-
-            newModel.nodes[diff.id] = diff
-          }
-          return newModel
-        })
-      }
-    }
-  )
-
-  const value = {
+  const value: ModelContextValue = {
     model,
     setModel,
     hoveredNodeId,
@@ -259,18 +280,21 @@ export function Wrapper({ children }: { children: React.ReactNode }) {
     rightBar,
     setRightBar,
   }
-  return <MainContext.Provider value={value}>{children}</MainContext.Provider>
+
+  return (
+    <ModelContext.Provider value={value}>{children}</ModelContext.Provider>
+  )
 }
 
-export function useMainContext(): MainContext {
-  const context = useContext(MainContext)
-
+export function useModelContext(): ModelContextValue {
+  const context = useContext(ModelContext)
   if (context === undefined) {
-    throw new Error("'useMainContext' must be used within the Wrapper")
+    throw new Error("'useModelContext' must be used within a ModelProvider")
   }
-
   return context
 }
+
+// --- Hooks (unchanged APIs, now read from ModelContext) ---
 
 const SAVE_DEBOUNCE = 1_000
 
@@ -279,7 +303,7 @@ type NodeUpdateConfig = {
 }
 
 export function useUpdateNode() {
-  const { setModel, model, socket } = useMainContext()
+  const { setModel, model, socket } = useModelContext()
   const debounce = useDebounce(SAVE_DEBOUNCE)
 
   return (
@@ -296,38 +320,44 @@ export function useUpdateNode() {
       },
     })
     if (!config?.noEmit) {
-      // debounce to avoid sending on every keystroke
       debounce(() => {
-        socket.emit('model-update', { updates: [updated], isDiff: false })
+        socket.emit('model-update', {
+          modelId: model.id,
+          updates: [updated],
+          isDiff: false,
+        })
       })
     }
   }
 }
 
 export function useAddNode() {
-  const { setModel, socket } = useMainContext()
+  const { setModel, socket, model } = useModelContext()
 
   return (id: string, node: ModelNode, config?: NodeUpdateConfig) => {
-    setModel((model) => ({
-      ...model,
+    setModel((prev) => ({
+      ...prev,
       nodes: {
-        ...model.nodes,
+        ...prev.nodes,
         [id]: node,
       },
     }))
     if (!config?.noEmit) {
-      socket.emit('model-update', { updates: [node], isDiff: false })
+      socket.emit('model-update', {
+        modelId: model.id,
+        updates: [node],
+        isDiff: false,
+      })
     }
   }
 }
 
 export function useDeleteNode() {
-  const { setModel, model, socket } = useMainContext()
+  const { setModel, model, socket } = useModelContext()
 
   return (id: string, config?: NodeUpdateConfig) => {
     setModel((prev) => {
       const { [id]: _, ...remaining } = prev.nodes
-      // Clean up stale references in integration tests
       const integrationTests = prev.integrationTests?.map((test) => {
         const { [id]: _input, ...restInputs } = test.inputs
         const { [id]: _assertion, ...restAssertions } = test.assertions
@@ -339,7 +369,8 @@ export function useDeleteNode() {
     if (!config?.noEmit) {
       const node = model.nodes[id]
       socket.emit('model-update', {
-        updates: [{ ...node, deletedVersion: 'TODO' }], // TODO: use real version
+        modelId: model.id,
+        updates: [{ ...node, deletedVersion: 'TODO' }],
         isDiff: false,
       })
     }
@@ -347,18 +378,17 @@ export function useDeleteNode() {
 }
 
 export function useNodeResult(nodeId: string): NodeResult | undefined {
-  const { executionResult } = useMainContext()
+  const { executionResult } = useModelContext()
   return executionResult?.nodeResults[nodeId]
 }
 
 export function useDiff(nodeId: string) {
-  const { diffs } = useMainContext()
-
+  const { diffs } = useModelContext()
   return diffs.find((diff) => diff.id === nodeId)
 }
 
 export function useUpdateDiff() {
-  const { setDiffs, diffs, socket } = useMainContext()
+  const { setDiffs, diffs, socket, model } = useModelContext()
   const debounce = useDebounce(SAVE_DEBOUNCE)
 
   return (id: string, updater: (diff: ModelNode) => ModelNode) => {
@@ -372,19 +402,21 @@ export function useUpdateDiff() {
         if (diff.id !== id) {
           return diff
         }
-
         return updated
       })
     )
-    // debounce to avoid sending on every keystroke
     debounce(() => {
-      socket.emit('model-update', { updates: [updated], isDiff: true })
+      socket.emit('model-update', {
+        modelId: model.id,
+        updates: [updated],
+        isDiff: true,
+      })
     })
   }
 }
 
 export function useResolveDiff() {
-  const { diffs, setDiffs, model, socket } = useMainContext()
+  const { diffs, setDiffs, model, socket } = useModelContext()
   const updateNode = useUpdateNode()
   const addNode = useAddNode()
   const deleteNode = useDeleteNode()
@@ -397,7 +429,6 @@ export function useResolveDiff() {
       } else if (diff) {
         const existing = model.nodes[id]
         if (existing) {
-          // Preserve existing docs when the diff doesn't include them
           updateNode(
             id,
             (node) => ({
@@ -408,7 +439,6 @@ export function useResolveDiff() {
             { noEmit: true }
           )
         } else {
-          // New node from diff — add it directly
           addNode(id, diff, { noEmit: true })
         }
       }
@@ -416,6 +446,7 @@ export function useResolveDiff() {
 
     setDiffs((diffs) => diffs.filter((diff) => diff.id !== id))
     socket.emit('model-update', {
+      modelId: model.id,
       updates: [],
       isDiff: true,
       acceptedDiffs: accept ? [id] : [],
@@ -425,23 +456,28 @@ export function useResolveDiff() {
 }
 
 export function useUpdateIntegrationTests() {
-  const { setModel, socket } = useMainContext()
+  const { setModel, socket, model } = useModelContext()
   const debounce = useDebounce(SAVE_DEBOUNCE)
 
-  return (updater: (tests: IntegrationTestCase[]) => IntegrationTestCase[]) => {
+  return (
+    updater: (tests: IntegrationTestCase[]) => IntegrationTestCase[]
+  ) => {
     let updated: IntegrationTestCase[]
     setModel((prev) => {
       updated = updater(prev.integrationTests ?? [])
       return { ...prev, integrationTests: updated }
     })
     debounce(() => {
-      socket.emit('integration-tests-update', { integrationTests: updated! })
+      socket.emit('integration-tests-update', {
+        modelId: model.id,
+        integrationTests: updated!,
+      })
     })
   }
 }
 
 export function useFindNode(nodeId: string | null): ModelNode | undefined {
-  const { model, diffs } = useMainContext()
+  const { model, diffs } = useModelContext()
 
   if (nodeId === null) {
     return undefined

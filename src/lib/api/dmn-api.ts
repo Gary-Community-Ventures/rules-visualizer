@@ -5,6 +5,16 @@ import type { ExecutionResult } from '@/lib/engine'
 // empty string (relative — works with the Vite dev proxy).
 const BASE_URL = import.meta.env.VITE_API_URL ?? import.meta.env.VITE_SOCKET_URL ?? ''
 
+async function get<T>(path: string): Promise<T> {
+  const response = await fetch(`${BASE_URL}${path}`)
+  if (!response.ok) {
+    const data = await response.json().catch(() => null)
+    const message = data?.error ?? `Request failed (${response.status})`
+    throw new Error(message)
+  }
+  return response.json()
+}
+
 async function post<T>(
   path: string,
   body: unknown,
@@ -74,4 +84,30 @@ export async function runIntegrationTest(
     { model, testCase },
     signal
   )
+}
+
+export async function listProjects(): Promise<{
+  projects: { id: string; name: string; created_at: string; updated_at: string }[]
+}> {
+  return get('/api/dmn/projects')
+}
+
+export async function createProject(
+  name: string
+): Promise<{ id: string; name: string }> {
+  return post('/api/dmn/projects', { name })
+}
+
+export async function listProjectModels(projectId: string): Promise<{
+  models: { id: string; name: string; namespace: string; updated_at: string }[]
+}> {
+  return get(`/api/dmn/projects/${projectId}/models`)
+}
+
+export async function createProjectModel(
+  projectId: string,
+  name: string,
+  namespace: string
+): Promise<{ id: string; name: string; namespace: string }> {
+  return post(`/api/dmn/projects/${projectId}/models`, { name, namespace })
 }

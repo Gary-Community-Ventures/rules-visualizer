@@ -23,7 +23,7 @@ export function HomePage() {
   )
 
   return (
-    <div className="flex flex-col h-screen">
+    <>
       <ToolBar />
       <NodeMapLayout>
         <PanContainer className="h-full">
@@ -31,7 +31,7 @@ export function HomePage() {
         </PanContainer>
         <Arrows rows={rows} />
       </NodeMapLayout>
-    </div>
+    </>
   )
 }
 
