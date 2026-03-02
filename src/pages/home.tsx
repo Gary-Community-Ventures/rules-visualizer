@@ -73,7 +73,7 @@ export function NodeMapLayout({ children }: PropsWithChildren) {
       {rightBar !== null && (
         <>
           <ResizableHandle withHandle />
-          <ResizablePanel defaultSize={25} minSize="20%">
+          <ResizablePanel defaultSize={25} minSize="20%" className="overflow-hidden">
             {rightBar === 'ai' && <AIPanel />}
           </ResizablePanel>
         </>
