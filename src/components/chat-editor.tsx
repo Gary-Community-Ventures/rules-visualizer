@@ -87,6 +87,7 @@ function nameCompletionSource(knownNames: string[]): CompletionSource {
         .map((name) => ({
           label: name,
           type: 'variable',
+          apply: name + ' ',
         })),
       validFor: /^[\w]*$/,
     }

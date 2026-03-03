@@ -111,6 +111,11 @@ export function Node({ node }: NodeProps) {
     if (alreadyExists && diff?.deletedVersion !== undefined) {
       return 'border-red-400 border-2'
     }
+
+    if (alreadyExists && diff !== undefined) {
+      return 'border-blue-400 border-2'
+    }
+
     return null
   }, [diffs, model, node])
 
@@ -178,9 +183,10 @@ export function NodeViewer({ node }: NodeViewerProps) {
   const config = NODE_TYPE_CONFIG[node.content.type]
   const Icon = config.icon
 
-  // Determine if this is a new or deleted node
+  // Determine if this is a new, deleted, or modified node
   const isNewNode = model.nodes[node.id] === undefined && diff !== undefined
   const isDeletedNode = diff?.deletedVersion !== undefined
+  const isModifiedNode = model.nodes[node.id] !== undefined && diff !== undefined && !isDeletedNode
 
   let nameDiff:
     | { new: string; update: (newValue: string) => void }
@@ -217,6 +223,11 @@ export function NodeViewer({ node }: NodeViewerProps) {
         {isDeletedNode && (
           <span className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-red-100 text-red-700">
             Deleted
+          </span>
+        )}
+        {isModifiedNode && (
+          <span className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-700">
+            Modified
           </span>
         )}
       </div>
@@ -297,6 +308,7 @@ export function NodePanel() {
 
   const isNewNode = model.nodes[openNode] === undefined && diff !== undefined
   const isDeletedNode = diff?.deletedVersion !== undefined
+  const isModifiedNode = model.nodes[openNode] !== undefined && diff !== undefined && !isDeletedNode
 
   const handleDelete = () => {
     setSelectedNodes((prev) => prev.filter((id) => id !== openNode))
