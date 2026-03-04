@@ -379,12 +379,14 @@ function ContextRow({
           {!isLast && diff.new !== undefined ? (
             <TypeSelector
               value={diff.new.expression.typeRef}
-              onChange={(v) =>
+              onChange={(v) => {
+                const current = diff.new
+                if (!current) return
                 diff.update({
-                  ...diff.new!,
-                  expression: { ...diff.new!.expression, typeRef: v },
+                  ...current,
+                  expression: { ...current.expression, typeRef: v },
                 })
-              }
+              }}
               placeholder="Type..."
               className="w-full"
             />

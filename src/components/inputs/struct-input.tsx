@@ -27,6 +27,7 @@ export function StructInput({
   const { customTypes } = useModelContext()
   const [rawMode, setRawMode] = useState(false)
   const [rawText, setRawText] = useState('')
+  const [rawError, setRawError] = useState(false)
 
   // Parse value — handle string inputs (e.g., from before type was assigned)
   const resolved = typeof value === 'string'
@@ -39,7 +40,7 @@ export function StructInput({
       : {}
 
   // Sync rawText from external value changes while in raw mode
-  const valueFingerprint = JSON.stringify(resolved)
+  const valueFingerprint = (() => { try { return JSON.stringify(resolved) } catch { return '' } })()
   useEffect(() => {
     if (!rawMode) return
     setRawText(Object.keys(obj).length > 0 ? JSON.stringify(obj, null, 2) : '')
@@ -66,14 +67,22 @@ export function StructInput({
   }
 
   const switchToStructured = () => {
-    try {
-      const parsed = rawText.trim() ? JSON.parse(rawText) : {}
-      if (typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)) {
-        onChange(parsed)
+    if (rawText.trim()) {
+      try {
+        const parsed = JSON.parse(rawText)
+        if (typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)) {
+          onChange(parsed)
+          setRawError(false)
+        } else {
+          setRawError(true)
+          return
+        }
+      } catch {
+        setRawError(true)
+        return
       }
-    } catch {
-      // Keep current value if JSON is invalid
     }
+    setRawError(false)
     setRawMode(false)
   }
 
@@ -92,25 +101,36 @@ export function StructInput({
             <FormInput className="size-3" />
           </Button>
         </div>
+        {rawError && (
+          <span className="text-xs text-destructive">Invalid JSON object</span>
+        )}
         <textarea
           className={cn(
             'w-full border rounded-md px-2 py-1.5 text-xs font-mono bg-background resize-y',
-            compact ? 'min-h-[60px]' : 'min-h-[80px]'
+            compact ? 'min-h-[60px]' : 'min-h-[80px]',
+            rawError && 'border-destructive'
           )}
           value={rawText}
-          onChange={(e) => setRawText(e.target.value)}
+          onChange={(e) => {
+            setRawText(e.target.value)
+            if (rawError) setRawError(false)
+          }}
           onBlur={() => {
+            if (!rawText.trim()) return
             try {
-              const parsed = rawText.trim() ? JSON.parse(rawText) : {}
+              const parsed = JSON.parse(rawText)
               if (
                 typeof parsed === 'object' &&
                 parsed !== null &&
                 !Array.isArray(parsed)
               ) {
                 onChange(parsed)
+                setRawError(false)
+              } else {
+                setRawError(true)
               }
             } catch {
-              // Leave as-is if invalid JSON
+              setRawError(true)
             }
           }}
         />
@@ -152,6 +172,19 @@ export function StructInput({
           )
         }
 
+        // Custom type at max nesting depth — show a JSON textarea with local state
+        if (nestedType) {
+          return (
+            <NestedJsonField
+              key={field.name}
+              fieldName={field.name}
+              fieldTypeRef={field.typeRef}
+              value={obj[field.name]}
+              onChange={(v) => updateField(field.name, v)}
+            />
+          )
+        }
+
         if (field.typeRef === 'boolean') {
           return (
             <label
@@ -188,6 +221,81 @@ export function StructInput({
           </div>
         )
       })}
+    </div>
+  )
+}
+
+/** Textarea with local string state for editing a nested struct as JSON at max depth. */
+function NestedJsonField({
+  fieldName,
+  fieldTypeRef,
+  value,
+  onChange,
+}: {
+  fieldName: string
+  fieldTypeRef: string
+  value: unknown
+  onChange: (v: unknown) => void
+}) {
+  const serialize = (v: unknown) =>
+    v !== undefined && typeof v === 'object' && v !== null
+      ? JSON.stringify(v, null, 2)
+      : v !== undefined
+        ? String(v)
+        : ''
+
+  const [text, setText] = useState(() => serialize(value))
+  const [error, setError] = useState(false)
+
+  // Sync from external value changes (e.g., parent reset)
+  const fingerprint = (() => { try { return JSON.stringify(value) } catch { return '' } })()
+  useEffect(() => {
+    setText(serialize(value))
+    setError(false)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fingerprint])
+
+  const commit = (raw: string) => {
+    const trimmed = raw.trim()
+    if (!trimmed) {
+      onChange(undefined)
+      setError(false)
+      return
+    }
+    try {
+      const parsed = JSON.parse(trimmed)
+      if (typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)) {
+        onChange(parsed)
+        setError(false)
+      } else {
+        setError(true)
+      }
+    } catch {
+      setError(true)
+    }
+  }
+
+  return (
+    <div className="flex flex-col gap-0.5">
+      <label className="text-xs text-muted-foreground">
+        {fieldName} <span className="italic">({fieldTypeRef} — JSON)</span>
+      </label>
+      {error && (
+        <span className="text-xs text-destructive">Invalid JSON object</span>
+      )}
+      <textarea
+        className={cn(
+          'w-full border rounded-md px-2 py-1.5 text-xs font-mono bg-background resize-y min-h-[40px]',
+          error && 'border-destructive'
+        )}
+        value={text}
+        onChange={(e) => {
+          setText(e.target.value)
+          if (error) setError(false)
+        }}
+        onBlur={() => commit(text)}
+        placeholder={`{ ... } (${fieldTypeRef})`}
+      />
     </div>
   )
 }

@@ -33,35 +33,51 @@ export function TypeManager({
   const [editingType, setEditingType] = useState<CustomType | null>(null)
   const [showForm, setShowForm] = useState(false)
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
 
-  const refresh = useCallback(() => {
+  const refresh = useCallback(async () => {
     setLoading(true)
-    listCustomTypes(projectId)
-      .then(setTypes)
-      .catch((err) => console.error('Failed to load types:', err))
-      .finally(() => setLoading(false))
+    try {
+      const result = await listCustomTypes(projectId)
+      setTypes(result)
+      return result
+    } catch (err) {
+      console.error('Failed to load types:', err)
+      return undefined
+    } finally {
+      setLoading(false)
+    }
   }, [projectId])
 
   useEffect(() => {
-    if (open) refresh()
+    if (open) {
+      refresh()
+      setConfirmDeleteId(null)
+      setDeleteError(null)
+    }
   }, [open, refresh])
 
-  const notifyTypesChanged = () => {
-    window.dispatchEvent(new Event('custom-types-changed'))
+  const notifyTypesChanged = (updatedTypes: CustomType[]) => {
+    window.dispatchEvent(
+      new CustomEvent('custom-types-changed', { detail: updatedTypes })
+    )
   }
 
   const handleDelete = async (typeId: string) => {
     if (confirmDeleteId !== typeId) {
       setConfirmDeleteId(typeId)
+      setDeleteError(null)
       return
     }
     setConfirmDeleteId(null)
+    setDeleteError(null)
     try {
       await deleteCustomType(projectId, typeId)
-      refresh()
-      notifyTypesChanged()
+      const updated = await refresh()
+      if (updated) notifyTypesChanged(updated)
     } catch (err) {
-      console.error('Failed to delete type:', err)
+      const message = err instanceof Error ? err.message : 'Failed to delete type'
+      setDeleteError(message)
     }
   }
 
@@ -80,10 +96,10 @@ export function TypeManager({
     setEditingType(null)
   }
 
-  const handleFormSave = () => {
+  const handleFormSave = async () => {
     handleFormClose()
-    refresh()
-    notifyTypesChanged()
+    const updated = await refresh()
+    if (updated) notifyTypesChanged(updated)
   }
 
   return (
@@ -94,6 +110,11 @@ export function TypeManager({
         </DialogHeader>
 
         <div className="flex-1 overflow-y-auto">
+          {deleteError && (
+            <div className="text-sm text-destructive bg-destructive/10 rounded-md px-3 py-2 mb-2">
+              {deleteError}
+            </div>
+          )}
           {loading ? (
             <p className="text-sm text-muted-foreground py-4">Loading...</p>
           ) : types.length === 0 ? (

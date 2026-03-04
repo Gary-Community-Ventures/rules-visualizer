@@ -103,9 +103,16 @@ export function ModelProvider({
     refreshCustomTypes()
   }, [refreshCustomTypes])
 
-  // Re-fetch custom types when TypeManager mutates them
+  // Update custom types when TypeManager mutates them (data passed via event)
   useEffect(() => {
-    const handler = () => refreshCustomTypes()
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail
+      if (Array.isArray(detail)) {
+        setCustomTypes(detail)
+      } else {
+        refreshCustomTypes()
+      }
+    }
     window.addEventListener('custom-types-changed', handler)
     return () => window.removeEventListener('custom-types-changed', handler)
   }, [refreshCustomTypes])
