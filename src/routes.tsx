@@ -49,7 +49,7 @@ function RootLayout() {
           }}
           className="flex-1 flex-col min-h-0"
         >
-          <ModelProvider modelId={tab.modelId}>
+          <ModelProvider projectId={tab.projectId} modelId={tab.modelId}>
             <HomePage />
           </ModelProvider>
         </div>

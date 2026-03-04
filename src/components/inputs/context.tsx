@@ -1,5 +1,7 @@
 import type { Context, ContextEntry } from '@/lib/model'
 import { createEntry } from '@/lib/model'
+import { cn } from '@/lib/utils'
+import { TypeSelector } from '../ui/type-selector'
 import { useKnownNames } from '@/lib/use-known-names'
 import {
   Table,
@@ -40,6 +42,18 @@ export function ContextInput({
     entries[index] = {
       ...entries[index],
       expression: { ...entries[index].expression, text: expression },
+    }
+    updateContext({ ...context, entries })
+  }
+
+  const updateExpressionType = (
+    index: number,
+    typeRef: string | undefined
+  ) => {
+    const entries = [...context.entries]
+    entries[index] = {
+      ...entries[index],
+      expression: { ...entries[index].expression, typeRef },
     }
     updateContext({ ...context, entries })
   }
@@ -183,9 +197,9 @@ export function ContextInput({
     ]
   }
 
-  let columns = 2
+  let columns = 3 // Name, Value, Type
   if (diff !== undefined) {
-    columns *= 2
+    columns = 6 // Name, Name (diff), Value, Value (diff), Type, Type (diff)
   }
 
   return (
@@ -205,6 +219,14 @@ export function ContextInput({
         {diff !== undefined && (
           <TableTextCell className="bg-fuchsia-100 text-black">
             Value (diff)
+          </TableTextCell>
+        )}
+        <TableTextCell className="bg-fuchsia-100 text-black">
+          Type
+        </TableTextCell>
+        {diff !== undefined && (
+          <TableTextCell className="bg-fuchsia-100 text-black">
+            Type (diff)
           </TableTextCell>
         )}
       </TableRow>
@@ -233,6 +255,7 @@ export function ContextInput({
           isLast={i === entries.length - 1}
           updateName={(v) => updateName(i, v)}
           updateExpression={(v) => updateExpression(i, v)}
+          updateExpressionType={(v) => updateExpressionType(i, v)}
         />
       ))}
     </Table>
@@ -246,6 +269,7 @@ function ContextRow({
   isLast,
   updateName,
   updateExpression,
+  updateExpressionType,
   rowIndex,
 }: {
   entry: ContextEntry
@@ -257,6 +281,7 @@ function ContextRow({
   isLast: boolean
   updateName: (newValue: string) => void
   updateExpression: (newValue: string) => void
+  updateExpressionType?: (typeRef: string | undefined) => void
   rowIndex?: number
 }) {
   const knownNames = useKnownNames(prevEntries)
@@ -325,12 +350,50 @@ function ContextRow({
             if (diff.new === undefined) {
               return
             }
-            diff.update({ ...diff.new, expression: { text: v } })
+            diff.update({ ...diff.new, expression: { ...diff.new.expression, text: v } })
           }}
           dialect="expression"
           knownNames={knownNames}
           disabled={diff.new === undefined}
         />
+      )}
+      <div className="border p-2 w-full h-full flex items-center">
+        {!isLast && updateExpressionType && !diff ? (
+          <TypeSelector
+            value={entry.expression.typeRef}
+            onChange={(v) => updateExpressionType(v)}
+            placeholder="Type..."
+            className="w-full"
+          />
+        ) : (
+          <span className={cn('text-xs text-muted-foreground', diff !== undefined && 'bg-gray-100 w-full')}>
+            {entry.expression.typeRef ?? '—'}
+          </span>
+        )}
+      </div>
+      {diff !== undefined && (
+        <div className={cn(
+          'border p-2 w-full h-full flex items-center',
+          !isLast && diffClass(entry.expression.typeRef ?? '', diff.new?.expression.typeRef ?? '')
+        )}>
+          {!isLast && diff.new !== undefined ? (
+            <TypeSelector
+              value={diff.new.expression.typeRef}
+              onChange={(v) =>
+                diff.update({
+                  ...diff.new!,
+                  expression: { ...diff.new!.expression, typeRef: v },
+                })
+              }
+              placeholder="Type..."
+              className="w-full"
+            />
+          ) : (
+            <span className="text-xs text-muted-foreground">
+              {diff.new?.expression.typeRef ?? '—'}
+            </span>
+          )}
+        </div>
       )}
     </TableRow>
   )

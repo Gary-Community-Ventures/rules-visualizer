@@ -30,6 +30,7 @@ import { NodeResultBadge } from './node-result'
 import { TextInput } from './inputs/text'
 import { NodeTests } from './inputs/node-tests'
 import { NodeDocumentation } from './inputs/node-documentation'
+import { TypeSelector } from './ui/type-selector'
 import { cloneContent, generateId, uniqueName, type ModelNode } from '@/lib/model'
 import { getDependents } from '@/lib/graph'
 import { useMemo } from 'react'
@@ -235,6 +236,19 @@ export function NodeViewer({ node }: NodeViewerProps) {
             }))
           }
           diff={nameDiff}
+        />
+      </div>
+
+      {/* Return type section */}
+      <div className="flex flex-col gap-1.5">
+        <label className="text-sm font-medium text-muted-foreground">
+          Return Type
+        </label>
+        <TypeSelector
+          value={node.typeRef}
+          onChange={(typeRef) =>
+            updateNode(node.id, (node) => ({ ...node, typeRef }))
+          }
         />
       </div>
 

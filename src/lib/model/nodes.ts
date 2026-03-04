@@ -1,5 +1,4 @@
 import type {
-  FeelDataType,
   ContextEntry,
   HitPolicy,
   Aggregation,
@@ -19,7 +18,6 @@ export type Input = {
 export type Constant = {
   type: 'constant'
   text: string
-  typeRef?: FeelDataType
 }
 
 export type Context = {
@@ -70,7 +68,7 @@ export type NodeLink = {
 export type ModelNode = {
   id: string
   name: string
-  typeRef?: FeelDataType
+  typeRef?: string
   dependencies: string[]
   content: NodeContent
   description?: string

@@ -10,9 +10,9 @@ import {
   type ReactNode,
   type SetStateAction,
 } from 'react'
-import type { Model, ModelNode, IntegrationTestCase } from '@/lib/model'
+import type { Model, ModelNode, IntegrationTestCase, CustomType } from '@/lib/model'
 import type { ExecutionResult, NodeResult } from '@/lib/engine'
-import { executeDmn } from '@/lib/api/dmn-api'
+import { executeDmn, listCustomTypes } from '@/lib/api/dmn-api'
 import { useLocalStorage } from '@/lib/use-local-storage'
 import { useDebounce } from '@/lib/use-debounce'
 import { buildNameToIdMap, recomputeDependencies } from '@/lib/graph'
@@ -30,6 +30,7 @@ type ExecutionActions = {
 type RightBarOptions = 'ai' | null
 
 type ModelContextValue = {
+  projectId: string
   model: Model
   setModel: Dispatch<SetStateAction<Model>>
   hoveredNodeId: string | null
@@ -55,6 +56,8 @@ type ModelContextValue = {
   socket: Socket
   rightBar: RightBarOptions
   setRightBar: Dispatch<SetStateAction<RightBarOptions>>
+  customTypes: CustomType[]
+  refreshCustomTypes: () => void
 }
 
 const ModelContext = createContext<ModelContextValue | undefined>(undefined)
@@ -62,9 +65,11 @@ const ModelContext = createContext<ModelContextValue | undefined>(undefined)
 const EMPTY_MODEL: Model = { id: '', name: '', namespace: '', nodes: {} }
 
 export function ModelProvider({
+  projectId,
   modelId,
   children,
 }: {
+  projectId: string
   modelId: string
   children: ReactNode
 }) {
@@ -86,6 +91,24 @@ export function ModelProvider({
   const [resultStale, setResultStale] = useState(false)
   const [lastError, setLastError] = useState<string | null>(null)
   const [rightBar, setRightBar] = useState<RightBarOptions>(null)
+  const [customTypes, setCustomTypes] = useState<CustomType[]>([])
+
+  const refreshCustomTypes = useCallback(() => {
+    listCustomTypes(projectId)
+      .then(setCustomTypes)
+      .catch((err) => console.error('Failed to load custom types:', err))
+  }, [projectId])
+
+  useEffect(() => {
+    refreshCustomTypes()
+  }, [refreshCustomTypes])
+
+  // Re-fetch custom types when TypeManager mutates them
+  useEffect(() => {
+    const handler = () => refreshCustomTypes()
+    window.addEventListener('custom-types-changed', handler)
+    return () => window.removeEventListener('custom-types-changed', handler)
+  }, [refreshCustomTypes])
 
   // --- Socket room lifecycle ---
   useEffect(() => {
@@ -177,7 +200,7 @@ export function ModelProvider({
     const currentModel = modelRef.current
     const currentInputValues = inputValuesRef.current
 
-    executeDmn(currentModel, currentInputValues, controller.signal)
+    executeDmn(currentModel, currentInputValues, controller.signal, projectId)
       .then((result) => {
         if (controller.signal.aborted) return
         setExecutionResult(result)
@@ -197,7 +220,7 @@ export function ModelProvider({
           setIsExecuting(false)
         }
       })
-  }, [])
+  }, [projectId])
 
   const debouncedExecute = useCallback(() => {
     debounce(() => execute())
@@ -254,6 +277,7 @@ export function ModelProvider({
   )
 
   const value: ModelContextValue = {
+    projectId,
     model,
     setModel,
     hoveredNodeId,
@@ -279,6 +303,8 @@ export function ModelProvider({
     socket,
     rightBar,
     setRightBar,
+    customTypes,
+    refreshCustomTypes,
   }
 
   return (

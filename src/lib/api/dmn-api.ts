@@ -1,4 +1,9 @@
-import type { Model, NodeTestCase, IntegrationTestCase } from '@/lib/model'
+import type {
+  Model,
+  NodeTestCase,
+  IntegrationTestCase,
+  CustomType,
+} from '@/lib/model'
 import type { ExecutionResult } from '@/lib/engine'
 
 // VITE_API_URL if set, otherwise same origin as the socket server, otherwise
@@ -36,17 +41,56 @@ async function post<T>(
   return response.json()
 }
 
-export async function exportDmnXml(model: Model): Promise<string> {
-  const data = await post<{ xml: string }>('/api/dmn/export', { model })
+async function put<T>(path: string, body: unknown): Promise<T> {
+  const response = await fetch(`${BASE_URL}${path}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  })
+
+  if (!response.ok) {
+    const data = await response.json().catch(() => null)
+    const message = data?.error ?? `Request failed (${response.status})`
+    throw new Error(message)
+  }
+
+  return response.json()
+}
+
+async function del<T>(path: string): Promise<T> {
+  const response = await fetch(`${BASE_URL}${path}`, { method: 'DELETE' })
+
+  if (!response.ok) {
+    const data = await response.json().catch(() => null)
+    const message = data?.error ?? `Request failed (${response.status})`
+    throw new Error(message)
+  }
+
+  return response.json()
+}
+
+export async function exportDmnXml(
+  model: Model,
+  projectId?: string
+): Promise<string> {
+  const data = await post<{ xml: string }>('/api/dmn/export', {
+    model,
+    projectId,
+  })
   return data.xml
 }
 
 export async function executeDmn(
   model: Model,
   inputValues: Record<string, unknown>,
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  projectId?: string
 ): Promise<ExecutionResult> {
-  return post<ExecutionResult>('/api/dmn/execute', { model, inputValues }, signal)
+  return post<ExecutionResult>(
+    '/api/dmn/execute',
+    { model, inputValues, projectId },
+    signal
+  )
 }
 
 export type TestResult = {
@@ -65,11 +109,12 @@ export async function runNodeTest(
   model: Model,
   targetNodeId: string,
   testCase: NodeTestCase,
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  projectId?: string
 ): Promise<TestResult> {
   return post<TestResult>(
     '/api/dmn/test/node',
-    { model, targetNodeId, testCase },
+    { model, targetNodeId, testCase, projectId },
     signal
   )
 }
@@ -77,11 +122,12 @@ export async function runNodeTest(
 export async function runIntegrationTest(
   model: Model,
   testCase: IntegrationTestCase,
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  projectId?: string
 ): Promise<IntegrationTestResult> {
   return post<IntegrationTestResult>(
     '/api/dmn/test/integration',
-    { model, testCase },
+    { model, testCase, projectId },
     signal
   )
 }
@@ -110,4 +156,39 @@ export async function createProjectModel(
   namespace: string
 ): Promise<{ id: string; name: string; namespace: string }> {
   return post(`/api/dmn/projects/${projectId}/models`, { name, namespace })
+}
+
+// ─── Custom Types ───────────────────────────────────────────────
+
+export async function listCustomTypes(
+  projectId: string
+): Promise<CustomType[]> {
+  const data = await get<{ types: CustomType[] }>(
+    `/api/dmn/projects/${projectId}/types`
+  )
+  return data.types
+}
+
+export async function createCustomType(
+  projectId: string,
+  name: string,
+  fields: CustomType['fields']
+): Promise<CustomType> {
+  return post(`/api/dmn/projects/${projectId}/types`, { name, fields })
+}
+
+export async function updateCustomType(
+  projectId: string,
+  typeId: string,
+  name: string,
+  fields: CustomType['fields']
+): Promise<CustomType> {
+  return put(`/api/dmn/projects/${projectId}/types/${typeId}`, { name, fields })
+}
+
+export async function deleteCustomType(
+  projectId: string,
+  typeId: string
+): Promise<void> {
+  await del(`/api/dmn/projects/${projectId}/types/${typeId}`)
 }

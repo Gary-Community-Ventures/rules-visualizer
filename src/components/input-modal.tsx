@@ -4,6 +4,7 @@ import { useMainContext } from '@/context'
 import { coerceNumber } from '@/lib/coerce'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
+import { StructInput } from './inputs/struct-input'
 import {
   Dialog,
   DialogContent,
@@ -15,7 +16,7 @@ import {
 } from './ui/dialog'
 
 export function InputModal() {
-  const { model, inputValues, setInputValues, isExecuting, execution } =
+  const { model, inputValues, setInputValues, isExecuting, execution, customTypes } =
     useMainContext()
   const [open, setOpen] = useState(false)
 
@@ -54,7 +55,14 @@ export function InputModal() {
           {inputNodes.map((node) => (
             <div key={node.id} className="flex flex-col gap-1">
               <label className="text-sm font-medium">{node.name}</label>
-              {node.typeRef === 'boolean' ? (
+              {node.typeRef &&
+              customTypes.some((ct) => ct.name === node.typeRef) ? (
+                <StructInput
+                  value={inputValues[node.id]}
+                  onChange={(v) => handleChange(node.id, v)}
+                  typeRef={node.typeRef}
+                />
+              ) : node.typeRef === 'boolean' ? (
                 <label className="flex items-center gap-2 text-sm">
                   <input
                     type="checkbox"

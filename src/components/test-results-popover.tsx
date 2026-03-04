@@ -40,7 +40,7 @@ type IntegrationTestRunState = {
 }
 
 export function TestResultsPopover() {
-  const { model, setOpenNode } = useMainContext()
+  const { model, setOpenNode, projectId } = useMainContext()
   const [open, setOpen] = useState(false)
   const [isRunning, setIsRunning] = useState(false)
   const [nodeStates, setNodeStates] = useState<NodeTestState[]>([])
@@ -134,7 +134,8 @@ export function TestResultsPopover() {
               model,
               node.id,
               testCase,
-              controller.signal
+              controller.signal,
+              projectId
             )
           } catch (err) {
             if (controller.signal.aborted) return
@@ -177,7 +178,8 @@ export function TestResultsPopover() {
           result = await runIntegrationTest(
             model,
             testCase,
-            controller.signal
+            controller.signal,
+            projectId
           )
         } catch (err) {
           if (controller.signal.aborted) return
@@ -206,7 +208,7 @@ export function TestResultsPopover() {
         setIsRunning(false)
       }
     }
-  }, [model])
+  }, [model, projectId])
 
   const stop = useCallback(() => {
     if (abortRef.current) {

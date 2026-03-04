@@ -10,7 +10,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Plus, ArrowLeft } from 'lucide-react'
+import { Plus, ArrowLeft, Shapes } from 'lucide-react'
+import { TypeManager } from '@/components/type-manager'
 
 type ModelSummary = {
   id: string
@@ -27,6 +28,7 @@ export function ModelListPage() {
   const [newName, setNewName] = useState('')
   const [newNamespace, setNewNamespace] = useState('')
   const [creating, setCreating] = useState(false)
+  const [showTypes, setShowTypes] = useState(false)
   const navigate = useNavigate()
   const { openTab } = useAppContext()
 
@@ -74,10 +76,16 @@ export function ModelListPage() {
           </button>
           <h1 className="text-xl font-semibold">Models</h1>
         </div>
-        <Button onClick={() => setShowCreate(true)}>
-          <Plus className="size-4" />
-          Create Model
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={() => setShowTypes(true)}>
+            <Shapes className="size-4" />
+            Types
+          </Button>
+          <Button onClick={() => setShowCreate(true)}>
+            <Plus className="size-4" />
+            Create Model
+          </Button>
+        </div>
       </div>
 
       {loading ? (
@@ -162,6 +170,12 @@ export function ModelListPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <TypeManager
+        projectId={projectId}
+        open={showTypes}
+        onOpenChange={setShowTypes}
+      />
     </div>
   )
 }

@@ -32,7 +32,9 @@ export function ConstantInput({
         />
         {diff !== undefined && (
           <TableFeelCell
-            className={diff.new.text !== constant.text ? 'bg-emerald-100' : ''}
+            className={
+              diff.new.text !== constant.text ? 'bg-emerald-100' : ''
+            }
             value={diff.new.text}
             onChange={(v) => diff.update({ ...diff.new, text: v })}
             dialect="expression"

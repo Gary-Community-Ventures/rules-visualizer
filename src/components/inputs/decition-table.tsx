@@ -1,5 +1,6 @@
 import type { DecisionTable } from '@/lib/model'
 import { createInputClause, createOutputClause, createRule } from '@/lib/model'
+import { TypeSelector } from '../ui/type-selector'
 import { useKnownNames } from '@/lib/use-known-names'
 import { Table, TableFeelCell, TableInputCell, TableRow } from '../table'
 import {
@@ -37,9 +38,30 @@ export function DecisionTableInput({
     updateDecisionTable({ ...decisionTable, inputClauses })
   }
 
+  const updateInputClauseType = (
+    index: number,
+    typeRef: string | undefined
+  ) => {
+    const inputClauses = [...decisionTable.inputClauses]
+    inputClauses[index] = {
+      ...inputClauses[index],
+      inputExpressionTypeRef: typeRef,
+    }
+    updateDecisionTable({ ...decisionTable, inputClauses })
+  }
+
   const updateOutputClause = (index: number, name: string) => {
     const outputClauses = [...decisionTable.outputClauses]
     outputClauses[index] = { ...outputClauses[index], name }
+    updateDecisionTable({ ...decisionTable, outputClauses })
+  }
+
+  const updateOutputClauseType = (
+    index: number,
+    typeRef: string | undefined
+  ) => {
+    const outputClauses = [...decisionTable.outputClauses]
+    outputClauses[index] = { ...outputClauses[index], typeRef }
     updateDecisionTable({ ...decisionTable, outputClauses })
   }
 
@@ -421,27 +443,50 @@ export function DecisionTableInput({
   }
 
   return (
-    <Table columns={columns} getActions={getActions}>
-      <TableRow>
+    <div className="flex flex-col gap-2">
+      <div className="flex gap-1">
         {decisionTable.inputClauses.map((input, i) => (
-          <TableFeelCell
-            key={input.id}
-            className={INPUT_HEADER_COLOR}
-            value={input.inputExpression}
-            onChange={(v) => updateInputClause(i, v)}
-            dialect="expression"
-            knownNames={knownNames}
-          />
+          <div key={input.id} className="flex-1 min-w-0">
+            <TypeSelector
+              value={input.inputExpressionTypeRef}
+              onChange={(v) => updateInputClauseType(i, v)}
+              placeholder="Input type..."
+              className="w-full"
+            />
+          </div>
         ))}
         {decisionTable.outputClauses.map((output, i) => (
-          <TableInputCell
-            key={output.id}
-            className={`${OUTPUT_HEADER_COLOR}`}
-            value={output.name}
-            onChange={(v) => updateOutputClause(i, v.replace(/ /g, '_'))}
-          />
+          <div key={output.id} className="flex-1 min-w-0">
+            <TypeSelector
+              value={output.typeRef}
+              onChange={(v) => updateOutputClauseType(i, v)}
+              placeholder="Output type..."
+              className="w-full"
+            />
+          </div>
         ))}
-      </TableRow>
+      </div>
+      <Table columns={columns} getActions={getActions}>
+        <TableRow>
+          {decisionTable.inputClauses.map((input, i) => (
+            <TableFeelCell
+              key={input.id}
+              className={INPUT_HEADER_COLOR}
+              value={input.inputExpression}
+              onChange={(v) => updateInputClause(i, v)}
+              dialect="expression"
+              knownNames={knownNames}
+            />
+          ))}
+          {decisionTable.outputClauses.map((output, i) => (
+            <TableInputCell
+              key={output.id}
+              className={`${OUTPUT_HEADER_COLOR}`}
+              value={output.name}
+              onChange={(v) => updateOutputClause(i, v.replace(/ /g, '_'))}
+            />
+          ))}
+        </TableRow>
       {decisionTable.rules.map((rule, ruleIndex) => (
         <TableRow key={rule.id}>
           {rule.inputEntries.map((input, entryIndex) => (
@@ -464,6 +509,7 @@ export function DecisionTableInput({
           ))}
         </TableRow>
       ))}
-    </Table>
+      </Table>
+    </div>
   )
 }

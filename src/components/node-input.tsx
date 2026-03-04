@@ -1,10 +1,11 @@
 import { useMainContext } from '@/context'
 import { coerceNumber } from '@/lib/coerce'
 import { Input } from './ui/input'
+import { StructInput } from './inputs/struct-input'
 import type { ModelNode } from '@/lib/model'
 
 export function NodeInput({ node }: { node: ModelNode }) {
-  const { inputValues, setInputValues, setResultStale, execution } =
+  const { inputValues, setInputValues, setResultStale, execution, customTypes } =
     useMainContext()
 
   const value = inputValues[node.id]
@@ -16,6 +17,23 @@ export function NodeInput({ node }: { node: ModelNode }) {
 
   // Prevent clicks on inputs from bubbling up and opening the editor panel
   const stopPropagation = (e: React.MouseEvent) => e.stopPropagation()
+
+  if (node.typeRef && customTypes.some((ct) => ct.name === node.typeRef)) {
+    return (
+      // eslint-disable-next-line jsx-a11y/click-events-have-key-events,jsx-a11y/no-static-element-interactions
+      <div className="mt-1" onClick={stopPropagation}>
+        <StructInput
+          compact
+          value={value}
+          onChange={(v) => {
+            setInputValues((prev) => ({ ...prev, [node.id]: v }))
+            commit()
+          }}
+          typeRef={node.typeRef}
+        />
+      </div>
+    )
+  }
 
   if (node.typeRef === 'boolean') {
     return (

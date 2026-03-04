@@ -35,7 +35,7 @@ type NodeTestsProps = {
 export function NodeTests({ node, allNodes, diff }: NodeTestsProps) {
   const updateNode = useUpdateNode()
   const updateDiff = useUpdateDiff()
-  const { model } = useMainContext()
+  const { model, projectId } = useMainContext()
   const [runState, setRunState] = useState<TestRunState>({})
   const runAllAbortRef = useRef<AbortController | null>(null)
   const singleAbortRef = useRef<AbortController | null>(null)
@@ -118,7 +118,8 @@ export function NodeTests({ node, allNodes, diff }: NodeTestsProps) {
             model,
             node.id,
             tc,
-            controller.signal
+            controller.signal,
+            projectId
           )
           if (controller.signal.aborted) return
           setRunState((s) => ({ ...s, [tc.id]: result }))
@@ -153,7 +154,8 @@ export function NodeTests({ node, allNodes, diff }: NodeTestsProps) {
         model,
         node.id,
         testCase,
-        controller.signal
+        controller.signal,
+        projectId
       )
       if (controller.signal.aborted) return
       setRunState((s) => ({ ...s, [testCase.id]: result }))

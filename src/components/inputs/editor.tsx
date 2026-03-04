@@ -151,6 +151,7 @@ export function Editor({ node }: EditorProps) {
         <InputDefault
           input={node.content}
           updateInput={updateInput}
+          typeRef={node.typeRef}
           diff={inputDiff}
         />
       </div>

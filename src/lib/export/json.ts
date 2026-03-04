@@ -3,16 +3,8 @@ import type { Model } from '@/lib/model'
 
 // ─── Zod Schema ──────────────────────────────────────────────────
 
-const feelDataTypeSchema = z.enum([
-  'number',
-  'string',
-  'boolean',
-  'date',
-  'time',
-  'dateTime',
-  'dayTimeDuration',
-  'yearMonthDuration',
-])
+// Accept any string as typeRef — built-in FEEL types plus custom type names
+const feelDataTypeSchema = z.string().min(1)
 
 const contextEntrySchema = z.object({
   id: z.string().min(1),

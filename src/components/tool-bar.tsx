@@ -111,6 +111,7 @@ export function ToolBar() {
   const {
     model,
     setModel,
+    projectId,
     selectedNodes,
     setSelectedNodes,
     setShowChildren,
@@ -260,7 +261,7 @@ export function ToolBar() {
             <DropdownMenuItem
               onSelect={() => {
                 const name = model.name || 'untitled'
-                exportDmnXml(model)
+                exportDmnXml(model, projectId)
                   .then((xml) => {
                     downloadFile(`${name}.dmn`, xml, 'application/xml')
                   })

@@ -10,11 +10,32 @@ export type FeelDataType =
   | 'dayTimeDuration'
   | 'yearMonthDuration'
 
+export const FEEL_DATA_TYPES: FeelDataType[] = [
+  'number',
+  'string',
+  'boolean',
+  'date',
+  'time',
+  'dateTime',
+  'dayTimeDuration',
+  'yearMonthDuration',
+]
+
+// ─── Custom Types ───────────────────────────────────────────────
+
+export type CustomTypeField = { name: string; typeRef: string }
+
+export type CustomType = {
+  id: string
+  name: string
+  fields: CustomTypeField[]
+}
+
 // ─── Context Entry ───────────────────────────────────────────────
 
 export type FeelExpression = {
   text: string
-  typeRef?: FeelDataType
+  typeRef?: string
 }
 
 export type ContextEntry = {
@@ -39,13 +60,13 @@ export type Aggregation = 'SUM' | 'COUNT' | 'MIN' | 'MAX'
 export type InputClause = {
   id: string
   inputExpression: string // FEEL expression evaluated against input
-  inputExpressionTypeRef?: FeelDataType
+  inputExpressionTypeRef?: string
 }
 
 export type OutputClause = {
   id: string
   name: string
-  typeRef?: FeelDataType
+  typeRef?: string
 }
 
 export type DecisionTableRule = {

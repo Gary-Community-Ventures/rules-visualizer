@@ -8,6 +8,7 @@ import {
 } from '@/lib/api/dmn-api'
 import { getLeafNodes } from '@/lib/graph'
 import { ParsedInput } from './inputs/parsed-input'
+import { StructInput } from './inputs/struct-input'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
 import {
@@ -29,7 +30,7 @@ export function IntegrationTestModal({
   open: boolean
   onOpenChange: (open: boolean) => void
 }) {
-  const { model, inputValues, executionResult } = useMainContext()
+  const { model, inputValues, executionResult, projectId } = useMainContext()
   const updateTests = useUpdateIntegrationTests()
   const [runState, setRunState] = useState<RunState>({})
   const abortRef = useRef<AbortController | null>(null)
@@ -103,7 +104,8 @@ export function IntegrationTestModal({
       const result = await runIntegrationTest(
         model,
         testCase,
-        controller.signal
+        controller.signal,
+        projectId
       )
       if (controller.signal.aborted) return
       setRunState((s) => ({ ...s, [testCase.id]: result }))
@@ -222,6 +224,7 @@ function IntegrationTestCard({
   onDelete: () => void
   onDuplicate: () => void
 }) {
+  const { customTypes } = useMainContext()
   const result = runState[testCase.id]
   const isRunning = result === 'running'
   const testResult = result && result !== 'running' ? result : null
@@ -321,30 +324,53 @@ function IntegrationTestCard({
             Inputs
           </span>
           {inputNodes.map((node) => (
-            <div key={node.id} className="flex items-center gap-2">
-              <label className="text-xs text-muted-foreground w-32 shrink-0 truncate">
+            <div key={node.id} className="flex flex-col gap-1">
+              <label className="text-xs text-muted-foreground truncate">
                 {node.name}
               </label>
-              <ParsedInput
-                placeholder="value"
-                value={testCase.inputs[node.id]}
-                onChange={(parsed) =>
-                  onUpdate((prev) =>
-                    prev.map((t) =>
-                      t.id === testCase.id
-                        ? {
-                            ...t,
-                            inputs: {
-                              ...t.inputs,
-                              [node.id]: parsed,
-                            },
-                          }
-                        : t
+              {node.typeRef &&
+              customTypes.some((ct) => ct.name === node.typeRef) ? (
+                <StructInput
+                  value={testCase.inputs[node.id]}
+                  onChange={(parsed) =>
+                    onUpdate((prev) =>
+                      prev.map((t) =>
+                        t.id === testCase.id
+                          ? {
+                              ...t,
+                              inputs: {
+                                ...t.inputs,
+                                [node.id]: parsed,
+                              },
+                            }
+                          : t
+                      )
                     )
-                  )
-                }
-                className="h-7 text-sm"
-              />
+                  }
+                  typeRef={node.typeRef}
+                />
+              ) : (
+                <ParsedInput
+                  placeholder="value"
+                  value={testCase.inputs[node.id]}
+                  onChange={(parsed) =>
+                    onUpdate((prev) =>
+                      prev.map((t) =>
+                        t.id === testCase.id
+                          ? {
+                              ...t,
+                              inputs: {
+                                ...t.inputs,
+                                [node.id]: parsed,
+                              },
+                            }
+                          : t
+                      )
+                    )
+                  }
+                  className="h-7 text-sm"
+                />
+              )}
             </div>
           ))}
         </div>
