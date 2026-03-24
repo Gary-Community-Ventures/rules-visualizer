@@ -1,81 +1,55 @@
-import type {
-  FeelDataType,
-  ContextEntry,
-  HitPolicy,
-  Aggregation,
-  InputClause,
-  OutputClause,
-  DecisionTableRule,
-} from './types'
+import type { DataType, RuleFormat } from './types'
 
-// ─── Node Content Types (discriminated on `type`) ────────────────
+// --- RAC content types ---
 
-export type Input = {
-  type: 'input'
-  id: string
-  defaultValue: string
+type RacVariable = {
+  format: 'rac'
+  type: 'variable'
+  path: string
+  dataType: DataType
+  expression?: string
+  source?: string
+  temporalValues?: { from: string; to?: string; expression: string }[]
 }
 
-export type Constant = {
-  type: 'constant'
-  text: string
-  typeRef?: FeelDataType
+type RacEntity = {
+  format: 'rac'
+  type: 'entity'
+  fields: { name: string; dataType: DataType }[]
 }
 
-export type Context = {
-  type: 'context'
-  entries: ContextEntry[]
-  tests: NodeTestCase[]
-  // Convention: entry named '_return' is the final result
+// --- Fact Graph content types ---
+
+type FactGraphWritable = {
+  format: 'factGraph'
+  type: 'writable'
+  path: string
+  dataType: DataType
 }
 
-export type DecisionTable = {
-  type: 'decisionTable'
-  hitPolicy: HitPolicy
-  aggregation?: Aggregation
-  inputClauses: InputClause[]
-  outputClauses: OutputClause[]
-  rules: DecisionTableRule[]
-  tests: NodeTestCase[]
+type FactGraphDerived = {
+  format: 'factGraph'
+  type: 'derived'
+  path: string
+  dataType: DataType
+  computation?: string
 }
 
-export type NodeContent = Input | Constant | Context | DecisionTable
+export type NodeContent =
+  | RacVariable
+  | RacEntity
+  | FactGraphWritable
+  | FactGraphDerived
 
-// ─── Test Cases ─────────────────────────────────────────────────
-
-export type NodeTestCase = {
-  id: string
-  name: string
-  inputs: Record<string, unknown>
-  expected: string
-}
-
-export type IntegrationTestCase = {
-  id: string
-  name: string
-  inputs: Record<string, unknown> // input node ID → value
-  assertions: Record<string, string> // node ID → expected value (string)
-}
-
-// ─── Documentation ───────────────────────────────────────────────
-
-export type NodeLink = {
-  id: string
-  label: string
-  url: string
-}
-
-// ─── Node & Model ────────────────────────────────────────────────
+// Node & Model
 
 export type ModelNode = {
   id: string
   name: string
-  typeRef?: FeelDataType
   dependencies: string[]
   content: NodeContent
   description?: string
-  links?: NodeLink[]
-  deletedVersion?: string
+  tags?: string[]
 }
 
 export type ModelNodes = Record<string, ModelNode>
@@ -83,7 +57,6 @@ export type ModelNodes = Record<string, ModelNode>
 export type Model = {
   id: string
   name: string
-  namespace: string
+  format: RuleFormat
   nodes: ModelNodes
-  integrationTests?: IntegrationTestCase[]
 }

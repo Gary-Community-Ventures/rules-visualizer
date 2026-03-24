@@ -3,7 +3,7 @@ import { Rows } from '@/components/node'
 import { Arrows } from '@/components/arrows'
 import { ToolBar } from '@/components/tool-bar'
 import { PanContainer } from '@/components/pan-container'
-import { addNodeDependencies, nodeRows } from '@/lib/graph'
+import { nodeRows } from '@/lib/graph'
 import {
   ResizableHandle,
   ResizablePanel,
@@ -14,13 +14,26 @@ import { AIPanel } from '@/components/ai-panel'
 import { NodePanel } from '@/components/node'
 
 export function HomePage() {
-  const { model, selectedNodes, showChildren, diffs } = useMainContext()
+  const { model, selectedNodes, showChildren, isLoading, error } =
+    useMainContext()
 
-  const rows: string[][] = nodeRows(
-    addNodeDependencies(model.nodes, diffs),
-    showChildren,
-    selectedNodes
-  )
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <p className="text-sm text-muted-foreground">Loading ruleset...</p>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <p className="text-sm text-red-600">{error}</p>
+      </div>
+    )
+  }
+
+  const rows: string[][] = nodeRows(model.nodes, showChildren, selectedNodes)
 
   return (
     <>
@@ -43,7 +56,6 @@ export function NodeMapLayout({ children }: PropsWithChildren) {
     window.dispatchEvent(new CustomEvent('containerresize'))
   }
 
-  // Trigger arrow recalculation when sidebar opens/closes
   useEffect(() => {
     const frameId = requestAnimationFrame(() => {
       window.dispatchEvent(new CustomEvent('containerresize'))
@@ -73,7 +85,11 @@ export function NodeMapLayout({ children }: PropsWithChildren) {
       {rightBar !== null && (
         <>
           <ResizableHandle withHandle />
-          <ResizablePanel defaultSize={25} minSize="20%" className="overflow-hidden">
+          <ResizablePanel
+            defaultSize={25}
+            minSize="20%"
+            className="overflow-hidden"
+          >
             {rightBar === 'ai' && <AIPanel />}
           </ResizablePanel>
         </>

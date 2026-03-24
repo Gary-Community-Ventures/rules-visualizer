@@ -1,8 +1,6 @@
-import { deepCopy } from './utils'
-import type { Model, ModelNode, ModelNodes, NodeContent } from './model'
+import type { ModelNodes } from './model'
 
 export function findRootNodes(nodes: ModelNodes): string[] {
-  // Root nodes are outputs — nodes that no other node depends on
   const dependedOn = new Set<string>()
   for (const node of Object.values(nodes)) {
     for (const dep of node.dependencies) {
@@ -13,20 +11,7 @@ export function findRootNodes(nodes: ModelNodes): string[] {
 }
 
 export function getLeafNodes(nodes: ModelNodes): string[] {
-  const dependedOn = new Set<string>()
-  for (const node of Object.values(nodes)) {
-    for (const dep of node.dependencies) {
-      dependedOn.add(dep)
-    }
-  }
-  return Object.keys(nodes).filter((id) => {
-    const node = nodes[id]
-    return (
-      !dependedOn.has(id) &&
-      node.content.type !== 'input' &&
-      node.content.type !== 'constant'
-    )
-  })
+  return Object.keys(nodes).filter((id) => nodes[id].dependencies.length === 0)
 }
 
 export function getDependents(nodeId: string, nodes: ModelNodes): string[] {
@@ -42,7 +27,6 @@ function getOrdering(
   nodes: ModelNodes,
   showChildren: Record<string, boolean>
 ): string[] {
-  // Expand into dependencies (what this node needs) — they appear below
   const children = nodes[currentNode]?.dependencies ?? []
 
   if (!showChildren[currentNode]) {
@@ -78,7 +62,6 @@ function compressRows(
       for (let j = row.length - 1; j >= 0; j--) {
         const item = row[j]
 
-        // Can't move up if a node in the row above depends on this item
         let neededByPreviousRow = false
         for (const previousItem of previousRow) {
           if (
@@ -131,116 +114,4 @@ export function nodeRows(
   const rows = ordering.map((node) => [node])
 
   return compressRows(rows, nodes, showChildren)
-}
-
-export function addNodeDependencies(
-  a: ModelNodes,
-  b: ModelNode[] | undefined
-): ModelNodes {
-  const nodes = deepCopy(a)
-
-  for (const node of b ?? []) {
-    const id = node.id
-    if (id in nodes) {
-      nodes[id] = {
-        ...nodes[id],
-        dependencies: [...nodes[id].dependencies, ...node.dependencies],
-      }
-    } else {
-      nodes[id] = node
-    }
-  }
-
-  return nodes
-}
-
-export function extractFeelText(content: NodeContent): string[] {
-  switch (content.type) {
-    case 'input':
-    case 'constant':
-      return []
-    case 'context':
-      return content.entries.map((e) => e.expression.text)
-    case 'decisionTable':
-      return [
-        ...content.inputClauses.map((c) => c.inputExpression),
-        ...content.rules.flatMap((r) => [
-          ...r.inputEntries,
-          ...r.outputEntries,
-        ]),
-      ]
-  }
-}
-
-export function computeNodeDependencies(
-  content: NodeContent,
-  nameToId: Map<string, string>,
-  selfId: string
-): string[] {
-  const texts = extractFeelText(content)
-  const depIds = new Set<string>()
-
-  for (const text of texts) {
-    for (const [name, id] of nameToId) {
-      if (id === selfId || name === '') continue
-      const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-      const re = new RegExp(`\\b${escaped}\\b`)
-      if (re.test(text)) {
-        depIds.add(id)
-      }
-    }
-  }
-
-  return [...depIds]
-}
-
-export function applyDiffs(model: Model, diffs: ModelNode[]): Model {
-  const result = deepCopy(model)
-
-  for (const diff of diffs) {
-    if (diff.deletedVersion !== undefined) {
-      delete result.nodes[diff.id]
-    } else {
-      result.nodes[diff.id] = deepCopy(diff)
-    }
-  }
-
-  return result
-}
-
-export function buildNameToIdMap(
-  nodes: ModelNodes,
-  diffs?: ModelNode[]
-): Map<string, string> {
-  const nameToId = new Map<string, string>()
-  for (const node of Object.values(nodes)) {
-    nameToId.set(node.name, node.id)
-  }
-  for (const diff of diffs ?? []) {
-    nameToId.set(diff.name, diff.id)
-  }
-  return nameToId
-}
-
-function depsEqual(a: string[], b: string[]): boolean {
-  if (a.length !== b.length) return false
-  const sortedA = [...a].sort()
-  const sortedB = [...b].sort()
-  return sortedA.every((v, i) => v === sortedB[i])
-}
-
-export function recomputeDependencies<T extends ModelNode>(
-  nodes: T[],
-  nameToId: Map<string, string>
-): { nodes: T[]; changed: boolean } {
-  let changed = false
-  const updated = nodes.map((node) => {
-    const newDeps = computeNodeDependencies(node.content, nameToId, node.id)
-    if (!depsEqual(node.dependencies, newDeps)) {
-      changed = true
-      return { ...node, dependencies: newDeps }
-    }
-    return node
-  })
-  return { nodes: updated, changed }
 }

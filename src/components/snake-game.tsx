@@ -21,13 +21,18 @@ function pointsEqual(a: Point, b: Point) {
 function spawnFood(snake: Point[]): Point {
   let food: Point
   do {
-    food = { x: Math.floor(Math.random() * WIDTH), y: Math.floor(Math.random() * HEIGHT) }
+    food = {
+      x: Math.floor(Math.random() * WIDTH),
+      y: Math.floor(Math.random() * HEIGHT),
+    }
   } while (snake.some((s) => pointsEqual(s, food)))
   return food
 }
 
 function renderBraille(snake: Point[], food: Point): string {
-  const grid: number[][] = Array.from({ length: HEIGHT }, () => Array(WIDTH).fill(0))
+  const grid: number[][] = Array.from({ length: HEIGHT }, () =>
+    Array(WIDTH).fill(0)
+  )
 
   for (const { x, y } of snake) {
     if (x >= 0 && x < WIDTH && y >= 0 && y < HEIGHT) grid[y][x] = 1
@@ -78,7 +83,12 @@ export function SnakeLoader() {
       const head = prev[0]
       const d = nextDirRef.current
       lastMovedRef.current = d
-      const delta = { up: { x: 0, y: -1 }, down: { x: 0, y: 1 }, left: { x: -1, y: 0 }, right: { x: 1, y: 0 } }[d]
+      const delta = {
+        up: { x: 0, y: -1 },
+        down: { x: 0, y: 1 },
+        left: { x: -1, y: 0 },
+        right: { x: 1, y: 0 },
+      }[d]
       const newHead = {
         x: (head.x + delta.x + WIDTH) % WIDTH,
         y: (head.y + delta.y + HEIGHT) % HEIGHT,
@@ -118,7 +128,8 @@ export function SnakeLoader() {
 
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
-      if (!['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) return
+      if (!['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key))
+        return
 
       if (gameOver) {
         reset()

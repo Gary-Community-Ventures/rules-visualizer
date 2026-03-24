@@ -5,7 +5,6 @@ import {
   useEffect,
   createContext,
   useContext,
-  Children,
   isValidElement,
   cloneElement,
   type ReactNode,
@@ -14,11 +13,8 @@ import {
   type SetStateAction,
 } from 'react'
 import { useMainContext } from '@/context'
-import { socket, useSocketEvent } from '@/lib/sockets'
 import { Button } from './ui/button'
 import { X, Send, ChevronRight, Copy, Check } from 'lucide-react'
-import { ChatEditor } from './chat-editor'
-import { cn } from '@/lib/utils'
 import Markdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { SnakeLoader } from './snake-game'
@@ -33,23 +29,7 @@ type AIMessage = {
   message: string
 }
 
-type ToolCall = {
-  type: 'toolCall'
-  name: string
-  status: 'pending' | 'success' | 'error'
-  id?: string
-  result?: string
-  contexts?: string[]
-}
-
-type SubAgent = {
-  type: 'subAgent'
-  name: string
-  status: 'pending' | 'success' | 'error'
-  messages: ChatMessage[]
-}
-
-type ChatMessage = UserMessage | AIMessage | ToolCall | SubAgent
+type ChatMessage = UserMessage | AIMessage
 
 type ChatContextType = {
   messages: ChatMessage[]
@@ -75,7 +55,8 @@ function useChatContext() {
 
 const GREETING: AIMessage = {
   type: 'aiMessage',
-  message: "Hi, I'm Gloppy. How can I help you today?",
+  message:
+    'AI chat coming soon. This panel will help you understand and explore rules.',
 }
 
 function ChatProvider({ children }: { children: ReactNode }) {
@@ -144,105 +125,34 @@ export function AIPanel() {
 }
 
 function ChatBox() {
-  const { model, setOpenNode } = useMainContext()
-  const { addMessage, setMessages, setShouldAutoScroll, setIsLoading } =
-    useChatContext()
+  const { addMessage, setShouldAutoScroll } = useChatContext()
   const [message, setMessage] = useState('')
-
-  // Build name -> id map for parsing mentions and clicking
-  const nameToId = useMemo(() => {
-    const map = new Map<string, string>()
-    for (const [id, node] of Object.entries(model.nodes)) {
-      map.set(node.name.toLowerCase(), id)
-    }
-    return map
-  }, [model.nodes])
-
-  const knownNames = useMemo(
-    () => Object.values(model.nodes).map((n) => n.name),
-    [model.nodes]
-  )
-
-  // Listen for AI response chunks
-  useSocketEvent(socket, 'ai-chunk', (data: { chunk: string }) => {
-    setMessages((prev) => {
-      const lastIdx = prev.length - 1
-      const last = prev[lastIdx]
-      // Append to existing AI message if present
-      if (last?.type === 'aiMessage') {
-        const updated = [...prev]
-        updated[lastIdx] = { ...last, message: last.message + data.chunk }
-        return updated
-      }
-      // Only create new AI message if chunk has non-whitespace content
-      // (avoids empty boxes before tool calls, but preserves formatting in messages)
-      if (data.chunk.trim()) {
-        return [...prev, { type: 'aiMessage', message: data.chunk }]
-      }
-      return prev
-    })
-  })
-
-  // Listen for tool call start
-  useSocketEvent(
-    socket,
-    'ai-tool-start',
-    (data: { name: string; id: string }) => {
-      addMessage({
-        type: 'toolCall',
-        name: data.name,
-        status: 'pending',
-        id: data.id,
-      })
-    }
-  )
-
-  // Listen for tool call completion
-  useSocketEvent(
-    socket,
-    'ai-tool-end',
-    (data: { name: string; id: string; result: string }) => {
-      setMessages((prev) =>
-        prev.map((msg) =>
-          msg.type === 'toolCall' && msg.id === data.id
-            ? { ...msg, status: 'success', result: data.result }
-            : msg
-        )
-      )
-    }
-  )
-
-  // Listen for AI response completion
-  useSocketEvent(socket, 'ai-done', () => {
-    setIsLoading(false)
-  })
 
   const handleSubmit = () => {
     if (!message.trim()) return
     setShouldAutoScroll(true)
-    setIsLoading(true)
     addMessage({
       type: 'userMessage',
       message: message.trim(),
     })
-    socket.emit('ai-chat', { message: message.trim() })
+    // TODO: Wire up to AI backend
     setMessage('')
-  }
-
-  const handleNodeClick = (name: string) => {
-    const id = nameToId.get(name.toLowerCase())
-    if (id) setOpenNode(id)
   }
 
   return (
     <div className="border-t p-3 shrink-0 flex flex-col gap-2">
-      <ChatEditor
+      <textarea
+        className="w-full resize-none rounded-md border bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+        rows={3}
+        placeholder="Ask about your rules..."
         value={message}
-        onChange={setMessage}
-        onSubmit={handleSubmit}
-        onNodeClick={handleNodeClick}
-        knownNames={knownNames}
-        placeholder="Ask about your model..."
+        onChange={(e) => setMessage(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault()
+            handleSubmit()
+          }
+        }}
       />
       <div className="flex justify-end">
         <Button size="sm" onClick={handleSubmit} disabled={!message.trim()}>
@@ -265,12 +175,10 @@ function ChatScrollArea() {
   const containerRef = useRef<HTMLDivElement>(null)
   const [isAtBottom, setIsAtBottom] = useState(true)
 
-  // Set the scroll ref in context
   useEffect(() => {
     setScrollRef(containerRef.current)
   }, [setScrollRef])
 
-  // Track scroll position
   const handleScroll = () => {
     if (!containerRef.current) return
     const { scrollTop, scrollHeight, clientHeight } = containerRef.current
@@ -279,7 +187,6 @@ function ChatScrollArea() {
     setShouldAutoScroll(atBottom)
   }
 
-  // Auto-scroll when messages change (if at bottom or shouldAutoScroll)
   useEffect(() => {
     if (shouldAutoScroll && containerRef.current) {
       containerRef.current.scrollTo({
@@ -340,35 +247,7 @@ function ChatMessageView({ message }: { message: ChatMessage }) {
       return <UserMessageView message={message} />
     case 'aiMessage':
       return <AIMessageView message={message} />
-    case 'toolCall':
-      return <ToolCallView message={message} />
-    case 'subAgent':
-      return <SubAgentView message={message} />
   }
-}
-
-function ContextChips({ contexts }: { contexts: string[] }) {
-  const { model, setOpenNode } = useMainContext()
-
-  if (contexts.length === 0) return null
-
-  return (
-    <div className="flex flex-wrap gap-1 mt-1.5">
-      {contexts.map((nodeId) => {
-        const node = model.nodes[nodeId]
-        const name = node?.name ?? nodeId
-        return (
-          <button
-            key={nodeId}
-            onClick={() => setOpenNode(nodeId)}
-            className="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 hover:bg-blue-200"
-          >
-            {name}
-          </button>
-        )
-      })}
-    </div>
-  )
 }
 
 const URL_PATTERN = /(https?:\/\/[^\s<>)"']+)/g
@@ -388,7 +267,6 @@ function ClickableNodeText({ text }: { text: string }) {
     type Part = { type: 'text' | 'node' | 'url'; content: string }
     const result: Part[] = []
 
-    // First split by URLs
     const urlParts: { type: 'text' | 'url'; content: string }[] = []
     let lastIndex = 0
     let match
@@ -411,7 +289,6 @@ function ClickableNodeText({ text }: { text: string }) {
       urlParts.push({ type: 'text', content: text })
     }
 
-    // Then split text parts by node names
     const nodeNames = Object.values(model.nodes).map((n) => n.name)
     if (nodeNames.length === 0) {
       return urlParts as Part[]
@@ -526,7 +403,9 @@ function extractText(node: ReactNode): string {
   if (!node) return ''
   if (Array.isArray(node)) return node.map(extractText).join('')
   if (isValidElement(node)) {
-    return extractText(node.props.children)
+    return extractText(
+      (node as ReactElement<{ children?: ReactNode }>).props.children
+    )
   }
   return ''
 }
@@ -544,7 +423,6 @@ function processClickableNodes(node: ReactNode): ReactNode {
   if (Array.isArray(node)) {
     return node.map((child, i) => {
       const processed = processClickableNodes(child)
-      // Add key if it's an element
       if (isValidElement(processed)) {
         return cloneElement(processed, { key: i })
       }
@@ -552,9 +430,9 @@ function processClickableNodes(node: ReactNode): ReactNode {
     })
   }
   if (isValidElement(node)) {
-    // Preserve the element, but process its children
-    return cloneElement(node as ReactElement, {
-      children: processClickableNodes(node.props.children),
+    const el = node as ReactElement<{ children?: ReactNode }>
+    return cloneElement(el, {
+      children: processClickableNodes(el.props.children),
     })
   }
   return node
@@ -657,99 +535,6 @@ function AIMessageView({ message }: { message: AIMessage }) {
       >
         {message.message}
       </Markdown>
-    </div>
-  )
-}
-
-function ToolCallView({ message }: { message: ToolCall }) {
-  const [expanded, setExpanded] = useState(false)
-  const hasContent =
-    message.result || (message.contexts && message.contexts.length > 0)
-
-  return (
-    <div className="border rounded-lg overflow-hidden text-sm">
-      <button
-        type="button"
-        className={cn(
-          'flex items-center gap-2 px-3 py-1.5 bg-muted/50 w-full text-left',
-          hasContent && 'cursor-pointer hover:bg-muted/70',
-          expanded && 'border-b'
-        )}
-        onClick={() => hasContent && setExpanded(!expanded)}
-        disabled={!hasContent}
-      >
-        {hasContent && (
-          <ChevronRight
-            className={cn(
-              'size-3 transition-transform',
-              expanded && 'rotate-90'
-            )}
-          />
-        )}
-        <span className="font-mono text-xs">{message.name}</span>
-        {message.status === 'pending' && (
-          <span className="text-xs text-muted-foreground">Running...</span>
-        )}
-        {message.status === 'success' && (
-          <span className="text-xs text-emerald-600">Done</span>
-        )}
-        {message.status === 'error' && (
-          <span className="text-xs text-red-600">Error</span>
-        )}
-      </button>
-      {expanded && (
-        <>
-          {message.result && (
-            <div className="px-3 py-2 font-mono text-xs whitespace-pre-wrap bg-muted/20">
-              {message.result}
-            </div>
-          )}
-          {message.contexts && message.contexts.length > 0 && (
-            <div className="px-3 py-2 border-t">
-              <ContextChips contexts={message.contexts} />
-            </div>
-          )}
-        </>
-      )}
-    </div>
-  )
-}
-
-function SubAgentView({ message }: { message: SubAgent }) {
-  const [expanded, setExpanded] = useState(false)
-
-  return (
-    <div className="border border-dashed rounded-lg overflow-hidden text-sm">
-      <button
-        type="button"
-        className={cn(
-          'flex items-center gap-2 px-3 py-1.5 bg-muted/50 w-full text-left',
-          'cursor-pointer hover:bg-muted/70',
-          expanded && 'border-b'
-        )}
-        onClick={() => setExpanded(!expanded)}
-      >
-        <ChevronRight
-          className={cn('size-3 transition-transform', expanded && 'rotate-90')}
-        />
-        <span className="text-xs font-medium">{message.name}</span>
-        {message.status === 'pending' && (
-          <span className="text-xs text-muted-foreground">Running...</span>
-        )}
-        {message.status === 'success' && (
-          <span className="text-xs text-emerald-600">Done</span>
-        )}
-        {message.status === 'error' && (
-          <span className="text-xs text-red-600">Error</span>
-        )}
-      </button>
-      {expanded && (
-        <div className="p-3 flex flex-col gap-3">
-          {message.messages.map((msg, index) => (
-            <ChatMessageView key={index} message={msg} />
-          ))}
-        </div>
-      )}
     </div>
   )
 }

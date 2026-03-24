@@ -1,74 +1,52 @@
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  type ReactNode,
-} from 'react'
-import { socket } from '@/lib/sockets'
+import { createContext, useCallback, useContext, type ReactNode } from 'react'
 import { useLocalStorage } from '@/lib/use-local-storage'
-import type { Socket } from 'socket.io-client'
 
 export type Tab = {
-  projectId: string
-  modelId: string
-  modelName: string
+  rulesetId: string
+  rulesetName: string
 }
 
 type AppContextValue = {
-  socket: Socket
   tabs: Tab[]
-  openTab: (projectId: string, modelId: string, modelName: string) => void
-  closeTab: (modelId: string) => void
-  updateTabName: (modelId: string, modelName: string) => void
+  openTab: (rulesetId: string, rulesetName: string) => void
+  closeTab: (rulesetId: string) => void
+  updateTabName: (rulesetId: string, rulesetName: string) => void
 }
 
 const AppContext = createContext<AppContextValue | undefined>(undefined)
 
 export function AppProvider({ children }: { children: ReactNode }) {
-  const [tabs, setTabs] = useLocalStorage<Tab[]>('dmn-editor-tabs', [])
-
-  // One-time migration: drop stale data from before the project refactor
-  useEffect(() => {
-    if (tabs.some((t) => !t.projectId)) {
-      setTabs((prev) => prev.filter((t) => t.projectId))
-    }
-    // Clean up old global showChildren key (now per-model)
-    localStorage.removeItem('showChildren')
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  const [tabs, setTabs] = useLocalStorage<Tab[]>('rules-visualizer-tabs', [])
 
   const openTab = useCallback(
-    (projectId: string, modelId: string, modelName: string) => {
+    (rulesetId: string, rulesetName: string) => {
       setTabs((prev) => {
-        if (prev.some((t) => t.modelId === modelId)) {
+        if (prev.some((t) => t.rulesetId === rulesetId)) {
           return prev
         }
-        return [...prev, { projectId, modelId, modelName }]
+        return [...prev, { rulesetId, rulesetName }]
       })
     },
     [setTabs]
   )
 
   const closeTab = useCallback(
-    (modelId: string) => {
-      setTabs((prev) => prev.filter((t) => t.modelId !== modelId))
+    (rulesetId: string) => {
+      setTabs((prev) => prev.filter((t) => t.rulesetId !== rulesetId))
     },
     [setTabs]
   )
 
   const updateTabName = useCallback(
-    (modelId: string, modelName: string) => {
+    (rulesetId: string, rulesetName: string) => {
       setTabs((prev) =>
-        prev.map((t) =>
-          t.modelId === modelId ? { ...t, modelName } : t
-        )
+        prev.map((t) => (t.rulesetId === rulesetId ? { ...t, rulesetName } : t))
       )
     },
     [setTabs]
   )
 
   const value: AppContextValue = {
-    socket,
     tabs,
     openTab,
     closeTab,

@@ -1,56 +1,11 @@
-// ─── FEEL Data Types ─────────────────────────────────────────────
-
-export type FeelDataType =
-  | 'number'
+// Generic data type (shared across formats)
+export type DataType =
   | 'string'
+  | 'number'
   | 'boolean'
   | 'date'
-  | 'time'
-  | 'dateTime'
-  | 'dayTimeDuration'
-  | 'yearMonthDuration'
+  | 'currency'
+  | 'unknown'
 
-// ─── Context Entry ───────────────────────────────────────────────
-
-export type FeelExpression = {
-  text: string
-  typeRef?: FeelDataType
-}
-
-export type ContextEntry = {
-  id: string
-  name: string
-  expression: FeelExpression
-}
-
-// ─── Decision Table Sub-Types ────────────────────────────────────
-
-export type HitPolicy =
-  | 'UNIQUE'
-  | 'ANY'
-  | 'PRIORITY'
-  | 'FIRST'
-  | 'OUTPUT ORDER'
-  | 'RULE ORDER'
-  | 'COLLECT'
-
-export type Aggregation = 'SUM' | 'COUNT' | 'MIN' | 'MAX'
-
-export type InputClause = {
-  id: string
-  inputExpression: string // FEEL expression evaluated against input
-  inputExpressionTypeRef?: FeelDataType
-}
-
-export type OutputClause = {
-  id: string
-  name: string
-  typeRef?: FeelDataType
-}
-
-export type DecisionTableRule = {
-  id: string
-  inputEntries: string[] // unary test FEEL expressions, one per input clause
-  outputEntries: string[] // FEEL expressions, one per output clause
-  annotationEntries: string[]
-}
+// Rule format identifier
+export type RuleFormat = 'rac' | 'factGraph'
