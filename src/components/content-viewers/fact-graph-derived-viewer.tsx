@@ -7,14 +7,10 @@ type Props = {
 export function FactGraphDerivedViewer({ content }: Props) {
   return (
     <div className="flex flex-col gap-3 text-sm">
-      <div>
-        <span className="text-muted-foreground font-medium">Path</span>
-        <p className="mt-0.5">{content.path}</p>
-      </div>
-      <div>
-        <span className="text-muted-foreground font-medium">Data Type</span>
-        <p className="mt-0.5">{content.dataType}</p>
-      </div>
+      <Field label="Path" value={content.path} />
+      {content.complete !== undefined && (
+        <Field label="Complete" value={content.complete ? 'Yes' : 'No'} />
+      )}
       {content.computation && (
         <div>
           <span className="text-muted-foreground font-medium">Computation</span>
@@ -23,6 +19,15 @@ export function FactGraphDerivedViewer({ content }: Props) {
           </pre>
         </div>
       )}
+    </div>
+  )
+}
+
+function Field({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <span className="text-muted-foreground font-medium">{label}</span>
+      <p className="mt-0.5">{value}</p>
     </div>
   )
 }

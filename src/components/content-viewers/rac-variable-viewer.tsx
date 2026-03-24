@@ -7,8 +7,11 @@ type Props = {
 export function RacVariableViewer({ content }: Props) {
   return (
     <div className="flex flex-col gap-3 text-sm">
+      {content.label && <Field label="Label" value={content.label} />}
       <Field label="Path" value={content.path} />
-      <Field label="Data Type" value={content.dataType} />
+      {content.entity && <Field label="Entity" value={content.entity} />}
+      {content.unit && <Field label="Unit" value={content.unit} />}
+      {content.default && <Field label="Default" value={content.default} />}
       {content.expression && (
         <div>
           <span className="text-muted-foreground font-medium">Expression</span>
