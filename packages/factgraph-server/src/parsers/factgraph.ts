@@ -179,13 +179,6 @@ function collectDependencyPaths(obj: unknown): string[] {
 
   const record = obj as Record<string, unknown>
 
-  // If this is a Dependency element, extract its path
-  // The parser flattens <Dependency path="/foo" module="bar"/> to
-  // an object with @_path and optional @_module
-  if (record['@_path'] !== undefined && isInDependencyContext(record)) {
-    // This is a Dependency element — handled by the parent scan below
-  }
-
   // Look for Dependency children
   if (record.Dependency !== undefined) {
     const deps = Array.isArray(record.Dependency)
@@ -212,11 +205,6 @@ function collectDependencyPaths(obj: unknown): string[] {
   }
 
   return paths
-}
-
-function isInDependencyContext(_record: Record<string, unknown>): boolean {
-  // Helper — not strictly needed since we handle Dependency as a child key
-  return false
 }
 
 /**

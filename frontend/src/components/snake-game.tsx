@@ -173,7 +173,7 @@ export function SnakeLoader() {
     }, 100)
 
     return () => clearInterval(interval)
-  }, [gameOver, highScore, setHighScore, tick])
+  }, [gameOver, snake.length, highScore, setHighScore, tick])
 
   const display = renderBraille(snake, food)
   const score = snake.length - 3

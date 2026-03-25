@@ -1,12 +1,11 @@
 import { Text } from '@/translations/wrapper'
 import { translations } from '@/translations/text'
-import * as Sentry from '@sentry/react'
 import { useRouter } from '@tanstack/react-router'
 
 function ErrorFallback({ error }: { error: unknown }) {
   const router = useRouter()
 
-  Sentry.captureException(error)
+  console.error('Error fallback rendered:', error)
 
   const t = translations.general.errorFallback
 

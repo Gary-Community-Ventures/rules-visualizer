@@ -12,6 +12,7 @@
     "start": "node dist/index.js"
   },
   "dependencies": {
+    "rules-visualizer-shared-types": "*",
     "express": "^5.1.0",
     "fast-xml-parser": "^5.2.3",
     "open": "^10.1.0",

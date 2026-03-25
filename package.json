@@ -4,7 +4,8 @@
   "version": "0.1.0",
   "workspaces": [
     "frontend",
-    "packages/factgraph-server"
+    "packages/factgraph-server",
+    "packages/shared-types"
   ],
   "scripts": {
     "dev": "npm run dev:factgraph & npm run dev:frontend",
