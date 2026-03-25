@@ -128,24 +128,29 @@ npx tsx packages/factgraph-server/src/index.ts ./data/factgraph
 **RAC (Python):**
 
 ```bash
-# Install
-pip install -e packages/rac-server
+# Set up (one time)
+python3 -m venv .venv
+.venv/bin/pip install -e packages/rac-server
 
 # Run
-rules-visualizer-rac ./data/rac
+.venv/bin/rules-visualizer-rac ./data/rac
 ```
 
 ### Development
 
 ```bash
-# Start everything (Fact Graph backend + Vite frontend)
+# Fact Graph backend + Vite frontend
 npm run dev
+
+# RAC backend + Vite frontend
+npm run dev:rac
 
 # Frontend only (uses mock data if no backend available)
 npm run dev:frontend
 
-# Backend only
+# Backends only
 npm run dev:factgraph
+npm run dev:rac-backend
 ```
 
 ### Production Build
@@ -189,8 +194,10 @@ Multiple XML/RAC files within a ruleset are merged into a single model with cros
 | Script | Description |
 |---|---|
 | `npm run dev` | Start Fact Graph backend + Vite frontend |
+| `npm run dev:rac` | Start RAC backend + Vite frontend |
 | `npm run dev:frontend` | Vite dev server only (proxies to localhost:5000) |
 | `npm run dev:factgraph` | Fact Graph backend only (tsx watch mode) |
+| `npm run dev:rac-backend` | RAC backend only (requires venv setup) |
 | `npm run build:frontend` | Build frontend (vite build) |
 | `npm run build:factgraph` | Build frontend + bundle into backend + compile TS |
 | `npm run start` | Unified launcher (alias for `./bin/rules-visualizer`) |

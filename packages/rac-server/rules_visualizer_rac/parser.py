@@ -2,16 +2,14 @@
 
 from __future__ import annotations
 
-import hashlib
 from datetime import date
 from pathlib import Path
 from typing import Any
 
-from rac import parse_file, compile
-from rac.compiler import IR
 
-
-def parse_rac_directory(rac_dir: str, ruleset_id: str, as_of: date | None = None) -> dict:
+def parse_rac_directory(
+    rac_dir: str, ruleset_id: str, as_of: date | None = None
+) -> dict:
     """Parse all .rac files in a directory into a Model dict.
 
     Args:
@@ -22,6 +20,8 @@ def parse_rac_directory(rac_dir: str, ruleset_id: str, as_of: date | None = None
     Returns:
         Model dict matching the frontend Model type
     """
+    from rac import parse_file, compile
+
     if as_of is None:
         as_of = date.today()
 
@@ -29,12 +29,7 @@ def parse_rac_directory(rac_dir: str, ruleset_id: str, as_of: date | None = None
     rac_files = sorted(rac_path.rglob("*.rac"))
 
     if not rac_files:
-        return {
-            "id": ruleset_id,
-            "name": ruleset_id,
-            "format": "rac",
-            "nodes": {},
-        }
+        return _empty_model(ruleset_id)
 
     # Parse all modules
     modules = []
@@ -43,49 +38,167 @@ def parse_rac_directory(rac_dir: str, ruleset_id: str, as_of: date | None = None
             module = parse_file(f)
             modules.append(module)
         except Exception as e:
-            print(f"Warning: failed to parse {f}: {e}")
+            print(f"  Warning: failed to parse {f.name}: {e}")
 
     if not modules:
-        return {
-            "id": ruleset_id,
-            "name": ruleset_id,
-            "format": "rac",
-            "nodes": {},
-        }
+        return _empty_model(ruleset_id)
 
-    # Compile to get resolved variables with dependencies
-    ir = compile(modules, as_of=as_of)
+    # Compile to get resolved variables with temporal resolution
+    try:
+        ir = compile(modules, as_of=as_of)
+    except Exception as e:
+        print(f"  Warning: compile failed for {ruleset_id}: {e}")
+        # Fall back to uncompiled variable declarations
+        return _modules_to_model(modules, ruleset_id)
 
-    return ir_to_model(ir, ruleset_id)
+    return _ir_to_model(ir, ruleset_id)
 
 
-def ir_to_model(ir: IR, ruleset_id: str) -> dict:
+def _empty_model(ruleset_id: str) -> dict:
+    return {
+        "id": ruleset_id,
+        "name": _id_to_name(ruleset_id),
+        "format": "rac",
+        "nodes": {},
+    }
+
+
+def _ir_to_model(ir: Any, ruleset_id: str) -> dict:
     """Convert compiled RAC IR to our Model JSON format."""
     nodes: dict[str, dict] = {}
     path_to_id: dict[str, str] = {}
 
-    # First pass: create node IDs
+    # Build path→id map
     for i, var_path in enumerate(ir.order):
-        node_id = f"rac-{i + 1}"
-        path_to_id[var_path] = node_id
+        path_to_id[var_path] = f"rac-{i + 1}"
 
-    # Second pass: build nodes
+    # Build nodes
     for i, var_path in enumerate(ir.order):
         var = ir.variables[var_path]
-        node_id = f"rac-{i + 1}"
+        vd = var.model_dump()
+        node_id = path_to_id[var_path]
 
-        # Resolve dependencies to node IDs
-        deps = []
-        for dep_path in var.deps:
-            dep_id = path_to_id.get(dep_path)
-            if dep_id:
-                deps.append(dep_id)
+        # Extract dependencies from expression tree
+        expr_refs = _collect_var_refs(vd.get("expr"))
+        deps = [path_to_id[ref] for ref in expr_refs if ref in path_to_id]
 
-        # Determine if this is an entity or variable
-        if hasattr(var, "fields") and var.fields:
-            content = _make_entity_content(var)
-        else:
-            content = _make_variable_content(var, var_path)
+        # Build content
+        content: dict[str, Any] = {
+            "format": "rac",
+            "type": "variable",
+            "path": var_path,
+        }
+
+        if vd.get("entity"):
+            content["entity"] = vd["entity"]
+        if vd.get("label"):
+            content["label"] = vd["label"]
+        if vd.get("unit"):
+            content["unit"] = vd["unit"]
+        if vd.get("default") is not None:
+            content["default"] = str(vd["default"])
+        if vd.get("source"):
+            content["source"] = vd["source"]
+
+        # Serialize expression
+        if vd.get("expr") is not None:
+            content["expression"] = _serialize_expr(vd["expr"])
+
+        # Build node
+        node: dict[str, Any] = {
+            "id": node_id,
+            "name": _path_to_name(var_path),
+            "dependencies": deps,
+            "content": content,
+        }
+
+        if vd.get("description"):
+            node["description"] = vd["description"]
+
+        tags: list[str] = []
+        if vd.get("entity"):
+            tags.append(f"entity:{vd['entity']}")
+        if tags:
+            node["tags"] = tags
+
+        nodes[node_id] = node
+
+    return {
+        "id": ruleset_id,
+        "name": _id_to_name(ruleset_id),
+        "format": "rac",
+        "nodes": nodes,
+    }
+
+
+def _modules_to_model(modules: list[Any], ruleset_id: str) -> dict:
+    """Fallback: build model directly from parsed modules (no compile step).
+
+    Used when compile fails (e.g. duplicate variables across files).
+    """
+    nodes: dict[str, dict] = {}
+    path_to_id: dict[str, str] = {}
+    seen_paths: set[str] = set()
+    all_vars: list[tuple[str, dict, str]] = []  # (path, var_dump, filename)
+
+    for mod in modules:
+        filename = Path(str(mod.path)).stem if mod.path else "unknown"
+        for v in mod.variables:
+            vd = v.model_dump()
+            var_path = vd["path"]
+            if var_path in seen_paths:
+                continue  # skip duplicates
+            seen_paths.add(var_path)
+            all_vars.append((var_path, vd, filename))
+
+    # Build path→id map
+    for i, (var_path, _, _) in enumerate(all_vars):
+        path_to_id[var_path] = f"rac-{i + 1}"
+
+    # Build nodes
+    for i, (var_path, vd, filename) in enumerate(all_vars):
+        node_id = path_to_id[var_path]
+
+        # Extract deps from all temporal values' expressions
+        all_refs: set[str] = set()
+        for tv in vd.get("values", []):
+            all_refs |= _collect_var_refs(tv.get("expr"))
+        deps = [path_to_id[ref] for ref in all_refs if ref in path_to_id]
+
+        content: dict[str, Any] = {
+            "format": "rac",
+            "type": "variable",
+            "path": var_path,
+        }
+
+        if vd.get("entity"):
+            content["entity"] = vd["entity"]
+        if vd.get("label"):
+            content["label"] = vd["label"]
+        if vd.get("unit"):
+            content["unit"] = vd["unit"]
+        if vd.get("default") is not None:
+            content["default"] = str(vd["default"])
+        if vd.get("source"):
+            content["source"] = vd["source"]
+
+        # Use the most recent temporal value's expression
+        values = vd.get("values", [])
+        if values:
+            latest = values[-1]
+            if latest.get("expr") is not None:
+                content["expression"] = _serialize_expr(latest["expr"])
+
+            # Include temporal values if there are multiple
+            if len(values) > 1:
+                content["temporalValues"] = [
+                    {
+                        "from": str(tv["start"]),
+                        **({"to": str(tv["end"])} if tv.get("end") else {}),
+                        "expression": _serialize_expr(tv.get("expr")),
+                    }
+                    for tv in values
+                ]
 
         node: dict[str, Any] = {
             "id": node_id,
@@ -94,129 +207,162 @@ def ir_to_model(ir: IR, ruleset_id: str) -> dict:
             "content": content,
         }
 
-        if hasattr(var, "description") and var.description:
-            node["description"] = var.description
+        if vd.get("description"):
+            node["description"] = vd["description"]
 
-        # Tag with source file if available
-        tags = []
-        if hasattr(var, "source") and var.source:
-            tags.append(var.source)
-        if hasattr(var, "entity") and var.entity:
-            tags.append(f"entity:{var.entity}")
-        if tags:
-            node["tags"] = tags
+        tags: list[str] = [filename]
+        if vd.get("entity"):
+            tags.append(f"entity:{vd['entity']}")
+        node["tags"] = tags
 
         nodes[node_id] = node
 
-    # Derive a human-readable name from the ruleset ID
-    ruleset_name = ruleset_id.replace("-", " ").replace("_", " ").title()
+    # Also add entities
+    entity_offset = len(all_vars)
+    seen_entities: set[str] = set()
+    for mod in modules:
+        for ent in mod.entities:
+            ed = ent.model_dump()
+            ent_name = ed.get("name", "unknown")
+            if ent_name in seen_entities:
+                continue
+            seen_entities.add(ent_name)
+
+            node_id = f"rac-{entity_offset + len(seen_entities)}"
+            fields = []
+            for f in ed.get("fields", []):
+                field: dict[str, Any] = {
+                    "name": f.get("name", "?"),
+                    "dtype": str(f.get("dtype", "unknown")),
+                }
+                if f.get("nullable"):
+                    field["nullable"] = True
+                if f.get("default") is not None:
+                    field["default"] = str(f["default"])
+                fields.append(field)
+
+            nodes[node_id] = {
+                "id": node_id,
+                "name": ent_name,
+                "dependencies": [],
+                "content": {
+                    "format": "rac",
+                    "type": "entity",
+                    "fields": fields,
+                },
+            }
 
     return {
         "id": ruleset_id,
-        "name": ruleset_name,
+        "name": _id_to_name(ruleset_id),
         "format": "rac",
         "nodes": nodes,
     }
 
 
-def _make_variable_content(var: Any, var_path: str) -> dict:
-    """Create a RacVariable content dict from a ResolvedVar."""
-    content: dict[str, Any] = {
-        "format": "rac",
-        "type": "variable",
-        "path": var_path,
-    }
-
-    if hasattr(var, "entity") and var.entity:
-        content["entity"] = var.entity
-    if hasattr(var, "label") and var.label:
-        content["label"] = var.label
-    if hasattr(var, "unit") and var.unit:
-        content["unit"] = var.unit
-    if hasattr(var, "default_") and var.default_ is not None:
-        content["default"] = str(var.default_)
-    if hasattr(var, "source") and var.source:
-        content["source"] = var.source
-
-    # Serialize expression to human-readable string
-    if hasattr(var, "expr") and var.expr is not None:
-        content["expression"] = _serialize_expr(var.expr)
-
-    return content
+# --- Expression utilities ---
 
 
-def _make_entity_content(var: Any) -> dict:
-    """Create a RacEntity content dict."""
-    fields = []
-    for f in var.fields:
-        field: dict[str, Any] = {
-            "name": f.name,
-            "dtype": str(f.dtype) if hasattr(f, "dtype") else "unknown",
-        }
-        if hasattr(f, "nullable") and f.nullable:
-            field["nullable"] = True
-        if hasattr(f, "default_") and f.default_ is not None:
-            field["default"] = str(f.default_)
-        fields.append(field)
-
-    return {
-        "format": "rac",
-        "type": "entity",
-        "fields": fields,
-    }
+def _collect_var_refs(expr: Any) -> set[str]:
+    """Recursively collect all variable references from an expression dict."""
+    if expr is None:
+        return set()
+    refs: set[str] = set()
+    if isinstance(expr, dict):
+        if expr.get("type") == "var":
+            refs.add(expr["path"])
+        for v in expr.values():
+            refs |= _collect_var_refs(v)
+    elif isinstance(expr, list):
+        for item in expr:
+            refs |= _collect_var_refs(item)
+    return refs
 
 
 def _serialize_expr(expr: Any) -> str:
-    """Serialize a RAC expression AST to a human-readable string."""
+    """Serialize a RAC expression dict to a human-readable string."""
     if expr is None:
         return ""
+    if not isinstance(expr, dict):
+        return str(expr)
 
-    type_name = type(expr).__name__
+    t = expr.get("type")
 
-    if type_name == "Literal":
-        return repr(expr.value)
-    elif type_name == "Var":
-        return expr.name
-    elif type_name == "BinOp":
-        left = _serialize_expr(expr.left)
-        right = _serialize_expr(expr.right)
-        return f"({left} {expr.op} {right})"
-    elif type_name == "UnaryOp":
-        operand = _serialize_expr(expr.operand)
-        return f"{expr.op}({operand})"
-    elif type_name == "Call":
-        args = ", ".join(_serialize_expr(a) for a in expr.args)
-        return f"{expr.func}({args})"
-    elif type_name == "Cond":
-        parts = []
-        for i, (test, body) in enumerate(expr.branches):
-            test_s = _serialize_expr(test)
-            body_s = _serialize_expr(body)
-            keyword = "if" if i == 0 else "elif"
-            parts.append(f"{keyword} {test_s}: {body_s}")
-        if expr.else_ is not None:
-            parts.append(f"else: {_serialize_expr(expr.else_)}")
-        return " ".join(parts)
-    elif type_name == "Match":
-        subject = _serialize_expr(expr.subject)
+    if t == "literal":
+        return repr(expr["value"])
+
+    if t == "var":
+        return expr["path"]
+
+    if t == "binop":
+        left = _serialize_expr(expr.get("left"))
+        right = _serialize_expr(expr.get("right"))
+        op = expr.get("op", "?")
+        return f"({left} {op} {right})"
+
+    if t == "unaryop":
+        operand = _serialize_expr(expr.get("operand"))
+        op = expr.get("op", "?")
+        return f"{op}({operand})"
+
+    if t == "call":
+        args = ", ".join(_serialize_expr(a) for a in expr.get("args", []))
+        return f"{expr.get('func', '?')}({args})"
+
+    if t == "cond":
+        cond = _serialize_expr(expr.get("condition"))
+        then = _serialize_expr(expr.get("then_expr"))
+        else_ = expr.get("else_expr")
+        if else_ is not None:
+            # Check if else is another cond (elif chain)
+            if isinstance(else_, dict) and else_.get("type") == "cond":
+                return f"if {cond}: {then} el{_serialize_expr(else_)}"
+            return f"if {cond}: {then} else: {_serialize_expr(else_)}"
+        return f"if {cond}: {then}"
+
+    if t == "match":
+        subject = _serialize_expr(expr.get("subject"))
         arms = ", ".join(
-            f"{_serialize_expr(p)} => {_serialize_expr(b)}" for p, b in expr.arms
+            f"{_serialize_expr(p)} => {_serialize_expr(b)}"
+            for p, b in expr.get("arms", [])
         )
         return f"match {subject} {{ {arms} }}"
-    elif type_name == "Let":
+
+    if t == "let":
         bindings = ", ".join(
-            f"{name} = {_serialize_expr(val)}" for name, val in expr.bindings
+            f"{name} = {_serialize_expr(val)}"
+            for name, val in expr.get("bindings", [])
         )
-        body = _serialize_expr(expr.body)
+        body = _serialize_expr(expr.get("body"))
         return f"let {bindings} in {body}"
-    elif type_name == "FieldAccess":
-        obj = _serialize_expr(expr.obj)
-        return f"{obj}.{expr.field}"
-    else:
-        return str(expr)
+
+    if t == "field_access":
+        obj = _serialize_expr(expr.get("obj"))
+        return f"{obj}.{expr.get('field', '?')}"
+
+    if t == "list":
+        items = ", ".join(_serialize_expr(item) for item in expr.get("items", []))
+        return f"[{items}]"
+
+    if t == "index":
+        obj = _serialize_expr(expr.get("obj"))
+        idx = _serialize_expr(expr.get("index"))
+        return f"{obj}[{idx}]"
+
+    # Unknown expression type — show it generically
+    return str(expr)
+
+
+# --- Name utilities ---
 
 
 def _path_to_name(path: str) -> str:
-    """Extract a short name from a variable path like 'gov/irs/standard_deduction'."""
+    """Extract a short display name from a variable path."""
     parts = path.split("/")
-    return parts[-1] if parts else path
+    name = parts[-1] if parts else path
+    return name.replace("_", " ").title()
+
+
+def _id_to_name(ruleset_id: str) -> str:
+    """Convert a ruleset ID to a display name."""
+    return ruleset_id.replace("-", " ").replace("_", " ").title()

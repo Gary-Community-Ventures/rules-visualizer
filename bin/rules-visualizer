@@ -123,14 +123,23 @@ if $has_xml; then
 elif $has_rac; then
   echo "Detected RAC files → starting Python backend"
 
-  # Find Python 3 — prefer python3, fall back to python
-  PYTHON=""
-  if command -v python3 &>/dev/null; then
+  # Use the project venv if it exists, otherwise look for system Python
+  if [[ -x "$ROOT_DIR/.venv/bin/python3" ]]; then
+    PYTHON="$ROOT_DIR/.venv/bin/python3"
+  elif command -v python3 &>/dev/null; then
     PYTHON="python3"
   elif command -v python &>/dev/null; then
     PYTHON="python"
   else
-    echo "Error: Python 3 is required for RAC but neither 'python3' nor 'python' was found."
+    echo "Error: Python 3 is required for RAC but no Python found."
+    echo "Create a venv: python3 -m venv .venv && .venv/bin/pip install -e packages/rac-server"
+    exit 1
+  fi
+
+  # Verify the rac module is importable
+  if ! "$PYTHON" -c "import rules_visualizer_rac" 2>/dev/null; then
+    echo "Error: rules-visualizer-rac is not installed."
+    echo "Install it: $PYTHON -m pip install -e $ROOT_DIR/packages/rac-server"
     exit 1
   fi
 

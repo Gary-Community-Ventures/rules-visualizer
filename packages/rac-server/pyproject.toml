@@ -1,6 +1,6 @@
 [build-system]
 requires = ["setuptools>=68.0"]
-build-backend = "setuptools.backends._legacy:_Backend"
+build-backend = "setuptools.build_meta"
 
 [project]
 name = "rules-visualizer-rac"
@@ -9,6 +9,7 @@ requires-python = ">=3.10"
 dependencies = [
     "rac @ git+https://github.com/TheAxiomFoundation/rac.git",
     "watchdog>=4.0",
+    "websockets>=13.0",
 ]
 
 [project.scripts]

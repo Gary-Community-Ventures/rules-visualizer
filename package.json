@@ -9,8 +9,10 @@
   ],
   "scripts": {
     "dev": "npm run dev:factgraph & npm run dev:frontend",
+    "dev:rac": "npm run dev:rac-backend & npm run dev:frontend",
     "dev:frontend": "PROXY_TARGET=http://localhost:5000 npm run dev --workspace=rules-visualizer-frontend",
     "dev:factgraph": "NO_OPEN=1 npm run dev --workspace=rules-visualizer-factgraph -- ../../data/factgraph",
+    "dev:rac-backend": ".venv/bin/python3 -m rules_visualizer_rac.cli data/rac --no-open --port 5000",
     "start": "./bin/rules-visualizer",
     "build:frontend": "npm run build --workspace=rules-visualizer-frontend",
     "build:factgraph": "npm run build:frontend && npm run bundle-frontend --workspace=rules-visualizer-factgraph && npm run build --workspace=rules-visualizer-factgraph",
