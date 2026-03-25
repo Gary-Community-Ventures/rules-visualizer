@@ -23,6 +23,17 @@ dist/
 # Production
 /build
 
+# Built frontend bundled into backends
+packages/*/public/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+*.egg
+.venv/
+venv/
+
 # Misc
 .DS_Store
 .env
@@ -36,9 +47,6 @@ dist/
 .vscode/
 *.sublime-project
 *.sublime-workspace
-
-# macOS
-.DS_Store
 
 # yarn package manager
 yarn.lock
@@ -57,6 +65,3 @@ pnpm-lock.yaml
 
 # TypeScript
 *.tsbuildinfo
-
-# Shadcn UI
-components.json

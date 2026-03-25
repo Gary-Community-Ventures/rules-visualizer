@@ -1,0 +1,15 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.backends._legacy:_Backend"
+
+[project]
+name = "rules-visualizer-rac"
+version = "0.1.0"
+requires-python = ">=3.10"
+dependencies = [
+    "rac @ git+https://github.com/TheAxiomFoundation/rac.git",
+    "watchdog>=4.0",
+]
+
+[project.scripts]
+rules-visualizer-rac = "rules_visualizer_rac.cli:main"

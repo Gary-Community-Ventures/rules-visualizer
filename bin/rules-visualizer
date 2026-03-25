@@ -1,0 +1,142 @@
+#!/usr/bin/env bash
+#
+# Unified launcher for rules-visualizer.
+#
+# Detects whether the given directory contains Fact Graph XML or RAC files
+# and starts the appropriate backend server.
+#
+# Usage:
+#   rules-visualizer <directory> [--port PORT]
+#
+# Examples:
+#   rules-visualizer ./data/factgraph
+#   rules-visualizer ./data/rac --port 8080
+#
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+usage() {
+  cat <<EOF
+Usage: rules-visualizer <directory> [--port PORT] [--no-open]
+
+Starts the rules visualizer for a directory of rule files.
+Auto-detects the format based on file types:
+  .xml  →  Fact Graph server (Node.js)
+  .rac  →  RAC server (Python)
+
+Options:
+  --port PORT   Server port (default: 5000)
+  --no-open     Don't open browser automatically
+
+Examples:
+  rules-visualizer ./data/factgraph
+  rules-visualizer ./data/rac --port 8080
+EOF
+  exit 1
+}
+
+# --- Parse arguments ---
+
+DIRECTORY=""
+PORT="5000"
+NO_OPEN=""
+EXTRA_ARGS=()
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --port)
+      PORT="$2"
+      shift 2
+      ;;
+    --no-open)
+      NO_OPEN="1"
+      shift
+      ;;
+    --help|-h)
+      usage
+      ;;
+    -*)
+      echo "Unknown option: $1"
+      usage
+      ;;
+    *)
+      if [[ -z "$DIRECTORY" ]]; then
+        DIRECTORY="$1"
+      else
+        echo "Unexpected argument: $1"
+        usage
+      fi
+      shift
+      ;;
+  esac
+done
+
+if [[ -z "$DIRECTORY" ]]; then
+  echo "Error: No directory specified."
+  echo ""
+  usage
+fi
+
+# Resolve to absolute path
+DIRECTORY="$(cd "$DIRECTORY" 2>/dev/null && pwd)" || {
+  echo "Error: Directory not found: $DIRECTORY"
+  exit 1
+}
+
+# --- Detect format ---
+
+has_xml=false
+has_rac=false
+
+# Check the directory and one level of subdirectories
+while IFS= read -r -d '' file; do
+  case "$file" in
+    *.xml) has_xml=true ;;
+    *.rac) has_rac=true ;;
+  esac
+done < <(find "$DIRECTORY" -maxdepth 3 -type f \( -name '*.xml' -o -name '*.rac' \) -print0 2>/dev/null)
+
+if $has_xml && $has_rac; then
+  echo "Error: Directory contains both .xml and .rac files."
+  echo "Please point to a directory with only one format."
+  exit 1
+fi
+
+if ! $has_xml && ! $has_rac; then
+  echo "Error: No .xml or .rac files found in $DIRECTORY (searched up to 3 levels deep)."
+  exit 1
+fi
+
+# --- Launch the appropriate backend ---
+
+if $has_xml; then
+  echo "Detected Fact Graph XML files → starting Node.js backend"
+  export PORT="$PORT"
+  if [[ -n "$NO_OPEN" ]]; then
+    export NO_OPEN=1
+  fi
+  exec node --import tsx "$ROOT_DIR/packages/factgraph-server/src/index.ts" "$DIRECTORY"
+
+elif $has_rac; then
+  echo "Detected RAC files → starting Python backend"
+
+  # Find Python 3 — prefer python3, fall back to python
+  PYTHON=""
+  if command -v python3 &>/dev/null; then
+    PYTHON="python3"
+  elif command -v python &>/dev/null; then
+    PYTHON="python"
+  else
+    echo "Error: Python 3 is required for RAC but neither 'python3' nor 'python' was found."
+    exit 1
+  fi
+
+  RAC_ARGS=("$DIRECTORY" "--port" "$PORT")
+  if [[ -n "$NO_OPEN" ]]; then
+    RAC_ARGS+=("--no-open")
+  fi
+  exec "$PYTHON" -m rules_visualizer_rac.cli "${RAC_ARGS[@]}"
+fi
