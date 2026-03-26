@@ -1,0 +1,127 @@
+# Child Care Subsidy Program
+#
+# A simplified child care subsidy that helps eligible families pay for
+# child care. Eligibility is based on income, household size, and
+# employment status. The subsidy covers a percentage of child care
+# costs based on income level.
+
+status: encoded
+
+# --- Inputs (facts about the applicant) ---
+
+annual_income:
+    dtype: Money
+    unit: USD
+    label: "Annual household income"
+    description: "Total annual gross income for the household"
+    default: 0
+
+household_size:
+    dtype: Integer
+    label: "Household size"
+    description: "Total number of people in the household"
+    default: 1
+
+number_of_children_in_care:
+    dtype: Integer
+    label: "Children in care"
+    description: "Number of children needing child care"
+    default: 0
+
+monthly_child_care_cost:
+    dtype: Money
+    unit: USD
+    label: "Monthly child care cost"
+    description: "Total monthly child care expenses for all children"
+    default: 0
+
+is_employed_or_in_training:
+    dtype: Boolean
+    label: "Employed or in training"
+    description: "Whether the applicant is employed, in school, or in a job training program"
+    default: false
+
+# --- Constants (from the program rules) ---
+
+base_income_limit:
+    description: "Base income limit for a household of one"
+    unit: USD
+    from 2024-01-01: 25000
+
+income_limit_per_additional_person:
+    description: "Additional income allowance per household member beyond the first"
+    unit: USD
+    from 2024-01-01: 7500
+
+max_subsidy_per_child:
+    description: "Maximum monthly subsidy per child"
+    unit: USD
+    from 2024-01-01: 600
+
+copay_rate:
+    description: "Percentage of income used to calculate family copay"
+    unit: rate
+    from 2024-01-01: 0.07
+
+min_copay:
+    description: "Minimum monthly copay regardless of income"
+    unit: USD
+    from 2024-01-01: 25
+
+# --- Computed (eligibility and benefit calculation) ---
+
+income_limit:
+    dtype: Money
+    unit: USD
+    label: "Income limit"
+    description: "Maximum income for eligibility based on household size"
+    from 2024-01-01:
+        base_income_limit + (max(0, household_size - 1) * income_limit_per_additional_person)
+
+income_eligible:
+    dtype: Boolean
+    label: "Income eligible"
+    description: "Whether household income is within the limit"
+    from 2024-01-01:
+        annual_income <= income_limit
+
+has_children_in_care:
+    dtype: Boolean
+    label: "Has children in care"
+    description: "Whether there is at least one child needing care"
+    from 2024-01-01:
+        number_of_children_in_care >= 1
+
+eligible:
+    dtype: Boolean
+    label: "Eligible for subsidy"
+    description: "Whether the applicant meets all eligibility requirements"
+    from 2024-01-01:
+        income_eligible and is_employed_or_in_training and has_children_in_care
+
+monthly_copay:
+    dtype: Money
+    unit: USD
+    label: "Monthly copay"
+    description: "The family's monthly copayment based on income"
+    from 2024-01-01:
+        max(min_copay, annual_income / 12 * copay_rate)
+
+subsidy_per_child:
+    dtype: Money
+    unit: USD
+    label: "Subsidy per child"
+    description: "Monthly subsidy amount per child after copay"
+    from 2024-01-01:
+        cost_share = monthly_child_care_cost / max(1, number_of_children_in_care)
+        raw_subsidy = max(0, cost_share - monthly_copay / max(1, number_of_children_in_care))
+        min(max_subsidy_per_child, raw_subsidy)
+
+total_monthly_subsidy:
+    dtype: Money
+    unit: USD
+    label: "Total monthly subsidy"
+    description: "Total monthly subsidy for all children, zero if not eligible"
+    from 2024-01-01:
+        result = subsidy_per_child * number_of_children_in_care
+        if eligible: result else: 0

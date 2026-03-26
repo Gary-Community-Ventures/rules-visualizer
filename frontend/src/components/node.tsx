@@ -1,5 +1,5 @@
 import { useFindNode, useMainContext } from '@/context'
-import { isInputNode } from '@/context/model-context'
+import { isInputNode, isConstantNode } from '@/context/model-context'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
 import {
@@ -10,6 +10,7 @@ import {
   Box,
   PencilLine,
   GitBranch,
+  Lock,
   Trash2,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -17,8 +18,9 @@ import { ContentViewer } from './content-viewers'
 import type { ModelNode, NodeContent } from '@/lib/model'
 import { getDependents } from '@/lib/graph'
 
-function getNodeTypeKey(content: NodeContent): string {
-  return `${content.format}:${content.type}`
+function getNodeRole(content: NodeContent): string {
+  if (content.type === 'entity') return 'entity'
+  return content.role
 }
 
 const NODE_TYPE_CONFIG: Record<
@@ -31,33 +33,33 @@ const NODE_TYPE_CONFIG: Record<
     badgeBg: string
   }
 > = {
-  'rac:variable': {
-    icon: Variable,
-    bg: 'bg-purple-50',
-    border: 'border-purple-200',
-    label: 'Variable',
-    badgeBg: 'bg-purple-100 text-purple-700',
-  },
-  'rac:entity': {
-    icon: Box,
-    bg: 'bg-blue-50',
-    border: 'border-blue-200',
-    label: 'Entity',
-    badgeBg: 'bg-blue-100 text-blue-700',
-  },
-  'factGraph:writable': {
+  input: {
     icon: PencilLine,
     bg: 'bg-blue-50',
     border: 'border-blue-200',
-    label: 'Writable',
+    label: 'Input',
     badgeBg: 'bg-blue-100 text-blue-700',
   },
-  'factGraph:derived': {
+  constant: {
+    icon: Lock,
+    bg: 'bg-gray-50',
+    border: 'border-gray-200',
+    label: 'Constant',
+    badgeBg: 'bg-gray-100 text-gray-600',
+  },
+  computed: {
     icon: GitBranch,
-    bg: 'bg-orange-50',
-    border: 'border-orange-200',
-    label: 'Derived',
-    badgeBg: 'bg-orange-100 text-orange-700',
+    bg: 'bg-purple-50',
+    border: 'border-purple-200',
+    label: 'Computed',
+    badgeBg: 'bg-purple-100 text-purple-700',
+  },
+  entity: {
+    icon: Box,
+    bg: 'bg-teal-50',
+    border: 'border-teal-200',
+    label: 'Entity',
+    badgeBg: 'bg-teal-100 text-teal-700',
   },
 }
 
@@ -104,7 +106,7 @@ export function Node({ node }: NodeProps) {
   const result = executionResults?.[node.id]
   const hasChildren = node.dependencies.length > 0
   const config =
-    NODE_TYPE_CONFIG[getNodeTypeKey(node.content)] ?? DEFAULT_CONFIG
+    NODE_TYPE_CONFIG[getNodeRole(node.content)] ?? DEFAULT_CONFIG
   const Icon = config.icon
 
   const toggleShowChildren = () => {
@@ -166,7 +168,7 @@ type NodeViewerProps = {
 
 export function NodeViewer({ node }: NodeViewerProps) {
   const config =
-    NODE_TYPE_CONFIG[getNodeTypeKey(node.content)] ?? DEFAULT_CONFIG
+    NODE_TYPE_CONFIG[getNodeRole(node.content)] ?? DEFAULT_CONFIG
   const Icon = config.icon
 
   return (
@@ -269,7 +271,9 @@ export function NodePanel() {
 
   const dependentIds = getDependents(openNode, model.nodes)
   const dependentNames = dependentIds.map((id) => model.nodes[id]?.name ?? id)
-  const canInput = isInputNode(openNodeData)
+  const isInput = isInputNode(openNodeData)
+  const isConstant = isConstantNode(openNodeData)
+  const canEdit = isInput || isConstant
 
   return (
     <div className="flex flex-col h-full bg-background">
@@ -287,16 +291,16 @@ export function NodePanel() {
       <div className="flex-1 overflow-y-auto p-5">
         <NodeViewer node={openNodeData} />
 
-        {/* Per-node input override */}
-        {canInput && (
+        {/* Per-node value entry */}
+        {canEdit && (
           <div className="mt-6 flex flex-col gap-1.5">
             <label className="text-sm font-medium text-muted-foreground">
-              Input Override
+              {isInput ? 'Value' : 'Override'}
             </label>
             <div className="flex gap-1.5">
               <Input
                 className="h-8 text-sm font-mono flex-1"
-                placeholder="Enter value..."
+                placeholder={isInput ? 'Enter value...' : 'Override default...'}
                 value={inputOverrides[openNode] ?? ''}
                 onChange={(e) => setInputOverride(openNode, e.target.value)}
               />
@@ -312,7 +316,9 @@ export function NodePanel() {
               )}
             </div>
             <p className="text-xs text-muted-foreground">
-              Override this value before running execution
+              {isInput
+                ? 'Provide this value before running'
+                : 'Override this constant for simulation'}
             </p>
           </div>
         )}

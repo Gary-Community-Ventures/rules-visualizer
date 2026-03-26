@@ -25,12 +25,14 @@ export type RightBarOptions = 'ai' | 'execution' | null
 
 /** Check if a node is an "input" that users can provide values for */
 export function isInputNode(node: ModelNode): boolean {
-  const c = node.content
-  if (c.format === 'factGraph' && c.type === 'writable') return true
-  if (c.format === 'rac' && c.type === 'variable') {
-    return node.dependencies.length === 0
-  }
-  return false
+  if (node.content.type === 'entity') return false
+  return node.content.role === 'input'
+}
+
+/** Check if a node is a constant (overridable for simulation) */
+export function isConstantNode(node: ModelNode): boolean {
+  if (node.content.type === 'entity') return false
+  return node.content.role === 'constant'
 }
 
 /** Get the variable path for a node (used as the key in execution inputs) */

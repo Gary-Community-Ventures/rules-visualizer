@@ -75,10 +75,11 @@ export function parseFactGraphModules(
     } else if (isDerived) {
       content = parseDerivedContent(fact.path, fact.raw.Derived as Record<string, unknown>)
     } else {
-      // Placeholder-only or unknown — treat as derived with no computation
+      // Placeholder-only or unknown — treat as derived constant with no computation
       content = {
         format: 'factGraph',
         type: 'derived',
+        role: 'constant',
         path: fact.path,
       }
     }
@@ -95,6 +96,18 @@ export function parseFactGraphModules(
     nodes[id] = node
   }
 
+  // Build a suffix lookup for fuzzy resolution of collection item references.
+  // E.g. /primaryFiler/age65OrOlder should match /filers/*/age65OrOlder.
+  // Key: last path segment(s) after a wildcard, Value: node id
+  const suffixToId: Record<string, string> = {}
+  for (const [path, nodeId] of Object.entries(pathToId)) {
+    const wildcardIdx = path.indexOf('/*/')
+    if (wildcardIdx !== -1) {
+      const suffix = path.slice(wildcardIdx + 3) // everything after /*/
+      suffixToId[suffix] = nodeId
+    }
+  }
+
   // Phase 3: Resolve dependencies
   for (let i = 0; i < allFacts.length; i++) {
     const fact = allFacts[i]
@@ -105,7 +118,20 @@ export function parseFactGraphModules(
     const resolved = new Set<string>()
 
     for (const depPath of depPaths) {
-      const depId = pathToId[depPath]
+      // Resolve relative paths (e.g. "../lastName") against the fact's own path
+      const absolutePath = resolvePath(depPath, fact.path)
+      let depId = pathToId[absolutePath]
+
+      // Fuzzy match: /primaryFiler/X or /secondaryFiler/X -> /filers/*/X
+      if (!depId) {
+        const segments = absolutePath.split('/').filter(Boolean)
+        if (segments.length >= 2) {
+          // Try matching the last segment against wildcard collection items
+          const lastSegment = segments[segments.length - 1]
+          depId = suffixToId[lastSegment]
+        }
+      }
+
       if (depId && depId !== id) {
         resolved.add(depId)
       }
@@ -188,19 +214,42 @@ function collectDependencyPaths(obj: unknown): string[] {
       const d = dep as Record<string, unknown>
       const path = d['@_path'] as string
       if (path) {
-        // Normalize: strip relative path prefixes for now
-        // Cross-module deps and relative paths (../) still resolve by absolute path
-        if (!path.startsWith('../')) {
-          paths.push(path)
-        }
+        paths.push(path)
       }
     }
+  }
+
+  // optionsPath="..." on Enum elements — references the fact providing enum options
+  if (typeof record['@_optionsPath'] === 'string') {
+    paths.push(record['@_optionsPath'] as string)
+  }
+
+  // <Find path="..."> — references a collection fact
+  if (typeof record['@_path'] === 'string' && record['@_path'] !== undefined) {
+    // Only for Find elements (not Fact definitions). We detect Find by checking
+    // if this is NOT a top-level fact (top-level facts have Writable/Derived children).
+    // Find elements have Dependency children but are keyed by 'Find' in the parent.
+    // We handle this via the parent recursion below.
+  }
+
+  // collection="..." on CollectionItem — references the parent collection
+  if (typeof record['@_collection'] === 'string') {
+    paths.push(record['@_collection'] as string)
   }
 
   // Recurse into all child elements
   for (const [key, value] of Object.entries(record)) {
     if (key.startsWith('@_') || key === '#text') continue
     if (key === 'Dependency') continue // already handled above
+
+    // <Find path="/filers"> — the path attribute is a dependency
+    if (key === 'Find' && typeof value === 'object' && value !== null) {
+      const findObj = value as Record<string, unknown>
+      if (typeof findObj['@_path'] === 'string') {
+        paths.push(findObj['@_path'] as string)
+      }
+    }
+
     paths.push(...collectDependencyPaths(value))
   }
 
@@ -240,6 +289,7 @@ function parseWritableContent(
   return {
     format: 'factGraph',
     type: 'writable',
+    role: 'input',
     path,
     typeName,
     enumOptionsPath,
@@ -256,11 +306,16 @@ function parseDerivedContent(
   path: string,
   derived: Record<string, unknown>
 ): FactGraphDerived {
+  // Check if this is a constant (no dependencies, only literal values)
+  const hasDeps = collectDependencyPaths(derived).length > 0
+  const computation = serializeExpression(derived)
+
   return {
     format: 'factGraph',
     type: 'derived',
+    role: hasDeps ? 'computed' : 'constant',
     path,
-    computation: serializeExpression(derived),
+    computation,
   }
 }
 
@@ -487,6 +542,32 @@ function serializeEnum(value: unknown): string {
     return text ? `enum:${text}` : 'enum'
   }
   return 'enum'
+}
+
+/**
+ * Resolve a dependency path relative to the owning fact's path.
+ * Absolute paths (starting with /) are returned as-is.
+ * Relative paths (starting with ../) are resolved against the parent of the fact path.
+ *
+ * "../lastName" relative to "/filers/x/fullName" becomes "/filers/x/lastName"
+ */
+function resolvePath(depPath: string, factPath: string): string {
+  if (!depPath.startsWith('../')) return depPath
+
+  // ../foo relative to /filers/*/fullName means /filers/*/foo (sibling in the collection).
+  // Each ../ pops one segment from the fact path.
+  const factSegments = factPath.split('/').filter(Boolean)
+  let remaining = depPath
+
+  // Pop the last segment (the fact's own name)
+  factSegments.pop()
+
+  while (remaining.startsWith('../')) {
+    remaining = remaining.slice(3)
+    // Don't pop further — ../ means sibling, not parent of the collection
+  }
+
+  return '/' + factSegments.join('/') + '/' + remaining
 }
 
 function pathToNodeName(path: string): string {
