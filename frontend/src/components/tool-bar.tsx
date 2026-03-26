@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useMainContext } from '@/context'
 import { Button } from './ui/button'
-import { Maximize2, Minimize2, Sparkles } from 'lucide-react'
+import { Maximize2, Minimize2, Play, Sparkles, Loader2, FlaskConical } from 'lucide-react'
 import {
   Combobox,
   ComboboxChips,
@@ -22,6 +22,9 @@ export function ToolBar() {
     setShowChildren,
     rightBar,
     setRightBar,
+    isExecuting,
+    executionError,
+    runExecution,
   } = useMainContext()
   const [search, setSearch] = useState('')
   const anchorRef = useComboboxAnchor()
@@ -87,7 +90,40 @@ export function ToolBar() {
         </Button>
       </div>
 
-      <div className="ml-auto flex items-center gap-3">
+      <div className="ml-auto flex items-center gap-2">
+        {executionError && (
+          <span
+            className="text-xs text-red-600 max-w-48 truncate"
+            title={executionError}
+          >
+            {executionError}
+          </span>
+        )}
+        <Button
+          variant="outline"
+          size="sm"
+          title="Run with current inputs"
+          onClick={runExecution}
+          disabled={isExecuting}
+          className="gap-1.5"
+        >
+          {isExecuting ? (
+            <Loader2 className="size-3.5 animate-spin" />
+          ) : (
+            <Play className="size-3.5" />
+          )}
+          Run
+        </Button>
+        <Button
+          variant={rightBar === 'execution' ? 'default' : 'outline'}
+          size="icon"
+          title="Execution panel"
+          onClick={() =>
+            setRightBar(rightBar === 'execution' ? null : 'execution')
+          }
+        >
+          <FlaskConical className="size-4" />
+        </Button>
         <Button
           variant={rightBar === 'ai' ? 'default' : 'outline'}
           size="icon"

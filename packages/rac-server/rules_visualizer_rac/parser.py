@@ -9,7 +9,7 @@ from typing import Any
 
 def parse_rac_directory(
     rac_dir: str, ruleset_id: str, as_of: date | None = None
-) -> dict:
+) -> tuple[dict, Any | None]:
     """Parse all .rac files in a directory into a Model dict.
 
     Args:
@@ -18,7 +18,7 @@ def parse_rac_directory(
         as_of: Date for temporal resolution (defaults to today)
 
     Returns:
-        Model dict matching the frontend Model type
+        Tuple of (Model dict, compiled IR or None if compile failed)
     """
     from rac import parse_file, compile
 
@@ -29,7 +29,7 @@ def parse_rac_directory(
     rac_files = sorted(rac_path.rglob("*.rac"))
 
     if not rac_files:
-        return _empty_model(ruleset_id)
+        return _empty_model(ruleset_id), None
 
     # Parse all modules
     modules = []
@@ -41,7 +41,7 @@ def parse_rac_directory(
             print(f"  Warning: failed to parse {f.name}: {e}")
 
     if not modules:
-        return _empty_model(ruleset_id)
+        return _empty_model(ruleset_id), None
 
     # Compile to get resolved variables with temporal resolution
     try:
@@ -49,9 +49,9 @@ def parse_rac_directory(
     except Exception as e:
         print(f"  Warning: compile failed for {ruleset_id}: {e}")
         # Fall back to uncompiled variable declarations
-        return _modules_to_model(modules, ruleset_id)
+        return _modules_to_model(modules, ruleset_id), None
 
-    return _ir_to_model(ir, ruleset_id)
+    return _ir_to_model(ir, ruleset_id), ir
 
 
 def _empty_model(ruleset_id: str) -> dict:

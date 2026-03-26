@@ -49,11 +49,18 @@ function Arrow({
       const toElement = document.getElementById(nodeElementId(toId))
 
       if (!fromElement || !toElement) {
+        setPath('')
         return
       }
 
       const fromRect = fromElement.getBoundingClientRect()
       const toRect = toElement.getBoundingClientRect()
+
+      // Skip if elements haven't been laid out yet (returns 0,0 during initial render)
+      if (fromRect.width === 0 || toRect.width === 0) {
+        setPath('')
+        return
+      }
 
       const fromX = fromRect.left + fromRect.width / 2
       const fromY = fromRect.top + fromRect.height

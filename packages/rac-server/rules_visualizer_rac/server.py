@@ -5,20 +5,17 @@ from __future__ import annotations
 import asyncio
 import json
 import mimetypes
-from http import HTTPStatus
 from pathlib import Path
 from typing import Any
 
-import websockets
-import websockets.http11
-import websockets.datastructures
-from websockets.asyncio.server import ServerConnection, Server
+from aiohttp import web
 
-# In-memory store
+# In-memory store: model dicts and compiled IRs
 _rulesets: dict[str, dict] = {}
+_compiled_irs: dict[str, Any] = {}
 
 # WebSocket clients
-_ws_clients: set[ServerConnection] = set()
+_ws_clients: set[web.WebSocketResponse] = set()
 
 # Event loop reference (set when server starts, used by watcher thread)
 _loop: asyncio.AbstractEventLoop | None = None
@@ -29,6 +26,14 @@ PUBLIC_DIR = Path(__file__).parent.parent / "public"
 def set_rulesets(rulesets: dict[str, dict]) -> None:
     global _rulesets
     _rulesets = rulesets
+
+
+def set_compiled_ir(ruleset_id: str, ir: Any) -> None:
+    """Store a compiled IR for a ruleset."""
+    if ir is not None:
+        _compiled_irs[ruleset_id] = ir
+    else:
+        _compiled_irs.pop(ruleset_id, None)
 
 
 def get_rulesets() -> dict[str, dict]:
@@ -47,118 +52,290 @@ def broadcast_reload(ruleset_id: str | None = None) -> None:
     async def _send_all() -> None:
         for ws in list(_ws_clients):
             try:
-                await ws.send(msg)
+                await ws.send_str(msg)
             except Exception:
                 pass
 
     _loop.call_soon_threadsafe(asyncio.ensure_future, _send_all())
 
 
-async def _ws_handler(ws: ServerConnection) -> None:
-    """Handle a WebSocket connection."""
+# --- Route handlers ---
+
+
+async def handle_ws(request: web.Request) -> web.WebSocketResponse:
+    """Handle WebSocket connections at /ws."""
+    ws = web.WebSocketResponse()
+    await ws.prepare(request)
     _ws_clients.add(ws)
     try:
-        await ws.send(json.dumps({"type": "connected"}))
+        await ws.send_str(json.dumps({"type": "connected"}))
         async for _ in ws:
             pass  # We don't expect messages from the client
     finally:
         _ws_clients.discard(ws)
+    return ws
 
 
-def _process_request(
-    connection: ServerConnection,
-    request: websockets.http11.Request,
-) -> websockets.http11.Response | None:
-    """Handle HTTP requests (API + static files).
+async def handle_rulesets_list(request: web.Request) -> web.Response:
+    """GET /api/rulesets — list all rulesets."""
+    summaries = [
+        {"id": m["id"], "name": m["name"], "format": m["format"]}
+        for m in _rulesets.values()
+    ]
+    return _json_response({"rulesets": summaries})
 
-    Returns a Response for HTTP requests, or None to proceed with WebSocket upgrade.
+
+async def handle_ruleset_get(request: web.Request) -> web.Response:
+    """GET /api/rulesets/:id — get a single ruleset."""
+    ruleset_id = request.match_info["id"]
+    model = _rulesets.get(ruleset_id)
+    if model:
+        return _json_response(model)
+    return _json_response({"error": "Ruleset not found"}, status=404)
+
+
+async def handle_ruleset_inputs(request: web.Request) -> web.Response:
+    """GET /api/rulesets/:id/inputs — describe what inputs a ruleset accepts."""
+    ruleset_id = request.match_info["id"]
+
+    ir = _compiled_irs.get(ruleset_id)
+    if ir is None:
+        if ruleset_id not in _rulesets:
+            return _json_response({"error": "Ruleset not found"}, status=404)
+        return _json_response(
+            {"executable": False, "scalars": [], "entities": {}}, status=200
+        )
+
+    scalars: list[dict[str, Any]] = []
+    entities: dict[str, list[str]] = {}
+
+    for var_path in ir.order:
+        var = ir.variables[var_path]
+        vd = var.model_dump()
+        entity = vd.get("entity")
+        expr = vd.get("expr")
+        is_literal = expr is not None and expr.get("type") == "literal"
+        is_leaf = is_literal or expr is None
+
+        if entity:
+            entities.setdefault(entity, []).append(var_path)
+        elif is_leaf:
+            info: dict[str, Any] = {"path": var_path}
+            if vd.get("label"):
+                info["label"] = vd["label"]
+            if vd.get("unit"):
+                info["unit"] = vd["unit"]
+            if is_literal:
+                info["default"] = _serialize_value(expr.get("value"))
+            scalars.append(info)
+
+    return _json_response(
+        {"executable": True, "scalars": scalars, "entities": entities}
+    )
+
+
+async def handle_ruleset_execute(request: web.Request) -> web.Response:
+    """POST /api/rulesets/:id/execute — execute rules with input data.
+
+    Input format:
+      {
+        "inputs": {
+          "scalar_path": value,         // override scalar constants
+          ...
+        },
+        "entities": {                   // optional entity tables
+          "TaxUnit": [{"id": 1, ...}],
+          "Person":  [{"id": 1, "tax_unit_id": 1, ...}],
+        }
+      }
     """
-    path = request.path
+    from rac import execute as rac_execute
 
-    # API routes
-    if path == "/api/rulesets":
-        summaries = [
-            {"id": m["id"], "name": m["name"], "format": m["format"]}
-            for m in _rulesets.values()
-        ]
-        return _json_response({"rulesets": summaries})
+    ruleset_id = request.match_info["id"]
 
-    if path.startswith("/api/rulesets/"):
-        parts = path.split("/api/rulesets/", 1)[1].split("/")
-        ruleset_id = parts[0]
-
-        if len(parts) > 1 and parts[1] == "execute":
-            return _json_response(
-                {"error": "Execution not yet implemented"}, status=501
-            )
-
-        model = _rulesets.get(ruleset_id)
-        if model:
-            return _json_response(model)
+    # Check ruleset exists
+    if ruleset_id not in _rulesets:
         return _json_response({"error": "Ruleset not found"}, status=404)
 
-    # WebSocket upgrade — return None to let websockets handle it
-    if path == "/ws":
-        return None
+    # Check we have a compiled IR
+    ir = _compiled_irs.get(ruleset_id)
+    if ir is None:
+        return _json_response(
+            {"error": "Ruleset could not be compiled; execution unavailable"},
+            status=400,
+        )
 
-    # Static files
+    # Parse request body
+    try:
+        body = await request.json()
+    except (json.JSONDecodeError, Exception):
+        return _json_response({"error": "Invalid JSON body"}, status=400)
+
+    scalar_overrides: dict[str, Any] = body.get("inputs", {})
+    entity_tables: dict[str, list[dict[str, Any]]] = body.get("entities", {})
+
+    # Build data tables for the RAC executor.
+    # RAC expects: {"EntityName": [{"id": ..., ...}, ...]}
+    # Scalar overrides are injected by patching the IR's literal values.
+    import copy
+
+    patched_ir = ir
+    if scalar_overrides:
+        patched_ir = copy.deepcopy(ir)
+        for var_path, value in scalar_overrides.items():
+            if var_path in patched_ir.variables:
+                var = patched_ir.variables[var_path]
+                vd = var.model_dump()
+                # Only override leaf/literal variables
+                expr = vd.get("expr")
+                if expr and expr.get("type") == "literal":
+                    # Patch the literal value
+                    var.expr.value = value
+
+    # Execute
+    try:
+        result = rac_execute(patched_ir, entity_tables)
+    except Exception as e:
+        return _json_response({"error": f"Execution failed: {e}"}, status=500)
+
+    # Build path->node_id map from the stored model
+    model = _rulesets[ruleset_id]
+    path_to_node_id: dict[str, str] = {}
+    for node_id, node in model.get("nodes", {}).items():
+        content = node.get("content", {})
+        var_path = content.get("path")
+        if var_path:
+            path_to_node_id[var_path] = node_id
+
+    # Map results back to node IDs
+    results: dict[str, dict[str, Any]] = {}
+
+    # Scalar results
+    for var_path, value in result.scalars.items():
+        node_id = path_to_node_id.get(var_path)
+        if node_id:
+            results[node_id] = {"value": _serialize_value(value)}
+
+    # Entity results
+    for entity_name, fields in result.entities.items():
+        for var_path, values in fields.items():
+            node_id = path_to_node_id.get(var_path)
+            if node_id:
+                results[node_id] = {
+                    "value": [_serialize_value(v) for v in values],
+                    "entity": entity_name,
+                }
+
+    return _json_response({"results": results})
+
+
+# --- Helpers ---
+
+
+def _serialize_value(value: Any) -> Any:
+    """Make a value JSON-serializable."""
+    if value is None or isinstance(value, (bool, int, float, str)):
+        return value
+    if isinstance(value, list):
+        return [_serialize_value(v) for v in value]
+    if isinstance(value, dict):
+        return {k: _serialize_value(v) for k, v in value.items()}
+    # Fallback: convert to string
+    return str(value)
+
+
+def _json_response(data: Any, status: int = 200) -> web.Response:
+    return web.Response(
+        text=json.dumps(data),
+        status=status,
+        content_type="application/json",
+        headers={"Access-Control-Allow-Origin": "*"},
+    )
+
+
+@web.middleware
+async def cors_middleware(request: web.Request, handler: Any) -> web.Response:
+    """Handle CORS preflight and add CORS headers to all responses."""
+    if request.method == "OPTIONS":
+        return web.Response(
+            status=204,
+            headers={
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+                "Access-Control-Allow-Headers": "Content-Type",
+            },
+        )
+    response = await handler(request)
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    return response
+
+
+def _create_app() -> web.Application:
+    """Create the aiohttp application with all routes."""
+    app = web.Application(middlewares=[cors_middleware])
+
+    # API routes
+    app.router.add_get("/api/rulesets", handle_rulesets_list)
+    app.router.add_get("/api/rulesets/{id}", handle_ruleset_get)
+    app.router.add_get("/api/rulesets/{id}/inputs", handle_ruleset_inputs)
+    app.router.add_post("/api/rulesets/{id}/execute", handle_ruleset_execute)
+
+    # WebSocket
+    app.router.add_get("/ws", handle_ws)
+
+    # Static files (SPA with fallback)
     if PUBLIC_DIR.exists():
-        file_path = (PUBLIC_DIR / path.lstrip("/")).resolve()
-        # Security: ensure resolved path is under PUBLIC_DIR
-        if file_path.is_file() and str(file_path).startswith(str(PUBLIC_DIR.resolve())):
-            return _file_response(file_path)
-        # SPA fallback
-        index = PUBLIC_DIR / "index.html"
-        if index.is_file():
-            return _file_response(index)
+        # Serve static files, with SPA index.html fallback
+        app.router.add_get("/{path:.*}", _handle_static)
+
+    return app
+
+
+async def _handle_static(request: web.Request) -> web.Response:
+    """Serve static files with SPA fallback."""
+    rel_path = request.match_info.get("path", "")
+    file_path = (PUBLIC_DIR / rel_path).resolve()
+
+    # Security: ensure resolved path is under PUBLIC_DIR
+    if file_path.is_file() and str(file_path).startswith(str(PUBLIC_DIR.resolve())):
+        content_type, _ = mimetypes.guess_type(str(file_path))
+        if content_type is None:
+            content_type = "application/octet-stream"
+        return web.Response(
+            body=file_path.read_bytes(),
+            content_type=content_type,
+        )
+
+    # SPA fallback
+    index = PUBLIC_DIR / "index.html"
+    if index.is_file():
+        return web.Response(
+            body=index.read_bytes(),
+            content_type="text/html",
+        )
 
     return _json_response(
         {"error": "No frontend build found. Use Vite dev server."}, status=404
     )
 
 
-def _json_response(data: Any, status: int = 200) -> websockets.http11.Response:
-    body = json.dumps(data).encode("utf-8")
-    headers = websockets.datastructures.Headers(
-        {
-            "Content-Type": "application/json",
-            "Content-Length": str(len(body)),
-            "Access-Control-Allow-Origin": "*",
-        }
-    )
-    return websockets.http11.Response(HTTPStatus(status), "", headers, body)
-
-
-def _file_response(file_path: Path) -> websockets.http11.Response:
-    content_type, _ = mimetypes.guess_type(str(file_path))
-    if content_type is None:
-        content_type = "application/octet-stream"
-    body = file_path.read_bytes()
-    headers = websockets.datastructures.Headers(
-        {
-            "Content-Type": content_type,
-            "Content-Length": str(len(body)),
-        }
-    )
-    return websockets.http11.Response(HTTPStatus(200), "", headers, body)
-
-
 async def _serve(port: int) -> None:
     global _loop
     _loop = asyncio.get_running_loop()
 
-    async with websockets.serve(
-        _ws_handler,
-        "",
-        port,
-        process_request=_process_request,
-    ):
-        print(f"RAC server listening on http://localhost:{port}")
-        if PUBLIC_DIR.exists():
-            print(f"Serving frontend from {PUBLIC_DIR}")
-        else:
-            print("No frontend build found — use Vite dev server")
-        await asyncio.get_running_loop().create_future()  # run forever
+    app = _create_app()
+    runner = web.AppRunner(app)
+    await runner.setup()
+    site = web.TCPSite(runner, "", port)
+    await site.start()
+
+    print(f"RAC server listening on http://localhost:{port}")
+    if PUBLIC_DIR.exists():
+        print(f"Serving frontend from {PUBLIC_DIR}")
+    else:
+        print("No frontend build found — use Vite dev server")
+
+    await asyncio.get_running_loop().create_future()  # run forever
 
 
 def run_server(port: int = 5000) -> None:

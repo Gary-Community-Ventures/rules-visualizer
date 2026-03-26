@@ -1,5 +1,7 @@
 import { useFindNode, useMainContext } from '@/context'
+import { isInputNode } from '@/context/model-context'
 import { Button } from './ui/button'
+import { Input } from './ui/input'
 import {
   Minus,
   Plus,
@@ -8,6 +10,7 @@ import {
   Box,
   PencilLine,
   GitBranch,
+  Trash2,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ContentViewer } from './content-viewers'
@@ -74,10 +77,31 @@ export function nodeElementId(id: string) {
   return `node-${id}`
 }
 
-export function Node({ node }: NodeProps) {
-  const { setHoveredNodeId, showChildren, setShowChildren, setOpenNode } =
-    useMainContext()
+function formatResultValue(value: unknown): string {
+  if (value === null || value === undefined) return 'null'
+  if (typeof value === 'boolean') return value ? 'true' : 'false'
+  if (typeof value === 'number') {
+    if (Number.isInteger(value)) return value.toLocaleString()
+    return value.toLocaleString(undefined, { maximumFractionDigits: 4 })
+  }
+  if (typeof value === 'string') return value
+  if (Array.isArray(value)) {
+    if (value.length === 0) return '[]'
+    return `[${value.length} items]`
+  }
+  return String(value)
+}
 
+export function Node({ node }: NodeProps) {
+  const {
+    setHoveredNodeId,
+    showChildren,
+    setShowChildren,
+    setOpenNode,
+    executionResults,
+  } = useMainContext()
+
+  const result = executionResults?.[node.id]
   const hasChildren = node.dependencies.length > 0
   const config =
     NODE_TYPE_CONFIG[getNodeTypeKey(node.content)] ?? DEFAULT_CONFIG
@@ -112,6 +136,11 @@ export function Node({ node }: NodeProps) {
             {node.name}
           </span>
         </div>
+        {result && (
+          <span className="mt-1 text-xs font-mono text-emerald-700 bg-emerald-50 rounded px-1.5 py-0.5 max-w-32 truncate">
+            {formatResultValue(result.value)}
+          </span>
+        )}
       </div>
       {hasChildren && (
         <Button
@@ -223,7 +252,15 @@ export function Rows({ rows }: RowsProps) {
 }
 
 export function NodePanel() {
-  const { model, openNode, setOpenNode } = useMainContext()
+  const {
+    model,
+    openNode,
+    setOpenNode,
+    executionResults,
+    inputOverrides,
+    setInputOverride,
+    clearInputOverride,
+  } = useMainContext()
   const openNodeData = useFindNode(openNode)
 
   if (openNode === null || openNodeData === undefined) {
@@ -232,6 +269,7 @@ export function NodePanel() {
 
   const dependentIds = getDependents(openNode, model.nodes)
   const dependentNames = dependentIds.map((id) => model.nodes[id]?.name ?? id)
+  const canInput = isInputNode(openNodeData)
 
   return (
     <div className="flex flex-col h-full bg-background">
@@ -248,6 +286,53 @@ export function NodePanel() {
       </div>
       <div className="flex-1 overflow-y-auto p-5">
         <NodeViewer node={openNodeData} />
+
+        {/* Per-node input override */}
+        {canInput && (
+          <div className="mt-6 flex flex-col gap-1.5">
+            <label className="text-sm font-medium text-muted-foreground">
+              Input Override
+            </label>
+            <div className="flex gap-1.5">
+              <Input
+                className="h-8 text-sm font-mono flex-1"
+                placeholder="Enter value..."
+                value={inputOverrides[openNode] ?? ''}
+                onChange={(e) => setInputOverride(openNode, e.target.value)}
+              />
+              {inputOverrides[openNode] && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 shrink-0"
+                  onClick={() => clearInputOverride(openNode)}
+                >
+                  <Trash2 className="size-3.5" />
+                </Button>
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Override this value before running execution
+            </p>
+          </div>
+        )}
+
+        {/* Execution result */}
+        {executionResults?.[openNode] && (
+          <div className="mt-6 flex flex-col gap-1.5">
+            <label className="text-sm font-medium text-muted-foreground">
+              Result
+            </label>
+            <pre className="text-sm bg-emerald-50 text-emerald-800 rounded-md p-3 overflow-x-auto">
+              {JSON.stringify(executionResults[openNode].value, null, 2)}
+            </pre>
+            {executionResults[openNode].entity && (
+              <span className="text-xs text-muted-foreground">
+                Entity: {executionResults[openNode].entity}
+              </span>
+            )}
+          </div>
+        )}
 
         {/* Dependents */}
         {dependentNames.length > 0 && (

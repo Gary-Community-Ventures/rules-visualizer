@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/resizable'
 import { useEffect, type PropsWithChildren } from 'react'
 import { AIPanel } from '@/components/ai-panel'
+import { ExecutionPanel } from '@/components/execution-panel'
 import { NodePanel } from '@/components/node'
 
 export function HomePage() {
@@ -91,6 +92,7 @@ export function NodeMapLayout({ children }: PropsWithChildren) {
             className="overflow-hidden"
           >
             {rightBar === 'ai' && <AIPanel />}
+            {rightBar === 'execution' && <ExecutionPanel />}
           </ResizablePanel>
         </>
       )}

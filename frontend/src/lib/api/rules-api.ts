@@ -6,10 +6,43 @@ const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true'
 
 export type RulesetSummary = { id: string; name: string; format: RuleFormat }
 
+export type NodeResult = {
+  value: unknown
+  entity?: string
+}
+
+export type ExecutionResults = Record<string, NodeResult>
+
+export type ScalarInputInfo = {
+  path: string
+  label?: string
+  unit?: string
+  default?: unknown
+}
+
+export type RulesetInputs = {
+  executable: boolean
+  scalars: ScalarInputInfo[]
+  entities: Record<string, string[]> // entity name → list of variable paths
+}
+
 async function get<T>(path: string): Promise<T> {
   const res = await fetch(`${API_BASE}${path}`)
   if (!res.ok) {
     throw new Error(`API error: ${res.status} ${res.statusText}`)
+  }
+  return res.json()
+}
+
+async function post<T>(path: string, body: unknown): Promise<T> {
+  const res = await fetch(`${API_BASE}${path}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  })
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    throw new Error(data.error ?? `API error: ${res.status} ${res.statusText}`)
   }
   return res.json()
 }
@@ -43,4 +76,22 @@ export async function getRuleset(rulesetId: string): Promise<Model> {
     if (!model) throw new Error(`Ruleset "${rulesetId}" not found`)
     return model
   }
+}
+
+export async function getRulesetInputs(
+  rulesetId: string
+): Promise<RulesetInputs> {
+  return get<RulesetInputs>(`/api/rulesets/${rulesetId}/inputs`)
+}
+
+export async function executeRuleset(
+  rulesetId: string,
+  inputs: Record<string, unknown>,
+  entities?: Record<string, unknown[]>
+): Promise<ExecutionResults> {
+  const data = await post<{ results: ExecutionResults }>(
+    `/api/rulesets/${rulesetId}/execute`,
+    { inputs, entities }
+  )
+  return data.results
 }

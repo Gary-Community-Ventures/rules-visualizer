@@ -9,7 +9,7 @@ from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler, FileSystemEvent
 
 from .parser import parse_rac_directory
-from .server import set_rulesets, get_rulesets, broadcast_reload
+from .server import set_rulesets, set_compiled_ir, get_rulesets, broadcast_reload
 
 
 class RacFileHandler(FileSystemEventHandler):
@@ -54,12 +54,16 @@ class RacFileHandler(FileSystemEventHandler):
         print(f"Reloading ruleset '{ruleset_id}'...")
 
         try:
-            model = parse_rac_directory(str(ruleset_dir), ruleset_id)
+            model, ir = parse_rac_directory(str(ruleset_dir), ruleset_id)
             rulesets = get_rulesets()
             rulesets[ruleset_id] = model
             set_rulesets(rulesets)
+            set_compiled_ir(ruleset_id, ir)
             broadcast_reload(ruleset_id)
-            print(f"Reloaded '{ruleset_id}' ({len(model['nodes'])} nodes)")
+            print(
+                f"Reloaded '{ruleset_id}' ({len(model['nodes'])} nodes)"
+                f'{" [executable]" if ir else ""}'
+            )
         except Exception as e:
             print(f"Failed to reload '{ruleset_id}': {e}")
 

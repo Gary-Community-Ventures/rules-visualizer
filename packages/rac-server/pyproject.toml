@@ -8,8 +8,8 @@ version = "0.1.0"
 requires-python = ">=3.10"
 dependencies = [
     "rac @ git+https://github.com/TheAxiomFoundation/rac.git",
+    "aiohttp>=3.9",
     "watchdog>=4.0",
-    "websockets>=13.0",
 ]
 
 [project.scripts]

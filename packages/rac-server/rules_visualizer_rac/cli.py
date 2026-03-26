@@ -8,7 +8,7 @@ import webbrowser
 from pathlib import Path
 
 from .parser import parse_rac_directory
-from .server import set_rulesets, run_server
+from .server import set_rulesets, set_compiled_ir, run_server
 from .watcher import start_watcher
 
 
@@ -52,11 +52,13 @@ def main() -> None:
                 continue
             ruleset_id = subdir.name
             try:
-                model = parse_rac_directory(str(subdir), ruleset_id)
+                model, ir = parse_rac_directory(str(subdir), ruleset_id)
                 rulesets[ruleset_id] = model
+                set_compiled_ir(ruleset_id, ir)
                 print(
                     f'Loaded ruleset "{model["name"]}" '
                     f'({len(model["nodes"])} nodes from {len(rac_files)} files)'
+                    f'{" [executable]" if ir else ""}'
                 )
             except Exception as e:
                 print(f'Failed to parse ruleset "{ruleset_id}": {e}')
@@ -66,11 +68,13 @@ def main() -> None:
         if rac_files:
             ruleset_id = data_dir.name
             try:
-                model = parse_rac_directory(str(data_dir), ruleset_id)
+                model, ir = parse_rac_directory(str(data_dir), ruleset_id)
                 rulesets[ruleset_id] = model
+                set_compiled_ir(ruleset_id, ir)
                 print(
                     f'Loaded ruleset "{model["name"]}" '
                     f'({len(model["nodes"])} nodes from {len(rac_files)} files)'
+                    f'{" [executable]" if ir else ""}'
                 )
             except Exception as e:
                 print(f"Failed to parse: {e}")
