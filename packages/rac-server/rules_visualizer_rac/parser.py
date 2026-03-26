@@ -444,12 +444,10 @@ def _serialize_expr(expr: Any) -> str:
         return f"match {subject} {{ {arms} }}"
 
     if t == "let":
-        bindings = ", ".join(
-            f"{name} = {_serialize_expr(val)}"
-            for name, val in expr.get("bindings", [])
-        )
+        name = expr.get("name", "?")
+        value = _serialize_expr(expr.get("value"))
         body = _serialize_expr(expr.get("body"))
-        return f"let {bindings} in {body}"
+        return f"{name} = {value}\n{body}"
 
     if t == "field_access":
         obj = _serialize_expr(expr.get("obj"))

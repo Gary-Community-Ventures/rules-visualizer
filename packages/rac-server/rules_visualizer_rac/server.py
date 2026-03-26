@@ -174,27 +174,65 @@ async def handle_ruleset_execute(request: web.Request) -> web.Response:
     scalar_overrides: dict[str, Any] = body.get("inputs", {})
     entity_tables: dict[str, list[dict[str, Any]]] = body.get("entities", {})
 
-    # Build data tables for the RAC executor.
-    # RAC expects: {"EntityName": [{"id": ..., ...}, ...]}
-    # Scalar overrides are injected by patching the IR's literal values.
+    # Execute using a custom approach that handles input variables
+    # the compiler drops. We pre-populate the executor context with
+    # user-provided input values and constant overrides.
     import copy
+    from rac.executor import Executor, Context, evaluate, Data
 
-    patched_ir = ir
-    if scalar_overrides:
-        patched_ir = copy.deepcopy(ir)
+    try:
+        patched_ir = copy.deepcopy(ir) if scalar_overrides else ir
+
+        # Patch constant overrides into the IR's literal expressions
         for var_path, value in scalar_overrides.items():
             if var_path in patched_ir.variables:
                 var = patched_ir.variables[var_path]
                 vd = var.model_dump()
-                # Only override leaf/literal variables
                 expr = vd.get("expr")
                 if expr and expr.get("type") == "literal":
-                    # Patch the literal value
                     var.expr.value = value
 
-    # Execute
-    try:
-        result = rac_execute(patched_ir, entity_tables)
+        # Build executor and context manually so we can inject inputs
+        executor = Executor(patched_ir)
+        data = Data(tables=entity_tables) if entity_tables else Data(tables={})
+        ctx = Context(data=data)
+
+        # Pre-populate context with user-provided input values.
+        # These are variables the compiler dropped (no temporal expression)
+        # but that computed variables reference by name.
+        for var_path, value in scalar_overrides.items():
+            if var_path not in patched_ir.variables:
+                # This is an input variable not in the IR — inject directly
+                ctx.computed[var_path] = value
+
+        # Run the executor's logic (replicated from Executor.execute)
+        entities: dict[str, dict[str, list]] = {}
+        for path in patched_ir.order:
+            var = patched_ir.variables[path]
+            if var.entity is None:
+                ctx.computed[path] = evaluate(var.expr, ctx)
+            else:
+                entity_name = var.entity
+                rows = data.get_rows(entity_name)
+                if entity_name not in entities:
+                    entities[entity_name] = {}
+                entities[entity_name][path] = []
+                for i, row in enumerate(rows):
+                    augmented = dict(row)
+                    for prev_path, prev_vals in entities.get(entity_name, {}).items():
+                        if len(prev_vals) > i:
+                            augmented[prev_path] = prev_vals[i]
+                    ctx.current_row = augmented
+                    ctx.current_entity = entity_name
+                    val = evaluate(var.expr, ctx)
+                    entities[entity_name][path].append(val)
+                    ctx.current_row = None
+                    ctx.current_entity = None
+
+        # Build result
+        from rac.executor import Result
+        result = Result(scalars=ctx.computed, entities=entities)
+
     except Exception as e:
         return _json_response({"error": f"Execution failed: {e}"}, status=500)
 
