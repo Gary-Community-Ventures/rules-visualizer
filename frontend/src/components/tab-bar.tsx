@@ -51,7 +51,7 @@ export function TabBar({ activeRulesetId }: TabBarProps) {
               onClick={(e) => {
                 e.stopPropagation()
                 const idx = tabs.findIndex((t) => t.rulesetId === tab.rulesetId)
-                closeTab(tab.rulesetId)
+                // Navigate away first, then close — prevents RulesetActivator from re-opening
                 if (isActive) {
                   const remaining = tabs.filter(
                     (t) => t.rulesetId !== tab.rulesetId
@@ -67,6 +67,7 @@ export function TabBar({ activeRulesetId }: TabBarProps) {
                     navigate({ to: '/' })
                   }
                 }
+                closeTab(tab.rulesetId)
               }}
               className="opacity-0 group-hover:opacity-100 hover:bg-muted-foreground/20 rounded p-0.5 transition-opacity"
               title="Close tab"

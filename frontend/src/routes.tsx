@@ -5,6 +5,7 @@ import {
   createRootRoute,
   createRoute,
   useMatch,
+  useNavigate,
   useParams,
 } from '@tanstack/react-router'
 import { AppProvider, ModelProvider, useAppContext, type Tab } from '@/context'
@@ -49,7 +50,8 @@ function RulesetActivator() {
   const { rulesetId } = useParams({
     from: '/ruleset/$rulesetId',
   })
-  const { openTab } = useAppContext()
+  const { openTab, closedTabs } = useAppContext()
+  const navigate = useNavigate()
 
   const didOpen = useRef(false)
   useEffect(() => {
@@ -57,11 +59,16 @@ function RulesetActivator() {
   }, [rulesetId])
 
   useEffect(() => {
+    // Don't reopen a tab that the user just closed
+    if (closedTabs.has(rulesetId)) {
+      navigate({ to: '/' })
+      return
+    }
     if (!didOpen.current) {
       didOpen.current = true
       openTab(rulesetId, 'Loading...')
     }
-  }, [rulesetId, openTab])
+  }, [rulesetId, openTab, closedTabs, navigate])
 
   return null
 }
