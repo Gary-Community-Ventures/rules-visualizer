@@ -54,14 +54,13 @@ def parse_rac_directory(
         # Fall back to uncompiled variable declarations
         return _modules_to_model(modules, ruleset_id, logic_blocks), None
 
-<<<<<<< HEAD
-    return _ir_to_model(ir, ruleset_id, logic_blocks), ir
+    return _ir_to_model(ir, modules, ruleset_id, logic_blocks), ir
 
 
 def _extract_logic_blocks(rac_files: list[Path]) -> dict[str, str]:
     """Read .rac files and extract the ``from`` blocks for each variable.
 
-    Returns a dict mapping variable name → the concatenated ``from …:``
+    Returns a dict mapping variable name to the concatenated ``from ...``
     temporal expression blocks (the calculation/logic portion only).
     """
     blocks: dict[str, str] = {}
@@ -109,9 +108,6 @@ def _extract_logic_blocks(rac_files: list[Path]) -> dict[str, str]:
             blocks[current_var] = "\n".join(from_lines).rstrip()
 
     return blocks
-=======
-    return _ir_to_model(ir, modules, ruleset_id), ir
->>>>>>> e01f1e9f5df73cbbc3e22f19e2ada9d6aa504ec8
 
 
 def _empty_model(ruleset_id: str) -> dict:
@@ -123,10 +119,6 @@ def _empty_model(ruleset_id: str) -> dict:
     }
 
 
-<<<<<<< HEAD
-def _ir_to_model(ir: Any, ruleset_id: str, logic_blocks: dict[str, str] | None = None) -> dict:
-    """Convert compiled RAC IR to our Model JSON format."""
-=======
 def _classify_ir_variable(vd: dict) -> str:
     """Classify a compiled IR variable as input, constant, or computed."""
     expr = vd.get("expr")
@@ -137,12 +129,16 @@ def _classify_ir_variable(vd: dict) -> str:
     return "computed"
 
 
-def _ir_to_model(ir: Any, modules: list[Any], ruleset_id: str) -> dict:
+def _ir_to_model(
+    ir: Any,
+    modules: list[Any],
+    ruleset_id: str,
+    logic_blocks: dict[str, str] | None = None,
+) -> dict:
     """Convert compiled RAC IR to our Model JSON format.
 
     Also includes input variables from the raw modules that the compiler drops.
     """
->>>>>>> e01f1e9f5df73cbbc3e22f19e2ada9d6aa504ec8
     nodes: dict[str, dict] = {}
     path_to_id: dict[str, str] = {}
 
