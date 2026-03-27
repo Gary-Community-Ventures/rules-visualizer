@@ -99,6 +99,7 @@ export type FactGraphDerived = {
   type: 'derived'
   role: 'constant' | 'computed'
   path: string
+  dataType?: string // inferred return type (Dollar, Int, Boolean, Day, etc.)
   computation?: string // human-readable serialization of the expression tree
   logic?: string // inner <Writable> or <Derived> XML
 }

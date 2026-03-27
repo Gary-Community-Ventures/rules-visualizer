@@ -395,41 +395,6 @@ def _modules_to_model(modules: list[Any], ruleset_id: str, logic_blocks: dict[st
 
         nodes[node_id] = node
 
-    # Also add entities
-    entity_offset = len(all_vars)
-    seen_entities: set[str] = set()
-    for mod in modules:
-        for ent in mod.entities:
-            ed = ent.model_dump()
-            ent_name = ed.get("name", "unknown")
-            if ent_name in seen_entities:
-                continue
-            seen_entities.add(ent_name)
-
-            node_id = f"rac-{entity_offset + len(seen_entities)}"
-            fields = []
-            for f in ed.get("fields", []):
-                field: dict[str, Any] = {
-                    "name": f.get("name", "?"),
-                    "dtype": str(f.get("dtype", "unknown")),
-                }
-                if f.get("nullable"):
-                    field["nullable"] = True
-                if f.get("default") is not None:
-                    field["default"] = str(f["default"])
-                fields.append(field)
-
-            nodes[node_id] = {
-                "id": node_id,
-                "name": ent_name,
-                "dependencies": [],
-                "content": {
-                    "format": "rac",
-                    "type": "entity",
-                    "fields": fields,
-                },
-            }
-
     return {
         "id": ruleset_id,
         "name": _id_to_name(ruleset_id),

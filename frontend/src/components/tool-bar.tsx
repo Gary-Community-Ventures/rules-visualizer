@@ -2,7 +2,31 @@ import { useState } from 'react'
 import { useMainContext } from '@/context'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
-import { Maximize2, Minimize2, Play, Sparkles, Loader2, FlaskConical, Calendar } from 'lucide-react'
+import { cn } from '@/lib/utils'
+import {
+  Maximize2,
+  Minimize2,
+  Play,
+  Sparkles,
+  Loader2,
+  FlaskConical,
+  Calendar,
+  ChevronLeft,
+  ChevronRight,
+  History,
+} from 'lucide-react'
+import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
+import {
+  Combobox,
+  ComboboxChips,
+  ComboboxChip,
+  ComboboxChipsInput,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxItem,
+  ComboboxList,
+  useComboboxAnchor,
+} from './ui/combobox'
 
 function YearPicker() {
   const { model, logicYear, setLogicYear } = useMainContext()
@@ -27,17 +51,81 @@ function YearPicker() {
     </div>
   )
 }
-import {
-  Combobox,
-  ComboboxChips,
-  ComboboxChip,
-  ComboboxChipsInput,
-  ComboboxContent,
-  ComboboxEmpty,
-  ComboboxItem,
-  ComboboxList,
-  useComboboxAnchor,
-} from './ui/combobox'
+
+function NodeNavigation() {
+  const {
+    model,
+    openNode,
+    nodeHistory,
+    nodeHistoryIndex,
+    goBackNode,
+    goForwardNode,
+    goToHistoryIndex,
+  } = useMainContext()
+
+  if (openNode === null) return null
+
+  const canGoBack = nodeHistoryIndex > 0
+  const canGoForward = nodeHistoryIndex < nodeHistory.length - 1
+
+  return (
+    <div className="flex gap-1">
+      <Button
+        variant="outline"
+        size="icon"
+        disabled={!canGoBack}
+        onClick={goBackNode}
+        title="Go back"
+      >
+        <ChevronLeft className="size-4" />
+      </Button>
+      <DropdownMenu.Root>
+        <DropdownMenu.Trigger asChild>
+          <Button
+            variant="outline"
+            size="icon"
+            disabled={nodeHistory.length <= 1}
+            title="History"
+          >
+            <History className="size-4" />
+          </Button>
+        </DropdownMenu.Trigger>
+        <DropdownMenu.Portal>
+          <DropdownMenu.Content
+            className="z-50 min-w-40 max-h-60 overflow-y-auto rounded-md border bg-popover p-1 text-popover-foreground shadow-md"
+            sideOffset={4}
+            align="start"
+          >
+            {nodeHistory.map((id, i) => (
+              <DropdownMenu.Item
+                key={`${id}-${i}`}
+                className={cn(
+                  'relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-xs outline-none transition-colors hover:bg-accent hover:text-accent-foreground',
+                  i === nodeHistoryIndex && 'font-semibold bg-accent/50'
+                )}
+                onSelect={(e) => {
+                  e.preventDefault()
+                  goToHistoryIndex(i)
+                }}
+              >
+                {model.nodes[id]?.name ?? id}
+              </DropdownMenu.Item>
+            ))}
+          </DropdownMenu.Content>
+        </DropdownMenu.Portal>
+      </DropdownMenu.Root>
+      <Button
+        variant="outline"
+        size="icon"
+        disabled={!canGoForward}
+        onClick={goForwardNode}
+        title="Go forward"
+      >
+        <ChevronRight className="size-4" />
+      </Button>
+    </div>
+  )
+}
 
 export function ToolBar() {
   const {
@@ -63,6 +151,7 @@ export function ToolBar() {
 
   return (
     <div className="border-b flex items-center gap-5 p-2 bg-background relative z-10">
+      <NodeNavigation />
       <Combobox multiple value={selectedNodes} onValueChange={setSelectedNodes}>
         <ComboboxChips ref={anchorRef}>
           {selectedNodes.map((nodeId) => (

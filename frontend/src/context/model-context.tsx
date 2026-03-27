@@ -50,7 +50,12 @@ type ModelContextValue = {
   showChildren: Record<string, boolean>
   setShowChildren: Dispatch<SetStateAction<Record<string, boolean>>>
   openNode: string | null
-  setOpenNode: Dispatch<SetStateAction<string | null>>
+  setOpenNode: (nodeId: string | null) => void
+  nodeHistory: string[]
+  nodeHistoryIndex: number
+  goBackNode: () => void
+  goForwardNode: () => void
+  goToHistoryIndex: (index: number) => void
   rightBar: RightBarOptions
   setRightBar: Dispatch<SetStateAction<RightBarOptions>>
   logicYear: number
@@ -113,7 +118,40 @@ export function ModelProvider({
   const [showChildren, setShowChildren] = useLocalStorage<
     Record<string, boolean>
   >(`showChildren:${rulesetId}`, {})
-  const [openNode, setOpenNode] = useState<string | null>(null)
+  const [nodeHistory, setNodeHistory] = useState<string[]>([])
+  const [nodeHistoryIndex, setNodeHistoryIndex] = useState(-1)
+
+  const openNode = nodeHistoryIndex >= 0 ? nodeHistory[nodeHistoryIndex] : null
+
+  const setOpenNode = useCallback((nodeId: string | null) => {
+    if (nodeId === null) {
+      // Close panel but keep history
+      setNodeHistoryIndex(-1)
+    } else if (nodeId !== (nodeHistoryIndex >= 0 ? nodeHistory[nodeHistoryIndex] : null)) {
+      // Truncate forward history and push new entry
+      setNodeHistory((prev) => [...prev.slice(0, nodeHistoryIndex + 1), nodeId])
+      setNodeHistoryIndex((prev) => prev + 1)
+    }
+  }, [nodeHistory, nodeHistoryIndex])
+
+  const goBackNode = useCallback(() => {
+    if (nodeHistoryIndex > 0) {
+      setNodeHistoryIndex((i) => i - 1)
+    }
+  }, [nodeHistoryIndex])
+
+  const goForwardNode = useCallback(() => {
+    if (nodeHistoryIndex < nodeHistory.length - 1) {
+      setNodeHistoryIndex((i) => i + 1)
+    }
+  }, [nodeHistoryIndex, nodeHistory.length])
+
+  const goToHistoryIndex = useCallback((index: number) => {
+    if (index >= 0 && index < nodeHistory.length) {
+      setNodeHistoryIndex(index)
+    }
+  }, [nodeHistory.length])
+
   const [rightBar, setRightBar] = useState<RightBarOptions>(null)
   const [logicYear, setLogicYear] = useState<number>(new Date().getFullYear())
 
@@ -219,6 +257,11 @@ export function ModelProvider({
       setShowChildren,
       openNode,
       setOpenNode,
+      nodeHistory,
+      nodeHistoryIndex,
+      goBackNode,
+      goForwardNode,
+      goToHistoryIndex,
       rightBar,
       setRightBar,
       logicYear,
@@ -244,6 +287,11 @@ export function ModelProvider({
       setShowChildren,
       openNode,
       setOpenNode,
+      nodeHistory,
+      nodeHistoryIndex,
+      goBackNode,
+      goForwardNode,
+      goToHistoryIndex,
       rightBar,
       setRightBar,
       logicYear,

@@ -1,60 +1,10 @@
+import { useState } from 'react'
 import type { NodeContent } from '@/lib/model'
 import { useMainContext } from '@/context'
+import { parseFromBlocks, getBlockForYear } from '@/lib/logic'
 
 type Props = {
   content: Extract<NodeContent, { format: 'rac'; type: 'variable' }>
-}
-
-/**
- * Parse a logic string containing `from YYYY-MM-DD:` blocks into
- * individual blocks with their start dates and body text.
- */
-function parseFromBlocks(
-  logic: string
-): { date: string; body: string }[] {
-  const blocks: { date: string; body: string }[] = []
-  const lines = logic.split('\n')
-  let currentDate: string | null = null
-  let bodyLines: string[] = []
-
-  for (const line of lines) {
-    const match = line.match(/^\s*from\s+(\d{4}-\d{2}-\d{2})\s*:/)
-    if (match) {
-      if (currentDate !== null) {
-        blocks.push({ date: currentDate, body: bodyLines.join('\n').trim() })
-      }
-      currentDate = match[1]
-      bodyLines = []
-    } else if (currentDate !== null) {
-      bodyLines.push(line)
-    }
-  }
-
-  if (currentDate !== null) {
-    blocks.push({ date: currentDate, body: bodyLines.join('\n').trim() })
-  }
-
-  return blocks
-}
-
-/**
- * Given a list of from-blocks and a year, return the block that applies:
- * the one with the latest start date that is <= Jan 1 of the year.
- */
-function getBlockForYear(
-  blocks: { date: string; body: string }[],
-  year: number
-): { date: string; body: string } | null {
-  const target = `${year}-01-01`
-  let best: { date: string; body: string } | null = null
-  for (const block of blocks) {
-    if (block.date <= target) {
-      if (!best || block.date > best.date) {
-        best = block
-      }
-    }
-  }
-  return best
 }
 
 export function RacVariableViewer({ content }: Props) {
@@ -81,7 +31,6 @@ export function RacVariableViewer({ content }: Props) {
         )
       }
     } else {
-      // No from blocks parsed — show raw
       logicDisplay = (
         <div>
           <span className="text-muted-foreground font-medium">Logic</span>
@@ -91,27 +40,27 @@ export function RacVariableViewer({ content }: Props) {
         </div>
       )
     }
+  } else if (content.default) {
+    logicDisplay = (
+      <div>
+        <span className="text-muted-foreground font-medium">Logic</span>
+        <pre className="mt-1 rounded-md border bg-muted/50 p-2 text-xs whitespace-pre-wrap font-mono">
+          {content.default}
+        </pre>
+      </div>
+    )
   }
+
+  const hasAdvanced = !!(content.entity || content.unit)
 
   return (
     <div className="flex flex-col gap-3 text-sm">
-      {content.label && <Field label="Label" value={content.label} />}
-      <Field label="Path" value={content.path} />
-      {content.entity && <Field label="Entity" value={content.entity} />}
-      {content.unit && <Field label="Unit" value={content.unit} />}
-      {content.default && <Field label="Default" value={content.default} />}
-      {logicDisplay ?? (
-        <>
-          {content.expression && (
-            <div>
-              <span className="text-muted-foreground font-medium">Expression</span>
-              <pre className="mt-1 rounded-md border bg-muted/50 p-2 text-xs whitespace-pre-wrap">
-                {content.expression}
-              </pre>
-            </div>
-          )}
-          {content.source && <Field label="Source" value={content.source} />}
-        </>
+      {logicDisplay}
+      {hasAdvanced && (
+        <AdvancedSection>
+          {content.entity && <Field label="Entity" value={content.entity} />}
+          {content.unit && <Field label="Unit" value={content.unit} />}
+        </AdvancedSection>
       )}
     </div>
   )
@@ -122,6 +71,21 @@ function Field({ label, value }: { label: string; value: string }) {
     <div>
       <span className="text-muted-foreground font-medium">{label}</span>
       <p className="mt-0.5">{value}</p>
+    </div>
+  )
+}
+
+function AdvancedSection({ children }: { children: React.ReactNode }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <div className="border-t pt-2">
+      <button
+        className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+        onClick={() => setOpen(!open)}
+      >
+        {open ? '▾ Advanced' : '▸ Advanced'}
+      </button>
+      {open && <div className="mt-2 flex flex-col gap-3">{children}</div>}
     </div>
   )
 }

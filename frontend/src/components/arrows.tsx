@@ -22,13 +22,14 @@ function Arrow({
   strokeWidth,
   parentMap,
 }: ArrowProps) {
-  const { model, hoveredNodeId, showChildren } = useMainContext()
+  const { model, hoveredNodeId, openNode, showChildren } = useMainContext()
   const nodes = model.nodes
   const [path, setPath] = useState<string>('')
   const [isDashed, setIsDashed] = useState(false)
 
+  const activeNode = hoveredNodeId ?? openNode
   const isRelated =
-    hoveredNodeId === null || fromId === hoveredNodeId || toId === hoveredNodeId
+    activeNode === null || fromId === activeNode || toId === activeNode
   const color = isRelated ? COLORS.active : COLORS.inactive
 
   const visibleNodeIds = useMemo(() => rows.flat(), [rows])

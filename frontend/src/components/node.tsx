@@ -17,6 +17,12 @@ import { cn } from '@/lib/utils'
 import { ContentViewer } from './content-viewers'
 import type { ModelNode, NodeContent } from '@/lib/model'
 import { getDependents } from '@/lib/graph'
+import {
+  HoverCard,
+  HoverCardTrigger,
+  HoverCardContent,
+} from './ui/hover-card'
+import { resolveRacLogic } from '@/lib/logic'
 
 function getNodeRole(content: NodeContent): string {
   if (content.type === 'entity') return 'entity'
@@ -167,20 +173,34 @@ type NodeViewerProps = {
 }
 
 export function NodeViewer({ node }: NodeViewerProps) {
+  const { model } = useMainContext()
+  const label = node.content.format === 'rac' && node.content.type === 'variable' ? node.content.label : undefined
+
+  const deps = node.dependencies
+    .map((id) => ({ id, name: model.nodes[id]?.name ?? id }))
+    .filter((d) => model.nodes[d.id])
+  const dependents = getDependents(node.id, model.nodes)
+    .map((id) => ({ id, name: model.nodes[id]?.name ?? id }))
+
   return (
-    <section className="flex flex-col gap-6">
-      {/* Description */}
-      {node.description && (
-        <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-medium text-muted-foreground">
-            Description
-          </label>
-          <p className="text-sm">{node.description}</p>
+    <section className="flex flex-col gap-4">
+      {(label || node.description) && (
+        <div>
+          {label && (
+            <p className="text-sm text-foreground">{label}</p>
+          )}
+          {node.description && (
+            <p className="text-xs text-muted-foreground mt-0.5">{node.description}</p>
+          )}
         </div>
       )}
 
       {/* Content viewer */}
       <ContentViewer content={node.content} />
+
+      {/* Connections */}
+      <NodeLinkList label="Dependencies" nodeIds={deps} />
+      <NodeLinkList label="Used by" nodeIds={dependents} />
     </section>
   )
 }
@@ -209,9 +229,112 @@ export function Rows({ rows }: RowsProps) {
   )
 }
 
+function getNodePreview(node: ModelNode, logicYear: number): {
+  label?: string
+  unit?: string
+  logic?: string
+  badge?: string
+  dataType?: string
+} {
+  const c = node.content
+  if (c.type === 'entity') return {}
+  switch (c.format) {
+    case 'rac':
+      return {
+        label: c.label,
+        unit: c.unit,
+        logic: resolveRacLogic(c.logic, c.default, logicYear),
+      }
+    case 'factGraph':
+      switch (c.type) {
+        case 'writable':
+          return { badge: 'Writable', dataType: c.typeName, logic: c.logic }
+        case 'derived':
+          return { badge: 'Derived', dataType: c.dataType, logic: c.logic ?? c.computation }
+      }
+  }
+}
+
+export function NodeLink({
+  nodeId,
+  name,
+  onSelect,
+}: {
+  nodeId: string
+  name: string
+  onSelect?: () => void
+}) {
+  const { model, logicYear, setOpenNode } = useMainContext()
+  const node = model.nodes[nodeId]
+  const preview = node ? getNodePreview(node, logicYear) : null
+
+  return (
+    <HoverCard openDelay={300} closeDelay={100}>
+      <HoverCardTrigger asChild>
+        <button
+          className="text-xs px-2 py-1 rounded-md border bg-muted/50 hover:bg-muted transition-colors text-left"
+          onClick={onSelect ?? (() => setOpenNode(nodeId))}
+        >
+          {name}
+        </button>
+      </HoverCardTrigger>
+      {preview && (preview.label || preview.logic || preview.badge) && (
+        <HoverCardContent side="top" className="w-72">
+          {(preview.badge || preview.dataType) && (
+            <div className="flex items-center gap-2 mb-1">
+              {preview.badge && (
+                <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                  {preview.badge}
+                </span>
+              )}
+              {preview.dataType && (
+                <span className="text-[10px] font-mono text-muted-foreground">
+                  {preview.dataType}
+                </span>
+              )}
+            </div>
+          )}
+          {preview.label && (
+            <p className="text-sm font-medium">{preview.label}</p>
+          )}
+          {preview.unit && (
+            <p className="text-xs text-muted-foreground mt-0.5">{preview.unit}</p>
+          )}
+          {preview.logic && (
+            <pre className="mt-2 rounded border bg-muted/50 p-2 text-xs whitespace-pre-wrap font-mono max-h-32 overflow-y-auto">
+              {preview.logic}
+            </pre>
+          )}
+        </HoverCardContent>
+      )}
+    </HoverCard>
+  )
+}
+
+export function NodeLinkList({
+  label,
+  nodeIds,
+}: {
+  label: string
+  nodeIds: { id: string; name: string }[]
+}) {
+  if (nodeIds.length === 0) return null
+  return (
+    <div className="flex flex-col gap-1.5">
+      <label className="text-sm font-medium text-muted-foreground">
+        {label}
+      </label>
+      <div className="flex flex-wrap gap-1.5">
+        {nodeIds.map((dep) => (
+          <NodeLink key={dep.id} nodeId={dep.id} name={dep.name} />
+        ))}
+      </div>
+    </div>
+  )
+}
+
 export function NodePanel() {
   const {
-    model,
     openNode,
     setOpenNode,
     executionResults,
@@ -225,8 +348,6 @@ export function NodePanel() {
     return null
   }
 
-  const dependentIds = getDependents(openNode, model.nodes)
-  const dependentNames = dependentIds.map((id) => model.nodes[id]?.name ?? id)
   const isInput = isInputNode(openNodeData)
   const isConstant = isConstantNode(openNodeData)
   const canEdit = isInput || isConstant
@@ -311,19 +432,6 @@ export function NodePanel() {
           </div>
         )}
 
-        {/* Dependents */}
-        {dependentNames.length > 0 && (
-          <div className="mt-6 flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-muted-foreground">
-              Referenced by
-            </label>
-            <ul className="list-disc list-inside text-sm">
-              {dependentNames.map((name) => (
-                <li key={name}>{name}</li>
-              ))}
-            </ul>
-          </div>
-        )}
       </div>
     </div>
   )

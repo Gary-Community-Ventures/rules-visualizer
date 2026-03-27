@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import type { NodeContent } from '@/lib/model'
 
 type Props = {
@@ -7,9 +8,6 @@ type Props = {
 export function FactGraphWritableViewer({ content }: Props) {
   return (
     <div className="flex flex-col gap-3 text-sm">
-      <Field label="Path" value={content.path} />
-      <Field label="Type" value={content.typeName} />
-
       {content.enumOptionsPath && (
         <Field label="Options Path" value={content.enumOptionsPath} />
       )}
@@ -39,6 +37,11 @@ export function FactGraphWritableViewer({ content }: Props) {
           </pre>
         </div>
       )}
+
+      <AdvancedSection>
+        <Field label="Type" value={content.typeName} />
+        <Field label="Path" value={content.path} />
+      </AdvancedSection>
     </div>
   )
 }
@@ -48,6 +51,21 @@ function Field({ label, value }: { label: string; value: string }) {
     <div>
       <span className="text-muted-foreground font-medium">{label}</span>
       <p className="mt-0.5">{value}</p>
+    </div>
+  )
+}
+
+function AdvancedSection({ children }: { children: React.ReactNode }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <div className="border-t pt-2">
+      <button
+        className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+        onClick={() => setOpen(!open)}
+      >
+        {open ? '▾ Advanced' : '▸ Advanced'}
+      </button>
+      {open && <div className="mt-2 flex flex-col gap-3">{children}</div>}
     </div>
   )
 }

@@ -1,6 +1,5 @@
 import type { NodeContent } from '@/lib/model'
 import { RacVariableViewer } from './rac-variable-viewer'
-import { RacEntityViewer } from './rac-entity-viewer'
 import { FactGraphWritableViewer } from './fact-graph-writable-viewer'
 import { FactGraphDerivedViewer } from './fact-graph-derived-viewer'
 
@@ -14,8 +13,6 @@ export function ContentViewer({ content }: Props) {
       switch (content.type) {
         case 'variable':
           return <RacVariableViewer content={content} />
-        case 'entity':
-          return <RacEntityViewer content={content} />
       }
       break
     case 'factGraph':

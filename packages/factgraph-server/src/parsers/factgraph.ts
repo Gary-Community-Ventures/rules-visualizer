@@ -145,6 +145,32 @@ export function parseFactGraphModules(
     nodes[id].dependencies = Array.from(resolved)
   }
 
+  // Phase 4: Propagate data types through dependency chain
+  // Repeat until no more types can be resolved
+  let resolved = true
+  while (resolved) {
+    resolved = false
+    for (const [, node] of Object.entries(nodes)) {
+      const c = node.content
+      if (c.format === 'factGraph' && c.type === 'derived' && !c.dataType) {
+        for (const depId of node.dependencies) {
+          const depContent = nodes[depId]?.content
+          if (!depContent || depContent.format !== 'factGraph') continue
+          const depType = depContent.type === 'writable'
+            ? depContent.typeName
+            : depContent.type === 'derived'
+              ? depContent.dataType
+              : undefined
+          if (depType) {
+            c.dataType = depType
+            resolved = true
+            break
+          }
+        }
+      }
+    }
+  }
+
   return {
     id: rulesetId,
     name: rulesetName,
@@ -186,7 +212,7 @@ function extractLogicBlocks(xml: string): Record<string, string> {
 
     const factBody = xml.slice(factStart, factEnd)
 
-    // Extract <Derived>...</Derived> or <Writable>...</Writable>
+    // Extract inner content of <Derived>...</Derived> or <Writable>...</Writable>
     for (const tag of ['Derived', 'Writable']) {
       const openTag = `<${tag}>`
       const closeTag = `</${tag}>`
@@ -194,7 +220,8 @@ function extractLogicBlocks(xml: string): Record<string, string> {
       if (openIdx !== -1) {
         const closeIdx = factBody.indexOf(closeTag, openIdx)
         if (closeIdx !== -1) {
-          blocks[path] = factBody.slice(openIdx, closeIdx + closeTag.length).trim()
+          const inner = dedentXml(factBody.slice(openIdx + openTag.length, closeIdx))
+          if (inner) blocks[path] = inner
           break
         }
       }
@@ -369,15 +396,91 @@ function parseDerivedContent(
   // Check if this is a constant (no dependencies, only literal values)
   const hasDeps = collectDependencyPaths(derived).length > 0
   const computation = serializeExpression(derived)
+  const dataType = inferType(derived)
 
   return {
     format: 'factGraph',
     type: 'derived',
     role: hasDeps ? 'computed' : 'constant',
     path,
+    dataType,
     computation,
   }
 }
+
+/**
+ * Infer the return type of a Derived expression tree.
+ * Optionally uses a path→type map to resolve Dependency references.
+ */
+function inferType(node: unknown): string | undefined {
+  if (node === null || node === undefined || typeof node !== 'object') return undefined
+  if (Array.isArray(node)) {
+    for (const item of node) {
+      const t = inferType(item)
+      if (t) return t
+    }
+    return undefined
+  }
+
+  const obj = node as Record<string, unknown>
+  const keys = Object.keys(obj).filter((k) => !k.startsWith('@_') && k !== '#text')
+
+  for (const key of keys) {
+    // Leaf value types
+    if (key === 'Dollar') return 'Dollar'
+    if (key === 'Int') return 'Int'
+    if (key === 'Day') return 'Day'
+    if (key === 'String') return 'String'
+    if (key === 'Rational') return 'Rational'
+    if (key === 'True' || key === 'False') return 'Boolean'
+    if (key === 'Enum') return 'Enum'
+
+    // Boolean operators
+    if (key === 'All' || key === 'Any' || key === 'Not') return 'Boolean'
+    if (key === 'Equal' || key === 'NotEqual') return 'Boolean'
+    if (key === 'GreaterThan' || key === 'GreaterThanOrEqual') return 'Boolean'
+    if (key === 'LessThan' || key === 'LessThanOrEqual') return 'Boolean'
+    if (key === 'IsComplete') return 'Boolean'
+
+    // Count/size → Int
+    if (key === 'Count' || key === 'CollectionSize') return 'Int'
+
+    // Round to int → Int
+    if (key === 'RoundToInt') return 'Int'
+
+    // Truncate cents → Dollar
+    if (key === 'TruncateCents') return 'Dollar'
+
+    // Arithmetic / aggregation — recurse to find the leaf type, default to Dollar
+    if (key === 'Add' || key === 'Subtract' || key === 'Multiply' || key === 'Divide'
+      || key === 'GreaterOf' || key === 'LesserOf' || key === 'Round'
+      || key === 'CollectionSum' || key === 'Minimum' || key === 'Maximum') {
+      return inferType(obj[key]) ?? 'Dollar'
+    }
+
+    // Switch — infer from Then branches
+    if (key === 'Switch') {
+      const sw = obj[key] as Record<string, unknown>
+      const cases = Array.isArray(sw.Case) ? sw.Case : sw.Case ? [sw.Case] : []
+      for (const c of cases) {
+        const caseObj = c as Record<string, unknown>
+        const t = inferType(caseObj.Then)
+        if (t) return t
+      }
+    }
+
+    // Containers — recurse
+    if (key === 'Then' || key === 'Value' || key === 'Minuend' || key === 'Subtrahends'
+      || key === 'Dividend' || key === 'Divisors' || key === 'Multiplicand'
+      || key === 'Left' || key === 'Right' || key === 'Placeholder' || key === 'Filter') {
+      const t = inferType(obj[key])
+      if (t) return t
+    }
+  }
+
+  return undefined
+}
+
 
 /**
  * Recursively serialize a Derived expression tree to a human-readable string.
@@ -628,6 +731,18 @@ function resolvePath(depPath: string, factPath: string): string {
   }
 
   return '/' + factSegments.join('/') + '/' + remaining
+}
+
+/**
+ * Remove common leading whitespace from each line of an XML snippet.
+ */
+function dedentXml(text: string): string {
+  const lines = text.split('\n').filter((l) => l.trim() !== '')
+  if (lines.length === 0) return ''
+  const minIndent = Math.min(
+    ...lines.map((l) => l.match(/^(\s*)/)?.[1].length ?? 0)
+  )
+  return lines.map((l) => l.slice(minIndent)).join('\n')
 }
 
 function pathToNodeName(path: string): string {
