@@ -37,6 +37,7 @@ type ParsedFact = {
   description?: string
   module: string // which module file this came from
   raw: Record<string, unknown>
+  logic?: string // raw XML for this <Fact> block
 }
 
 /**
@@ -83,13 +84,17 @@ export function parseFactGraphModules(
       }
     }
 
+    // Attach raw XML source
+    if (fact.logic) {
+      content.logic = fact.logic
+    }
+
     const node: ModelNode = {
       id,
       name: fact.name || pathToNodeName(fact.path),
       dependencies: [], // filled in phase 3
       content,
       description: fact.description,
-      tags: [fact.module], // tag with source module
     }
 
     nodes[id] = node
@@ -123,6 +128,57 @@ export function parseFactGraphModules(
 }
 
 /**
+ * Extract the inner <Derived> or <Writable> XML block for each <Fact path="...">.
+ * Returns a map from fact path to the logic XML snippet.
+ */
+function extractLogicBlocks(xml: string): Record<string, string> {
+  const blocks: Record<string, string> = {}
+  const factRegex = /<Fact\s[^>]*path="([^"]+)"[^>]*>/g
+  let match: RegExpExecArray | null
+
+  while ((match = factRegex.exec(xml)) !== null) {
+    const path = match[1]
+    const factStart = match.index
+
+    // Find the closing </Fact>
+    let depth = 1
+    let searchIdx = factStart + match[0].length
+    let factEnd = xml.length
+    while (depth > 0 && searchIdx < xml.length) {
+      const nextOpen = xml.indexOf('<Fact', searchIdx)
+      const nextClose = xml.indexOf('</Fact>', searchIdx)
+      if (nextClose === -1) break
+      if (nextOpen !== -1 && nextOpen < nextClose) {
+        depth++
+        searchIdx = nextOpen + 5
+      } else {
+        depth--
+        if (depth === 0) factEnd = nextClose + '</Fact>'.length
+        searchIdx = nextClose + '</Fact>'.length
+      }
+    }
+
+    const factBody = xml.slice(factStart, factEnd)
+
+    // Extract <Derived>...</Derived> or <Writable>...</Writable>
+    for (const tag of ['Derived', 'Writable']) {
+      const openTag = `<${tag}>`
+      const closeTag = `</${tag}>`
+      const openIdx = factBody.indexOf(openTag)
+      if (openIdx !== -1) {
+        const closeIdx = factBody.indexOf(closeTag, openIdx)
+        if (closeIdx !== -1) {
+          blocks[path] = factBody.slice(openIdx, closeIdx + closeTag.length).trim()
+          break
+        }
+      }
+    }
+  }
+
+  return blocks
+}
+
+/**
  * Parse a single module XML file into a list of facts.
  */
 function parseModuleXml(xml: string, moduleName: string): ParsedFact[] {
@@ -141,6 +197,9 @@ function parseModuleXml(xml: string, moduleName: string): ParsedFact[] {
       ? [factsContainer.Fact]
       : []
 
+  // Extract raw XML blocks for source display
+  const logicBlocks = extractLogicBlocks(xml)
+
   const facts: ParsedFact[] = []
   for (const el of factElements) {
     const fact = el as Record<string, unknown>
@@ -153,6 +212,7 @@ function parseModuleXml(xml: string, moduleName: string): ParsedFact[] {
       description: (fact.Description as string) || undefined,
       module: moduleName,
       raw: fact,
+      logic: logicBlocks[path],
     })
   }
 

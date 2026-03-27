@@ -30,6 +30,15 @@ export function FactGraphWritableViewer({ content }: Props) {
           </ul>
         </div>
       )}
+
+      {content.logic && (
+        <div>
+          <span className="text-muted-foreground font-medium">Logic</span>
+          <pre className="mt-1 rounded-md border bg-muted/50 p-2 text-xs whitespace-pre-wrap font-mono">
+            {content.logic}
+          </pre>
+        </div>
+      )}
     </div>
   )
 }

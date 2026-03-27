@@ -165,33 +165,8 @@ type NodeViewerProps = {
 }
 
 export function NodeViewer({ node }: NodeViewerProps) {
-  const config =
-    NODE_TYPE_CONFIG[getNodeTypeKey(node.content)] ?? DEFAULT_CONFIG
-  const Icon = config.icon
-
   return (
     <section className="flex flex-col gap-6">
-      {/* Type badge */}
-      <div className="flex items-center gap-2">
-        <span
-          className={cn(
-            'inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium',
-            config.badgeBg
-          )}
-        >
-          <Icon className="size-3" />
-          {config.label}
-        </span>
-      </div>
-
-      {/* Name */}
-      <div className="flex flex-col gap-1.5">
-        <label className="text-sm font-medium text-muted-foreground">
-          Name
-        </label>
-        <p className="text-sm">{node.name}</p>
-      </div>
-
       {/* Description */}
       {node.description && (
         <div className="flex flex-col gap-1.5">
@@ -199,25 +174,6 @@ export function NodeViewer({ node }: NodeViewerProps) {
             Description
           </label>
           <p className="text-sm">{node.description}</p>
-        </div>
-      )}
-
-      {/* Tags */}
-      {node.tags && node.tags.length > 0 && (
-        <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-medium text-muted-foreground">
-            Tags
-          </label>
-          <div className="flex flex-wrap gap-1">
-            {node.tags.map((tag) => (
-              <span
-                key={tag}
-                className="rounded-full bg-muted px-2 py-0.5 text-xs"
-              >
-                {tag}
-              </span>
-            ))}
-          </div>
         </div>
       )}
 
@@ -271,14 +227,29 @@ export function NodePanel() {
   const dependentNames = dependentIds.map((id) => model.nodes[id]?.name ?? id)
   const canInput = isInputNode(openNodeData)
 
+  const config =
+    NODE_TYPE_CONFIG[getNodeTypeKey(openNodeData.content)] ?? DEFAULT_CONFIG
+  const TypeIcon = config.icon
+
   return (
     <div className="flex flex-col h-full bg-background">
-      <div className="flex items-center justify-between px-5 py-3 border-b shrink-0">
-        <h2 className="text-sm font-semibold">Node Details</h2>
+      <div className="flex items-center justify-between px-5 py-3 border-b shrink-0 gap-2">
+        <div className="flex items-center gap-2 min-w-0">
+          <h2 className="text-sm font-semibold truncate">{openNodeData.name}</h2>
+          <span
+            className={cn(
+              'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium shrink-0',
+              config.badgeBg
+            )}
+          >
+            <TypeIcon className="size-3" />
+            {config.label}
+          </span>
+        </div>
         <Button
           variant="ghost"
           size="icon"
-          className="h-7 w-7"
+          className="h-7 w-7 shrink-0"
           onClick={() => setOpenNode(null)}
         >
           <X className="size-4" />

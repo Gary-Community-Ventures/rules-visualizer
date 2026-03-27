@@ -31,6 +31,9 @@ def parse_rac_directory(
     if not rac_files:
         return _empty_model(ruleset_id), None
 
+    # Extract raw source blocks from all .rac files
+    logic_blocks = _extract_logic_blocks(rac_files)
+
     # Parse all modules
     modules = []
     for f in rac_files:
@@ -49,9 +52,62 @@ def parse_rac_directory(
     except Exception as e:
         print(f"  Warning: compile failed for {ruleset_id}: {e}")
         # Fall back to uncompiled variable declarations
-        return _modules_to_model(modules, ruleset_id), None
+        return _modules_to_model(modules, ruleset_id, logic_blocks), None
 
-    return _ir_to_model(ir, ruleset_id), ir
+    return _ir_to_model(ir, ruleset_id, logic_blocks), ir
+
+
+def _extract_logic_blocks(rac_files: list[Path]) -> dict[str, str]:
+    """Read .rac files and extract the ``from`` blocks for each variable.
+
+    Returns a dict mapping variable name → the concatenated ``from …:``
+    temporal expression blocks (the calculation/logic portion only).
+    """
+    blocks: dict[str, str] = {}
+    for filepath in rac_files:
+        try:
+            text = filepath.read_text(encoding="utf-8")
+        except Exception:
+            continue
+
+        lines = text.split("\n")
+        current_var: str | None = None
+        from_lines: list[str] = []
+        in_from = False
+
+        for line in lines:
+            stripped = line.rstrip()
+            # A top-level key: non-empty, not indented, not a comment, not a
+            # docstring delimiter, and ends with ':'
+            if (
+                stripped
+                and not stripped.startswith((" ", "\t", "#", '"'))
+                and stripped.endswith(":")
+                and not stripped.startswith("status")
+            ):
+                # Save previous variable's from blocks
+                if current_var is not None and from_lines:
+                    blocks[current_var] = "\n".join(from_lines).rstrip()
+                current_var = stripped[:-1].strip()
+                from_lines = []
+                in_from = False
+            elif current_var is not None:
+                lstripped = stripped.lstrip()
+                if lstripped.startswith("from ") and lstripped.endswith(":"):
+                    in_from = True
+                    from_lines.append(stripped)
+                elif in_from:
+                    # Indented content under a from block, or blank line
+                    if stripped == "" or stripped.startswith((" ", "\t")):
+                        from_lines.append(stripped)
+                    else:
+                        in_from = False
+
+        # Save last variable
+        if current_var is not None and from_lines:
+            blocks[current_var] = "\n".join(from_lines).rstrip()
+
+    return blocks
 
 
 def _empty_model(ruleset_id: str) -> dict:
@@ -63,7 +119,7 @@ def _empty_model(ruleset_id: str) -> dict:
     }
 
 
-def _ir_to_model(ir: Any, ruleset_id: str) -> dict:
+def _ir_to_model(ir: Any, ruleset_id: str, logic_blocks: dict[str, str] | None = None) -> dict:
     """Convert compiled RAC IR to our Model JSON format."""
     nodes: dict[str, dict] = {}
     path_to_id: dict[str, str] = {}
@@ -104,6 +160,13 @@ def _ir_to_model(ir: Any, ruleset_id: str) -> dict:
         if vd.get("expr") is not None:
             content["expression"] = _serialize_expr(vd["expr"])
 
+        # Attach raw source code from the .rac file
+        if logic_blocks:
+            # The variable name is the last segment of the path
+            var_name = var_path.rsplit("/", 1)[-1] if "/" in var_path else var_path
+            if var_name in logic_blocks:
+                content["logic"] = logic_blocks[var_name]
+
         # Build node
         node: dict[str, Any] = {
             "id": node_id,
@@ -115,12 +178,6 @@ def _ir_to_model(ir: Any, ruleset_id: str) -> dict:
         if vd.get("description"):
             node["description"] = vd["description"]
 
-        tags: list[str] = []
-        if vd.get("entity"):
-            tags.append(f"entity:{vd['entity']}")
-        if tags:
-            node["tags"] = tags
-
         nodes[node_id] = node
 
     return {
@@ -131,7 +188,7 @@ def _ir_to_model(ir: Any, ruleset_id: str) -> dict:
     }
 
 
-def _modules_to_model(modules: list[Any], ruleset_id: str) -> dict:
+def _modules_to_model(modules: list[Any], ruleset_id: str, logic_blocks: dict[str, str] | None = None) -> dict:
     """Fallback: build model directly from parsed modules (no compile step).
 
     Used when compile fails (e.g. duplicate variables across files).
@@ -200,6 +257,12 @@ def _modules_to_model(modules: list[Any], ruleset_id: str) -> dict:
                     for tv in values
                 ]
 
+        # Attach raw source code from the .rac file
+        if logic_blocks:
+            var_name = var_path.rsplit("/", 1)[-1] if "/" in var_path else var_path
+            if var_name in logic_blocks:
+                content["logic"] = logic_blocks[var_name]
+
         node: dict[str, Any] = {
             "id": node_id,
             "name": _path_to_name(var_path),
@@ -209,11 +272,6 @@ def _modules_to_model(modules: list[Any], ruleset_id: str) -> dict:
 
         if vd.get("description"):
             node["description"] = vd["description"]
-
-        tags: list[str] = [filename]
-        if vd.get("entity"):
-            tags.append(f"entity:{vd['entity']}")
-        node["tags"] = tags
 
         nodes[node_id] = node
 

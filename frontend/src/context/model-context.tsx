@@ -54,6 +54,8 @@ type ModelContextValue = {
   setOpenNode: Dispatch<SetStateAction<string | null>>
   rightBar: RightBarOptions
   setRightBar: Dispatch<SetStateAction<RightBarOptions>>
+  logicYear: number
+  setLogicYear: Dispatch<SetStateAction<number>>
   // Execution
   rulesetInputs: RulesetInputs | null
   inputOverrides: Record<string, string>
@@ -140,6 +142,7 @@ export function ModelProvider({
   >(`showChildren:${rulesetId}`, {})
   const [openNode, setOpenNode] = useState<string | null>(null)
   const [rightBar, setRightBar] = useState<RightBarOptions>(null)
+  const [logicYear, setLogicYear] = useState<number>(new Date().getFullYear())
 
   // Execution state
   const [rulesetInputs, setRulesetInputs] = useState<RulesetInputs | null>(null)
@@ -216,6 +219,21 @@ export function ModelProvider({
     loadModel()
   }, [loadModel])
 
+  // Set favicon based on format
+  useEffect(() => {
+    const href = model.format === 'rac' ? '/favicon-rac.svg' : '/favicon-fg.svg'
+    let link = document.querySelector<HTMLLinkElement>("link[rel='icon']")
+    if (link) {
+      link.href = href
+    } else {
+      link = document.createElement('link')
+      link.rel = 'icon'
+      link.type = 'image/svg+xml'
+      link.href = href
+      document.head.appendChild(link)
+    }
+  }, [model.format])
+
   // Live reload: re-fetch when backend notifies of file changes
   useEffect(() => {
     return onReload((changedRulesetId) => {
@@ -240,6 +258,8 @@ export function ModelProvider({
       setOpenNode,
       rightBar,
       setRightBar,
+      logicYear,
+      setLogicYear,
       rulesetInputs,
       inputOverrides,
       setInputOverride,
@@ -266,6 +286,8 @@ export function ModelProvider({
       setOpenNode,
       rightBar,
       setRightBar,
+      logicYear,
+      setLogicYear,
       rulesetInputs,
       inputOverrides,
       setInputOverride,

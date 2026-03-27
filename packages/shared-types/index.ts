@@ -51,6 +51,7 @@ export type RacVariable = {
   default?: string
   expression?: string // human-readable for now, will become AST
   source?: string
+  logic?: string // the calculation/logic portion of the source
   temporalValues?: { from: string; to?: string; expression: string }[]
 }
 
@@ -86,6 +87,7 @@ export type FactGraphWritable = {
   enumOptionsPath?: string
   limits?: Limit[]
   collectionItemPath?: string
+  logic?: string // inner <Writable> or <Derived> XML
 }
 
 export type FactGraphDerived = {
@@ -93,6 +95,7 @@ export type FactGraphDerived = {
   type: 'derived'
   path: string
   computation?: string // human-readable serialization of the expression tree
+  logic?: string // inner <Writable> or <Derived> XML
 }
 
 // ---------------------------------------------------------------------------
