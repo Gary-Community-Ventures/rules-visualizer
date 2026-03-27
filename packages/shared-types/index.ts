@@ -75,7 +75,6 @@ export type RacEntity = {
   type: 'entity'
   fields: RacEntityField[]
   foreignKeys?: RacForeignKey[]
-  reverseRelations?: { name: string; entity: string; field: string }[]
 }
 
 // ---------------------------------------------------------------------------
@@ -96,7 +95,7 @@ export type FactGraphWritable = {
 export type FactGraphDerived = {
   format: 'factGraph'
   type: 'derived'
-  role: NodeRole
+  role: 'constant' | 'computed'
   path: string
   computation?: string // human-readable serialization of the expression tree
 }
