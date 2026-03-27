@@ -1,0 +1,206 @@
+<FactDictionaryModule>
+  <Facts>
+    <!-- ============================================================ -->
+    <!-- INPUTS — facts the applicant provides                        -->
+    <!-- ============================================================ -->
+
+    <Fact path="/annualIncome">
+      <Name>Annual household income</Name>
+      <Description>Total annual gross income for the household</Description>
+      <Writable><Dollar /></Writable>
+    </Fact>
+
+    <Fact path="/householdSize">
+      <Name>Household size</Name>
+      <Description>Total number of people in the household</Description>
+      <Writable><Int /></Writable>
+    </Fact>
+
+    <Fact path="/numberOfChildrenInCare">
+      <Name>Children in care</Name>
+      <Description>Number of children needing child care</Description>
+      <Writable><Int /></Writable>
+    </Fact>
+
+    <Fact path="/monthlyChildCareCost">
+      <Name>Monthly child care cost</Name>
+      <Description>Total monthly child care expenses for all children</Description>
+      <Writable><Dollar /></Writable>
+    </Fact>
+
+    <Fact path="/isEmployedOrInTraining">
+      <Name>Employed or in training</Name>
+      <Description>Whether the applicant is employed, in school, or in a job training program</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <!-- ============================================================ -->
+    <!-- CONSTANTS — values set by program rules                      -->
+    <!-- ============================================================ -->
+
+    <Fact path="/baseIncomeLimit">
+      <Name>Base income limit</Name>
+      <Description>Base income limit for a household of one</Description>
+      <Derived><Dollar>25000</Dollar></Derived>
+    </Fact>
+
+    <Fact path="/incomeLimitPerAdditionalPerson">
+      <Name>Income limit per additional person</Name>
+      <Description>Additional income allowance per household member beyond the first</Description>
+      <Derived><Dollar>7500</Dollar></Derived>
+    </Fact>
+
+    <Fact path="/maxSubsidyPerChild">
+      <Name>Max subsidy per child</Name>
+      <Description>Maximum monthly subsidy per child</Description>
+      <Derived><Dollar>600</Dollar></Derived>
+    </Fact>
+
+    <Fact path="/copayRate">
+      <Name>Copay rate</Name>
+      <Description>Percentage of income used to calculate family copay</Description>
+      <Derived><Rational>0.07</Rational></Derived>
+    </Fact>
+
+    <Fact path="/minCopay">
+      <Name>Minimum copay</Name>
+      <Description>Minimum monthly copay regardless of income</Description>
+      <Derived><Dollar>25</Dollar></Derived>
+    </Fact>
+
+    <!-- ============================================================ -->
+    <!-- COMPUTED — calculated from inputs and constants               -->
+    <!-- ============================================================ -->
+
+    <Fact path="/incomeLimit">
+      <Name>Income limit</Name>
+      <Description>Maximum income for eligibility based on household size</Description>
+      <Derived>
+        <Add>
+          <Dependency path="/baseIncomeLimit" />
+          <Multiply>
+            <GreaterOf>
+              <Subtract>
+                <Minuend><Dependency path="/householdSize" /></Minuend>
+                <Subtrahends><Int>1</Int></Subtrahends>
+              </Subtract>
+              <Int>0</Int>
+            </GreaterOf>
+            <Dependency path="/incomeLimitPerAdditionalPerson" />
+          </Multiply>
+        </Add>
+      </Derived>
+    </Fact>
+
+    <Fact path="/incomeEligible">
+      <Name>Income eligible</Name>
+      <Description>Whether household income is within the limit</Description>
+      <Derived>
+        <LessThanOrEqual>
+          <Left><Dependency path="/annualIncome" /></Left>
+          <Right><Dependency path="/incomeLimit" /></Right>
+        </LessThanOrEqual>
+      </Derived>
+    </Fact>
+
+    <Fact path="/hasChildrenInCare">
+      <Name>Has children in care</Name>
+      <Description>Whether there is at least one child needing care</Description>
+      <Derived>
+        <GreaterThanOrEqual>
+          <Left><Dependency path="/numberOfChildrenInCare" /></Left>
+          <Right><Int>1</Int></Right>
+        </GreaterThanOrEqual>
+      </Derived>
+    </Fact>
+
+    <Fact path="/eligible">
+      <Name>Eligible for subsidy</Name>
+      <Description>Whether the applicant meets all eligibility requirements</Description>
+      <Derived>
+        <All>
+          <Dependency path="/incomeEligible" />
+          <Dependency path="/isEmployedOrInTraining" />
+          <Dependency path="/hasChildrenInCare" />
+        </All>
+      </Derived>
+    </Fact>
+
+    <Fact path="/monthlyCopay">
+      <Name>Monthly copay</Name>
+      <Description>The family's monthly copayment based on income</Description>
+      <Derived>
+        <GreaterOf>
+          <Dependency path="/minCopay" />
+          <Multiply>
+            <Divide>
+              <Dividend><Dependency path="/annualIncome" /></Dividend>
+              <Divisors><Int>12</Int></Divisors>
+            </Divide>
+            <Dependency path="/copayRate" />
+          </Multiply>
+        </GreaterOf>
+      </Derived>
+    </Fact>
+
+    <Fact path="/subsidyPerChild">
+      <Name>Subsidy per child</Name>
+      <Description>Monthly subsidy amount per child after copay</Description>
+      <Derived>
+        <LesserOf>
+          <Dependency path="/maxSubsidyPerChild" />
+          <GreaterOf>
+            <Subtract>
+              <Minuend>
+                <Divide>
+                  <Dividend><Dependency path="/monthlyChildCareCost" /></Dividend>
+                  <Divisors>
+                    <GreaterOf>
+                      <Dependency path="/numberOfChildrenInCare" />
+                      <Int>1</Int>
+                    </GreaterOf>
+                  </Divisors>
+                </Divide>
+              </Minuend>
+              <Subtrahends>
+                <Divide>
+                  <Dividend><Dependency path="/monthlyCopay" /></Dividend>
+                  <Divisors>
+                    <GreaterOf>
+                      <Dependency path="/numberOfChildrenInCare" />
+                      <Int>1</Int>
+                    </GreaterOf>
+                  </Divisors>
+                </Divide>
+              </Subtrahends>
+            </Subtract>
+            <Int>0</Int>
+          </GreaterOf>
+        </LesserOf>
+      </Derived>
+    </Fact>
+
+    <Fact path="/totalMonthlySubsidy">
+      <Name>Total monthly subsidy</Name>
+      <Description>Total monthly subsidy for all children, zero if not eligible</Description>
+      <Derived>
+        <Switch>
+          <Case>
+            <When><Dependency path="/eligible" /></When>
+            <Then>
+              <Multiply>
+                <Dependency path="/subsidyPerChild" />
+                <Dependency path="/numberOfChildrenInCare" />
+              </Multiply>
+            </Then>
+          </Case>
+          <Case>
+            <When><True /></When>
+            <Then><Dollar>0</Dollar></Then>
+          </Case>
+        </Switch>
+      </Derived>
+    </Fact>
+
+  </Facts>
+</FactDictionaryModule>

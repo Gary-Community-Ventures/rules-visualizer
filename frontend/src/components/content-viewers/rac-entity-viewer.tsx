@@ -52,20 +52,6 @@ export function RacEntityViewer({ content }: Props) {
         </>
       )}
 
-      {content.reverseRelations && content.reverseRelations.length > 0 && (
-        <>
-          <span className="text-muted-foreground font-medium">
-            Reverse Relations
-          </span>
-          <ul className="text-xs list-disc list-inside">
-            {content.reverseRelations.map((rr, i) => (
-              <li key={i}>
-                {rr.name} (from {rr.entity}.{rr.field})
-              </li>
-            ))}
-          </ul>
-        </>
-      )}
     </div>
   )
 }

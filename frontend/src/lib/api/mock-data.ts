@@ -24,6 +24,7 @@ const RAC_EITC_MODEL: Model = {
       content: {
         format: 'rac',
         type: 'variable',
+        role: 'input',
         path: '/taxpayer/filing_status',
         entity: 'taxpayer',
         label: 'Filing Status',
@@ -40,6 +41,7 @@ const RAC_EITC_MODEL: Model = {
       content: {
         format: 'rac',
         type: 'variable',
+        role: 'input',
         path: '/taxpayer/earned_income',
         entity: 'taxpayer',
         label: 'Earned Income',
@@ -56,6 +58,7 @@ const RAC_EITC_MODEL: Model = {
       content: {
         format: 'rac',
         type: 'variable',
+        role: 'input',
         path: '/taxpayer/qualifying_children_count',
         entity: 'taxpayer',
         label: 'Qualifying Children',
@@ -72,6 +75,7 @@ const RAC_EITC_MODEL: Model = {
       content: {
         format: 'rac',
         type: 'variable',
+        role: 'computed',
         path: '/taxpayer/agi',
         entity: 'taxpayer',
         label: 'AGI',
@@ -91,6 +95,7 @@ const RAC_EITC_MODEL: Model = {
       content: {
         format: 'rac',
         type: 'variable',
+        role: 'computed',
         path: '/eitc/income_threshold',
         label: 'Income Threshold',
         unit: 'USD',
@@ -120,6 +125,7 @@ const RAC_EITC_MODEL: Model = {
       content: {
         format: 'rac',
         type: 'variable',
+        role: 'computed',
         path: '/eitc/eligible',
         label: 'EITC Eligible',
         expression:
@@ -136,6 +142,7 @@ const RAC_EITC_MODEL: Model = {
       content: {
         format: 'rac',
         type: 'variable',
+        role: 'computed',
         path: '/eitc/credit_amount',
         label: 'Credit Amount',
         unit: 'USD',
@@ -179,6 +186,7 @@ const FG_STANDARD_DEDUCTION_MODEL: Model = {
       content: {
         format: 'factGraph',
         type: 'writable',
+        role: 'input',
         path: '/filers/primary/filingStatus',
         typeName: 'Enum',
         enumOptionsPath: '/filingStatusOptions',
@@ -192,6 +200,7 @@ const FG_STANDARD_DEDUCTION_MODEL: Model = {
       content: {
         format: 'factGraph',
         type: 'writable',
+        role: 'input',
         path: '/filers/primary/isBlind',
         typeName: 'Boolean',
       },
@@ -204,6 +213,7 @@ const FG_STANDARD_DEDUCTION_MODEL: Model = {
       content: {
         format: 'factGraph',
         type: 'writable',
+        role: 'input',
         path: '/filers/primary/dateOfBirth',
         typeName: 'Day',
         limits: [
@@ -221,6 +231,7 @@ const FG_STANDARD_DEDUCTION_MODEL: Model = {
       content: {
         format: 'factGraph',
         type: 'derived',
+        role: 'computed',
         path: '/filers/primary/isOver65',
         computation: 'date_of_birth <= (tax_year_end - 65 years)',
       },
@@ -233,6 +244,7 @@ const FG_STANDARD_DEDUCTION_MODEL: Model = {
       content: {
         format: 'factGraph',
         type: 'derived',
+        role: 'computed',
         path: '/deductions/standard/baseAmount',
         computation:
           'Match filing_status: Single \u2192 $14,600, MFJ \u2192 $29,200, MFS \u2192 $14,600, HoH \u2192 $21,900, QSS \u2192 $29,200',
@@ -246,6 +258,7 @@ const FG_STANDARD_DEDUCTION_MODEL: Model = {
       content: {
         format: 'factGraph',
         type: 'derived',
+        role: 'computed',
         path: '/deductions/standard/additionalAmount',
         computation:
           'If Single or HoH: $1,950 per qualifying condition. If MFJ/MFS/QSS: $1,550 per qualifying condition. Conditions: is_over_65, is_blind.',
@@ -259,6 +272,7 @@ const FG_STANDARD_DEDUCTION_MODEL: Model = {
       content: {
         format: 'factGraph',
         type: 'derived',
+        role: 'computed',
         path: '/deductions/standard/totalAmount',
         computation: 'base_standard_deduction + additional_deduction',
       },

@@ -13,19 +13,6 @@ export type NodeResult = {
 
 export type ExecutionResults = Record<string, NodeResult>
 
-export type ScalarInputInfo = {
-  path: string
-  label?: string
-  unit?: string
-  default?: unknown
-}
-
-export type RulesetInputs = {
-  executable: boolean
-  scalars: ScalarInputInfo[]
-  entities: Record<string, string[]> // entity name → list of variable paths
-}
-
 async function get<T>(path: string): Promise<T> {
   const res = await fetch(`${API_BASE}${path}`)
   if (!res.ok) {
@@ -76,12 +63,6 @@ export async function getRuleset(rulesetId: string): Promise<Model> {
     if (!model) throw new Error(`Ruleset "${rulesetId}" not found`)
     return model
   }
-}
-
-export async function getRulesetInputs(
-  rulesetId: string
-): Promise<RulesetInputs> {
-  return get<RulesetInputs>(`/api/rulesets/${rulesetId}/inputs`)
 }
 
 export async function executeRuleset(

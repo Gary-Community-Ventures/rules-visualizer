@@ -12,10 +12,8 @@ import {
 import type { Model, ModelNode, NodeContent } from '@/lib/model'
 import {
   getRuleset,
-  getRulesetInputs,
   executeRuleset,
   type ExecutionResults,
-  type RulesetInputs,
 } from '@/lib/api/rules-api'
 import { onReload } from '@/lib/api/live-reload'
 import { useLocalStorage } from '@/lib/use-local-storage'
@@ -23,21 +21,22 @@ import { useAppContext } from './app-context'
 
 export type RightBarOptions = 'ai' | 'execution' | null
 
-/** Check if a node is an "input" that users can provide values for */
+/** Check if a node is an "input" that users must provide values for */
 export function isInputNode(node: ModelNode): boolean {
-  const c = node.content
-  if (c.format === 'factGraph' && c.type === 'writable') return true
-  if (c.format === 'rac' && c.type === 'variable') {
-    return node.dependencies.length === 0
-  }
-  return false
+  if (node.content.type === 'entity') return false
+  return node.content.role === 'input'
+}
+
+/** Check if a node is a constant (overridable for simulation) */
+export function isConstantNode(node: ModelNode): boolean {
+  if (node.content.type === 'entity') return false
+  return node.content.role === 'constant'
 }
 
 /** Get the variable path for a node (used as the key in execution inputs) */
 export function getNodePath(content: NodeContent): string | undefined {
-  if (content.format === 'rac' && content.type === 'variable') return content.path
-  if (content.format === 'factGraph') return content.path
-  return undefined
+  if (content.type === 'entity') return undefined
+  return content.path
 }
 
 type ModelContextValue = {
@@ -57,12 +56,9 @@ type ModelContextValue = {
   logicYear: number
   setLogicYear: Dispatch<SetStateAction<number>>
   // Execution
-  rulesetInputs: RulesetInputs | null
   inputOverrides: Record<string, string>
   setInputOverride: (nodeId: string, value: string) => void
   clearInputOverride: (nodeId: string) => void
-  entityTables: Record<string, Record<string, string>[]>
-  setEntityTables: Dispatch<SetStateAction<Record<string, Record<string, string>[]>>>
   executionResults: ExecutionResults | null
   isExecuting: boolean
   executionError: string | null
@@ -100,29 +96,6 @@ function parseOverrides(
   return inputs
 }
 
-/** Convert string entity table values to typed values */
-function parseEntityTables(
-  tables: Record<string, Record<string, string>[]>
-): Record<string, Record<string, unknown>[]> {
-  const result: Record<string, Record<string, unknown>[]> = {}
-  for (const [entity, rows] of Object.entries(tables)) {
-    if (rows.length === 0) continue
-    result[entity] = rows.map((row) => {
-      const parsed: Record<string, unknown> = {}
-      for (const [key, val] of Object.entries(row)) {
-        if (val === '') continue
-        try {
-          parsed[key] = JSON.parse(val)
-        } catch {
-          parsed[key] = val
-        }
-      }
-      return parsed
-    })
-  }
-  return result
-}
-
 export function ModelProvider({
   rulesetId,
   children,
@@ -145,11 +118,7 @@ export function ModelProvider({
   const [logicYear, setLogicYear] = useState<number>(new Date().getFullYear())
 
   // Execution state
-  const [rulesetInputs, setRulesetInputs] = useState<RulesetInputs | null>(null)
   const [inputOverrides, setInputOverrides] = useState<Record<string, string>>({})
-  const [entityTables, setEntityTables] = useState<
-    Record<string, Record<string, string>[]>
-  >({})
   const [executionResults, setExecutionResults] =
     useState<ExecutionResults | null>(null)
   const [isExecuting, setIsExecuting] = useState(false)
@@ -171,8 +140,7 @@ export function ModelProvider({
     setIsExecuting(true)
     setExecutionError(null)
     const inputs = parseOverrides(inputOverrides, model.nodes)
-    const entities = parseEntityTables(entityTables)
-    executeRuleset(rulesetId, inputs, entities)
+    executeRuleset(rulesetId, inputs)
       .then((results) => setExecutionResults(results))
       .catch((err) => {
         const message =
@@ -180,7 +148,7 @@ export function ModelProvider({
         setExecutionError(message)
       })
       .finally(() => setIsExecuting(false))
-  }, [rulesetId, inputOverrides, entityTables, model.nodes])
+  }, [rulesetId, inputOverrides, model.nodes])
 
   const clearExecution = useCallback(() => {
     setExecutionResults(null)
@@ -207,11 +175,6 @@ export function ModelProvider({
       .finally(() => {
         setIsLoading(false)
       })
-
-    // Also fetch input metadata
-    getRulesetInputs(rulesetId)
-      .then(setRulesetInputs)
-      .catch(() => setRulesetInputs(null))
   }, [rulesetId, updateTabName])
 
   // Load model from API
@@ -260,12 +223,9 @@ export function ModelProvider({
       setRightBar,
       logicYear,
       setLogicYear,
-      rulesetInputs,
       inputOverrides,
       setInputOverride,
       clearInputOverride,
-      entityTables,
-      setEntityTables,
       executionResults,
       isExecuting,
       executionError,
@@ -288,12 +248,9 @@ export function ModelProvider({
       setRightBar,
       logicYear,
       setLogicYear,
-      rulesetInputs,
       inputOverrides,
       setInputOverride,
       clearInputOverride,
-      entityTables,
-      setEntityTables,
       executionResults,
       isExecuting,
       executionError,

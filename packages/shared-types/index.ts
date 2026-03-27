@@ -8,6 +8,9 @@
 /** Rule format identifier */
 export type RuleFormat = 'rac' | 'factGraph'
 
+/** Universal node role — consistent across all formats */
+export type NodeRole = 'input' | 'constant' | 'computed'
+
 /** Fact Graph writable type names — matches Direct File XML element names */
 export type WritableTypeName =
   | 'String'
@@ -44,6 +47,7 @@ export type Limit = {
 export type RacVariable = {
   format: 'rac'
   type: 'variable'
+  role: NodeRole
   path: string
   entity?: string
   label?: string
@@ -72,7 +76,6 @@ export type RacEntity = {
   type: 'entity'
   fields: RacEntityField[]
   foreignKeys?: RacForeignKey[]
-  reverseRelations?: { name: string; entity: string; field: string }[]
 }
 
 // ---------------------------------------------------------------------------
@@ -82,6 +85,7 @@ export type RacEntity = {
 export type FactGraphWritable = {
   format: 'factGraph'
   type: 'writable'
+  role: 'input'
   path: string
   typeName: WritableTypeName
   enumOptionsPath?: string
@@ -93,6 +97,7 @@ export type FactGraphWritable = {
 export type FactGraphDerived = {
   format: 'factGraph'
   type: 'derived'
+  role: 'constant' | 'computed'
   path: string
   computation?: string // human-readable serialization of the expression tree
   logic?: string // inner <Writable> or <Derived> XML
