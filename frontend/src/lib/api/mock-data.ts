@@ -233,7 +233,7 @@ const FG_STANDARD_DEDUCTION_MODEL: Model = {
         type: 'derived',
         role: 'computed',
         path: '/filers/primary/isOver65',
-        computation: 'date_of_birth <= (tax_year_end - 65 years)',
+        logic: 'date_of_birth <= (tax_year_end - 65 years)',
       },
     },
     'fg-5': {
@@ -246,7 +246,7 @@ const FG_STANDARD_DEDUCTION_MODEL: Model = {
         type: 'derived',
         role: 'computed',
         path: '/deductions/standard/baseAmount',
-        computation:
+        logic:
           'Match filing_status: Single \u2192 $14,600, MFJ \u2192 $29,200, MFS \u2192 $14,600, HoH \u2192 $21,900, QSS \u2192 $29,200',
       },
     },
@@ -260,7 +260,7 @@ const FG_STANDARD_DEDUCTION_MODEL: Model = {
         type: 'derived',
         role: 'computed',
         path: '/deductions/standard/additionalAmount',
-        computation:
+        logic:
           'If Single or HoH: $1,950 per qualifying condition. If MFJ/MFS/QSS: $1,550 per qualifying condition. Conditions: is_over_65, is_blind.',
       },
     },
@@ -274,7 +274,7 @@ const FG_STANDARD_DEDUCTION_MODEL: Model = {
         type: 'derived',
         role: 'computed',
         path: '/deductions/standard/totalAmount',
-        computation: 'base_standard_deduction + additional_deduction',
+        logic: 'base_standard_deduction + additional_deduction',
       },
     },
   },

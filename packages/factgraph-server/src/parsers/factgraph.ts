@@ -92,7 +92,7 @@ export function parseFactGraphModules(
 
     const node: ModelNode = {
       id,
-      name: fact.name || pathToNodeName(fact.path),
+      name: fact.path,
       dependencies: [], // filled in phase 3
       content,
       description: fact.description,
@@ -393,9 +393,7 @@ function parseDerivedContent(
   path: string,
   derived: Record<string, unknown>
 ): FactGraphDerived {
-  // Check if this is a constant (no dependencies, only literal values)
   const hasDeps = collectDependencyPaths(derived).length > 0
-  const computation = serializeExpression(derived)
   const dataType = inferType(derived)
 
   return {
@@ -404,7 +402,6 @@ function parseDerivedContent(
     role: hasDeps ? 'computed' : 'constant',
     path,
     dataType,
-    computation,
   }
 }
 
@@ -483,231 +480,6 @@ function inferType(node: unknown): string | undefined {
 
 
 /**
- * Recursively serialize a Derived expression tree to a human-readable string.
- */
-function serializeExpression(node: unknown): string {
-  if (node === null || node === undefined) return ''
-  if (typeof node === 'string' || typeof node === 'number') return String(node)
-
-  if (Array.isArray(node)) {
-    return node.map(serializeExpression).filter(Boolean).join(', ')
-  }
-
-  const obj = node as Record<string, unknown>
-
-  // Leaf values: <Dollar>29200</Dollar>, <Int>0</Int>, <String>foo</String>, <Day>...</Day>
-  if (obj['#text'] !== undefined) return String(obj['#text'])
-
-  // Find the expression element (skip attributes)
-  const keys = Object.keys(obj).filter((k) => !k.startsWith('@_') && k !== '#text')
-
-  if (keys.length === 0) return ''
-
-  // Single-child wrapper — unwrap
-  if (keys.length === 1) {
-    const key = keys[0]
-    const child = obj[key]
-    return serializeExpressionNode(key, child)
-  }
-
-  // Multiple children — serialize each
-  return keys
-    .map((key) => serializeExpressionNode(key, obj[key]))
-    .filter(Boolean)
-    .join('; ')
-}
-
-function serializeExpressionNode(tag: string, value: unknown): string {
-  switch (tag) {
-    // Leaf types
-    case 'Dollar': return `$${extractTextValue(value)}`
-    case 'Int': return extractTextValue(value)
-    case 'Day': return extractTextValue(value)
-    case 'String': return `"${extractTextValue(value)}"`
-    case 'Boolean': return extractTextValue(value)
-    case 'True': return 'true'
-    case 'False': return 'false'
-    case 'Rational': return extractTextValue(value)
-
-    // Dependencies
-    case 'Dependency': {
-      if (Array.isArray(value)) {
-        return value.map((d) => depStr(d as Record<string, unknown>)).join(', ')
-      }
-      return depStr(value as Record<string, unknown>)
-    }
-
-    // Boolean logic
-    case 'All': return `(${serializeChildren(value, ' AND ')})`
-    case 'Any': return `(${serializeChildren(value, ' OR ')})`
-    case 'Not': return `NOT(${serializeExpression(value)})`
-
-    // Comparison
-    case 'Equal': return binaryOp(value, '==')
-    case 'NotEqual': return binaryOp(value, '!=')
-    case 'GreaterThan': return binaryOp(value, '>')
-    case 'GreaterThanOrEqual': return binaryOp(value, '>=')
-    case 'LessThan': return binaryOp(value, '<')
-    case 'LessThanOrEqual': return binaryOp(value, '<=')
-    case 'GreaterOf': return `max(${serializeChildren(value, ', ')})`
-    case 'LesserOf': return `min(${serializeChildren(value, ', ')})`
-
-    // Arithmetic
-    case 'Add': return `(${serializeChildren(value, ' + ')})`
-    case 'Subtract': return serializeSubtract(value)
-    case 'Multiply': return `(${serializeChildren(value, ' * ')})`
-    case 'Divide': return serializeDivide(value)
-    case 'Round': return `round(${serializeExpression(value)})`
-    case 'RoundToInt': return `roundToInt(${serializeExpression(value)})`
-    case 'TruncateCents': return `truncateCents(${serializeExpression(value)})`
-
-    // Control flow
-    case 'Switch': return serializeSwitch(value)
-    case 'IsComplete': return `isComplete(${serializeExpression(value)})`
-
-    // Collection ops
-    case 'Count': return `count(${serializeExpression(value)})`
-    case 'CollectionSum': return `sum(${serializeExpression(value)})`
-    case 'CollectionSize': return `size(${serializeExpression(value)})`
-    case 'Filter': return `filter(${serializeExpression(value)})`
-
-    // Enum
-    case 'Enum': return serializeEnum(value)
-    case 'EnumOptions': return `enumOptions(${serializeExpression(value)})`
-    case 'EnumOption': return serializeExpression(value)
-    case 'EnumOptionsContains': return `enumContains(${serializeExpression(value)})`
-
-    // String ops
-    case 'Paste': return `paste(${serializeChildren(value, ', ')})`
-    case 'Length': return `length(${serializeExpression(value)})`
-
-    // Misc
-    case 'Placeholder': return serializeExpression(value)
-    case 'Today': return 'today()'
-    case 'Minimum': return `min(${serializeChildren(value, ', ')})`
-    case 'Maximum': return `max(${serializeChildren(value, ', ')})`
-
-    // Containers that just wrap children
-    case 'Condition':
-    case 'Value':
-    case 'When':
-    case 'Then':
-    case 'Left':
-    case 'Right':
-    case 'Minuend':
-    case 'Subtrahends':
-    case 'Dividend':
-    case 'Divisors':
-    case 'Multiplicand':
-    case 'Rate':
-      return serializeExpression(value)
-
-    // Metadata we skip
-    case 'Name':
-    case 'Description':
-    case 'Export':
-    case 'ExportZero':
-    case 'BlockSubmissionOnTrue':
-    case 'TaxYear':
-      return ''
-
-    default:
-      // Unknown tag — just show it
-      return `${tag}(${serializeExpression(value)})`
-  }
-}
-
-function extractTextValue(value: unknown): string {
-  if (value === null || value === undefined) return ''
-  if (typeof value === 'string' || typeof value === 'number') return String(value)
-  if (typeof value === 'object') {
-    const obj = value as Record<string, unknown>
-    if (obj['#text'] !== undefined) return String(obj['#text'])
-  }
-  return String(value)
-}
-
-function depStr(d: Record<string, unknown>): string {
-  const path = d['@_path'] as string || '?'
-  const mod = d['@_module'] as string | undefined
-  // Show last segment of path for readability
-  const shortPath = path.startsWith('/') ? path.split('/').filter(Boolean).pop() || path : path
-  return mod ? `${mod}:${shortPath}` : shortPath
-}
-
-function serializeChildren(value: unknown, sep: string): string {
-  if (value === null || value === undefined) return ''
-  if (typeof value !== 'object') return String(value)
-
-  const obj = value as Record<string, unknown>
-  const parts: string[] = []
-
-  for (const [key, child] of Object.entries(obj)) {
-    if (key.startsWith('@_') || key === '#text') continue
-    const s = serializeExpressionNode(key, child)
-    if (s) parts.push(s)
-  }
-
-  return parts.join(sep)
-}
-
-function binaryOp(value: unknown, op: string): string {
-  if (typeof value !== 'object' || value === null) return ''
-  const obj = value as Record<string, unknown>
-  const left = serializeExpression(obj.Left)
-  const right = serializeExpression(obj.Right)
-  return `${left} ${op} ${right}`
-}
-
-function serializeSubtract(value: unknown): string {
-  if (typeof value !== 'object' || value === null) return ''
-  const obj = value as Record<string, unknown>
-  const minuend = serializeExpression(obj.Minuend)
-  const subtrahends = serializeExpression(obj.Subtrahends)
-  return `(${minuend} - ${subtrahends})`
-}
-
-function serializeDivide(value: unknown): string {
-  if (typeof value !== 'object' || value === null) return ''
-  const obj = value as Record<string, unknown>
-  const dividend = serializeExpression(obj.Dividend)
-  const divisors = serializeExpression(obj.Divisors)
-  return `(${dividend} / ${divisors})`
-}
-
-function serializeSwitch(value: unknown): string {
-  if (typeof value !== 'object' || value === null) return ''
-  const obj = value as Record<string, unknown>
-  const cases = Array.isArray(obj.Case) ? obj.Case : obj.Case ? [obj.Case] : []
-
-  const parts: string[] = []
-  for (let i = 0; i < cases.length; i++) {
-    const c = cases[i] as Record<string, unknown>
-    const when = serializeExpression(c.When)
-    const then = serializeExpression(c.Then)
-    if (i === 0) {
-      parts.push(`if ${when} then ${then}`)
-    } else if (when === 'true') {
-      parts.push(`else ${then}`)
-    } else {
-      parts.push(`elif ${when} then ${then}`)
-    }
-  }
-
-  return parts.join(' ')
-}
-
-function serializeEnum(value: unknown): string {
-  if (typeof value === 'string') return `enum:${value}`
-  if (typeof value === 'object' && value !== null) {
-    const obj = value as Record<string, unknown>
-    const text = obj['#text'] as string || ''
-    return text ? `enum:${text}` : 'enum'
-  }
-  return 'enum'
-}
-
-/**
  * Resolve a dependency path relative to the owning fact's path.
  * Absolute paths (starting with /) are returned as-is.
  * Relative paths (starting with ../) are resolved against the parent of the fact path.
@@ -745,10 +517,6 @@ function dedentXml(text: string): string {
   return lines.map((l) => l.slice(minIndent)).join('\n')
 }
 
-function pathToNodeName(path: string): string {
-  const segments = path.split('/').filter((s) => s && s !== '*')
-  return segments[segments.length - 1] || path
-}
 
 function parseLimits(writable: Record<string, unknown>): Limit[] | undefined {
   if (!writable.Limit) return undefined
@@ -764,7 +532,11 @@ function parseLimits(writable: Record<string, unknown>): Limit[] | undefined {
     let value: string | number = ''
     for (const [key, val] of Object.entries(lim)) {
       if (key.startsWith('@_')) continue
-      value = extractTextValue(val)
+      if (typeof val === 'object' && val !== null && '#text' in (val as Record<string, unknown>)) {
+        value = String((val as Record<string, unknown>)['#text'])
+      } else {
+        value = String(val ?? '')
+      }
       break
     }
 

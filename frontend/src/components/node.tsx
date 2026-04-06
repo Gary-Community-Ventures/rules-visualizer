@@ -250,7 +250,7 @@ function getNodePreview(node: ModelNode, logicYear: number): {
         case 'writable':
           return { badge: 'Writable', dataType: c.typeName, logic: c.logic }
         case 'derived':
-          return { badge: 'Derived', dataType: c.dataType, logic: c.logic ?? c.computation }
+          return { badge: 'Derived', dataType: c.dataType, logic: c.logic }
       }
   }
 }

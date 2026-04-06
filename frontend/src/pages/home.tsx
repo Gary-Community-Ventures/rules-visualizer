@@ -1,4 +1,5 @@
 import { useFindNode, useMainContext } from '@/context'
+import { useKeyboardShortcuts } from '@/lib/use-keyboard-shortcuts'
 import { Rows } from '@/components/node'
 import { Arrows } from '@/components/arrows'
 import { ToolBar } from '@/components/tool-bar'
@@ -15,6 +16,7 @@ import { ExecutionPanel } from '@/components/execution-panel'
 import { NodePanel } from '@/components/node'
 
 export function HomePage() {
+  useKeyboardShortcuts()
   const { model, selectedNodes, showChildren, isLoading, error } =
     useMainContext()
 

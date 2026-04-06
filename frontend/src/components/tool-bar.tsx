@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useMainContext } from '@/context'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
@@ -62,10 +62,17 @@ function NodeNavigation() {
     goForwardNode,
     goToHistoryIndex,
   } = useMainContext()
+  const [historyOpen, setHistoryOpen] = useState(false)
 
-  if (openNode === null) return null
+  useEffect(() => {
+    const handler = () => setHistoryOpen(true)
+    window.addEventListener('open-history', handler)
+    return () => window.removeEventListener('open-history', handler)
+  }, [])
 
-  const canGoBack = nodeHistoryIndex > 0
+  if (nodeHistory.length === 0) return null
+
+  const canGoBack = openNode === null || nodeHistoryIndex > 0
   const canGoForward = nodeHistoryIndex < nodeHistory.length - 1
 
   return (
@@ -79,12 +86,12 @@ function NodeNavigation() {
       >
         <ChevronLeft className="size-4" />
       </Button>
-      <DropdownMenu.Root>
+      <DropdownMenu.Root open={historyOpen} onOpenChange={setHistoryOpen}>
         <DropdownMenu.Trigger asChild>
           <Button
             variant="outline"
             size="icon"
-            disabled={nodeHistory.length <= 1}
+            disabled={nodeHistory.length === 0}
             title="History"
           >
             <History className="size-4" />
@@ -96,21 +103,24 @@ function NodeNavigation() {
             sideOffset={4}
             align="start"
           >
-            {nodeHistory.map((id, i) => (
-              <DropdownMenu.Item
-                key={`${id}-${i}`}
-                className={cn(
-                  'relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-xs outline-none transition-colors hover:bg-accent hover:text-accent-foreground',
-                  i === nodeHistoryIndex && 'font-semibold bg-accent/50'
-                )}
-                onSelect={(e) => {
-                  e.preventDefault()
-                  goToHistoryIndex(i)
-                }}
-              >
-                {model.nodes[id]?.name ?? id}
-              </DropdownMenu.Item>
-            ))}
+            {[...nodeHistory].reverse().map((id, ri) => {
+              const i = nodeHistory.length - 1 - ri
+              return (
+                <DropdownMenu.Item
+                  key={`${id}-${i}`}
+                  className={cn(
+                    'relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-xs outline-none transition-colors hover:bg-accent hover:text-accent-foreground',
+                    i === nodeHistoryIndex && 'font-semibold bg-accent/50'
+                  )}
+                  onSelect={(e) => {
+                    e.preventDefault()
+                    goToHistoryIndex(i)
+                  }}
+                >
+                  {model.nodes[id]?.name ?? id}
+                </DropdownMenu.Item>
+              )
+            })}
           </DropdownMenu.Content>
         </DropdownMenu.Portal>
       </DropdownMenu.Root>

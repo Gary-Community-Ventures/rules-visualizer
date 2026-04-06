@@ -1,15 +1,38 @@
 type ReloadCallback = (rulesetId?: string) => void
+type AiCallback = (event: AiEvent) => void
 
-const callbacks: ReloadCallback[] = []
+export type AiEvent =
+  | { type: 'ai-chunk'; requestId: string; content: string }
+  | { type: 'ai-tool-start'; requestId: string; name: string; id: string }
+  | { type: 'ai-tool-end'; requestId: string; name: string; id: string; result: string }
+  | { type: 'ai-done'; requestId: string }
+  | { type: 'ai-error'; requestId: string; content: string }
+
+const reloadCallbacks: ReloadCallback[] = []
+const aiCallbacks: AiCallback[] = []
 let ws: WebSocket | null = null
 let reconnectTimer: ReturnType<typeof setTimeout> | null = null
 let reconnectDelay = 1000
 
 export function onReload(callback: ReloadCallback): () => void {
-  callbacks.push(callback)
+  reloadCallbacks.push(callback)
   return () => {
-    const index = callbacks.indexOf(callback)
-    if (index !== -1) callbacks.splice(index, 1)
+    const index = reloadCallbacks.indexOf(callback)
+    if (index !== -1) reloadCallbacks.splice(index, 1)
+  }
+}
+
+export function onAiEvent(callback: AiCallback): () => void {
+  aiCallbacks.push(callback)
+  return () => {
+    const index = aiCallbacks.indexOf(callback)
+    if (index !== -1) aiCallbacks.splice(index, 1)
+  }
+}
+
+export function sendWsMessage(data: Record<string, unknown>): void {
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify(data))
   }
 }
 
@@ -30,8 +53,12 @@ export function connectLiveReload(): void {
       try {
         const data = JSON.parse(event.data)
         if (data.type === 'reload') {
-          for (const cb of callbacks) {
+          for (const cb of reloadCallbacks) {
             cb(data.rulesetId)
+          }
+        } else if (data.type?.startsWith('ai-')) {
+          for (const cb of aiCallbacks) {
+            cb(data as AiEvent)
           }
         }
       } catch {

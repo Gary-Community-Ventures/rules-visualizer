@@ -13,6 +13,8 @@ import {
   type SetStateAction,
 } from 'react'
 import { useMainContext } from '@/context'
+import { cn } from '@/lib/utils'
+import { onAiEvent, sendWsMessage, type AiEvent } from '@/lib/api/live-reload'
 import { Button } from './ui/button'
 import { X, Send, ChevronRight, Copy, Check } from 'lucide-react'
 import Markdown from 'react-markdown'
@@ -29,7 +31,15 @@ type AIMessage = {
   message: string
 }
 
-type ChatMessage = UserMessage | AIMessage
+type ToolCallMessage = {
+  type: 'toolCall'
+  name: string
+  id: string
+  status: 'pending' | 'success' | 'error'
+  result?: string
+}
+
+type ChatMessage = UserMessage | AIMessage | ToolCallMessage
 
 type ChatContextType = {
   messages: ChatMessage[]
@@ -125,37 +135,98 @@ export function AIPanel() {
 }
 
 function ChatBox() {
-  const { addMessage, setShouldAutoScroll } = useChatContext()
+  const { messages, addMessage, setMessages, setShouldAutoScroll, isLoading, setIsLoading } =
+    useChatContext()
+  const { model } = useMainContext()
   const [message, setMessage] = useState('')
+  const requestIdRef = useRef(0)
+  const aiContentRef = useRef('')
+
+  // Listen for AI WebSocket events
+  useEffect(() => {
+    return onAiEvent((event: AiEvent) => {
+      const currentId = String(requestIdRef.current)
+      if (event.requestId !== currentId) return
+
+      switch (event.type) {
+        case 'ai-chunk':
+          aiContentRef.current += event.content
+          setMessages((prev) => {
+            const last = prev[prev.length - 1]
+            if (last?.type === 'aiMessage') {
+              return [...prev.slice(0, -1), { type: 'aiMessage', message: aiContentRef.current }]
+            }
+            return [...prev, { type: 'aiMessage', message: aiContentRef.current }]
+          })
+          break
+        case 'ai-tool-start':
+          aiContentRef.current = ''
+          setMessages((prev) => [
+            ...prev,
+            { type: 'toolCall', name: event.name, id: event.id, status: 'pending' },
+          ])
+          break
+        case 'ai-tool-end':
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.type === 'toolCall' && m.id === event.id
+                ? { ...m, status: 'success' as const, result: event.result }
+                : m
+            )
+          )
+          break
+        case 'ai-done':
+          setIsLoading(false)
+          break
+        case 'ai-error':
+          setMessages((prev) => [
+            ...prev,
+            { type: 'aiMessage', message: `Error: ${event.content}` },
+          ])
+          setIsLoading(false)
+          break
+      }
+    })
+  }, [setMessages, setIsLoading])
 
   const handleSubmit = () => {
-    if (!message.trim()) return
+    if (!message.trim() || isLoading) return
+    const userMsg = message.trim()
     setShouldAutoScroll(true)
-    addMessage({
-      type: 'userMessage',
-      message: message.trim(),
-    })
-    // TODO: Wire up to AI backend
+    addMessage({ type: 'userMessage', message: userMsg })
     setMessage('')
+    setIsLoading(true)
+    aiContentRef.current = ''
+
+    // Build history from existing messages (skip greeting and tool calls)
+    const history = messages
+      .filter((m): m is UserMessage | AIMessage => m !== GREETING && m.type !== 'toolCall')
+      .map((m) => ({
+        role: m.type === 'userMessage' ? 'user' : 'assistant',
+        content: m.message,
+      }))
+
+    const reqId = ++requestIdRef.current
+
+    sendWsMessage({
+      type: 'ai-chat',
+      requestId: String(reqId),
+      rulesetId: model.id,
+      message: userMsg,
+      history,
+    })
   }
 
   return (
     <div className="border-t p-3 shrink-0 flex flex-col gap-2">
-      <textarea
-        className="w-full resize-none rounded-md border bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-        rows={3}
-        placeholder="Ask about your rules..."
+      <ChatInput
         value={message}
-        onChange={(e) => setMessage(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault()
-            handleSubmit()
-          }
-        }}
+        onChange={setMessage}
+        onSubmit={handleSubmit}
+        placeholder="Ask about your rules..."
       />
       <div className="flex justify-end">
-        <Button size="sm" onClick={handleSubmit} disabled={!message.trim()}>
+        <Button size="sm" onClick={handleSubmit} disabled={!message.trim() || isLoading}>
           <Send className="size-4 mr-1" />
           Send
         </Button>
@@ -247,7 +318,178 @@ function ChatMessageView({ message }: { message: ChatMessage }) {
       return <UserMessageView message={message} />
     case 'aiMessage':
       return <AIMessageView message={message} />
+    case 'toolCall':
+      return <ToolCallView message={message} />
   }
+}
+
+function ToolCallView({ message }: { message: ToolCallMessage }) {
+  const [expanded, setExpanded] = useState(false)
+  const hasContent = !!message.result
+
+  return (
+    <div className="border rounded-lg overflow-hidden text-sm">
+      <button
+        type="button"
+        className={cn(
+          'flex items-center gap-2 px-3 py-1.5 bg-muted/50 w-full text-left',
+          hasContent && 'cursor-pointer hover:bg-muted/70',
+          expanded && 'border-b'
+        )}
+        onClick={() => hasContent && setExpanded(!expanded)}
+        disabled={!hasContent}
+      >
+        {hasContent && (
+          <ChevronRight
+            className={cn(
+              'size-3 transition-transform',
+              expanded && 'rotate-90'
+            )}
+          />
+        )}
+        <span className="font-mono text-xs">{message.name}</span>
+        {message.status === 'pending' && (
+          <span className="text-xs text-muted-foreground">Running...</span>
+        )}
+        {message.status === 'success' && (
+          <span className="text-xs text-emerald-600">Done</span>
+        )}
+        {message.status === 'error' && (
+          <span className="text-xs text-red-600">Error</span>
+        )}
+      </button>
+      {expanded && message.result && (
+        <div className="px-3 py-2 font-mono text-xs whitespace-pre-wrap bg-muted/20">
+          {message.result}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function ChatInput({
+  value,
+  onChange,
+  onSubmit,
+  placeholder,
+}: {
+  value: string
+  onChange: (value: string) => void
+  onSubmit: () => void
+  placeholder?: string
+}) {
+  const { model } = useMainContext()
+  const [showSuggestions, setShowSuggestions] = useState(false)
+  const [selectedIndex, setSelectedIndex] = useState(0)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
+
+  const nodeNames = useMemo(
+    () => Object.values(model.nodes).map((n) => n.name),
+    [model.nodes]
+  )
+
+  // Get the current word being typed (after last space or start)
+  const currentWord = useMemo(() => {
+    const textarea = textareaRef.current
+    if (!textarea) return ''
+    const pos = textarea.selectionStart
+    const textBefore = value.slice(0, pos)
+    const match = textBefore.match(/\S+$/)
+    return match ? match[0] : ''
+  }, [value])
+
+  const suggestions = useMemo(() => {
+    if (currentWord.length < 2) return []
+    const q = currentWord.toLowerCase()
+    return nodeNames
+      .filter((name) => name.toLowerCase().includes(q))
+      .slice(0, 8)
+  }, [currentWord, nodeNames])
+
+  useEffect(() => {
+    setShowSuggestions(suggestions.length > 0)
+    setSelectedIndex(0)
+  }, [suggestions])
+
+  const applySuggestion = (name: string) => {
+    const textarea = textareaRef.current
+    if (!textarea) return
+    const pos = textarea.selectionStart
+    const textBefore = value.slice(0, pos)
+    const wordStart = textBefore.search(/\S+$/)
+    const newValue =
+      value.slice(0, wordStart === -1 ? pos : wordStart) +
+      name +
+      ' ' +
+      value.slice(pos)
+    onChange(newValue)
+    setShowSuggestions(false)
+    textarea.focus()
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (showSuggestions && suggestions.length > 0) {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault()
+        setSelectedIndex((i) => Math.min(i + 1, suggestions.length - 1))
+        return
+      }
+      if (e.key === 'ArrowUp') {
+        e.preventDefault()
+        setSelectedIndex((i) => Math.max(i - 1, 0))
+        return
+      }
+      if (e.key === 'Tab' || (e.key === 'Enter' && suggestions.length > 0 && showSuggestions)) {
+        e.preventDefault()
+        applySuggestion(suggestions[selectedIndex])
+        return
+      }
+      if (e.key === 'Escape') {
+        setShowSuggestions(false)
+        return
+      }
+    }
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      onSubmit()
+    }
+  }
+
+  return (
+    <div className="relative">
+      <textarea
+        ref={textareaRef}
+        className="w-full resize-none rounded-md border bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+        rows={3}
+        placeholder={placeholder}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        onKeyDown={handleKeyDown}
+        onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+      />
+      {showSuggestions && (
+        <div className="absolute bottom-full left-0 right-0 mb-1 max-h-48 overflow-y-auto rounded-md border bg-popover p-1 shadow-md z-50">
+          {suggestions.map((name, i) => (
+            <button
+              key={name}
+              className={cn(
+                'flex w-full items-center rounded-sm px-2 py-1.5 text-xs text-left transition-colors',
+                i === selectedIndex
+                  ? 'bg-accent text-accent-foreground'
+                  : 'hover:bg-accent/50'
+              )}
+              onMouseDown={(e) => {
+                e.preventDefault()
+                applySuggestion(name)
+              }}
+            >
+              <span className="font-mono truncate">{name}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
 }
 
 const URL_PATTERN = /(https?:\/\/[^\s<>)"']+)/g
@@ -258,7 +500,7 @@ function ClickableNodeText({ text }: { text: string }) {
   const nameToId = useMemo(() => {
     const map = new Map<string, string>()
     for (const [id, node] of Object.entries(model.nodes)) {
-      map.set(node.name.toLowerCase(), id)
+      map.set(node.name, id)
     }
     return map
   }, [model.nodes])
@@ -296,7 +538,7 @@ function ClickableNodeText({ text }: { text: string }) {
 
     const sorted = [...nodeNames].sort((a, b) => b.length - a.length)
     const escaped = sorted.map((n) => n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
-    const nodePattern = new RegExp(`(${escaped.join('|')})`, 'gi')
+    const nodePattern = new RegExp(`(${escaped.join('|')})`, 'g')
 
     for (const part of urlParts) {
       if (part.type === 'url') {
@@ -345,7 +587,7 @@ function ClickableNodeText({ text }: { text: string }) {
           <button
             key={i}
             onClick={() => {
-              const id = nameToId.get(part.content.toLowerCase())
+              const id = nameToId.get(part.content)
               if (id) setOpenNode(id)
             }}
             className="text-violet-600 font-semibold hover:underline"

@@ -500,8 +500,7 @@ def _serialize_expr(expr: Any) -> str:
 def _path_to_name(path: str) -> str:
     """Extract a short display name from a variable path."""
     parts = path.split("/")
-    name = parts[-1] if parts else path
-    return name.replace("_", " ").title()
+    return parts[-1] if parts else path
 
 
 def _id_to_name(ruleset_id: str) -> str:

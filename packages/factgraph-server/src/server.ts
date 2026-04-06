@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url'
 import { WebSocketServer, type WebSocket } from 'ws'
 import type { Server } from 'node:http'
 import rulesetRoutes from './routes/rulesets.js'
+import { handleAiChat } from './routes/ai.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -44,6 +45,17 @@ export function createServer(port: number): Server {
   wss = new WebSocketServer({ server, path: '/ws' })
   wss.on('connection', (ws) => {
     ws.send(JSON.stringify({ type: 'connected' }))
+
+    ws.on('message', (raw) => {
+      try {
+        const data = JSON.parse(String(raw))
+        if (data.type === 'ai-chat') {
+          handleAiChat(ws, data)
+        }
+      } catch {
+        // ignore malformed messages
+      }
+    })
   })
 
   return server

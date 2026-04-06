@@ -121,34 +121,42 @@ export function ModelProvider({
   const [nodeHistory, setNodeHistory] = useState<string[]>([])
   const [nodeHistoryIndex, setNodeHistoryIndex] = useState(-1)
 
-  const openNode = nodeHistoryIndex >= 0 ? nodeHistory[nodeHistoryIndex] : null
+  const [panelOpen, setPanelOpen] = useState(false)
+
+  const openNode = panelOpen && nodeHistoryIndex >= 0 ? nodeHistory[nodeHistoryIndex] : null
 
   const setOpenNode = useCallback((nodeId: string | null) => {
     if (nodeId === null) {
-      // Close panel but keep history
-      setNodeHistoryIndex(-1)
-    } else if (nodeId !== (nodeHistoryIndex >= 0 ? nodeHistory[nodeHistoryIndex] : null)) {
-      // Truncate forward history and push new entry
-      setNodeHistory((prev) => [...prev.slice(0, nodeHistoryIndex + 1), nodeId])
-      setNodeHistoryIndex((prev) => prev + 1)
+      setPanelOpen(false)
+    } else {
+      setPanelOpen(true)
+      if (nodeId !== (nodeHistoryIndex >= 0 ? nodeHistory[nodeHistoryIndex] : null)) {
+        setNodeHistory((prev) => [...prev.slice(0, nodeHistoryIndex + 1), nodeId])
+        setNodeHistoryIndex((prev) => prev + 1)
+      }
     }
   }, [nodeHistory, nodeHistoryIndex])
 
   const goBackNode = useCallback(() => {
-    if (nodeHistoryIndex > 0) {
+    if (!panelOpen && nodeHistoryIndex >= 0) {
+      setPanelOpen(true)
+    } else if (nodeHistoryIndex > 0) {
       setNodeHistoryIndex((i) => i - 1)
+      setPanelOpen(true)
     }
-  }, [nodeHistoryIndex])
+  }, [nodeHistoryIndex, panelOpen])
 
   const goForwardNode = useCallback(() => {
     if (nodeHistoryIndex < nodeHistory.length - 1) {
       setNodeHistoryIndex((i) => i + 1)
+      setPanelOpen(true)
     }
   }, [nodeHistoryIndex, nodeHistory.length])
 
   const goToHistoryIndex = useCallback((index: number) => {
     if (index >= 0 && index < nodeHistory.length) {
       setNodeHistoryIndex(index)
+      setPanelOpen(true)
     }
   }, [nodeHistory.length])
 

@@ -187,7 +187,7 @@ export function ExecutionPanel() {
                       ? content.default
                       : content.type === 'derived' &&
                           content.format === 'factGraph'
-                        ? content.computation
+                        ? content.logic
                         : undefined
                   return (
                     <NodeField
