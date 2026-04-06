@@ -12,7 +12,31 @@ from .server import set_rulesets, set_compiled_ir, run_server
 from .watcher import start_watcher
 
 
+def _load_env() -> None:
+    """Load .env from current directory or any parent."""
+    d = Path.cwd()
+    while True:
+        env_file = d / ".env"
+        if env_file.is_file():
+            for line in env_file.read_text().splitlines():
+                line = line.strip()
+                if not line or line.startswith("#"):
+                    continue
+                eq = line.find("=")
+                if eq == -1:
+                    continue
+                key, value = line[:eq], line[eq + 1:]
+                if key not in os.environ:
+                    os.environ[key] = value
+            return
+        parent = d.parent
+        if parent == d:
+            return
+        d = parent
+
+
 def main() -> None:
+    _load_env()
     parser = argparse.ArgumentParser(
         description="Serve RAC rules for visualization",
     )

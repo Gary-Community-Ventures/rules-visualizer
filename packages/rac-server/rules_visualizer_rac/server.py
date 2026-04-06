@@ -69,11 +69,54 @@ async def handle_ws(request: web.Request) -> web.WebSocketResponse:
     _ws_clients.add(ws)
     try:
         await ws.send_str(json.dumps({"type": "connected"}))
-        async for _ in ws:
-            pass  # We don't expect messages from the client
+        async for msg in ws:
+            if msg.type == web.WSMsgType.TEXT:
+                try:
+                    data = json.loads(msg.data)
+                    if data.get("type") == "ai-chat":
+                        asyncio.ensure_future(_handle_ai_chat(ws, data))
+                except (json.JSONDecodeError, Exception):
+                    pass
     finally:
         _ws_clients.discard(ws)
     return ws
+
+
+async def _handle_ai_chat(ws: web.WebSocketResponse, data: dict) -> None:
+    """Handle an AI chat request over WebSocket."""
+    from rules_visualizer_rac.ai.agents.orchestrator import stream_agent
+    from rules_visualizer_rac.ai.config import ChatContext
+
+    request_id = data.get("requestId", "")
+    ruleset_id = data.get("rulesetId", "")
+    message = data.get("message", "")
+    history = data.get("history")
+
+    try:
+        async for event in stream_agent(
+            ChatContext(ruleset_id=ruleset_id),
+            message,
+            thread_id=request_id,
+            history=history,
+        ):
+            event["requestId"] = request_id
+            event_type = event.pop("type")
+            # Map event types to match frontend expectations
+            type_map = {
+                "text": "ai-chunk",
+                "tool_start": "ai-tool-start",
+                "tool_end": "ai-tool-end",
+                "done": "ai-done",
+                "error": "ai-error",
+            }
+            ws_type = type_map.get(event_type, f"ai-{event_type}")
+            await ws.send_str(json.dumps({"type": ws_type, **event}))
+    except Exception as e:
+        await ws.send_str(json.dumps({
+            "type": "ai-error",
+            "requestId": request_id,
+            "content": str(e),
+        }))
 
 
 async def handle_rulesets_list(request: web.Request) -> web.Response:
