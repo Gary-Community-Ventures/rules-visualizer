@@ -107,9 +107,11 @@ export function Node({ node }: NodeProps) {
     setShowChildren,
     setOpenNode,
     executionResults,
+    inputOverrides,
   } = useMainContext()
 
   const result = executionResults?.[node.id]
+  const hasOverride = !!(inputOverrides[node.id] && inputOverrides[node.id] !== '')
   const hasChildren = node.dependencies.length > 0
   const config =
     NODE_TYPE_CONFIG[getNodeRole(node.content)] ?? DEFAULT_CONFIG
@@ -131,7 +133,7 @@ export function Node({ node }: NodeProps) {
       <div
         id={nodeElementId(node.id)}
         className={cn(
-          config.border,
+          hasOverride ? 'border-amber-400 ring-1 ring-amber-400' : config.border,
           'border p-5 h-full relative flex flex-col items-center'
         )}
         onClick={() => {
@@ -391,7 +393,10 @@ export function NodePanel() {
             </label>
             <div className="flex gap-1.5">
               <Input
-                className="h-8 text-sm font-mono flex-1"
+                className={cn(
+                  'h-8 text-sm font-mono flex-1',
+                  inputOverrides[openNode] && 'border-amber-400 ring-1 ring-amber-400'
+                )}
                 placeholder={isInput ? 'Enter value...' : 'Override default...'}
                 value={inputOverrides[openNode] ?? ''}
                 onChange={(e) => setInputOverride(openNode, e.target.value)}
