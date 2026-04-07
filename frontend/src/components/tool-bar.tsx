@@ -194,7 +194,13 @@ export function ToolBar() {
           variant="outline"
           size="icon"
           title="Expand all"
-          onClick={() => setShowChildren({})}
+          onClick={() => {
+            const all: Record<string, boolean> = {}
+            for (const id of Object.keys(model.nodes)) {
+              all[id] = true
+            }
+            setShowChildren(all)
+          }}
         >
           <Maximize2 className="size-4" />
         </Button>
@@ -202,13 +208,7 @@ export function ToolBar() {
           variant="outline"
           size="icon"
           title="Collapse all"
-          onClick={() => {
-            const all: Record<string, boolean> = {}
-            for (const id of Object.keys(model.nodes)) {
-              all[id] = false
-            }
-            setShowChildren(all)
-          }}
+          onClick={() => setShowChildren({})}
         >
           <Minimize2 className="size-4" />
         </Button>

@@ -135,7 +135,7 @@ function nodeRowsLarge(
       const id = stack.pop()!
       if (reachable.has(id) || !nodes[id]) continue
       reachable.add(id)
-      if (showChildren[id] !== false) {
+      if (showChildren[id] === true) {
         for (const dep of nodes[id].dependencies) {
           stack.push(dep)
         }
@@ -159,7 +159,7 @@ function nodeRowsLarge(
       const id = stack.pop()!
       if (visible.has(id) || !nodes[id]) continue
       visible.add(id)
-      if (showChildren[id] !== false) {
+      if (showChildren[id] === true) {
         for (const dep of nodes[id].dependencies) {
           stack.push(dep)
         }
@@ -234,7 +234,7 @@ function getOrdering(
 ): string[] {
   const children = nodes[currentNode]?.dependencies ?? []
 
-  if (showChildren[currentNode] === false) {
+  if (showChildren[currentNode] !== true) {
     return currentOrdering
   }
 

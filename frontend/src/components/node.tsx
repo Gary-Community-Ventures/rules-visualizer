@@ -118,7 +118,7 @@ export function Node({ node }: NodeProps) {
   const toggleShowChildren = () => {
     setShowChildren((prev) => ({
       ...prev,
-      [node.id]: prev[node.id] === false,
+      [node.id]: prev[node.id] !== true,
     }))
   }
 
@@ -157,7 +157,7 @@ export function Node({ node }: NodeProps) {
           className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-white h-6 w-6"
           onClick={toggleShowChildren}
         >
-          {showChildren[node.id] !== false ? (
+          {showChildren[node.id] === true ? (
             <Minus className="w-3 h-3" />
           ) : (
             <Plus className="w-3 h-3" />

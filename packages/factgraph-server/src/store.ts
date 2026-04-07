@@ -3,7 +3,10 @@ import path from 'node:path'
 import { parseFactGraphModules } from './parsers/factgraph.js'
 import type { Model, RulesetSummary } from './types.js'
 
+export type RawFact = { path: string; raw: Record<string, unknown> }
+
 const models = new Map<string, Model>()
+const rawFacts = new Map<string, RawFact[]>()
 
 /**
  * Load Fact Graph rulesets from the given directory.
@@ -42,10 +45,11 @@ function loadSingleRuleset(rulesetId: string, rulesetDir: string): void {
     .replace(/[-_]/g, ' ')
     .replace(/\b\w/g, (c) => c.toUpperCase())
 
-  const model = parseFactGraphModules(modules, rulesetId, rulesetName)
-  models.set(rulesetId, model)
+  const result = parseFactGraphModules(modules, rulesetId, rulesetName)
+  models.set(rulesetId, result.model)
+  rawFacts.set(rulesetId, result.facts)
   console.log(
-    `Loaded ruleset "${model.name}" (${Object.keys(model.nodes).length} nodes from ${modules.length} modules)`
+    `Loaded ruleset "${result.model.name}" (${Object.keys(result.model.nodes).length} nodes from ${modules.length} modules)`
   )
 }
 
@@ -66,4 +70,8 @@ export function listRulesets(): RulesetSummary[] {
 
 export function getRuleset(id: string): Model | undefined {
   return models.get(id)
+}
+
+export function getRawFacts(id: string): RawFact[] | undefined {
+  return rawFacts.get(id)
 }
