@@ -68,6 +68,7 @@ type ModelContextValue = {
   isExecuting: boolean
   executionError: string | null
   runExecution: () => void
+  runOnBlur: () => void
   clearExecution: () => void
 }
 
@@ -201,6 +202,12 @@ export function ModelProvider({
     setExecutionError(null)
   }, [])
 
+  // Auto-run execution when an input field loses focus
+  const runOnBlur = useCallback(() => {
+    const hasAnyInput = Object.values(inputOverrides).some((v) => v !== '')
+    if (hasAnyInput) runExecution()
+  }, [inputOverrides, runExecution])
+
   const loadModel = useCallback(() => {
     setIsLoading(true)
     setError(null)
@@ -281,6 +288,7 @@ export function ModelProvider({
       isExecuting,
       executionError,
       runExecution,
+      runOnBlur,
       clearExecution,
     }),
     [
@@ -311,6 +319,7 @@ export function ModelProvider({
       isExecuting,
       executionError,
       runExecution,
+      runOnBlur,
       clearExecution,
     ]
   )

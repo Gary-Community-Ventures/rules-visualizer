@@ -108,10 +108,15 @@ export function Node({ node }: NodeProps) {
     setOpenNode,
     executionResults,
     inputOverrides,
+    setInputOverride,
+    clearInputOverride,
+    runOnBlur,
   } = useMainContext()
 
   const result = executionResults?.[node.id]
-  const hasOverride = !!(inputOverrides[node.id] && inputOverrides[node.id] !== '')
+  const overrideValue = inputOverrides[node.id] ?? ''
+  const hasOverride = overrideValue !== ''
+  const isEditable = isInputNode(node) || isConstantNode(node)
   const hasChildren = node.dependencies.length > 0
   const config =
     NODE_TYPE_CONFIG[getNodeRole(node.content)] ?? DEFAULT_CONFIG
@@ -146,9 +151,36 @@ export function Node({ node }: NodeProps) {
             {node.name}
           </span>
         </div>
-        {result && (
+        {isEditable && (
+          <div className="mt-1.5 flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+            <Input
+              className={cn(
+                'h-6 w-24 text-xs font-mono text-center',
+                hasOverride && 'border-amber-400 ring-1 ring-amber-400'
+              )}
+              placeholder={isInputNode(node) ? 'value' : 'default'}
+              value={overrideValue}
+              onChange={(e) => setInputOverride(node.id, e.target.value)}
+              onBlur={runOnBlur}
+            />
+            {hasOverride && (
+              <button
+                className="text-muted-foreground hover:text-foreground"
+                onClick={() => clearInputOverride(node.id)}
+              >
+                <Trash2 className="size-3" />
+              </button>
+            )}
+          </div>
+        )}
+        {result && !isEditable && (
           <span className="mt-1 text-xs font-mono text-emerald-700 bg-emerald-50 rounded px-1.5 py-0.5 max-w-32 truncate">
             {formatResultValue(result.value)}
+          </span>
+        )}
+        {result && isEditable && (
+          <span className="text-[10px] font-mono text-emerald-700 truncate max-w-28">
+            = {formatResultValue(result.value)}
           </span>
         )}
       </div>
@@ -343,6 +375,7 @@ export function NodePanel() {
     inputOverrides,
     setInputOverride,
     clearInputOverride,
+    runOnBlur,
   } = useMainContext()
   const openNodeData = useFindNode(openNode)
 
@@ -400,6 +433,7 @@ export function NodePanel() {
                 placeholder={isInput ? 'Enter value...' : 'Override default...'}
                 value={inputOverrides[openNode] ?? ''}
                 onChange={(e) => setInputOverride(openNode, e.target.value)}
+                onBlur={runOnBlur}
               />
               {inputOverrides[openNode] && (
                 <Button

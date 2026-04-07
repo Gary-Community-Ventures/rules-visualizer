@@ -25,6 +25,7 @@ export function ExecutionPanel() {
     isExecuting,
     executionError,
     runExecution,
+    runOnBlur,
     clearExecution,
   } = useMainContext()
 
@@ -152,6 +153,7 @@ export function ExecutionPanel() {
                   value={inputOverrides[node.id] ?? ''}
                   onChange={(val) => setInputOverride(node.id, val)}
                   onClear={() => clearInputOverride(node.id)}
+                  onBlur={runOnBlur}
                   result={executionResults?.[node.id]?.value}
                   required
                 />
@@ -197,6 +199,7 @@ export function ExecutionPanel() {
                       value={inputOverrides[node.id] ?? ''}
                       onChange={(val) => setInputOverride(node.id, val)}
                       onClear={() => clearInputOverride(node.id)}
+                      onBlur={runOnBlur}
                       result={executionResults?.[node.id]?.value}
                       defaultValue={defaultVal}
                     />
@@ -258,6 +261,7 @@ type NodeFieldProps = {
   value: string
   onChange: (value: string) => void
   onClear: () => void
+  onBlur?: () => void
   result?: unknown
   required?: boolean
   defaultValue?: string
@@ -268,6 +272,7 @@ function NodeField({
   value,
   onChange,
   onClear,
+  onBlur,
   result,
   required,
   defaultValue,
@@ -307,6 +312,7 @@ function NodeField({
         placeholder={defaultValue ?? (required ? 'required' : 'default')}
         value={value}
         onChange={(e) => onChange(e.target.value)}
+        onBlur={onBlur}
       />
       {result !== undefined && (
         <p className="text-xs font-mono text-emerald-700 truncate">
