@@ -243,7 +243,8 @@ function parseModuleXml(xml: string, moduleName: string): ParsedFact[] {
   const parsed = parser.parse(xml)
   const root = parsed.FactDictionaryModule
   if (!root) {
-    throw new Error(`${moduleName}.xml: missing <FactDictionaryModule> root`)
+    console.warn(`  Skipping ${moduleName}.xml: not a FactDictionaryModule`)
+    return []
   }
 
   const factsContainer = root.Facts
