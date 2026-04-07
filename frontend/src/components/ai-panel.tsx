@@ -66,7 +66,7 @@ function useChatContext() {
 const GREETING: AIMessage = {
   type: 'aiMessage',
   message:
-    'AI chat coming soon. This panel will help you understand and explore rules.',
+    'Ask me about the rules in this ruleset. I can explain how nodes are connected, what inputs are needed, or how a computation works.',
 }
 
 function ChatProvider({ children }: { children: ReactNode }) {
