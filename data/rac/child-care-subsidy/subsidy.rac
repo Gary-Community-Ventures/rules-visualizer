@@ -68,6 +68,15 @@ min_copay:
     unit: USD
     from 2024-01-01: 25
 
+max_children_eligible:
+    description: "Maximum number of children that can receive the subsidy"
+    from 2024-01-01: 3
+
+min_benefit:
+    description: "Minimum monthly benefit — if calculated benefit is below this, round up"
+    unit: USD
+    from 2024-01-01: 50
+
 # --- Computed (eligibility and benefit calculation) ---
 
 income_limit:
@@ -117,11 +126,18 @@ subsidy_per_child:
         raw_subsidy = max(0, cost_share - monthly_copay / max(1, number_of_children_in_care))
         min(max_subsidy_per_child, raw_subsidy)
 
+children_covered:
+    dtype: Integer
+    label: "Children covered"
+    description: "Number of children covered by the subsidy, capped at the program maximum"
+    from 2024-01-01:
+        min(number_of_children_in_care, max_children_eligible)
+
 total_monthly_subsidy:
     dtype: Money
     unit: USD
     label: "Total monthly subsidy"
-    description: "Total monthly subsidy for all children, zero if not eligible"
+    description: "Total monthly subsidy for covered children, zero if not eligible, with minimum benefit floor"
     from 2024-01-01:
-        result = subsidy_per_child * number_of_children_in_care
-        if eligible: result else: 0
+        raw = subsidy_per_child * children_covered
+        if eligible: max(min_benefit, raw) else: 0

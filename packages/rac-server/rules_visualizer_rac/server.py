@@ -240,12 +240,24 @@ async def handle_ruleset_execute(request: web.Request) -> web.Response:
         data = Data(tables=entity_tables) if entity_tables else Data(tables={})
         ctx = Context(data=data)
 
-        # Pre-populate context with user-provided input values.
-        # These are variables the compiler dropped (no temporal expression)
-        # but that computed variables reference by name.
+        # Pre-populate context with default values for input variables
+        # the compiler dropped (no temporal expression).  Then overlay
+        # any user-provided overrides.
+        model = _rulesets.get(ruleset_id, {})
+        for node in model.get("nodes", {}).values():
+            c = node.get("content", {})
+            if c.get("role") != "input":
+                continue
+            var_path = c.get("path")
+            if not var_path or var_path in patched_ir.variables:
+                continue
+            # Parse the stored default into an appropriate Python value
+            raw = c.get("default")
+            ctx.computed[var_path] = _parse_default(raw)
+
+        # Overlay user-provided input values
         for var_path, value in scalar_overrides.items():
             if var_path not in patched_ir.variables:
-                # This is an input variable not in the IR — inject directly
                 ctx.computed[var_path] = value
 
         # Run the executor's logic (replicated from Executor.execute)
@@ -311,6 +323,28 @@ async def handle_ruleset_execute(request: web.Request) -> web.Response:
 
 
 # --- Helpers ---
+
+
+def _parse_default(raw: Any) -> Any:
+    """Convert a stored default string to a Python value for execution."""
+    if raw is None:
+        return 0
+    if isinstance(raw, (int, float, bool)):
+        return raw
+    s = str(raw).strip().lower()
+    if s in ("false", "no"):
+        return False
+    if s in ("true", "yes"):
+        return True
+    try:
+        return int(raw)
+    except (ValueError, TypeError):
+        pass
+    try:
+        return float(raw)
+    except (ValueError, TypeError):
+        pass
+    return 0
 
 
 def _serialize_value(value: Any) -> Any:

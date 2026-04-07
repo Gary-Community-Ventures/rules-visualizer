@@ -56,10 +56,10 @@
       <Derived><Dollar>600</Dollar></Derived>
     </Fact>
 
-    <Fact path="/copayRate">
-      <Name>Copay rate</Name>
-      <Description>Percentage of income used to calculate family copay</Description>
-      <Derived><Rational>0.07</Rational></Derived>
+    <Fact path="/copayPercent">
+      <Name>Copay percent</Name>
+      <Description>Percentage of monthly income used to calculate family copay (7 = 7%)</Description>
+      <Derived><Int>7</Int></Derived>
     </Fact>
 
     <Fact path="/minCopay">
@@ -128,55 +128,20 @@
 
     <Fact path="/monthlyCopay">
       <Name>Monthly copay</Name>
-      <Description>The family's monthly copayment based on income</Description>
+      <Description>The family's monthly copayment based on income (7% of monthly income, min $25)</Description>
       <Derived>
         <GreaterOf>
           <Dependency path="/minCopay" />
-          <Multiply>
-            <Divide>
-              <Dividend><Dependency path="/annualIncome" /></Dividend>
-              <Divisors><Int>12</Int></Divisors>
-            </Divide>
-            <Dependency path="/copayRate" />
-          </Multiply>
+          <Divide>
+            <Dividend>
+              <Multiply>
+                <Dependency path="/annualIncome" />
+                <Dependency path="/copayPercent" />
+              </Multiply>
+            </Dividend>
+            <Divisors><Int>1200</Int></Divisors>
+          </Divide>
         </GreaterOf>
-      </Derived>
-    </Fact>
-
-    <Fact path="/subsidyPerChild">
-      <Name>Subsidy per child</Name>
-      <Description>Monthly subsidy amount per child after copay</Description>
-      <Derived>
-        <LesserOf>
-          <Dependency path="/maxSubsidyPerChild" />
-          <GreaterOf>
-            <Subtract>
-              <Minuend>
-                <Divide>
-                  <Dividend><Dependency path="/monthlyChildCareCost" /></Dividend>
-                  <Divisors>
-                    <GreaterOf>
-                      <Dependency path="/numberOfChildrenInCare" />
-                      <Int>1</Int>
-                    </GreaterOf>
-                  </Divisors>
-                </Divide>
-              </Minuend>
-              <Subtrahends>
-                <Divide>
-                  <Dividend><Dependency path="/monthlyCopay" /></Dividend>
-                  <Divisors>
-                    <GreaterOf>
-                      <Dependency path="/numberOfChildrenInCare" />
-                      <Int>1</Int>
-                    </GreaterOf>
-                  </Divisors>
-                </Divide>
-              </Subtrahends>
-            </Subtract>
-            <Int>0</Int>
-          </GreaterOf>
-        </LesserOf>
       </Derived>
     </Fact>
 
@@ -188,10 +153,19 @@
           <Case>
             <When><Dependency path="/eligible" /></When>
             <Then>
-              <Multiply>
-                <Dependency path="/subsidyPerChild" />
-                <Dependency path="/numberOfChildrenInCare" />
-              </Multiply>
+              <LesserOf>
+                <Multiply>
+                  <Dependency path="/maxSubsidyPerChild" />
+                  <Dependency path="/numberOfChildrenInCare" />
+                </Multiply>
+                <GreaterOf>
+                  <Subtract>
+                    <Minuend><Dependency path="/monthlyChildCareCost" /></Minuend>
+                    <Subtrahends><Dependency path="/monthlyCopay" /></Subtrahends>
+                  </Subtract>
+                  <Dollar>0</Dollar>
+                </GreaterOf>
+              </LesserOf>
             </Then>
           </Case>
           <Case>

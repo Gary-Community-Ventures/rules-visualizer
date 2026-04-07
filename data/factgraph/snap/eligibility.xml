@@ -1,0 +1,599 @@
+<FactDictionaryModule>
+  <Facts>
+    <!-- ============================================================ -->
+    <!-- INPUTS — facts about the household                           -->
+    <!-- ============================================================ -->
+
+    <Fact path="/grossEarnedIncome">
+      <Name>Gross earned income</Name>
+      <Description>Monthly earned income before taxes (wages, salary, self-employment)</Description>
+      <Writable><Dollar /></Writable>
+    </Fact>
+
+    <Fact path="/unearnedIncome">
+      <Name>Unearned income</Name>
+      <Description>Monthly unearned income (Social Security, unemployment, child support, etc.)</Description>
+      <Writable><Dollar /></Writable>
+    </Fact>
+
+    <Fact path="/householdSize">
+      <Name>Household size</Name>
+      <Description>Number of people in the SNAP household</Description>
+      <Writable><Int /></Writable>
+    </Fact>
+
+    <Fact path="/dependentCareExpenses">
+      <Name>Dependent care expenses</Name>
+      <Description>Monthly out-of-pocket dependent care costs</Description>
+      <Writable><Dollar /></Writable>
+    </Fact>
+
+    <Fact path="/shelterCosts">
+      <Name>Shelter costs</Name>
+      <Description>Monthly shelter costs (rent/mortgage, property tax, insurance, utilities)</Description>
+      <Writable><Dollar /></Writable>
+    </Fact>
+
+    <Fact path="/medicalExpensesElderlyDisabled">
+      <Name>Medical expenses (elderly/disabled)</Name>
+      <Description>Monthly out-of-pocket medical expenses for elderly/disabled members over $35</Description>
+      <Writable><Dollar /></Writable>
+    </Fact>
+
+    <Fact path="/hasElderlyOrDisabledMember">
+      <Name>Elderly or disabled member</Name>
+      <Description>Whether household has a member who is age 60+ or disabled</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <!-- ============================================================ -->
+    <!-- CONSTANTS — federal SNAP parameters (FY2024)                 -->
+    <!-- ============================================================ -->
+
+    <Fact path="/earnedIncomeDeductionRate">
+      <Name>Earned income deduction rate</Name>
+      <Description>20% earned income deduction per 7 USC 2014(e)(1)</Description>
+      <Derived><Int>20</Int></Derived>
+    </Fact>
+
+    <Fact path="/standardDeduction1to3">
+      <Name>Standard deduction (1-3 persons)</Name>
+      <Derived><Dollar>209</Dollar></Derived>
+    </Fact>
+
+    <Fact path="/standardDeduction4">
+      <Name>Standard deduction (4 persons)</Name>
+      <Derived><Dollar>225</Dollar></Derived>
+    </Fact>
+
+    <Fact path="/standardDeduction5">
+      <Name>Standard deduction (5 persons)</Name>
+      <Derived><Dollar>263</Dollar></Derived>
+    </Fact>
+
+    <Fact path="/standardDeduction6Plus">
+      <Name>Standard deduction (6+ persons)</Name>
+      <Derived><Dollar>300</Dollar></Derived>
+    </Fact>
+
+    <Fact path="/excessShelterDeductionCap">
+      <Name>Excess shelter deduction cap</Name>
+      <Description>Cap on excess shelter deduction for non-elderly/disabled households</Description>
+      <Derived><Dollar>672</Dollar></Derived>
+    </Fact>
+
+    <Fact path="/medicalDeductionThreshold">
+      <Name>Medical deduction threshold</Name>
+      <Description>Only medical expenses above this threshold are deductible</Description>
+      <Derived><Dollar>35</Dollar></Derived>
+    </Fact>
+
+    <Fact path="/benefitReductionPercent">
+      <Name>Benefit reduction percent</Name>
+      <Description>Households expected to spend 30% of net income on food</Description>
+      <Derived><Int>30</Int></Derived>
+    </Fact>
+
+    <Fact path="/minimumBenefit">
+      <Name>Minimum benefit</Name>
+      <Description>Minimum monthly benefit for 1-2 person households</Description>
+      <Derived><Dollar>23</Dollar></Derived>
+    </Fact>
+
+    <Fact path="/grossIncomeLimitPercent">
+      <Name>Gross income limit percent</Name>
+      <Description>Gross income must be at or below 130% of FPL</Description>
+      <Derived><Int>130</Int></Derived>
+    </Fact>
+
+    <!-- FPL monthly amounts by household size (FY2024, 48 states + DC) -->
+
+    <Fact path="/fplMonthly1">
+      <Name>FPL monthly (1 person)</Name>
+      <Derived><Dollar>1255</Dollar></Derived>
+    </Fact>
+
+    <Fact path="/fplMonthly2">
+      <Name>FPL monthly (2 persons)</Name>
+      <Derived><Dollar>1705</Dollar></Derived>
+    </Fact>
+
+    <Fact path="/fplMonthly3">
+      <Name>FPL monthly (3 persons)</Name>
+      <Derived><Dollar>2155</Dollar></Derived>
+    </Fact>
+
+    <Fact path="/fplMonthly4">
+      <Name>FPL monthly (4 persons)</Name>
+      <Derived><Dollar>2605</Dollar></Derived>
+    </Fact>
+
+    <Fact path="/fplMonthlyPerAdditional">
+      <Name>FPL monthly per additional person</Name>
+      <Description>Additional FPL amount per person beyond 4</Description>
+      <Derived><Dollar>450</Dollar></Derived>
+    </Fact>
+
+    <!-- Max allotment by household size (FY2024, 48 states + DC) -->
+
+    <Fact path="/maxAllotment1">
+      <Name>Max allotment (1 person)</Name>
+      <Derived><Dollar>292</Dollar></Derived>
+    </Fact>
+
+    <Fact path="/maxAllotment2">
+      <Name>Max allotment (2 persons)</Name>
+      <Derived><Dollar>536</Dollar></Derived>
+    </Fact>
+
+    <Fact path="/maxAllotment3">
+      <Name>Max allotment (3 persons)</Name>
+      <Derived><Dollar>768</Dollar></Derived>
+    </Fact>
+
+    <Fact path="/maxAllotment4">
+      <Name>Max allotment (4 persons)</Name>
+      <Derived><Dollar>975</Dollar></Derived>
+    </Fact>
+
+    <Fact path="/maxAllotmentPerAdditional">
+      <Name>Max allotment per additional person</Name>
+      <Description>Additional max allotment per person beyond 4</Description>
+      <Derived><Dollar>195</Dollar></Derived>
+    </Fact>
+
+    <!-- ============================================================ -->
+    <!-- COMPUTED — eligibility and benefit calculation                -->
+    <!-- ============================================================ -->
+
+    <Fact path="/grossMonthlyIncome">
+      <Name>Gross monthly income</Name>
+      <Description>Total monthly income before deductions</Description>
+      <Derived>
+        <Add>
+          <Dependency path="/grossEarnedIncome" />
+          <Dependency path="/unearnedIncome" />
+        </Add>
+      </Derived>
+    </Fact>
+
+    <!-- FPL lookup based on household size -->
+    <Fact path="/federalPovertyLevelMonthly">
+      <Name>Federal poverty level (monthly)</Name>
+      <Description>Monthly FPL for this household size</Description>
+      <Derived>
+        <Switch>
+          <Case>
+            <When>
+              <LessThanOrEqual>
+                <Left><Dependency path="/householdSize" /></Left>
+                <Right><Int>1</Int></Right>
+              </LessThanOrEqual>
+            </When>
+            <Then><Dependency path="/fplMonthly1" /></Then>
+          </Case>
+          <Case>
+            <When>
+              <Equal>
+                <Left><Dependency path="/householdSize" /></Left>
+                <Right><Int>2</Int></Right>
+              </Equal>
+            </When>
+            <Then><Dependency path="/fplMonthly2" /></Then>
+          </Case>
+          <Case>
+            <When>
+              <Equal>
+                <Left><Dependency path="/householdSize" /></Left>
+                <Right><Int>3</Int></Right>
+              </Equal>
+            </When>
+            <Then><Dependency path="/fplMonthly3" /></Then>
+          </Case>
+          <Case>
+            <When>
+              <LessThanOrEqual>
+                <Left><Dependency path="/householdSize" /></Left>
+                <Right><Int>4</Int></Right>
+              </LessThanOrEqual>
+            </When>
+            <Then><Dependency path="/fplMonthly4" /></Then>
+          </Case>
+          <Case>
+            <When><True /></When>
+            <Then>
+              <Add>
+                <Dependency path="/fplMonthly4" />
+                <Multiply>
+                  <Dependency path="/fplMonthlyPerAdditional" />
+                  <Subtract>
+                    <Minuend><Dependency path="/householdSize" /></Minuend>
+                    <Subtrahends><Int>4</Int></Subtrahends>
+                  </Subtract>
+                </Multiply>
+              </Add>
+            </Then>
+          </Case>
+        </Switch>
+      </Derived>
+    </Fact>
+
+    <!-- Gross income test: 130% FPL -->
+    <Fact path="/grossIncomeLimit">
+      <Name>Gross income limit</Name>
+      <Description>130% of FPL — maximum gross monthly income for eligibility</Description>
+      <Derived>
+        <Divide>
+          <Dividend>
+            <Multiply>
+              <Dependency path="/federalPovertyLevelMonthly" />
+              <Dependency path="/grossIncomeLimitPercent" />
+            </Multiply>
+          </Dividend>
+          <Divisors><Int>100</Int></Divisors>
+        </Divide>
+      </Derived>
+    </Fact>
+
+    <Fact path="/grossIncomeEligible">
+      <Name>Passes gross income test</Name>
+      <Description>Whether gross monthly income is at or below 130% of FPL</Description>
+      <Derived>
+        <LessThanOrEqual>
+          <Left><Dependency path="/grossMonthlyIncome" /></Left>
+          <Right><Dependency path="/grossIncomeLimit" /></Right>
+        </LessThanOrEqual>
+      </Derived>
+    </Fact>
+
+    <!-- Deductions -->
+    <Fact path="/earnedIncomeDeduction">
+      <Name>Earned income deduction</Name>
+      <Description>20% of gross earned income</Description>
+      <Derived>
+        <Divide>
+          <Dividend>
+            <Multiply>
+              <Dependency path="/grossEarnedIncome" />
+              <Dependency path="/earnedIncomeDeductionRate" />
+            </Multiply>
+          </Dividend>
+          <Divisors><Int>100</Int></Divisors>
+        </Divide>
+      </Derived>
+    </Fact>
+
+    <Fact path="/standardDeduction">
+      <Name>Standard deduction</Name>
+      <Description>Standard deduction based on household size</Description>
+      <Derived>
+        <Switch>
+          <Case>
+            <When>
+              <LessThanOrEqual>
+                <Left><Dependency path="/householdSize" /></Left>
+                <Right><Int>3</Int></Right>
+              </LessThanOrEqual>
+            </When>
+            <Then><Dependency path="/standardDeduction1to3" /></Then>
+          </Case>
+          <Case>
+            <When>
+              <Equal>
+                <Left><Dependency path="/householdSize" /></Left>
+                <Right><Int>4</Int></Right>
+              </Equal>
+            </When>
+            <Then><Dependency path="/standardDeduction4" /></Then>
+          </Case>
+          <Case>
+            <When>
+              <Equal>
+                <Left><Dependency path="/householdSize" /></Left>
+                <Right><Int>5</Int></Right>
+              </Equal>
+            </When>
+            <Then><Dependency path="/standardDeduction5" /></Then>
+          </Case>
+          <Case>
+            <When><True /></When>
+            <Then><Dependency path="/standardDeduction6Plus" /></Then>
+          </Case>
+        </Switch>
+      </Derived>
+    </Fact>
+
+    <Fact path="/medicalDeduction">
+      <Name>Medical deduction</Name>
+      <Description>Medical expenses over $35/month for elderly/disabled members</Description>
+      <Derived>
+        <Switch>
+          <Case>
+            <When><Dependency path="/hasElderlyOrDisabledMember" /></When>
+            <Then>
+              <GreaterOf>
+                <Subtract>
+                  <Minuend><Dependency path="/medicalExpensesElderlyDisabled" /></Minuend>
+                  <Subtrahends><Dependency path="/medicalDeductionThreshold" /></Subtrahends>
+                </Subtract>
+                <Dollar>0</Dollar>
+              </GreaterOf>
+            </Then>
+          </Case>
+          <Case>
+            <When><True /></When>
+            <Then><Dollar>0</Dollar></Then>
+          </Case>
+        </Switch>
+      </Derived>
+    </Fact>
+
+    <Fact path="/incomeAfterPreliminaryDeductions">
+      <Name>Income after preliminary deductions</Name>
+      <Description>Gross income minus earned income, standard, dependent care, and medical deductions</Description>
+      <Derived>
+        <GreaterOf>
+          <Subtract>
+            <Minuend><Dependency path="/grossMonthlyIncome" /></Minuend>
+            <Subtrahends>
+              <Dependency path="/earnedIncomeDeduction" />
+              <Dependency path="/standardDeduction" />
+              <Dependency path="/dependentCareExpenses" />
+              <Dependency path="/medicalDeduction" />
+            </Subtrahends>
+          </Subtract>
+          <Dollar>0</Dollar>
+        </GreaterOf>
+      </Derived>
+    </Fact>
+
+    <!-- Excess shelter deduction -->
+    <Fact path="/halfIncomeAfterDeductions">
+      <Name>Half of adjusted income</Name>
+      <Description>50% of income after preliminary deductions</Description>
+      <Derived>
+        <Divide>
+          <Dividend><Dependency path="/incomeAfterPreliminaryDeductions" /></Dividend>
+          <Divisors><Int>2</Int></Divisors>
+        </Divide>
+      </Derived>
+    </Fact>
+
+    <Fact path="/excessShelterCost">
+      <Name>Excess shelter cost</Name>
+      <Description>Shelter costs exceeding 50% of income after other deductions</Description>
+      <Derived>
+        <GreaterOf>
+          <Subtract>
+            <Minuend><Dependency path="/shelterCosts" /></Minuend>
+            <Subtrahends><Dependency path="/halfIncomeAfterDeductions" /></Subtrahends>
+          </Subtract>
+          <Dollar>0</Dollar>
+        </GreaterOf>
+      </Derived>
+    </Fact>
+
+    <Fact path="/shelterDeduction">
+      <Name>Shelter deduction</Name>
+      <Description>Excess shelter deduction, capped unless elderly/disabled member present</Description>
+      <Derived>
+        <Switch>
+          <Case>
+            <When><Dependency path="/hasElderlyOrDisabledMember" /></When>
+            <Then><Dependency path="/excessShelterCost" /></Then>
+          </Case>
+          <Case>
+            <When><True /></When>
+            <Then>
+              <LesserOf>
+                <Dependency path="/excessShelterCost" />
+                <Dependency path="/excessShelterDeductionCap" />
+              </LesserOf>
+            </Then>
+          </Case>
+        </Switch>
+      </Derived>
+    </Fact>
+
+    <!-- Net income -->
+    <Fact path="/netMonthlyIncome">
+      <Name>Net monthly income</Name>
+      <Description>Income after all deductions</Description>
+      <Derived>
+        <GreaterOf>
+          <Subtract>
+            <Minuend><Dependency path="/incomeAfterPreliminaryDeductions" /></Minuend>
+            <Subtrahends><Dependency path="/shelterDeduction" /></Subtrahends>
+          </Subtract>
+          <Dollar>0</Dollar>
+        </GreaterOf>
+      </Derived>
+    </Fact>
+
+    <!-- Net income test: 100% FPL -->
+    <Fact path="/netIncomeLimit">
+      <Name>Net income limit</Name>
+      <Description>100% of FPL — maximum net monthly income for eligibility</Description>
+      <Derived>
+        <Dependency path="/federalPovertyLevelMonthly" />
+      </Derived>
+    </Fact>
+
+    <Fact path="/netIncomeEligible">
+      <Name>Passes net income test</Name>
+      <Description>Whether net monthly income is at or below 100% of FPL</Description>
+      <Derived>
+        <LessThanOrEqual>
+          <Left><Dependency path="/netMonthlyIncome" /></Left>
+          <Right><Dependency path="/netIncomeLimit" /></Right>
+        </LessThanOrEqual>
+      </Derived>
+    </Fact>
+
+    <!-- Overall eligibility -->
+    <Fact path="/eligible">
+      <Name>Eligible for SNAP</Name>
+      <Description>Whether household passes both gross and net income tests (elderly/disabled exempt from gross test)</Description>
+      <Derived>
+        <Switch>
+          <Case>
+            <When><Dependency path="/hasElderlyOrDisabledMember" /></When>
+            <Then><Dependency path="/netIncomeEligible" /></Then>
+          </Case>
+          <Case>
+            <When><True /></When>
+            <Then>
+              <All>
+                <Dependency path="/grossIncomeEligible" />
+                <Dependency path="/netIncomeEligible" />
+              </All>
+            </Then>
+          </Case>
+        </Switch>
+      </Derived>
+    </Fact>
+
+    <!-- Benefit calculation -->
+    <Fact path="/maxAllotment">
+      <Name>Maximum allotment</Name>
+      <Description>Maximum monthly SNAP benefit for this household size</Description>
+      <Derived>
+        <Switch>
+          <Case>
+            <When>
+              <LessThanOrEqual>
+                <Left><Dependency path="/householdSize" /></Left>
+                <Right><Int>1</Int></Right>
+              </LessThanOrEqual>
+            </When>
+            <Then><Dependency path="/maxAllotment1" /></Then>
+          </Case>
+          <Case>
+            <When>
+              <Equal>
+                <Left><Dependency path="/householdSize" /></Left>
+                <Right><Int>2</Int></Right>
+              </Equal>
+            </When>
+            <Then><Dependency path="/maxAllotment2" /></Then>
+          </Case>
+          <Case>
+            <When>
+              <Equal>
+                <Left><Dependency path="/householdSize" /></Left>
+                <Right><Int>3</Int></Right>
+              </Equal>
+            </When>
+            <Then><Dependency path="/maxAllotment3" /></Then>
+          </Case>
+          <Case>
+            <When>
+              <LessThanOrEqual>
+                <Left><Dependency path="/householdSize" /></Left>
+                <Right><Int>4</Int></Right>
+              </LessThanOrEqual>
+            </When>
+            <Then><Dependency path="/maxAllotment4" /></Then>
+          </Case>
+          <Case>
+            <When><True /></When>
+            <Then>
+              <Add>
+                <Dependency path="/maxAllotment4" />
+                <Multiply>
+                  <Dependency path="/maxAllotmentPerAdditional" />
+                  <Subtract>
+                    <Minuend><Dependency path="/householdSize" /></Minuend>
+                    <Subtrahends><Int>4</Int></Subtrahends>
+                  </Subtract>
+                </Multiply>
+              </Add>
+            </Then>
+          </Case>
+        </Switch>
+      </Derived>
+    </Fact>
+
+    <Fact path="/expectedFoodContribution">
+      <Name>Expected food contribution</Name>
+      <Description>30% of net income — the amount the household is expected to spend on food</Description>
+      <Derived>
+        <Divide>
+          <Dividend>
+            <Multiply>
+              <Dependency path="/netMonthlyIncome" />
+              <Dependency path="/benefitReductionPercent" />
+            </Multiply>
+          </Dividend>
+          <Divisors><Int>100</Int></Divisors>
+        </Divide>
+      </Derived>
+    </Fact>
+
+    <Fact path="/calculatedBenefit">
+      <Name>Calculated benefit</Name>
+      <Description>Max allotment minus 30% of net income</Description>
+      <Derived>
+        <GreaterOf>
+          <Subtract>
+            <Minuend><Dependency path="/maxAllotment" /></Minuend>
+            <Subtrahends><Dependency path="/expectedFoodContribution" /></Subtrahends>
+          </Subtract>
+          <Dollar>0</Dollar>
+        </GreaterOf>
+      </Derived>
+    </Fact>
+
+    <Fact path="/monthlySnapBenefit">
+      <Name>Monthly SNAP benefit</Name>
+      <Description>Final monthly benefit amount, zero if not eligible, with minimum benefit floor for small households</Description>
+      <Derived>
+        <Switch>
+          <Case>
+            <When><Not><Dependency path="/eligible" /></Not></When>
+            <Then><Dollar>0</Dollar></Then>
+          </Case>
+          <Case>
+            <When>
+              <LessThanOrEqual>
+                <Left><Dependency path="/householdSize" /></Left>
+                <Right><Int>2</Int></Right>
+              </LessThanOrEqual>
+            </When>
+            <Then>
+              <GreaterOf>
+                <Dependency path="/minimumBenefit" />
+                <Dependency path="/calculatedBenefit" />
+              </GreaterOf>
+            </Then>
+          </Case>
+          <Case>
+            <When><True /></When>
+            <Then><Dependency path="/calculatedBenefit" /></Then>
+          </Case>
+        </Switch>
+      </Derived>
+    </Fact>
+
+  </Facts>
+</FactDictionaryModule>

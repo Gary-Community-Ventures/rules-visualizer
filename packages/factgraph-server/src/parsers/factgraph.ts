@@ -45,11 +45,13 @@ type ParsedFact = {
  * Each file is a <FactDictionaryModule> containing <Facts><Fact>...</Fact></Facts>.
  * Dependencies can cross modules via <Dependency module="filers" path="/foo"/>.
  */
+export type { ParsedFact }
+
 export function parseFactGraphModules(
   modules: { name: string; xml: string }[],
   rulesetId: string,
   rulesetName: string
-): Model {
+): { model: Model; facts: ParsedFact[] } {
   // Phase 1: Parse all XML files and collect facts
   const allFacts: ParsedFact[] = []
   for (const mod of modules) {
@@ -172,10 +174,13 @@ export function parseFactGraphModules(
   }
 
   return {
-    id: rulesetId,
-    name: rulesetName,
-    format: 'factGraph',
-    nodes,
+    model: {
+      id: rulesetId,
+      name: rulesetName,
+      format: 'factGraph',
+      nodes,
+    },
+    facts: allFacts,
   }
 }
 

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { cn } from '@/lib/utils'
 import { useMainContext } from '@/context'
 import { getNodePath, isInputNode, isConstantNode } from '@/context/model-context'
 import { Button } from './ui/button'
@@ -299,7 +300,10 @@ function NodeField({
         )}
       </div>
       <Input
-        className="h-7 text-xs font-mono"
+        className={cn(
+          'h-7 text-xs font-mono',
+          value !== '' && 'border-amber-400 ring-1 ring-amber-400'
+        )}
         placeholder={defaultValue ?? (required ? 'required' : 'default')}
         value={value}
         onChange={(e) => onChange(e.target.value)}

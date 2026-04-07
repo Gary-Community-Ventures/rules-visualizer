@@ -37,7 +37,7 @@ function Arrow({
   const isFromVisible = visibleNodeIds.includes(fromId)
   const isToVisible = visibleNodeIds.includes(toId)
 
-  const parentShowsChildren = showChildren[fromId] !== false
+  const parentShowsChildren = showChildren[fromId] === true
 
   useEffect(() => {
     const updateArrow = () => {
