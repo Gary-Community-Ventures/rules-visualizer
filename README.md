@@ -5,165 +5,175 @@ A read-only visualizer for rule systems, supporting two formats:
 - **Fact Graph** from IRS Direct File — XML-based decision dictionaries
 - **RAC** (Rules as Code) from The Axiom Foundation — Python-based rule definitions
 
-Displays rules as an interactive node graph with dependency arrows, pan/zoom, expand/collapse, and a detail panel for inspecting individual nodes.
+Displays rules as an interactive node graph with dependency arrows, pan/zoom, expand/collapse, rule execution with live results, and an AI assistant for exploring rules.
 
 ## Quick Start
 
 ```bash
+# Install dependencies
 npm install
+
+# Set up Python venv (for RAC backend)
+python3 -m venv .venv
+.venv/bin/pip install -e packages/rac-server
+
+# Start Fact Graph backend + frontend
 npm run dev
+
+# Or start RAC backend + frontend
+npm run dev:rac
 ```
 
-This starts both the Fact Graph backend (port 5000) and the Vite dev server (port 5173) pointed at the sample data in `data/factgraph/`. Open http://localhost:5173.
+Open http://localhost:5173 (Fact Graph) or http://localhost:5174 (RAC).
+
+## Features
+
+### Node Graph Visualization
+- Interactive pan/zoom canvas with dependency arrows
+- Expand/collapse subtrees per node
+- Three node types with distinct visual styles:
+  - **Input** (blue, pencil icon) — values the user provides
+  - **Constant** (gray, book icon) — values from the rules, overridable for simulation
+  - **Computed** (purple, branch icon) — calculated from inputs and constants
+- Detail panel with logic source, dependencies, and "used by" links
+- Node navigation history (back/forward)
+
+### Rule Execution
+- Fill in input values directly on node cards or via the execution panel
+- Override constants to simulate rule changes ("what if the income limit was $30k?")
+- Pin computed nodes to skip their calculation and force a value
+- Results displayed as colored badges on every node
+- Auto-runs on blur — results update as you fill in values
+- **RAC**: Executes via the `rac` library's Python runtime
+- **Fact Graph**: Executes via a Scala.js bundle (from IRS Direct File) running in Node.js
+
+### Execution Panel
+- **Inputs** section with required/optional indicators and type hints (USD, Boolean, Integer, etc.)
+- **Overrides** section with collapsible Constants and Computed sub-groups
+- **JSON** import/export — Generate JSON from current form state, or paste JSON to bulk-set values
+- Blue rings for input values, amber rings for overrides — visible at a glance on the graph
+- Section states persist across panel open/close
+
+### AI Assistant
+- Chat panel for asking questions about the rules
+- Powered by LangChain + OpenRouter (configurable model)
+- Node name autocomplete in the chat input
+- Clickable node references in AI responses
+
+### Live Reload
+Edit a rule file on disk and the graph updates automatically:
+```
+File change → watcher detects → backend re-parses → WebSocket broadcast → frontend re-fetches
+```
 
 ## Project Structure
 
-This is an **npm workspaces monorepo** with a shared frontend and format-specific backends:
-
 ```
 rules-visualizer/
-├── package.json                 # Root workspace config + dev scripts
-├── bin/
-│   └── rules-visualizer         # Unified launcher (auto-detects format)
-├── frontend/                    # React + Vite + TypeScript
-│   ├── package.json             # "rules-visualizer-frontend"
-│   ├── vite.config.ts           # Proxies /api and /ws to backend in dev
+├── bin/rules-visualizer              # Unified launcher (auto-detects format)
+├── frontend/                         # React 19 + Vite + TypeScript
 │   └── src/
-│       ├── components/          # UI components
-│       │   ├── content-viewers/ # Read-only viewers per node format
-│       │   └── ui/              # Radix/shadcn primitives
-│       ├── context/             # React context (app tabs, model state)
-│       ├── lib/
-│       │   ├── api/             # HTTP client + WebSocket live reload
-│       │   ├── model/           # Type definitions (nodes, content types)
-│       │   └── graph.ts         # Layout algorithms (row ordering, deps)
-│       ├── pages/               # Route-level page components
-│       └── routes.tsx           # TanStack Router config
+│       ├── components/               # Graph nodes, arrows, panels, content viewers
+│       ├── context/                  # App state, model context, execution state
+│       ├── lib/                      # API client, graph layout, utilities
+│       └── pages/                    # Route-level pages
 ├── packages/
-│   ├── factgraph-server/        # Node.js backend for Fact Graph XML
-│   │   ├── package.json         # "rules-visualizer-factgraph"
-│   │   └── src/
-│   │       ├── index.ts         # CLI entry point
-│   │       ├── server.ts        # Express + WebSocket + static serving
-│   │       ├── store.ts         # In-memory model store
-│   │       ├── watcher.ts       # File watcher for live reload
-│   │       ├── routes/          # API route handlers
-│   │       └── parsers/         # XML → Model parser
-│   └── rac-server/              # Python backend for RAC files
-│       ├── pyproject.toml       # "rules-visualizer-rac"
-│       └── rules_visualizer_rac/
-│           ├── cli.py           # CLI entry point
-│           ├── server.py        # HTTP server + WebSocket
-│           ├── parser.py        # RAC → Model parser
-│           └── watcher.py       # File watcher for live reload
-└── data/                        # Sample rule files
-    ├── factgraph/direct-file/   # IRS Direct File XML modules (451 nodes)
-    └── rac/                     # RAC files (EITC, CTC, standard deduction)
+│   ├── factgraph-server/             # Node.js backend (Express + WebSocket)
+│   │   ├── src/
+│   │   │   ├── parsers/factgraph.ts  # XML → Model parser
+│   │   │   ├── executor.ts           # Scala.js execution engine
+│   │   │   ├── routes/               # REST API + AI chat
+│   │   │   └── ai/                   # LangChain agent configuration
+│   │   └── vendor/
+│   │       └── factgraph-scala.cjs   # Scala.js bundle (6MB, from Direct File)
+│   ├── rac-server/                   # Python backend (aiohttp + WebSocket)
+│   │   └── rules_visualizer_rac/
+│   │       ├── parser.py             # RAC → Model parser
+│   │       ├── server.py             # HTTP server + execution engine
+│   │       └── ai/                   # LangChain agent configuration
+│   └── shared-types/                 # TypeScript type definitions (single source of truth)
+└── data/                             # Example rule files
+    ├── rac/
+    │   ├── child-care-subsidy/       # Simple example (20 nodes)
+    │   ├── child-care-credit/        # Real IRS Section 21 rules (100 nodes)
+    │   └── snap/                     # SNAP benefits eligibility (47 nodes)
+    └── factgraph/
+        ├── child-care-subsidy/       # Same rules as RAC version, in XML
+        └── snap/                     # SNAP benefits in Fact Graph XML
 ```
 
 ## Architecture
 
-Each rule format has its own backend server that:
+Both backends implement the same API contract. The frontend is format-agnostic.
 
-1. **Parses** rule files into a standardized `Model` JSON structure
-2. **Serves** the model via a REST API (`GET /api/rulesets`, `GET /api/rulesets/:id`)
-3. **Watches** the data directory for file changes
-4. **Broadcasts** reload notifications to the frontend via WebSocket
+### API
 
-The frontend is format-agnostic — it consumes the same API regardless of which backend is running. In dev mode, Vite proxies `/api` and `/ws` to the backend. In production, the built frontend is bundled into the backend as static files.
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/rulesets` | GET | List rulesets: `{ rulesets: [{ id, name, format }] }` |
+| `/api/rulesets/:id` | GET | Full model with nodes and dependencies |
+| `/api/rulesets/:id/execute` | POST | Execute rules with `{ inputs: { path: value } }` |
+| `/ws` | WebSocket | Live reload + AI chat messages |
 
-### Live Reload
+### Node Model
 
-When you edit a rule file on disk:
+Every node has a universal `role` regardless of format:
 
+| Role | Description | RAC | Fact Graph |
+|------|-------------|-----|------------|
+| `input` | User provides this value | Variable with no expression | `<Writable>` element |
+| `constant` | Set by rules, overridable | Variable with literal expression | `<Derived>` with no dependencies |
+| `computed` | Calculated from others | Variable with expression | `<Derived>` with dependencies |
+
+All nodes have `overridable: boolean` — the execution engine supports overriding any node in both formats.
+
+### Execution
+
+**RAC:** The Python `rac` library compiles `.rac` files into an IR. Input variables (dropped by the compiler) are injected into the execution context. Overrides pre-populate `ctx.computed` and skip computation for pinned nodes.
+
+**Fact Graph:** The Scala.js bundle creates a graph from a "digest" representation of the XML. Overriding derived nodes works by converting them to writables in the digest before graph creation.
+
+## Environment Variables
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `OPEN_ROUTER_KEY` | For AI chat | API key from [openrouter.ai](https://openrouter.ai) |
+| `AI_MODEL` | No | Model ID (default: `google/gemini-2.5-flash`) |
+
+Create a `.env` file in the project root (gitignored):
 ```
-File change → fs.watch detects it → Backend re-parses → WebSocket broadcasts
-  {"type":"reload","rulesetId":"..."} → Frontend re-fetches model via HTTP
+OPEN_ROUTER_KEY=sk-or-v1-your-key-here
 ```
-
-The WebSocket is only a notification channel — the actual data always flows through the REST API.
-
-### API Contract
-
-Both backends implement the same API:
-
-| Endpoint | Description |
-|---|---|
-| `GET /api/rulesets` | List all loaded rulesets: `{ rulesets: [{ id, name, format }] }` |
-| `GET /api/rulesets/:id` | Full model with nodes and pre-computed dependencies |
-| `POST /api/rulesets/:id/execute` | Execute rules (not yet implemented) |
-| `WebSocket /ws` | Live reload notifications |
 
 ## Usage
 
 ### Unified Launcher
 
-The `bin/rules-visualizer` script auto-detects the file format and starts the right backend:
-
 ```bash
-# Fact Graph (detects .xml files)
+# Auto-detects format from file extensions
 ./bin/rules-visualizer ./data/factgraph
-
-# RAC (detects .rac files)
 ./bin/rules-visualizer ./data/rac
-
-# With options
-./bin/rules-visualizer ./data/factgraph --port 8080 --no-open
-```
-
-### Running Backends Directly
-
-You can also run each backend independently:
-
-**Fact Graph (Node.js):**
-
-```bash
-# Dev mode (with tsx hot reload)
-npm run dev:factgraph
-
-# Or directly
-npx tsx packages/factgraph-server/src/index.ts ./data/factgraph
-```
-
-**RAC (Python):**
-
-```bash
-# Set up (one time)
-python3 -m venv .venv
-.venv/bin/pip install -e packages/rac-server
-
-# Run
-.venv/bin/rules-visualizer-rac ./data/rac
+./bin/rules-visualizer ./data/rac --port 8080 --no-open
 ```
 
 ### Development
 
 ```bash
-# Fact Graph backend + Vite frontend
-npm run dev
-
-# RAC backend + Vite frontend
-npm run dev:rac
-
-# Frontend only (uses mock data if no backend available)
-npm run dev:frontend
-
-# Backends only
-npm run dev:factgraph
-npm run dev:rac-backend
+npm run dev              # Fact Graph backend + Vite frontend
+npm run dev:rac          # RAC backend + Vite frontend
+npm run dev:frontend     # Vite only (proxies to port 5000)
+npm run dev:factgraph    # Fact Graph backend only
+npm run dev:rac-backend  # RAC backend only
 ```
 
 ### Production Build
 
 ```bash
-# Build Fact Graph server with bundled frontend
 npm run build:factgraph
-
-# Run the built server
 node packages/factgraph-server/dist/index.js ./data/factgraph
 ```
 
-This builds the frontend, copies it into `packages/factgraph-server/public/`, and compiles the TypeScript. The resulting server is self-contained — it serves both the API and the frontend.
+Builds the frontend and bundles it into the Fact Graph backend as static files.
 
 ## Data Directory Layout
 
@@ -171,53 +181,28 @@ Each backend expects a directory where **subdirectories are rulesets**:
 
 ```
 data/factgraph/
-  direct-file/          ← ruleset "direct-file"
-    constants.xml
-    filers.xml
-    income.xml
-    ...
+  child-care-subsidy/     # ruleset ID = "child-care-subsidy"
+    subsidy.xml
+  snap/
+    eligibility.xml
 
 data/rac/
-  eitc/                 ← ruleset "eitc"
+  child-care-subsidy/
+    subsidy.rac
+  snap/
     eligibility.rac
-    amounts.rac
-    ...
-  ctc/                  ← ruleset "ctc"
-    child_tax_credit.rac
-    ...
 ```
 
-Multiple XML/RAC files within a ruleset are merged into a single model with cross-file dependency resolution.
-
-## npm Scripts Reference
-
-| Script | Description |
-|---|---|
-| `npm run dev` | Start Fact Graph backend + Vite frontend |
-| `npm run dev:rac` | Start RAC backend + Vite frontend |
-| `npm run dev:frontend` | Vite dev server only (proxies to localhost:5000) |
-| `npm run dev:factgraph` | Fact Graph backend only (tsx watch mode) |
-| `npm run dev:rac-backend` | RAC backend only (requires venv setup) |
-| `npm run build:frontend` | Build frontend (vite build) |
-| `npm run build:factgraph` | Build frontend + bundle into backend + compile TS |
-| `npm run start` | Unified launcher (alias for `./bin/rules-visualizer`) |
-| `npm run format` | Prettier |
-| `npm run lint` | ESLint + TypeScript check |
+Multiple files within a ruleset are merged with cross-file dependency resolution.
 
 ## Tech Stack
 
-**Frontend:**
-- React 19, TypeScript, Vite
-- TanStack Router
-- Tailwind CSS + Radix UI primitives
-- React Context for state management
+**Frontend:** React 19, TypeScript, Vite, TanStack Router, Tailwind CSS, Radix UI
 
-**Fact Graph Backend:**
-- Node.js, Express 5, TypeScript
-- fast-xml-parser for XML parsing
-- ws for WebSocket
+**Fact Graph Backend:** Node.js, Express 5, TypeScript, fast-xml-parser, Scala.js (execution)
 
-**RAC Backend:**
-- Python 3.10+
-- [rac](https://github.com/TheAxiomFoundation/rac) library for parsing
-- watchdog for file watching
+**RAC Backend:** Python 3.10+, aiohttp, [rac](https://github.com/TheAxiomFoundation/rac) library, watchdog
+
+**AI:** LangChain, OpenRouter (configurable model)
+
+**Shared:** npm workspaces monorepo, shared TypeScript types package
