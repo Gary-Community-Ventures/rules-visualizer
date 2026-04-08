@@ -101,6 +101,8 @@ type ModelContextValue = {
   inputOverrides: Record<string, string>
   setInputOverride: (nodeId: string, value: string) => void
   clearInputOverride: (nodeId: string) => void
+  clearOverrides: () => void
+  clearAll: () => void
   executionResults: ExecutionResults | null
   isExecuting: boolean
   executionError: string | null
@@ -220,6 +222,29 @@ export function ModelProvider({
     })
   }, [])
 
+  // Clear only override values (constants + computed), keep input values
+  const clearOverrides = useCallback(() => {
+    setInputOverrides((prev) => {
+      const next: Record<string, string> = {}
+      for (const [nodeId, value] of Object.entries(prev)) {
+        const node = model.nodes[nodeId]
+        if (node && isInputNode(node)) {
+          next[nodeId] = value
+        }
+      }
+      return next
+    })
+    setExecutionResults(null)
+    setExecutionError(null)
+  }, [model.nodes])
+
+  // Clear everything — inputs, overrides, results
+  const clearAll = useCallback(() => {
+    setInputOverrides({})
+    setExecutionResults(null)
+    setExecutionError(null)
+  }, [])
+
   const runExecution = useCallback(() => {
     setIsExecuting(true)
     setExecutionError(null)
@@ -321,6 +346,8 @@ export function ModelProvider({
       inputOverrides,
       setInputOverride,
       clearInputOverride,
+      clearOverrides,
+      clearAll,
       executionResults,
       isExecuting,
       executionError,
@@ -352,6 +379,8 @@ export function ModelProvider({
       inputOverrides,
       setInputOverride,
       clearInputOverride,
+      clearOverrides,
+      clearAll,
       executionResults,
       isExecuting,
       executionError,

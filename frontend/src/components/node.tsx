@@ -151,7 +151,11 @@ export function Node({ node }: NodeProps) {
       <div
         id={nodeElementId(node.id)}
         className={cn(
-          hasOverride ? 'border-amber-400 ring-1 ring-amber-400' : config.border,
+          hasOverride
+            ? isInput
+              ? 'border-blue-400 ring-1 ring-blue-400'
+              : 'border-amber-400 ring-1 ring-amber-400'
+            : config.border,
           'border h-full relative flex flex-col items-center',
           isInput ? 'px-5 py-4' : 'p-5'
         )}
@@ -172,7 +176,7 @@ export function Node({ node }: NodeProps) {
             <Input
               className={cn(
                 'h-8 w-32 text-sm font-mono text-center',
-                hasOverride ? 'border-amber-400 ring-1 ring-amber-400' : 'border-blue-300'
+                hasOverride ? 'border-blue-400 ring-1 ring-blue-400' : 'border-blue-300'
               )}
               placeholder={declaredDefault ?? typeHint?.toLowerCase() ?? 'required'}
               value={overrideValue}
@@ -468,7 +472,7 @@ export function NodePanel() {
               <Input
                 className={cn(
                   'h-8 text-sm font-mono flex-1',
-                  inputOverrides[openNode] && 'border-amber-400 ring-1 ring-amber-400'
+                  inputOverrides[openNode] && (isInput ? 'border-blue-400 ring-1 ring-blue-400' : 'border-amber-400 ring-1 ring-amber-400')
                 )}
                 placeholder={isInput ? 'Enter value...' : isConstant ? 'Override default...' : 'Pin to value...'}
                 value={inputOverrides[openNode] ?? ''}
