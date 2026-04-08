@@ -36,7 +36,14 @@ export type WritableTypeName =
 
 /** Fact Graph validation limit — type names match Direct File XML */
 export type Limit = {
-  type: 'Min' | 'Max' | 'MinLength' | 'MaxLength' | 'Match' | 'Contains' | 'MaxCollectionSize'
+  type:
+    | 'Min'
+    | 'Max'
+    | 'MinLength'
+    | 'MaxLength'
+    | 'Match'
+    | 'Contains'
+    | 'MaxCollectionSize'
   value: string | number
 }
 

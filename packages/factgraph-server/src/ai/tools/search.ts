@@ -21,7 +21,8 @@ export const listNodes = tool(
   },
   {
     name: 'list_nodes',
-    description: 'List all nodes in the ruleset with their type and a brief description.',
+    description:
+      'List all nodes in the ruleset with their type and a brief description.',
     schema: z.object({
       rulesetId: z.string().describe('The ruleset ID'),
     }),
@@ -46,11 +47,25 @@ export const getNodes = tool(
         `Name: ${node.name}`,
         node.description ? `Description: ${node.description}` : null,
         `Type: ${node.content.type}`,
-        node.content.type !== 'entity' && 'path' in node.content ? `Path: ${node.content.path}` : null,
-        depNames.length > 0 ? `Dependencies: ${depNames.join(', ')}` : 'Dependencies: none (leaf node)',
-        node.content.type !== 'entity' && 'logic' in node.content && node.content.logic ? `Logic:\n${node.content.logic}` : null,
-        node.content.type !== 'entity' && 'dataType' in node.content && node.content.dataType ? `Returns: ${node.content.dataType}` : null,
-      ].filter(Boolean).join('\n')
+        node.content.type !== 'entity' && 'path' in node.content
+          ? `Path: ${node.content.path}`
+          : null,
+        depNames.length > 0
+          ? `Dependencies: ${depNames.join(', ')}`
+          : 'Dependencies: none (leaf node)',
+        node.content.type !== 'entity' &&
+        'logic' in node.content &&
+        node.content.logic
+          ? `Logic:\n${node.content.logic}`
+          : null,
+        node.content.type !== 'entity' &&
+        'dataType' in node.content &&
+        node.content.dataType
+          ? `Returns: ${node.content.dataType}`
+          : null,
+      ]
+        .filter(Boolean)
+        .join('\n')
     })
     return results.join('\n\n---\n\n')
   },
@@ -113,7 +128,7 @@ export const getDependencies = tool(
   {
     name: 'get_dependencies',
     description:
-      "Get the dependency chain for a node — what other nodes it depends on.",
+      'Get the dependency chain for a node — what other nodes it depends on.',
     schema: z.object({
       rulesetId: z.string().describe('The ruleset ID'),
       name: z.string().describe('Node name'),

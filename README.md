@@ -29,6 +29,7 @@ Open http://localhost:5173 (Fact Graph) or http://localhost:5174 (RAC).
 ## Features
 
 ### Node Graph Visualization
+
 - Interactive pan/zoom canvas with dependency arrows
 - Expand/collapse subtrees per node
 - Three node types with distinct visual styles:
@@ -39,6 +40,7 @@ Open http://localhost:5173 (Fact Graph) or http://localhost:5174 (RAC).
 - Node navigation history (back/forward)
 
 ### Rule Execution
+
 - Fill in input values directly on node cards or via the execution panel
 - Override constants to simulate rule changes ("what if the income limit was $30k?")
 - Pin computed nodes to skip their calculation and force a value
@@ -48,6 +50,7 @@ Open http://localhost:5173 (Fact Graph) or http://localhost:5174 (RAC).
 - **Fact Graph**: Executes via a Scala.js bundle (from IRS Direct File) running in Node.js
 
 ### Execution Panel
+
 - **Inputs** section with required/optional indicators and type hints (USD, Boolean, Integer, etc.)
 - **Overrides** section with collapsible Constants and Computed sub-groups
 - **JSON** import/export — Generate JSON from current form state, or paste JSON to bulk-set values
@@ -55,13 +58,16 @@ Open http://localhost:5173 (Fact Graph) or http://localhost:5174 (RAC).
 - Section states persist across panel open/close
 
 ### AI Assistant
+
 - Chat panel for asking questions about the rules
 - Powered by LangChain + OpenRouter (configurable model)
 - Node name autocomplete in the chat input
 - Clickable node references in AI responses
 
 ### Live Reload
+
 Edit a rule file on disk and the graph updates automatically:
+
 ```
 File change → watcher detects → backend re-parses → WebSocket broadcast → frontend re-fetches
 ```
@@ -108,22 +114,22 @@ Both backends implement the same API contract. The frontend is format-agnostic.
 
 ### API
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/rulesets` | GET | List rulesets: `{ rulesets: [{ id, name, format }] }` |
-| `/api/rulesets/:id` | GET | Full model with nodes and dependencies |
-| `/api/rulesets/:id/execute` | POST | Execute rules with `{ inputs: { path: value } }` |
-| `/ws` | WebSocket | Live reload + AI chat messages |
+| Endpoint                    | Method    | Description                                           |
+| --------------------------- | --------- | ----------------------------------------------------- |
+| `/api/rulesets`             | GET       | List rulesets: `{ rulesets: [{ id, name, format }] }` |
+| `/api/rulesets/:id`         | GET       | Full model with nodes and dependencies                |
+| `/api/rulesets/:id/execute` | POST      | Execute rules with `{ inputs: { path: value } }`      |
+| `/ws`                       | WebSocket | Live reload + AI chat messages                        |
 
 ### Node Model
 
 Every node has a universal `role` regardless of format:
 
-| Role | Description | RAC | Fact Graph |
-|------|-------------|-----|------------|
-| `input` | User provides this value | Variable with no expression | `<Writable>` element |
+| Role       | Description               | RAC                              | Fact Graph                       |
+| ---------- | ------------------------- | -------------------------------- | -------------------------------- |
+| `input`    | User provides this value  | Variable with no expression      | `<Writable>` element             |
 | `constant` | Set by rules, overridable | Variable with literal expression | `<Derived>` with no dependencies |
-| `computed` | Calculated from others | Variable with expression | `<Derived>` with dependencies |
+| `computed` | Calculated from others    | Variable with expression         | `<Derived>` with dependencies    |
 
 All nodes have `overridable: boolean` — the execution engine supports overriding any node in both formats.
 
@@ -135,12 +141,13 @@ All nodes have `overridable: boolean` — the execution engine supports overridi
 
 ## Environment Variables
 
-| Variable | Required | Description |
-|----------|----------|-------------|
+| Variable          | Required    | Description                                         |
+| ----------------- | ----------- | --------------------------------------------------- |
 | `OPEN_ROUTER_KEY` | For AI chat | API key from [openrouter.ai](https://openrouter.ai) |
-| `AI_MODEL` | No | Model ID (default: `google/gemini-2.5-flash`) |
+| `AI_MODEL`        | No          | Model ID (default: `google/gemini-2.5-flash`)       |
 
 Create a `.env` file in the project root (gitignored):
+
 ```
 OPEN_ROUTER_KEY=sk-or-v1-your-key-here
 ```

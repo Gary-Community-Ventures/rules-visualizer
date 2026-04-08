@@ -40,7 +40,9 @@ type DigestFact = {
   placeholder: DigestNode | null
 }
 
-function processOptions(rawNode: Record<string, unknown>): Record<string, string> {
+function processOptions(
+  rawNode: Record<string, unknown>
+): Record<string, string> {
   const buffer: Record<string, string> = {}
   for (const [key, val] of Object.entries(rawNode)) {
     if (key.startsWith('@_')) {
@@ -62,14 +64,16 @@ function processWritable(rawWritable: Record<string, unknown>): DigestWritable {
   }
 
   const typeValue = rawWritable[typeName]
-  const defaultOptions = typeof typeValue === 'object' && typeValue !== null
-    ? processOptions(typeValue as Record<string, unknown>)
-    : {}
+  const defaultOptions =
+    typeof typeValue === 'object' && typeValue !== null
+      ? processOptions(typeValue as Record<string, unknown>)
+      : {}
 
   const options = typeName === 'CollectionItem' ? {} : defaultOptions
-  const collectionItemAlias = typeName === 'CollectionItem'
-    ? (defaultOptions['collection'] ?? null)
-    : null
+  const collectionItemAlias =
+    typeName === 'CollectionItem'
+      ? (defaultOptions['collection'] ?? null)
+      : null
 
   return {
     typeName,
@@ -84,7 +88,12 @@ function processLimits(rawNode: unknown): DigestLimit[] {
   const rawNodes = Array.isArray(rawNode) ? rawNode : [rawNode]
   return rawNodes.map((node: Record<string, unknown>) => {
     const typeName = Object.keys(node).find((name) => !name.startsWith('@_'))
-    if (!typeName) return { operation: '', level: 'Error', node: { typeName: 'Int', options: { value: '0' }, children: [] } }
+    if (!typeName)
+      return {
+        operation: '',
+        level: 'Error',
+        node: { typeName: 'Int', options: { value: '0' }, children: [] },
+      }
 
     if (typeName === 'Dependency') {
       const dep = node['Dependency'] as Record<string, unknown>
@@ -112,7 +121,9 @@ function processLimits(rawNode: unknown): DigestLimit[] {
 }
 
 function processDerived(rawNode: Record<string, unknown>): DigestNode {
-  const typeName = Object.keys(rawNode).find((k) => !k.startsWith('@_') && k !== '#text')
+  const typeName = Object.keys(rawNode).find(
+    (k) => !k.startsWith('@_') && k !== '#text'
+  )
   if (!typeName) return { typeName: 'True', options: {}, children: [] }
   return inner(rawNode[typeName], typeName)
 }
@@ -128,7 +139,9 @@ function inner(currentNode: unknown, typeName: string): DigestNode {
           const keys = Object.keys(node as Record<string, unknown>).filter(
             (k) => !k.startsWith('@_') && k !== '#text'
           )
-          return keys.map((key) => inner((node as Record<string, unknown>)[key], key))
+          return keys.map((key) =>
+            inner((node as Record<string, unknown>)[key], key)
+          )
         }
         return [{ typeName, options: { value: String(node) }, children: [] }]
       }),
@@ -200,7 +213,12 @@ function createGraph(rulesetId: string, facts: ParsedFact[]): unknown {
   const meta = new sfg.DigestMetaWrapper('2024').toNative()
   const nativeFacts = digestFacts.map((fact) =>
     sfg.DigestNodeWrapperFactory.toNative(
-      new sfg.DigestNodeWrapper(fact.path, fact.writable, fact.derived, fact.placeholder)
+      new sfg.DigestNodeWrapper(
+        fact.path,
+        fact.writable,
+        fact.derived,
+        fact.placeholder
+      )
     )
   )
   const config = sfg.FactDictionaryConfig.create(meta, nativeFacts)
@@ -224,7 +242,10 @@ function createGraph(rulesetId: string, facts: ParsedFact[]): unknown {
  * Infer the writable type for a derived fact.
  * Uses the model node's dataType if available, otherwise inspects the expression.
  */
-function inferWritableType(raw: Record<string, unknown>, modelNode?: { dataType?: string }): string {
+function inferWritableType(
+  raw: Record<string, unknown>,
+  modelNode?: { dataType?: string }
+): string {
   // Prefer the pre-computed dataType from the model
   if (modelNode?.dataType) {
     return modelNode.dataType
@@ -232,14 +253,25 @@ function inferWritableType(raw: Record<string, unknown>, modelNode?: { dataType?
 
   const derived = raw['Derived'] as Record<string, unknown> | undefined
   if (!derived) return 'Dollar'
-  const typeName = Object.keys(derived).find((k) => !k.startsWith('@_') && k !== '#text')
+  const typeName = Object.keys(derived).find(
+    (k) => !k.startsWith('@_') && k !== '#text'
+  )
   if (!typeName) return 'Dollar'
 
   // Expression types that produce booleans
   const booleanOps = new Set([
-    'All', 'Any', 'Not', 'Equal', 'NotEqual',
-    'GreaterThan', 'GreaterThanOrEqual', 'LessThan', 'LessThanOrEqual',
-    'True', 'False', 'IsComplete',
+    'All',
+    'Any',
+    'Not',
+    'Equal',
+    'NotEqual',
+    'GreaterThan',
+    'GreaterThanOrEqual',
+    'LessThan',
+    'LessThanOrEqual',
+    'True',
+    'False',
+    'IsComplete',
   ])
   if (booleanOps.has(typeName)) return 'Boolean'
 
@@ -252,8 +284,15 @@ function inferWritableType(raw: Record<string, unknown>, modelNode?: { dataType?
 
   // Arithmetic operations produce Dollar by default
   const dollarOps = new Set([
-    'Add', 'Subtract', 'Multiply', 'Divide', 'Round', 'RoundToInt',
-    'TruncateCents', 'GreaterOf', 'LesserOf',
+    'Add',
+    'Subtract',
+    'Multiply',
+    'Divide',
+    'Round',
+    'RoundToInt',
+    'TruncateCents',
+    'GreaterOf',
+    'LesserOf',
   ])
   if (dollarOps.has(typeName)) return 'Dollar'
 
@@ -261,18 +300,48 @@ function inferWritableType(raw: Record<string, unknown>, modelNode?: { dataType?
   if (typeName === 'Switch') {
     const cases = derived['Switch'] as Record<string, unknown> | undefined
     if (cases) {
-      const caseList = Array.isArray(cases['Case']) ? cases['Case'] : cases['Case'] ? [cases['Case']] : []
+      const caseList = Array.isArray(cases['Case'])
+        ? cases['Case']
+        : cases['Case']
+          ? [cases['Case']]
+          : []
       for (const c of caseList as Record<string, unknown>[]) {
         const then = c['Then'] as Record<string, unknown> | undefined
         if (then) {
-          const innerType = Object.keys(then).find((k) => !k.startsWith('@_') && k !== '#text')
+          const innerType = Object.keys(then).find(
+            (k) => !k.startsWith('@_') && k !== '#text'
+          )
           if (innerType === 'Dollar') return 'Dollar'
           if (innerType === 'Int') return 'Int'
           if (innerType === 'String') return 'String'
           if (innerType === 'True' || innerType === 'False') return 'Boolean'
           if (innerType === 'Dependency') return 'Boolean' // dependency in Then likely returns same type
-          if (innerType && new Set(['All', 'Any', 'Not', 'GreaterThan', 'LessThan', 'Equal', 'GreaterThanOrEqual', 'LessThanOrEqual']).has(innerType)) return 'Boolean'
-          if (innerType && new Set(['Add', 'Subtract', 'Multiply', 'Divide', 'GreaterOf', 'LesserOf']).has(innerType)) return 'Dollar'
+          if (
+            innerType &&
+            new Set([
+              'All',
+              'Any',
+              'Not',
+              'GreaterThan',
+              'LessThan',
+              'Equal',
+              'GreaterThanOrEqual',
+              'LessThanOrEqual',
+            ]).has(innerType)
+          )
+            return 'Boolean'
+          if (
+            innerType &&
+            new Set([
+              'Add',
+              'Subtract',
+              'Multiply',
+              'Divide',
+              'GreaterOf',
+              'LesserOf',
+            ]).has(innerType)
+          )
+            return 'Dollar'
         }
       }
     }
@@ -303,31 +372,44 @@ export function executeFactGraph(
   }
 
   // If there are derived overrides, rebuild the graph with those facts as writables
-  const effectiveFacts = Object.keys(derivedOverrides).length > 0
-    ? facts.map((f) => {
-        if (f.path in derivedOverrides) {
-          // Convert this derived fact to a writable
-          // Find the model node to get dataType
-          const modelNode = modelNodes
-            ? Object.values(modelNodes).find((n) => n.content && 'path' in n.content && (n.content as { path: string }).path === f.path)
-            : undefined
-          const typeName = inferWritableType(f.raw, modelNode?.content as { dataType?: string } | undefined)
-          return {
-            ...f,
-            raw: {
-              ...f.raw,
-              Writable: { [typeName]: {} },
-              Derived: undefined,
-            },
+  const effectiveFacts =
+    Object.keys(derivedOverrides).length > 0
+      ? facts.map((f) => {
+          if (f.path in derivedOverrides) {
+            // Convert this derived fact to a writable
+            // Find the model node to get dataType
+            const modelNode = modelNodes
+              ? Object.values(modelNodes).find(
+                  (n) =>
+                    n.content &&
+                    'path' in n.content &&
+                    (n.content as { path: string }).path === f.path
+                )
+              : undefined
+            const typeName = inferWritableType(
+              f.raw,
+              modelNode?.content as { dataType?: string } | undefined
+            )
+            return {
+              ...f,
+              raw: {
+                ...f.raw,
+                Writable: { [typeName]: {} },
+                Derived: undefined,
+              },
+            }
           }
-        }
-        return f
-      })
-    : facts
+          return f
+        })
+      : facts
 
   const graph = createGraph(rulesetId, effectiveFacts) as {
     set: (path: string, value: unknown) => void
-    get: (path: string) => { complete: boolean; hasValue: boolean; get: unknown }
+    get: (path: string) => {
+      complete: boolean
+      hasValue: boolean
+      get: unknown
+    }
     save: () => { valid: boolean }
   }
 
@@ -384,7 +466,9 @@ function createTypedValue(
   if (!fact?.raw['Writable']) return undefined
 
   const writable = fact.raw['Writable'] as Record<string, unknown>
-  const typeName = Object.keys(writable).find((k) => !k.startsWith('@_') && k !== 'Limit')
+  const typeName = Object.keys(writable).find(
+    (k) => !k.startsWith('@_') && k !== 'Limit'
+  )
 
   switch (typeName) {
     case 'String': {

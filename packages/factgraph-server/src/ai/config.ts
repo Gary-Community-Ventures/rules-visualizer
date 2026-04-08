@@ -6,7 +6,8 @@ export type ChatContext = {
 
 export function getModel(modelId?: string): ChatOpenAI {
   const apiKey = process.env.OPEN_ROUTER_KEY
-  if (!apiKey) throw new Error('OPEN_ROUTER_KEY environment variable is required')
+  if (!apiKey)
+    throw new Error('OPEN_ROUTER_KEY environment variable is required')
 
   return new ChatOpenAI({
     model: modelId || process.env.AI_MODEL || 'google/gemini-2.5-flash',

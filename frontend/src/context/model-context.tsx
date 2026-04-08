@@ -46,13 +46,22 @@ export function getTypeHint(node: ModelNode): string | undefined {
   if (c.format === 'factGraph') {
     const typeName = c.type === 'writable' ? c.typeName : c.dataType
     switch (typeName) {
-      case 'Dollar': return 'USD'
-      case 'Int': case 'Short': case 'Byte': return 'Integer'
-      case 'Boolean': return 'Boolean'
-      case 'String': return 'Text'
-      case 'Day': return 'Date'
-      case 'Rational': return 'Rate'
-      case 'Enum': return 'Enum'
+      case 'Dollar':
+        return 'USD'
+      case 'Int':
+      case 'Short':
+      case 'Byte':
+        return 'Integer'
+      case 'Boolean':
+        return 'Boolean'
+      case 'String':
+        return 'Text'
+      case 'Day':
+        return 'Date'
+      case 'Rational':
+        return 'Rate'
+      case 'Enum':
+        return 'Enum'
     }
     return typeName
   }
@@ -163,19 +172,29 @@ export function ModelProvider({
 
   const [panelOpen, setPanelOpen] = useState(false)
 
-  const openNode = panelOpen && nodeHistoryIndex >= 0 ? nodeHistory[nodeHistoryIndex] : null
+  const openNode =
+    panelOpen && nodeHistoryIndex >= 0 ? nodeHistory[nodeHistoryIndex] : null
 
-  const setOpenNode = useCallback((nodeId: string | null) => {
-    if (nodeId === null) {
-      setPanelOpen(false)
-    } else {
-      setPanelOpen(true)
-      if (nodeId !== (nodeHistoryIndex >= 0 ? nodeHistory[nodeHistoryIndex] : null)) {
-        setNodeHistory((prev) => [...prev.slice(0, nodeHistoryIndex + 1), nodeId])
-        setNodeHistoryIndex((prev) => prev + 1)
+  const setOpenNode = useCallback(
+    (nodeId: string | null) => {
+      if (nodeId === null) {
+        setPanelOpen(false)
+      } else {
+        setPanelOpen(true)
+        if (
+          nodeId !==
+          (nodeHistoryIndex >= 0 ? nodeHistory[nodeHistoryIndex] : null)
+        ) {
+          setNodeHistory((prev) => [
+            ...prev.slice(0, nodeHistoryIndex + 1),
+            nodeId,
+          ])
+          setNodeHistoryIndex((prev) => prev + 1)
+        }
       }
-    }
-  }, [nodeHistory, nodeHistoryIndex])
+    },
+    [nodeHistory, nodeHistoryIndex]
+  )
 
   const goBackNode = useCallback(() => {
     if (!panelOpen && nodeHistoryIndex >= 0) {
@@ -193,18 +212,23 @@ export function ModelProvider({
     }
   }, [nodeHistoryIndex, nodeHistory.length])
 
-  const goToHistoryIndex = useCallback((index: number) => {
-    if (index >= 0 && index < nodeHistory.length) {
-      setNodeHistoryIndex(index)
-      setPanelOpen(true)
-    }
-  }, [nodeHistory.length])
+  const goToHistoryIndex = useCallback(
+    (index: number) => {
+      if (index >= 0 && index < nodeHistory.length) {
+        setNodeHistoryIndex(index)
+        setPanelOpen(true)
+      }
+    },
+    [nodeHistory.length]
+  )
 
   const [rightBar, setRightBar] = useState<RightBarOptions>(null)
   const [logicYear, setLogicYear] = useState<number>(new Date().getFullYear())
 
   // Execution state
-  const [inputOverrides, setInputOverrides] = useState<Record<string, string>>({})
+  const [inputOverrides, setInputOverrides] = useState<Record<string, string>>(
+    {}
+  )
   const [executionResults, setExecutionResults] =
     useState<ExecutionResults | null>(null)
   const [isExecuting, setIsExecuting] = useState(false)
@@ -252,8 +276,7 @@ export function ModelProvider({
     executeRuleset(rulesetId, inputs)
       .then((results) => setExecutionResults(results))
       .catch((err) => {
-        const message =
-          err instanceof Error ? err.message : 'Execution failed'
+        const message = err instanceof Error ? err.message : 'Execution failed'
         setExecutionError(message)
       })
       .finally(() => setIsExecuting(false))

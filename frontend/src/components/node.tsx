@@ -1,6 +1,11 @@
 import { useState } from 'react'
 import { useFindNode, useMainContext } from '@/context'
-import { isInputNode, isConstantNode, isOverridable, getTypeHint } from '@/context/model-context'
+import {
+  isInputNode,
+  isConstantNode,
+  isOverridable,
+  getTypeHint,
+} from '@/context/model-context'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
 import {
@@ -18,11 +23,7 @@ import { cn } from '@/lib/utils'
 import { ContentViewer } from './content-viewers'
 import type { ModelNode, NodeContent } from '@/lib/model'
 import { getDependents } from '@/lib/graph'
-import {
-  HoverCard,
-  HoverCardTrigger,
-  HoverCardContent,
-} from './ui/hover-card'
+import { HoverCard, HoverCardTrigger, HoverCardContent } from './ui/hover-card'
 import { resolveRacLogic } from '@/lib/logic'
 
 function getNodeRole(content: NodeContent): string {
@@ -122,8 +123,14 @@ export function Node({ node }: NodeProps) {
   const isEditable = isOverridable(node)
   const declaredDefault = (() => {
     const c = node.content
-    if (c.format === 'rac' && c.type === 'variable' && c.default) return c.default
-    if (c.format === 'factGraph' && c.type === 'derived' && c.role === 'constant' && c.logic) {
+    if (c.format === 'rac' && c.type === 'variable' && c.default)
+      return c.default
+    if (
+      c.format === 'factGraph' &&
+      c.type === 'derived' &&
+      c.role === 'constant' &&
+      c.logic
+    ) {
       const match = c.logic.match(/>([^<]+)<\//)
       if (match) return match[1]
     }
@@ -131,8 +138,7 @@ export function Node({ node }: NodeProps) {
   })()
   const typeHint = getTypeHint(node)
   const hasChildren = node.dependencies.length > 0
-  const config =
-    NODE_TYPE_CONFIG[getNodeRole(node.content)] ?? DEFAULT_CONFIG
+  const config = NODE_TYPE_CONFIG[getNodeRole(node.content)] ?? DEFAULT_CONFIG
   const Icon = config.icon
 
   const toggleShowChildren = () => {
@@ -145,8 +151,14 @@ export function Node({ node }: NodeProps) {
   return (
     <div
       className={cn(config.bg, 'relative z-10')}
-      onMouseEnter={() => { setHoveredNodeId(node.id); setIsHovered(true) }}
-      onMouseLeave={() => { setHoveredNodeId(null); setIsHovered(false) }}
+      onMouseEnter={() => {
+        setHoveredNodeId(node.id)
+        setIsHovered(true)
+      }}
+      onMouseLeave={() => {
+        setHoveredNodeId(null)
+        setIsHovered(false)
+      }}
     >
       <div
         id={nodeElementId(node.id)}
@@ -172,13 +184,20 @@ export function Node({ node }: NodeProps) {
 
         {/* Input nodes: prominent field, always visible */}
         {isInput && (
-          <div className="mt-2 flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="mt-2 flex items-center gap-1"
+            onClick={(e) => e.stopPropagation()}
+          >
             <Input
               className={cn(
                 'h-8 w-32 text-sm font-mono text-center',
-                hasOverride ? 'border-blue-400 ring-1 ring-blue-400' : 'border-blue-300'
+                hasOverride
+                  ? 'border-blue-400 ring-1 ring-blue-400'
+                  : 'border-blue-300'
               )}
-              placeholder={declaredDefault ?? typeHint?.toLowerCase() ?? 'required'}
+              placeholder={
+                declaredDefault ?? typeHint?.toLowerCase() ?? 'required'
+              }
               value={overrideValue}
               onChange={(e) => setInputOverride(node.id, e.target.value)}
               onBlur={runOnBlur}
@@ -196,13 +215,21 @@ export function Node({ node }: NodeProps) {
 
         {/* Constants/computed: small subtle field, only when hovered or has override */}
         {isEditable && !isInput && (hasOverride || isHovered) && (
-          <div className="mt-1.5 flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="mt-1.5 flex items-center gap-1"
+            onClick={(e) => e.stopPropagation()}
+          >
             <Input
               className={cn(
                 'h-5 w-20 text-[11px] font-mono text-center border-dashed',
-                hasOverride ? 'border-amber-400 ring-1 ring-amber-400' : 'border-muted-foreground/30'
+                hasOverride
+                  ? 'border-amber-400 ring-1 ring-amber-400'
+                  : 'border-muted-foreground/30'
               )}
-              placeholder={typeHint?.toLowerCase() ?? (isConstantNode(node) ? 'override' : 'pin')}
+              placeholder={
+                typeHint?.toLowerCase() ??
+                (isConstantNode(node) ? 'override' : 'pin')
+              }
               value={overrideValue}
               onChange={(e) => setInputOverride(node.id, e.target.value)}
               onBlur={runOnBlur}
@@ -220,10 +247,12 @@ export function Node({ node }: NodeProps) {
 
         {/* Result value — clear colored badge */}
         {result && (
-          <div className={cn(
-            'mt-2 font-mono rounded px-2 py-0.5 truncate max-w-36 text-center',
-            'text-xs bg-emerald-50 text-emerald-800 border border-emerald-200'
-          )}>
+          <div
+            className={cn(
+              'mt-2 font-mono rounded px-2 py-0.5 truncate max-w-36 text-center',
+              'text-xs bg-emerald-50 text-emerald-800 border border-emerald-200'
+            )}
+          >
             {formatResultValue(result.value)}
           </div>
         )}
@@ -252,23 +281,28 @@ type NodeViewerProps = {
 
 export function NodeViewer({ node }: NodeViewerProps) {
   const { model } = useMainContext()
-  const label = node.content.format === 'rac' && node.content.type === 'variable' ? node.content.label : undefined
+  const label =
+    node.content.format === 'rac' && node.content.type === 'variable'
+      ? node.content.label
+      : undefined
 
   const deps = node.dependencies
     .map((id) => ({ id, name: model.nodes[id]?.name ?? id }))
     .filter((d) => model.nodes[d.id])
-  const dependents = getDependents(node.id, model.nodes)
-    .map((id) => ({ id, name: model.nodes[id]?.name ?? id }))
+  const dependents = getDependents(node.id, model.nodes).map((id) => ({
+    id,
+    name: model.nodes[id]?.name ?? id,
+  }))
 
   return (
     <section className="flex flex-col gap-4">
       {(label || node.description) && (
         <div>
-          {label && (
-            <p className="text-sm text-foreground">{label}</p>
-          )}
+          {label && <p className="text-sm text-foreground">{label}</p>}
           {node.description && (
-            <p className="text-xs text-muted-foreground mt-0.5">{node.description}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {node.description}
+            </p>
           )}
         </div>
       )}
@@ -307,7 +341,10 @@ export function Rows({ rows }: RowsProps) {
   )
 }
 
-function getNodePreview(node: ModelNode, logicYear: number): {
+function getNodePreview(
+  node: ModelNode,
+  logicYear: number
+): {
   label?: string
   unit?: string
   logic?: string
@@ -376,7 +413,9 @@ export function NodeLink({
             <p className="text-sm font-medium">{preview.label}</p>
           )}
           {preview.unit && (
-            <p className="text-xs text-muted-foreground mt-0.5">{preview.unit}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {preview.unit}
+            </p>
           )}
           {preview.logic && (
             <pre className="mt-2 rounded border bg-muted/50 p-2 text-xs whitespace-pre-wrap font-mono max-h-32 overflow-y-auto">
@@ -439,7 +478,9 @@ export function NodePanel() {
     <div className="flex flex-col h-full bg-background">
       <div className="flex items-center justify-between px-5 py-3 border-b shrink-0 gap-2">
         <div className="flex items-center gap-2 min-w-0">
-          <h2 className="text-sm font-semibold truncate">{openNodeData.name}</h2>
+          <h2 className="text-sm font-semibold truncate">
+            {openNodeData.name}
+          </h2>
           <span
             className={cn(
               'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium shrink-0',
@@ -472,9 +513,18 @@ export function NodePanel() {
               <Input
                 className={cn(
                   'h-8 text-sm font-mono flex-1',
-                  inputOverrides[openNode] && (isInput ? 'border-blue-400 ring-1 ring-blue-400' : 'border-amber-400 ring-1 ring-amber-400')
+                  inputOverrides[openNode] &&
+                    (isInput
+                      ? 'border-blue-400 ring-1 ring-blue-400'
+                      : 'border-amber-400 ring-1 ring-amber-400')
                 )}
-                placeholder={isInput ? 'Enter value...' : isConstant ? 'Override default...' : 'Pin to value...'}
+                placeholder={
+                  isInput
+                    ? 'Enter value...'
+                    : isConstant
+                      ? 'Override default...'
+                      : 'Pin to value...'
+                }
                 value={inputOverrides[openNode] ?? ''}
                 onChange={(e) => setInputOverride(openNode, e.target.value)}
                 onBlur={runOnBlur}
@@ -516,7 +566,6 @@ export function NodePanel() {
             )}
           </div>
         )}
-
       </div>
     </div>
   )

@@ -10,10 +10,26 @@ import type {
 } from '../types.js'
 
 const WRITABLE_TYPE_NAMES = new Set<string>([
-  'String', 'Boolean', 'Dollar', 'Int', 'Short', 'Byte', 'Rational',
-  'Day', 'Enum', 'MultiEnum', 'Collection', 'CollectionItem',
-  'Address', 'BankAccount', 'EmailAddress', 'PhoneNumber',
-  'TIN', 'EIN', 'PIN', 'IPPIN',
+  'String',
+  'Boolean',
+  'Dollar',
+  'Int',
+  'Short',
+  'Byte',
+  'Rational',
+  'Day',
+  'Enum',
+  'MultiEnum',
+  'Collection',
+  'CollectionItem',
+  'Address',
+  'BankAccount',
+  'EmailAddress',
+  'PhoneNumber',
+  'TIN',
+  'EIN',
+  'PIN',
+  'IPPIN',
 ])
 
 const parser = new XMLParser({
@@ -25,9 +41,11 @@ const parser = new XMLParser({
   isArray: (_name, jpath) => {
     // Facts and Limits always appear as arrays
     const jp = String(jpath)
-    return jp === 'FactDictionaryModule.Facts.Fact'
-      || jp.endsWith('.Limit')
-      || jp.endsWith('.Case')
+    return (
+      jp === 'FactDictionaryModule.Facts.Fact' ||
+      jp.endsWith('.Limit') ||
+      jp.endsWith('.Case')
+    )
   },
 })
 
@@ -74,9 +92,15 @@ export function parseFactGraphModules(
     let content: FactGraphWritable | FactGraphDerived
 
     if (isWritable) {
-      content = parseWritableContent(fact.path, fact.raw.Writable as Record<string, unknown>)
+      content = parseWritableContent(
+        fact.path,
+        fact.raw.Writable as Record<string, unknown>
+      )
     } else if (isDerived) {
-      content = parseDerivedContent(fact.path, fact.raw.Derived as Record<string, unknown>)
+      content = parseDerivedContent(
+        fact.path,
+        fact.raw.Derived as Record<string, unknown>
+      )
     } else {
       // Placeholder-only or unknown — treat as derived constant with no computation
       content = {
@@ -159,11 +183,12 @@ export function parseFactGraphModules(
         for (const depId of node.dependencies) {
           const depContent = nodes[depId]?.content
           if (!depContent || depContent.format !== 'factGraph') continue
-          const depType = depContent.type === 'writable'
-            ? depContent.typeName
-            : depContent.type === 'derived'
-              ? depContent.dataType
-              : undefined
+          const depType =
+            depContent.type === 'writable'
+              ? depContent.typeName
+              : depContent.type === 'derived'
+                ? depContent.dataType
+                : undefined
           if (depType) {
             c.dataType = depType
             resolved = true
@@ -226,7 +251,9 @@ function extractLogicBlocks(xml: string): Record<string, string> {
       if (openIdx !== -1) {
         const closeIdx = factBody.indexOf(closeTag, openIdx)
         if (closeIdx !== -1) {
-          const inner = dedentXml(factBody.slice(openIdx + openTag.length, closeIdx))
+          const inner = dedentXml(
+            factBody.slice(openIdx + openTag.length, closeIdx)
+          )
           if (inner) blocks[path] = inner
           break
         }
@@ -366,7 +393,10 @@ function parseWritableContent(
     if (key.startsWith('@_') || key === 'Limit') continue
     if (WRITABLE_TYPE_NAMES.has(key)) {
       typeName = key as WritableTypeName
-      const typeValue = writable[key] as Record<string, unknown> | string | undefined
+      const typeValue = writable[key] as
+        | Record<string, unknown>
+        | string
+        | undefined
       if (typeof typeValue === 'object' && typeValue !== null) {
         // Enum has optionsPath, CollectionItem has collection
         if (typeValue['@_optionsPath']) {
@@ -417,7 +447,8 @@ function parseDerivedContent(
  * Optionally uses a path→type map to resolve Dependency references.
  */
 function inferType(node: unknown): string | undefined {
-  if (node === null || node === undefined || typeof node !== 'object') return undefined
+  if (node === null || node === undefined || typeof node !== 'object')
+    return undefined
   if (Array.isArray(node)) {
     for (const item of node) {
       const t = inferType(item)
@@ -427,7 +458,9 @@ function inferType(node: unknown): string | undefined {
   }
 
   const obj = node as Record<string, unknown>
-  const keys = Object.keys(obj).filter((k) => !k.startsWith('@_') && k !== '#text')
+  const keys = Object.keys(obj).filter(
+    (k) => !k.startsWith('@_') && k !== '#text'
+  )
 
   for (const key of keys) {
     // Leaf value types
@@ -456,9 +489,18 @@ function inferType(node: unknown): string | undefined {
     if (key === 'TruncateCents') return 'Dollar'
 
     // Arithmetic / aggregation — recurse to find the leaf type, default to Dollar
-    if (key === 'Add' || key === 'Subtract' || key === 'Multiply' || key === 'Divide'
-      || key === 'GreaterOf' || key === 'LesserOf' || key === 'Round'
-      || key === 'CollectionSum' || key === 'Minimum' || key === 'Maximum') {
+    if (
+      key === 'Add' ||
+      key === 'Subtract' ||
+      key === 'Multiply' ||
+      key === 'Divide' ||
+      key === 'GreaterOf' ||
+      key === 'LesserOf' ||
+      key === 'Round' ||
+      key === 'CollectionSum' ||
+      key === 'Minimum' ||
+      key === 'Maximum'
+    ) {
       return inferType(obj[key]) ?? 'Dollar'
     }
 
@@ -474,9 +516,19 @@ function inferType(node: unknown): string | undefined {
     }
 
     // Containers — recurse
-    if (key === 'Then' || key === 'Value' || key === 'Minuend' || key === 'Subtrahends'
-      || key === 'Dividend' || key === 'Divisors' || key === 'Multiplicand'
-      || key === 'Left' || key === 'Right' || key === 'Placeholder' || key === 'Filter') {
+    if (
+      key === 'Then' ||
+      key === 'Value' ||
+      key === 'Minuend' ||
+      key === 'Subtrahends' ||
+      key === 'Dividend' ||
+      key === 'Divisors' ||
+      key === 'Multiplicand' ||
+      key === 'Left' ||
+      key === 'Right' ||
+      key === 'Placeholder' ||
+      key === 'Filter'
+    ) {
       const t = inferType(obj[key])
       if (t) return t
     }
@@ -484,7 +536,6 @@ function inferType(node: unknown): string | undefined {
 
   return undefined
 }
-
 
 /**
  * Resolve a dependency path relative to the owning fact's path.
@@ -524,10 +575,11 @@ function dedentXml(text: string): string {
   return lines.map((l) => l.slice(minIndent)).join('\n')
 }
 
-
 function parseLimits(writable: Record<string, unknown>): Limit[] | undefined {
   if (!writable.Limit) return undefined
-  const limits = Array.isArray(writable.Limit) ? writable.Limit : [writable.Limit]
+  const limits = Array.isArray(writable.Limit)
+    ? writable.Limit
+    : [writable.Limit]
   const result: Limit[] = []
 
   for (const l of limits) {
@@ -539,7 +591,11 @@ function parseLimits(writable: Record<string, unknown>): Limit[] | undefined {
     let value: string | number = ''
     for (const [key, val] of Object.entries(lim)) {
       if (key.startsWith('@_')) continue
-      if (typeof val === 'object' && val !== null && '#text' in (val as Record<string, unknown>)) {
+      if (
+        typeof val === 'object' &&
+        val !== null &&
+        '#text' in (val as Record<string, unknown>)
+      ) {
         value = String((val as Record<string, unknown>)['#text'])
       } else {
         value = String(val ?? '')

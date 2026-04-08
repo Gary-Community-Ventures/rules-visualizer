@@ -15,21 +15,40 @@ function send(ws: WebSocket, data: Record<string, unknown>) {
   }
 }
 
-export async function handleAiChat(ws: WebSocket, data: AiChatRequest): Promise<void> {
+export async function handleAiChat(
+  ws: WebSocket,
+  data: AiChatRequest
+): Promise<void> {
   const { requestId, rulesetId, message, history } = data
   const threadId = requestId
 
   try {
-    for await (const event of streamAgent({ rulesetId }, message, threadId, history)) {
+    for await (const event of streamAgent(
+      { rulesetId },
+      message,
+      threadId,
+      history
+    )) {
       switch (event.type) {
         case 'text':
           send(ws, { type: 'ai-chunk', requestId, content: event.content })
           break
         case 'tool_start':
-          send(ws, { type: 'ai-tool-start', requestId, name: event.name, id: event.id })
+          send(ws, {
+            type: 'ai-tool-start',
+            requestId,
+            name: event.name,
+            id: event.id,
+          })
           break
         case 'tool_end':
-          send(ws, { type: 'ai-tool-end', requestId, name: event.name, id: event.id, result: event.result })
+          send(ws, {
+            type: 'ai-tool-end',
+            requestId,
+            name: event.name,
+            id: event.id,
+            result: event.result,
+          })
           break
         case 'done':
           send(ws, { type: 'ai-done', requestId })

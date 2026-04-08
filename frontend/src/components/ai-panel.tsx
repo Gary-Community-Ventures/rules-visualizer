@@ -135,8 +135,14 @@ export function AIPanel() {
 }
 
 function ChatBox() {
-  const { messages, addMessage, setMessages, setShouldAutoScroll, isLoading, setIsLoading } =
-    useChatContext()
+  const {
+    messages,
+    addMessage,
+    setMessages,
+    setShouldAutoScroll,
+    isLoading,
+    setIsLoading,
+  } = useChatContext()
   const { model } = useMainContext()
   const [message, setMessage] = useState('')
   const requestIdRef = useRef(0)
@@ -154,16 +160,27 @@ function ChatBox() {
           setMessages((prev) => {
             const last = prev[prev.length - 1]
             if (last?.type === 'aiMessage') {
-              return [...prev.slice(0, -1), { type: 'aiMessage', message: aiContentRef.current }]
+              return [
+                ...prev.slice(0, -1),
+                { type: 'aiMessage', message: aiContentRef.current },
+              ]
             }
-            return [...prev, { type: 'aiMessage', message: aiContentRef.current }]
+            return [
+              ...prev,
+              { type: 'aiMessage', message: aiContentRef.current },
+            ]
           })
           break
         case 'ai-tool-start':
           aiContentRef.current = ''
           setMessages((prev) => [
             ...prev,
-            { type: 'toolCall', name: event.name, id: event.id, status: 'pending' },
+            {
+              type: 'toolCall',
+              name: event.name,
+              id: event.id,
+              status: 'pending',
+            },
           ])
           break
         case 'ai-tool-end':
@@ -200,7 +217,10 @@ function ChatBox() {
 
     // Build history from existing messages (skip greeting and tool calls)
     const history = messages
-      .filter((m): m is UserMessage | AIMessage => m !== GREETING && m.type !== 'toolCall')
+      .filter(
+        (m): m is UserMessage | AIMessage =>
+          m !== GREETING && m.type !== 'toolCall'
+      )
       .map((m) => ({
         role: m.type === 'userMessage' ? 'user' : 'assistant',
         content: m.message,
@@ -226,7 +246,11 @@ function ChatBox() {
         placeholder="Ask about your rules..."
       />
       <div className="flex justify-end">
-        <Button size="sm" onClick={handleSubmit} disabled={!message.trim() || isLoading}>
+        <Button
+          size="sm"
+          onClick={handleSubmit}
+          disabled={!message.trim() || isLoading}
+        >
           <Send className="size-4 mr-1" />
           Send
         </Button>
@@ -439,7 +463,10 @@ function ChatInput({
         setSelectedIndex((i) => Math.max(i - 1, 0))
         return
       }
-      if (e.key === 'Tab' || (e.key === 'Enter' && suggestions.length > 0 && showSuggestions)) {
+      if (
+        e.key === 'Tab' ||
+        (e.key === 'Enter' && suggestions.length > 0 && showSuggestions)
+      ) {
         e.preventDefault()
         applySuggestion(suggestions[selectedIndex])
         return

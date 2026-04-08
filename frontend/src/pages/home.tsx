@@ -74,7 +74,11 @@ export function NodeMapLayout({ children }: PropsWithChildren) {
         <ResizablePanelGroup onLayoutChange={handleLayoutChange}>
           {showNodePanel && (
             <>
-              <ResizablePanel defaultSize={50} minSize="20%" className="relative z-[5]">
+              <ResizablePanel
+                defaultSize={50}
+                minSize="20%"
+                className="relative z-[5]"
+              >
                 <NodePanel />
               </ResizablePanel>
               <ResizableHandle withHandle />

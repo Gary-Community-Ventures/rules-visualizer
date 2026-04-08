@@ -20,9 +20,7 @@ export function RacVariableViewer({ content }: Props) {
           <div>
             <span className="text-muted-foreground font-medium">
               Logic{' '}
-              <span className="text-xs font-normal">
-                (from {active.date})
-              </span>
+              <span className="text-xs font-normal">(from {active.date})</span>
             </span>
             <pre className="mt-1 rounded-md border bg-muted/50 p-2 text-xs whitespace-pre-wrap font-mono">
               {active.body}
