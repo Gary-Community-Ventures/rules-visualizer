@@ -12,8 +12,6 @@ import { Button } from './ui/button'
 import { Input } from './ui/input'
 import { Textarea } from './ui/textarea'
 import {
-  Play,
-  Loader2,
   Trash2,
   ChevronDown,
   ChevronRight,
@@ -30,17 +28,32 @@ export function ExecutionPanel() {
     clearInputOverride,
     clearOverrides,
     executionResults,
-    isExecuting,
     executionError,
-    runExecution,
     runOnBlur,
     clearExecution,
   } = useMainContext()
 
-  const [showOverrides, setShowOverrides] = useState(false)
-  const [showConstants, setShowConstants] = useState(false)
-  const [showComputed, setShowComputed] = useState(false)
-  const [showJson, setShowJson] = useState(false)
+  // Persist section expand states across panel open/close
+  const [sectionState, setSectionState] = useState<Record<string, boolean>>(() => {
+    try {
+      const stored = localStorage.getItem(`exec-panel:${model.id}`)
+      return stored ? JSON.parse(stored) : { inputs: true }
+    } catch {
+      return { inputs: true }
+    }
+  })
+  const setSection = (key: string, open: boolean) => {
+    setSectionState((prev) => {
+      const next = { ...prev, [key]: open }
+      localStorage.setItem(`exec-panel:${model.id}`, JSON.stringify(next))
+      return next
+    })
+  }
+  const showInputs = sectionState.inputs ?? true
+  const showOverrides = sectionState.overrides ?? false
+  const showConstants = sectionState.constants ?? false
+  const showComputed = sectionState.computed ?? false
+  const showJson = sectionState.json ?? false
   const [jsonText, setJsonText] = useState('')
   const [jsonError, setJsonError] = useState<string | null>(null)
 
@@ -120,7 +133,7 @@ export function ExecutionPanel() {
     if (Object.keys(overrides).length > 0) json.overrides = overrides
 
     setJsonText(JSON.stringify(json, null, 2))
-    setShowJson(true)
+    setSection('json', true)
   }
 
   // Import: read JSON text box and apply to form
@@ -161,31 +174,16 @@ export function ExecutionPanel() {
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b shrink-0">
         <h2 className="text-sm font-semibold">Execute Rules</h2>
-        <div className="flex gap-1.5">
-          {executionResults && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={clearExecution}
-              className="h-7 text-xs"
-            >
-              Clear results
-            </Button>
-          )}
+        {executionResults && (
           <Button
+            variant="ghost"
             size="sm"
-            onClick={runExecution}
-            disabled={isExecuting}
-            className="h-7 gap-1.5"
+            onClick={clearExecution}
+            className="h-7 text-xs"
           >
-            {isExecuting ? (
-              <Loader2 className="size-3 animate-spin" />
-            ) : (
-              <Play className="size-3" />
-            )}
-            Run
+            Clear results
           </Button>
-        </div>
+        )}
       </div>
 
       {/* Status banners */}
@@ -211,27 +209,31 @@ export function ExecutionPanel() {
         {/* ── INPUTS ── */}
         {inputNodes.length > 0 && (
           <div className="p-4 border-b">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                Inputs ({inputNodes.length})
-              </h3>
-              <div className="flex items-center gap-2">
-                {inputCount > 0 && (
-                  <>
-                    <span className="text-xs text-muted-foreground">
-                      {inputCount} / {inputNodes.length} set
-                    </span>
-                    <button
-                      className="text-[11px] text-muted-foreground hover:text-foreground"
-                      onClick={clearInputs}
-                    >
-                      Clear
-                    </button>
-                  </>
+            <div className="flex items-center">
+              <button
+                className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider flex-1"
+                onClick={() => setSection('inputs', !showInputs)}
+              >
+                {showInputs ? <ChevronDown className="size-3" /> : <ChevronRight className="size-3" />}
+                Inputs
+                {inputCount === inputNodes.length ? (
+                  <span className="font-normal text-emerald-600">All set</span>
+                ) : inputCount > 0 ? (
+                  <span className="font-normal">{inputCount} of {inputNodes.length}</span>
+                ) : (
+                  <span className="font-normal">({inputNodes.length})</span>
                 )}
-              </div>
+              </button>
+              {inputCount > 0 && (
+                <button
+                  className="text-[11px] text-muted-foreground hover:text-foreground"
+                  onClick={clearInputs}
+                >
+                  Clear
+                </button>
+              )}
             </div>
-            <div className="space-y-3">
+            {showInputs && <div className="mt-3 space-y-3">
               {inputNodes.map((node) => {
                 const nodeDefault = getDefault(node)
                 return (
@@ -249,7 +251,7 @@ export function ExecutionPanel() {
                   />
                 )
               })}
-            </div>
+            </div>}
           </div>
         )}
 
@@ -259,12 +261,12 @@ export function ExecutionPanel() {
             <div className="flex items-center">
               <button
                 className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider flex-1"
-                onClick={() => setShowOverrides(!showOverrides)}
+                onClick={() => setSection('overrides', !showOverrides)}
               >
                 {showOverrides ? <ChevronDown className="size-3" /> : <ChevronRight className="size-3" />}
                 Overrides
                 {totalOverrideCount > 0 && (
-                  <span className="font-normal">{totalOverrideCount} active</span>
+                  <span className="font-normal text-amber-600">{totalOverrideCount} active</span>
                 )}
               </button>
               {totalOverrideCount > 0 && (
@@ -284,12 +286,12 @@ export function ExecutionPanel() {
                   <div>
                     <button
                       className="flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground w-full mb-2"
-                      onClick={() => setShowConstants(!showConstants)}
+                      onClick={() => setSection('constants', !showConstants)}
                     >
                       {showConstants ? <ChevronDown className="size-2.5" /> : <ChevronRight className="size-2.5" />}
                       Constants ({constantNodes.length})
                       {constantOverrideCount > 0 && (
-                        <span className="ml-auto">{constantOverrideCount} overridden</span>
+                        <span className="ml-auto text-amber-600">{constantOverrideCount} overridden</span>
                       )}
                     </button>
                     {showConstants && (
@@ -317,12 +319,12 @@ export function ExecutionPanel() {
                   <div>
                     <button
                       className="flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground w-full mb-2"
-                      onClick={() => setShowComputed(!showComputed)}
+                      onClick={() => setSection('computed', !showComputed)}
                     >
                       {showComputed ? <ChevronDown className="size-2.5" /> : <ChevronRight className="size-2.5" />}
                       Computed ({computedNodes.length})
                       {computedOverrideCount > 0 && (
-                        <span className="ml-auto">{computedOverrideCount} pinned</span>
+                        <span className="ml-auto text-amber-600">{computedOverrideCount} pinned</span>
                       )}
                     </button>
                     {showComputed && (
@@ -352,7 +354,7 @@ export function ExecutionPanel() {
         <div className="p-4">
           <button
             className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider w-full"
-            onClick={() => setShowJson(!showJson)}
+            onClick={() => setSection('json', !showJson)}
           >
             {showJson ? <ChevronDown className="size-3" /> : <ChevronRight className="size-3" />}
             JSON
