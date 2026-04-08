@@ -9,12 +9,13 @@ import {
   Play,
   Sparkles,
   Loader2,
-  FlaskConical,
+  SlidersHorizontal,
   Calendar,
   ChevronLeft,
   ChevronRight,
   History,
 } from 'lucide-react'
+import { ButtonGroup } from './ui/button-group'
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
 import {
   Combobox,
@@ -225,31 +226,34 @@ export function ToolBar() {
             {executionError}
           </span>
         )}
-        <Button
-          variant="outline"
-          size="sm"
-          title="Run with current inputs"
-          onClick={runExecution}
-          disabled={isExecuting}
-          className="gap-1.5"
-        >
-          {isExecuting ? (
-            <Loader2 className="size-3.5 animate-spin" />
-          ) : (
-            <Play className="size-3.5" />
-          )}
-          Run
-        </Button>
-        <Button
-          variant={rightBar === 'execution' ? 'default' : 'outline'}
-          size="icon"
-          title="Execution panel"
-          onClick={() =>
-            setRightBar(rightBar === 'execution' ? null : 'execution')
-          }
-        >
-          <FlaskConical className="size-4" />
-        </Button>
+        <ButtonGroup>
+          <Button
+            variant="outline"
+            size="sm"
+            title="Run with current inputs"
+            onClick={runExecution}
+            disabled={isExecuting}
+            className="gap-1.5 h-9"
+          >
+            {isExecuting ? (
+              <Loader2 className="size-3.5 animate-spin" />
+            ) : (
+              <Play className="size-3.5" />
+            )}
+            Run
+          </Button>
+          <Button
+            variant={rightBar === 'execution' ? 'default' : 'outline'}
+            size="sm"
+            title="Inputs & execution"
+            className="h-9 px-2"
+            onClick={() =>
+              setRightBar(rightBar === 'execution' ? null : 'execution')
+            }
+          >
+            <SlidersHorizontal className="size-4" />
+          </Button>
+        </ButtonGroup>
         <Button
           variant={rightBar === 'ai' ? 'default' : 'outline'}
           size="icon"

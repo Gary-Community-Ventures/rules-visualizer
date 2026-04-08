@@ -1,5 +1,6 @@
+import { useState } from 'react'
 import { useFindNode, useMainContext } from '@/context'
-import { isInputNode, isConstantNode, isOverridable } from '@/context/model-context'
+import { isInputNode, isConstantNode, isOverridable, getTypeHint } from '@/context/model-context'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
 import {
@@ -10,7 +11,7 @@ import {
   Box,
   PencilLine,
   GitBranch,
-  Lock,
+  BookOpen,
   Trash2,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -47,7 +48,7 @@ const NODE_TYPE_CONFIG: Record<
     badgeBg: 'bg-blue-100 text-blue-700',
   },
   constant: {
-    icon: Lock,
+    icon: BookOpen,
     bg: 'bg-gray-50',
     border: 'border-gray-200',
     label: 'Constant',
@@ -113,14 +114,22 @@ export function Node({ node }: NodeProps) {
     runOnBlur,
   } = useMainContext()
 
+  const [isHovered, setIsHovered] = useState(false)
   const result = executionResults?.[node.id]
   const overrideValue = inputOverrides[node.id] ?? ''
   const hasOverride = overrideValue !== ''
   const isInput = isInputNode(node)
   const isEditable = isOverridable(node)
-  const declaredDefault = node.content.type !== 'entity' && node.content.format === 'rac' && node.content.type === 'variable'
-    ? node.content.default
-    : undefined
+  const declaredDefault = (() => {
+    const c = node.content
+    if (c.format === 'rac' && c.type === 'variable' && c.default) return c.default
+    if (c.format === 'factGraph' && c.type === 'derived' && c.role === 'constant' && c.logic) {
+      const match = c.logic.match(/>([^<]+)<\//)
+      if (match) return match[1]
+    }
+    return undefined
+  })()
+  const typeHint = getTypeHint(node)
   const hasChildren = node.dependencies.length > 0
   const config =
     NODE_TYPE_CONFIG[getNodeRole(node.content)] ?? DEFAULT_CONFIG
@@ -135,15 +144,16 @@ export function Node({ node }: NodeProps) {
 
   return (
     <div
-      className={cn(config.bg, 'relative')}
-      onMouseEnter={() => setHoveredNodeId(node.id)}
-      onMouseLeave={() => setHoveredNodeId(null)}
+      className={cn(config.bg, 'relative z-10')}
+      onMouseEnter={() => { setHoveredNodeId(node.id); setIsHovered(true) }}
+      onMouseLeave={() => { setHoveredNodeId(null); setIsHovered(false) }}
     >
       <div
         id={nodeElementId(node.id)}
         className={cn(
           hasOverride ? 'border-amber-400 ring-1 ring-amber-400' : config.border,
-          'border p-5 h-full relative flex flex-col items-center'
+          'border h-full relative flex flex-col items-center',
+          isInput ? 'px-5 py-4' : 'p-5'
         )}
         onClick={() => {
           setOpenNode(node.id)
@@ -155,14 +165,16 @@ export function Node({ node }: NodeProps) {
             {node.name}
           </span>
         </div>
-        {isEditable && (
-          <div className="mt-1.5 flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+
+        {/* Input nodes: prominent field, always visible */}
+        {isInput && (
+          <div className="mt-2 flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
             <Input
               className={cn(
-                'h-6 w-24 text-xs font-mono text-center',
-                hasOverride && 'border-amber-400 ring-1 ring-amber-400'
+                'h-8 w-32 text-sm font-mono text-center',
+                hasOverride ? 'border-amber-400 ring-1 ring-amber-400' : 'border-blue-300'
               )}
-              placeholder={declaredDefault ?? (isInput ? 'required' : isConstantNode(node) ? 'default' : 'pin')}
+              placeholder={declaredDefault ?? typeHint?.toLowerCase() ?? 'required'}
               value={overrideValue}
               onChange={(e) => setInputOverride(node.id, e.target.value)}
               onBlur={runOnBlur}
@@ -177,15 +189,39 @@ export function Node({ node }: NodeProps) {
             )}
           </div>
         )}
-        {result && !isEditable && (
-          <span className="mt-1 text-xs font-mono text-emerald-700 bg-emerald-50 rounded px-1.5 py-0.5 max-w-32 truncate">
-            {formatResultValue(result.value)}
-          </span>
+
+        {/* Constants/computed: small subtle field, only when hovered or has override */}
+        {isEditable && !isInput && (hasOverride || isHovered) && (
+          <div className="mt-1.5 flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+            <Input
+              className={cn(
+                'h-5 w-20 text-[11px] font-mono text-center border-dashed',
+                hasOverride ? 'border-amber-400 ring-1 ring-amber-400' : 'border-muted-foreground/30'
+              )}
+              placeholder={typeHint?.toLowerCase() ?? (isConstantNode(node) ? 'override' : 'pin')}
+              value={overrideValue}
+              onChange={(e) => setInputOverride(node.id, e.target.value)}
+              onBlur={runOnBlur}
+            />
+            {hasOverride && (
+              <button
+                className="text-muted-foreground hover:text-foreground"
+                onClick={() => clearInputOverride(node.id)}
+              >
+                <Trash2 className="size-2.5" />
+              </button>
+            )}
+          </div>
         )}
-        {result && isEditable && (
-          <span className="text-[10px] font-mono text-emerald-700 truncate max-w-28">
-            = {formatResultValue(result.value)}
-          </span>
+
+        {/* Result value — clear colored badge */}
+        {result && (
+          <div className={cn(
+            'mt-2 font-mono rounded px-2 py-0.5 truncate max-w-36 text-center',
+            'text-xs bg-emerald-50 text-emerald-800 border border-emerald-200'
+          )}>
+            {formatResultValue(result.value)}
+          </div>
         )}
       </div>
       {hasChildren && (

@@ -38,6 +38,38 @@ export function isOverridable(node: ModelNode): boolean {
   return node.overridable
 }
 
+/** Get a short type hint for a node's value (e.g. "USD", "Boolean", "Integer") */
+export function getTypeHint(node: ModelNode): string | undefined {
+  const c = node.content
+  if (c.type === 'entity') return undefined
+
+  if (c.format === 'factGraph') {
+    const typeName = c.type === 'writable' ? c.typeName : c.dataType
+    switch (typeName) {
+      case 'Dollar': return 'USD'
+      case 'Int': case 'Short': case 'Byte': return 'Integer'
+      case 'Boolean': return 'Boolean'
+      case 'String': return 'Text'
+      case 'Day': return 'Date'
+      case 'Rational': return 'Rate'
+      case 'Enum': return 'Enum'
+    }
+    return typeName
+  }
+
+  if (c.format === 'rac' && c.type === 'variable') {
+    if (c.unit === 'USD') return 'USD'
+    if (c.unit === 'rate') return 'Rate'
+    // Infer from default value
+    if (c.default === 'true' || c.default === 'false') return 'Boolean'
+    if (c.default && /^\d+$/.test(c.default)) return 'Integer'
+    if (c.default && /^\d+\.\d+$/.test(c.default)) return 'Number'
+    if (c.unit) return c.unit
+  }
+
+  return undefined
+}
+
 /** Get the variable path for a node (used as the key in execution inputs) */
 export function getNodePath(content: NodeContent): string | undefined {
   if (content.type === 'entity') return undefined

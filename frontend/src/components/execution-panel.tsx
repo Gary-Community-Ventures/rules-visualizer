@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
 import { useMainContext } from '@/context'
-import { getNodePath, isInputNode, isConstantNode } from '@/context/model-context'
+import { getNodePath, isInputNode, isConstantNode, getTypeHint } from '@/context/model-context'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
 import { Textarea } from './ui/textarea'
@@ -123,6 +123,18 @@ export function ExecutionPanel() {
         </div>
       )}
 
+      {/* Missing required inputs warning */}
+      {(() => {
+        const missingRequired = inputNodes.filter(
+          (n) => !getDefault(n) && !(inputOverrides[n.id] && inputOverrides[n.id] !== '')
+        )
+        return missingRequired.length > 0 ? (
+          <div className="px-4 py-2 bg-amber-50 text-amber-700 text-xs border-b">
+            {missingRequired.length} required {missingRequired.length === 1 ? 'input' : 'inputs'} missing: {missingRequired.map((n) => n.name).join(', ')}
+          </div>
+        ) : null
+      })()}
+
       {/* Result summary */}
       {executionResults && (
         <div className="px-4 py-2 bg-emerald-50 text-emerald-700 text-xs border-b">
@@ -192,9 +204,6 @@ export function ExecutionPanel() {
                   const defaultVal =
                     content.type !== 'entity' && content.format === 'rac'
                       ? content.default
-                      : content.type === 'derived' &&
-                          content.format === 'factGraph'
-                        ? content.logic
                         : undefined
                   return (
                     <NodeField
@@ -281,19 +290,15 @@ function NodeField({
   required,
   defaultValue,
 }: NodeFieldProps) {
-  const content = node.content
-  const unit =
-    content.format === 'rac' && content.type === 'variable'
-      ? content.unit
-      : undefined
+  const typeHint = getTypeHint(node)
 
   return (
     <div className="space-y-1">
       <div className="flex items-center justify-between">
         <label className="text-xs font-medium truncate" title={node.name}>
           {node.name}
-          {unit && (
-            <span className="ml-1 text-muted-foreground">({unit})</span>
+          {typeHint && (
+            <span className="ml-1 text-muted-foreground font-normal">({typeHint})</span>
           )}
           {required && !value && (
             <span className="ml-1 text-red-400">*</span>
@@ -331,6 +336,11 @@ function NodeField({
 function getDefault(node: ModelNode): string | undefined {
   const c = node.content
   if (c.format === 'rac' && c.type === 'variable' && c.default) return c.default
+  // For Fact Graph constants, extract the value from the logic XML
+  if (c.format === 'factGraph' && c.type === 'derived' && c.role === 'constant' && c.logic) {
+    const match = c.logic.match(/>([^<]+)<\//)
+    if (match) return match[1]
+  }
   return undefined
 }
 
