@@ -74,7 +74,7 @@ export function NodeMapLayout({ children }: PropsWithChildren) {
         <ResizablePanelGroup onLayoutChange={handleLayoutChange}>
           {showNodePanel && (
             <>
-              <ResizablePanel defaultSize={50} minSize="20%">
+              <ResizablePanel defaultSize={50} minSize="20%" className="relative z-[5]">
                 <NodePanel />
               </ResizablePanel>
               <ResizableHandle withHandle />
@@ -91,7 +91,7 @@ export function NodeMapLayout({ children }: PropsWithChildren) {
           <ResizablePanel
             defaultSize={25}
             minSize="20%"
-            className="overflow-hidden"
+            className="overflow-hidden relative z-[5]"
           >
             {rightBar === 'ai' && <AIPanel />}
             {rightBar === 'execution' && <ExecutionPanel />}

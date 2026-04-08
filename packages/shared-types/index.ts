@@ -122,6 +122,7 @@ export type ModelNode = {
   name: string
   dependencies: string[] // pre-computed by backend/converter
   content: NodeContent
+  overridable: boolean // whether this node's value can be overridden during execution
   description?: string
   tags?: string[]
 }

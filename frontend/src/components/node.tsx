@@ -1,5 +1,5 @@
 import { useFindNode, useMainContext } from '@/context'
-import { isInputNode, isConstantNode } from '@/context/model-context'
+import { isInputNode, isConstantNode, isOverridable } from '@/context/model-context'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
 import {
@@ -117,7 +117,7 @@ export function Node({ node }: NodeProps) {
   const overrideValue = inputOverrides[node.id] ?? ''
   const hasOverride = overrideValue !== ''
   const isInput = isInputNode(node)
-  const isEditable = isInput || isConstantNode(node)
+  const isEditable = isOverridable(node)
   const declaredDefault = node.content.type !== 'entity' && node.content.format === 'rac' && node.content.type === 'variable'
     ? node.content.default
     : undefined
@@ -162,7 +162,7 @@ export function Node({ node }: NodeProps) {
                 'h-6 w-24 text-xs font-mono text-center',
                 hasOverride && 'border-amber-400 ring-1 ring-amber-400'
               )}
-              placeholder={declaredDefault ?? (isInput ? 'required' : 'default')}
+              placeholder={declaredDefault ?? (isInput ? 'required' : isConstantNode(node) ? 'default' : 'pin')}
               value={overrideValue}
               onChange={(e) => setInputOverride(node.id, e.target.value)}
               onBlur={runOnBlur}
@@ -389,7 +389,7 @@ export function NodePanel() {
 
   const isInput = isInputNode(openNodeData)
   const isConstant = isConstantNode(openNodeData)
-  const canEdit = isInput || isConstant
+  const canEdit = isOverridable(openNodeData)
 
   const config =
     NODE_TYPE_CONFIG[getNodeRole(openNodeData.content)] ?? DEFAULT_CONFIG
@@ -426,7 +426,7 @@ export function NodePanel() {
         {canEdit && (
           <div className="mt-6 flex flex-col gap-1.5">
             <label className="text-sm font-medium text-muted-foreground">
-              {isInput ? 'Value' : 'Override'}
+              {isInput ? 'Value' : isConstant ? 'Override' : 'Pin Value'}
             </label>
             <div className="flex gap-1.5">
               <Input
@@ -434,7 +434,7 @@ export function NodePanel() {
                   'h-8 text-sm font-mono flex-1',
                   inputOverrides[openNode] && 'border-amber-400 ring-1 ring-amber-400'
                 )}
-                placeholder={isInput ? 'Enter value...' : 'Override default...'}
+                placeholder={isInput ? 'Enter value...' : isConstant ? 'Override default...' : 'Pin to value...'}
                 value={inputOverrides[openNode] ?? ''}
                 onChange={(e) => setInputOverride(openNode, e.target.value)}
                 onBlur={runOnBlur}
@@ -453,7 +453,9 @@ export function NodePanel() {
             <p className="text-xs text-muted-foreground">
               {isInput
                 ? 'Provide this value before running'
-                : 'Override this constant for simulation'}
+                : isConstant
+                  ? 'Override this constant for simulation'
+                  : 'Pin this node to skip its computation'}
             </p>
           </div>
         )}

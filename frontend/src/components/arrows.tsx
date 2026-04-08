@@ -233,7 +233,7 @@ export function Arrows({ rows }: ArrowsProps) {
   return (
     <svg
       className="fixed top-0 left-0 w-full h-full pointer-events-none"
-      style={{ zIndex: -1 }}
+      style={{ zIndex: 2 }}
     >
       <style>
         {`

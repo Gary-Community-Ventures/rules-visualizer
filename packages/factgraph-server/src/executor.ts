@@ -220,27 +220,138 @@ function createGraph(rulesetId: string, facts: ParsedFact[]): unknown {
  * @param inputs - Map of fact path → value to set as inputs
  * @returns Map of node path → computed value
  */
+/**
+ * Infer the writable type for a derived fact.
+ * Uses the model node's dataType if available, otherwise inspects the expression.
+ */
+function inferWritableType(raw: Record<string, unknown>, modelNode?: { dataType?: string }): string {
+  // Prefer the pre-computed dataType from the model
+  if (modelNode?.dataType) {
+    return modelNode.dataType
+  }
+
+  const derived = raw['Derived'] as Record<string, unknown> | undefined
+  if (!derived) return 'Dollar'
+  const typeName = Object.keys(derived).find((k) => !k.startsWith('@_') && k !== '#text')
+  if (!typeName) return 'Dollar'
+
+  // Expression types that produce booleans
+  const booleanOps = new Set([
+    'All', 'Any', 'Not', 'Equal', 'NotEqual',
+    'GreaterThan', 'GreaterThanOrEqual', 'LessThan', 'LessThanOrEqual',
+    'True', 'False', 'IsComplete',
+  ])
+  if (booleanOps.has(typeName)) return 'Boolean'
+
+  // Literal types
+  if (typeName === 'Dollar') return 'Dollar'
+  if (typeName === 'Int') return 'Int'
+  if (typeName === 'String') return 'String'
+  if (typeName === 'Day') return 'Day'
+  if (typeName === 'Rational') return 'Int'
+
+  // Arithmetic operations produce Dollar by default
+  const dollarOps = new Set([
+    'Add', 'Subtract', 'Multiply', 'Divide', 'Round', 'RoundToInt',
+    'TruncateCents', 'GreaterOf', 'LesserOf',
+  ])
+  if (dollarOps.has(typeName)) return 'Dollar'
+
+  // Switch/conditional — need to look at the Then branches to infer type
+  if (typeName === 'Switch') {
+    const cases = derived['Switch'] as Record<string, unknown> | undefined
+    if (cases) {
+      const caseList = Array.isArray(cases['Case']) ? cases['Case'] : cases['Case'] ? [cases['Case']] : []
+      for (const c of caseList as Record<string, unknown>[]) {
+        const then = c['Then'] as Record<string, unknown> | undefined
+        if (then) {
+          const innerType = Object.keys(then).find((k) => !k.startsWith('@_') && k !== '#text')
+          if (innerType === 'Dollar') return 'Dollar'
+          if (innerType === 'Int') return 'Int'
+          if (innerType === 'String') return 'String'
+          if (innerType === 'True' || innerType === 'False') return 'Boolean'
+          if (innerType === 'Dependency') return 'Boolean' // dependency in Then likely returns same type
+          if (innerType && new Set(['All', 'Any', 'Not', 'GreaterThan', 'LessThan', 'Equal', 'GreaterThanOrEqual', 'LessThanOrEqual']).has(innerType)) return 'Boolean'
+          if (innerType && new Set(['Add', 'Subtract', 'Multiply', 'Divide', 'GreaterOf', 'LesserOf']).has(innerType)) return 'Dollar'
+        }
+      }
+    }
+  }
+
+  // Default to Dollar for unknown types
+  return 'Dollar'
+}
+
 export function executeFactGraph(
   rulesetId: string,
   facts: ParsedFact[],
-  inputs: Record<string, unknown>
+  inputs: Record<string, unknown>,
+  modelNodes?: Record<string, { content: { dataType?: string } }>
 ): Record<string, unknown> {
-  // Create or reuse graph
-  const graph = createGraph(rulesetId, facts) as {
+  // Separate inputs into writable values and derived overrides
+  const writableInputs: Record<string, unknown> = {}
+  const derivedOverrides: Record<string, unknown> = {}
+
+  for (const [path, value] of Object.entries(inputs)) {
+    const fact = facts.find((f) => f.path === path)
+    if (!fact) continue
+    if (fact.raw['Writable']) {
+      writableInputs[path] = value
+    } else {
+      derivedOverrides[path] = value
+    }
+  }
+
+  // If there are derived overrides, rebuild the graph with those facts as writables
+  const effectiveFacts = Object.keys(derivedOverrides).length > 0
+    ? facts.map((f) => {
+        if (f.path in derivedOverrides) {
+          // Convert this derived fact to a writable
+          // Find the model node to get dataType
+          const modelNode = modelNodes
+            ? Object.values(modelNodes).find((n) => n.content && 'path' in n.content && (n.content as { path: string }).path === f.path)
+            : undefined
+          const typeName = inferWritableType(f.raw, modelNode?.content as { dataType?: string } | undefined)
+          return {
+            ...f,
+            raw: {
+              ...f.raw,
+              Writable: { [typeName]: {} },
+              Derived: undefined,
+            },
+          }
+        }
+        return f
+      })
+    : facts
+
+  const graph = createGraph(rulesetId, effectiveFacts) as {
     set: (path: string, value: unknown) => void
     get: (path: string) => { complete: boolean; hasValue: boolean; get: unknown }
     save: () => { valid: boolean }
   }
 
-  // Set input values
-  for (const [path, value] of Object.entries(inputs)) {
+  // Set writable input values
+  for (const [path, value] of Object.entries(writableInputs)) {
     try {
-      const typedValue = createTypedValue(path, value, facts)
+      const typedValue = createTypedValue(path, value, effectiveFacts)
       if (typedValue !== undefined) {
         graph.set(path, typedValue)
       }
     } catch (e) {
       console.warn(`Failed to set ${path}:`, (e as Error).message)
+    }
+  }
+
+  // Set derived-turned-writable overrides
+  for (const [path, value] of Object.entries(derivedOverrides)) {
+    try {
+      const typedValue = createTypedValue(path, value, effectiveFacts)
+      if (typedValue !== undefined) {
+        graph.set(path, typedValue)
+      }
+    } catch (e) {
+      console.warn(`Failed to set override ${path}:`, (e as Error).message)
     }
   }
 

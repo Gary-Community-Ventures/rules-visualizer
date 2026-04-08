@@ -143,7 +143,7 @@ export function PanContainer({ children, className }: PanContainerProps) {
     <div
       ref={containerRef}
       className={cn(
-        'relative overflow-hidden flex-1',
+        'relative overflow-hidden flex-1 z-[3]',
         isPanning ? 'cursor-grabbing' : 'cursor-grab',
         className
       )}

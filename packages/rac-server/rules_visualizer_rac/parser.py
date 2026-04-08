@@ -205,12 +205,13 @@ def _ir_to_model(
             if var_name in logic_blocks:
                 content["logic"] = logic_blocks[var_name]
 
-        # Build node
+        # Build node — all RAC variables are overridable
         node: dict[str, Any] = {
             "id": node_id,
             "name": _path_to_name(var_path),
             "dependencies": deps,
             "content": content,
+            "overridable": True,
         }
 
         if vd.get("description"):
@@ -245,6 +246,7 @@ def _ir_to_model(
             "name": _path_to_name(var_path),
             "dependencies": [],
             "content": content,
+            "overridable": True,
         }
 
         if vd.get("description"):
@@ -388,6 +390,7 @@ def _modules_to_model(modules: list[Any], ruleset_id: str, logic_blocks: dict[st
             "name": _path_to_name(var_path),
             "dependencies": deps,
             "content": content,
+            "overridable": True,
         }
 
         if vd.get("description"):

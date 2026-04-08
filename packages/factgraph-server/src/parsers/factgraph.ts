@@ -94,9 +94,10 @@ export function parseFactGraphModules(
 
     const node: ModelNode = {
       id,
-      name: fact.path,
+      name: fact.name || pathToNodeName(fact.path),
       dependencies: [], // filled in phase 3
       content,
+      overridable: true,
       description: fact.description,
     }
 

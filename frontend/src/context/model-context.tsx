@@ -33,6 +33,11 @@ export function isConstantNode(node: ModelNode): boolean {
   return node.content.role === 'constant'
 }
 
+/** Check if a node can be overridden during execution */
+export function isOverridable(node: ModelNode): boolean {
+  return node.overridable
+}
+
 /** Get the variable path for a node (used as the key in execution inputs) */
 export function getNodePath(content: NodeContent): string | undefined {
   if (content.type === 'entity') return undefined
