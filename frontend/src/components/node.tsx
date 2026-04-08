@@ -116,7 +116,11 @@ export function Node({ node }: NodeProps) {
   const result = executionResults?.[node.id]
   const overrideValue = inputOverrides[node.id] ?? ''
   const hasOverride = overrideValue !== ''
-  const isEditable = isInputNode(node) || isConstantNode(node)
+  const isInput = isInputNode(node)
+  const isEditable = isInput || isConstantNode(node)
+  const declaredDefault = node.content.type !== 'entity' && node.content.format === 'rac' && node.content.type === 'variable'
+    ? node.content.default
+    : undefined
   const hasChildren = node.dependencies.length > 0
   const config =
     NODE_TYPE_CONFIG[getNodeRole(node.content)] ?? DEFAULT_CONFIG
@@ -158,7 +162,7 @@ export function Node({ node }: NodeProps) {
                 'h-6 w-24 text-xs font-mono text-center',
                 hasOverride && 'border-amber-400 ring-1 ring-amber-400'
               )}
-              placeholder={isInputNode(node) ? 'value' : 'default'}
+              placeholder={declaredDefault ?? (isInput ? 'required' : 'default')}
               value={overrideValue}
               onChange={(e) => setInputOverride(node.id, e.target.value)}
               onBlur={runOnBlur}

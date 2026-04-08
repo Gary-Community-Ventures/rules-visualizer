@@ -146,18 +146,22 @@ export function ExecutionPanel() {
               )}
             </div>
             <div className="space-y-3">
-              {inputNodes.map((node) => (
-                <NodeField
-                  key={node.id}
-                  node={node}
-                  value={inputOverrides[node.id] ?? ''}
-                  onChange={(val) => setInputOverride(node.id, val)}
-                  onClear={() => clearInputOverride(node.id)}
-                  onBlur={runOnBlur}
-                  result={executionResults?.[node.id]?.value}
-                  required
-                />
-              ))}
+              {inputNodes.map((node) => {
+                const nodeDefault = getDefault(node)
+                return (
+                  <NodeField
+                    key={node.id}
+                    node={node}
+                    value={inputOverrides[node.id] ?? ''}
+                    onChange={(val) => setInputOverride(node.id, val)}
+                    onClear={() => clearInputOverride(node.id)}
+                    onBlur={runOnBlur}
+                    result={executionResults?.[node.id]?.value}
+                    required={!nodeDefault}
+                    defaultValue={nodeDefault}
+                  />
+                )
+              })}
             </div>
           </div>
         )}
@@ -321,6 +325,13 @@ function NodeField({
       )}
     </div>
   )
+}
+
+/** Get the default value string for a node, or undefined if none declared */
+function getDefault(node: ModelNode): string | undefined {
+  const c = node.content
+  if (c.format === 'rac' && c.type === 'variable' && c.default) return c.default
+  return undefined
 }
 
 function formatValue(value: unknown): string {
