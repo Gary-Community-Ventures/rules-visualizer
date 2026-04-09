@@ -1,4 +1,28 @@
 import type { ModelNodes } from './model'
+import { getCollectionInfo } from '@/context/model-context'
+
+/**
+ * Filter out disconnected collection-scoped nodes.
+ * These are per-member input nodes that nothing depends on and have no deps themselves.
+ * They add clutter to the graph — the Members section handles them instead.
+ */
+export function filterDisconnectedCollectionNodes(nodes: ModelNodes): ModelNodes {
+  const dependedOn = new Set<string>()
+  for (const node of Object.values(nodes)) {
+    for (const dep of node.dependencies) {
+      dependedOn.add(dep)
+    }
+  }
+
+  const filtered: ModelNodes = {}
+  for (const [id, node] of Object.entries(nodes)) {
+    const isCollectionScoped = !!getCollectionInfo(node)
+    const isDisconnected = !dependedOn.has(id) && node.dependencies.length === 0
+    if (isCollectionScoped && isDisconnected) continue
+    filtered[id] = node
+  }
+  return filtered
+}
 
 export function findRootNodes(nodes: ModelNodes): string[] {
   const dependedOn = new Set<string>()

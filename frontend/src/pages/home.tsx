@@ -4,7 +4,7 @@ import { Rows } from '@/components/node'
 import { Arrows } from '@/components/arrows'
 import { ToolBar } from '@/components/tool-bar'
 import { PanContainer } from '@/components/pan-container'
-import { nodeRows } from '@/lib/graph'
+import { nodeRows, filterDisconnectedCollectionNodes } from '@/lib/graph'
 import {
   ResizableHandle,
   ResizablePanel,
@@ -36,7 +36,8 @@ export function HomePage() {
     )
   }
 
-  const rows: string[][] = nodeRows(model.nodes, showChildren, selectedNodes)
+  const visibleNodes = filterDisconnectedCollectionNodes(model.nodes)
+  const rows: string[][] = nodeRows(visibleNodes, showChildren, selectedNodes)
 
   return (
     <>

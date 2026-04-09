@@ -234,10 +234,13 @@ export function Node({ node }: NodeProps) {
           </div>
         )}
 
-        {/* Constants/computed: overlay field on hover, no layout shift */}
-        {isEditable && !isInput && (hasOverride || isHovered) && (
+        {/* Constants/computed: always reserve space, show field on hover */}
+        {isEditable && !isInput && (
           <div
-            className="absolute left-1/2 -translate-x-1/2 bottom-0 translate-y-[calc(100%+4px)] flex items-center gap-1 z-20 bg-white rounded shadow-sm border px-1 py-0.5"
+            className={cn(
+              'mt-1.5 flex items-center gap-1 h-5',
+              !hasOverride && !isHovered && 'invisible'
+            )}
             onClick={(e) => e.stopPropagation()}
           >
             <Input
