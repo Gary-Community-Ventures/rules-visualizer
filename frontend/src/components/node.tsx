@@ -196,10 +196,17 @@ export function Node({ node }: NodeProps) {
           </span>
         </div>
 
-        {/* Collection badge */}
+        {/* Collection indicator */}
         {isCollection && !isCollectionParent(node) && (
-          <span className="mt-1 text-[10px] text-muted-foreground italic">
-            per member
+          <span className="mt-0.5 text-[9px] text-muted-foreground/60">
+            {(() => {
+              const info = getCollectionInfo(node)
+              if (!info) return ''
+              const name = info.collection.startsWith('/')
+                ? info.collection.slice(1)
+                : info.collection
+              return `per ${name}`
+            })()}
           </span>
         )}
 

@@ -61,7 +61,6 @@ export function ExecutionPanel() {
   const showOverrides = sectionState.overrides ?? false
   const showConstants = sectionState.constants ?? false
   const showComputed = sectionState.computed ?? false
-  const showEntities = sectionState.entities ?? true
   const showJson = sectionState.json ?? false
   const [jsonText, setJsonText] = useState('')
   const [jsonError, setJsonError] = useState<string | null>(null)
@@ -254,7 +253,7 @@ export function ExecutionPanel() {
       {/* Scrollable content */}
       <div className="flex-1 overflow-y-auto">
         {/* ── INPUTS ── */}
-        {inputNodes.length > 0 && (
+        {(inputNodes.length > 0 || collectionNames.length > 0) && (
           <div className="p-4 border-b">
             <div className="flex items-center">
               <button
@@ -267,14 +266,15 @@ export function ExecutionPanel() {
                   <ChevronRight className="size-3" />
                 )}
                 Inputs
-                {inputCount === inputNodes.length ? (
+                {inputCount === inputNodes.length && (collectionNames.length === 0 || totalCollectionRows > 0) ? (
                   <span className="font-normal text-emerald-600">All set</span>
-                ) : inputCount > 0 ? (
+                ) : inputCount > 0 || totalCollectionRows > 0 ? (
                   <span className="font-normal">
                     {inputCount} of {inputNodes.length}
+                    {totalCollectionRows > 0 && ` + ${totalCollectionRows} items`}
                   </span>
                 ) : (
-                  <span className="font-normal">({inputNodes.length})</span>
+                  <span className="font-normal">({inputNodes.length}{collectionNames.length > 0 ? ' + collections' : ''})</span>
                 )}
               </button>
               {inputCount > 0 && (
@@ -305,35 +305,8 @@ export function ExecutionPanel() {
                     />
                   )
                 })}
-              </div>
-            )}
-          </div>
-        )}
 
-        {/* ── MEMBERS (collection/entity data) ── */}
-        {collectionNames.length > 0 && (
-          <div className="p-4 border-b">
-            <div className="flex items-center">
-              <button
-                className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider flex-1"
-                onClick={() => setSection('entities', !showEntities)}
-              >
-                {showEntities ? (
-                  <ChevronDown className="size-3" />
-                ) : (
-                  <ChevronRight className="size-3" />
-                )}
-                <Users className="size-3" />
-                Members
-                {totalCollectionRows > 0 && (
-                  <span className="font-normal text-blue-600">
-                    {totalCollectionRows} added
-                  </span>
-                )}
-              </button>
-            </div>
-            {showEntities && (
-              <div className="mt-3 space-y-4">
+                {/* Collection editors inline under inputs */}
                 {collectionNames.map((collectionName) => {
                   const fields = collectionInputs[collectionName]
                   const rows = entityData[collectionName] ?? []
@@ -653,10 +626,19 @@ function EntityEditor({ entityName, fields, rows, onChange, onBlur }: EntityEdit
     onChange(rows.filter((_, i) => i !== rowIdx))
   }
 
+  // Clean up display name: strip leading / for Fact Graph paths
+  const displayName = entityName.startsWith('/')
+    ? entityName.slice(1).replace(/[-_]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
+    : entityName
+
   return (
-    <div>
-      <div className="text-[11px] font-medium text-muted-foreground mb-2">
-        {entityName}
+    <div className="border-t pt-3 mt-3">
+      <div className="text-xs font-semibold text-muted-foreground mb-2 flex items-center gap-1.5">
+        <Users className="size-3" />
+        {displayName}
+        {rows.length > 0 && (
+          <span className="font-normal text-blue-600">{rows.length}</span>
+        )}
       </div>
       <div className="space-y-3">
         {rows.map((row, rowIdx) => (
@@ -702,7 +684,7 @@ function EntityEditor({ entityName, fields, rows, onChange, onBlur }: EntityEdit
         className="mt-2 h-7 text-xs gap-1.5 w-full"
       >
         <Plus className="size-3" />
-        Add {entityName}
+        Add {displayName}
       </Button>
     </div>
   )
