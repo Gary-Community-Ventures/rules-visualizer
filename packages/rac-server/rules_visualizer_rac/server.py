@@ -285,6 +285,10 @@ async def handle_ruleset_execute(request: web.Request) -> web.Response:
                     ctx.current_row = None
                     ctx.current_entity = None
 
+                # Inject entity result list into ctx.computed so scalar
+                # expressions can aggregate over them (sum, max, len, etc.)
+                ctx.computed[path] = entities[entity_name][path]
+
         # Build result
         from rac.executor import Result
         result = Result(scalars=ctx.computed, entities=entities)

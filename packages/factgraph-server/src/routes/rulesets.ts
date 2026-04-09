@@ -32,13 +32,16 @@ router.post('/rulesets/:id/execute', (req, res) => {
   }
 
   const inputs: Record<string, unknown> = req.body?.inputs ?? {}
+  const entities: Record<string, Record<string, unknown>[]> =
+    req.body?.entities ?? {}
 
   try {
     const pathResults = executeFactGraph(
       rulesetId,
       facts,
       inputs,
-      model.nodes as Record<string, { content: { dataType?: string } }>
+      model.nodes as Record<string, { content: { dataType?: string } }>,
+      entities
     )
 
     // Map path results to node IDs

@@ -4,6 +4,8 @@ import {
   isInputNode,
   isConstantNode,
   isOverridable,
+  isCollectionParent,
+  getCollectionInfo,
   getTypeHint,
 } from '@/context/model-context'
 import { Button } from './ui/button'
@@ -100,7 +102,14 @@ function formatResultValue(value: unknown): string {
   if (typeof value === 'string') return value
   if (Array.isArray(value)) {
     if (value.length === 0) return '[]'
-    return `[${value.length} items]`
+    return value
+      .map((v) => {
+        if (typeof v === 'boolean') return v ? 'T' : 'F'
+        if (typeof v === 'number')
+          return Number.isInteger(v) ? String(v) : v.toFixed(0)
+        return String(v)
+      })
+      .join(', ')
   }
   return String(value)
 }
@@ -123,7 +132,8 @@ export function Node({ node }: NodeProps) {
   const overrideValue = inputOverrides[node.id] ?? ''
   const hasOverride = overrideValue !== ''
   const isInput = isInputNode(node)
-  const isEditable = isOverridable(node)
+  const isCollection = !!getCollectionInfo(node) || isCollectionParent(node)
+  const isEditable = isOverridable(node) && !isCollection
   const declaredDefault = (() => {
     const c = node.content
     if (c.format === 'rac' && c.type === 'variable' && c.default)
@@ -185,8 +195,15 @@ export function Node({ node }: NodeProps) {
           </span>
         </div>
 
-        {/* Input nodes: prominent field, always visible */}
-        {isInput && (
+        {/* Collection badge */}
+        {isCollection && !isCollectionParent(node) && (
+          <span className="mt-1 text-[10px] text-muted-foreground italic">
+            per member
+          </span>
+        )}
+
+        {/* Input nodes: prominent field, always visible (but not for collection-scoped) */}
+        {isInput && !isCollection && (
           <div
             className="mt-2 flex items-center gap-1"
             onClick={(e) => e.stopPropagation()}
@@ -216,10 +233,10 @@ export function Node({ node }: NodeProps) {
           </div>
         )}
 
-        {/* Constants/computed: small subtle field, only when hovered or has override */}
+        {/* Constants/computed: overlay field on hover, no layout shift */}
         {isEditable && !isInput && (hasOverride || isHovered) && (
           <div
-            className="mt-1.5 flex items-center gap-1"
+            className="absolute left-1/2 -translate-x-1/2 bottom-0 translate-y-[calc(100%+4px)] flex items-center gap-1 z-20 bg-white rounded shadow-sm border px-1 py-0.5"
             onClick={(e) => e.stopPropagation()}
           >
             <Input

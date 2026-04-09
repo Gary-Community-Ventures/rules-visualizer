@@ -6,6 +6,8 @@ import {
   isInputNode,
   isConstantNode,
   isOverridable,
+  isCollectionParent,
+  getCollectionInputs,
   getTypeHint,
 } from '@/context/model-context'
 import { Button } from './ui/button'
@@ -17,6 +19,8 @@ import {
   ChevronRight,
   Upload,
   Download,
+  Plus,
+  Users,
 } from 'lucide-react'
 import type { ModelNode } from '@/lib/model'
 
@@ -27,6 +31,8 @@ export function ExecutionPanel() {
     setInputOverride,
     clearInputOverride,
     clearOverrides,
+    entityData,
+    setEntityData,
     executionResults,
     executionError,
     runOnBlur,
@@ -55,16 +61,42 @@ export function ExecutionPanel() {
   const showOverrides = sectionState.overrides ?? false
   const showConstants = sectionState.constants ?? false
   const showComputed = sectionState.computed ?? false
+  const showEntities = sectionState.entities ?? true
   const showJson = sectionState.json ?? false
   const [jsonText, setJsonText] = useState('')
   const [jsonError, setJsonError] = useState<string | null>(null)
 
-  // Categorize nodes
+  // Collection inputs (per-member fields) — works for both RAC and Fact Graph
+  const collectionInputs = useMemo(
+    () => getCollectionInputs(model.nodes),
+    [model.nodes]
+  )
+  const collectionNames = Object.keys(collectionInputs)
+  const totalCollectionRows = Object.values(entityData).reduce(
+    (s, rows) => s + rows.length,
+    0
+  )
+
+  // IDs of nodes that belong to collections (should NOT appear in scalar inputs)
+  const collectionNodeIds = useMemo(() => {
+    const ids = new Set<string>()
+    for (const fields of Object.values(collectionInputs)) {
+      for (const f of fields) ids.add(f.nodeId)
+    }
+    // Also exclude Collection parent nodes
+    for (const node of Object.values(model.nodes)) {
+      if (isCollectionParent(node)) ids.add(node.id)
+    }
+    return ids
+  }, [collectionInputs, model.nodes])
+
   const { inputNodes, constantNodes, computedNodes } = useMemo(() => {
     const inputs: ModelNode[] = []
     const constants: ModelNode[] = []
     const computed: ModelNode[] = []
     for (const node of Object.values(model.nodes)) {
+      // Skip collection-scoped inputs and collection parents
+      if (collectionNodeIds.has(node.id)) continue
       if (isInputNode(node)) inputs.push(node)
       else if (isConstantNode(node)) constants.push(node)
       else if (isOverridable(node)) computed.push(node)
@@ -270,6 +302,54 @@ export function ExecutionPanel() {
                       required={!nodeDefault}
                       defaultValue={nodeDefault}
                       colorScheme="input"
+                    />
+                  )
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── MEMBERS (collection/entity data) ── */}
+        {collectionNames.length > 0 && (
+          <div className="p-4 border-b">
+            <div className="flex items-center">
+              <button
+                className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider flex-1"
+                onClick={() => setSection('entities', !showEntities)}
+              >
+                {showEntities ? (
+                  <ChevronDown className="size-3" />
+                ) : (
+                  <ChevronRight className="size-3" />
+                )}
+                <Users className="size-3" />
+                Members
+                {totalCollectionRows > 0 && (
+                  <span className="font-normal text-blue-600">
+                    {totalCollectionRows} added
+                  </span>
+                )}
+              </button>
+            </div>
+            {showEntities && (
+              <div className="mt-3 space-y-4">
+                {collectionNames.map((collectionName) => {
+                  const fields = collectionInputs[collectionName]
+                  const rows = entityData[collectionName] ?? []
+                  return (
+                    <EntityEditor
+                      key={collectionName}
+                      entityName={collectionName}
+                      fields={fields}
+                      rows={rows}
+                      onChange={(newRows) =>
+                        setEntityData((prev) => ({
+                          ...prev,
+                          [collectionName]: newRows,
+                        }))
+                      }
+                      onBlur={runOnBlur}
                     />
                   )
                 })}
@@ -535,11 +615,105 @@ function getDefault(node: ModelNode): string | undefined {
   return undefined
 }
 
+// --- Entity editor ---
+
+type EntityField = {
+  nodeId: string
+  path: string
+  fieldName: string
+  default?: string
+  typeHint?: string
+}
+
+type EntityEditorProps = {
+  entityName: string
+  fields: EntityField[]
+  rows: Record<string, string>[]
+  onChange: (rows: Record<string, string>[]) => void
+  onBlur: () => void
+}
+
+function EntityEditor({ entityName, fields, rows, onChange, onBlur }: EntityEditorProps) {
+  const addRow = () => {
+    const newRow: Record<string, string> = {}
+    for (const field of fields) {
+      if (field.default) newRow[field.path] = field.default
+    }
+    onChange([...rows, newRow])
+  }
+
+  const updateField = (rowIdx: number, fieldPath: string, value: string) => {
+    const updated = rows.map((row, i) =>
+      i === rowIdx ? { ...row, [fieldPath]: value } : row
+    )
+    onChange(updated)
+  }
+
+  const removeRow = (rowIdx: number) => {
+    onChange(rows.filter((_, i) => i !== rowIdx))
+  }
+
+  return (
+    <div>
+      <div className="text-[11px] font-medium text-muted-foreground mb-2">
+        {entityName}
+      </div>
+      <div className="space-y-3">
+        {rows.map((row, rowIdx) => (
+          <div key={rowIdx} className="border rounded-md p-2 space-y-1.5 bg-blue-50/30">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-medium text-muted-foreground">
+                #{rowIdx + 1}
+              </span>
+              <button
+                className="text-muted-foreground hover:text-foreground"
+                onClick={() => removeRow(rowIdx)}
+              >
+                <Trash2 className="size-2.5" />
+              </button>
+            </div>
+            {fields.map((field) => (
+              <div key={field.path} className="flex items-center gap-2">
+                <span className="text-[11px] text-muted-foreground w-24 shrink-0 truncate" title={field.path}>
+                  {field.fieldName}
+                  {field.typeHint && (
+                    <span className="ml-0.5 opacity-60">({field.typeHint})</span>
+                  )}
+                </span>
+                <Input
+                  className={cn(
+                    'h-6 text-xs font-mono flex-1',
+                    row[field.path] && 'border-blue-400 ring-1 ring-blue-400'
+                  )}
+                  placeholder={field.default ?? field.typeHint?.toLowerCase() ?? 'value'}
+                  value={row[field.path] ?? ''}
+                  onChange={(e) => updateField(rowIdx, field.path, e.target.value)}
+                  onBlur={onBlur}
+                />
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={addRow}
+        className="mt-2 h-7 text-xs gap-1.5 w-full"
+      >
+        <Plus className="size-3" />
+        Add {entityName}
+      </Button>
+    </div>
+  )
+}
+
 function formatValue(value: unknown): string {
   if (value === null || value === undefined) return 'null'
   if (Array.isArray(value)) {
     if (value.length === 0) return '[]'
-    return `[${value.length} items]`
+    // Show per-member values inline
+    return value.map((v) => String(v)).join(', ')
   }
   if (typeof value === 'object') return JSON.stringify(value)
   return String(value)

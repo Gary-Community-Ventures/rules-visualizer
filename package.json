@@ -20,5 +20,8 @@
     "build:factgraph": "npm run build:frontend && npm run bundle-frontend --workspace=rules-visualizer-factgraph && npm run build --workspace=rules-visualizer-factgraph",
     "format": "prettier --write .",
     "lint": "npm run lint --workspace=rules-visualizer-frontend"
+  },
+  "dependencies": {
+    "chokidar": "^5.0.0"
   }
 }

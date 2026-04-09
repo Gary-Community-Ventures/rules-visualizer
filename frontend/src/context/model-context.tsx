@@ -79,6 +79,68 @@ export function getTypeHint(node: ModelNode): string | undefined {
   return undefined
 }
 
+/** Get the collection name for a node, or null if not collection-scoped */
+export function getCollectionInfo(node: ModelNode): { collection: string } | null {
+  const c = node.content
+  if (c.type === 'entity') return null
+
+  // RAC: check entity field
+  if (c.format === 'rac' && c.type === 'variable' && c.entity) {
+    return { collection: c.entity }
+  }
+
+  // Fact Graph: check for /* in path (collection items)
+  if (c.format === 'factGraph') {
+    const match = c.path.match(/^(\/[^*]+)\/\*\//)
+    if (match) return { collection: match[1] }
+  }
+
+  return null
+}
+
+/** Check if a node is a Collection parent (Fact Graph only, e.g. /members with <Collection />) */
+export function isCollectionParent(node: ModelNode): boolean {
+  const c = node.content
+  return c.format === 'factGraph' && c.type === 'writable' && c.typeName === 'Collection'
+}
+
+/** Get collection input fields grouped by collection name (works for both formats) */
+export function getCollectionInputs(
+  nodes: Record<string, ModelNode>
+): Record<string, { nodeId: string; path: string; fieldName: string; default?: string; typeHint?: string }[]> {
+  const result: Record<string, { nodeId: string; path: string; fieldName: string; default?: string; typeHint?: string }[]> = {}
+  for (const [nodeId, node] of Object.entries(nodes)) {
+    if (!isInputNode(node)) continue
+    if (isCollectionParent(node)) continue
+    const info = getCollectionInfo(node)
+    if (!info) continue
+    if (!result[info.collection]) result[info.collection] = []
+
+    // Extract the field name (last path segment for FG, variable name for RAC)
+    const c = node.content
+    let fieldName = node.name
+    let fieldPath = c.type !== 'entity' ? c.path : ''
+    let defaultVal: string | undefined
+    if (c.format === 'rac' && c.type === 'variable') {
+      defaultVal = c.default
+      fieldPath = c.path
+    } else if (c.format === 'factGraph') {
+      // For /members/*/age, the field path for entity data is just "age"
+      const segments = c.path.split('/')
+      fieldPath = segments[segments.length - 1]
+    }
+
+    result[info.collection].push({
+      nodeId,
+      path: fieldPath,
+      fieldName,
+      default: defaultVal,
+      typeHint: getTypeHint(node),
+    })
+  }
+  return result
+}
+
 /** Get the variable path for a node (used as the key in execution inputs) */
 export function getNodePath(content: NodeContent): string | undefined {
   if (content.type === 'entity') return undefined
@@ -112,6 +174,8 @@ type ModelContextValue = {
   clearInputOverride: (nodeId: string) => void
   clearOverrides: () => void
   clearAll: () => void
+  entityData: Record<string, Record<string, string>[]>
+  setEntityData: Dispatch<SetStateAction<Record<string, Record<string, string>[]>>>
   executionResults: ExecutionResults | null
   isExecuting: boolean
   executionError: string | null
@@ -231,6 +295,9 @@ export function ModelProvider({
   const [inputOverrides, setInputOverrides] = useState<Record<string, string>>(
     {}
   )
+  const [entityData, setEntityData] = useState<
+    Record<string, Record<string, string>[]>
+  >({})
   const [executionResults, setExecutionResults] =
     useState<ExecutionResults | null>(null)
   const [isExecuting, setIsExecuting] = useState(false)
@@ -264,9 +331,10 @@ export function ModelProvider({
     setExecutionError(null)
   }, [model.nodes])
 
-  // Clear everything — inputs, overrides, results
+  // Clear everything — inputs, overrides, entity data, results
   const clearAll = useCallback(() => {
     setInputOverrides({})
+    setEntityData({})
     setExecutionResults(null)
     setExecutionError(null)
   }, [])
@@ -275,14 +343,31 @@ export function ModelProvider({
     setIsExecuting(true)
     setExecutionError(null)
     const inputs = parseOverrides(inputOverrides, model.nodes)
-    executeRuleset(rulesetId, inputs)
+    // Parse entity data: convert string values to typed
+    const entities: Record<string, Record<string, unknown>[]> | undefined =
+      Object.keys(entityData).length > 0
+        ? Object.fromEntries(
+            Object.entries(entityData).map(([entity, rows]) => [
+              entity,
+              rows.map((row, i) => {
+                const parsed: Record<string, unknown> = { id: i + 1 }
+                for (const [key, val] of Object.entries(row)) {
+                  if (val === '') continue
+                  try { parsed[key] = JSON.parse(val) } catch { parsed[key] = val }
+                }
+                return parsed
+              }),
+            ])
+          )
+        : undefined
+    executeRuleset(rulesetId, inputs, entities)
       .then((results) => setExecutionResults(results))
       .catch((err) => {
         const message = err instanceof Error ? err.message : 'Execution failed'
         setExecutionError(message)
       })
       .finally(() => setIsExecuting(false))
-  }, [rulesetId, inputOverrides, model.nodes])
+  }, [rulesetId, inputOverrides, entityData, model.nodes])
 
   const clearExecution = useCallback(() => {
     setExecutionResults(null)
@@ -292,8 +377,9 @@ export function ModelProvider({
   // Auto-run execution when an input field loses focus
   const runOnBlur = useCallback(() => {
     const hasAnyInput = Object.values(inputOverrides).some((v) => v !== '')
-    if (hasAnyInput) runExecution()
-  }, [inputOverrides, runExecution])
+    const hasEntityData = Object.values(entityData).some((rows) => rows.length > 0)
+    if (hasAnyInput || hasEntityData) runExecution()
+  }, [inputOverrides, entityData, runExecution])
 
   const [workspaceItems, setWorkspaceItems] = useLocalStorage<string[]>(
     `workspace:${rulesetId}`,
@@ -378,6 +464,8 @@ export function ModelProvider({
       clearInputOverride,
       clearOverrides,
       clearAll,
+      entityData,
+      setEntityData,
       executionResults,
       isExecuting,
       executionError,
@@ -413,6 +501,8 @@ export function ModelProvider({
       clearInputOverride,
       clearOverrides,
       clearAll,
+      entityData,
+      setEntityData,
       executionResults,
       isExecuting,
       executionError,

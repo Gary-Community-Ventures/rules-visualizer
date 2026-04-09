@@ -1,0 +1,212 @@
+<FactDictionaryModule>
+  <Facts>
+    <!-- ============================================================ -->
+    <!-- COLLECTION — the household members list                      -->
+    <!-- ============================================================ -->
+
+    <Fact path="/members">
+      <Name>Household members</Name>
+      <Description>List of household members</Description>
+      <Writable><Collection /></Writable>
+    </Fact>
+
+    <!-- ============================================================ -->
+    <!-- INPUTS — per-member (collection items)                       -->
+    <!-- ============================================================ -->
+
+    <Fact path="/members/*/age">
+      <Name>Age</Name>
+      <Description>Age of the household member</Description>
+      <Writable><Int /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/isDisabled">
+      <Name>Is disabled</Name>
+      <Description>Whether the member has a qualifying disability</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/monthlyIncome">
+      <Name>Monthly income</Name>
+      <Description>Member's monthly income from all sources</Description>
+      <Writable><Dollar /></Writable>
+    </Fact>
+
+    <!-- ============================================================ -->
+    <!-- INPUTS — household-level                                     -->
+    <!-- ============================================================ -->
+
+    <Fact path="/isEmployed">
+      <Name>Household has employed member</Name>
+      <Description>Whether any household member is currently employed</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <!-- ============================================================ -->
+    <!-- CONSTANTS                                                    -->
+    <!-- ============================================================ -->
+
+    <Fact path="/childAgeLimit">
+      <Name>Child age limit</Name>
+      <Description>Age below which a member qualifies as a child</Description>
+      <Derived><Int>18</Int></Derived>
+    </Fact>
+
+    <Fact path="/seniorAgeThreshold">
+      <Name>Senior age threshold</Name>
+      <Description>Age at or above which a member qualifies as senior</Description>
+      <Derived><Int>65</Int></Derived>
+    </Fact>
+
+    <Fact path="/baseBenefitPerChild">
+      <Name>Base benefit per child</Name>
+      <Description>Monthly benefit per qualifying child</Description>
+      <Derived><Dollar>150</Dollar></Derived>
+    </Fact>
+
+    <Fact path="/baseBenefitPerSenior">
+      <Name>Base benefit per senior</Name>
+      <Description>Monthly benefit per qualifying senior</Description>
+      <Derived><Dollar>200</Dollar></Derived>
+    </Fact>
+
+    <Fact path="/disabilitySupplement">
+      <Name>Disability supplement</Name>
+      <Description>Additional monthly benefit for disabled members</Description>
+      <Derived><Dollar>75</Dollar></Derived>
+    </Fact>
+
+    <Fact path="/incomeLimitPerMember">
+      <Name>Income limit per member</Name>
+      <Description>Maximum monthly income per member for eligibility</Description>
+      <Derived><Dollar>2000</Dollar></Derived>
+    </Fact>
+
+    <!-- ============================================================ -->
+    <!-- COMPUTED — per-member                                        -->
+    <!-- ============================================================ -->
+
+    <Fact path="/members/*/isChild">
+      <Name>Is a child</Name>
+      <Description>Whether the member is under the child age limit</Description>
+      <Derived>
+        <LessThan>
+          <Left><Dependency path="../age" /></Left>
+          <Right><Dependency path="/childAgeLimit" /></Right>
+        </LessThan>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/isSenior">
+      <Name>Is a senior</Name>
+      <Description>Whether the member is at or above the senior age threshold</Description>
+      <Derived>
+        <GreaterThanOrEqual>
+          <Left><Dependency path="../age" /></Left>
+          <Right><Dependency path="/seniorAgeThreshold" /></Right>
+        </GreaterThanOrEqual>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/incomeEligible">
+      <Name>Income eligible</Name>
+      <Description>Whether the member's income is below the limit</Description>
+      <Derived>
+        <LessThanOrEqual>
+          <Left><Dependency path="../monthlyIncome" /></Left>
+          <Right><Dependency path="/incomeLimitPerMember" /></Right>
+        </LessThanOrEqual>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/memberBenefit">
+      <Name>Member benefit</Name>
+      <Description>Monthly benefit amount for this member</Description>
+      <Derived>
+        <Switch>
+          <Case>
+            <When><Not><Dependency path="../incomeEligible" /></Not></When>
+            <Then><Dollar>0</Dollar></Then>
+          </Case>
+          <Case>
+            <When><Dependency path="../isChild" /></When>
+            <Then>
+              <Add>
+                <Dependency path="/baseBenefitPerChild" />
+                <Switch>
+                  <Case>
+                    <When><Dependency path="../isDisabled" /></When>
+                    <Then><Dependency path="/disabilitySupplement" /></Then>
+                  </Case>
+                  <Case>
+                    <When><True /></When>
+                    <Then><Dollar>0</Dollar></Then>
+                  </Case>
+                </Switch>
+              </Add>
+            </Then>
+          </Case>
+          <Case>
+            <When><Dependency path="../isSenior" /></When>
+            <Then>
+              <Add>
+                <Dependency path="/baseBenefitPerSenior" />
+                <Switch>
+                  <Case>
+                    <When><Dependency path="../isDisabled" /></When>
+                    <Then><Dependency path="/disabilitySupplement" /></Then>
+                  </Case>
+                  <Case>
+                    <When><True /></When>
+                    <Then><Dollar>0</Dollar></Then>
+                  </Case>
+                </Switch>
+              </Add>
+            </Then>
+          </Case>
+          <Case>
+            <When><True /></When>
+            <Then>
+              <Switch>
+                <Case>
+                  <When><Dependency path="../isDisabled" /></When>
+                  <Then><Dependency path="/disabilitySupplement" /></Then>
+                </Case>
+                <Case>
+                  <When><True /></When>
+                  <Then><Dollar>0</Dollar></Then>
+                </Case>
+              </Switch>
+            </Then>
+          </Case>
+        </Switch>
+      </Derived>
+    </Fact>
+
+    <!-- ============================================================ -->
+    <!-- COMPUTED — household-level aggregation                       -->
+    <!-- ============================================================ -->
+
+    <Fact path="/totalMonthlyBenefit">
+      <Name>Total monthly benefit</Name>
+      <Description>Sum of all member benefits, requires employment</Description>
+      <Derived>
+        <Switch>
+          <Case>
+            <When><Dependency path="/isEmployed" /></When>
+            <Then>
+              <CollectionSum>
+                <Dependency path="/members/*/memberBenefit" />
+              </CollectionSum>
+            </Then>
+          </Case>
+          <Case>
+            <When><True /></When>
+            <Then><Dollar>0</Dollar></Then>
+          </Case>
+        </Switch>
+      </Derived>
+    </Fact>
+
+  </Facts>
+</FactDictionaryModule>

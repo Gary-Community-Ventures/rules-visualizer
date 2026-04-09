@@ -96,6 +96,8 @@ export function parseFactGraphModules(
         fact.path,
         fact.raw.Writable as Record<string, unknown>
       )
+      // Skip Collection parent nodes — they're structural, not rules
+      if (content.typeName === 'Collection') continue
     } else if (isDerived) {
       content = parseDerivedContent(
         fact.path,
@@ -169,7 +171,9 @@ export function parseFactGraphModules(
       }
     }
 
-    nodes[id].dependencies = Array.from(resolved)
+    if (nodes[id]) {
+      nodes[id].dependencies = Array.from(resolved)
+    }
   }
 
   // Phase 4: Propagate data types through dependency chain

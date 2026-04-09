@@ -355,7 +355,8 @@ export function executeFactGraph(
   rulesetId: string,
   facts: ParsedFact[],
   inputs: Record<string, unknown>,
-  modelNodes?: Record<string, { content: { dataType?: string } }>
+  modelNodes?: Record<string, { content: { dataType?: string } }>,
+  entities?: Record<string, Record<string, unknown>[]>
 ): Record<string, unknown> {
   // Separate inputs into writable values and derived overrides
   const writableInputs: Record<string, unknown> = {}
@@ -376,8 +377,6 @@ export function executeFactGraph(
     Object.keys(derivedOverrides).length > 0
       ? facts.map((f) => {
           if (f.path in derivedOverrides) {
-            // Convert this derived fact to a writable
-            // Find the model node to get dataType
             const modelNode = modelNodes
               ? Object.values(modelNodes).find(
                   (n) =>
@@ -413,8 +412,62 @@ export function executeFactGraph(
     save: () => { valid: boolean }
   }
 
-  // Set writable input values
+  // Detect collections: find facts with /* in path, group by collection prefix
+  const collectionPrefixes = new Set<string>()
+  for (const fact of effectiveFacts) {
+    const match = fact.path.match(/^(\/[^*]+)\/\*\//)
+    if (match) collectionPrefixes.add(match[1])
+  }
+
+  // Generate UUIDs for each collection instance and set up collections
+  const collectionUuids: Record<string, string[]> = {}
+  for (const prefix of collectionPrefixes) {
+    const entityRows = entities?.[prefix] ?? []
+    if (entityRows.length === 0) continue
+
+    const uuids = entityRows.map(() => crypto.randomUUID())
+    collectionUuids[prefix] = uuids
+
+    // Create the collection
+    try {
+      const collection = sfg.CollectionFactory(uuids)
+      graph.set(prefix, collection)
+    } catch (e) {
+      console.warn(
+        `Failed to create collection ${prefix}:`,
+        (e as Error).message
+      )
+      continue
+    }
+
+    // Save after creating collection so the engine registers the items
+    graph.save()
+
+    // Set per-item values
+    for (let i = 0; i < entityRows.length; i++) {
+      const row = entityRows[i]
+      const uuid = uuids[i]
+      for (const [fieldName, value] of Object.entries(row)) {
+        if (fieldName === 'id') continue
+        // Find the fact for this field to determine its type
+        const fieldPath = `${prefix}/*/${fieldName}`
+        const itemPath = `${prefix}/#${uuid}/${fieldName}`
+        try {
+          const typedValue = createTypedValue(fieldPath, value, effectiveFacts)
+          if (typedValue !== undefined) {
+            graph.set(itemPath, typedValue)
+          }
+        } catch (e) {
+          console.warn(`Failed to set ${itemPath}:`, (e as Error).message)
+        }
+      }
+    }
+  }
+
+  // Set scalar writable input values
   for (const [path, value] of Object.entries(writableInputs)) {
+    // Skip collection items — already handled above
+    if (path.includes('/*')) continue
     try {
       const typedValue = createTypedValue(path, value, effectiveFacts)
       if (typedValue !== undefined) {
@@ -443,6 +496,39 @@ export function executeFactGraph(
   // Read all fact values
   const results: Record<string, unknown> = {}
   for (const fact of facts) {
+    // For collection item facts (with /*), read per-instance values
+    const collMatch = fact.path.match(/^(\/[^*]+)\/\*\/(.+)$/)
+    if (collMatch) {
+      const [, prefix, fieldSuffix] = collMatch
+      const uuids = collectionUuids[prefix]
+      if (uuids && uuids.length > 0) {
+        const perInstanceValues: unknown[] = []
+        for (const uuid of uuids) {
+          const itemPath = `${prefix}/#${uuid}/${fieldSuffix}`
+          try {
+            const result = graph.get(itemPath)
+            if (result.complete && result.hasValue) {
+              perInstanceValues.push(extractValue(result.get))
+            } else {
+              perInstanceValues.push(null)
+            }
+          } catch {
+            perInstanceValues.push(null)
+          }
+        }
+        results[fact.path] = perInstanceValues
+      }
+      continue
+    }
+
+    // For collection parent facts, skip (they're structural)
+    const isCollectionParent = collectionPrefixes.has(fact.path)
+    if (isCollectionParent) {
+      results[fact.path] = `${collectionUuids[fact.path]?.length ?? 0} members`
+      continue
+    }
+
+    // Scalar facts
     try {
       const result = graph.get(fact.path)
       if (result.complete && result.hasValue) {
