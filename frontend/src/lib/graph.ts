@@ -20,6 +20,38 @@ export function getDependents(nodeId: string, nodes: ModelNodes): string[] {
     .map(([id]) => id)
 }
 
+/** Collect all transitive dependencies of a node */
+export function getAllDependencies(nodeId: string, nodes: ModelNodes): string[] {
+  const result = new Set<string>()
+  const stack = [nodeId]
+  while (stack.length > 0) {
+    const id = stack.pop()!
+    if (result.has(id)) continue
+    result.add(id)
+    for (const dep of nodes[id]?.dependencies ?? []) {
+      if (nodes[dep] && !result.has(dep)) stack.push(dep)
+    }
+  }
+  result.delete(nodeId)
+  return [...result]
+}
+
+/** Collect all transitive dependents of a node */
+export function getAllDependents(nodeId: string, nodes: ModelNodes): string[] {
+  const result = new Set<string>()
+  const stack = [nodeId]
+  while (stack.length > 0) {
+    const id = stack.pop()!
+    if (result.has(id)) continue
+    result.add(id)
+    for (const dep of getDependents(id, nodes)) {
+      if (!result.has(dep)) stack.push(dep)
+    }
+  }
+  result.delete(nodeId)
+  return [...result]
+}
+
 /**
  * Compute the depth (longest path from any root) for each node.
  * Uses iterative topological-sort BFS so it handles large graphs.

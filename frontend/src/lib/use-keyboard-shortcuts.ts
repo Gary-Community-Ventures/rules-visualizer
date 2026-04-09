@@ -14,6 +14,7 @@ function isInputFocused(): boolean {
 
 let autoCloseTimer: ReturnType<typeof setTimeout> | null = null
 let activeDropdown: 'history' | 'workspace' | null = null
+let dropdownClosedAt = 0
 
 function isAnyDropdownOpen(): boolean {
   return !!document.querySelector('[data-radix-popper-content-wrapper]')
@@ -52,7 +53,11 @@ export function useKeyboardShortcuts() {
           ;(document.activeElement as HTMLElement)?.blur()
           return
         }
-        if (isAnyDropdownOpen()) return
+        if (isAnyDropdownOpen()) {
+          dropdownClosedAt = Date.now()
+          return
+        }
+        if (Date.now() - dropdownClosedAt < 100) return
         if (openNode) {
           setOpenNode(null)
           return

@@ -25,7 +25,8 @@ import {
 import { cn } from '@/lib/utils'
 import { ContentViewer } from './content-viewers'
 import type { ModelNode, NodeContent } from '@/lib/model'
-import { getDependents } from '@/lib/graph'
+import { getDependents, getAllDependencies, getAllDependents } from '@/lib/graph'
+import * as ContextMenu from '@radix-ui/react-context-menu'
 import { HoverCard, HoverCardTrigger, HoverCardContent } from './ui/hover-card'
 import { resolveRacLogic } from '@/lib/logic'
 
@@ -480,6 +481,7 @@ function CopyableName({ name }: { name: string }) {
 
 export function NodePanel() {
   const {
+    model,
     openNode,
     setOpenNode,
     executionResults,
@@ -521,23 +523,68 @@ export function NodePanel() {
           </span>
         </div>
         <div className="flex items-center gap-0.5 shrink-0">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-7 w-7"
-            title={inWorkspace ? 'Remove from workspace (W)' : 'Add to workspace (W)'}
-            onClick={() =>
-              inWorkspace
-                ? setWorkspaceItems((prev) => prev.filter((id) => id !== openNode))
-                : setWorkspaceItems((prev) => [...prev, openNode])
-            }
-          >
-            {inWorkspace ? (
-              <BookmarkCheck className="size-4 text-primary" />
-            ) : (
-              <Bookmark className="size-4" />
-            )}
-          </Button>
+          <ContextMenu.Root>
+            <ContextMenu.Trigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7"
+                title={inWorkspace ? 'Remove from workspace (W)' : 'Add to workspace (W)'}
+                onClick={() =>
+                  inWorkspace
+                    ? setWorkspaceItems((prev) => prev.filter((id) => id !== openNode))
+                    : setWorkspaceItems((prev) => [...prev, openNode])
+                }
+              >
+                {inWorkspace ? (
+                  <BookmarkCheck className="size-4 text-primary" />
+                ) : (
+                  <Bookmark className="size-4" />
+                )}
+              </Button>
+            </ContextMenu.Trigger>
+            <ContextMenu.Portal>
+              <ContextMenu.Content className="z-50 min-w-40 rounded-md border bg-popover p-1 text-popover-foreground shadow-md">
+                <ContextMenu.Item
+                  className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-xs outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
+                  onSelect={() => {
+                    const direct = openNodeData.dependencies.filter((id) => model.nodes[id])
+                    setWorkspaceItems((prev) => [...new Set([...prev, openNode, ...direct])])
+                  }}
+                >
+                  Add with dependencies ({openNodeData.dependencies.filter((id) => model.nodes[id]).length})
+                </ContextMenu.Item>
+                <ContextMenu.Item
+                  className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-xs outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
+                  onSelect={() => {
+                    const direct = getDependents(openNode, model.nodes)
+                    setWorkspaceItems((prev) => [...new Set([...prev, openNode, ...direct])])
+                  }}
+                >
+                  Add with dependents ({getDependents(openNode, model.nodes).length})
+                </ContextMenu.Item>
+                <ContextMenu.Separator className="h-px my-1 bg-border" />
+                <ContextMenu.Item
+                  className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-xs outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
+                  onSelect={() => {
+                    const deps = getAllDependencies(openNode, model.nodes)
+                    setWorkspaceItems((prev) => [...new Set([...prev, openNode, ...deps])])
+                  }}
+                >
+                  Add with all dependencies ({getAllDependencies(openNode, model.nodes).length})
+                </ContextMenu.Item>
+                <ContextMenu.Item
+                  className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-xs outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
+                  onSelect={() => {
+                    const deps = getAllDependents(openNode, model.nodes)
+                    setWorkspaceItems((prev) => [...new Set([...prev, openNode, ...deps])])
+                  }}
+                >
+                  Add with all dependents ({getAllDependents(openNode, model.nodes).length})
+                </ContextMenu.Item>
+              </ContextMenu.Content>
+            </ContextMenu.Portal>
+          </ContextMenu.Root>
           <Button
             variant="ghost"
             size="icon"
