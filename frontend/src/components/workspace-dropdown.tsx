@@ -70,8 +70,18 @@ export function WorkspaceDropdown() {
           onPointerMove={handleDragMove}
           onPointerUp={handleDragEnd}
         >
-          <div className="text-xs font-medium text-muted-foreground mb-2 px-1">
-            Workspace
+          <div className="flex items-center justify-between mb-2 px-1">
+            <span className="text-xs font-medium text-muted-foreground">
+              Workspace
+            </span>
+            {validItems.length > 0 && (
+              <button
+                className="text-xs text-muted-foreground hover:text-foreground"
+                onClick={() => setWorkspaceItems([])}
+              >
+                Clear
+              </button>
+            )}
           </div>
           {validItems.length === 0 ? (
             <div className="text-xs text-muted-foreground px-1 py-3 text-center">

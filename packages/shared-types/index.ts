@@ -95,6 +95,7 @@ export type FactGraphWritable = {
   role: 'input'
   path: string
   typeName: WritableTypeName
+  label?: string
   enumOptionsPath?: string
   limits?: Limit[]
   collectionItemPath?: string
@@ -106,6 +107,7 @@ export type FactGraphDerived = {
   type: 'derived'
   role: 'constant' | 'computed'
   path: string
+  label?: string
   dataType?: string // inferred return type (Dollar, Int, Boolean, Day, etc.)
   logic?: string // inner <Writable> or <Derived> XML
 }

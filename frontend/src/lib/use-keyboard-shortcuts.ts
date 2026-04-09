@@ -14,6 +14,7 @@ function isInputFocused(): boolean {
 
 let autoCloseTimer: ReturnType<typeof setTimeout> | null = null
 let activeDropdown: 'history' | 'workspace' | null = null
+let dropdownClosedAt = 0
 
 function isAnyDropdownOpen(): boolean {
   return !!document.querySelector('[data-radix-popper-content-wrapper]')
@@ -52,7 +53,11 @@ export function useKeyboardShortcuts() {
           ;(document.activeElement as HTMLElement)?.blur()
           return
         }
-        if (isAnyDropdownOpen()) return
+        if (isAnyDropdownOpen()) {
+          dropdownClosedAt = Date.now()
+          return
+        }
+        if (Date.now() - dropdownClosedAt < 100) return
         if (openNode) {
           setOpenNode(null)
           return
@@ -67,7 +72,10 @@ export function useKeyboardShortcuts() {
       if (isInputFocused()) return
 
       // Up/Down: navigate workspace items (loops), but not when history is open
-      if ((e.key === 'ArrowUp' || e.key === 'ArrowDown') && activeDropdown !== 'history') {
+      if (
+        (e.key === 'ArrowUp' || e.key === 'ArrowDown') &&
+        activeDropdown !== 'history'
+      ) {
         const validItems = workspaceItems.filter((id) => model.nodes[id])
         if (validItems.length > 0) {
           e.preventDefault()
@@ -77,7 +85,8 @@ export function useKeyboardShortcuts() {
           if (currentIndex === -1) {
             newIndex = e.key === 'ArrowUp' ? 0 : validItems.length - 1
           } else if (e.key === 'ArrowUp') {
-            newIndex = (currentIndex - 1 + validItems.length) % validItems.length
+            newIndex =
+              (currentIndex - 1 + validItems.length) % validItems.length
           } else {
             newIndex = (currentIndex + 1) % validItems.length
           }
@@ -158,5 +167,15 @@ export function useKeyboardShortcuts() {
 
     document.addEventListener('keydown', handleKeyDown, true)
     return () => document.removeEventListener('keydown', handleKeyDown, true)
-  }, [openNode, setOpenNode, goBackNode, goForwardNode, rightBar, setRightBar, workspaceItems, setWorkspaceItems, model.nodes])
+  }, [
+    openNode,
+    setOpenNode,
+    goBackNode,
+    goForwardNode,
+    rightBar,
+    setRightBar,
+    workspaceItems,
+    setWorkspaceItems,
+    model.nodes,
+  ])
 }
