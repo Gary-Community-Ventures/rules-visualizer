@@ -266,15 +266,20 @@ export function ExecutionPanel() {
                   <ChevronRight className="size-3" />
                 )}
                 Inputs
-                {inputCount === inputNodes.length && (collectionNames.length === 0 || totalCollectionRows > 0) ? (
+                {inputCount === inputNodes.length &&
+                (collectionNames.length === 0 || totalCollectionRows > 0) ? (
                   <span className="font-normal text-emerald-600">All set</span>
                 ) : inputCount > 0 || totalCollectionRows > 0 ? (
                   <span className="font-normal">
                     {inputCount} of {inputNodes.length}
-                    {totalCollectionRows > 0 && ` + ${totalCollectionRows} items`}
+                    {totalCollectionRows > 0 &&
+                      ` + ${totalCollectionRows} items`}
                   </span>
                 ) : (
-                  <span className="font-normal">({inputNodes.length}{collectionNames.length > 0 ? ' + collections' : ''})</span>
+                  <span className="font-normal">
+                    ({inputNodes.length}
+                    {collectionNames.length > 0 ? ' + collections' : ''})
+                  </span>
                 )}
               </button>
               {inputCount > 0 && (
@@ -606,7 +611,13 @@ type EntityEditorProps = {
   onBlur: () => void
 }
 
-function EntityEditor({ entityName, fields, rows, onChange, onBlur }: EntityEditorProps) {
+function EntityEditor({
+  entityName,
+  fields,
+  rows,
+  onChange,
+  onBlur,
+}: EntityEditorProps) {
   const addRow = () => {
     const newRow: Record<string, string> = {}
     for (const field of fields) {
@@ -628,7 +639,10 @@ function EntityEditor({ entityName, fields, rows, onChange, onBlur }: EntityEdit
 
   // Clean up display name: strip leading / for Fact Graph paths
   const displayName = entityName.startsWith('/')
-    ? entityName.slice(1).replace(/[-_]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
+    ? entityName
+        .slice(1)
+        .replace(/[-_]/g, ' ')
+        .replace(/\b\w/g, (c) => c.toUpperCase())
     : entityName
 
   return (
@@ -642,7 +656,10 @@ function EntityEditor({ entityName, fields, rows, onChange, onBlur }: EntityEdit
       </div>
       <div className="space-y-3">
         {rows.map((row, rowIdx) => (
-          <div key={rowIdx} className="border rounded-md p-2 space-y-1.5 bg-blue-50/30">
+          <div
+            key={rowIdx}
+            className="border rounded-md p-2 space-y-1.5 bg-blue-50/30"
+          >
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-medium text-muted-foreground">
                 #{rowIdx + 1}
@@ -656,10 +673,15 @@ function EntityEditor({ entityName, fields, rows, onChange, onBlur }: EntityEdit
             </div>
             {fields.map((field) => (
               <div key={field.path} className="flex items-center gap-2">
-                <span className="text-[11px] text-muted-foreground w-24 shrink-0 truncate" title={field.path}>
+                <span
+                  className="text-[11px] text-muted-foreground w-24 shrink-0 truncate"
+                  title={field.path}
+                >
                   {field.fieldName}
                   {field.typeHint && (
-                    <span className="ml-0.5 opacity-60">({field.typeHint})</span>
+                    <span className="ml-0.5 opacity-60">
+                      ({field.typeHint})
+                    </span>
                   )}
                 </span>
                 <Input
@@ -667,9 +689,13 @@ function EntityEditor({ entityName, fields, rows, onChange, onBlur }: EntityEdit
                     'h-6 text-xs font-mono flex-1',
                     row[field.path] && 'border-blue-400 ring-1 ring-blue-400'
                   )}
-                  placeholder={field.default ?? field.typeHint?.toLowerCase() ?? 'value'}
+                  placeholder={
+                    field.default ?? field.typeHint?.toLowerCase() ?? 'value'
+                  }
                   value={row[field.path] ?? ''}
-                  onChange={(e) => updateField(rowIdx, field.path, e.target.value)}
+                  onChange={(e) =>
+                    updateField(rowIdx, field.path, e.target.value)
+                  }
                   onBlur={onBlur}
                 />
               </div>

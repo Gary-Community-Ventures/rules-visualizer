@@ -27,7 +27,11 @@ import {
 import { cn } from '@/lib/utils'
 import { ContentViewer } from './content-viewers'
 import type { ModelNode, NodeContent } from '@/lib/model'
-import { getDependents, getAllDependencies, getAllDependents } from '@/lib/graph'
+import {
+  getDependents,
+  getAllDependencies,
+  getAllDependents,
+} from '@/lib/graph'
 import * as ContextMenu from '@radix-ui/react-context-menu'
 import { HoverCard, HoverCardTrigger, HoverCardContent } from './ui/hover-card'
 import { resolveRacLogic } from '@/lib/logic'
@@ -560,10 +564,16 @@ export function NodePanel() {
                 variant="ghost"
                 size="icon"
                 className="h-7 w-7"
-                title={inWorkspace ? 'Remove from workspace (W)' : 'Add to workspace (W)'}
+                title={
+                  inWorkspace
+                    ? 'Remove from workspace (W)'
+                    : 'Add to workspace (W)'
+                }
                 onClick={() =>
                   inWorkspace
-                    ? setWorkspaceItems((prev) => prev.filter((id) => id !== openNode))
+                    ? setWorkspaceItems((prev) =>
+                        prev.filter((id) => id !== openNode)
+                      )
                     : setWorkspaceItems((prev) => [...prev, openNode])
                 }
               >
@@ -579,39 +589,57 @@ export function NodePanel() {
                 <ContextMenu.Item
                   className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-xs outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
                   onSelect={() => {
-                    const direct = openNodeData.dependencies.filter((id) => model.nodes[id])
-                    setWorkspaceItems((prev) => [...new Set([...prev, openNode, ...direct])])
+                    const direct = openNodeData.dependencies.filter(
+                      (id) => model.nodes[id]
+                    )
+                    setWorkspaceItems((prev) => [
+                      ...new Set([...prev, openNode, ...direct]),
+                    ])
                   }}
                 >
-                  Add with dependencies ({openNodeData.dependencies.filter((id) => model.nodes[id]).length})
+                  Add with dependencies (
+                  {
+                    openNodeData.dependencies.filter((id) => model.nodes[id])
+                      .length
+                  }
+                  )
                 </ContextMenu.Item>
                 <ContextMenu.Item
                   className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-xs outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
                   onSelect={() => {
                     const direct = getDependents(openNode, model.nodes)
-                    setWorkspaceItems((prev) => [...new Set([...prev, openNode, ...direct])])
+                    setWorkspaceItems((prev) => [
+                      ...new Set([...prev, openNode, ...direct]),
+                    ])
                   }}
                 >
-                  Add with dependents ({getDependents(openNode, model.nodes).length})
+                  Add with dependents (
+                  {getDependents(openNode, model.nodes).length})
                 </ContextMenu.Item>
                 <ContextMenu.Separator className="h-px my-1 bg-border" />
                 <ContextMenu.Item
                   className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-xs outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
                   onSelect={() => {
                     const deps = getAllDependencies(openNode, model.nodes)
-                    setWorkspaceItems((prev) => [...new Set([...prev, openNode, ...deps])])
+                    setWorkspaceItems((prev) => [
+                      ...new Set([...prev, openNode, ...deps]),
+                    ])
                   }}
                 >
-                  Add with all dependencies ({getAllDependencies(openNode, model.nodes).length})
+                  Add with all dependencies (
+                  {getAllDependencies(openNode, model.nodes).length})
                 </ContextMenu.Item>
                 <ContextMenu.Item
                   className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-xs outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
                   onSelect={() => {
                     const deps = getAllDependents(openNode, model.nodes)
-                    setWorkspaceItems((prev) => [...new Set([...prev, openNode, ...deps])])
+                    setWorkspaceItems((prev) => [
+                      ...new Set([...prev, openNode, ...deps]),
+                    ])
                   }}
                 >
-                  Add with all dependents ({getAllDependents(openNode, model.nodes).length})
+                  Add with all dependents (
+                  {getAllDependents(openNode, model.nodes).length})
                 </ContextMenu.Item>
               </ContextMenu.Content>
             </ContextMenu.Portal>

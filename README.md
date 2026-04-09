@@ -160,6 +160,7 @@ Both backends required workarounds to get execution working. These are documente
 **Derived node overrides.** The Scala.js `graph.set()` only works on writable facts. To override a derived (computed) node, we rebuild the entire graph dictionary with that fact converted from `Derived` to `Writable`. The `inferWritableType()` function guesses the return type from the expression tree, with a fallback to the model's `dataType` field.
 
 **Dependency resolution.** The XML parser needed several fixes to capture all dependency edges:
+
 - Relative paths (`../foo`) are resolved against the fact's parent path
 - Named collection items (`/primaryFiler/age65OrOlder`) are fuzzy-matched to wildcard paths (`/filers/*/age65OrOlder`)
 - `optionsPath` attributes on `<Enum>` elements, `<Find path=...>`, and `collection=` attributes are captured as dependencies

@@ -80,7 +80,9 @@ export function getTypeHint(node: ModelNode): string | undefined {
 }
 
 /** Get the collection name for a node, or null if not collection-scoped */
-export function getCollectionInfo(node: ModelNode): { collection: string } | null {
+export function getCollectionInfo(
+  node: ModelNode
+): { collection: string } | null {
   const c = node.content
   if (c.type === 'entity') return null
 
@@ -101,14 +103,36 @@ export function getCollectionInfo(node: ModelNode): { collection: string } | nul
 /** Check if a node is a Collection parent (Fact Graph only, e.g. /members with <Collection />) */
 export function isCollectionParent(node: ModelNode): boolean {
   const c = node.content
-  return c.format === 'factGraph' && c.type === 'writable' && c.typeName === 'Collection'
+  return (
+    c.format === 'factGraph' &&
+    c.type === 'writable' &&
+    c.typeName === 'Collection'
+  )
 }
 
 /** Get collection input fields grouped by collection name (works for both formats) */
 export function getCollectionInputs(
   nodes: Record<string, ModelNode>
-): Record<string, { nodeId: string; path: string; fieldName: string; default?: string; typeHint?: string }[]> {
-  const result: Record<string, { nodeId: string; path: string; fieldName: string; default?: string; typeHint?: string }[]> = {}
+): Record<
+  string,
+  {
+    nodeId: string
+    path: string
+    fieldName: string
+    default?: string
+    typeHint?: string
+  }[]
+> {
+  const result: Record<
+    string,
+    {
+      nodeId: string
+      path: string
+      fieldName: string
+      default?: string
+      typeHint?: string
+    }[]
+  > = {}
   for (const [nodeId, node] of Object.entries(nodes)) {
     if (!isInputNode(node)) continue
     if (isCollectionParent(node)) continue
@@ -177,7 +201,9 @@ type ModelContextValue = {
   clearOverrides: () => void
   clearAll: () => void
   entityData: Record<string, Record<string, string>[]>
-  setEntityData: Dispatch<SetStateAction<Record<string, Record<string, string>[]>>>
+  setEntityData: Dispatch<
+    SetStateAction<Record<string, Record<string, string>[]>>
+  >
   executionResults: ExecutionResults | null
   isExecuting: boolean
   executionError: string | null
@@ -358,7 +384,11 @@ export function ModelProvider({
                 const parsed: Record<string, unknown> = { id: i + 1 }
                 for (const [key, val] of Object.entries(row)) {
                   if (val === '') continue
-                  try { parsed[key] = JSON.parse(val) } catch { parsed[key] = val }
+                  try {
+                    parsed[key] = JSON.parse(val)
+                  } catch {
+                    parsed[key] = val
+                  }
                 }
                 return parsed
               }),
@@ -382,7 +412,9 @@ export function ModelProvider({
   // Auto-run execution when an input field loses focus
   const runOnBlur = useCallback(() => {
     const hasAnyInput = Object.values(inputOverrides).some((v) => v !== '')
-    const hasEntityData = Object.values(entityData).some((rows) => rows.length > 0)
+    const hasEntityData = Object.values(entityData).some(
+      (rows) => rows.length > 0
+    )
     if (hasAnyInput || hasEntityData) runExecution()
   }, [inputOverrides, entityData, runExecution])
 

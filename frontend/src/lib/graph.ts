@@ -6,7 +6,9 @@ import { getCollectionInfo } from '@/context/model-context'
  * These are per-member input nodes that nothing depends on and have no deps themselves.
  * They add clutter to the graph — the Members section handles them instead.
  */
-export function filterDisconnectedCollectionNodes(nodes: ModelNodes): ModelNodes {
+export function filterDisconnectedCollectionNodes(
+  nodes: ModelNodes
+): ModelNodes {
   const dependedOn = new Set<string>()
   for (const node of Object.values(nodes)) {
     for (const dep of node.dependencies) {
@@ -45,7 +47,10 @@ export function getDependents(nodeId: string, nodes: ModelNodes): string[] {
 }
 
 /** Collect all transitive dependencies of a node */
-export function getAllDependencies(nodeId: string, nodes: ModelNodes): string[] {
+export function getAllDependencies(
+  nodeId: string,
+  nodes: ModelNodes
+): string[] {
   const result = new Set<string>()
   const stack = [nodeId]
   while (stack.length > 0) {

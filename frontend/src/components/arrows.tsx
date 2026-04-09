@@ -218,13 +218,9 @@ export function Arrows({ rows }: ArrowsProps) {
     const activeNode = hoveredNodeId ?? openNode
     return [...arrows].sort((a, b) => {
       const aRelated =
-        activeNode === null ||
-        a.fromId === activeNode ||
-        a.toId === activeNode
+        activeNode === null || a.fromId === activeNode || a.toId === activeNode
       const bRelated =
-        activeNode === null ||
-        b.fromId === activeNode ||
-        b.toId === activeNode
+        activeNode === null || b.fromId === activeNode || b.toId === activeNode
       return aRelated === bRelated ? 0 : aRelated ? 1 : -1
     })
   }, [arrows, hoveredNodeId, openNode])

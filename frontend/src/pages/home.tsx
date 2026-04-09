@@ -73,7 +73,11 @@ export function NodeMapLayout({ children }: PropsWithChildren) {
     // Delay to let layout settle after panel opens
     const timer = setTimeout(() => {
       const el = document.getElementById(nodeElementId(openNode))
-      el?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' })
+      el?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest',
+        inline: 'nearest',
+      })
     }, 150)
     return () => clearTimeout(timer)
   }, [openNode])

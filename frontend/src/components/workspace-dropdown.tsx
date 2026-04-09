@@ -53,7 +53,12 @@ export function WorkspaceDropdown() {
   return (
     <Popover.Root open={open} onOpenChange={setOpen}>
       <Popover.Trigger asChild>
-        <Button variant="outline" size="icon" title="Workspace" className="relative">
+        <Button
+          variant="outline"
+          size="icon"
+          title="Workspace"
+          className="relative"
+        >
           <LayoutList className="size-4" />
           {validItems.length > 0 && (
             <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-[10px] font-medium rounded-full w-4 h-4 flex items-center justify-center">
@@ -85,7 +90,9 @@ export function WorkspaceDropdown() {
           </div>
           {validItems.length === 0 ? (
             <div className="text-xs text-muted-foreground px-1 py-3 text-center">
-              Press <kbd className="px-1 py-0.5 rounded bg-muted font-mono">w</kbd> to add the current node
+              Press{' '}
+              <kbd className="px-1 py-0.5 rounded bg-muted font-mono">w</kbd> to
+              add the current node
             </div>
           ) : (
             <div className="flex flex-col gap-0.5 max-h-72 overflow-y-auto">
