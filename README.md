@@ -139,6 +139,33 @@ All nodes have `overridable: boolean` — the execution engine supports overridi
 
 **Fact Graph:** The Scala.js bundle creates a graph from a "digest" representation of the XML. Overriding derived nodes works by converting them to writables in the digest before graph creation.
 
+## Implementation Notes
+
+Both backends required workarounds to get execution working. These are documented here so future maintainers understand what's non-obvious.
+
+### RAC Workarounds
+
+**Compiler drops input variables.** The `rac` library (v0.2.0) only includes variables with temporal `from YYYY-MM-DD:` expressions in the compiled IR. Input variables (declared with metadata but no expression, e.g. `household_size: dtype: Integer, default: 1`) are silently dropped. Our parser recovers them from the raw modules and adds them to the model as `role: 'input'` nodes. See `_ir_to_model()` in `parser.py`.
+
+**Manual executor replication.** We replicate the `rac.executor.Executor.execute()` loop in `server.py` rather than calling `rac.execute()` directly. This lets us: (1) inject default values for input variables the compiler dropped, (2) pre-populate `ctx.computed` with user overrides, and (3) skip computation for pinned nodes. **This is the most fragile workaround** — if the `rac` library changes its executor internals, this code may need updating.
+
+**Execution order not topologically sorted.** The compiler's `ir.order` is just file-parse order, not dependency order. Our skip-if-already-computed approach handles this since pinned values are checked before computation.
+
+### Fact Graph Workarounds
+
+**Scala.js bundle.** The `vendor/factgraph-scala.cjs` file is a 6MB Scala.js bundle compiled from the IRS Direct File project's `fact-graph-scala/` directory. It's a pinned copy — updating it requires rebuilding from the Direct File source. The `.cjs` extension is needed because our project uses ESM.
+
+**Digest conversion.** The Scala.js engine doesn't accept raw XML. We convert `fast-xml-parser` output into a "digest" format (`{typeName, options, children}` trees) that mirrors Direct File's `processFactsToDigestWrapper.ts`. See `executor.ts`.
+
+**Derived node overrides.** The Scala.js `graph.set()` only works on writable facts. To override a derived (computed) node, we rebuild the entire graph dictionary with that fact converted from `Derived` to `Writable`. The `inferWritableType()` function guesses the return type from the expression tree, with a fallback to the model's `dataType` field.
+
+**Dependency resolution.** The XML parser needed several fixes to capture all dependency edges:
+- Relative paths (`../foo`) are resolved against the fact's parent path
+- Named collection items (`/primaryFiler/age65OrOlder`) are fuzzy-matched to wildcard paths (`/filers/*/age65OrOlder`)
+- `optionsPath` attributes on `<Enum>` elements, `<Find path=...>`, and `collection=` attributes are captured as dependencies
+
+**Type limitations.** The Scala engine's `GreaterOf`/`LesserOf` nodes cannot compare values of different types (e.g. Rational vs Dollar). Our example XML uses integer math to work around this.
+
 ## Environment Variables
 
 | Variable          | Required    | Description                                         |
