@@ -92,6 +92,7 @@ export function useKeyboardShortcuts() {
         const validItems = workspaceItems.filter((id) => model.nodes[id])
         if (index < validItems.length) {
           e.preventDefault()
+          openTemporarily('workspace')
           setOpenNode(validItems[index])
         }
         return
