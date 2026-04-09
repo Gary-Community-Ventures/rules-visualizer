@@ -68,11 +68,12 @@ export async function getRuleset(rulesetId: string): Promise<Model> {
 export async function executeRuleset(
   rulesetId: string,
   inputs: Record<string, unknown>,
-  entities?: Record<string, unknown[]>
+  entities?: Record<string, unknown[]>,
+  asOfDate?: string
 ): Promise<ExecutionResults> {
   const data = await post<{ results: ExecutionResults }>(
     `/api/rulesets/${rulesetId}/execute`,
-    { inputs, entities }
+    { inputs, entities, as_of: asOfDate }
   )
   return data.results
 }

@@ -168,6 +168,8 @@ type ModelContextValue = {
   setRightBar: Dispatch<SetStateAction<RightBarOptions>>
   logicYear: number
   setLogicYear: Dispatch<SetStateAction<number>>
+  asOfDate: string
+  setAsOfDate: Dispatch<SetStateAction<string>>
   // Execution
   inputOverrides: Record<string, string>
   setInputOverride: (nodeId: string, value: string) => void
@@ -290,6 +292,9 @@ export function ModelProvider({
 
   const [rightBar, setRightBar] = useState<RightBarOptions>(null)
   const [logicYear, setLogicYear] = useState<number>(new Date().getFullYear())
+  const [asOfDate, setAsOfDate] = useState<string>(
+    new Date().toISOString().slice(0, 10)
+  )
 
   // Execution state
   const [inputOverrides, setInputOverrides] = useState<Record<string, string>>(
@@ -360,14 +365,14 @@ export function ModelProvider({
             ])
           )
         : undefined
-    executeRuleset(rulesetId, inputs, entities)
+    executeRuleset(rulesetId, inputs, entities, asOfDate)
       .then((results) => setExecutionResults(results))
       .catch((err) => {
         const message = err instanceof Error ? err.message : 'Execution failed'
         setExecutionError(message)
       })
       .finally(() => setIsExecuting(false))
-  }, [rulesetId, inputOverrides, entityData, model.nodes])
+  }, [rulesetId, inputOverrides, entityData, asOfDate, model.nodes])
 
   const clearExecution = useCallback(() => {
     setExecutionResults(null)
@@ -459,6 +464,8 @@ export function ModelProvider({
       setRightBar,
       logicYear,
       setLogicYear,
+      asOfDate,
+      setAsOfDate,
       inputOverrides,
       setInputOverride,
       clearInputOverride,
@@ -496,6 +503,8 @@ export function ModelProvider({
       setRightBar,
       logicYear,
       setLogicYear,
+      asOfDate,
+      setAsOfDate,
       inputOverrides,
       setInputOverride,
       clearInputOverride,

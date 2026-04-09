@@ -30,8 +30,8 @@ import {
   useComboboxAnchor,
 } from './ui/combobox'
 
-function YearPicker() {
-  const { model, logicYear, setLogicYear } = useMainContext()
+function DatePicker() {
+  const { model, setLogicYear, asOfDate, setAsOfDate } = useMainContext()
 
   if (model.format !== 'rac') return null
 
@@ -39,16 +39,18 @@ function YearPicker() {
     <div className="flex items-center gap-1.5">
       <Calendar className="size-3.5 text-muted-foreground" />
       <Input
-        type="number"
-        min={1900}
-        max={2100}
-        value={logicYear}
+        type="date"
+        value={asOfDate}
         onChange={(e) => {
-          const val = parseInt(e.target.value, 10)
-          if (!isNaN(val)) setLogicYear(val)
+          const val = e.target.value
+          if (val) {
+            setAsOfDate(val)
+            const year = parseInt(val.slice(0, 4), 10)
+            if (!isNaN(year)) setLogicYear(year)
+          }
         }}
-        className="h-7 w-20 text-xs font-mono"
-        title="Year for logic display"
+        className="h-7 w-36 text-xs font-mono"
+        title="Date for temporal resolution (affects logic display and execution)"
       />
     </div>
   )
@@ -221,7 +223,7 @@ export function ToolBar() {
         </Button>
       </div>
 
-      <YearPicker />
+      <DatePicker />
 
       <div className="ml-auto flex items-center gap-2">
         {executionError && (

@@ -8,7 +8,7 @@ import webbrowser
 from pathlib import Path
 
 from .parser import parse_rac_directory
-from .server import set_rulesets, set_compiled_ir, run_server
+from .server import set_rulesets, set_compiled_ir, set_ruleset_dir, run_server
 from .watcher import start_watcher
 
 
@@ -79,6 +79,7 @@ def main() -> None:
                 model, ir = parse_rac_directory(str(subdir), ruleset_id)
                 rulesets[ruleset_id] = model
                 set_compiled_ir(ruleset_id, ir)
+                set_ruleset_dir(ruleset_id, str(subdir))
                 print(
                     f'Loaded ruleset "{model["name"]}" '
                     f'({len(model["nodes"])} nodes from {len(rac_files)} files)'
@@ -95,6 +96,7 @@ def main() -> None:
                 model, ir = parse_rac_directory(str(data_dir), ruleset_id)
                 rulesets[ruleset_id] = model
                 set_compiled_ir(ruleset_id, ir)
+                set_ruleset_dir(ruleset_id, str(data_dir))
                 print(
                     f'Loaded ruleset "{model["name"]}" '
                     f'({len(model["nodes"])} nodes from {len(rac_files)} files)'

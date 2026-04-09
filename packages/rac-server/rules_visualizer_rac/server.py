@@ -13,6 +13,7 @@ from aiohttp import web
 # In-memory store: model dicts and compiled IRs
 _rulesets: dict[str, dict] = {}
 _compiled_irs: dict[str, Any] = {}
+_ruleset_dirs: dict[str, str] = {}  # ruleset_id → directory path for recompilation
 
 # WebSocket clients
 _ws_clients: set[web.WebSocketResponse] = set()
@@ -34,6 +35,11 @@ def set_compiled_ir(ruleset_id: str, ir: Any) -> None:
         _compiled_irs[ruleset_id] = ir
     else:
         _compiled_irs.pop(ruleset_id, None)
+
+
+def set_ruleset_dir(ruleset_id: str, directory: str) -> None:
+    """Store the data directory for a ruleset (used for recompilation)."""
+    _ruleset_dirs[ruleset_id] = directory
 
 
 def get_rulesets() -> dict[str, dict]:
@@ -216,15 +222,35 @@ async def handle_ruleset_execute(request: web.Request) -> web.Response:
 
     scalar_overrides: dict[str, Any] = body.get("inputs", {})
     entity_tables: dict[str, list[dict[str, Any]]] = body.get("entities", {})
+    as_of_str: str | None = body.get("as_of")
+
+    # If a custom as_of date is provided, recompile the IR for that date
+    import copy
+    from rac.executor import Executor, Context, evaluate, Data
+
+    effective_ir = ir
+    if as_of_str:
+        try:
+            from datetime import date as date_cls
+
+            as_of = date_cls.fromisoformat(as_of_str)
+            rac_dir = _ruleset_dirs.get(ruleset_id)
+            if rac_dir:
+                from .parser import parse_rac_directory
+
+                _, recompiled_ir = parse_rac_directory(
+                    rac_dir, ruleset_id, as_of=as_of
+                )
+                if recompiled_ir:
+                    effective_ir = recompiled_ir
+        except Exception as e:
+            print(f"  Warning: recompile for as_of={as_of_str} failed: {e}")
 
     # Execute using a custom approach that handles input variables
     # the compiler drops. We pre-populate the executor context with
     # user-provided input values and constant overrides.
-    import copy
-    from rac.executor import Executor, Context, evaluate, Data
-
     try:
-        patched_ir = copy.deepcopy(ir) if scalar_overrides else ir
+        patched_ir = copy.deepcopy(effective_ir) if scalar_overrides else effective_ir
 
         # Patch constant overrides into the IR's literal expressions
         for var_path, value in scalar_overrides.items():
@@ -263,12 +289,25 @@ async def handle_ruleset_execute(request: web.Request) -> web.Response:
 
         # Run the executor's logic (replicated from Executor.execute).
         # Skip any variable already in ctx.computed (pinned by user).
+        #
+        # Two-pass approach:
+        # Pass 1: Evaluate scalars that don't need entity data, and all entity vars.
+        #         Entity result lists are NOT put into ctx.computed during this pass
+        #         because [False] is truthy in Python and would break conditions.
+        # Pass 2: Inject entity result lists, then evaluate remaining scalars
+        #         that aggregate over entity data (sum, max, etc.).
         entities: dict[str, dict[str, list]] = {}
+        deferred_scalars: list[str] = []
+
         for path in patched_ir.order:
             var = patched_ir.variables[path]
             if var.entity is None:
                 if path not in ctx.computed:
-                    ctx.computed[path] = evaluate(var.expr, ctx)
+                    try:
+                        ctx.computed[path] = evaluate(var.expr, ctx)
+                    except Exception:
+                        # May fail if it references entity results not yet available
+                        deferred_scalars.append(path)
             else:
                 entity_name = var.entity
                 rows = data.get_rows(entity_name)
@@ -287,9 +326,16 @@ async def handle_ruleset_execute(request: web.Request) -> web.Response:
                     ctx.current_row = None
                     ctx.current_entity = None
 
-                # Inject entity result list into ctx.computed so scalar
-                # expressions can aggregate over them (sum, max, len, etc.)
-                ctx.computed[path] = entities[entity_name][path]
+        # Pass 2: Inject entity result lists for aggregation, then eval deferred scalars
+        for entity_name, fields in entities.items():
+            for path, values in fields.items():
+                ctx.computed[path] = values
+
+        for path in deferred_scalars:
+            if path not in ctx.computed:
+                ctx.computed[path] = evaluate(
+                    patched_ir.variables[path].expr, ctx
+                )
 
         # Build result
         from rac.executor import Result
