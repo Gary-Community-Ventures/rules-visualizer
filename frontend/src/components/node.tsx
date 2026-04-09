@@ -286,9 +286,13 @@ type NodeViewerProps = {
 export function NodeViewer({ node }: NodeViewerProps) {
   const { model } = useMainContext()
   const label =
-    node.content.format === 'rac' && node.content.type === 'variable'
-      ? node.content.label
-      : undefined
+    node.content.type === 'entity'
+      ? undefined
+      : node.content.format === 'rac' && node.content.type === 'variable'
+        ? node.content.label
+        : node.content.format === 'factGraph'
+          ? node.content.label
+          : undefined
 
   const deps = node.dependencies
     .map((id) => ({ id, name: model.nodes[id]?.name ?? id }))

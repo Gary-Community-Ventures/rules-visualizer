@@ -116,9 +116,14 @@ export function parseFactGraphModules(
       content.logic = fact.logic
     }
 
+    // Store human-readable <Name> as label on content
+    if (fact.name) {
+      content.label = fact.name
+    }
+
     const node: ModelNode = {
       id,
-      name: fact.name || pathToNodeName(fact.path),
+      name: fact.path,
       dependencies: [], // filled in phase 3
       content,
       overridable: true,
@@ -535,6 +540,12 @@ function inferType(node: unknown): string | undefined {
   }
 
   return undefined
+}
+
+/** Extract a short display name from a fact path (last segment). */
+function pathToNodeName(path: string): string {
+  const parts = path.split('/')
+  return parts[parts.length - 1] || path
 }
 
 /**
