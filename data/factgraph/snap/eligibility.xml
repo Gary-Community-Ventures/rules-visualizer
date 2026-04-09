@@ -53,7 +53,7 @@
     <Fact path="/earnedIncomeDeductionRate">
       <Name>Earned income deduction rate</Name>
       <Description>20% earned income deduction per 7 USC 2014(e)(1)</Description>
-      <Derived><Int>20</Int></Derived>
+      <Derived><Rational>0.20</Rational></Derived>
     </Fact>
 
     <Fact path="/standardDeduction1to3">
@@ -88,10 +88,16 @@
       <Derived><Dollar>35</Dollar></Derived>
     </Fact>
 
-    <Fact path="/benefitReductionPercent">
-      <Name>Benefit reduction percent</Name>
+    <Fact path="/benefitReductionRate">
+      <Name>Benefit reduction rate</Name>
       <Description>Households expected to spend 30% of net income on food</Description>
-      <Derived><Int>30</Int></Derived>
+      <Derived><Rational>0.30</Rational></Derived>
+    </Fact>
+
+    <Fact path="/shelterIncomeShareRate">
+      <Name>Shelter income share rate</Name>
+      <Description>Shelter costs exceeding this share of adjusted income are deductible per 7 USC 2014(e)(6)</Description>
+      <Derived><Rational>0.50</Rational></Derived>
     </Fact>
 
     <Fact path="/minimumBenefit">
@@ -100,10 +106,10 @@
       <Derived><Dollar>23</Dollar></Derived>
     </Fact>
 
-    <Fact path="/grossIncomeLimitPercent">
-      <Name>Gross income limit percent</Name>
+    <Fact path="/grossIncomeLimitRate">
+      <Name>Gross income limit rate</Name>
       <Description>Gross income must be at or below 130% of FPL</Description>
-      <Derived><Int>130</Int></Derived>
+      <Derived><Rational>1.30</Rational></Derived>
     </Fact>
 
     <!-- FPL monthly amounts by household size (FY2024, 48 states + DC) -->
@@ -243,15 +249,10 @@
       <Name>Gross income limit</Name>
       <Description>130% of FPL — maximum gross monthly income for eligibility</Description>
       <Derived>
-        <Divide>
-          <Dividend>
-            <Multiply>
-              <Dependency path="/federalPovertyLevelMonthly" />
-              <Dependency path="/grossIncomeLimitPercent" />
-            </Multiply>
-          </Dividend>
-          <Divisors><Int>100</Int></Divisors>
-        </Divide>
+        <Multiply>
+          <Dependency path="/federalPovertyLevelMonthly" />
+          <Dependency path="/grossIncomeLimitRate" />
+        </Multiply>
       </Derived>
     </Fact>
 
@@ -271,15 +272,10 @@
       <Name>Earned income deduction</Name>
       <Description>20% of gross earned income</Description>
       <Derived>
-        <Divide>
-          <Dividend>
-            <Multiply>
-              <Dependency path="/grossEarnedIncome" />
-              <Dependency path="/earnedIncomeDeductionRate" />
-            </Multiply>
-          </Dividend>
-          <Divisors><Int>100</Int></Divisors>
-        </Divide>
+        <Multiply>
+          <Dependency path="/grossEarnedIncome" />
+          <Dependency path="/earnedIncomeDeductionRate" />
+        </Multiply>
       </Derived>
     </Fact>
 
@@ -368,14 +364,14 @@
     </Fact>
 
     <!-- Excess shelter deduction -->
-    <Fact path="/halfIncomeAfterDeductions">
-      <Name>Half of adjusted income</Name>
-      <Description>50% of income after preliminary deductions</Description>
+    <Fact path="/shelterIncomeShare">
+      <Name>Shelter income share</Name>
+      <Description>Share of adjusted income allocated to shelter per 7 USC 2014(e)(6)</Description>
       <Derived>
-        <Divide>
-          <Dividend><Dependency path="/incomeAfterPreliminaryDeductions" /></Dividend>
-          <Divisors><Int>2</Int></Divisors>
-        </Divide>
+        <Multiply>
+          <Dependency path="/incomeAfterPreliminaryDeductions" />
+          <Dependency path="/shelterIncomeShareRate" />
+        </Multiply>
       </Derived>
     </Fact>
 
@@ -386,7 +382,7 @@
         <GreaterOf>
           <Subtract>
             <Minuend><Dependency path="/shelterCosts" /></Minuend>
-            <Subtrahends><Dependency path="/halfIncomeAfterDeductions" /></Subtrahends>
+            <Subtrahends><Dependency path="/shelterIncomeShare" /></Subtrahends>
           </Subtract>
           <Dollar>0</Dollar>
         </GreaterOf>
@@ -538,15 +534,10 @@
       <Name>Expected food contribution</Name>
       <Description>30% of net income — the amount the household is expected to spend on food</Description>
       <Derived>
-        <Divide>
-          <Dividend>
-            <Multiply>
-              <Dependency path="/netMonthlyIncome" />
-              <Dependency path="/benefitReductionPercent" />
-            </Multiply>
-          </Dividend>
-          <Divisors><Int>100</Int></Divisors>
-        </Divide>
+        <Multiply>
+          <Dependency path="/netMonthlyIncome" />
+          <Dependency path="/benefitReductionRate" />
+        </Multiply>
       </Derived>
     </Fact>
 
@@ -564,7 +555,7 @@
       </Derived>
     </Fact>
 
-    <Fact path="/monthlySnapBenefit">
+    <Fact path="/snap">
       <Name>Monthly SNAP benefit</Name>
       <Description>Final monthly benefit amount, zero if not eligible, with minimum benefit floor for small households</Description>
       <Derived>

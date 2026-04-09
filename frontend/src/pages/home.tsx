@@ -13,7 +13,7 @@ import {
 import { useEffect, type PropsWithChildren } from 'react'
 import { AIPanel } from '@/components/ai-panel'
 import { ExecutionPanel } from '@/components/execution-panel'
-import { NodePanel } from '@/components/node'
+import { NodePanel, nodeElementId } from '@/components/node'
 
 export function HomePage() {
   useKeyboardShortcuts()
@@ -65,6 +65,17 @@ export function NodeMapLayout({ children }: PropsWithChildren) {
     })
     return () => cancelAnimationFrame(frameId)
   }, [openNode, rightBar])
+
+  // Scroll the open node into view
+  useEffect(() => {
+    if (!openNode) return
+    // Delay to let layout settle after panel opens
+    const timer = setTimeout(() => {
+      const el = document.getElementById(nodeElementId(openNode))
+      el?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' })
+    }, 150)
+    return () => clearTimeout(timer)
+  }, [openNode])
 
   const showNodePanel = openNode !== null && openNodeData !== undefined
 

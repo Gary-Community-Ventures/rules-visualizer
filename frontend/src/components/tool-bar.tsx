@@ -16,6 +16,7 @@ import {
   History,
 } from 'lucide-react'
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
+import { WorkspaceDropdown } from './workspace-dropdown'
 import {
   Combobox,
   ComboboxChips,
@@ -63,11 +64,15 @@ function NodeNavigation() {
     goToHistoryIndex,
   } = useMainContext()
   const [historyOpen, setHistoryOpen] = useState(false)
-
   useEffect(() => {
-    const handler = () => setHistoryOpen(true)
-    window.addEventListener('open-history', handler)
-    return () => window.removeEventListener('open-history', handler)
+    const handleOpen = () => setHistoryOpen(true)
+    const handleClose = () => setHistoryOpen(false)
+    window.addEventListener('open-history', handleOpen)
+    window.addEventListener('close-history', handleClose)
+    return () => {
+      window.removeEventListener('open-history', handleOpen)
+      window.removeEventListener('close-history', handleClose)
+    }
   }, [])
 
   if (nodeHistory.length === 0) return null
@@ -162,6 +167,7 @@ export function ToolBar() {
   return (
     <div className="border-b flex items-center gap-5 p-2 bg-background relative z-10">
       <NodeNavigation />
+      <WorkspaceDropdown />
       <Combobox multiple value={selectedNodes} onValueChange={setSelectedNodes}>
         <ComboboxChips ref={anchorRef}>
           {selectedNodes.map((nodeId) => (

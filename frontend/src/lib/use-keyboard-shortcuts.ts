@@ -8,24 +8,47 @@ function isInputFocused(): boolean {
   return tag === 'input' || tag === 'textarea' || (el as HTMLElement).isContentEditable
 }
 
+let autoCloseTimer: ReturnType<typeof setTimeout> | null = null
+let activeDropdown: 'history' | 'workspace' | null = null
+
+function isAnyDropdownOpen(): boolean {
+  return !!document.querySelector('[data-radix-popper-content-wrapper]')
+}
+
+function openTemporarily(name: 'history' | 'workspace') {
+  if (isAnyDropdownOpen()) return
+
+  window.dispatchEvent(new CustomEvent(`open-${name}`))
+  activeDropdown = name
+  if (autoCloseTimer) clearTimeout(autoCloseTimer)
+  autoCloseTimer = setTimeout(() => {
+    window.dispatchEvent(new CustomEvent(`close-${name}`))
+    activeDropdown = null
+    autoCloseTimer = null
+  }, 500)
+}
+
 export function useKeyboardShortcuts() {
   const {
+    model,
     openNode,
     setOpenNode,
     goBackNode,
     goForwardNode,
     rightBar,
     setRightBar,
+    workspaceItems,
+    setWorkspaceItems,
   } = useModelContext()
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
-      // Always allow Escape
       if (e.key === 'Escape') {
         if (isInputFocused()) {
           (document.activeElement as HTMLElement)?.blur()
           return
         }
+        if (isAnyDropdownOpen()) return
         if (openNode) {
           setOpenNode(null)
           return
@@ -37,16 +60,48 @@ export function useKeyboardShortcuts() {
         return
       }
 
-      // Skip all other shortcuts if an input is focused
       if (isInputFocused()) return
+
+      // Up/Down: navigate workspace items (loops), but not when history is open
+      if ((e.key === 'ArrowUp' || e.key === 'ArrowDown') && activeDropdown !== 'history') {
+        const validItems = workspaceItems.filter((id) => model.nodes[id])
+        if (validItems.length > 0) {
+          e.preventDefault()
+          openTemporarily('workspace')
+          const currentIndex = openNode ? validItems.indexOf(openNode) : -1
+          let newIndex: number
+          if (currentIndex === -1) {
+            newIndex = e.key === 'ArrowUp' ? 0 : validItems.length - 1
+          } else if (e.key === 'ArrowUp') {
+            newIndex = (currentIndex - 1 + validItems.length) % validItems.length
+          } else {
+            newIndex = (currentIndex + 1) % validItems.length
+          }
+          setOpenNode(validItems[newIndex])
+          return
+        }
+      }
+
+      // Number keys 1-9: jump to workspace item
+      if (e.key >= '1' && e.key <= '9') {
+        const index = parseInt(e.key) - 1
+        const validItems = workspaceItems.filter((id) => model.nodes[id])
+        if (index < validItems.length) {
+          e.preventDefault()
+          setOpenNode(validItems[index])
+        }
+        return
+      }
 
       switch (e.key) {
         case 'ArrowLeft':
           e.preventDefault()
+          openTemporarily('history')
           goBackNode()
           break
         case 'ArrowRight':
           e.preventDefault()
+          openTemporarily('history')
           goForwardNode()
           break
         case '/':
@@ -56,7 +111,29 @@ export function useKeyboardShortcuts() {
           break
         case 'h':
           e.preventDefault()
-          window.dispatchEvent(new CustomEvent('open-history'))
+          if (isAnyDropdownOpen()) {
+            window.dispatchEvent(new CustomEvent('close-history'))
+          } else {
+            window.dispatchEvent(new CustomEvent('open-history'))
+          }
+          break
+        case 'w':
+          e.preventDefault()
+          if (openNode) {
+            if (workspaceItems.includes(openNode)) {
+              setWorkspaceItems((prev) => prev.filter((id) => id !== openNode))
+            } else {
+              setWorkspaceItems((prev) => [...prev, openNode])
+            }
+          }
+          break
+        case 'e':
+          e.preventDefault()
+          if (isAnyDropdownOpen()) {
+            window.dispatchEvent(new CustomEvent('close-workspace'))
+          } else {
+            window.dispatchEvent(new CustomEvent('open-workspace'))
+          }
           break
         case 'a':
           e.preventDefault()
@@ -70,7 +147,7 @@ export function useKeyboardShortcuts() {
       }
     }
 
-    document.addEventListener('keydown', handleKeyDown)
-    return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [openNode, setOpenNode, goBackNode, goForwardNode, rightBar, setRightBar])
+    document.addEventListener('keydown', handleKeyDown, true)
+    return () => document.removeEventListener('keydown', handleKeyDown, true)
+  }, [openNode, setOpenNode, goBackNode, goForwardNode, rightBar, setRightBar, workspaceItems, setWorkspaceItems, model.nodes])
 }

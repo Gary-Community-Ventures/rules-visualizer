@@ -70,6 +70,8 @@ type ModelContextValue = {
   runExecution: () => void
   runOnBlur: () => void
   clearExecution: () => void
+  workspaceItems: string[]
+  setWorkspaceItems: Dispatch<SetStateAction<string[]>>
 }
 
 const ModelContext = createContext<ModelContextValue | undefined>(undefined)
@@ -208,6 +210,11 @@ export function ModelProvider({
     if (hasAnyInput) runExecution()
   }, [inputOverrides, runExecution])
 
+  const [workspaceItems, setWorkspaceItems] = useLocalStorage<string[]>(
+    `workspace:${rulesetId}`,
+    []
+  )
+
   const loadModel = useCallback(() => {
     setIsLoading(true)
     setError(null)
@@ -290,6 +297,8 @@ export function ModelProvider({
       runExecution,
       runOnBlur,
       clearExecution,
+      workspaceItems,
+      setWorkspaceItems,
     }),
     [
       model,
@@ -321,6 +330,8 @@ export function ModelProvider({
       runExecution,
       runOnBlur,
       clearExecution,
+      workspaceItems,
+      setWorkspaceItems,
     ]
   )
 

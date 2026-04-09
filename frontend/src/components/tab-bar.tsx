@@ -12,7 +12,7 @@ export function TabBar({ activeRulesetId }: TabBarProps) {
   const navigate = useNavigate()
 
   return (
-    <div className="border-b bg-muted/40 flex items-center gap-0.5 px-1 h-9 shrink-0 overflow-x-auto">
+    <div className="border-b bg-background flex items-center gap-0.5 px-1 h-9 shrink-0 overflow-x-auto relative z-10">
       <button
         onClick={() => navigate({ to: '/' })}
         className="px-2 h-7 rounded text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors shrink-0"

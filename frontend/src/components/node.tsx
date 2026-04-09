@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useFindNode, useMainContext } from '@/context'
 import { isInputNode, isConstantNode } from '@/context/model-context'
 import { Button } from './ui/button'
@@ -12,6 +13,9 @@ import {
   GitBranch,
   Lock,
   Trash2,
+  Check,
+  Bookmark,
+  BookmarkCheck,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ContentViewer } from './content-viewers'
@@ -192,7 +196,7 @@ export function Node({ node }: NodeProps) {
         <Button
           variant="outline"
           size="icon"
-          className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-white h-6 w-6"
+          className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-white h-6 w-6 z-10"
           onClick={toggleShowChildren}
         >
           {showChildren[node.id] === true ? (
@@ -371,6 +375,31 @@ export function NodeLinkList({
   )
 }
 
+function CopyableName({ name }: { name: string }) {
+  const [copied, setCopied] = useState(false)
+
+  return (
+    <h2
+      className="text-sm font-semibold truncate cursor-pointer hover:text-muted-foreground transition-colors"
+      title="Click to copy"
+      onClick={() => {
+        navigator.clipboard.writeText(name)
+        setCopied(true)
+        setTimeout(() => setCopied(false), 1500)
+      }}
+    >
+      {copied ? (
+        <span className="text-emerald-600 flex items-center gap-1">
+          <Check className="size-3" />
+          Copied
+        </span>
+      ) : (
+        name
+      )}
+    </h2>
+  )
+}
+
 export function NodePanel() {
   const {
     openNode,
@@ -380,6 +409,8 @@ export function NodePanel() {
     setInputOverride,
     clearInputOverride,
     runOnBlur,
+    workspaceItems,
+    setWorkspaceItems,
   } = useMainContext()
   const openNodeData = useFindNode(openNode)
 
@@ -387,6 +418,7 @@ export function NodePanel() {
     return null
   }
 
+  const inWorkspace = workspaceItems.includes(openNode)
   const isInput = isInputNode(openNodeData)
   const isConstant = isConstantNode(openNodeData)
   const canEdit = isInput || isConstant
@@ -399,7 +431,7 @@ export function NodePanel() {
     <div className="flex flex-col h-full bg-background">
       <div className="flex items-center justify-between px-5 py-3 border-b shrink-0 gap-2">
         <div className="flex items-center gap-2 min-w-0">
-          <h2 className="text-sm font-semibold truncate">{openNodeData.name}</h2>
+          <CopyableName name={openNodeData.name} />
           <span
             className={cn(
               'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium shrink-0',
@@ -410,14 +442,33 @@ export function NodePanel() {
             {config.label}
           </span>
         </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-7 w-7 shrink-0"
-          onClick={() => setOpenNode(null)}
-        >
-          <X className="size-4" />
-        </Button>
+        <div className="flex items-center gap-0.5 shrink-0">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7"
+            title={inWorkspace ? 'Remove from workspace (W)' : 'Add to workspace (W)'}
+            onClick={() =>
+              inWorkspace
+                ? setWorkspaceItems((prev) => prev.filter((id) => id !== openNode))
+                : setWorkspaceItems((prev) => [...prev, openNode])
+            }
+          >
+            {inWorkspace ? (
+              <BookmarkCheck className="size-4 text-primary" />
+            ) : (
+              <Bookmark className="size-4" />
+            )}
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7"
+            onClick={() => setOpenNode(null)}
+          >
+            <X className="size-4" />
+          </Button>
+        </div>
       </div>
       <div className="flex-1 overflow-y-auto p-5">
         <NodeViewer node={openNodeData} />

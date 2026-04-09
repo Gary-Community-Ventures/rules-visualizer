@@ -180,7 +180,7 @@ function buildParentMap(nodes: ModelNodes): Record<string, string[]> {
 }
 
 export function Arrows({ rows }: ArrowsProps) {
-  const { model, hoveredNodeId } = useMainContext()
+  const { model, hoveredNodeId, openNode } = useMainContext()
   const nodes = model.nodes
   const [scale, setScale] = useState(1)
 
@@ -215,18 +215,19 @@ export function Arrows({ rows }: ArrowsProps) {
   }, [nodes])
 
   const sortedArrows = useMemo(() => {
+    const activeNode = hoveredNodeId ?? openNode
     return [...arrows].sort((a, b) => {
       const aRelated =
-        hoveredNodeId === null ||
-        a.fromId === hoveredNodeId ||
-        a.toId === hoveredNodeId
+        activeNode === null ||
+        a.fromId === activeNode ||
+        a.toId === activeNode
       const bRelated =
-        hoveredNodeId === null ||
-        b.fromId === hoveredNodeId ||
-        b.toId === hoveredNodeId
+        activeNode === null ||
+        b.fromId === activeNode ||
+        b.toId === activeNode
       return aRelated === bRelated ? 0 : aRelated ? 1 : -1
     })
-  }, [arrows, hoveredNodeId])
+  }, [arrows, hoveredNodeId, openNode])
 
   const strokeWidth = 2 * scale
 

@@ -1,14 +1,15 @@
-import fs from 'node:fs'
 import path from 'node:path'
+import fs from 'node:fs'
+import chokidar from 'chokidar'
 import { reloadRuleset } from './store.js'
 import { broadcastReload } from './server.js'
 
 /**
  * Watch a directory of Fact Graph XML modules for changes.
  * On change, re-parses the affected ruleset and notifies the frontend.
+ * Uses chokidar for reliable file watching on all platforms (including WSL).
  */
 export function startWatcher(dataDir: string): void {
-  // Debounce: avoid re-parsing multiple times for rapid saves
   const pending = new Map<string, ReturnType<typeof setTimeout>>()
 
   const handleChange = (rulesetId: string) => {
@@ -31,19 +32,25 @@ export function startWatcher(dataDir: string): void {
     )
   }
 
-  // Watch each ruleset subdirectory
-  const entries = fs.readdirSync(dataDir, { withFileTypes: true })
-  for (const entry of entries) {
-    if (!entry.isDirectory()) continue
-    const rulesetId = entry.name
-    const rulesetDir = path.join(dataDir, rulesetId)
+  // Watch all XML files in ruleset subdirectories
+  const watcher = chokidar.watch('*/*.xml', {
+    cwd: dataDir,
+    ignoreInitial: true,
+    usePolling: true,
+    interval: 500,
+  })
 
-    fs.watch(rulesetDir, { recursive: true }, (eventType, filename) => {
-      if (!filename || !filename.endsWith('.xml')) return
-      console.log(`File ${eventType}: ${rulesetId}/${filename}`)
-      handleChange(rulesetId)
-    })
-  }
+  watcher.on('change', (filePath) => {
+    const rulesetId = filePath.split(path.sep)[0]
+    console.log(`File changed: ${filePath}`)
+    handleChange(rulesetId)
+  })
+
+  watcher.on('add', (filePath) => {
+    const rulesetId = filePath.split(path.sep)[0]
+    console.log(`File added: ${filePath}`)
+    handleChange(rulesetId)
+  })
 
   console.log(`Watching ${dataDir} for XML changes...`)
 }

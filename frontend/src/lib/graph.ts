@@ -271,7 +271,7 @@ function compressRows(
         for (const previousItem of previousRow) {
           if (
             nodes[previousItem]?.dependencies.includes(item) &&
-            showChildren[previousItem] !== false
+            showChildren[previousItem] === true
           ) {
             neededByPreviousRow = true
             break
