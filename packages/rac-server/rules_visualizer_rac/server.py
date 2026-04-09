@@ -240,14 +240,16 @@ async def handle_ruleset_execute(request: web.Request) -> web.Response:
         data = Data(tables=entity_tables) if entity_tables else Data(tables={})
         ctx = Context(data=data)
 
-        # Pre-populate context with default values for input variables
-        # the compiler dropped (no temporal expression).  Then overlay
-        # any user-provided overrides.
+        # Pre-populate context with default values for SCALAR input variables
+        # the compiler dropped (no temporal expression).  Skip entity-scoped
+        # inputs — those come from entity data rows, not ctx.computed.
         model = _rulesets.get(ruleset_id, {})
         for node in model.get("nodes", {}).values():
             c = node.get("content", {})
             if c.get("role") != "input":
                 continue
+            if c.get("entity"):
+                continue  # entity-scoped inputs come from row data
             var_path = c.get("path")
             if not var_path or var_path in patched_ir.variables:
                 continue
