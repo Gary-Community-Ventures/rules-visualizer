@@ -5,7 +5,11 @@ function isInputFocused(): boolean {
   const el = document.activeElement
   if (!el) return false
   const tag = el.tagName.toLowerCase()
-  return tag === 'input' || tag === 'textarea' || (el as HTMLElement).isContentEditable
+  return (
+    tag === 'input' ||
+    tag === 'textarea' ||
+    (el as HTMLElement).isContentEditable
+  )
 }
 
 let autoCloseTimer: ReturnType<typeof setTimeout> | null = null
@@ -45,7 +49,7 @@ export function useKeyboardShortcuts() {
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === 'Escape') {
         if (isInputFocused()) {
-          (document.activeElement as HTMLElement)?.blur()
+          ;(document.activeElement as HTMLElement)?.blur()
           return
         }
         if (isAnyDropdownOpen()) return
@@ -107,7 +111,9 @@ export function useKeyboardShortcuts() {
         case '/':
         case 'k':
           e.preventDefault()
-          document.querySelector<HTMLInputElement>('[placeholder="Search..."]')?.focus()
+          document
+            .querySelector<HTMLInputElement>('[placeholder="Search..."]')
+            ?.focus()
           break
         case 'h':
           e.preventDefault()
@@ -140,7 +146,9 @@ export function useKeyboardShortcuts() {
           setRightBar(rightBar === 'ai' ? null : 'ai')
           if (rightBar !== 'ai') {
             setTimeout(() => {
-              document.querySelector<HTMLTextAreaElement>('.border-t textarea')?.focus()
+              document
+                .querySelector<HTMLTextAreaElement>('.border-t textarea')
+                ?.focus()
             }, 100)
           }
           break

@@ -255,17 +255,18 @@ async def handle_ruleset_execute(request: web.Request) -> web.Response:
             raw = c.get("default")
             ctx.computed[var_path] = _parse_default(raw)
 
-        # Overlay user-provided input values
+        # Overlay user-provided values (inputs, constant overrides, and pinned nodes)
         for var_path, value in scalar_overrides.items():
-            if var_path not in patched_ir.variables:
-                ctx.computed[var_path] = value
+            ctx.computed[var_path] = value
 
-        # Run the executor's logic (replicated from Executor.execute)
+        # Run the executor's logic (replicated from Executor.execute).
+        # Skip any variable already in ctx.computed (pinned by user).
         entities: dict[str, dict[str, list]] = {}
         for path in patched_ir.order:
             var = patched_ir.variables[path]
             if var.entity is None:
-                ctx.computed[path] = evaluate(var.expr, ctx)
+                if path not in ctx.computed:
+                    ctx.computed[path] = evaluate(var.expr, ctx)
             else:
                 entity_name = var.entity
                 rows = data.get_rows(entity_name)

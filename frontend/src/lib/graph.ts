@@ -186,7 +186,9 @@ function nodeRowsLarge(
   for (let d = 0; d <= maxDepth; d++) {
     const row = rowMap.get(d)
     if (row && row.length > 0) {
-      row.sort((a, b) => (activeNodes[a]?.name ?? '').localeCompare(activeNodes[b]?.name ?? ''))
+      row.sort((a, b) =>
+        (activeNodes[a]?.name ?? '').localeCompare(activeNodes[b]?.name ?? '')
+      )
       rows.push(row)
     }
   }

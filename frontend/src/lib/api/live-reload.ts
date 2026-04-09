@@ -4,7 +4,13 @@ type AiCallback = (event: AiEvent) => void
 export type AiEvent =
   | { type: 'ai-chunk'; requestId: string; content: string }
   | { type: 'ai-tool-start'; requestId: string; name: string; id: string }
-  | { type: 'ai-tool-end'; requestId: string; name: string; id: string; result: string }
+  | {
+      type: 'ai-tool-end'
+      requestId: string
+      name: string
+      id: string
+      result: string
+    }
   | { type: 'ai-done'; requestId: string }
   | { type: 'ai-error'; requestId: string; content: string }
 

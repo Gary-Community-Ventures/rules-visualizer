@@ -1,17 +1,22 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { cn } from '@/lib/utils'
 import { useMainContext } from '@/context'
-import { getNodePath, isInputNode, isConstantNode } from '@/context/model-context'
+import {
+  getNodePath,
+  isInputNode,
+  isConstantNode,
+  isOverridable,
+  getTypeHint,
+} from '@/context/model-context'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
 import { Textarea } from './ui/textarea'
 import {
-  Play,
-  Loader2,
   Trash2,
   ChevronDown,
   ChevronRight,
   Upload,
+  Download,
 } from 'lucide-react'
 import type { ModelNode } from '@/lib/model'
 
@@ -21,44 +26,129 @@ export function ExecutionPanel() {
     inputOverrides,
     setInputOverride,
     clearInputOverride,
+    clearOverrides,
     executionResults,
-    isExecuting,
     executionError,
-    runExecution,
     runOnBlur,
     clearExecution,
   } = useMainContext()
 
-  const [showConstants, setShowConstants] = useState(false)
-  const [showJson, setShowJson] = useState(false)
+  // Persist section expand states across panel open/close
+  const [sectionState, setSectionState] = useState<Record<string, boolean>>(
+    () => {
+      try {
+        const stored = localStorage.getItem(`exec-panel:${model.id}`)
+        return stored ? JSON.parse(stored) : { inputs: true }
+      } catch {
+        return { inputs: true }
+      }
+    }
+  )
+  const setSection = (key: string, open: boolean) => {
+    setSectionState((prev) => {
+      const next = { ...prev, [key]: open }
+      localStorage.setItem(`exec-panel:${model.id}`, JSON.stringify(next))
+      return next
+    })
+  }
+  const showInputs = sectionState.inputs ?? true
+  const showOverrides = sectionState.overrides ?? false
+  const showConstants = sectionState.constants ?? false
+  const showComputed = sectionState.computed ?? false
+  const showJson = sectionState.json ?? false
   const [jsonText, setJsonText] = useState('')
   const [jsonError, setJsonError] = useState<string | null>(null)
 
-  // Separate nodes by role
-  const inputNodes: ModelNode[] = []
-  const constantNodes: ModelNode[] = []
-  for (const node of Object.values(model.nodes)) {
-    if (isInputNode(node)) inputNodes.push(node)
-    else if (isConstantNode(node)) constantNodes.push(node)
-  }
-  inputNodes.sort((a, b) => a.name.localeCompare(b.name))
-  constantNodes.sort((a, b) => a.name.localeCompare(b.name))
+  // Categorize nodes
+  const { inputNodes, constantNodes, computedNodes } = useMemo(() => {
+    const inputs: ModelNode[] = []
+    const constants: ModelNode[] = []
+    const computed: ModelNode[] = []
+    for (const node of Object.values(model.nodes)) {
+      if (isInputNode(node)) inputs.push(node)
+      else if (isConstantNode(node)) constants.push(node)
+      else if (isOverridable(node)) computed.push(node)
+    }
+    inputs.sort((a, b) => a.name.localeCompare(b.name))
+    constants.sort((a, b) => a.name.localeCompare(b.name))
+    computed.sort((a, b) => a.name.localeCompare(b.name))
+    return {
+      inputNodes: inputs,
+      constantNodes: constants,
+      computedNodes: computed,
+    }
+  }, [model.nodes])
 
-  const inputCount = Object.entries(inputOverrides).filter(
-    ([id, v]) => v !== '' && inputNodes.some((n) => n.id === id)
+  // Count values by category
+  const inputCount = inputNodes.filter(
+    (n) => inputOverrides[n.id] && inputOverrides[n.id] !== ''
   ).length
-  const constantOverrideCount = Object.entries(inputOverrides).filter(
-    ([id, v]) => v !== '' && constantNodes.some((n) => n.id === id)
+  const constantOverrideCount = constantNodes.filter(
+    (n) => inputOverrides[n.id] && inputOverrides[n.id] !== ''
   ).length
+  const computedOverrideCount = computedNodes.filter(
+    (n) => inputOverrides[n.id] && inputOverrides[n.id] !== ''
+  ).length
+  const totalOverrideCount = constantOverrideCount + computedOverrideCount
 
-  // Build nodeId lookup from path
+  // Missing required inputs
+  const missingRequired = inputNodes.filter(
+    (n) =>
+      !getDefault(n) && !(inputOverrides[n.id] && inputOverrides[n.id] !== '')
+  )
+
+  // Path lookups
+  const nodeIdToPath: Record<string, string> = {}
   const pathToNodeId: Record<string, string> = {}
   for (const node of Object.values(model.nodes)) {
     const path = getNodePath(node.content)
-    if (path) pathToNodeId[path] = node.id
+    if (path) {
+      nodeIdToPath[node.id] = path
+      pathToNodeId[path] = node.id
+    }
   }
 
-  const handleJsonImport = () => {
+  // Clear just input values
+  const clearInputs = () => {
+    for (const node of inputNodes) {
+      if (inputOverrides[node.id]) clearInputOverride(node.id)
+    }
+    clearExecution()
+  }
+
+  // Export: generate JSON from current state into the text box
+  const handleExport = () => {
+    const inputs: Record<string, unknown> = {}
+    const overrides: Record<string, unknown> = {}
+
+    for (const [nodeId, rawValue] of Object.entries(inputOverrides)) {
+      if (rawValue === '') continue
+      const path = nodeIdToPath[nodeId]
+      if (!path) continue
+      let value: unknown
+      try {
+        value = JSON.parse(rawValue)
+      } catch {
+        value = rawValue
+      }
+
+      if (inputNodes.some((n) => n.id === nodeId)) {
+        inputs[path] = value
+      } else {
+        overrides[path] = value
+      }
+    }
+
+    const json: Record<string, unknown> = {}
+    if (Object.keys(inputs).length > 0) json.inputs = inputs
+    if (Object.keys(overrides).length > 0) json.overrides = overrides
+
+    setJsonText(JSON.stringify(json, null, 2))
+    setSection('json', true)
+  }
+
+  // Import: read JSON text box and apply to form
+  const handleImport = () => {
     setJsonError(null)
     try {
       const parsed = JSON.parse(jsonText)
@@ -66,11 +156,21 @@ export function ExecutionPanel() {
         setJsonError('JSON must be an object')
         return
       }
-      const entries =
-        parsed.inputs || parsed.entities
-          ? Object.entries((parsed.inputs ?? {}) as Record<string, unknown>)
-          : Object.entries(parsed as Record<string, unknown>)
-      for (const [key, value] of entries) {
+      const allEntries: [string, unknown][] = []
+      if (parsed.inputs) {
+        allEntries.push(
+          ...Object.entries(parsed.inputs as Record<string, unknown>)
+        )
+      }
+      if (parsed.overrides) {
+        allEntries.push(
+          ...Object.entries(parsed.overrides as Record<string, unknown>)
+        )
+      }
+      if (allEntries.length === 0) {
+        allEntries.push(...Object.entries(parsed as Record<string, unknown>))
+      }
+      for (const [key, value] of allEntries) {
         const nodeId = pathToNodeId[key]
         if (nodeId) {
           setInputOverride(
@@ -89,41 +189,30 @@ export function ExecutionPanel() {
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b shrink-0">
         <h2 className="text-sm font-semibold">Execute Rules</h2>
-        <div className="flex gap-1.5">
-          {executionResults && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={clearExecution}
-              className="h-7 text-xs"
-            >
-              Clear
-            </Button>
-          )}
+        {executionResults && (
           <Button
+            variant="ghost"
             size="sm"
-            onClick={runExecution}
-            disabled={isExecuting}
-            className="h-7 gap-1.5"
+            onClick={clearExecution}
+            className="h-7 text-xs"
           >
-            {isExecuting ? (
-              <Loader2 className="size-3 animate-spin" />
-            ) : (
-              <Play className="size-3" />
-            )}
-            Run
+            Clear results
           </Button>
-        </div>
+        )}
       </div>
 
-      {/* Error */}
+      {/* Status banners */}
       {executionError && (
         <div className="px-4 py-2 bg-red-50 text-red-700 text-xs border-b">
           {executionError}
         </div>
       )}
-
-      {/* Result summary */}
+      {missingRequired.length > 0 && (
+        <div className="px-4 py-2 bg-amber-50 text-amber-700 text-xs border-b">
+          {missingRequired.length} required{' '}
+          {missingRequired.length === 1 ? 'input' : 'inputs'} missing
+        </div>
+      )}
       {executionResults && (
         <div className="px-4 py-2 bg-emerald-50 text-emerald-700 text-xs border-b">
           {Object.keys(executionResults).length} nodes computed
@@ -132,70 +221,43 @@ export function ExecutionPanel() {
 
       {/* Scrollable content */}
       <div className="flex-1 overflow-y-auto">
-        {/* Inputs — required, user must provide */}
+        {/* ── INPUTS ── */}
         {inputNodes.length > 0 && (
           <div className="p-4 border-b">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                Inputs ({inputNodes.length})
-              </h3>
+            <div className="flex items-center">
+              <button
+                className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider flex-1"
+                onClick={() => setSection('inputs', !showInputs)}
+              >
+                {showInputs ? (
+                  <ChevronDown className="size-3" />
+                ) : (
+                  <ChevronRight className="size-3" />
+                )}
+                Inputs
+                {inputCount === inputNodes.length ? (
+                  <span className="font-normal text-emerald-600">All set</span>
+                ) : inputCount > 0 ? (
+                  <span className="font-normal">
+                    {inputCount} of {inputNodes.length}
+                  </span>
+                ) : (
+                  <span className="font-normal">({inputNodes.length})</span>
+                )}
+              </button>
               {inputCount > 0 && (
-                <span className="text-xs text-muted-foreground">
-                  {inputCount} / {inputNodes.length} set
-                </span>
+                <button
+                  className="text-[11px] text-muted-foreground hover:text-foreground"
+                  onClick={clearInputs}
+                >
+                  Clear
+                </button>
               )}
             </div>
-            <div className="space-y-3">
-              {inputNodes.map((node) => {
-                const nodeDefault = getDefault(node)
-                return (
-                  <NodeField
-                    key={node.id}
-                    node={node}
-                    value={inputOverrides[node.id] ?? ''}
-                    onChange={(val) => setInputOverride(node.id, val)}
-                    onClear={() => clearInputOverride(node.id)}
-                    onBlur={runOnBlur}
-                    result={executionResults?.[node.id]?.value}
-                    required={!nodeDefault}
-                    defaultValue={nodeDefault}
-                  />
-                )
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* Constants — optional overrides for simulation */}
-        {constantNodes.length > 0 && (
-          <div className="p-4 border-b">
-            <button
-              className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider w-full"
-              onClick={() => setShowConstants(!showConstants)}
-            >
-              {showConstants ? (
-                <ChevronDown className="size-3" />
-              ) : (
-                <ChevronRight className="size-3" />
-              )}
-              Constants ({constantNodes.length})
-              {constantOverrideCount > 0 && (
-                <span className="ml-auto font-normal">
-                  {constantOverrideCount} overridden
-                </span>
-              )}
-            </button>
-            {showConstants && (
+            {showInputs && (
               <div className="mt-3 space-y-3">
-                {constantNodes.map((node) => {
-                  const content = node.content
-                  const defaultVal =
-                    content.type !== 'entity' && content.format === 'rac'
-                      ? content.default
-                      : content.type === 'derived' &&
-                          content.format === 'factGraph'
-                        ? content.logic
-                        : undefined
+                {inputNodes.map((node) => {
+                  const nodeDefault = getDefault(node)
                   return (
                     <NodeField
                       key={node.id}
@@ -205,7 +267,9 @@ export function ExecutionPanel() {
                       onClear={() => clearInputOverride(node.id)}
                       onBlur={runOnBlur}
                       result={executionResults?.[node.id]?.value}
-                      defaultValue={defaultVal}
+                      required={!nodeDefault}
+                      defaultValue={nodeDefault}
+                      colorScheme="input"
                     />
                   )
                 })}
@@ -214,42 +278,166 @@ export function ExecutionPanel() {
           </div>
         )}
 
-        {/* JSON editor */}
+        {/* ── OVERRIDES ── */}
+        {(constantNodes.length > 0 || computedNodes.length > 0) && (
+          <div className="p-4 border-b">
+            <div className="flex items-center">
+              <button
+                className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider flex-1"
+                onClick={() => setSection('overrides', !showOverrides)}
+              >
+                {showOverrides ? (
+                  <ChevronDown className="size-3" />
+                ) : (
+                  <ChevronRight className="size-3" />
+                )}
+                Overrides
+                {totalOverrideCount > 0 && (
+                  <span className="font-normal text-amber-600">
+                    {totalOverrideCount} active
+                  </span>
+                )}
+              </button>
+              {totalOverrideCount > 0 && (
+                <button
+                  className="text-[11px] text-muted-foreground hover:text-foreground"
+                  onClick={clearOverrides}
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+
+            {showOverrides && (
+              <div className="mt-3 space-y-4">
+                {/* Constants */}
+                {constantNodes.length > 0 && (
+                  <div>
+                    <button
+                      className="flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground w-full mb-2"
+                      onClick={() => setSection('constants', !showConstants)}
+                    >
+                      {showConstants ? (
+                        <ChevronDown className="size-2.5" />
+                      ) : (
+                        <ChevronRight className="size-2.5" />
+                      )}
+                      Constants ({constantNodes.length})
+                      {constantOverrideCount > 0 && (
+                        <span className="ml-auto text-amber-600">
+                          {constantOverrideCount} overridden
+                        </span>
+                      )}
+                    </button>
+                    {showConstants && (
+                      <div className="space-y-3 pl-2">
+                        {constantNodes.map((node) => (
+                          <NodeField
+                            key={node.id}
+                            node={node}
+                            value={inputOverrides[node.id] ?? ''}
+                            onChange={(val) => setInputOverride(node.id, val)}
+                            onClear={() => clearInputOverride(node.id)}
+                            onBlur={runOnBlur}
+                            result={executionResults?.[node.id]?.value}
+                            defaultValue={getDefault(node)}
+                            colorScheme="override"
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Computed nodes */}
+                {computedNodes.length > 0 && (
+                  <div>
+                    <button
+                      className="flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground w-full mb-2"
+                      onClick={() => setSection('computed', !showComputed)}
+                    >
+                      {showComputed ? (
+                        <ChevronDown className="size-2.5" />
+                      ) : (
+                        <ChevronRight className="size-2.5" />
+                      )}
+                      Computed ({computedNodes.length})
+                      {computedOverrideCount > 0 && (
+                        <span className="ml-auto text-amber-600">
+                          {computedOverrideCount} pinned
+                        </span>
+                      )}
+                    </button>
+                    {showComputed && (
+                      <div className="space-y-3 pl-2">
+                        {computedNodes.map((node) => (
+                          <NodeField
+                            key={node.id}
+                            node={node}
+                            value={inputOverrides[node.id] ?? ''}
+                            onChange={(val) => setInputOverride(node.id, val)}
+                            onClear={() => clearInputOverride(node.id)}
+                            onBlur={runOnBlur}
+                            result={executionResults?.[node.id]?.value}
+                            colorScheme="override"
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── JSON ── */}
         <div className="p-4">
           <button
             className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider w-full"
-            onClick={() => setShowJson(!showJson)}
+            onClick={() => setSection('json', !showJson)}
           >
             {showJson ? (
               <ChevronDown className="size-3" />
             ) : (
               <ChevronRight className="size-3" />
             )}
-            JSON Input
+            JSON
           </button>
           {showJson && (
-            <div className="mt-3 space-y-2">
+            <div className="mt-2 space-y-2">
+              <div className="flex gap-1.5">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleExport}
+                  className="gap-1.5 h-7 text-xs flex-1"
+                >
+                  <Download className="size-3" />
+                  Generate
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleImport}
+                  className="gap-1.5 h-7 text-xs flex-1"
+                >
+                  <Upload className="size-3" />
+                  Apply
+                </Button>
+              </div>
               <Textarea
-                className="font-mono text-xs min-h-[120px]"
-                placeholder={'{\n  "variable_path": value,\n  ...\n}'}
+                className="font-mono text-xs min-h-[100px]"
+                placeholder={
+                  '{\n  "inputs": { "path": value },\n  "overrides": { "path": value }\n}'
+                }
                 value={jsonText}
                 onChange={(e) => {
                   setJsonText(e.target.value)
                   setJsonError(null)
                 }}
               />
-              {jsonError && (
-                <p className="text-xs text-red-600">{jsonError}</p>
-              )}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleJsonImport}
-                className="gap-1.5 h-7 text-xs"
-              >
-                <Upload className="size-3" />
-                Import to form
-              </Button>
+              {jsonError && <p className="text-xs text-red-600">{jsonError}</p>}
             </div>
           )}
         </div>
@@ -269,6 +457,7 @@ type NodeFieldProps = {
   result?: unknown
   required?: boolean
   defaultValue?: string
+  colorScheme?: 'input' | 'override'
 }
 
 function NodeField({
@@ -280,26 +469,32 @@ function NodeField({
   result,
   required,
   defaultValue,
+  colorScheme = 'input',
 }: NodeFieldProps) {
-  const content = node.content
-  const unit =
-    content.format === 'rac' && content.type === 'variable'
-      ? content.unit
-      : undefined
+  const typeHint = getTypeHint(node)
+  const hasValue = value !== ''
+
+  const ringClass = hasValue
+    ? colorScheme === 'input'
+      ? 'border-blue-400 ring-1 ring-blue-400'
+      : 'border-amber-400 ring-1 ring-amber-400'
+    : ''
 
   return (
     <div className="space-y-1">
       <div className="flex items-center justify-between">
         <label className="text-xs font-medium truncate" title={node.name}>
           {node.name}
-          {unit && (
-            <span className="ml-1 text-muted-foreground">({unit})</span>
+          {typeHint && (
+            <span className="ml-1 text-muted-foreground font-normal">
+              ({typeHint})
+            </span>
           )}
-          {required && !value && (
+          {required && !hasValue && (
             <span className="ml-1 text-red-400">*</span>
           )}
         </label>
-        {value !== '' && (
+        {hasValue && (
           <button
             className="text-muted-foreground hover:text-foreground"
             onClick={onClear}
@@ -309,10 +504,7 @@ function NodeField({
         )}
       </div>
       <Input
-        className={cn(
-          'h-7 text-xs font-mono',
-          value !== '' && 'border-amber-400 ring-1 ring-amber-400'
-        )}
+        className={cn('h-7 text-xs font-mono', ringClass)}
         placeholder={defaultValue ?? (required ? 'required' : 'default')}
         value={value}
         onChange={(e) => onChange(e.target.value)}
@@ -331,6 +523,15 @@ function NodeField({
 function getDefault(node: ModelNode): string | undefined {
   const c = node.content
   if (c.format === 'rac' && c.type === 'variable' && c.default) return c.default
+  if (
+    c.format === 'factGraph' &&
+    c.type === 'derived' &&
+    c.role === 'constant' &&
+    c.logic
+  ) {
+    const match = c.logic.match(/>([^<]+)<\//)
+    if (match) return match[1]
+  }
   return undefined
 }
 

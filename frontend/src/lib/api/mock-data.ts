@@ -19,6 +19,7 @@ const RAC_EITC_MODEL: Model = {
       id: 'rac-1',
       name: 'filing_status',
       dependencies: [],
+      overridable: true,
       description: "The taxpayer's filing status for the tax year.",
       tags: ['input', 'taxpayer'],
       content: {
@@ -35,6 +36,7 @@ const RAC_EITC_MODEL: Model = {
       id: 'rac-2',
       name: 'earned_income',
       dependencies: [],
+      overridable: true,
       description:
         'Total earned income from wages, salaries, and self-employment.',
       tags: ['input', 'income'],
@@ -53,6 +55,7 @@ const RAC_EITC_MODEL: Model = {
       id: 'rac-3',
       name: 'qualifying_children',
       dependencies: [],
+      overridable: true,
       description: 'Number of qualifying children for EITC purposes.',
       tags: ['input', 'dependents'],
       content: {
@@ -70,6 +73,7 @@ const RAC_EITC_MODEL: Model = {
       id: 'rac-4',
       name: 'agi',
       dependencies: ['rac-2'],
+      overridable: true,
       description: 'Adjusted Gross Income.',
       tags: ['computed', 'income'],
       content: {
@@ -89,6 +93,7 @@ const RAC_EITC_MODEL: Model = {
       id: 'rac-5',
       name: 'income_threshold',
       dependencies: ['rac-1', 'rac-3'],
+      overridable: true,
       description:
         'Maximum income threshold based on filing status and number of children.',
       tags: ['threshold', 'eligibility'],
@@ -120,6 +125,7 @@ const RAC_EITC_MODEL: Model = {
       id: 'rac-6',
       name: 'eitc_eligible',
       dependencies: ['rac-4', 'rac-5', 'rac-1'],
+      overridable: true,
       description: 'Whether the taxpayer is eligible for EITC.',
       tags: ['eligibility', 'output'],
       content: {
@@ -137,6 +143,7 @@ const RAC_EITC_MODEL: Model = {
       id: 'rac-7',
       name: 'credit_amount',
       dependencies: ['rac-6', 'rac-2', 'rac-3'],
+      overridable: true,
       description: 'The calculated EITC credit amount.',
       tags: ['output', 'credit'],
       content: {
@@ -155,6 +162,7 @@ const RAC_EITC_MODEL: Model = {
       id: 'rac-8',
       name: 'taxpayer',
       dependencies: [],
+      overridable: true,
       description: 'The taxpayer entity with basic demographic fields.',
       tags: ['entity'],
       content: {
@@ -182,6 +190,7 @@ const FG_STANDARD_DEDUCTION_MODEL: Model = {
       id: 'fg-1',
       name: 'filing_status',
       dependencies: [],
+      overridable: true,
       description: 'Filing status selected by the taxpayer.',
       content: {
         format: 'factGraph',
@@ -196,6 +205,7 @@ const FG_STANDARD_DEDUCTION_MODEL: Model = {
       id: 'fg-2',
       name: 'is_blind',
       dependencies: [],
+      overridable: true,
       description: 'Whether the primary filer is legally blind.',
       content: {
         format: 'factGraph',
@@ -209,6 +219,7 @@ const FG_STANDARD_DEDUCTION_MODEL: Model = {
       id: 'fg-3',
       name: 'date_of_birth',
       dependencies: [],
+      overridable: true,
       description: 'Primary filer date of birth.',
       content: {
         format: 'factGraph',
@@ -226,6 +237,7 @@ const FG_STANDARD_DEDUCTION_MODEL: Model = {
       id: 'fg-4',
       name: 'is_over_65',
       dependencies: ['fg-3'],
+      overridable: true,
       description:
         'Whether the primary filer is 65 or older by end of tax year.',
       content: {
@@ -240,6 +252,7 @@ const FG_STANDARD_DEDUCTION_MODEL: Model = {
       id: 'fg-5',
       name: 'base_standard_deduction',
       dependencies: ['fg-1'],
+      overridable: true,
       description: 'Base standard deduction amount before additional amounts.',
       content: {
         format: 'factGraph',
@@ -254,6 +267,7 @@ const FG_STANDARD_DEDUCTION_MODEL: Model = {
       id: 'fg-6',
       name: 'additional_deduction',
       dependencies: ['fg-1', 'fg-2', 'fg-4'],
+      overridable: true,
       description: 'Additional standard deduction for age 65+ or blindness.',
       content: {
         format: 'factGraph',
@@ -268,6 +282,7 @@ const FG_STANDARD_DEDUCTION_MODEL: Model = {
       id: 'fg-7',
       name: 'total_standard_deduction',
       dependencies: ['fg-5', 'fg-6'],
+      overridable: true,
       description: 'Total standard deduction (base + additional).',
       content: {
         format: 'factGraph',
