@@ -99,27 +99,8 @@ export function nodeElementId(id: string) {
   return `node-${id}`
 }
 
-function formatResultValue(value: unknown): string {
-  if (value === null || value === undefined) return 'null'
-  if (typeof value === 'boolean') return value ? 'true' : 'false'
-  if (typeof value === 'number') {
-    if (Number.isInteger(value)) return value.toLocaleString()
-    return value.toLocaleString(undefined, { maximumFractionDigits: 4 })
-  }
-  if (typeof value === 'string') return value
-  if (Array.isArray(value)) {
-    if (value.length === 0) return '[]'
-    return value
-      .map((v) => {
-        if (typeof v === 'boolean') return v ? 'T' : 'F'
-        if (typeof v === 'number')
-          return Number.isInteger(v) ? String(v) : v.toFixed(0)
-        return String(v)
-      })
-      .join(', ')
-  }
-  return String(value)
-}
+// Use shared format utilities
+import { formatBadgeValue as formatResultValue } from '@/lib/format'
 
 export function Node({ node }: NodeProps) {
   const {
@@ -132,9 +113,7 @@ export function Node({ node }: NodeProps) {
     setInputOverride,
     clearInputOverride,
     runOnBlur,
-    activeTestExpectations,
-    activeTestInputs,
-    activeTestComputedValues,
+    activeTest,
   } = useMainContext()
 
   const [isHovered, setIsHovered] = useState(false)
@@ -220,9 +199,9 @@ export function Node({ node }: NodeProps) {
         )}
 
         {/* Input nodes in test mode: show test value as read-only badge */}
-        {isInput && !isCollection && activeTestInputs && (() => {
+        {isInput && !isCollection && activeTest?.inputs && (() => {
           const nodePath = node.content.type !== 'entity' ? node.content.path : null
-          const testValue = nodePath ? activeTestInputs[nodePath] : undefined
+          const testValue = nodePath ? activeTest?.inputs[nodePath] : undefined
           if (testValue !== undefined) {
             return (
               <div className="mt-1.5 font-mono text-xs text-blue-700 bg-blue-50 rounded px-2 py-0.5 border border-blue-200">
@@ -234,7 +213,7 @@ export function Node({ node }: NodeProps) {
         })()}
 
         {/* Input nodes: prominent field, always visible (but not for collection-scoped or test mode) */}
-        {isInput && !isCollection && !activeTestExpectations && (
+        {isInput && !isCollection && !activeTest && (
           <div
             className="mt-2 flex items-center gap-1"
             onClick={(e) => e.stopPropagation()}
@@ -265,7 +244,7 @@ export function Node({ node }: NodeProps) {
         )}
 
         {/* Constants/computed: always reserve space, show field on hover (hidden in test mode) */}
-        {isEditable && !isInput && !activeTestExpectations && (
+        {isEditable && !isInput && !activeTest && (
           <div
             className={cn(
               'mt-1.5 flex items-center gap-1 h-5',
@@ -302,7 +281,7 @@ export function Node({ node }: NodeProps) {
         {/* Result value — with optional test expectation */}
         {(() => {
           const nodePath = node.content.type !== 'entity' ? node.content.path : null
-          const testExp = nodePath && activeTestExpectations ? activeTestExpectations[nodePath] : null
+          const testExp = nodePath && activeTest ? activeTest.expectations[nodePath] : null
 
           if (testExp) {
             return (
@@ -332,8 +311,8 @@ export function Node({ node }: NodeProps) {
           }
 
           // In test mode: show computed value from test run for nodes without expectations
-          if (activeTestComputedValues && nodePath) {
-            const computed = activeTestComputedValues[nodePath]
+          if (activeTest?.computedValues && nodePath) {
+            const computed = activeTest?.computedValues[nodePath]
             if (computed !== undefined) {
               return (
                 <div className="mt-2 font-mono rounded px-2 py-0.5 truncate max-w-36 text-center text-xs bg-gray-50 text-gray-600 border border-gray-200">
@@ -344,7 +323,7 @@ export function Node({ node }: NodeProps) {
           }
 
           // Normal execution result (non-test mode)
-          if (result && !activeTestExpectations) {
+          if (result && !activeTest) {
             return (
               <div
                 className={cn(

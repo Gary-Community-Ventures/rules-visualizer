@@ -11,6 +11,7 @@ import {
   Loader2,
   SlidersHorizontal,
   FlaskConical,
+  X,
   Calendar,
   ChevronLeft,
   ChevronRight,
@@ -156,7 +157,11 @@ export function ToolBar() {
     setRightBar,
     isExecuting,
     executionError,
+    executionResults,
     runExecution,
+    activeTest,
+    setActiveTest,
+    clearExecution,
   } = useMainContext()
   const [search, setSearch] = useState('')
   const anchorRef = useComboboxAnchor()
@@ -234,6 +239,28 @@ export function ToolBar() {
           >
             {executionError}
           </span>
+        )}
+        {/* Active run indicator */}
+        {activeTest && (
+          <button
+            className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground bg-muted/50 rounded px-2 h-7 shrink-0"
+            onClick={() => setActiveTest(null)}
+            title="Clear test view"
+          >
+            <FlaskConical className="size-3" />
+            <span className="truncate max-w-32">Test</span>
+            <X className="size-3" />
+          </button>
+        )}
+        {!activeTest && executionResults && (
+          <button
+            className="flex items-center gap-1.5 text-xs text-emerald-600 bg-emerald-50 rounded px-2 h-7 shrink-0"
+            onClick={clearExecution}
+            title="Clear execution results"
+          >
+            <span>{Object.keys(executionResults).length} results</span>
+            <X className="size-3" />
+          </button>
         )}
         <ButtonGroup>
           <Button

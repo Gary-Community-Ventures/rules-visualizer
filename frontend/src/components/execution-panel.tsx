@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react'
 import { cn } from '@/lib/utils'
+import { formatDisplayValue as formatValue } from '@/lib/format'
 import { useMainContext } from '@/context'
 import {
   getNodePath,
@@ -716,13 +717,3 @@ function EntityEditor({
   )
 }
 
-function formatValue(value: unknown): string {
-  if (value === null || value === undefined) return 'null'
-  if (Array.isArray(value)) {
-    if (value.length === 0) return '[]'
-    // Show per-member values inline
-    return value.map((v) => String(v)).join(', ')
-  }
-  if (typeof value === 'object') return JSON.stringify(value)
-  return String(value)
-}

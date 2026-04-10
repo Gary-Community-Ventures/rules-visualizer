@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { cn } from '@/lib/utils'
+import { formatDisplayValue } from '@/lib/format'
 import { useMainContext } from '@/context'
 import { getNodePath } from '@/context/model-context'
 import { Button } from './ui/button'
@@ -39,9 +40,7 @@ export function TestPanel() {
     setEntityData,
     setRightBar,
     asOfDate,
-    setActiveTestExpectations,
-    setActiveTestInputs,
-    setActiveTestComputedValues,
+    setActiveTest,
   } = useMainContext()
 
   const [tests, setTests] = useState<TestCase[]>([])
@@ -63,36 +62,33 @@ export function TestPanel() {
 
   // Clear graph state when panel closes
   useEffect(() => {
-    return () => {
-      setActiveTestExpectations(null)
-      setActiveTestInputs(null)
-      setActiveTestComputedValues(null)
-    }
-  }, [setActiveTestExpectations, setActiveTestInputs, setActiveTestComputedValues])
+    return () => setActiveTest(null)
+  }, [setActiveTest])
 
-  // When a test is selected, show expectations, inputs, and computed values on graph
+  // When a test is selected, load its state onto the graph
   useEffect(() => {
     if (!selectedTestId) {
-      setActiveTestExpectations(null)
-      setActiveTestInputs(null)
-      setActiveTestComputedValues(null)
+      setActiveTest(null)
       return
     }
     const test = tests.find((t) => t.id === selectedTestId)
     const result = results.find((r) => r.testId === selectedTestId)
-    if (result) {
-      setActiveTestExpectations(result.expectations)
-      setActiveTestComputedValues(result.computedValues ?? null)
+    if (test && result) {
+      setActiveTest({
+        expectations: result.expectations,
+        inputs: { ...(test.inputs ?? {}), ...(test.overrides ?? {}) },
+        computedValues: result.computedValues ?? {},
+      })
+    } else if (test) {
+      setActiveTest({
+        expectations: {},
+        inputs: { ...(test.inputs ?? {}), ...(test.overrides ?? {}) },
+        computedValues: {},
+      })
     } else {
-      setActiveTestExpectations(null)
-      setActiveTestComputedValues(null)
+      setActiveTest(null)
     }
-    if (test) {
-      setActiveTestInputs({ ...(test.inputs ?? {}), ...(test.overrides ?? {}) })
-    } else {
-      setActiveTestInputs(null)
-    }
-  }, [selectedTestId, tests, results, setActiveTestExpectations, setActiveTestInputs, setActiveTestComputedValues])
+  }, [selectedTestId, tests, results, setActiveTest])
 
   const handleRunAll = async () => {
     setIsRunning(true)
@@ -610,9 +606,9 @@ function EditableSection({
                 </div>
               ) : (
                 <div className="ml-4 flex gap-2">
-                  <span>= {JSON.stringify(value)}</span>
+                  <span>= {formatDisplayValue(value)}</span>
                   {exp && !exp.passed && (
-                    <span className="text-red-500">got {JSON.stringify(exp.actual)}</span>
+                    <span className="text-red-500">got {formatDisplayValue(exp.actual)}</span>
                   )}
                 </div>
               )}
