@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useFindNode, useMainContext } from '@/context'
 import {
   isInputNode,
@@ -360,22 +360,117 @@ type RowsProps = {
   rows: string[][]
 }
 
-export function Rows({ rows }: RowsProps) {
-  const { model } = useMainContext()
+// Module-level viewport store — avoids per-component state updates
+type Viewport = { top: number; left: number; bottom: number; right: number }
 
+let currentViewport: Viewport = { top: 0, left: 0, bottom: 2000, right: 2000 }
+const viewportListeners = new Set<() => void>()
+
+// One global listener that updates the viewport
+if (typeof window !== 'undefined') {
+  const margin = 400
+  const updateViewport = () => {
+    const container = document.querySelector('[data-pan-container]')
+    if (!container) return
+    const rect = container.getBoundingClientRect()
+    const inner = container.firstElementChild as HTMLElement | null
+    if (!inner) return
+    const style = getComputedStyle(inner)
+    const matrix = new DOMMatrix(style.transform)
+    const scale = matrix.a || 1
+    const offsetX = matrix.e
+    const offsetY = matrix.f
+    currentViewport = {
+      top: (-offsetY - margin) / scale,
+      left: (-offsetX - margin) / scale,
+      bottom: (-offsetY + rect.height + margin) / scale,
+      right: (-offsetX + rect.width + margin) / scale,
+    }
+    for (const cb of viewportListeners) cb()
+  }
+  window.addEventListener('transform', updateViewport)
+  window.addEventListener('resize', updateViewport)
+}
+
+function checkVisible(
+  el: HTMLElement,
+  size: { width: number; height: number } | null,
+  vp: Viewport
+) {
+  const top = el.offsetTop
+  const left = el.offsetLeft
+  const w = size?.width ?? el.offsetWidth
+  const h = size?.height ?? el.offsetHeight
+  return (
+    top + h > vp.top &&
+    top < vp.bottom &&
+    left + w > vp.left &&
+    left < vp.right
+  )
+}
+
+function useIsVisible(
+  ref: React.RefObject<HTMLDivElement | null>,
+  size: React.RefObject<{ width: number; height: number } | null>
+) {
+  const [visible, setVisible] = useState(true)
+
+  useEffect(() => {
+    const update = () => {
+      const el = ref.current
+      if (!el) return
+      const next = checkVisible(el, size.current, currentViewport)
+      setVisible((prev) => (prev === next ? prev : next))
+    }
+    update()
+    viewportListeners.add(update)
+    return () => { viewportListeners.delete(update) }
+  }, [ref, size])
+
+  return visible
+}
+
+export function Rows({ rows }: RowsProps) {
   return (
     <div className="flex flex-col gap-20">
-      {rows.map((row, i) => {
-        return (
-          <div key={i} className="flex gap-10 justify-center">
-            {row.map((id) => {
-              const node = model.nodes[id]
-              if (!node) return null
-              return <Node node={node} key={id} />
-            })}
-          </div>
-        )
-      })}
+      {rows.map((row, i) => (
+        <div key={i} className="flex gap-10 justify-center">
+          {row.map((id) => (
+            <VirtualNode key={id} id={id} />
+          ))}
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function VirtualNode({ id }: { id: string }) {
+  const { model } = useMainContext()
+  const node = model.nodes[id]
+  const ref = useRef<HTMLDivElement>(null)
+  const size = useRef<{ width: number; height: number } | null>(null)
+  const visible = useIsVisible(ref, size)
+
+  // Capture size when becoming invisible so placeholder keeps layout stable
+  const prevVisible = useRef(visible)
+  if (prevVisible.current && !visible && ref.current) {
+    const el = ref.current
+    if (el.offsetHeight > 0) {
+      size.current = { width: el.offsetWidth, height: el.offsetHeight }
+    }
+  }
+  prevVisible.current = visible
+
+  return (
+    <div
+      ref={ref}
+      style={
+        !visible && size.current
+          ? { minWidth: size.current.width, minHeight: size.current.height }
+          : undefined
+      }
+    >
+      {visible && node && <Node node={node} />}
     </div>
   )
 }

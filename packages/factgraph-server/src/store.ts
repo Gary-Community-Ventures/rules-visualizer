@@ -22,6 +22,15 @@ const rawFacts = new Map<string, RawFact[]>()
 export function loadFactGraphData(dataDir: string): void {
   const entries = fs.readdirSync(dataDir, { withFileTypes: true })
 
+  // Check if this directory has XML files directly (flat layout)
+  const hasDirectXml = entries.some(
+    (e) => e.isFile() && e.name.endsWith('.xml')
+  )
+  if (hasDirectXml) {
+    loadSingleRuleset(path.basename(dataDir), dataDir)
+  }
+
+  // Also check subdirectories (nested layout)
   for (const entry of entries) {
     if (!entry.isDirectory()) continue
     loadSingleRuleset(entry.name, path.join(dataDir, entry.name))

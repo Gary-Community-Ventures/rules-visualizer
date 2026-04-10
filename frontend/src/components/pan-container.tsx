@@ -142,9 +142,10 @@ export function PanContainer({ children, className }: PanContainerProps) {
   return (
     <div
       ref={containerRef}
+      data-pan-container
       className={cn(
         'relative overflow-hidden flex-1 z-[3]',
-        isPanning ? 'cursor-grabbing' : 'cursor-grab',
+        isPanning ? 'cursor-grabbing select-none' : 'cursor-grab',
         className
       )}
       onMouseDown={handleMouseDown}

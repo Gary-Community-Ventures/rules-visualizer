@@ -10,7 +10,7 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
 } from '@/components/ui/resizable'
-import { useEffect, type PropsWithChildren } from 'react'
+import { useEffect, useMemo, type PropsWithChildren } from 'react'
 import { AIPanel } from '@/components/ai-panel'
 import { ExecutionPanel } from '@/components/execution-panel'
 import { NodePanel, nodeElementId } from '@/components/node'
@@ -19,6 +19,11 @@ export function HomePage() {
   useKeyboardShortcuts()
   const { model, selectedNodes, showChildren, isLoading, error } =
     useMainContext()
+
+  const rows = useMemo(() => {
+    const visibleNodes = filterDisconnectedCollectionNodes(model.nodes)
+    return nodeRows(visibleNodes, showChildren, selectedNodes)
+  }, [model.nodes, showChildren, selectedNodes])
 
   if (isLoading) {
     return (
@@ -35,9 +40,6 @@ export function HomePage() {
       </div>
     )
   }
-
-  const visibleNodes = filterDisconnectedCollectionNodes(model.nodes)
-  const rows: string[][] = nodeRows(visibleNodes, showChildren, selectedNodes)
 
   return (
     <>
