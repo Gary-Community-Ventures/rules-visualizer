@@ -19,7 +19,7 @@ import { onReload } from '@/lib/api/live-reload'
 import { useLocalStorage } from '@/lib/use-local-storage'
 import { useAppContext } from './app-context'
 
-export type RightBarOptions = 'ai' | 'execution' | null
+export type RightBarOptions = 'ai' | 'execution' | 'tests' | null
 
 /** Check if a node is an "input" that users must provide values for */
 export function isInputNode(node: ModelNode): boolean {
@@ -212,6 +212,15 @@ type ModelContextValue = {
   clearExecution: () => void
   workspaceItems: string[]
   setWorkspaceItems: Dispatch<SetStateAction<string[]>>
+  // Test results displayed on graph (path → { expected, actual, passed })
+  activeTestExpectations: Record<string, { expected: unknown; actual: unknown; passed: boolean }> | null
+  setActiveTestExpectations: Dispatch<SetStateAction<Record<string, { expected: unknown; actual: unknown; passed: boolean }> | null>>
+  // All test input values for display on input nodes (path → value)
+  activeTestInputs: Record<string, unknown> | null
+  setActiveTestInputs: Dispatch<SetStateAction<Record<string, unknown> | null>>
+  // All computed values from the test run (path → value)
+  activeTestComputedValues: Record<string, unknown> | null
+  setActiveTestComputedValues: Dispatch<SetStateAction<Record<string, unknown> | null>>
 }
 
 const ModelContext = createContext<ModelContextValue | undefined>(undefined)
@@ -422,6 +431,15 @@ export function ModelProvider({
     `workspace:${rulesetId}`,
     []
   )
+  const [activeTestExpectations, setActiveTestExpectations] = useState<
+    Record<string, { expected: unknown; actual: unknown; passed: boolean }> | null
+  >(null)
+  const [activeTestInputs, setActiveTestInputs] = useState<
+    Record<string, unknown> | null
+  >(null)
+  const [activeTestComputedValues, setActiveTestComputedValues] = useState<
+    Record<string, unknown> | null
+  >(null)
 
   const loadModel = useCallback(() => {
     setIsLoading(true)
@@ -513,6 +531,12 @@ export function ModelProvider({
       clearExecution,
       workspaceItems,
       setWorkspaceItems,
+      activeTestExpectations,
+      setActiveTestExpectations,
+      activeTestInputs,
+      setActiveTestInputs,
+      activeTestComputedValues,
+      setActiveTestComputedValues,
     }),
     [
       model,
@@ -552,6 +576,12 @@ export function ModelProvider({
       clearExecution,
       workspaceItems,
       setWorkspaceItems,
+      activeTestExpectations,
+      setActiveTestExpectations,
+      activeTestInputs,
+      setActiveTestInputs,
+      activeTestComputedValues,
+      setActiveTestComputedValues,
     ]
   )
 

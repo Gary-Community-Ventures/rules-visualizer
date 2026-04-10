@@ -21,6 +21,8 @@ import {
   BookOpen,
   Trash2,
   Check,
+  CheckCircle,
+  XCircle,
   Bookmark,
   BookmarkCheck,
 } from 'lucide-react'
@@ -130,6 +132,9 @@ export function Node({ node }: NodeProps) {
     setInputOverride,
     clearInputOverride,
     runOnBlur,
+    activeTestExpectations,
+    activeTestInputs,
+    activeTestComputedValues,
   } = useMainContext()
 
   const [isHovered, setIsHovered] = useState(false)
@@ -214,8 +219,22 @@ export function Node({ node }: NodeProps) {
           </span>
         )}
 
-        {/* Input nodes: prominent field, always visible (but not for collection-scoped) */}
-        {isInput && !isCollection && (
+        {/* Input nodes in test mode: show test value as read-only badge */}
+        {isInput && !isCollection && activeTestInputs && (() => {
+          const nodePath = node.content.type !== 'entity' ? node.content.path : null
+          const testValue = nodePath ? activeTestInputs[nodePath] : undefined
+          if (testValue !== undefined) {
+            return (
+              <div className="mt-1.5 font-mono text-xs text-blue-700 bg-blue-50 rounded px-2 py-0.5 border border-blue-200">
+                {formatResultValue(testValue)}
+              </div>
+            )
+          }
+          return null
+        })()}
+
+        {/* Input nodes: prominent field, always visible (but not for collection-scoped or test mode) */}
+        {isInput && !isCollection && !activeTestExpectations && (
           <div
             className="mt-2 flex items-center gap-1"
             onClick={(e) => e.stopPropagation()}
@@ -245,8 +264,8 @@ export function Node({ node }: NodeProps) {
           </div>
         )}
 
-        {/* Constants/computed: always reserve space, show field on hover */}
-        {isEditable && !isInput && (
+        {/* Constants/computed: always reserve space, show field on hover (hidden in test mode) */}
+        {isEditable && !isInput && !activeTestExpectations && (
           <div
             className={cn(
               'mt-1.5 flex items-center gap-1 h-5',
@@ -280,17 +299,66 @@ export function Node({ node }: NodeProps) {
           </div>
         )}
 
-        {/* Result value — clear colored badge */}
-        {result && (
-          <div
-            className={cn(
-              'mt-2 font-mono rounded px-2 py-0.5 truncate max-w-36 text-center',
-              'text-xs bg-emerald-50 text-emerald-800 border border-emerald-200'
-            )}
-          >
-            {formatResultValue(result.value)}
-          </div>
-        )}
+        {/* Result value — with optional test expectation */}
+        {(() => {
+          const nodePath = node.content.type !== 'entity' ? node.content.path : null
+          const testExp = nodePath && activeTestExpectations ? activeTestExpectations[nodePath] : null
+
+          if (testExp) {
+            return (
+              <div
+                className={cn(
+                  'mt-2 font-mono rounded px-2 py-0.5 max-w-44 text-center text-xs border',
+                  testExp.passed
+                    ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                    : 'bg-red-50 text-red-800 border-red-200'
+                )}
+              >
+                <div className="flex items-center gap-1 justify-center">
+                  {testExp.passed ? (
+                    <CheckCircle className="size-3 text-emerald-600 shrink-0" />
+                  ) : (
+                    <XCircle className="size-3 text-red-600 shrink-0" />
+                  )}
+                  <span className="truncate">{formatResultValue(testExp.actual)}</span>
+                </div>
+                {!testExp.passed && (
+                  <div className="text-[10px] text-red-500 truncate">
+                    expected {formatResultValue(testExp.expected)}
+                  </div>
+                )}
+              </div>
+            )
+          }
+
+          // In test mode: show computed value from test run for nodes without expectations
+          if (activeTestComputedValues && nodePath) {
+            const computed = activeTestComputedValues[nodePath]
+            if (computed !== undefined) {
+              return (
+                <div className="mt-2 font-mono rounded px-2 py-0.5 truncate max-w-36 text-center text-xs bg-gray-50 text-gray-600 border border-gray-200">
+                  {formatResultValue(computed)}
+                </div>
+              )
+            }
+          }
+
+          // Normal execution result (non-test mode)
+          if (result && !activeTestExpectations) {
+            return (
+              <div
+                className={cn(
+                  'mt-2 font-mono rounded px-2 py-0.5 truncate max-w-36 text-center',
+                  'text-xs bg-emerald-50 text-emerald-800 border border-emerald-200'
+                )}
+              >
+                {formatResultValue(result.value)}
+              </div>
+            )
+          }
+
+          return null
+        })()}
       </div>
       {hasChildren && (
         <Button

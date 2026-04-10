@@ -429,13 +429,258 @@ async def cors_middleware(request: web.Request, handler: Any) -> web.Response:
             status=204,
             headers={
                 "Access-Control-Allow-Origin": "*",
-                "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+                "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
                 "Access-Control-Allow-Headers": "Content-Type",
             },
         )
     response = await handler(request)
     response.headers["Access-Control-Allow-Origin"] = "*"
     return response
+
+
+# --- Test CRUD + runner ---
+
+
+def _tests_path(ruleset_id: str) -> Path | None:
+    rac_dir = _ruleset_dirs.get(ruleset_id)
+    if not rac_dir:
+        return None
+    return Path(rac_dir) / "tests.json"
+
+
+def _read_tests(ruleset_id: str) -> list[dict]:
+    p = _tests_path(ruleset_id)
+    if not p or not p.exists():
+        return []
+    try:
+        return json.loads(p.read_text())
+    except Exception:
+        return []
+
+
+def _write_tests(ruleset_id: str, tests: list[dict]) -> None:
+    p = _tests_path(ruleset_id)
+    if p:
+        p.write_text(json.dumps(tests, indent=2))
+
+
+def _compare_values(expected: Any, actual: Any, tolerance: float = 0.01) -> bool:
+    if expected == actual:
+        return True
+    if expected is None or actual is None:
+        return False
+    if isinstance(expected, bool) or isinstance(actual, bool):
+        return expected == actual
+    if isinstance(expected, (int, float)) and isinstance(actual, (int, float)):
+        return abs(float(expected) - float(actual)) <= tolerance
+    if isinstance(expected, list) and isinstance(actual, list):
+        if len(expected) != len(actual):
+            return False
+        return all(_compare_values(e, a, tolerance) for e, a in zip(expected, actual))
+    return str(expected) == str(actual)
+
+
+async def handle_tests_list(request: web.Request) -> web.Response:
+    ruleset_id = request.match_info["id"]
+    if ruleset_id not in _rulesets:
+        return _json_response({"error": "Ruleset not found"}, status=404)
+    return _json_response({"tests": _read_tests(ruleset_id)})
+
+
+async def handle_tests_create(request: web.Request) -> web.Response:
+    ruleset_id = request.match_info["id"]
+    if ruleset_id not in _rulesets:
+        return _json_response({"error": "Ruleset not found"}, status=404)
+    body = await request.json()
+    import uuid
+
+    tests = _read_tests(ruleset_id)
+    new_test = {
+        "id": str(uuid.uuid4()),
+        "name": body.get("name", "Untitled test"),
+        "description": body.get("description"),
+        "asOf": body.get("asOf"),
+        "inputs": body.get("inputs", {}),
+        "entities": body.get("entities"),
+        "overrides": body.get("overrides"),
+        "expect": body.get("expect", {}),
+    }
+    tests.append(new_test)
+    _write_tests(ruleset_id, tests)
+    return _json_response(new_test)
+
+
+async def handle_tests_update(request: web.Request) -> web.Response:
+    ruleset_id = request.match_info["id"]
+    test_id = request.match_info["testId"]
+    tests = _read_tests(ruleset_id)
+    body = await request.json()
+    for i, t in enumerate(tests):
+        if t["id"] == test_id:
+            tests[i] = {**t, **body, "id": test_id}
+            _write_tests(ruleset_id, tests)
+            return _json_response(tests[i])
+    return _json_response({"error": "Test not found"}, status=404)
+
+
+async def handle_tests_delete(request: web.Request) -> web.Response:
+    ruleset_id = request.match_info["id"]
+    test_id = request.match_info["testId"]
+    tests = _read_tests(ruleset_id)
+    before = len(tests)
+    tests = [t for t in tests if t["id"] != test_id]
+    if len(tests) == before:
+        return _json_response({"error": "Test not found"}, status=404)
+    _write_tests(ruleset_id, tests)
+    return _json_response({"success": True})
+
+
+async def handle_tests_run(request: web.Request) -> web.Response:
+    """Run tests for a ruleset and compare expectations."""
+    ruleset_id = request.match_info["id"]
+    if ruleset_id not in _rulesets:
+        return _json_response({"error": "Ruleset not found"}, status=404)
+
+    ir = _compiled_irs.get(ruleset_id)
+    if ir is None:
+        return _json_response({"error": "Ruleset not compilable"}, status=400)
+
+    body = await request.json() if request.can_read_body else {}
+    test_ids = body.get("testIds")
+    tests = _read_tests(ruleset_id)
+    if test_ids:
+        tests = [t for t in tests if t["id"] in test_ids]
+
+    results = []
+    for test in tests:
+        try:
+            # Build a fake request-like execute call
+            as_of_str = test.get("asOf")
+            scalar_inputs = {**(test.get("inputs") or {}), **(test.get("overrides") or {})}
+            entity_tables = test.get("entities") or {}
+
+            # Recompile if as_of is specified
+            effective_ir = ir
+            if as_of_str:
+                try:
+                    from datetime import date as date_cls
+                    as_of = date_cls.fromisoformat(as_of_str)
+                    rac_dir = _ruleset_dirs.get(ruleset_id)
+                    if rac_dir:
+                        from .parser import parse_rac_directory
+                        _, recompiled = parse_rac_directory(rac_dir, ruleset_id, as_of=as_of)
+                        if recompiled:
+                            effective_ir = recompiled
+                except Exception:
+                    pass
+
+            # Execute (reuse the same logic as handle_ruleset_execute)
+            import copy
+            from rac.executor import Context, evaluate, Data
+            from rac.schema import Data as SchemaData
+
+            patched_ir = copy.deepcopy(effective_ir) if scalar_inputs else effective_ir
+            for var_path, value in scalar_inputs.items():
+                if var_path in patched_ir.variables:
+                    var = patched_ir.variables[var_path]
+                    vd = var.model_dump()
+                    expr = vd.get("expr")
+                    if expr and expr.get("type") == "literal":
+                        var.expr.value = value
+
+            data = SchemaData(tables=entity_tables) if entity_tables else SchemaData(tables={})
+            ctx = Context(data=data)
+
+            model = _rulesets.get(ruleset_id, {})
+            for node in model.get("nodes", {}).values():
+                c = node.get("content", {})
+                if c.get("role") != "input":
+                    continue
+                if c.get("entity"):
+                    continue
+                var_path = c.get("path")
+                if not var_path or var_path in patched_ir.variables:
+                    continue
+                raw = c.get("default")
+                ctx.computed[var_path] = _parse_default(raw)
+
+            for var_path, value in scalar_inputs.items():
+                ctx.computed[var_path] = value
+
+            entities: dict[str, dict[str, list]] = {}
+            deferred_scalars: list[str] = []
+            for path in patched_ir.order:
+                var = patched_ir.variables[path]
+                if var.entity is None:
+                    if path not in ctx.computed:
+                        try:
+                            ctx.computed[path] = evaluate(var.expr, ctx)
+                        except Exception:
+                            deferred_scalars.append(path)
+                else:
+                    entity_name = var.entity
+                    rows = data.get_rows(entity_name)
+                    if entity_name not in entities:
+                        entities[entity_name] = {}
+                    entities[entity_name][path] = []
+                    for i, row in enumerate(rows):
+                        augmented = dict(row)
+                        for prev_path, prev_vals in entities.get(entity_name, {}).items():
+                            if len(prev_vals) > i:
+                                augmented[prev_path] = prev_vals[i]
+                        ctx.current_row = augmented
+                        ctx.current_entity = entity_name
+                        val = evaluate(var.expr, ctx)
+                        entities[entity_name][path].append(val)
+                        ctx.current_row = None
+                        ctx.current_entity = None
+
+            for entity_name, fields in entities.items():
+                for path, values in fields.items():
+                    ctx.computed[path] = values
+            for path in deferred_scalars:
+                if path not in ctx.computed:
+                    ctx.computed[path] = evaluate(patched_ir.variables[path].expr, ctx)
+
+            # Build path results (scalars + entity arrays)
+            path_results: dict[str, Any] = {}
+            for path, value in ctx.computed.items():
+                path_results[path] = _serialize_value(value)
+            for entity_name, fields in entities.items():
+                for path, values in fields.items():
+                    path_results[path] = [_serialize_value(v) for v in values]
+
+            # Compare expectations
+            expectations: dict[str, dict[str, Any]] = {}
+            all_passed = True
+            for expect_path, expected_value in test.get("expect", {}).items():
+                actual = path_results.get(expect_path)
+                passed = _compare_values(expected_value, actual)
+                expectations[expect_path] = {
+                    "expected": expected_value,
+                    "actual": actual,
+                    "passed": passed,
+                }
+                if not passed:
+                    all_passed = False
+
+            results.append({
+                "testId": test["id"],
+                "name": test["name"],
+                "passed": all_passed,
+                "expectations": expectations,
+                "computedValues": path_results,
+            })
+        except Exception as e:
+            results.append({
+                "testId": test["id"],
+                "name": test["name"],
+                "passed": False,
+                "error": str(e),
+                "expectations": {},
+            })
+
+    return _json_response({"results": results})
 
 
 def _create_app() -> web.Application:
@@ -447,6 +692,15 @@ def _create_app() -> web.Application:
     app.router.add_get("/api/rulesets/{id}", handle_ruleset_get)
     app.router.add_get("/api/rulesets/{id}/inputs", handle_ruleset_inputs)
     app.router.add_post("/api/rulesets/{id}/execute", handle_ruleset_execute)
+
+    # Tests
+    app.router.add_get("/api/rulesets/{id}/tests", handle_tests_list)
+    app.router.add_post("/api/rulesets/{id}/tests", handle_tests_create)
+    app.router.add_put("/api/rulesets/{id}/tests/{testId}", handle_tests_update)
+    app.router.add_delete(
+        "/api/rulesets/{id}/tests/{testId}", handle_tests_delete
+    )
+    app.router.add_post("/api/rulesets/{id}/tests/run", handle_tests_run)
 
     # WebSocket
     app.router.add_get("/ws", handle_ws)

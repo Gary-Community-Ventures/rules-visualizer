@@ -10,6 +10,7 @@ import {
   Sparkles,
   Loader2,
   SlidersHorizontal,
+  FlaskConical,
   Calendar,
   ChevronLeft,
   ChevronRight,
@@ -262,6 +263,16 @@ export function ToolBar() {
             <SlidersHorizontal className="size-4" />
           </Button>
         </ButtonGroup>
+        <Button
+          variant={rightBar === 'tests' ? 'default' : 'outline'}
+          size="icon"
+          title="Tests"
+          onClick={() =>
+            setRightBar(rightBar === 'tests' ? null : 'tests')
+          }
+        >
+          <FlaskConical className="size-4" />
+        </Button>
         <Button
           variant={rightBar === 'ai' ? 'default' : 'outline'}
           size="icon"

@@ -4,7 +4,7 @@ import { Rows } from '@/components/node'
 import { Arrows } from '@/components/arrows'
 import { ToolBar } from '@/components/tool-bar'
 import { PanContainer } from '@/components/pan-container'
-import { nodeRows, filterDisconnectedCollectionNodes } from '@/lib/graph'
+import { nodeRows } from '@/lib/graph'
 import {
   ResizableHandle,
   ResizablePanel,
@@ -13,6 +13,7 @@ import {
 import { useEffect, type PropsWithChildren } from 'react'
 import { AIPanel } from '@/components/ai-panel'
 import { ExecutionPanel } from '@/components/execution-panel'
+import { TestPanel } from '@/components/test-panel'
 import { NodePanel, nodeElementId } from '@/components/node'
 
 export function HomePage() {
@@ -36,8 +37,7 @@ export function HomePage() {
     )
   }
 
-  const visibleNodes = filterDisconnectedCollectionNodes(model.nodes)
-  const rows: string[][] = nodeRows(visibleNodes, showChildren, selectedNodes)
+  const rows: string[][] = nodeRows(model.nodes, showChildren, selectedNodes)
 
   return (
     <>
@@ -115,6 +115,7 @@ export function NodeMapLayout({ children }: PropsWithChildren) {
           >
             {rightBar === 'ai' && <AIPanel />}
             {rightBar === 'execution' && <ExecutionPanel />}
+            {rightBar === 'tests' && <TestPanel />}
           </ResizablePanel>
         </>
       )}

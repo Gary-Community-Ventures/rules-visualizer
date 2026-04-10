@@ -1,0 +1,668 @@
+import { useState, useEffect, useCallback } from 'react'
+import { cn } from '@/lib/utils'
+import { useMainContext } from '@/context'
+import { getNodePath } from '@/context/model-context'
+import { Button } from './ui/button'
+import { Input } from './ui/input'
+import {
+  Play,
+  Loader2,
+  Trash2,
+  ChevronDown,
+  ChevronRight,
+  Plus,
+  Copy,
+  Check,
+  X,
+  CheckCircle,
+  XCircle,
+  ArrowRight,
+  Pencil,
+} from 'lucide-react'
+import {
+  listTests,
+  createTest,
+  updateTest,
+  deleteTest,
+  runTests,
+  type TestCase,
+  type TestRunResult,
+} from '@/lib/api/rules-api'
+
+export function TestPanel() {
+  const {
+    model,
+    inputOverrides,
+    entityData,
+    executionResults,
+    setInputOverride,
+    setEntityData,
+    setRightBar,
+    asOfDate,
+    setActiveTestExpectations,
+    setActiveTestInputs,
+    setActiveTestComputedValues,
+  } = useMainContext()
+
+  const [tests, setTests] = useState<TestCase[]>([])
+  const [results, setResults] = useState<TestRunResult[]>([])
+  const [isRunning, setIsRunning] = useState(false)
+  const [expandedTest, setExpandedTest] = useState<string | null>(null)
+  const [selectedTestId, setSelectedTestId] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
+
+  const loadTests = useCallback(() => {
+    listTests(model.id)
+      .then(setTests)
+      .catch(() => setTests([]))
+  }, [model.id])
+
+  useEffect(() => {
+    loadTests()
+  }, [loadTests])
+
+  // Clear graph state when panel closes
+  useEffect(() => {
+    return () => {
+      setActiveTestExpectations(null)
+      setActiveTestInputs(null)
+      setActiveTestComputedValues(null)
+    }
+  }, [setActiveTestExpectations, setActiveTestInputs, setActiveTestComputedValues])
+
+  // When a test is selected, show expectations, inputs, and computed values on graph
+  useEffect(() => {
+    if (!selectedTestId) {
+      setActiveTestExpectations(null)
+      setActiveTestInputs(null)
+      setActiveTestComputedValues(null)
+      return
+    }
+    const test = tests.find((t) => t.id === selectedTestId)
+    const result = results.find((r) => r.testId === selectedTestId)
+    if (result) {
+      setActiveTestExpectations(result.expectations)
+      setActiveTestComputedValues(result.computedValues ?? null)
+    } else {
+      setActiveTestExpectations(null)
+      setActiveTestComputedValues(null)
+    }
+    if (test) {
+      setActiveTestInputs({ ...(test.inputs ?? {}), ...(test.overrides ?? {}) })
+    } else {
+      setActiveTestInputs(null)
+    }
+  }, [selectedTestId, tests, results, setActiveTestExpectations, setActiveTestInputs, setActiveTestComputedValues])
+
+  const handleRunAll = async () => {
+    setIsRunning(true)
+    setError(null)
+    try {
+      const r = await runTests(model.id)
+      setResults(r)
+      // Auto-select first failed test, or first test
+      const failed = r.find((t) => !t.passed)
+      setSelectedTestId(failed?.testId ?? r[0]?.testId ?? null)
+    } catch (e) {
+      setError((e as Error).message)
+    } finally {
+      setIsRunning(false)
+    }
+  }
+
+  const handleRunOne = async (testId: string) => {
+    setIsRunning(true)
+    setError(null)
+    try {
+      const r = await runTests(model.id, [testId])
+      setResults((prev) => {
+        const next = prev.filter((p) => p.testId !== testId)
+        return [...next, ...r]
+      })
+      setSelectedTestId(testId)
+    } catch (e) {
+      setError((e as Error).message)
+    } finally {
+      setIsRunning(false)
+    }
+  }
+
+  const handleSaveAsTest = async () => {
+    const inputs: Record<string, unknown> = {}
+    const overrides: Record<string, unknown> = {}
+    for (const [nodeId, rawValue] of Object.entries(inputOverrides)) {
+      if (rawValue === '') continue
+      const node = model.nodes[nodeId]
+      if (!node) continue
+      const path = getNodePath(node.content)
+      if (!path) continue
+      let value: unknown
+      try { value = JSON.parse(rawValue) } catch { value = rawValue }
+      if (node.content.type !== 'entity' && node.content.role === 'input') {
+        inputs[path] = value
+      } else {
+        overrides[path] = value
+      }
+    }
+
+    const expect: Record<string, unknown> = {}
+    if (executionResults) {
+      for (const [nodeId, result] of Object.entries(executionResults)) {
+        const node = model.nodes[nodeId]
+        if (!node) continue
+        const path = getNodePath(node.content)
+        if (path) expect[path] = result.value
+      }
+    }
+
+    const entities = Object.keys(entityData).length > 0
+      ? Object.fromEntries(
+          Object.entries(entityData).map(([entity, rows]) => [
+            entity,
+            rows.map((row) => {
+              const parsed: Record<string, unknown> = {}
+              for (const [key, val] of Object.entries(row)) {
+                if (val === '') continue
+                try { parsed[key] = JSON.parse(val) } catch { parsed[key] = val }
+              }
+              return parsed
+            }),
+          ])
+        )
+      : undefined
+
+    try {
+      const newTest = await createTest(model.id, {
+        name: `Test ${tests.length + 1}`,
+        asOf: model.format === 'rac' ? asOfDate : undefined,
+        inputs: Object.keys(inputs).length > 0 ? inputs : undefined,
+        entities,
+        overrides: Object.keys(overrides).length > 0 ? overrides : undefined,
+        expect,
+      })
+      setTests((prev) => [...prev, newTest])
+      setExpandedTest(newTest.id)
+      setSelectedTestId(newTest.id)
+    } catch (e) {
+      setError((e as Error).message)
+    }
+  }
+
+  const handleDuplicate = async (test: TestCase) => {
+    try {
+      const newTest = await createTest(model.id, {
+        name: `${test.name} (copy)`,
+        asOf: test.asOf,
+        inputs: test.inputs,
+        entities: test.entities,
+        overrides: test.overrides,
+        expect: test.expect,
+      })
+      setTests((prev) => [...prev, newTest])
+      setExpandedTest(newTest.id)
+    } catch (e) {
+      setError((e as Error).message)
+    }
+  }
+
+  const handleDelete = async (testId: string) => {
+    try {
+      await deleteTest(model.id, testId)
+      setTests((prev) => prev.filter((t) => t.id !== testId))
+      setResults((prev) => prev.filter((r) => r.testId !== testId))
+      if (selectedTestId === testId) setSelectedTestId(null)
+    } catch (e) {
+      setError((e as Error).message)
+    }
+  }
+
+  const handleUpdateTest = async (testId: string, updates: Partial<TestCase>) => {
+    try {
+      const updated = await updateTest(model.id, testId, updates)
+      setTests((prev) => prev.map((t) => (t.id === testId ? updated : t)))
+      // Auto-rerun the updated test
+      handleRunOne(testId)
+    } catch (e) {
+      setError((e as Error).message)
+    }
+  }
+
+  const handleLoadIntoExecution = (test: TestCase) => {
+    for (const [path, value] of Object.entries(test.inputs ?? {})) {
+      for (const [nodeId, node] of Object.entries(model.nodes)) {
+        if (getNodePath(node.content) === path) {
+          setInputOverride(nodeId, typeof value === 'string' ? value : JSON.stringify(value))
+          break
+        }
+      }
+    }
+    for (const [path, value] of Object.entries(test.overrides ?? {})) {
+      for (const [nodeId, node] of Object.entries(model.nodes)) {
+        if (getNodePath(node.content) === path) {
+          setInputOverride(nodeId, typeof value === 'string' ? value : JSON.stringify(value))
+          break
+        }
+      }
+    }
+    if (test.entities) {
+      const ed: Record<string, Record<string, string>[]> = {}
+      for (const [entity, rows] of Object.entries(test.entities)) {
+        ed[entity] = rows.map((row) => {
+          const stringRow: Record<string, string> = {}
+          for (const [key, val] of Object.entries(row)) {
+            stringRow[key] = typeof val === 'string' ? val : JSON.stringify(val)
+          }
+          return stringRow
+        })
+      }
+      setEntityData(ed)
+    }
+    setRightBar('execution')
+  }
+
+  // Build available path options for dropdowns
+  const inputPaths: { path: string; name: string }[] = []
+  const allPaths: { path: string; name: string }[] = []
+  for (const node of Object.values(model.nodes)) {
+    const path = getNodePath(node.content)
+    if (!path) continue
+    allPaths.push({ path, name: node.name })
+    if (node.content.type !== 'entity' && node.content.role === 'input') {
+      inputPaths.push({ path, name: node.name })
+    }
+    if (node.content.type !== 'entity' && node.content.role === 'constant') {
+      inputPaths.push({ path, name: `${node.name} (override)` })
+    }
+  }
+
+  const passCount = results.filter((r) => r.passed).length
+  const failCount = results.filter((r) => !r.passed).length
+
+  return (
+    <div className="flex flex-col h-full bg-background">
+      <div className="flex items-center justify-between px-4 py-3 border-b shrink-0">
+        <h2 className="text-sm font-semibold">Tests</h2>
+        <div className="flex gap-1.5">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleSaveAsTest}
+            disabled={!executionResults}
+            className="h-7 text-xs gap-1"
+            title="Save current execution as a test"
+          >
+            <Plus className="size-3" />
+            Save
+          </Button>
+          <Button
+            size="sm"
+            onClick={handleRunAll}
+            disabled={isRunning || tests.length === 0}
+            className="h-7 gap-1"
+          >
+            {isRunning ? <Loader2 className="size-3 animate-spin" /> : <Play className="size-3" />}
+            Run all
+          </Button>
+        </div>
+      </div>
+
+      {results.length > 0 && (
+        <div className={cn('px-4 py-2 text-xs border-b', failCount === 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700')}>
+          {passCount} passed, {failCount} failed
+        </div>
+      )}
+
+      {error && <div className="px-4 py-2 bg-red-50 text-red-700 text-xs border-b">{error}</div>}
+
+      <div className="flex-1 overflow-y-auto">
+        {tests.length === 0 ? (
+          <div className="p-4 text-sm text-muted-foreground text-center">
+            No tests yet. Run some inputs and click "Save" to create one.
+          </div>
+        ) : (
+          <div className="divide-y">
+            {tests.map((test) => (
+              <TestItem
+                key={test.id}
+                test={test}
+                result={results.find((r) => r.testId === test.id)}
+                isExpanded={expandedTest === test.id}
+                isSelected={selectedTestId === test.id}
+                onToggle={() => setExpandedTest(expandedTest === test.id ? null : test.id)}
+                onSelect={() => {
+                  if (selectedTestId === test.id) {
+                    setSelectedTestId(null)
+                  } else {
+                    setSelectedTestId(test.id)
+                    setExpandedTest(test.id)
+                    // Run the test so results show on graph
+                    handleRunOne(test.id)
+                  }
+                }}
+                onRun={() => handleRunOne(test.id)}
+                onDuplicate={() => handleDuplicate(test)}
+                onDelete={() => handleDelete(test.id)}
+                onLoadIntoExecution={() => handleLoadIntoExecution(test)}
+                onUpdate={(updates) => handleUpdateTest(test.id, updates)}
+                isRunning={isRunning}
+                inputPaths={inputPaths}
+                allPaths={allPaths}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+type TestItemProps = {
+  test: TestCase
+  result?: TestRunResult
+  isExpanded: boolean
+  isSelected: boolean
+  onToggle: () => void
+  onSelect: () => void
+  onRun: () => void
+  onDuplicate: () => void
+  onDelete: () => void
+  onLoadIntoExecution: () => void
+  onUpdate: (updates: Partial<TestCase>) => void
+  isRunning: boolean
+  inputPaths: { path: string; name: string }[]
+  allPaths: { path: string; name: string }[]
+}
+
+function TestItem({
+  test, result, isExpanded, isSelected, onToggle, onSelect,
+  onRun, onDuplicate, onDelete, onLoadIntoExecution, onUpdate, isRunning,
+  inputPaths, allPaths,
+}: TestItemProps) {
+  const [editingName, setEditingName] = useState(false)
+  const [nameValue, setNameValue] = useState(test.name)
+  const [editingField, setEditingField] = useState<{ section: 'input' | 'expect'; path: string } | null>(null)
+  const [fieldValue, setFieldValue] = useState('')
+  const [addingField, setAddingField] = useState<'input' | 'expect' | null>(null)
+  const [newPath, setNewPath] = useState('')
+  const [newValue, setNewValue] = useState('')
+
+  const saveName = () => {
+    if (nameValue.trim() && nameValue !== test.name) {
+      onUpdate({ name: nameValue.trim() })
+    }
+    setEditingName(false)
+  }
+
+  const saveField = (section: 'input' | 'expect', path: string) => {
+    try {
+      const parsed = JSON.parse(fieldValue)
+      if (section === 'expect') {
+        onUpdate({ expect: { ...test.expect, [path]: parsed } })
+      } else {
+        onUpdate({ inputs: { ...(test.inputs ?? {}), [path]: parsed } })
+      }
+    } catch {
+      // Try as string
+      if (section === 'expect') {
+        onUpdate({ expect: { ...test.expect, [path]: fieldValue } })
+      } else {
+        onUpdate({ inputs: { ...(test.inputs ?? {}), [path]: fieldValue } })
+      }
+    }
+    setEditingField(null)
+  }
+
+  const removeField = (section: 'input' | 'expect', path: string) => {
+    if (section === 'expect') {
+      const next = { ...test.expect }
+      delete next[path]
+      onUpdate({ expect: next })
+    } else {
+      const next = { ...(test.inputs ?? {}) }
+      delete next[path]
+      onUpdate({ inputs: next })
+    }
+  }
+
+  const addField = (section: 'input' | 'expect') => {
+    if (!newPath.trim()) return
+    let parsed: unknown
+    try { parsed = JSON.parse(newValue) } catch { parsed = newValue }
+    if (section === 'expect') {
+      onUpdate({ expect: { ...test.expect, [newPath.trim()]: parsed } })
+    } else {
+      onUpdate({ inputs: { ...(test.inputs ?? {}), [newPath.trim()]: parsed } })
+    }
+    setNewPath('')
+    setNewValue('')
+    setAddingField(null)
+  }
+
+  return (
+    <div className={cn('px-4 py-2', isSelected && 'bg-blue-50/50')}>
+      <div className="flex items-center gap-2">
+        <button className="flex items-center gap-1.5 flex-1 text-left min-w-0" onClick={() => { onSelect(); onToggle() }}>
+          {isExpanded ? <ChevronDown className="size-3 text-muted-foreground shrink-0" /> : <ChevronRight className="size-3 text-muted-foreground shrink-0" />}
+          {result && (result.passed ? <CheckCircle className="size-3.5 text-emerald-600 shrink-0" /> : <XCircle className="size-3.5 text-red-600 shrink-0" />)}
+          {editingName ? (
+            <Input
+              className="h-5 text-xs flex-1"
+              value={nameValue}
+              onChange={(e) => setNameValue(e.target.value)}
+              onBlur={saveName}
+              onKeyDown={(e) => { if (e.key === 'Enter') saveName(); if (e.key === 'Escape') setEditingName(false) }}
+              autoFocus
+              onClick={(e) => e.stopPropagation()}
+            />
+          ) : (
+            <span className="text-xs font-medium truncate">{test.name}</span>
+          )}
+        </button>
+        <div className="flex gap-0.5 shrink-0">
+          {!editingName && (
+            <button className="p-1 text-muted-foreground hover:text-foreground rounded" onClick={(e) => { e.stopPropagation(); setEditingName(true); setNameValue(test.name) }} title="Edit name">
+              <Pencil className="size-2.5" />
+            </button>
+          )}
+          <button className="p-1 text-muted-foreground hover:text-foreground rounded" onClick={onRun} disabled={isRunning} title="Run">
+            <Play className="size-3" />
+          </button>
+          <button className="p-1 text-muted-foreground hover:text-foreground rounded" onClick={onLoadIntoExecution} title="Load into execution">
+            <ArrowRight className="size-3" />
+          </button>
+          <button className="p-1 text-muted-foreground hover:text-foreground rounded" onClick={onDuplicate} title="Duplicate">
+            <Copy className="size-3" />
+          </button>
+          <button className="p-1 text-muted-foreground hover:text-foreground rounded" onClick={onDelete} title="Delete">
+            <Trash2 className="size-3" />
+          </button>
+        </div>
+      </div>
+
+      {isExpanded && (
+        <div className="mt-2 ml-5 space-y-3">
+          {/* Inputs — editable */}
+          <EditableSection
+            label="Inputs"
+            entries={Object.entries(test.inputs ?? {})}
+            editingField={editingField?.section === 'input' ? editingField.path : null}
+            fieldValue={fieldValue}
+            result={null}
+            onEdit={(path) => { setEditingField({ section: 'input', path }); setFieldValue(JSON.stringify((test.inputs ?? {})[path])) }}
+            onSave={(path) => saveField('input', path)}
+            onRemove={(path) => removeField('input', path)}
+            onFieldValueChange={setFieldValue}
+            onCancelEdit={() => setEditingField(null)}
+            adding={addingField === 'input'}
+            onStartAdd={() => { setAddingField('input'); setNewPath(''); setNewValue('') }}
+            onCancelAdd={() => setAddingField(null)}
+            onAdd={() => addField('input')}
+            newPath={newPath}
+            newValue={newValue}
+            availablePaths={inputPaths}
+            onNewPathChange={setNewPath}
+            onNewValueChange={setNewValue}
+          />
+
+          {/* Entities */}
+          {test.entities && Object.entries(test.entities).map(([entity, rows]) => (
+            <div key={entity}>
+              <span className="text-[10px] font-semibold text-muted-foreground uppercase">{entity} ({rows.length})</span>
+            </div>
+          ))}
+
+          {/* Expectations — editable with results */}
+          <EditableSection
+            label="Expectations"
+            entries={Object.entries(test.expect)}
+            editingField={editingField?.section === 'expect' ? editingField.path : null}
+            fieldValue={fieldValue}
+            result={result}
+            onEdit={(path) => { setEditingField({ section: 'expect', path }); setFieldValue(JSON.stringify(test.expect[path])) }}
+            onSave={(path) => saveField('expect', path)}
+            onRemove={(path) => removeField('expect', path)}
+            onFieldValueChange={setFieldValue}
+            onCancelEdit={() => setEditingField(null)}
+            adding={addingField === 'expect'}
+            onStartAdd={() => { setAddingField('expect'); setNewPath(''); setNewValue('') }}
+            onCancelAdd={() => setAddingField(null)}
+            onAdd={() => addField('expect')}
+            newPath={newPath}
+            newValue={newValue}
+            availablePaths={allPaths}
+            onNewPathChange={setNewPath}
+            onNewValueChange={setNewValue}
+          />
+
+          {result?.error && <p className="text-xs text-red-600">Error: {result.error}</p>}
+        </div>
+      )}
+    </div>
+  )
+}
+
+type EditableSectionProps = {
+  label: string
+  entries: [string, unknown][]
+  editingField: string | null
+  fieldValue: string
+  result: TestRunResult | null | undefined
+  onEdit: (path: string) => void
+  onSave: (path: string) => void
+  onRemove: (path: string) => void
+  onFieldValueChange: (value: string) => void
+  onCancelEdit: () => void
+  adding: boolean
+  onStartAdd: () => void
+  onCancelAdd: () => void
+  onAdd: () => void
+  newPath: string
+  newValue: string
+  availablePaths: { path: string; name: string }[]
+  onNewPathChange: (value: string) => void
+  onNewValueChange: (value: string) => void
+}
+
+function EditableSection({
+  label, entries, editingField, fieldValue, result,
+  onEdit, onSave, onRemove, onFieldValueChange, onCancelEdit,
+  adding, onStartAdd, onCancelAdd, onAdd, availablePaths,
+  newPath, newValue, onNewPathChange, onNewValueChange,
+}: EditableSectionProps) {
+  return (
+    <div>
+      <div className="flex items-center gap-1">
+        <span className="text-[10px] font-semibold text-muted-foreground uppercase">{label}</span>
+        <button className="p-0.5 text-muted-foreground hover:text-foreground" onClick={onStartAdd} title={`Add ${label.toLowerCase()}`}>
+          <Plus className="size-2.5" />
+        </button>
+      </div>
+      <div className="mt-0.5 space-y-1">
+        {entries.map(([path, value]) => {
+          const exp = result?.expectations[path]
+          const isEditing = editingField === path
+          return (
+            <div key={path} className={cn('text-xs font-mono', exp && !exp.passed && 'text-red-700')}>
+              <div className="flex items-center gap-1">
+                {exp && (exp.passed ? <Check className="size-3 text-emerald-600 shrink-0" /> : <X className="size-3 text-red-600 shrink-0" />)}
+                <span className="text-muted-foreground truncate flex-1">{path}</span>
+                {!isEditing && (
+                  <>
+                    <button className="p-0.5 text-muted-foreground hover:text-foreground" onClick={() => onEdit(path)} title="Edit">
+                      <Pencil className="size-2.5" />
+                    </button>
+                    <button className="p-0.5 text-muted-foreground hover:text-foreground" onClick={() => onRemove(path)} title="Remove">
+                      <Trash2 className="size-2.5" />
+                    </button>
+                  </>
+                )}
+              </div>
+              {isEditing ? (
+                <div className="flex gap-1 mt-0.5 ml-4">
+                  <Input
+                    className="h-5 text-xs font-mono flex-1"
+                    value={fieldValue}
+                    onChange={(e) => onFieldValueChange(e.target.value)}
+                    onBlur={() => onSave(path)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') onSave(path); if (e.key === 'Escape') onCancelEdit() }}
+                    autoFocus
+                  />
+                </div>
+              ) : (
+                <div className="ml-4 flex gap-2">
+                  <span>= {JSON.stringify(value)}</span>
+                  {exp && !exp.passed && (
+                    <span className="text-red-500">got {JSON.stringify(exp.actual)}</span>
+                  )}
+                </div>
+              )}
+            </div>
+          )
+        })}
+
+        {/* Add new field */}
+        {adding && (
+          <div className="space-y-1">
+            <select
+              className="h-6 w-full text-xs font-mono rounded border bg-background px-1"
+              value={newPath}
+              onChange={(e) => onNewPathChange(e.target.value)}
+              autoFocus
+            >
+              <option value="">Select path...</option>
+              {availablePaths
+                .filter((p) => !entries.some(([ep]) => ep === p.path))
+                .map((p) => (
+                  <option key={p.path} value={p.path}>
+                    {p.name} ({p.path})
+                  </option>
+                ))}
+            </select>
+            {newPath && (
+              <div className="flex gap-1 items-center">
+                <Input
+                  className="h-5 text-xs font-mono flex-1"
+                  placeholder="value"
+                  value={newValue}
+                  onChange={(e) => onNewValueChange(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') onAdd() }}
+                  autoFocus
+                />
+                <button className="p-0.5 text-emerald-600 hover:text-emerald-700" onClick={onAdd} title="Add">
+                  <Check className="size-3" />
+                </button>
+                <button className="p-0.5 text-muted-foreground hover:text-foreground" onClick={onCancelAdd} title="Cancel">
+                  <X className="size-3" />
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {entries.length === 0 && !adding && (
+          <span className="text-[10px] text-muted-foreground italic">None</span>
+        )}
+      </div>
+    </div>
+  )
+}
