@@ -211,10 +211,10 @@ export function Node({ node }: NodeProps) {
           return null
         })()}
 
-        {/* Input nodes: prominent field, always visible (but not for collection-scoped or test mode) */}
-        {isInput && !isCollection && !activeTest && (
+        {/* Input nodes: prominent field, always visible (but not for collection-scoped) */}
+        {isInput && !isCollection && (
           <div
-            className="mt-2 flex items-center gap-1"
+            className={cn('mt-2 flex items-center gap-1 h-8', activeTest && 'invisible')}
             onClick={(e) => e.stopPropagation()}
           >
             <Input
@@ -242,12 +242,12 @@ export function Node({ node }: NodeProps) {
           </div>
         )}
 
-        {/* Constants/computed: always reserve space, show field on hover (hidden in test mode) */}
-        {isEditable && !isInput && !activeTest && (
+        {/* Constants/computed: always reserve space, show field on hover */}
+        {isEditable && !isInput && (
           <div
             className={cn(
               'mt-1.5 flex items-center gap-1 h-5',
-              !hasOverride && !isHovered && 'invisible'
+              (activeTest || (!hasOverride && !isHovered)) && 'invisible'
             )}
             onClick={(e) => e.stopPropagation()}
           >
