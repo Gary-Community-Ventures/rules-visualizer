@@ -19,7 +19,7 @@ import { onReload } from '@/lib/api/live-reload'
 import { useLocalStorage } from '@/lib/use-local-storage'
 import { useAppContext } from './app-context'
 
-export type RightBarOptions = 'ai' | 'execution' | null
+export type RightBarOptions = 'ai' | 'execution' | 'tests' | null
 
 /** Check if a node is an "input" that users must provide values for */
 export function isInputNode(node: ModelNode): boolean {
@@ -212,6 +212,17 @@ type ModelContextValue = {
   clearExecution: () => void
   workspaceItems: string[]
   setWorkspaceItems: Dispatch<SetStateAction<string[]>>
+  // Active test state displayed on graph nodes
+  activeTest: {
+    expectations: Record<string, { expected: unknown; actual: unknown; passed: boolean }>
+    inputs: Record<string, unknown>
+    computedValues: Record<string, unknown>
+  } | null
+  setActiveTest: Dispatch<SetStateAction<{
+    expectations: Record<string, { expected: unknown; actual: unknown; passed: boolean }>
+    inputs: Record<string, unknown>
+    computedValues: Record<string, unknown>
+  } | null>>
 }
 
 const ModelContext = createContext<ModelContextValue | undefined>(undefined)
@@ -422,6 +433,11 @@ export function ModelProvider({
     `workspace:${rulesetId}`,
     []
   )
+  const [activeTest, setActiveTest] = useState<{
+    expectations: Record<string, { expected: unknown; actual: unknown; passed: boolean }>
+    inputs: Record<string, unknown>
+    computedValues: Record<string, unknown>
+  } | null>(null)
 
   const loadModel = useCallback(() => {
     setIsLoading(true)
@@ -513,6 +529,8 @@ export function ModelProvider({
       clearExecution,
       workspaceItems,
       setWorkspaceItems,
+      activeTest,
+      setActiveTest,
     }),
     [
       model,
@@ -552,6 +570,8 @@ export function ModelProvider({
       clearExecution,
       workspaceItems,
       setWorkspaceItems,
+      activeTest,
+      setActiveTest,
     ]
   )
 

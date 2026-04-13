@@ -21,6 +21,8 @@ import {
   BookOpen,
   Trash2,
   Check,
+  CheckCircle,
+  XCircle,
   Bookmark,
   BookmarkCheck,
 } from 'lucide-react'
@@ -97,27 +99,8 @@ export function nodeElementId(id: string) {
   return `node-${id}`
 }
 
-function formatResultValue(value: unknown): string {
-  if (value === null || value === undefined) return 'null'
-  if (typeof value === 'boolean') return value ? 'true' : 'false'
-  if (typeof value === 'number') {
-    if (Number.isInteger(value)) return value.toLocaleString()
-    return value.toLocaleString(undefined, { maximumFractionDigits: 4 })
-  }
-  if (typeof value === 'string') return value
-  if (Array.isArray(value)) {
-    if (value.length === 0) return '[]'
-    return value
-      .map((v) => {
-        if (typeof v === 'boolean') return v ? 'T' : 'F'
-        if (typeof v === 'number')
-          return Number.isInteger(v) ? String(v) : v.toFixed(0)
-        return String(v)
-      })
-      .join(', ')
-  }
-  return String(value)
-}
+// Use shared format utilities
+import { formatBadgeValue as formatResultValue } from '@/lib/format'
 
 export function Node({ node }: NodeProps) {
   const {
@@ -130,6 +113,7 @@ export function Node({ node }: NodeProps) {
     setInputOverride,
     clearInputOverride,
     runOnBlur,
+    activeTest,
   } = useMainContext()
 
   const [isHovered, setIsHovered] = useState(false)
@@ -214,8 +198,22 @@ export function Node({ node }: NodeProps) {
           </span>
         )}
 
-        {/* Input nodes: prominent field, always visible (but not for collection-scoped) */}
-        {isInput && !isCollection && (
+        {/* Input nodes in test mode: show test value as read-only badge */}
+        {isInput && !isCollection && activeTest?.inputs && (() => {
+          const nodePath = node.content.type !== 'entity' ? node.content.path : null
+          const testValue = nodePath ? activeTest?.inputs[nodePath] : undefined
+          if (testValue !== undefined) {
+            return (
+              <div className="mt-1.5 font-mono text-xs text-blue-700 bg-blue-50 rounded px-2 py-0.5 border border-blue-200">
+                {formatResultValue(testValue)}
+              </div>
+            )
+          }
+          return null
+        })()}
+
+        {/* Input nodes: prominent field, always visible (but not for collection-scoped or test mode) */}
+        {isInput && !isCollection && !activeTest && (
           <div
             className="mt-2 flex items-center gap-1"
             onClick={(e) => e.stopPropagation()}
@@ -245,8 +243,8 @@ export function Node({ node }: NodeProps) {
           </div>
         )}
 
-        {/* Constants/computed: always reserve space, show field on hover */}
-        {isEditable && !isInput && (
+        {/* Constants/computed: always reserve space, show field on hover (hidden in test mode) */}
+        {isEditable && !isInput && !activeTest && (
           <div
             className={cn(
               'mt-1.5 flex items-center gap-1 h-5',
@@ -280,17 +278,66 @@ export function Node({ node }: NodeProps) {
           </div>
         )}
 
-        {/* Result value — clear colored badge */}
-        {result && (
-          <div
-            className={cn(
-              'mt-2 font-mono rounded px-2 py-0.5 truncate max-w-36 text-center',
-              'text-xs bg-emerald-50 text-emerald-800 border border-emerald-200'
-            )}
-          >
-            {formatResultValue(result.value)}
-          </div>
-        )}
+        {/* Result value — with optional test expectation */}
+        {(() => {
+          const nodePath = node.content.type !== 'entity' ? node.content.path : null
+          const testExp = nodePath && activeTest ? activeTest.expectations[nodePath] : null
+
+          if (testExp) {
+            return (
+              <div
+                className={cn(
+                  'mt-2 font-mono rounded px-2 py-0.5 max-w-44 text-center text-xs border',
+                  testExp.passed
+                    ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                    : 'bg-red-50 text-red-800 border-red-200'
+                )}
+              >
+                <div className="flex items-center gap-1 justify-center">
+                  {testExp.passed ? (
+                    <CheckCircle className="size-3 text-emerald-600 shrink-0" />
+                  ) : (
+                    <XCircle className="size-3 text-red-600 shrink-0" />
+                  )}
+                  <span className="truncate">{formatResultValue(testExp.actual)}</span>
+                </div>
+                {!testExp.passed && (
+                  <div className="text-[10px] text-red-500 truncate">
+                    expected {formatResultValue(testExp.expected)}
+                  </div>
+                )}
+              </div>
+            )
+          }
+
+          // In test mode: show computed value from test run for nodes without expectations
+          if (activeTest?.computedValues && nodePath) {
+            const computed = activeTest?.computedValues[nodePath]
+            if (computed !== undefined) {
+              return (
+                <div className="mt-2 font-mono rounded px-2 py-0.5 truncate max-w-36 text-center text-xs bg-gray-50 text-gray-600 border border-gray-200">
+                  {formatResultValue(computed)}
+                </div>
+              )
+            }
+          }
+
+          // Normal execution result (non-test mode)
+          if (result && !activeTest) {
+            return (
+              <div
+                className={cn(
+                  'mt-2 font-mono rounded px-2 py-0.5 truncate max-w-36 text-center',
+                  'text-xs bg-emerald-50 text-emerald-800 border border-emerald-200'
+                )}
+              >
+                {formatResultValue(result.value)}
+              </div>
+            )
+          }
+
+          return null
+        })()}
       </div>
       {hasChildren && (
         <Button

@@ -7,6 +7,7 @@ export type RawFact = { path: string; raw: Record<string, unknown> }
 
 const models = new Map<string, Model>()
 const rawFacts = new Map<string, RawFact[]>()
+let _dataDir: string | null = null
 
 /**
  * Load Fact Graph rulesets from the given directory.
@@ -19,7 +20,12 @@ const rawFacts = new Map<string, RawFact[]>()
  *
  * Each subdirectory is parsed as a multi-module ruleset.
  */
+export function getDataDir(): string | null {
+  return _dataDir
+}
+
 export function loadFactGraphData(dataDir: string): void {
+  _dataDir = dataDir
   const entries = fs.readdirSync(dataDir, { withFileTypes: true })
 
   // Check if this directory has XML files directly (flat layout)

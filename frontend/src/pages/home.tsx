@@ -4,7 +4,7 @@ import { Rows } from '@/components/node'
 import { Arrows } from '@/components/arrows'
 import { ToolBar } from '@/components/tool-bar'
 import { PanContainer } from '@/components/pan-container'
-import { nodeRows, filterDisconnectedCollectionNodes } from '@/lib/graph'
+import { nodeRows } from '@/lib/graph'
 import {
   ResizableHandle,
   ResizablePanel,
@@ -13,6 +13,7 @@ import {
 import { useEffect, useMemo, type PropsWithChildren } from 'react'
 import { AIPanel } from '@/components/ai-panel'
 import { ExecutionPanel } from '@/components/execution-panel'
+import { TestPanel } from '@/components/test-panel'
 import { NodePanel, nodeElementId } from '@/components/node'
 
 export function HomePage() {
@@ -20,10 +21,10 @@ export function HomePage() {
   const { model, selectedNodes, showChildren, isLoading, error } =
     useMainContext()
 
-  const rows = useMemo(() => {
-    const visibleNodes = filterDisconnectedCollectionNodes(model.nodes)
-    return nodeRows(visibleNodes, showChildren, selectedNodes)
-  }, [model.nodes, showChildren, selectedNodes])
+  const rows = useMemo(
+    () => nodeRows(model.nodes, showChildren, selectedNodes),
+    [model.nodes, showChildren, selectedNodes]
+  )
 
   if (isLoading) {
     return (
@@ -117,6 +118,7 @@ export function NodeMapLayout({ children }: PropsWithChildren) {
           >
             {rightBar === 'ai' && <AIPanel />}
             {rightBar === 'execution' && <ExecutionPanel />}
+            {rightBar === 'tests' && <TestPanel />}
           </ResizablePanel>
         </>
       )}

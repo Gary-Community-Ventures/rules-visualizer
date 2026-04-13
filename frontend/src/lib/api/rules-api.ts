@@ -65,6 +65,83 @@ export async function getRuleset(rulesetId: string): Promise<Model> {
   }
 }
 
+// --- Test API ---
+
+export type TestCase = {
+  id: string
+  name: string
+  description?: string
+  asOf?: string
+  inputs?: Record<string, unknown>
+  entities?: Record<string, Record<string, unknown>[]>
+  overrides?: Record<string, unknown>
+  expect: Record<string, unknown>
+}
+
+export type TestExpectation = {
+  expected: unknown
+  actual: unknown
+  passed: boolean
+}
+
+export type TestRunResult = {
+  testId: string
+  name: string
+  passed: boolean
+  error?: string
+  expectations: Record<string, TestExpectation>
+  computedValues?: Record<string, unknown>
+}
+
+export async function listTests(rulesetId: string): Promise<TestCase[]> {
+  const data = await get<{ tests: TestCase[] }>(
+    `/api/rulesets/${rulesetId}/tests`
+  )
+  return data.tests
+}
+
+export async function createTest(
+  rulesetId: string,
+  test: Omit<TestCase, 'id'>
+): Promise<TestCase> {
+  return post<TestCase>(`/api/rulesets/${rulesetId}/tests`, test)
+}
+
+export async function updateTest(
+  rulesetId: string,
+  testId: string,
+  updates: Partial<TestCase>
+): Promise<TestCase> {
+  const res = await fetch(`${API_BASE}/api/rulesets/${rulesetId}/tests/${testId}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(updates),
+  })
+  if (!res.ok) throw new Error(`API error: ${res.status}`)
+  return res.json()
+}
+
+export async function deleteTest(
+  rulesetId: string,
+  testId: string
+): Promise<void> {
+  const res = await fetch(`${API_BASE}/api/rulesets/${rulesetId}/tests/${testId}`, {
+    method: 'DELETE',
+  })
+  if (!res.ok) throw new Error(`API error: ${res.status}`)
+}
+
+export async function runTests(
+  rulesetId: string,
+  testIds?: string[]
+): Promise<TestRunResult[]> {
+  const data = await post<{ results: TestRunResult[] }>(
+    `/api/rulesets/${rulesetId}/tests/run`,
+    testIds ? { testIds } : {}
+  )
+  return data.results
+}
+
 export async function executeRuleset(
   rulesetId: string,
   inputs: Record<string, unknown>,

@@ -1,0 +1,66 @@
+[
+  {
+    "id": "test-1",
+    "name": "Single child, employed",
+    "inputs": {
+      "/isEmployed": true
+    },
+    "entities": {
+      "/members": [
+        {
+          "age": 5,
+          "isDisabled": false,
+          "monthlyIncome": 0
+        }
+      ]
+    },
+    "expect": {
+      "/members/*/isChild": [
+        true
+      ],
+      "/members/*/memberBenefit": [
+        150
+      ],
+      "/totalMonthlyBenefit": 150
+    }
+  },
+  {
+    "id": "test-2",
+    "name": "Mixed household, employed",
+    "inputs": {
+      "/isEmployed": true
+    },
+    "entities": {
+      "/members": [
+        {
+          "age": 5,
+          "isDisabled": false,
+          "monthlyIncome": 0
+        },
+        {
+          "age": 70,
+          "isDisabled": true,
+          "monthlyIncome": 1500
+        },
+        {
+          "age": 35,
+          "isDisabled": false,
+          "monthlyIncome": 3000
+        }
+      ]
+    },
+    "expect": {
+      "/members/*/isChild": [
+        true,
+        false,
+        false
+      ],
+      "/members/*/memberBenefit": [
+        150,
+        275,
+        0
+      ],
+      "/totalMonthlyBenefit": 425
+    }
+  }
+]
