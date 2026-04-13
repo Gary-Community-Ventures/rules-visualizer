@@ -1,0 +1,147 @@
+[
+  {
+    "id": "snap-rac-1",
+    "name": "Single person, no income — minimum/max benefit",
+    "description": "1-person household with no income gets the full max allotment.",
+    "asOf": "2024-10-01",
+    "inputs": {
+      "gross_earned_income": 0,
+      "unearned_income": 0,
+      "household_size": 1,
+      "dependent_care_expenses": 0,
+      "shelter_costs": 0,
+      "medical_expenses_elderly_disabled": 0,
+      "has_elderly_or_disabled_member": false
+    },
+    "expect": {
+      "gross_income_eligible": true,
+      "net_income_eligible": true,
+      "eligible": true,
+      "max_allotment": 292,
+      "monthly_snap_benefit": 292
+    }
+  },
+  {
+    "id": "snap-rac-2",
+    "name": "3-person household with moderate earnings",
+    "description": "Passes both income tests; benefit reduced by 30% of net income.",
+    "asOf": "2024-10-01",
+    "inputs": {
+      "gross_earned_income": 1500,
+      "unearned_income": 0,
+      "household_size": 3,
+      "dependent_care_expenses": 0,
+      "shelter_costs": 800,
+      "medical_expenses_elderly_disabled": 0,
+      "has_elderly_or_disabled_member": false
+    },
+    "expect": {
+      "gross_monthly_income": 1500,
+      "earned_income_deduction": 300,
+      "standard_deduction": 209,
+      "income_after_preliminary_deductions": 991,
+      "shelter_deduction": 304.5,
+      "net_monthly_income": 686.5,
+      "eligible": true,
+      "max_allotment": 768,
+      "expected_food_contribution": 205.95,
+      "calculated_benefit": 562.05,
+      "monthly_snap_benefit": 562.05
+    }
+  },
+  {
+    "id": "snap-rac-3",
+    "name": "Over gross income limit — ineligible",
+    "description": "2-person household with $5000/mo fails the 130% FPL gross test.",
+    "asOf": "2024-10-01",
+    "inputs": {
+      "gross_earned_income": 5000,
+      "unearned_income": 0,
+      "household_size": 2,
+      "dependent_care_expenses": 0,
+      "shelter_costs": 0,
+      "medical_expenses_elderly_disabled": 0,
+      "has_elderly_or_disabled_member": false
+    },
+    "expect": {
+      "gross_income_eligible": false,
+      "eligible": false,
+      "monthly_snap_benefit": 0
+    }
+  },
+  {
+    "id": "snap-rac-4",
+    "name": "Elderly/disabled — exempt from gross test",
+    "description": "Elderly household skips gross test; uncapped shelter deduction.",
+    "asOf": "2024-10-01",
+    "inputs": {
+      "gross_earned_income": 0,
+      "unearned_income": 1800,
+      "household_size": 2,
+      "dependent_care_expenses": 0,
+      "shelter_costs": 1200,
+      "medical_expenses_elderly_disabled": 200,
+      "has_elderly_or_disabled_member": true
+    },
+    "expect": {
+      "gross_monthly_income": 1800,
+      "medical_deduction": 165,
+      "income_after_preliminary_deductions": 1426,
+      "shelter_deduction": 487,
+      "net_monthly_income": 939,
+      "net_income_eligible": true,
+      "eligible": true,
+      "max_allotment": 536,
+      "calculated_benefit": 254.3,
+      "monthly_snap_benefit": 254.3
+    }
+  },
+  {
+    "id": "snap-rac-5",
+    "name": "Large household passes gross but fails net",
+    "description": "5-person household with $3900 unearned income passes 130% FPL gross test but exceeds 100% FPL net limit (no earned-income deduction on unearned income).",
+    "asOf": "2024-10-01",
+    "inputs": {
+      "gross_earned_income": 0,
+      "unearned_income": 3900,
+      "household_size": 5,
+      "dependent_care_expenses": 0,
+      "shelter_costs": 200,
+      "medical_expenses_elderly_disabled": 0,
+      "has_elderly_or_disabled_member": false
+    },
+    "expect": {
+      "federal_poverty_level_monthly": 3055,
+      "gross_income_eligible": true,
+      "earned_income_deduction": 0,
+      "standard_deduction": 263,
+      "income_after_preliminary_deductions": 3637,
+      "shelter_deduction": 0,
+      "net_monthly_income": 3637,
+      "net_income_eligible": false,
+      "eligible": false,
+      "monthly_snap_benefit": 0
+    }
+  },
+  {
+    "id": "snap-rac-6",
+    "name": "Minimum benefit floor for small household",
+    "description": "1-person household where calculated benefit would be zero; min $23 applies.",
+    "asOf": "2024-10-01",
+    "inputs": {
+      "gross_earned_income": 0,
+      "unearned_income": 1250,
+      "household_size": 1,
+      "dependent_care_expenses": 0,
+      "shelter_costs": 0,
+      "medical_expenses_elderly_disabled": 0,
+      "has_elderly_or_disabled_member": false
+    },
+    "expect": {
+      "eligible": true,
+      "max_allotment": 292,
+      "calculated_benefit": 0,
+      "monthly_snap_benefit": 23
+    }
+  }
+]

@@ -1,0 +1,141 @@
+[
+  {
+    "id": "snap-fg-1",
+    "name": "Single person, no income — max allotment",
+    "description": "1-person household with zero income gets the full max allotment.",
+    "inputs": {
+      "/grossEarnedIncome": 0,
+      "/unearnedIncome": 0,
+      "/householdSize": 1,
+      "/dependentCareExpenses": 0,
+      "/shelterCosts": 0,
+      "/medicalExpensesElderlyDisabled": 0,
+      "/hasElderlyOrDisabledMember": false
+    },
+    "expect": {
+      "/grossIncomeEligible": true,
+      "/netIncomeEligible": true,
+      "/eligible": true,
+      "/maxAllotment": 292,
+      "/snap": 292
+    }
+  },
+  {
+    "id": "snap-fg-2",
+    "name": "3-person household with moderate earnings",
+    "description": "Passes both income tests; benefit reduced by 30% of net income.",
+    "inputs": {
+      "/grossEarnedIncome": 1500,
+      "/unearnedIncome": 0,
+      "/householdSize": 3,
+      "/dependentCareExpenses": 0,
+      "/shelterCosts": 800,
+      "/medicalExpensesElderlyDisabled": 0,
+      "/hasElderlyOrDisabledMember": false
+    },
+    "expect": {
+      "/grossMonthlyIncome": 1500,
+      "/earnedIncomeDeduction": 300,
+      "/standardDeduction": 209,
+      "/incomeAfterPreliminaryDeductions": 991,
+      "/shelterDeduction": 304.5,
+      "/netMonthlyIncome": 686.5,
+      "/eligible": true,
+      "/maxAllotment": 768,
+      "/expectedFoodContribution": 205.95,
+      "/calculatedBenefit": 562.05,
+      "/snap": 562.05
+    }
+  },
+  {
+    "id": "snap-fg-3",
+    "name": "Over gross income limit — ineligible",
+    "description": "2-person household with $5000/mo fails the 130% FPL gross test.",
+    "inputs": {
+      "/grossEarnedIncome": 5000,
+      "/unearnedIncome": 0,
+      "/householdSize": 2,
+      "/dependentCareExpenses": 0,
+      "/shelterCosts": 0,
+      "/medicalExpensesElderlyDisabled": 0,
+      "/hasElderlyOrDisabledMember": false
+    },
+    "expect": {
+      "/grossIncomeEligible": false,
+      "/eligible": false,
+      "/snap": 0
+    }
+  },
+  {
+    "id": "snap-fg-4",
+    "name": "Elderly/disabled — exempt from gross test",
+    "description": "Elderly household skips gross test; uncapped shelter deduction.",
+    "inputs": {
+      "/grossEarnedIncome": 0,
+      "/unearnedIncome": 1800,
+      "/householdSize": 2,
+      "/dependentCareExpenses": 0,
+      "/shelterCosts": 1200,
+      "/medicalExpensesElderlyDisabled": 200,
+      "/hasElderlyOrDisabledMember": true
+    },
+    "expect": {
+      "/grossMonthlyIncome": 1800,
+      "/medicalDeduction": 165,
+      "/incomeAfterPreliminaryDeductions": 1426,
+      "/shelterDeduction": 487,
+      "/netMonthlyIncome": 939,
+      "/netIncomeEligible": true,
+      "/eligible": true,
+      "/maxAllotment": 536,
+      "/calculatedBenefit": 254.3,
+      "/snap": 254.3
+    }
+  },
+  {
+    "id": "snap-fg-5",
+    "name": "Large household passes gross but fails net",
+    "description": "5-person household with $3900 unearned income passes 130% FPL gross test but exceeds 100% FPL net limit.",
+    "inputs": {
+      "/grossEarnedIncome": 0,
+      "/unearnedIncome": 3900,
+      "/householdSize": 5,
+      "/dependentCareExpenses": 0,
+      "/shelterCosts": 200,
+      "/medicalExpensesElderlyDisabled": 0,
+      "/hasElderlyOrDisabledMember": false
+    },
+    "expect": {
+      "/federalPovertyLevelMonthly": 3055,
+      "/grossIncomeEligible": true,
+      "/earnedIncomeDeduction": 0,
+      "/standardDeduction": 263,
+      "/incomeAfterPreliminaryDeductions": 3637,
+      "/shelterDeduction": 0,
+      "/netMonthlyIncome": 3637,
+      "/netIncomeEligible": false,
+      "/eligible": false,
+      "/snap": 0
+    }
+  },
+  {
+    "id": "snap-fg-6",
+    "name": "Minimum benefit floor for small household",
+    "description": "1-person household where calculated benefit would be zero; min $23 applies.",
+    "inputs": {
+      "/grossEarnedIncome": 0,
+      "/unearnedIncome": 1250,
+      "/householdSize": 1,
+      "/dependentCareExpenses": 0,
+      "/shelterCosts": 0,
+      "/medicalExpensesElderlyDisabled": 0,
+      "/hasElderlyOrDisabledMember": false
+    },
+    "expect": {
+      "/eligible": true,
+      "/maxAllotment": 292,
+      "/calculatedBenefit": 0,
+      "/snap": 23
+    }
+  }
+]

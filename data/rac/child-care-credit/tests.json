@@ -1,0 +1,258 @@
+[
+  {
+    "id": "ccc-rac-1",
+    "name": "Unmarried individual with earned income — limit is own income",
+    "description": "Under 26 USC 21(d)(1)(A), unmarried taxpayer's earned income caps expenses.",
+    "asOf": "2024-01-15",
+    "inputs": {},
+    "entities": {
+      "TaxUnit": [
+        {
+          "is_married": false,
+          "is_joint_return": false,
+          "earned_income": 25000,
+          "spouse_earned_income": 0,
+          "spouse_is_student_or_incapable": false,
+          "months_spouse_student_or_incapable": 0,
+          "number_of_qualifying_individuals": 1,
+          "employment_related_expenses": 2000,
+          "adjusted_gross_income": 25000
+        }
+      ]
+    },
+    "expect": {
+      "earned_income_limit": [25000]
+    }
+  },
+  {
+    "id": "ccc-rac-2",
+    "name": "Married — limit is lesser of spouse earned incomes",
+    "description": "Under 26 USC 21(d)(1)(B), for married filers the cap is the lower of the two earned incomes.",
+    "asOf": "2024-01-15",
+    "inputs": {},
+    "entities": {
+      "TaxUnit": [
+        {
+          "is_married": true,
+          "is_joint_return": true,
+          "earned_income": 40000,
+          "spouse_earned_income": 15000,
+          "spouse_is_student_or_incapable": false,
+          "months_spouse_student_or_incapable": 0,
+          "number_of_qualifying_individuals": 1,
+          "employment_related_expenses": 2000,
+          "adjusted_gross_income": 55000
+        }
+      ]
+    },
+    "expect": {
+      "earned_income_limit": [15000]
+    }
+  },
+  {
+    "id": "ccc-rac-3",
+    "name": "Married with full-time student spouse — deemed earned income (1 QI)",
+    "description": "Under 26 USC 21(d)(2)(A), student spouse is deemed to earn $250/mo per qualifying individual.",
+    "asOf": "2024-01-15",
+    "inputs": {},
+    "entities": {
+      "TaxUnit": [
+        {
+          "is_married": true,
+          "is_joint_return": true,
+          "earned_income": 40000,
+          "spouse_earned_income": 0,
+          "spouse_is_student_or_incapable": true,
+          "months_spouse_student_or_incapable": 12,
+          "number_of_qualifying_individuals": 1,
+          "employment_related_expenses": 3000,
+          "adjusted_gross_income": 40000
+        }
+      ]
+    },
+    "expect": {
+      "earned_income_limit": [3000]
+    }
+  },
+  {
+    "id": "ccc-rac-4",
+    "name": "Married with student spouse — deemed earned income (2 QIs)",
+    "description": "Under 26 USC 21(d)(2)(B), deemed earned income is $500/mo with 2+ QIs.",
+    "asOf": "2024-01-15",
+    "inputs": {},
+    "entities": {
+      "TaxUnit": [
+        {
+          "is_married": true,
+          "is_joint_return": true,
+          "earned_income": 40000,
+          "spouse_earned_income": 0,
+          "spouse_is_student_or_incapable": true,
+          "months_spouse_student_or_incapable": 12,
+          "number_of_qualifying_individuals": 2,
+          "employment_related_expenses": 6000,
+          "adjusted_gross_income": 40000
+        }
+      ]
+    },
+    "expect": {
+      "earned_income_limit": [6000]
+    }
+  },
+  {
+    "id": "ccc-rac-5",
+    "name": "Expenses capped at dollar limit (1 QI = $3,000)",
+    "description": "Under 26 USC 21(c)(1), creditable expenses capped at $3,000 for one qualifying individual.",
+    "asOf": "2024-01-15",
+    "inputs": {},
+    "entities": {
+      "TaxUnit": [
+        {
+          "is_married": false,
+          "is_joint_return": false,
+          "earned_income": 50000,
+          "spouse_earned_income": 0,
+          "spouse_is_student_or_incapable": false,
+          "months_spouse_student_or_incapable": 0,
+          "number_of_qualifying_individuals": 1,
+          "employment_related_expenses": 5000,
+          "adjusted_gross_income": 50000
+        }
+      ]
+    },
+    "expect": {
+      "creditable_expenses": [3000]
+    }
+  },
+  {
+    "id": "ccc-rac-6",
+    "name": "Expenses capped at dollar limit (2+ QIs = $6,000)",
+    "description": "Under 26 USC 21(c)(2), creditable expenses capped at $6,000 for 2+ qualifying individuals.",
+    "asOf": "2024-01-15",
+    "inputs": {},
+    "entities": {
+      "TaxUnit": [
+        {
+          "is_married": false,
+          "is_joint_return": false,
+          "earned_income": 50000,
+          "spouse_earned_income": 0,
+          "spouse_is_student_or_incapable": false,
+          "months_spouse_student_or_incapable": 0,
+          "number_of_qualifying_individuals": 2,
+          "employment_related_expenses": 8000,
+          "adjusted_gross_income": 50000
+        }
+      ]
+    },
+    "expect": {
+      "creditable_expenses": [6000]
+    }
+  },
+  {
+    "id": "ccc-rac-7",
+    "name": "No qualifying individuals — no credit",
+    "description": "Under 26 USC 21(a)(1), zero qualifying individuals means zero credit.",
+    "asOf": "2024-01-15",
+    "inputs": {},
+    "entities": {
+      "TaxUnit": [
+        {
+          "is_married": false,
+          "is_joint_return": false,
+          "earned_income": 30000,
+          "spouse_earned_income": 0,
+          "spouse_is_student_or_incapable": false,
+          "months_spouse_student_or_incapable": 0,
+          "number_of_qualifying_individuals": 0,
+          "employment_related_expenses": 3000,
+          "adjusted_gross_income": 30000
+        }
+      ]
+    },
+    "expect": {
+      "child_and_dependent_care_credit": [0],
+      "section_21_credit": [0]
+    }
+  },
+  {
+    "id": "ccc-rac-8",
+    "name": "Full credit at low AGI — no reductions apply",
+    "description": "AGI at or below $15,000 gives the full 50% applicable percentage.",
+    "asOf": "2024-01-15",
+    "inputs": {},
+    "entities": {
+      "TaxUnit": [
+        {
+          "is_married": false,
+          "is_joint_return": false,
+          "earned_income": 15000,
+          "spouse_earned_income": 0,
+          "spouse_is_student_or_incapable": false,
+          "months_spouse_student_or_incapable": 0,
+          "number_of_qualifying_individuals": 1,
+          "employment_related_expenses": 3000,
+          "adjusted_gross_income": 15000
+        }
+      ]
+    },
+    "expect": {
+      "applicable_percentage": [0.50],
+      "creditable_expenses": [3000],
+      "section_21_credit": [1500]
+    }
+  },
+  {
+    "id": "ccc-rac-9",
+    "name": "First reduction applies — AGI above $15k trips 1pp per $2k",
+    "description": "AGI = $20,000 → excess $5,000 → ceil(5000/2000)=3 → 3 percentage points off base 50%.",
+    "asOf": "2024-01-15",
+    "inputs": {},
+    "entities": {
+      "TaxUnit": [
+        {
+          "is_married": false,
+          "is_joint_return": false,
+          "earned_income": 20000,
+          "spouse_earned_income": 0,
+          "spouse_is_student_or_incapable": false,
+          "months_spouse_student_or_incapable": 0,
+          "number_of_qualifying_individuals": 1,
+          "employment_related_expenses": 3000,
+          "adjusted_gross_income": 20000
+        }
+      ]
+    },
+    "expect": {
+      "first_reduction": [0.03],
+      "further_reduction": [0],
+      "applicable_percentage": [0.47],
+      "section_21_credit": [1410]
+    }
+  },
+  {
+    "id": "ccc-rac-10",
+    "name": "Joint return — further reduction threshold is $150k with $4k increments",
+    "description": "Joint return with AGI $160k triggers further reduction at higher threshold.",
+    "asOf": "2024-01-15",
+    "inputs": {},
+    "entities": {
+      "TaxUnit": [
+        {
+          "is_married": true,
+          "is_joint_return": true,
+          "earned_income": 100000,
+          "spouse_earned_income": 60000,
+          "spouse_is_student_or_incapable": false,
+          "months_spouse_student_or_incapable": 0,
+          "number_of_qualifying_individuals": 2,
+          "employment_related_expenses": 6000,
+          "adjusted_gross_income": 160000
+        }
+      ]
+    },
+    "expect": {
+      "further_reduction": [0.03]
+    }
+  }
+]

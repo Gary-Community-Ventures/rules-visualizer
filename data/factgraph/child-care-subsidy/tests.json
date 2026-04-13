@@ -1,0 +1,109 @@
+[
+  {
+    "id": "ccs-fg-1",
+    "name": "Eligible family with two children",
+    "description": "Working family; cost-side cap (cost minus copay) drives the subsidy.",
+    "inputs": {
+      "/annualIncome": 30000,
+      "/householdSize": 3,
+      "/numberOfChildrenInCare": 2,
+      "/monthlyChildCareCost": 1200,
+      "/isEmployedOrInTraining": true
+    },
+    "expect": {
+      "/incomeLimit": 40000,
+      "/incomeEligible": true,
+      "/hasChildrenInCare": true,
+      "/eligible": true,
+      "/monthlyCopay": 175,
+      "/totalMonthlySubsidy": 1025
+    }
+  },
+  {
+    "id": "ccs-fg-2",
+    "name": "Ineligible — not employed or in training",
+    "description": "Fails the employment/training requirement.",
+    "inputs": {
+      "/annualIncome": 20000,
+      "/householdSize": 2,
+      "/numberOfChildrenInCare": 1,
+      "/monthlyChildCareCost": 600,
+      "/isEmployedOrInTraining": false
+    },
+    "expect": {
+      "/incomeEligible": true,
+      "/eligible": false,
+      "/totalMonthlySubsidy": 0
+    }
+  },
+  {
+    "id": "ccs-fg-3",
+    "name": "Ineligible — over income limit",
+    "description": "2-person household at $100k exceeds the $32,500 income limit.",
+    "inputs": {
+      "/annualIncome": 100000,
+      "/householdSize": 2,
+      "/numberOfChildrenInCare": 1,
+      "/monthlyChildCareCost": 800,
+      "/isEmployedOrInTraining": true
+    },
+    "expect": {
+      "/incomeLimit": 32500,
+      "/incomeEligible": false,
+      "/eligible": false,
+      "/totalMonthlySubsidy": 0
+    }
+  },
+  {
+    "id": "ccs-fg-4",
+    "name": "Low-cost care — cost side caps the subsidy",
+    "description": "Small care bill means subsidy equals cost minus copay.",
+    "inputs": {
+      "/annualIncome": 18000,
+      "/householdSize": 2,
+      "/numberOfChildrenInCare": 1,
+      "/monthlyChildCareCost": 150,
+      "/isEmployedOrInTraining": true
+    },
+    "expect": {
+      "/eligible": true,
+      "/monthlyCopay": 105,
+      "/totalMonthlySubsidy": 45
+    }
+  },
+  {
+    "id": "ccs-fg-5",
+    "name": "Max-per-child cap drives total",
+    "description": "Large bill exceeds max subsidy cap ($600 × 3 children).",
+    "inputs": {
+      "/annualIncome": 24000,
+      "/householdSize": 4,
+      "/numberOfChildrenInCare": 3,
+      "/monthlyChildCareCost": 2400,
+      "/isEmployedOrInTraining": true
+    },
+    "expect": {
+      "/incomeLimit": 47500,
+      "/eligible": true,
+      "/monthlyCopay": 140,
+      "/totalMonthlySubsidy": 1800
+    }
+  },
+  {
+    "id": "ccs-fg-6",
+    "name": "Min copay floor applies at very low income",
+    "description": "Income-based copay below $25 rounds up to minimum.",
+    "inputs": {
+      "/annualIncome": 3600,
+      "/householdSize": 2,
+      "/numberOfChildrenInCare": 1,
+      "/monthlyChildCareCost": 500,
+      "/isEmployedOrInTraining": true
+    },
+    "expect": {
+      "/eligible": true,
+      "/monthlyCopay": 25,
+      "/totalMonthlySubsidy": 475
+    }
+  }
+]
