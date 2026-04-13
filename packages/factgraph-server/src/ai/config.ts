@@ -10,7 +10,7 @@ export function getModel(modelId?: string): ChatOpenAI {
     throw new Error('OPEN_ROUTER_KEY environment variable is required')
 
   return new ChatOpenAI({
-    model: modelId || process.env.AI_MODEL || 'google/gemini-2.5-flash',
+    model: modelId || process.env.AI_MODEL || 'moonshotai/kimi-k2',
     apiKey,
     configuration: {
       baseURL: 'https://openrouter.ai/api/v1',
