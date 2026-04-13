@@ -172,6 +172,7 @@ export function getNodePath(content: NodeContent): string | undefined {
 }
 
 type ModelContextValue = {
+  rulesetId: string
   model: Model
   isLoading: boolean
   error: string | null
@@ -492,6 +493,7 @@ export function ModelProvider({
 
   const value: ModelContextValue = useMemo(
     () => ({
+      rulesetId,
       model,
       isLoading,
       error,
@@ -533,6 +535,7 @@ export function ModelProvider({
       setActiveTest,
     }),
     [
+      rulesetId,
       model,
       isLoading,
       error,

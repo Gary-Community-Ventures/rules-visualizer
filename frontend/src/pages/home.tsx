@@ -56,7 +56,7 @@ export function HomePage() {
 }
 
 export function NodeMapLayout({ children }: PropsWithChildren) {
-  const { openNode, rightBar } = useMainContext()
+  const { openNode, rightBar, rulesetId } = useMainContext()
   const openNodeData = useFindNode(openNode)
 
   const handleLayoutChange = () => {
@@ -75,7 +75,7 @@ export function NodeMapLayout({ children }: PropsWithChildren) {
     if (!openNode) return
     // Delay to let layout settle after panel opens
     const timer = setTimeout(() => {
-      const el = document.getElementById(nodeElementId(openNode))
+      const el = document.getElementById(nodeElementId(rulesetId, openNode))
       el?.scrollIntoView({
         behavior: 'smooth',
         block: 'nearest',
@@ -83,7 +83,7 @@ export function NodeMapLayout({ children }: PropsWithChildren) {
       })
     }, 150)
     return () => clearTimeout(timer)
-  }, [openNode])
+  }, [openNode, rulesetId])
 
   const showNodePanel = openNode !== null && openNodeData !== undefined
 

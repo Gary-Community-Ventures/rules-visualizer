@@ -139,6 +139,19 @@ export function PanContainer({ children, className }: PanContainerProps) {
     window.dispatchEvent(new CustomEvent('transform', { detail: { scale } }))
   }, [scale, offset])
 
+  // Watch for this container's own size changing — fires when the tab this
+  // container lives in goes from display:none (0×0) to visible, which we
+  // otherwise have no event for. Keeps arrows and virtualization in sync.
+  useEffect(() => {
+    const el = containerRef.current
+    if (!el) return
+    const observer = new ResizeObserver(() => {
+      window.dispatchEvent(new Event('containerresize'))
+    })
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
+
   return (
     <div
       ref={containerRef}

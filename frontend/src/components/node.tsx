@@ -95,8 +95,11 @@ type NodeProps = {
   node: ModelNode
 }
 
-export function nodeElementId(id: string) {
-  return `node-${id}`
+// Element IDs are scoped by rulesetId so multiple tabs can coexist in the
+// DOM without getElementById collisions (rulesets can share node names like
+// "eligible" or "income_eligible").
+export function nodeElementId(rulesetId: string, id: string) {
+  return `node-${rulesetId}-${id}`
 }
 
 // Use shared format utilities
@@ -412,30 +415,46 @@ type Viewport = { top: number; left: number; bottom: number; right: number }
 let currentViewport: Viewport = { top: 0, left: 0, bottom: 2000, right: 2000 }
 const viewportListeners = new Set<() => void>()
 
-// One global listener that updates the viewport
-if (typeof window !== 'undefined') {
-  const margin = 400
-  const updateViewport = () => {
-    const container = document.querySelector('[data-pan-container]')
-    if (!container) return
-    const rect = container.getBoundingClientRect()
-    const inner = container.firstElementChild as HTMLElement | null
-    if (!inner) return
-    const style = getComputedStyle(inner)
-    const matrix = new DOMMatrix(style.transform)
-    const scale = matrix.a || 1
-    const offsetX = matrix.e
-    const offsetY = matrix.f
-    currentViewport = {
-      top: (-offsetY - margin) / scale,
-      left: (-offsetX - margin) / scale,
-      bottom: (-offsetY + rect.height + margin) / scale,
-      right: (-offsetX + rect.width + margin) / scale,
-    }
-    for (const cb of viewportListeners) cb()
+// Find the pan-container of the currently visible tab.
+// Multiple tabs may be mounted simultaneously (hidden via display:none);
+// offsetParent === null means the element is hidden.
+function findVisiblePanContainer(): HTMLElement | null {
+  const containers = document.querySelectorAll('[data-pan-container]')
+  for (const el of containers) {
+    const htmlEl = el as HTMLElement
+    if (htmlEl.offsetParent !== null) return htmlEl
   }
-  window.addEventListener('transform', updateViewport)
-  window.addEventListener('resize', updateViewport)
+  return (containers[0] as HTMLElement | undefined) ?? null
+}
+
+const VIEWPORT_MARGIN = 400
+
+function updateViewportNow() {
+  const container = findVisiblePanContainer()
+  if (!container) return
+  const rect = container.getBoundingClientRect()
+  if (rect.width === 0 || rect.height === 0) return
+  const inner = container.firstElementChild as HTMLElement | null
+  if (!inner) return
+  const style = getComputedStyle(inner)
+  const matrix = new DOMMatrix(style.transform)
+  const scale = matrix.a || 1
+  const offsetX = matrix.e
+  const offsetY = matrix.f
+  currentViewport = {
+    top: (-offsetY - VIEWPORT_MARGIN) / scale,
+    left: (-offsetX - VIEWPORT_MARGIN) / scale,
+    bottom: (-offsetY + rect.height + VIEWPORT_MARGIN) / scale,
+    right: (-offsetX + rect.width + VIEWPORT_MARGIN) / scale,
+  }
+  for (const cb of viewportListeners) cb()
+}
+
+// One global listener that updates the viewport on layout-affecting events.
+if (typeof window !== 'undefined') {
+  window.addEventListener('transform', updateViewportNow)
+  window.addEventListener('resize', updateViewportNow)
+  window.addEventListener('containerresize', updateViewportNow)
 }
 
 function checkVisible(
@@ -477,10 +496,12 @@ function useIsVisible(
 }
 
 export function Rows({ rows }: RowsProps) {
-  // Re-check all node visibilities after layout changes
+  // After layout changes, refresh the viewport (and thus virtualization)
+  // based on the current DOM. Runs after child VirtualNode effects so we
+  // overwrite their reads of the stale module-level viewport.
   useEffect(() => {
     const id = requestAnimationFrame(() => {
-      for (const cb of viewportListeners) cb()
+      updateViewportNow()
     })
     return () => cancelAnimationFrame(id)
   }, [rows])
@@ -499,7 +520,7 @@ export function Rows({ rows }: RowsProps) {
 }
 
 function VirtualNode({ id }: { id: string }) {
-  const { model } = useMainContext()
+  const { model, rulesetId } = useMainContext()
   const node = model.nodes[id]
   const ref = useRef<HTMLDivElement>(null)
   const size = useRef<{ width: number; height: number } | null>(null)
@@ -518,7 +539,7 @@ function VirtualNode({ id }: { id: string }) {
   return (
     <div
       ref={ref}
-      id={nodeElementId(id)}
+      id={nodeElementId(rulesetId, id)}
       data-rendered={visible || undefined}
       style={
         !visible && size.current
