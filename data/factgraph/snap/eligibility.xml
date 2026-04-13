@@ -53,7 +53,7 @@
     <Fact path="/earnedIncomeDeductionRate">
       <Name>Earned income deduction rate</Name>
       <Description>20% earned income deduction per 7 USC 2014(e)(1)</Description>
-      <Derived><Rational>0.20</Rational></Derived>
+      <Derived><Rational>1/5</Rational></Derived>
     </Fact>
 
     <Fact path="/standardDeduction1to3">
@@ -91,13 +91,13 @@
     <Fact path="/benefitReductionRate">
       <Name>Benefit reduction rate</Name>
       <Description>Households expected to spend 30% of net income on food</Description>
-      <Derived><Rational>0.30</Rational></Derived>
+      <Derived><Rational>3/10</Rational></Derived>
     </Fact>
 
     <Fact path="/shelterIncomeShareRate">
       <Name>Shelter income share rate</Name>
       <Description>Shelter costs exceeding this share of adjusted income are deductible per 7 USC 2014(e)(6)</Description>
-      <Derived><Rational>0.50</Rational></Derived>
+      <Derived><Rational>1/2</Rational></Derived>
     </Fact>
 
     <Fact path="/minimumBenefit">
@@ -109,7 +109,7 @@
     <Fact path="/grossIncomeLimitRate">
       <Name>Gross income limit rate</Name>
       <Description>Gross income must be at or below 130% of FPL</Description>
-      <Derived><Rational>1.30</Rational></Derived>
+      <Derived><Rational>13/10</Rational></Derived>
     </Fact>
 
     <!-- FPL monthly amounts by household size (FY2024, 48 states + DC) -->

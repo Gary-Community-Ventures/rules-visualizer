@@ -298,45 +298,44 @@ export function Node({ node }: NodeProps) {
           const testExp =
             nodePath && activeTest ? activeTest.expectations[nodePath] : null
 
-          if (testExp) {
+          // In test mode: always show the computed value (same emerald styling
+          // as a normal execution result). For asserted nodes, add a
+          // pass/fail indicator; failing nodes also show the expected value.
+          if (activeTest && nodePath) {
+            const computed =
+              testExp?.actual ?? activeTest.computedValues?.[nodePath]
+            if (computed === undefined) return null
+
+            const passed = testExp?.passed
+            const failed = testExp && !passed
+
             return (
               <div
                 className={cn(
                   'mt-2 font-mono rounded px-2 py-0.5 max-w-44 text-center text-xs border',
-                  testExp.passed
-                    ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
-                    : 'bg-red-50 text-red-800 border-red-200'
+                  failed
+                    ? 'bg-red-50 text-red-800 border-red-200'
+                    : 'bg-emerald-50 text-emerald-800 border-emerald-200'
                 )}
               >
                 <div className="flex items-center gap-1 justify-center">
-                  {testExp.passed ? (
+                  {testExp && passed && (
                     <CheckCircle className="size-3 text-emerald-600 shrink-0" />
-                  ) : (
+                  )}
+                  {failed && (
                     <XCircle className="size-3 text-red-600 shrink-0" />
                   )}
                   <span className="truncate">
-                    {formatResultValue(testExp.actual)}
+                    {formatResultValue(computed)}
                   </span>
                 </div>
-                {!testExp.passed && (
+                {failed && (
                   <div className="text-[10px] text-red-500 truncate">
                     expected {formatResultValue(testExp.expected)}
                   </div>
                 )}
               </div>
             )
-          }
-
-          // In test mode: show computed value from test run for nodes without expectations
-          if (activeTest?.computedValues && nodePath) {
-            const computed = activeTest?.computedValues[nodePath]
-            if (computed !== undefined) {
-              return (
-                <div className="mt-2 font-mono rounded px-2 py-0.5 truncate max-w-36 text-center text-xs bg-gray-50 text-gray-600 border border-gray-200">
-                  {formatResultValue(computed)}
-                </div>
-              )
-            }
           }
 
           // Normal execution result (non-test mode)

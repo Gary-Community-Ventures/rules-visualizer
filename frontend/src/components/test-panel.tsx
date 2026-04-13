@@ -193,6 +193,22 @@ export function TestPanel() {
     }
   }
 
+  const handleNewTest = async () => {
+    try {
+      const newTest = await createTest(model.id, {
+        name: `Test ${tests.length + 1}`,
+        asOf: model.format === 'rac' ? asOfDate : undefined,
+        inputs: {},
+        expect: {},
+      })
+      setTests((prev) => [...prev, newTest])
+      setExpandedTest(newTest.id)
+      setSelectedTestId(newTest.id)
+    } catch (e) {
+      setError((e as Error).message)
+    }
+  }
+
   const handleDuplicate = async (test: TestCase) => {
     try {
       const newTest = await createTest(model.id, {
@@ -276,16 +292,17 @@ export function TestPanel() {
 
   // Build available path options for dropdowns
   const inputPaths: { path: string; name: string }[] = []
+  const overridePaths: { path: string; name: string }[] = []
   const allPaths: { path: string; name: string }[] = []
   for (const node of Object.values(model.nodes)) {
     const path = getNodePath(node.content)
     if (!path) continue
     allPaths.push({ path, name: node.name })
-    if (node.content.type !== 'entity' && node.content.role === 'input') {
+    if (node.content.type === 'entity') continue
+    if (node.content.role === 'input') {
       inputPaths.push({ path, name: node.name })
-    }
-    if (node.content.type !== 'entity' && node.content.role === 'constant') {
-      inputPaths.push({ path, name: `${node.name} (override)` })
+    } else {
+      overridePaths.push({ path, name: node.name })
     }
   }
 
@@ -297,6 +314,16 @@ export function TestPanel() {
       <div className="flex items-center justify-between px-4 py-3 border-b shrink-0">
         <h2 className="text-sm font-semibold">Tests</h2>
         <div className="flex gap-1.5">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleNewTest}
+            className="h-7 text-xs gap-1"
+            title="Create a new empty test"
+          >
+            <Plus className="size-3" />
+            New
+          </Button>
           <Button
             variant="outline"
             size="sm"
@@ -377,6 +404,7 @@ export function TestPanel() {
                 onUpdate={(updates) => handleUpdateTest(test.id, updates)}
                 isRunning={isRunning}
                 inputPaths={inputPaths}
+                overridePaths={overridePaths}
                 allPaths={allPaths}
               />
             ))}
@@ -386,6 +414,8 @@ export function TestPanel() {
     </div>
   )
 }
+
+type Section = 'input' | 'override' | 'expect'
 
 type TestItemProps = {
   test: TestCase
@@ -401,6 +431,7 @@ type TestItemProps = {
   onUpdate: (updates: Partial<TestCase>) => void
   isRunning: boolean
   inputPaths: { path: string; name: string }[]
+  overridePaths: { path: string; name: string }[]
   allPaths: { path: string; name: string }[]
 }
 
@@ -418,18 +449,17 @@ function TestItem({
   onUpdate,
   isRunning,
   inputPaths,
+  overridePaths,
   allPaths,
 }: TestItemProps) {
   const [editingName, setEditingName] = useState(false)
   const [nameValue, setNameValue] = useState(test.name)
   const [editingField, setEditingField] = useState<{
-    section: 'input' | 'expect'
+    section: Section
     path: string
   } | null>(null)
   const [fieldValue, setFieldValue] = useState('')
-  const [addingField, setAddingField] = useState<'input' | 'expect' | null>(
-    null
-  )
+  const [addingField, setAddingField] = useState<Section | null>(null)
   const [newPath, setNewPath] = useState('')
   const [newValue, setNewValue] = useState('')
 
@@ -440,50 +470,50 @@ function TestItem({
     setEditingName(false)
   }
 
-  const saveField = (section: 'input' | 'expect', path: string) => {
+  const parseValue = (raw: string): unknown => {
     try {
-      const parsed = JSON.parse(fieldValue)
-      if (section === 'expect') {
-        onUpdate({ expect: { ...test.expect, [path]: parsed } })
-      } else {
-        onUpdate({ inputs: { ...(test.inputs ?? {}), [path]: parsed } })
-      }
+      return JSON.parse(raw)
     } catch {
-      // Try as string
-      if (section === 'expect') {
-        onUpdate({ expect: { ...test.expect, [path]: fieldValue } })
-      } else {
-        onUpdate({ inputs: { ...(test.inputs ?? {}), [path]: fieldValue } })
-      }
+      return raw
     }
-    setEditingField(null)
   }
 
-  const removeField = (section: 'input' | 'expect', path: string) => {
+  const writeField = (
+    section: Section,
+    path: string,
+    value: unknown,
+    remove = false
+  ) => {
     if (section === 'expect') {
       const next = { ...test.expect }
-      delete next[path]
+      if (remove) delete next[path]
+      else next[path] = value
       onUpdate({ expect: next })
+    } else if (section === 'override') {
+      const next = { ...(test.overrides ?? {}) }
+      if (remove) delete next[path]
+      else next[path] = value
+      onUpdate({ overrides: next })
     } else {
       const next = { ...(test.inputs ?? {}) }
-      delete next[path]
+      if (remove) delete next[path]
+      else next[path] = value
       onUpdate({ inputs: next })
     }
   }
 
-  const addField = (section: 'input' | 'expect') => {
+  const saveField = (section: Section, path: string) => {
+    writeField(section, path, parseValue(fieldValue))
+    setEditingField(null)
+  }
+
+  const removeField = (section: Section, path: string) => {
+    writeField(section, path, undefined, true)
+  }
+
+  const addField = (section: Section) => {
     if (!newPath.trim()) return
-    let parsed: unknown
-    try {
-      parsed = JSON.parse(newValue)
-    } catch {
-      parsed = newValue
-    }
-    if (section === 'expect') {
-      onUpdate({ expect: { ...test.expect, [newPath.trim()]: parsed } })
-    } else {
-      onUpdate({ inputs: { ...(test.inputs ?? {}), [newPath.trim()]: parsed } })
-    }
+    writeField(section, newPath.trim(), parseValue(newValue))
     setNewPath('')
     setNewValue('')
     setAddingField(null)
@@ -575,37 +605,73 @@ function TestItem({
 
       {isExpanded && (
         <div className="mt-2 ml-5 space-y-3">
-          {/* Inputs — editable */}
-          <EditableSection
-            label="Inputs"
-            entries={Object.entries(test.inputs ?? {})}
-            editingField={
-              editingField?.section === 'input' ? editingField.path : null
-            }
-            fieldValue={fieldValue}
-            result={null}
-            onEdit={(path) => {
-              setEditingField({ section: 'input', path })
-              setFieldValue(JSON.stringify((test.inputs ?? {})[path]))
-            }}
-            onSave={(path) => saveField('input', path)}
-            onRemove={(path) => removeField('input', path)}
-            onFieldValueChange={setFieldValue}
-            onCancelEdit={() => setEditingField(null)}
-            adding={addingField === 'input'}
-            onStartAdd={() => {
-              setAddingField('input')
-              setNewPath('')
-              setNewValue('')
-            }}
-            onCancelAdd={() => setAddingField(null)}
-            onAdd={() => addField('input')}
-            newPath={newPath}
-            newValue={newValue}
-            availablePaths={inputPaths}
-            onNewPathChange={setNewPath}
-            onNewValueChange={setNewValue}
-          />
+          {(
+            [
+              {
+                section: 'input' as const,
+                label: 'Inputs',
+                entries: Object.entries(test.inputs ?? {}),
+                paths: inputPaths,
+                result: null as TestRunResult | null | undefined,
+              },
+              {
+                section: 'override' as const,
+                label: 'Overrides',
+                entries: Object.entries(test.overrides ?? {}),
+                paths: overridePaths,
+                result: null as TestRunResult | null | undefined,
+              },
+              {
+                section: 'expect' as const,
+                label: 'Expectations',
+                entries: Object.entries(test.expect),
+                paths: allPaths,
+                result,
+              },
+            ] as const
+          ).map(({ section, label, entries, paths, result: sectionResult }) => (
+            <EditableSection
+              key={section}
+              label={label}
+              entries={entries}
+              editingField={
+                editingField?.section === section ? editingField.path : null
+              }
+              fieldValue={fieldValue}
+              result={sectionResult}
+              onEdit={(path) => {
+                setEditingField({ section, path })
+                const src =
+                  section === 'expect'
+                    ? test.expect
+                    : section === 'override'
+                      ? (test.overrides ?? {})
+                      : (test.inputs ?? {})
+                setFieldValue(JSON.stringify(src[path]))
+              }}
+              onSave={(path) => saveField(section, path)}
+              onRemove={(path) => removeField(section, path)}
+              onFieldValueChange={setFieldValue}
+              onCancelEdit={() => setEditingField(null)}
+              adding={addingField === section}
+              onStartAdd={() => {
+                setAddingField(section)
+                setNewPath('')
+                setNewValue('')
+              }}
+              onCancelAdd={() => {
+                setAddingField(null)
+                setNewPath('')
+                setNewValue('')
+              }}
+              onAdd={() => addField(section)}
+              newPath={newPath}
+              newValue={newValue}
+              availablePaths={paths}
+              onNewPathChange={setNewPath}
+              onNewValueChange={setNewValue}
+            />
+          ))}
 
           {/* Entities */}
           {test.entities &&
@@ -616,38 +682,6 @@ function TestItem({
                 </span>
               </div>
             ))}
-
-          {/* Expectations — editable with results */}
-          <EditableSection
-            label="Expectations"
-            entries={Object.entries(test.expect)}
-            editingField={
-              editingField?.section === 'expect' ? editingField.path : null
-            }
-            fieldValue={fieldValue}
-            result={result}
-            onEdit={(path) => {
-              setEditingField({ section: 'expect', path })
-              setFieldValue(JSON.stringify(test.expect[path]))
-            }}
-            onSave={(path) => saveField('expect', path)}
-            onRemove={(path) => removeField('expect', path)}
-            onFieldValueChange={setFieldValue}
-            onCancelEdit={() => setEditingField(null)}
-            adding={addingField === 'expect'}
-            onStartAdd={() => {
-              setAddingField('expect')
-              setNewPath('')
-              setNewValue('')
-            }}
-            onCancelAdd={() => setAddingField(null)}
-            onAdd={() => addField('expect')}
-            newPath={newPath}
-            newValue={newValue}
-            availablePaths={allPaths}
-            onNewPathChange={setNewPath}
-            onNewValueChange={setNewValue}
-          />
 
           {result?.error && (
             <p className="text-xs text-red-600">Error: {result.error}</p>
@@ -787,49 +821,57 @@ function EditableSection({
         {/* Add new field */}
         {adding && (
           <div className="space-y-1">
-            <select
-              className="h-6 w-full text-xs font-mono rounded border bg-background px-1"
-              value={newPath}
-              onChange={(e) => onNewPathChange(e.target.value)}
-              autoFocus
-            >
-              <option value="">Select path...</option>
-              {availablePaths
-                .filter((p) => !entries.some(([ep]) => ep === p.path))
-                .map((p) => (
-                  <option key={p.path} value={p.path}>
-                    {p.name} ({p.path})
-                  </option>
-                ))}
-            </select>
-            {newPath && (
-              <div className="flex gap-1 items-center">
-                <Input
-                  className="h-5 text-xs font-mono flex-1"
-                  placeholder="value"
-                  value={newValue}
-                  onChange={(e) => onNewValueChange(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') onAdd()
-                  }}
-                  autoFocus
-                />
-                <button
-                  className="p-0.5 text-emerald-600 hover:text-emerald-700"
-                  onClick={onAdd}
-                  title="Add"
-                >
-                  <Check className="size-3" />
-                </button>
-                <button
-                  className="p-0.5 text-muted-foreground hover:text-foreground"
-                  onClick={onCancelAdd}
-                  title="Cancel"
-                >
-                  <X className="size-3" />
-                </button>
-              </div>
-            )}
+            {(() => {
+              const listId = `test-paths-${label.toLowerCase().replace(/\s+/g, '-')}`
+              const remaining = availablePaths.filter(
+                (p) => !entries.some(([ep]) => ep === p.path)
+              )
+              return (
+                <>
+                  <Input
+                    className="h-6 text-xs font-mono"
+                    list={listId}
+                    placeholder="Type to search paths..."
+                    value={newPath}
+                    onChange={(e) => onNewPathChange(e.target.value)}
+                    autoFocus
+                  />
+                  <datalist id={listId}>
+                    {remaining.map((p) => (
+                      <option key={p.path} value={p.path}>
+                        {p.name}
+                      </option>
+                    ))}
+                  </datalist>
+                </>
+              )
+            })()}
+            <div className="flex gap-1 items-center">
+              <Input
+                className="h-5 text-xs font-mono flex-1"
+                placeholder="value"
+                value={newValue}
+                onChange={(e) => onNewValueChange(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') onAdd()
+                }}
+              />
+              <button
+                className="p-0.5 text-emerald-600 hover:text-emerald-700 disabled:opacity-30 disabled:cursor-not-allowed"
+                onClick={onAdd}
+                disabled={!newPath.trim()}
+                title="Add"
+              >
+                <Check className="size-3" />
+              </button>
+              <button
+                className="p-0.5 text-muted-foreground hover:text-foreground"
+                onClick={onCancelAdd}
+                title="Cancel"
+              >
+                <X className="size-3" />
+              </button>
+            </div>
           </div>
         )}
 
