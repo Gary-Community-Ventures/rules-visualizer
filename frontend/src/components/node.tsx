@@ -25,6 +25,8 @@ import {
   XCircle,
   Bookmark,
   BookmarkCheck,
+  Filter,
+  FilterX,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ContentViewer } from './content-viewers'
@@ -710,6 +712,8 @@ export function NodePanel() {
     runOnBlur,
     workspaceItems,
     setWorkspaceItems,
+    selectedNodes,
+    setSelectedNodes,
   } = useMainContext()
   const openNodeData = useFindNode(openNode)
 
@@ -718,6 +722,7 @@ export function NodePanel() {
   }
 
   const inWorkspace = workspaceItems.includes(openNode)
+  const inFilter = selectedNodes.includes(openNode)
   const isInput = isInputNode(openNodeData)
   const isConstant = isConstantNode(openNodeData)
   const canEdit = isOverridable(openNodeData)
@@ -828,6 +833,25 @@ export function NodePanel() {
               </ContextMenu.Content>
             </ContextMenu.Portal>
           </ContextMenu.Root>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7"
+            title={inFilter ? 'Remove from filter' : 'Add to filter'}
+            onClick={() =>
+              inFilter
+                ? setSelectedNodes((prev) =>
+                    prev.filter((id) => id !== openNode)
+                  )
+                : setSelectedNodes((prev) => [...prev, openNode])
+            }
+          >
+            {inFilter ? (
+              <FilterX className="size-4 text-primary" />
+            ) : (
+              <Filter className="size-4" />
+            )}
+          </Button>
           <Button
             variant="ghost"
             size="icon"
