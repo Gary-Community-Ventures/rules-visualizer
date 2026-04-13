@@ -2,10 +2,10 @@
 
 ## Commit Message Workflow
 
-After completing any work, append a short description of the changes to `.git/MERGE_MSG`. Use this format:
+After completing any work, append a short description of the changes to `.git/CLAUDE_MSG`. Use this format:
 
 ```
 - Brief description of what changed
 ```
 
-Git automatically opens the editor with this content when the user runs `git commit`, and deletes the file after a successful commit. No cleanup needed.
+A `prepare-commit-msg` hook prepends this into the commit editor and deletes the file automatically.

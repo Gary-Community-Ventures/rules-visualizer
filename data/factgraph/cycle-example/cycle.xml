@@ -1,0 +1,67 @@
+<FactDictionaryModule>
+  <Facts>
+    <!-- Simple example with a 3-node cycle: A -> B -> C -> A -->
+
+    <!-- Input -->
+    <Fact path="/seed">
+      <Name>Seed value</Name>
+      <Description>Starting input value</Description>
+      <Writable><Int /></Writable>
+    </Fact>
+
+    <!-- A depends on B and on /seed -->
+    <Fact path="/a">
+      <Name>A</Name>
+      <Description>A = B + seed (also part of cycle A->B->C->A)</Description>
+      <Derived>
+        <Add>
+          <Dependency path="/b" />
+          <Dependency path="/seed" />
+        </Add>
+      </Derived>
+    </Fact>
+
+    <!-- B depends on C -->
+    <Fact path="/b">
+      <Name>B</Name>
+      <Description>B = C * 2</Description>
+      <Derived>
+        <Multiply>
+          <Dependency path="/c" />
+          <Int>2</Int>
+        </Multiply>
+      </Derived>
+    </Fact>
+
+    <!-- C depends on A — this closes the cycle -->
+    <Fact path="/c">
+      <Name>C</Name>
+      <Description>C = A + 1 (back-edge that creates the cycle)</Description>
+      <Derived>
+        <Add>
+          <Dependency path="/a" />
+          <Int>1</Int>
+        </Add>
+      </Derived>
+    </Fact>
+
+    <!-- D depends on A but is not part of the cycle -->
+    <Fact path="/d">
+      <Name>D</Name>
+      <Description>D = A * 10 (downstream of cycle, not part of it)</Description>
+      <Derived>
+        <Multiply>
+          <Dependency path="/a" />
+          <Int>10</Int>
+        </Multiply>
+      </Derived>
+    </Fact>
+
+    <!-- E is a leaf with no deps -->
+    <Fact path="/e">
+      <Name>E</Name>
+      <Description>E = 42 (standalone constant)</Description>
+      <Derived><Int>42</Int></Derived>
+    </Fact>
+  </Facts>
+</FactDictionaryModule>
