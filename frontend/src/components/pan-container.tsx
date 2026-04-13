@@ -164,7 +164,7 @@ export function PanContainer({ children, className }: PanContainerProps) {
       {/* Zoom controls */}
       <ButtonGroup
         orientation="vertical"
-        className="absolute bottom-4 right-4 shadow-sm"
+        className="absolute bottom-4 right-4 rounded-md shadow-sm"
       >
         <Button
           variant="outline"
