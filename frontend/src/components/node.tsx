@@ -201,23 +201,32 @@ export function Node({ node }: NodeProps) {
         )}
 
         {/* Input nodes in test mode: show test value as read-only badge */}
-        {isInput && !isCollection && activeTest?.inputs && (() => {
-          const nodePath = node.content.type !== 'entity' ? node.content.path : null
-          const testValue = nodePath ? activeTest?.inputs[nodePath] : undefined
-          if (testValue !== undefined) {
-            return (
-              <div className="mt-1.5 font-mono text-xs text-blue-700 bg-blue-50 rounded px-2 py-0.5 border border-blue-200">
-                {formatResultValue(testValue)}
-              </div>
-            )
-          }
-          return null
-        })()}
+        {isInput &&
+          !isCollection &&
+          activeTest?.inputs &&
+          (() => {
+            const nodePath =
+              node.content.type !== 'entity' ? node.content.path : null
+            const testValue = nodePath
+              ? activeTest?.inputs[nodePath]
+              : undefined
+            if (testValue !== undefined) {
+              return (
+                <div className="mt-1.5 font-mono text-xs text-blue-700 bg-blue-50 rounded px-2 py-0.5 border border-blue-200">
+                  {formatResultValue(testValue)}
+                </div>
+              )
+            }
+            return null
+          })()}
 
         {/* Input nodes: prominent field, always visible (but not for collection-scoped) */}
         {isInput && !isCollection && (
           <div
-            className={cn('mt-2 flex items-center gap-1 h-8', activeTest && 'invisible')}
+            className={cn(
+              'mt-2 flex items-center gap-1 h-8',
+              activeTest && 'invisible'
+            )}
             onClick={(e) => e.stopPropagation()}
           >
             <Input
@@ -282,8 +291,10 @@ export function Node({ node }: NodeProps) {
 
         {/* Result value — with optional test expectation */}
         {(() => {
-          const nodePath = node.content.type !== 'entity' ? node.content.path : null
-          const testExp = nodePath && activeTest ? activeTest.expectations[nodePath] : null
+          const nodePath =
+            node.content.type !== 'entity' ? node.content.path : null
+          const testExp =
+            nodePath && activeTest ? activeTest.expectations[nodePath] : null
 
           if (testExp) {
             return (
@@ -301,7 +312,9 @@ export function Node({ node }: NodeProps) {
                   ) : (
                     <XCircle className="size-3 text-red-600 shrink-0" />
                   )}
-                  <span className="truncate">{formatResultValue(testExp.actual)}</span>
+                  <span className="truncate">
+                    {formatResultValue(testExp.actual)}
+                  </span>
                 </div>
                 {!testExp.passed && (
                   <div className="text-[10px] text-red-500 truncate">
@@ -467,10 +480,7 @@ function checkVisible(
   const w = size?.width ?? el.offsetWidth
   const h = size?.height ?? el.offsetHeight
   return (
-    top + h > vp.top &&
-    top < vp.bottom &&
-    left + w > vp.left &&
-    left < vp.right
+    top + h > vp.top && top < vp.bottom && left + w > vp.left && left < vp.right
   )
 }
 
@@ -489,7 +499,9 @@ function useIsVisible(
     }
     update()
     viewportListeners.add(update)
-    return () => { viewportListeners.delete(update) }
+    return () => {
+      viewportListeners.delete(update)
+    }
   }, [ref, size])
 
   return visible

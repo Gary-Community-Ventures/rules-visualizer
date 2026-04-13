@@ -294,9 +294,7 @@ export function ToolBar() {
           variant={rightBar === 'tests' ? 'default' : 'outline'}
           size="icon"
           title="Tests"
-          onClick={() =>
-            setRightBar(rightBar === 'tests' ? null : 'tests')
-          }
+          onClick={() => setRightBar(rightBar === 'tests' ? null : 'tests')}
         >
           <FlaskConical className="size-4" />
         </Button>

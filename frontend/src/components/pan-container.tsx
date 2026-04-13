@@ -20,6 +20,7 @@ export function PanContainer({ children, className }: PanContainerProps) {
   const [isPanning, setIsPanning] = useState(false)
   const dragStart = useRef({ x: 0, y: 0, offsetX: 0, offsetY: 0 })
   const containerRef = useRef<HTMLDivElement>(null)
+  const contentRef = useRef<HTMLDivElement>(null)
 
   const handleMouseDown = (e: React.MouseEvent) => {
     // Only pan with left mouse button
@@ -139,16 +140,21 @@ export function PanContainer({ children, className }: PanContainerProps) {
     window.dispatchEvent(new CustomEvent('transform', { detail: { scale } }))
   }, [scale, offset])
 
-  // Watch for this container's own size changing — fires when the tab this
-  // container lives in goes from display:none (0×0) to visible, which we
-  // otherwise have no event for. Keeps arrows and virtualization in sync.
+  // Watch for size changes — fires when:
+  //   - Tab goes from display:none (0×0) to visible (outer container)
+  //   - Window/panel resizes (outer container)
+  //   - Content grows because nodes expanded, e.g. after a test/execution
+  //     added a result badge (inner container)
+  // Keeps arrows and virtualization in sync.
   useEffect(() => {
-    const el = containerRef.current
-    if (!el) return
+    const outer = containerRef.current
+    const inner = contentRef.current
+    if (!outer || !inner) return
     const observer = new ResizeObserver(() => {
       window.dispatchEvent(new Event('containerresize'))
     })
-    observer.observe(el)
+    observer.observe(outer)
+    observer.observe(inner)
     return () => observer.disconnect()
   }, [])
 
@@ -166,6 +172,7 @@ export function PanContainer({ children, className }: PanContainerProps) {
       onMouseUp={handleMouseUp}
     >
       <div
+        ref={contentRef}
         style={{
           transform: `translate(${offset.x}px, ${offset.y}px) scale(${scale})`,
           transformOrigin: '0 0',

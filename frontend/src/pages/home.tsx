@@ -18,13 +18,30 @@ import { NodePanel, nodeElementId } from '@/components/node'
 
 export function HomePage() {
   useKeyboardShortcuts()
-  const { model, selectedNodes, showChildren, isLoading, error } =
-    useMainContext()
+  const {
+    model,
+    selectedNodes,
+    showChildren,
+    isLoading,
+    error,
+    executionResults,
+    activeTest,
+  } = useMainContext()
 
   const rows = useMemo(
     () => nodeRows(model.nodes, showChildren, selectedNodes),
     [model.nodes, showChildren, selectedNodes]
   )
+
+  // Nodes change size when execution/test results appear (result badges
+  // expand the cards). Arrows are positioned from getBoundingClientRect, so
+  // they need to recompute after the layout settles.
+  useEffect(() => {
+    const id = requestAnimationFrame(() => {
+      window.dispatchEvent(new Event('containerresize'))
+    })
+    return () => cancelAnimationFrame(id)
+  }, [executionResults, activeTest])
 
   if (isLoading) {
     return (

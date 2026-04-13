@@ -15,12 +15,8 @@
       ]
     },
     "expect": {
-      "/members/*/isChild": [
-        true
-      ],
-      "/members/*/memberBenefit": [
-        150
-      ],
+      "/members/*/isChild": [true],
+      "/members/*/memberBenefit": [150],
       "/totalMonthlyBenefit": 150
     }
   },
@@ -50,16 +46,8 @@
       ]
     },
     "expect": {
-      "/members/*/isChild": [
-        true,
-        false,
-        false
-      ],
-      "/members/*/memberBenefit": [
-        150,
-        275,
-        0
-      ],
+      "/members/*/isChild": [true, false, false],
+      "/members/*/memberBenefit": [150, 275, 0],
       "/totalMonthlyBenefit": 425
     }
   }

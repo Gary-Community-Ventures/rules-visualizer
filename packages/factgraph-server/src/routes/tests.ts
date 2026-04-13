@@ -154,8 +154,7 @@ router.post('/rulesets/:id/tests/run', (req, res) => {
       // Build path→nodeId map
       const pathToNodeId: Record<string, string> = {}
       for (const [nodeId, node] of Object.entries(model.nodes)) {
-        const p =
-          node.content.type === 'entity' ? undefined : node.content.path
+        const p = node.content.type === 'entity' ? undefined : node.content.path
         if (p) pathToNodeId[p] = nodeId
       }
 

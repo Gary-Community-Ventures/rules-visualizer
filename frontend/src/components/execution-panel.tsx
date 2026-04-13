@@ -716,4 +716,3 @@ function EntityEditor({
     </div>
   )
 }
-

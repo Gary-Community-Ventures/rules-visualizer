@@ -62,9 +62,7 @@ function Arrow({
       const fromElement = document.getElementById(
         nodeElementId(rulesetId, fromId)
       )
-      const toElement = document.getElementById(
-        nodeElementId(rulesetId, toId)
-      )
+      const toElement = document.getElementById(nodeElementId(rulesetId, toId))
 
       if (!fromElement || !toElement) {
         setPath('')
@@ -72,10 +70,7 @@ function Arrow({
       }
 
       // Skip arrows where both endpoints are virtualized away
-      if (
-        !fromElement.dataset.rendered &&
-        !toElement.dataset.rendered
-      ) {
+      if (!fromElement.dataset.rendered && !toElement.dataset.rendered) {
         setPath('')
         return
       }

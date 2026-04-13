@@ -133,7 +133,11 @@ export function TestPanel() {
       const path = getNodePath(node.content)
       if (!path) continue
       let value: unknown
-      try { value = JSON.parse(rawValue) } catch { value = rawValue }
+      try {
+        value = JSON.parse(rawValue)
+      } catch {
+        value = rawValue
+      }
       if (node.content.type !== 'entity' && node.content.role === 'input') {
         inputs[path] = value
       } else {
@@ -151,21 +155,26 @@ export function TestPanel() {
       }
     }
 
-    const entities = Object.keys(entityData).length > 0
-      ? Object.fromEntries(
-          Object.entries(entityData).map(([entity, rows]) => [
-            entity,
-            rows.map((row) => {
-              const parsed: Record<string, unknown> = {}
-              for (const [key, val] of Object.entries(row)) {
-                if (val === '') continue
-                try { parsed[key] = JSON.parse(val) } catch { parsed[key] = val }
-              }
-              return parsed
-            }),
-          ])
-        )
-      : undefined
+    const entities =
+      Object.keys(entityData).length > 0
+        ? Object.fromEntries(
+            Object.entries(entityData).map(([entity, rows]) => [
+              entity,
+              rows.map((row) => {
+                const parsed: Record<string, unknown> = {}
+                for (const [key, val] of Object.entries(row)) {
+                  if (val === '') continue
+                  try {
+                    parsed[key] = JSON.parse(val)
+                  } catch {
+                    parsed[key] = val
+                  }
+                }
+                return parsed
+              }),
+            ])
+          )
+        : undefined
 
     try {
       const newTest = await createTest(model.id, {
@@ -212,7 +221,10 @@ export function TestPanel() {
     }
   }
 
-  const handleUpdateTest = async (testId: string, updates: Partial<TestCase>) => {
+  const handleUpdateTest = async (
+    testId: string,
+    updates: Partial<TestCase>
+  ) => {
     try {
       const updated = await updateTest(model.id, testId, updates)
       setTests((prev) => prev.map((t) => (t.id === testId ? updated : t)))
@@ -227,7 +239,10 @@ export function TestPanel() {
     for (const [path, value] of Object.entries(test.inputs ?? {})) {
       for (const [nodeId, node] of Object.entries(model.nodes)) {
         if (getNodePath(node.content) === path) {
-          setInputOverride(nodeId, typeof value === 'string' ? value : JSON.stringify(value))
+          setInputOverride(
+            nodeId,
+            typeof value === 'string' ? value : JSON.stringify(value)
+          )
           break
         }
       }
@@ -235,7 +250,10 @@ export function TestPanel() {
     for (const [path, value] of Object.entries(test.overrides ?? {})) {
       for (const [nodeId, node] of Object.entries(model.nodes)) {
         if (getNodePath(node.content) === path) {
-          setInputOverride(nodeId, typeof value === 'string' ? value : JSON.stringify(value))
+          setInputOverride(
+            nodeId,
+            typeof value === 'string' ? value : JSON.stringify(value)
+          )
           break
         }
       }
@@ -296,19 +314,34 @@ export function TestPanel() {
             disabled={isRunning || tests.length === 0}
             className="h-7 gap-1"
           >
-            {isRunning ? <Loader2 className="size-3 animate-spin" /> : <Play className="size-3" />}
+            {isRunning ? (
+              <Loader2 className="size-3 animate-spin" />
+            ) : (
+              <Play className="size-3" />
+            )}
             Run all
           </Button>
         </div>
       </div>
 
       {results.length > 0 && (
-        <div className={cn('px-4 py-2 text-xs border-b', failCount === 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700')}>
+        <div
+          className={cn(
+            'px-4 py-2 text-xs border-b',
+            failCount === 0
+              ? 'bg-emerald-50 text-emerald-700'
+              : 'bg-red-50 text-red-700'
+          )}
+        >
           {passCount} passed, {failCount} failed
         </div>
       )}
 
-      {error && <div className="px-4 py-2 bg-red-50 text-red-700 text-xs border-b">{error}</div>}
+      {error && (
+        <div className="px-4 py-2 bg-red-50 text-red-700 text-xs border-b">
+          {error}
+        </div>
+      )}
 
       <div className="flex-1 overflow-y-auto">
         {tests.length === 0 ? (
@@ -324,7 +357,9 @@ export function TestPanel() {
                 result={results.find((r) => r.testId === test.id)}
                 isExpanded={expandedTest === test.id}
                 isSelected={selectedTestId === test.id}
-                onToggle={() => setExpandedTest(expandedTest === test.id ? null : test.id)}
+                onToggle={() =>
+                  setExpandedTest(expandedTest === test.id ? null : test.id)
+                }
                 onSelect={() => {
                   if (selectedTestId === test.id) {
                     setSelectedTestId(null)
@@ -370,15 +405,31 @@ type TestItemProps = {
 }
 
 function TestItem({
-  test, result, isExpanded, isSelected, onToggle, onSelect,
-  onRun, onDuplicate, onDelete, onLoadIntoExecution, onUpdate, isRunning,
-  inputPaths, allPaths,
+  test,
+  result,
+  isExpanded,
+  isSelected,
+  onToggle,
+  onSelect,
+  onRun,
+  onDuplicate,
+  onDelete,
+  onLoadIntoExecution,
+  onUpdate,
+  isRunning,
+  inputPaths,
+  allPaths,
 }: TestItemProps) {
   const [editingName, setEditingName] = useState(false)
   const [nameValue, setNameValue] = useState(test.name)
-  const [editingField, setEditingField] = useState<{ section: 'input' | 'expect'; path: string } | null>(null)
+  const [editingField, setEditingField] = useState<{
+    section: 'input' | 'expect'
+    path: string
+  } | null>(null)
   const [fieldValue, setFieldValue] = useState('')
-  const [addingField, setAddingField] = useState<'input' | 'expect' | null>(null)
+  const [addingField, setAddingField] = useState<'input' | 'expect' | null>(
+    null
+  )
   const [newPath, setNewPath] = useState('')
   const [newValue, setNewValue] = useState('')
 
@@ -423,7 +474,11 @@ function TestItem({
   const addField = (section: 'input' | 'expect') => {
     if (!newPath.trim()) return
     let parsed: unknown
-    try { parsed = JSON.parse(newValue) } catch { parsed = newValue }
+    try {
+      parsed = JSON.parse(newValue)
+    } catch {
+      parsed = newValue
+    }
     if (section === 'expect') {
       onUpdate({ expect: { ...test.expect, [newPath.trim()]: parsed } })
     } else {
@@ -437,16 +492,34 @@ function TestItem({
   return (
     <div className={cn('px-4 py-2', isSelected && 'bg-blue-50/50')}>
       <div className="flex items-center gap-2">
-        <button className="flex items-center gap-1.5 flex-1 text-left min-w-0" onClick={() => { onSelect(); onToggle() }}>
-          {isExpanded ? <ChevronDown className="size-3 text-muted-foreground shrink-0" /> : <ChevronRight className="size-3 text-muted-foreground shrink-0" />}
-          {result && (result.passed ? <CheckCircle className="size-3.5 text-emerald-600 shrink-0" /> : <XCircle className="size-3.5 text-red-600 shrink-0" />)}
+        <button
+          className="flex items-center gap-1.5 flex-1 text-left min-w-0"
+          onClick={() => {
+            onSelect()
+            onToggle()
+          }}
+        >
+          {isExpanded ? (
+            <ChevronDown className="size-3 text-muted-foreground shrink-0" />
+          ) : (
+            <ChevronRight className="size-3 text-muted-foreground shrink-0" />
+          )}
+          {result &&
+            (result.passed ? (
+              <CheckCircle className="size-3.5 text-emerald-600 shrink-0" />
+            ) : (
+              <XCircle className="size-3.5 text-red-600 shrink-0" />
+            ))}
           {editingName ? (
             <Input
               className="h-5 text-xs flex-1"
               value={nameValue}
               onChange={(e) => setNameValue(e.target.value)}
               onBlur={saveName}
-              onKeyDown={(e) => { if (e.key === 'Enter') saveName(); if (e.key === 'Escape') setEditingName(false) }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') saveName()
+                if (e.key === 'Escape') setEditingName(false)
+              }}
               autoFocus
               onClick={(e) => e.stopPropagation()}
             />
@@ -456,20 +529,45 @@ function TestItem({
         </button>
         <div className="flex gap-0.5 shrink-0">
           {!editingName && (
-            <button className="p-1 text-muted-foreground hover:text-foreground rounded" onClick={(e) => { e.stopPropagation(); setEditingName(true); setNameValue(test.name) }} title="Edit name">
+            <button
+              className="p-1 text-muted-foreground hover:text-foreground rounded"
+              onClick={(e) => {
+                e.stopPropagation()
+                setEditingName(true)
+                setNameValue(test.name)
+              }}
+              title="Edit name"
+            >
               <Pencil className="size-2.5" />
             </button>
           )}
-          <button className="p-1 text-muted-foreground hover:text-foreground rounded" onClick={onRun} disabled={isRunning} title="Run">
+          <button
+            className="p-1 text-muted-foreground hover:text-foreground rounded"
+            onClick={onRun}
+            disabled={isRunning}
+            title="Run"
+          >
             <Play className="size-3" />
           </button>
-          <button className="p-1 text-muted-foreground hover:text-foreground rounded" onClick={onLoadIntoExecution} title="Load into execution">
+          <button
+            className="p-1 text-muted-foreground hover:text-foreground rounded"
+            onClick={onLoadIntoExecution}
+            title="Load into execution"
+          >
             <ArrowRight className="size-3" />
           </button>
-          <button className="p-1 text-muted-foreground hover:text-foreground rounded" onClick={onDuplicate} title="Duplicate">
+          <button
+            className="p-1 text-muted-foreground hover:text-foreground rounded"
+            onClick={onDuplicate}
+            title="Duplicate"
+          >
             <Copy className="size-3" />
           </button>
-          <button className="p-1 text-muted-foreground hover:text-foreground rounded" onClick={onDelete} title="Delete">
+          <button
+            className="p-1 text-muted-foreground hover:text-foreground rounded"
+            onClick={onDelete}
+            title="Delete"
+          >
             <Trash2 className="size-3" />
           </button>
         </div>
@@ -481,16 +579,25 @@ function TestItem({
           <EditableSection
             label="Inputs"
             entries={Object.entries(test.inputs ?? {})}
-            editingField={editingField?.section === 'input' ? editingField.path : null}
+            editingField={
+              editingField?.section === 'input' ? editingField.path : null
+            }
             fieldValue={fieldValue}
             result={null}
-            onEdit={(path) => { setEditingField({ section: 'input', path }); setFieldValue(JSON.stringify((test.inputs ?? {})[path])) }}
+            onEdit={(path) => {
+              setEditingField({ section: 'input', path })
+              setFieldValue(JSON.stringify((test.inputs ?? {})[path]))
+            }}
             onSave={(path) => saveField('input', path)}
             onRemove={(path) => removeField('input', path)}
             onFieldValueChange={setFieldValue}
             onCancelEdit={() => setEditingField(null)}
             adding={addingField === 'input'}
-            onStartAdd={() => { setAddingField('input'); setNewPath(''); setNewValue('') }}
+            onStartAdd={() => {
+              setAddingField('input')
+              setNewPath('')
+              setNewValue('')
+            }}
             onCancelAdd={() => setAddingField(null)}
             onAdd={() => addField('input')}
             newPath={newPath}
@@ -501,26 +608,38 @@ function TestItem({
           />
 
           {/* Entities */}
-          {test.entities && Object.entries(test.entities).map(([entity, rows]) => (
-            <div key={entity}>
-              <span className="text-[10px] font-semibold text-muted-foreground uppercase">{entity} ({rows.length})</span>
-            </div>
-          ))}
+          {test.entities &&
+            Object.entries(test.entities).map(([entity, rows]) => (
+              <div key={entity}>
+                <span className="text-[10px] font-semibold text-muted-foreground uppercase">
+                  {entity} ({rows.length})
+                </span>
+              </div>
+            ))}
 
           {/* Expectations — editable with results */}
           <EditableSection
             label="Expectations"
             entries={Object.entries(test.expect)}
-            editingField={editingField?.section === 'expect' ? editingField.path : null}
+            editingField={
+              editingField?.section === 'expect' ? editingField.path : null
+            }
             fieldValue={fieldValue}
             result={result}
-            onEdit={(path) => { setEditingField({ section: 'expect', path }); setFieldValue(JSON.stringify(test.expect[path])) }}
+            onEdit={(path) => {
+              setEditingField({ section: 'expect', path })
+              setFieldValue(JSON.stringify(test.expect[path]))
+            }}
             onSave={(path) => saveField('expect', path)}
             onRemove={(path) => removeField('expect', path)}
             onFieldValueChange={setFieldValue}
             onCancelEdit={() => setEditingField(null)}
             adding={addingField === 'expect'}
-            onStartAdd={() => { setAddingField('expect'); setNewPath(''); setNewValue('') }}
+            onStartAdd={() => {
+              setAddingField('expect')
+              setNewPath('')
+              setNewValue('')
+            }}
             onCancelAdd={() => setAddingField(null)}
             onAdd={() => addField('expect')}
             newPath={newPath}
@@ -530,7 +649,9 @@ function TestItem({
             onNewValueChange={setNewValue}
           />
 
-          {result?.error && <p className="text-xs text-red-600">Error: {result.error}</p>}
+          {result?.error && (
+            <p className="text-xs text-red-600">Error: {result.error}</p>
+          )}
         </div>
       )}
     </div>
@@ -560,16 +681,37 @@ type EditableSectionProps = {
 }
 
 function EditableSection({
-  label, entries, editingField, fieldValue, result,
-  onEdit, onSave, onRemove, onFieldValueChange, onCancelEdit,
-  adding, onStartAdd, onCancelAdd, onAdd, availablePaths,
-  newPath, newValue, onNewPathChange, onNewValueChange,
+  label,
+  entries,
+  editingField,
+  fieldValue,
+  result,
+  onEdit,
+  onSave,
+  onRemove,
+  onFieldValueChange,
+  onCancelEdit,
+  adding,
+  onStartAdd,
+  onCancelAdd,
+  onAdd,
+  availablePaths,
+  newPath,
+  newValue,
+  onNewPathChange,
+  onNewValueChange,
 }: EditableSectionProps) {
   return (
     <div>
       <div className="flex items-center gap-1">
-        <span className="text-[10px] font-semibold text-muted-foreground uppercase">{label}</span>
-        <button className="p-0.5 text-muted-foreground hover:text-foreground" onClick={onStartAdd} title={`Add ${label.toLowerCase()}`}>
+        <span className="text-[10px] font-semibold text-muted-foreground uppercase">
+          {label}
+        </span>
+        <button
+          className="p-0.5 text-muted-foreground hover:text-foreground"
+          onClick={onStartAdd}
+          title={`Add ${label.toLowerCase()}`}
+        >
           <Plus className="size-2.5" />
         </button>
       </div>
@@ -578,16 +720,37 @@ function EditableSection({
           const exp = result?.expectations[path]
           const isEditing = editingField === path
           return (
-            <div key={path} className={cn('text-xs font-mono', exp && !exp.passed && 'text-red-700')}>
+            <div
+              key={path}
+              className={cn(
+                'text-xs font-mono',
+                exp && !exp.passed && 'text-red-700'
+              )}
+            >
               <div className="flex items-center gap-1">
-                {exp && (exp.passed ? <Check className="size-3 text-emerald-600 shrink-0" /> : <X className="size-3 text-red-600 shrink-0" />)}
-                <span className="text-muted-foreground truncate flex-1">{path}</span>
+                {exp &&
+                  (exp.passed ? (
+                    <Check className="size-3 text-emerald-600 shrink-0" />
+                  ) : (
+                    <X className="size-3 text-red-600 shrink-0" />
+                  ))}
+                <span className="text-muted-foreground truncate flex-1">
+                  {path}
+                </span>
                 {!isEditing && (
                   <>
-                    <button className="p-0.5 text-muted-foreground hover:text-foreground" onClick={() => onEdit(path)} title="Edit">
+                    <button
+                      className="p-0.5 text-muted-foreground hover:text-foreground"
+                      onClick={() => onEdit(path)}
+                      title="Edit"
+                    >
                       <Pencil className="size-2.5" />
                     </button>
-                    <button className="p-0.5 text-muted-foreground hover:text-foreground" onClick={() => onRemove(path)} title="Remove">
+                    <button
+                      className="p-0.5 text-muted-foreground hover:text-foreground"
+                      onClick={() => onRemove(path)}
+                      title="Remove"
+                    >
                       <Trash2 className="size-2.5" />
                     </button>
                   </>
@@ -600,7 +763,10 @@ function EditableSection({
                     value={fieldValue}
                     onChange={(e) => onFieldValueChange(e.target.value)}
                     onBlur={() => onSave(path)}
-                    onKeyDown={(e) => { if (e.key === 'Enter') onSave(path); if (e.key === 'Escape') onCancelEdit() }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') onSave(path)
+                      if (e.key === 'Escape') onCancelEdit()
+                    }}
                     autoFocus
                   />
                 </div>
@@ -608,7 +774,9 @@ function EditableSection({
                 <div className="ml-4 flex gap-2">
                   <span>= {formatDisplayValue(value)}</span>
                   {exp && !exp.passed && (
-                    <span className="text-red-500">got {formatDisplayValue(exp.actual)}</span>
+                    <span className="text-red-500">
+                      got {formatDisplayValue(exp.actual)}
+                    </span>
                   )}
                 </div>
               )}
@@ -641,13 +809,23 @@ function EditableSection({
                   placeholder="value"
                   value={newValue}
                   onChange={(e) => onNewValueChange(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === 'Enter') onAdd() }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') onAdd()
+                  }}
                   autoFocus
                 />
-                <button className="p-0.5 text-emerald-600 hover:text-emerald-700" onClick={onAdd} title="Add">
+                <button
+                  className="p-0.5 text-emerald-600 hover:text-emerald-700"
+                  onClick={onAdd}
+                  title="Add"
+                >
                   <Check className="size-3" />
                 </button>
-                <button className="p-0.5 text-muted-foreground hover:text-foreground" onClick={onCancelAdd} title="Cancel">
+                <button
+                  className="p-0.5 text-muted-foreground hover:text-foreground"
+                  onClick={onCancelAdd}
+                  title="Cancel"
+                >
                   <X className="size-3" />
                 </button>
               </div>

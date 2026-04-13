@@ -197,7 +197,7 @@
       ]
     },
     "expect": {
-      "applicable_percentage": [0.50],
+      "applicable_percentage": [0.5],
       "creditable_expenses": [3000],
       "section_21_credit": [1500]
     }
