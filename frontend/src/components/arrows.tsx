@@ -12,7 +12,12 @@ type ArrowProps = {
   parentMap: Record<string, string[]>
 }
 
-const COLORS = { active: '#001970', inactive: '#c0c0d8' }
+const COLORS = {
+  active: '#001970',
+  inactive: '#c0c0d8',
+  cycleActive: '#dc2626',
+  cycleInactive: '#fca5a5',
+}
 
 function Arrow({
   fromId,
@@ -26,11 +31,18 @@ function Arrow({
   const nodes = model.nodes
   const [path, setPath] = useState<string>('')
   const [isDashed, setIsDashed] = useState(false)
+  const [isBackEdge, setIsBackEdge] = useState(false)
 
   const activeNode = hoveredNodeId ?? openNode
   const isRelated =
     activeNode === null || fromId === activeNode || toId === activeNode
-  const color = isRelated ? COLORS.active : COLORS.inactive
+  const color = isBackEdge
+    ? isRelated
+      ? COLORS.cycleActive
+      : COLORS.cycleInactive
+    : isRelated
+      ? COLORS.active
+      : COLORS.inactive
 
   const visibleNodeIds = useMemo(() => rows.flat(), [rows])
 
@@ -50,6 +62,15 @@ function Arrow({
       const toElement = document.getElementById(nodeElementId(toId))
 
       if (!fromElement || !toElement) {
+        setPath('')
+        return
+      }
+
+      // Skip arrows where both endpoints are virtualized away
+      if (
+        !fromElement.dataset.rendered &&
+        !toElement.dataset.rendered
+      ) {
         setPath('')
         return
       }
@@ -90,9 +111,31 @@ function Arrow({
       }
 
       const isAdjacent = Math.abs(toRowIndex - fromRowIndex) === 1
+      // Back-edge: the dependency is at or above the parent (cycle in original graph)
+      const isBack = toRowIndex <= fromRowIndex
+      setIsBackEdge(isBack)
 
       let pathData: string
-      if (isAdjacent) {
+      if (isBack) {
+        // Back-edge: exit the source from the right side, traverse to the dest, enter from the right.
+        // Source: exit horizontally from middle-right of source rect
+        const fromExitX = fromRect.right
+        const fromExitY = fromRect.top + fromRect.height / 2
+        // Dest: enter horizontally into middle-right of dest rect
+        const toEntryX = toRect.right
+        const toEntryY = toRect.top + toRect.height / 2
+        // Stick-out distance from each node before the curve
+        const stickOut = 20
+        const sideOffset = 40 + Math.abs(toRowIndex - fromRowIndex) * 20
+        const sideX = Math.max(fromExitX, toEntryX) + stickOut + sideOffset
+
+        pathData =
+          `M ${fromExitX} ${fromExitY} ` +
+          `H ${fromExitX + stickOut} ` +
+          `C ${sideX} ${fromExitY}, ${sideX} ${toEntryY}, ${toEntryX + stickOut} ${toEntryY} ` +
+          `H ${toEntryX}`
+        setIsDashed(true)
+      } else if (isAdjacent) {
         const verticalDistance = toY - fromY
 
         const fromNodeIndex = rows[fromRowIndex].indexOf(fromId)

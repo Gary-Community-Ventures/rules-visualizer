@@ -163,7 +163,6 @@ export function Node({ node }: NodeProps) {
       }}
     >
       <div
-        id={nodeElementId(node.id)}
         className={cn(
           hasOverride
             ? isInput
@@ -478,6 +477,14 @@ function useIsVisible(
 }
 
 export function Rows({ rows }: RowsProps) {
+  // Re-check all node visibilities after layout changes
+  useEffect(() => {
+    const id = requestAnimationFrame(() => {
+      for (const cb of viewportListeners) cb()
+    })
+    return () => cancelAnimationFrame(id)
+  }, [rows])
+
   return (
     <div className="flex flex-col gap-20">
       {rows.map((row, i) => (
@@ -511,6 +518,8 @@ function VirtualNode({ id }: { id: string }) {
   return (
     <div
       ref={ref}
+      id={nodeElementId(id)}
+      data-rendered={visible || undefined}
       style={
         !visible && size.current
           ? { minWidth: size.current.width, minHeight: size.current.height }
