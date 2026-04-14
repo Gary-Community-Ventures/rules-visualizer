@@ -1,19 +1,38 @@
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import type { NodeContent } from '@/lib/model'
+import { useMainContext } from '@/context'
+import { getNodePath } from '@/context/model-context'
+import { LogicHighlighter } from './logic-highlighter'
 
 type Props = {
   content: Extract<NodeContent, { format: 'factGraph'; type: 'derived' }>
 }
 
 export function FactGraphDerivedViewer({ content }: Props) {
+  const { model, setOpenNode } = useMainContext()
+
+  const navigateToPath = useCallback(
+    (path: string) => {
+      for (const [nodeId, node] of Object.entries(model.nodes)) {
+        if (getNodePath(node.content) === path) {
+          setOpenNode(nodeId)
+          return
+        }
+      }
+    },
+    [model.nodes, setOpenNode]
+  )
+
   return (
     <div className="flex flex-col gap-3 text-sm">
       {content.logic && (
         <div>
           <span className="text-muted-foreground font-medium">Logic</span>
-          <pre className="mt-1 rounded-md border bg-muted/50 p-2 text-xs whitespace-pre-wrap font-mono">
-            {content.logic}
-          </pre>
+          <LogicHighlighter
+            format="factGraph"
+            logic={content.logic}
+            onNavigate={navigateToPath}
+          />
         </div>
       )}
       <AdvancedSection>

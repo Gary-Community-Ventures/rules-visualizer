@@ -1,14 +1,34 @@
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import type { NodeContent } from '@/lib/model'
 import { useMainContext } from '@/context'
+import { getNodePath } from '@/context/model-context'
 import { parseFromBlocks, getBlockForYear } from '@/lib/logic'
+import { LogicHighlighter } from './logic-highlighter'
 
 type Props = {
   content: Extract<NodeContent, { format: 'rac'; type: 'variable' }>
 }
 
 export function RacVariableViewer({ content }: Props) {
-  const { logicYear } = useMainContext()
+  const { logicYear, model, setOpenNode } = useMainContext()
+
+  const navigateToPath = useCallback(
+    (varName: string) => {
+      // RAC variables are referenced by name, which is also the node ID
+      if (model.nodes[varName]) {
+        setOpenNode(varName)
+        return
+      }
+      // Fallback: search by path
+      for (const [nodeId, node] of Object.entries(model.nodes)) {
+        if (getNodePath(node.content) === varName) {
+          setOpenNode(nodeId)
+          return
+        }
+      }
+    },
+    [model.nodes, setOpenNode]
+  )
 
   let logicDisplay: React.ReactNode = null
   if (content.logic) {
@@ -22,9 +42,7 @@ export function RacVariableViewer({ content }: Props) {
               Logic{' '}
               <span className="text-xs font-normal">(from {active.date})</span>
             </span>
-            <pre className="mt-1 rounded-md border bg-muted/50 p-2 text-xs whitespace-pre-wrap font-mono">
-              {active.body}
-            </pre>
+            <LogicHighlighter format="rac" logic={active.body} onNavigate={navigateToPath} />
           </div>
         )
       }
@@ -32,9 +50,7 @@ export function RacVariableViewer({ content }: Props) {
       logicDisplay = (
         <div>
           <span className="text-muted-foreground font-medium">Logic</span>
-          <pre className="mt-1 rounded-md border bg-muted/50 p-2 text-xs whitespace-pre-wrap font-mono">
-            {content.logic}
-          </pre>
+          <LogicHighlighter format="rac" logic={content.logic} onNavigate={navigateToPath} />
         </div>
       )
     }
@@ -42,9 +58,7 @@ export function RacVariableViewer({ content }: Props) {
     logicDisplay = (
       <div>
         <span className="text-muted-foreground font-medium">Logic</span>
-        <pre className="mt-1 rounded-md border bg-muted/50 p-2 text-xs whitespace-pre-wrap font-mono">
-          {content.default}
-        </pre>
+        <LogicHighlighter format="rac" logic={content.default} onNavigate={navigateToPath} />
       </div>
     )
   }
