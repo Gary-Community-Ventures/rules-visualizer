@@ -1,6 +1,7 @@
 import express from 'express'
 import path from 'node:path'
 import fs from 'node:fs'
+import { timingSafeEqual, createHash } from 'node:crypto'
 import { fileURLToPath } from 'node:url'
 import { WebSocketServer, type WebSocket } from 'ws'
 import type { Server } from 'node:http'
@@ -14,6 +15,36 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const FRONTEND_DIR = path.resolve(__dirname, '..', 'public')
 
 const app = express()
+
+// Basic auth in production (when BASIC_AUTH_USER and BASIC_AUTH_PASS are set)
+const basicUser = process.env.BASIC_AUTH_USER
+const basicPass = process.env.BASIC_AUTH_PASS
+if (basicUser && basicPass) {
+  app.use((req, res, next) => {
+    const header = req.headers.authorization
+    if (!header || !header.startsWith('Basic ')) {
+      res.set('WWW-Authenticate', 'Basic realm="Rules Visualizer"')
+      return res.status(401).send('Authentication required')
+    }
+    const [user, pass] = Buffer.from(header.slice(6), 'base64')
+      .toString()
+      .split(':')
+    const userMatch = timingSafeEqual(
+      createHash('sha256').update(user ?? '').digest(),
+      createHash('sha256').update(basicUser).digest()
+    )
+    const passMatch = timingSafeEqual(
+      createHash('sha256').update(pass ?? '').digest(),
+      createHash('sha256').update(basicPass).digest()
+    )
+    if (!userMatch || !passMatch) {
+      res.set('WWW-Authenticate', 'Basic realm="Rules Visualizer"')
+      return res.status(401).send('Invalid credentials')
+    }
+    next()
+  })
+}
+
 app.use(express.json())
 
 // API routes
