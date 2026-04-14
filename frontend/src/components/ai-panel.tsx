@@ -16,7 +16,8 @@ import { useMainContext } from '@/context'
 import { cn } from '@/lib/utils'
 import { onAiEvent, sendWsMessage, type AiEvent } from '@/lib/api/live-reload'
 import { Button } from './ui/button'
-import { X, Send, ChevronRight, Copy, Check } from 'lucide-react'
+import { Input } from './ui/input'
+import { X, Send, ChevronRight, Copy, Check, Lock } from 'lucide-react'
 import Markdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { SnakeLoader } from './snake-game'
@@ -112,29 +113,73 @@ function ChatProvider({ children }: { children: ReactNode }) {
 
 export function AIPanel() {
   const { setRightBar } = useMainContext()
+  const [hasPassword, setHasPassword] = useState(
+    () => !!localStorage.getItem('ai-password')
+  )
 
   return (
-    <ChatProvider>
-      <div className="flex flex-col h-full bg-background">
-        <div className="flex items-center justify-between px-4 py-3 border-b shrink-0">
-          <h2 className="text-sm font-semibold">AI Assistant</h2>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-7 w-7"
-            onClick={() => setRightBar(null)}
-          >
-            <X className="size-4" />
-          </Button>
-        </div>
-        <ChatScrollArea />
-        <ChatBox />
+    <div className="flex flex-col h-full bg-background">
+      <div className="flex items-center justify-between px-4 py-3 border-b shrink-0">
+        <h2 className="text-sm font-semibold">AI Assistant</h2>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7"
+          onClick={() => setRightBar(null)}
+        >
+          <X className="size-4" />
+        </Button>
       </div>
-    </ChatProvider>
+      {hasPassword ? (
+        <ChatProvider>
+          <ChatScrollArea />
+          <ChatBox onPasswordError={() => setHasPassword(false)} />
+        </ChatProvider>
+      ) : (
+        <PasswordGate onSubmit={() => setHasPassword(true)} />
+      )}
+    </div>
   )
 }
 
-function ChatBox() {
+function PasswordGate({ onSubmit }: { onSubmit: () => void }) {
+  const [value, setValue] = useState('')
+  const handleSubmit = () => {
+    if (!value.trim()) return
+    localStorage.setItem('ai-password', value.trim())
+    setValue('')
+    onSubmit()
+  }
+  return (
+    <div className="flex-1 flex flex-col items-center justify-center gap-3 px-6">
+      <Lock className="size-8 text-muted-foreground" />
+      <p className="text-sm text-muted-foreground text-center">
+        Enter the AI password to use the assistant
+      </p>
+      <form
+        className="flex gap-2 w-full max-w-64"
+        onSubmit={(e) => {
+          e.preventDefault()
+          handleSubmit()
+        }}
+      >
+        <Input
+          type="password"
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          placeholder="Password"
+          className="h-8 text-sm"
+          autoFocus
+        />
+        <Button size="sm" type="submit" disabled={!value.trim()}>
+          Go
+        </Button>
+      </form>
+    </div>
+  )
+}
+
+function ChatBox({ onPasswordError }: { onPasswordError: () => void }) {
   const {
     messages,
     addMessage,
@@ -196,6 +241,12 @@ function ChatBox() {
           setIsLoading(false)
           break
         case 'ai-error':
+          if (event.content === 'Invalid AI password') {
+            localStorage.removeItem('ai-password')
+            onPasswordError()
+            setIsLoading(false)
+            return
+          }
           setMessages((prev) => [
             ...prev,
             { type: 'aiMessage', message: `Error: ${event.content}` },
@@ -233,6 +284,7 @@ function ChatBox() {
       requestId: String(reqId),
       rulesetId: model.id,
       message: userMsg,
+      password: localStorage.getItem('ai-password') ?? '',
       history,
     })
   }

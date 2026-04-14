@@ -86,7 +86,7 @@ function processWritable(rawWritable: Record<string, unknown>): DigestWritable {
 function processLimits(rawNode: unknown): DigestLimit[] {
   if (rawNode === undefined || rawNode === null) return []
   const rawNodes = Array.isArray(rawNode) ? rawNode : [rawNode]
-  return rawNodes.map((node: Record<string, unknown>) => {
+  return rawNodes.map((node: Record<string, unknown>): DigestLimit => {
     const typeName = Object.keys(node).find((name) => !name.startsWith('@_'))
     if (!typeName)
       return {

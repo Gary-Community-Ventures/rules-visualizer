@@ -1,3 +1,4 @@
+import { createHash, timingSafeEqual } from 'node:crypto'
 import type { WebSocket } from 'ws'
 import { streamAgent } from '../ai/agents/orchestrator.js'
 
@@ -6,6 +7,7 @@ type AiChatRequest = {
   requestId: string
   rulesetId: string
   message: string
+  password?: string
   history?: { role: string; content: string }[]
 }
 
@@ -19,7 +21,22 @@ export async function handleAiChat(
   ws: WebSocket,
   data: AiChatRequest
 ): Promise<void> {
-  const { requestId, rulesetId, message, history } = data
+  const { requestId, rulesetId, message, history, password } = data
+
+  // In production, require AI_PASSWORD to be set and matched (constant-time comparison)
+  const requiredPassword = process.env.AI_PASSWORD
+  if (requiredPassword) {
+    const a = createHash('sha256').update(password ?? '').digest()
+    const b = createHash('sha256').update(requiredPassword).digest()
+    if (!timingSafeEqual(a, b)) {
+      send(ws, {
+        type: 'ai-error',
+        requestId,
+        content: 'Invalid AI password',
+      })
+      return
+    }
+  }
   const threadId = requestId
 
   try {

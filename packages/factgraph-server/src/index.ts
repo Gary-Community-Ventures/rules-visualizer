@@ -50,8 +50,10 @@ loadFactGraphData(dataDir)
 // Start server
 createServer(port)
 
-// Start file watcher
-startWatcher(dataDir)
+// Start file watcher (skip in production — filesystem is read-only/ephemeral)
+if (process.env.NODE_ENV !== 'production') {
+  startWatcher(dataDir)
+}
 
 // Open browser (non-blocking, don't fail if it can't open)
 if (!process.env.NO_OPEN) {

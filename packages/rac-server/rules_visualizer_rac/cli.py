@@ -111,8 +111,9 @@ def main() -> None:
 
     set_rulesets(rulesets)
 
-    # Start file watcher
-    start_watcher(str(data_dir))
+    # Start file watcher (skip in production — filesystem is read-only/ephemeral)
+    if os.environ.get("NODE_ENV") != "production":
+        start_watcher(str(data_dir))
 
     # Open browser
     if not args.no_open:
