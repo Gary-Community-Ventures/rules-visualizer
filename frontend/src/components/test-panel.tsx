@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { cn } from '@/lib/utils'
 import { formatDisplayValue } from '@/lib/format'
 import { useMainContext } from '@/context'
@@ -19,6 +19,7 @@ import {
   XCircle,
   ArrowRight,
   Pencil,
+  Filter,
 } from 'lucide-react'
 import {
   listTests,
@@ -41,6 +42,7 @@ export function TestPanel() {
     setRightBar,
     asOfDate,
     setActiveTest,
+    selectedNodes,
   } = useMainContext()
 
   const [tests, setTests] = useState<TestCase[]>([])
@@ -49,6 +51,7 @@ export function TestPanel() {
   const [expandedTest, setExpandedTest] = useState<string | null>(null)
   const [selectedTestId, setSelectedTestId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [filterByGraph, setFilterByGraph] = useState(true)
 
   const loadTests = useCallback(() => {
     listTests(model.id)
@@ -306,13 +309,59 @@ export function TestPanel() {
     }
   }
 
+  // Build the set of paths for currently-selected graph nodes
+  const selectedPaths = useMemo(() => {
+    if (selectedNodes.length === 0) return null
+    const paths = new Set<string>()
+    for (const nodeId of selectedNodes) {
+      const node = model.nodes[nodeId]
+      if (!node) continue
+      const path = getNodePath(node.content)
+      if (path) paths.add(path)
+    }
+    return paths.size > 0 ? paths : null
+  }, [selectedNodes, model.nodes])
+
+  // Filter tests to those that reference at least one selected node's path
+  const visibleTests = useMemo(() => {
+    if (!filterByGraph || !selectedPaths) return tests
+    return tests.filter((test) => {
+      const testPaths = [
+        ...Object.keys(test.inputs ?? {}),
+        ...Object.keys(test.overrides ?? {}),
+        ...Object.keys(test.expect),
+      ]
+      return testPaths.some((p) => selectedPaths.has(p))
+    })
+  }, [tests, filterByGraph, selectedPaths])
+
   const passCount = results.filter((r) => r.passed).length
   const failCount = results.filter((r) => !r.passed).length
 
   return (
     <div className="flex flex-col h-full bg-background">
       <div className="flex items-center justify-between px-4 py-3 border-b shrink-0">
-        <h2 className="text-sm font-semibold">Tests</h2>
+        <div className="flex items-center gap-1.5">
+          <h2 className="text-sm font-semibold">Tests</h2>
+          {selectedPaths && (
+            <Button
+              variant={filterByGraph ? 'default' : 'outline'}
+              size="sm"
+              className="h-5 px-1.5 text-[10px] gap-0.5"
+              onClick={() => setFilterByGraph((prev) => !prev)}
+              title={
+                filterByGraph
+                  ? 'Showing tests matching graph filter — click to show all'
+                  : 'Showing all tests — click to filter by graph selection'
+              }
+            >
+              <Filter className="size-2.5" />
+              {filterByGraph
+                ? `${visibleTests.length}/${tests.length}`
+                : 'All'}
+            </Button>
+          )}
+        </div>
         <div className="flex gap-1.5">
           <Button
             variant="outline"
@@ -371,13 +420,15 @@ export function TestPanel() {
       )}
 
       <div className="flex-1 overflow-y-auto">
-        {tests.length === 0 ? (
+        {visibleTests.length === 0 ? (
           <div className="p-4 text-sm text-muted-foreground text-center">
-            No tests yet. Run some inputs and click "Save" to create one.
+            {tests.length === 0
+              ? 'No tests yet. Run some inputs and click "Save" to create one.'
+              : 'No tests match the current graph filter.'}
           </div>
         ) : (
           <div className="divide-y">
-            {tests.map((test) => (
+            {visibleTests.map((test) => (
               <TestItem
                 key={test.id}
                 test={test}
