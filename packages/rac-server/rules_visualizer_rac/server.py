@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import asyncio
+import hashlib
+import hmac
 import json
 import mimetypes
 from pathlib import Path
@@ -97,6 +99,20 @@ async def _handle_ai_chat(ws: web.WebSocketResponse, data: dict) -> None:
     ruleset_id = data.get("rulesetId", "")
     message = data.get("message", "")
     history = data.get("history")
+    password = data.get("password")
+
+    # In production, require AI_PASSWORD to be set and matched (constant-time comparison)
+    required_password = os.environ.get("AI_PASSWORD")
+    if required_password and not hmac.compare_digest(
+        hashlib.sha256((password or "").encode()).digest(),
+        hashlib.sha256(required_password.encode()).digest(),
+    ):
+        await ws.send_str(json.dumps({
+            "type": "ai-error",
+            "requestId": request_id,
+            "content": "Invalid AI password",
+        }))
+        return
 
     try:
         async for event in stream_agent(
