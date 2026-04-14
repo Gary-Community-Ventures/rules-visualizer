@@ -17,12 +17,8 @@
       ]
     },
     "expect": {
-      "is_child": [
-        true
-      ],
-      "member_benefit": [
-        150
-      ],
+      "is_child": [true],
+      "member_benefit": [150],
       "total_monthly_benefit": 150
     }
   },
@@ -53,26 +49,10 @@
       ]
     },
     "expect": {
-      "is_child": [
-        true,
-        false,
-        false
-      ],
-      "is_senior": [
-        false,
-        true,
-        false
-      ],
-      "income_eligible": [
-        true,
-        true,
-        false
-      ],
-      "member_benefit": [
-        150,
-        275,
-        0
-      ],
+      "is_child": [true, false, false],
+      "is_senior": [false, true, false],
+      "income_eligible": [true, true, false],
+      "member_benefit": [150, 275, 0],
       "total_monthly_benefit": 425
     }
   },
@@ -115,12 +95,8 @@
     },
     "overrides": null,
     "expect": {
-      "is_child": [
-        true
-      ],
-      "member_benefit": [
-        150
-      ],
+      "is_child": [true],
+      "member_benefit": [150],
       "total_monthly_benefit": 150
     }
   },
@@ -150,18 +126,10 @@
       "base_benefit_per_senior": 200,
       "disability_supplement": 75,
       "income_limit_per_member": 2000,
-      "is_child": [
-        true
-      ],
-      "is_senior": [
-        false
-      ],
-      "income_eligible": [
-        true
-      ],
-      "member_benefit": [
-        150
-      ],
+      "is_child": [true],
+      "is_senior": [false],
+      "income_eligible": [true],
+      "member_benefit": [150],
       "total_monthly_benefit": 150
     }
   }

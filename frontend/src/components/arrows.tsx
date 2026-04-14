@@ -27,7 +27,8 @@ function Arrow({
   strokeWidth,
   parentMap,
 }: ArrowProps) {
-  const { model, hoveredNodeId, openNode, showChildren } = useMainContext()
+  const { model, rulesetId, hoveredNodeId, openNode, showChildren } =
+    useMainContext()
   const nodes = model.nodes
   const [path, setPath] = useState<string>('')
   const [isDashed, setIsDashed] = useState(false)
@@ -58,8 +59,10 @@ function Arrow({
         return
       }
 
-      const fromElement = document.getElementById(nodeElementId(fromId))
-      const toElement = document.getElementById(nodeElementId(toId))
+      const fromElement = document.getElementById(
+        nodeElementId(rulesetId, fromId)
+      )
+      const toElement = document.getElementById(nodeElementId(rulesetId, toId))
 
       if (!fromElement || !toElement) {
         setPath('')
@@ -67,10 +70,7 @@ function Arrow({
       }
 
       // Skip arrows where both endpoints are virtualized away
-      if (
-        !fromElement.dataset.rendered &&
-        !toElement.dataset.rendered
-      ) {
+      if (!fromElement.dataset.rendered && !toElement.dataset.rendered) {
         setPath('')
         return
       }
@@ -179,6 +179,7 @@ function Arrow({
     parentShowsChildren,
     scale,
     parentMap,
+    rulesetId,
   ])
 
   if (!path) {

@@ -111,9 +111,7 @@ export function isCollectionParent(node: ModelNode): boolean {
 }
 
 /** Get collection input fields grouped by collection name (works for both formats) */
-export function getCollectionInputs(
-  nodes: Record<string, ModelNode>
-): Record<
+export function getCollectionInputs(nodes: Record<string, ModelNode>): Record<
   string,
   {
     nodeId: string
@@ -172,6 +170,7 @@ export function getNodePath(content: NodeContent): string | undefined {
 }
 
 type ModelContextValue = {
+  rulesetId: string
   model: Model
   isLoading: boolean
   error: string | null
@@ -214,15 +213,23 @@ type ModelContextValue = {
   setWorkspaceItems: Dispatch<SetStateAction<string[]>>
   // Active test state displayed on graph nodes
   activeTest: {
-    expectations: Record<string, { expected: unknown; actual: unknown; passed: boolean }>
+    expectations: Record<
+      string,
+      { expected: unknown; actual: unknown; passed: boolean }
+    >
     inputs: Record<string, unknown>
     computedValues: Record<string, unknown>
   } | null
-  setActiveTest: Dispatch<SetStateAction<{
-    expectations: Record<string, { expected: unknown; actual: unknown; passed: boolean }>
-    inputs: Record<string, unknown>
-    computedValues: Record<string, unknown>
-  } | null>>
+  setActiveTest: Dispatch<
+    SetStateAction<{
+      expectations: Record<
+        string,
+        { expected: unknown; actual: unknown; passed: boolean }
+      >
+      inputs: Record<string, unknown>
+      computedValues: Record<string, unknown>
+    } | null>
+  >
 }
 
 const ModelContext = createContext<ModelContextValue | undefined>(undefined)
@@ -434,7 +441,10 @@ export function ModelProvider({
     []
   )
   const [activeTest, setActiveTest] = useState<{
-    expectations: Record<string, { expected: unknown; actual: unknown; passed: boolean }>
+    expectations: Record<
+      string,
+      { expected: unknown; actual: unknown; passed: boolean }
+    >
     inputs: Record<string, unknown>
     computedValues: Record<string, unknown>
   } | null>(null)
@@ -492,6 +502,7 @@ export function ModelProvider({
 
   const value: ModelContextValue = useMemo(
     () => ({
+      rulesetId,
       model,
       isLoading,
       error,
@@ -533,6 +544,7 @@ export function ModelProvider({
       setActiveTest,
     }),
     [
+      rulesetId,
       model,
       isLoading,
       error,

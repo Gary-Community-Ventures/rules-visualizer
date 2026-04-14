@@ -112,11 +112,14 @@ export async function updateTest(
   testId: string,
   updates: Partial<TestCase>
 ): Promise<TestCase> {
-  const res = await fetch(`${API_BASE}/api/rulesets/${rulesetId}/tests/${testId}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(updates),
-  })
+  const res = await fetch(
+    `${API_BASE}/api/rulesets/${rulesetId}/tests/${testId}`,
+    {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updates),
+    }
+  )
   if (!res.ok) throw new Error(`API error: ${res.status}`)
   return res.json()
 }
@@ -125,9 +128,12 @@ export async function deleteTest(
   rulesetId: string,
   testId: string
 ): Promise<void> {
-  const res = await fetch(`${API_BASE}/api/rulesets/${rulesetId}/tests/${testId}`, {
-    method: 'DELETE',
-  })
+  const res = await fetch(
+    `${API_BASE}/api/rulesets/${rulesetId}/tests/${testId}`,
+    {
+      method: 'DELETE',
+    }
+  )
   if (!res.ok) throw new Error(`API error: ${res.status}`)
 }
 

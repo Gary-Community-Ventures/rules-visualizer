@@ -25,6 +25,8 @@ import {
   XCircle,
   Bookmark,
   BookmarkCheck,
+  Filter,
+  FilterX,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ContentViewer } from './content-viewers'
@@ -95,8 +97,11 @@ type NodeProps = {
   node: ModelNode
 }
 
-export function nodeElementId(id: string) {
-  return `node-${id}`
+// Element IDs are scoped by rulesetId so multiple tabs can coexist in the
+// DOM without getElementById collisions (rulesets can share node names like
+// "eligible" or "income_eligible").
+export function nodeElementId(rulesetId: string, id: string) {
+  return `node-${rulesetId}-${id}`
 }
 
 // Use shared format utilities
@@ -198,23 +203,32 @@ export function Node({ node }: NodeProps) {
         )}
 
         {/* Input nodes in test mode: show test value as read-only badge */}
-        {isInput && !isCollection && activeTest?.inputs && (() => {
-          const nodePath = node.content.type !== 'entity' ? node.content.path : null
-          const testValue = nodePath ? activeTest?.inputs[nodePath] : undefined
-          if (testValue !== undefined) {
-            return (
-              <div className="mt-1.5 font-mono text-xs text-blue-700 bg-blue-50 rounded px-2 py-0.5 border border-blue-200">
-                {formatResultValue(testValue)}
-              </div>
-            )
-          }
-          return null
-        })()}
+        {isInput &&
+          !isCollection &&
+          activeTest?.inputs &&
+          (() => {
+            const nodePath =
+              node.content.type !== 'entity' ? node.content.path : null
+            const testValue = nodePath
+              ? activeTest?.inputs[nodePath]
+              : undefined
+            if (testValue !== undefined) {
+              return (
+                <div className="mt-1.5 font-mono text-xs text-blue-700 bg-blue-50 rounded px-2 py-0.5 border border-blue-200">
+                  {formatResultValue(testValue)}
+                </div>
+              )
+            }
+            return null
+          })()}
 
         {/* Input nodes: prominent field, always visible (but not for collection-scoped) */}
         {isInput && !isCollection && (
           <div
-            className={cn('mt-2 flex items-center gap-1 h-8', activeTest && 'invisible')}
+            className={cn(
+              'mt-2 flex items-center gap-1 h-8',
+              activeTest && 'invisible'
+            )}
             onClick={(e) => e.stopPropagation()}
           >
             <Input
@@ -279,46 +293,49 @@ export function Node({ node }: NodeProps) {
 
         {/* Result value — with optional test expectation */}
         {(() => {
-          const nodePath = node.content.type !== 'entity' ? node.content.path : null
-          const testExp = nodePath && activeTest ? activeTest.expectations[nodePath] : null
+          const nodePath =
+            node.content.type !== 'entity' ? node.content.path : null
+          const testExp =
+            nodePath && activeTest ? activeTest.expectations[nodePath] : null
 
-          if (testExp) {
+          // In test mode: always show the computed value (same emerald styling
+          // as a normal execution result). For asserted nodes, add a
+          // pass/fail indicator; failing nodes also show the expected value.
+          if (activeTest && nodePath) {
+            const computed =
+              testExp?.actual ?? activeTest.computedValues?.[nodePath]
+            if (computed === undefined) return null
+
+            const passed = testExp?.passed
+            const failed = testExp && !passed
+
             return (
               <div
                 className={cn(
                   'mt-2 font-mono rounded px-2 py-0.5 max-w-44 text-center text-xs border',
-                  testExp.passed
-                    ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
-                    : 'bg-red-50 text-red-800 border-red-200'
+                  failed
+                    ? 'bg-red-50 text-red-800 border-red-200'
+                    : 'bg-emerald-50 text-emerald-800 border-emerald-200'
                 )}
               >
                 <div className="flex items-center gap-1 justify-center">
-                  {testExp.passed ? (
+                  {testExp && passed && (
                     <CheckCircle className="size-3 text-emerald-600 shrink-0" />
-                  ) : (
+                  )}
+                  {failed && (
                     <XCircle className="size-3 text-red-600 shrink-0" />
                   )}
-                  <span className="truncate">{formatResultValue(testExp.actual)}</span>
+                  <span className="truncate">
+                    {formatResultValue(computed)}
+                  </span>
                 </div>
-                {!testExp.passed && (
+                {failed && (
                   <div className="text-[10px] text-red-500 truncate">
                     expected {formatResultValue(testExp.expected)}
                   </div>
                 )}
               </div>
             )
-          }
-
-          // In test mode: show computed value from test run for nodes without expectations
-          if (activeTest?.computedValues && nodePath) {
-            const computed = activeTest?.computedValues[nodePath]
-            if (computed !== undefined) {
-              return (
-                <div className="mt-2 font-mono rounded px-2 py-0.5 truncate max-w-36 text-center text-xs bg-gray-50 text-gray-600 border border-gray-200">
-                  {formatResultValue(computed)}
-                </div>
-              )
-            }
           }
 
           // Normal execution result (non-test mode)
@@ -412,30 +429,46 @@ type Viewport = { top: number; left: number; bottom: number; right: number }
 let currentViewport: Viewport = { top: 0, left: 0, bottom: 2000, right: 2000 }
 const viewportListeners = new Set<() => void>()
 
-// One global listener that updates the viewport
-if (typeof window !== 'undefined') {
-  const margin = 400
-  const updateViewport = () => {
-    const container = document.querySelector('[data-pan-container]')
-    if (!container) return
-    const rect = container.getBoundingClientRect()
-    const inner = container.firstElementChild as HTMLElement | null
-    if (!inner) return
-    const style = getComputedStyle(inner)
-    const matrix = new DOMMatrix(style.transform)
-    const scale = matrix.a || 1
-    const offsetX = matrix.e
-    const offsetY = matrix.f
-    currentViewport = {
-      top: (-offsetY - margin) / scale,
-      left: (-offsetX - margin) / scale,
-      bottom: (-offsetY + rect.height + margin) / scale,
-      right: (-offsetX + rect.width + margin) / scale,
-    }
-    for (const cb of viewportListeners) cb()
+// Find the pan-container of the currently visible tab.
+// Multiple tabs may be mounted simultaneously (hidden via display:none);
+// offsetParent === null means the element is hidden.
+function findVisiblePanContainer(): HTMLElement | null {
+  const containers = document.querySelectorAll('[data-pan-container]')
+  for (const el of containers) {
+    const htmlEl = el as HTMLElement
+    if (htmlEl.offsetParent !== null) return htmlEl
   }
-  window.addEventListener('transform', updateViewport)
-  window.addEventListener('resize', updateViewport)
+  return (containers[0] as HTMLElement | undefined) ?? null
+}
+
+const VIEWPORT_MARGIN = 400
+
+function updateViewportNow() {
+  const container = findVisiblePanContainer()
+  if (!container) return
+  const rect = container.getBoundingClientRect()
+  if (rect.width === 0 || rect.height === 0) return
+  const inner = container.firstElementChild as HTMLElement | null
+  if (!inner) return
+  const style = getComputedStyle(inner)
+  const matrix = new DOMMatrix(style.transform)
+  const scale = matrix.a || 1
+  const offsetX = matrix.e
+  const offsetY = matrix.f
+  currentViewport = {
+    top: (-offsetY - VIEWPORT_MARGIN) / scale,
+    left: (-offsetX - VIEWPORT_MARGIN) / scale,
+    bottom: (-offsetY + rect.height + VIEWPORT_MARGIN) / scale,
+    right: (-offsetX + rect.width + VIEWPORT_MARGIN) / scale,
+  }
+  for (const cb of viewportListeners) cb()
+}
+
+// One global listener that updates the viewport on layout-affecting events.
+if (typeof window !== 'undefined') {
+  window.addEventListener('transform', updateViewportNow)
+  window.addEventListener('resize', updateViewportNow)
+  window.addEventListener('containerresize', updateViewportNow)
 }
 
 function checkVisible(
@@ -448,10 +481,7 @@ function checkVisible(
   const w = size?.width ?? el.offsetWidth
   const h = size?.height ?? el.offsetHeight
   return (
-    top + h > vp.top &&
-    top < vp.bottom &&
-    left + w > vp.left &&
-    left < vp.right
+    top + h > vp.top && top < vp.bottom && left + w > vp.left && left < vp.right
   )
 }
 
@@ -470,17 +500,21 @@ function useIsVisible(
     }
     update()
     viewportListeners.add(update)
-    return () => { viewportListeners.delete(update) }
+    return () => {
+      viewportListeners.delete(update)
+    }
   }, [ref, size])
 
   return visible
 }
 
 export function Rows({ rows }: RowsProps) {
-  // Re-check all node visibilities after layout changes
+  // After layout changes, refresh the viewport (and thus virtualization)
+  // based on the current DOM. Runs after child VirtualNode effects so we
+  // overwrite their reads of the stale module-level viewport.
   useEffect(() => {
     const id = requestAnimationFrame(() => {
-      for (const cb of viewportListeners) cb()
+      updateViewportNow()
     })
     return () => cancelAnimationFrame(id)
   }, [rows])
@@ -499,7 +533,7 @@ export function Rows({ rows }: RowsProps) {
 }
 
 function VirtualNode({ id }: { id: string }) {
-  const { model } = useMainContext()
+  const { model, rulesetId } = useMainContext()
   const node = model.nodes[id]
   const ref = useRef<HTMLDivElement>(null)
   const size = useRef<{ width: number; height: number } | null>(null)
@@ -518,7 +552,7 @@ function VirtualNode({ id }: { id: string }) {
   return (
     <div
       ref={ref}
-      id={nodeElementId(id)}
+      id={nodeElementId(rulesetId, id)}
       data-rendered={visible || undefined}
       style={
         !visible && size.current
@@ -677,6 +711,8 @@ export function NodePanel() {
     runOnBlur,
     workspaceItems,
     setWorkspaceItems,
+    selectedNodes,
+    setSelectedNodes,
   } = useMainContext()
   const openNodeData = useFindNode(openNode)
 
@@ -685,6 +721,7 @@ export function NodePanel() {
   }
 
   const inWorkspace = workspaceItems.includes(openNode)
+  const inFilter = selectedNodes.includes(openNode)
   const isInput = isInputNode(openNodeData)
   const isConstant = isConstantNode(openNodeData)
   const canEdit = isOverridable(openNodeData)
@@ -795,6 +832,25 @@ export function NodePanel() {
               </ContextMenu.Content>
             </ContextMenu.Portal>
           </ContextMenu.Root>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7"
+            title={inFilter ? 'Remove from filter' : 'Add to filter'}
+            onClick={() =>
+              inFilter
+                ? setSelectedNodes((prev) =>
+                    prev.filter((id) => id !== openNode)
+                  )
+                : setSelectedNodes((prev) => [...prev, openNode])
+            }
+          >
+            {inFilter ? (
+              <FilterX className="size-4 text-primary" />
+            ) : (
+              <Filter className="size-4" />
+            )}
+          </Button>
           <Button
             variant="ghost"
             size="icon"

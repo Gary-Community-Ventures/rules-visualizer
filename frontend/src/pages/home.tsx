@@ -18,13 +18,30 @@ import { NodePanel, nodeElementId } from '@/components/node'
 
 export function HomePage() {
   useKeyboardShortcuts()
-  const { model, selectedNodes, showChildren, isLoading, error } =
-    useMainContext()
+  const {
+    model,
+    selectedNodes,
+    showChildren,
+    isLoading,
+    error,
+    executionResults,
+    activeTest,
+  } = useMainContext()
 
   const rows = useMemo(
     () => nodeRows(model.nodes, showChildren, selectedNodes),
     [model.nodes, showChildren, selectedNodes]
   )
+
+  // Nodes change size when execution/test results appear (result badges
+  // expand the cards). Arrows are positioned from getBoundingClientRect, so
+  // they need to recompute after the layout settles.
+  useEffect(() => {
+    const id = requestAnimationFrame(() => {
+      window.dispatchEvent(new Event('containerresize'))
+    })
+    return () => cancelAnimationFrame(id)
+  }, [executionResults, activeTest])
 
   if (isLoading) {
     return (
@@ -56,7 +73,7 @@ export function HomePage() {
 }
 
 export function NodeMapLayout({ children }: PropsWithChildren) {
-  const { openNode, rightBar } = useMainContext()
+  const { openNode, rightBar, rulesetId } = useMainContext()
   const openNodeData = useFindNode(openNode)
 
   const handleLayoutChange = () => {
@@ -75,7 +92,7 @@ export function NodeMapLayout({ children }: PropsWithChildren) {
     if (!openNode) return
     // Delay to let layout settle after panel opens
     const timer = setTimeout(() => {
-      const el = document.getElementById(nodeElementId(openNode))
+      const el = document.getElementById(nodeElementId(rulesetId, openNode))
       el?.scrollIntoView({
         behavior: 'smooth',
         block: 'nearest',
@@ -83,7 +100,7 @@ export function NodeMapLayout({ children }: PropsWithChildren) {
       })
     }, 150)
     return () => clearTimeout(timer)
-  }, [openNode])
+  }, [openNode, rulesetId])
 
   const showNodePanel = openNode !== null && openNodeData !== undefined
 
