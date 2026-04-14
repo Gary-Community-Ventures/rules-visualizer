@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import asyncio
+import base64
 import hashlib
 import hmac
 import json
 import mimetypes
+import os
 from pathlib import Path
 from typing import Any
 
@@ -452,7 +454,6 @@ async def basic_auth_middleware(request: web.Request, handler: Any) -> web.Respo
             text="Authentication required",
             headers={"WWW-Authenticate": 'Basic realm="Rules Visualizer"'},
         )
-    import base64
     decoded = base64.b64decode(header[6:]).decode("utf-8", errors="replace")
     user, _, password = decoded.partition(":")
     user_match = hmac.compare_digest(
