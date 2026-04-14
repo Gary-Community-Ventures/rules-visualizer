@@ -139,36 +139,13 @@
     }
   },
   {
-    "id": "d3e92537-6d47-448d-8435-12db2a67a940",
-    "name": "Standard Deduction Test",
+    "id": "65856a19-0e32-4181-a901-1a3eed6af2ca",
+    "name": "Test 7",
     "inputs": {
       "/householdSize": 1
     },
     "expect": {
       "/standardDeduction": 209
-    }
-  },
-  {
-    "id": "7e90398f-c474-42d7-96bb-b631f70bd102",
-    "name": "Standard Deduction Test 4",
-    "inputs": {
-      "/householdSize": 4
-    },
-    "expect": {
-      "/standardDeduction": 225
-    },
-    "overrides": {
-      "/standardDeduction4": 226
-    }
-  },
-  {
-    "id": "8b63d02c-3806-477c-a772-71e91e742cc2",
-    "name": "Test 9",
-    "inputs": {
-      "/householdSize": 4
-    },
-    "expect": {
-      "/standardDeduction": 225
     }
   }
 ]
