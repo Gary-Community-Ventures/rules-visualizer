@@ -15,5 +15,8 @@ dependencies = [
     "langgraph>=0.4",
 ]
 
+[tool.setuptools.packages.find]
+include = ["rules_visualizer_rac*"]
+
 [project.scripts]
 rules-visualizer-rac = "rules_visualizer_rac.cli:main"
