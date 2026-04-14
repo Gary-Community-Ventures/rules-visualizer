@@ -438,6 +438,41 @@ def _json_response(data: Any, status: int = 200) -> web.Response:
 
 
 @web.middleware
+async def basic_auth_middleware(request: web.Request, handler: Any) -> web.Response:
+    """Require basic auth when BASIC_AUTH_USER and BASIC_AUTH_PASS are set."""
+    required_user = os.environ.get("BASIC_AUTH_USER")
+    required_pass = os.environ.get("BASIC_AUTH_PASS")
+    if not required_user or not required_pass:
+        return await handler(request)
+
+    header = request.headers.get("Authorization", "")
+    if not header.startswith("Basic "):
+        return web.Response(
+            status=401,
+            text="Authentication required",
+            headers={"WWW-Authenticate": 'Basic realm="Rules Visualizer"'},
+        )
+    import base64
+    decoded = base64.b64decode(header[6:]).decode("utf-8", errors="replace")
+    user, _, password = decoded.partition(":")
+    user_match = hmac.compare_digest(
+        hashlib.sha256(user.encode()).digest(),
+        hashlib.sha256(required_user.encode()).digest(),
+    )
+    pass_match = hmac.compare_digest(
+        hashlib.sha256(password.encode()).digest(),
+        hashlib.sha256(required_pass.encode()).digest(),
+    )
+    if not user_match or not pass_match:
+        return web.Response(
+            status=401,
+            text="Invalid credentials",
+            headers={"WWW-Authenticate": 'Basic realm="Rules Visualizer"'},
+        )
+    return await handler(request)
+
+
+@web.middleware
 async def cors_middleware(request: web.Request, handler: Any) -> web.Response:
     """Handle CORS preflight and add CORS headers to all responses."""
     if request.method == "OPTIONS":
@@ -701,7 +736,7 @@ async def handle_tests_run(request: web.Request) -> web.Response:
 
 def _create_app() -> web.Application:
     """Create the aiohttp application with all routes."""
-    app = web.Application(middlewares=[cors_middleware])
+    app = web.Application(middlewares=[basic_auth_middleware, cors_middleware])
 
     # API routes
     app.router.add_get("/api/rulesets", handle_rulesets_list)
