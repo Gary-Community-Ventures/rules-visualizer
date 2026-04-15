@@ -356,9 +356,7 @@ export function TestPanel() {
               }
             >
               <Filter className="size-2.5" />
-              {filterByGraph
-                ? `${visibleTests.length}/${tests.length}`
-                : 'All'}
+              {filterByGraph ? `${visibleTests.length}/${tests.length}` : 'All'}
             </Button>
           )}
         </div>

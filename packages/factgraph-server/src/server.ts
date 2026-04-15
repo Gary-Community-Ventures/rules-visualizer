@@ -30,11 +30,15 @@ if (basicUser && basicPass) {
       .toString()
       .split(':')
     const userMatch = timingSafeEqual(
-      createHash('sha256').update(user ?? '').digest(),
+      createHash('sha256')
+        .update(user ?? '')
+        .digest(),
       createHash('sha256').update(basicUser).digest()
     )
     const passMatch = timingSafeEqual(
-      createHash('sha256').update(pass ?? '').digest(),
+      createHash('sha256')
+        .update(pass ?? '')
+        .digest(),
       createHash('sha256').update(basicPass).digest()
     )
     if (!userMatch || !passMatch) {

@@ -26,7 +26,9 @@ export async function handleAiChat(
   // In production, require AI_PASSWORD to be set and matched (constant-time comparison)
   const requiredPassword = process.env.AI_PASSWORD
   if (requiredPassword) {
-    const a = createHash('sha256').update(password ?? '').digest()
+    const a = createHash('sha256')
+      .update(password ?? '')
+      .digest()
     const b = createHash('sha256').update(requiredPassword).digest()
     if (!timingSafeEqual(a, b)) {
       send(ws, {

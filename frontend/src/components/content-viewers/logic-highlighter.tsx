@@ -82,7 +82,11 @@ function tokenizeXml(xml: string): XmlToken[] {
     }
 
     // Attributes and closing bracket
-    while (pos < xml.length && xml[pos] !== '>' && !(xml[pos] === '/' && xml[pos + 1] === '>')) {
+    while (
+      pos < xml.length &&
+      xml[pos] !== '>' &&
+      !(xml[pos] === '/' && xml[pos + 1] === '>')
+    ) {
       // Whitespace
       if (/\s/.test(xml[pos])) {
         const ws = pos
@@ -92,7 +96,14 @@ function tokenizeXml(xml: string): XmlToken[] {
       }
       // Attribute name
       const aStart = pos
-      while (pos < xml.length && xml[pos] !== '=' && xml[pos] !== '>' && xml[pos] !== '/' && !/\s/.test(xml[pos])) pos++
+      while (
+        pos < xml.length &&
+        xml[pos] !== '=' &&
+        xml[pos] !== '>' &&
+        xml[pos] !== '/' &&
+        !/\s/.test(xml[pos])
+      )
+        pos++
       if (pos > aStart) {
         tokens.push({ type: 'attr-name', value: xml.slice(aStart, pos) })
       }
@@ -210,9 +221,13 @@ function tokenizeRac(logic: string): RacToken[] {
       tokens.push({ type: 'literal', value: num })
     } else if (word) {
       if (RAC_KEYWORDS.has(word)) {
-        const type = word === 'true' || word === 'false' || word === 'True' || word === 'False'
-          ? 'literal'
-          : 'keyword'
+        const type =
+          word === 'true' ||
+          word === 'false' ||
+          word === 'True' ||
+          word === 'False'
+            ? 'literal'
+            : 'keyword'
         tokens.push({ type, value: word })
       } else {
         tokens.push({ type: 'variable', value: word })

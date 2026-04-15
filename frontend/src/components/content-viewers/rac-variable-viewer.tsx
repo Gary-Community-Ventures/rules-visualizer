@@ -42,7 +42,11 @@ export function RacVariableViewer({ content }: Props) {
               Logic{' '}
               <span className="text-xs font-normal">(from {active.date})</span>
             </span>
-            <LogicHighlighter format="rac" logic={active.body} onNavigate={navigateToPath} />
+            <LogicHighlighter
+              format="rac"
+              logic={active.body}
+              onNavigate={navigateToPath}
+            />
           </div>
         )
       }
@@ -50,7 +54,11 @@ export function RacVariableViewer({ content }: Props) {
       logicDisplay = (
         <div>
           <span className="text-muted-foreground font-medium">Logic</span>
-          <LogicHighlighter format="rac" logic={content.logic} onNavigate={navigateToPath} />
+          <LogicHighlighter
+            format="rac"
+            logic={content.logic}
+            onNavigate={navigateToPath}
+          />
         </div>
       )
     }
@@ -58,7 +66,11 @@ export function RacVariableViewer({ content }: Props) {
     logicDisplay = (
       <div>
         <span className="text-muted-foreground font-medium">Logic</span>
-        <LogicHighlighter format="rac" logic={content.default} onNavigate={navigateToPath} />
+        <LogicHighlighter
+          format="rac"
+          logic={content.default}
+          onNavigate={navigateToPath}
+        />
       </div>
     )
   }
