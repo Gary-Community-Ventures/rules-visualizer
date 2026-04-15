@@ -65,3 +65,4 @@ pnpm-lock.yaml
 
 # TypeScript
 *.tsbuildinfo
+.stashed/
