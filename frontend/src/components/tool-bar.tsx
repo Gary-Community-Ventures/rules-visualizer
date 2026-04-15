@@ -177,7 +177,14 @@ export function ToolBar() {
     <div className="border-b flex items-center gap-5 p-2 bg-background relative z-10">
       <NodeNavigation />
       <WorkspaceDropdown />
-      <Combobox multiple value={selectedNodes} onValueChange={setSelectedNodes}>
+      <Combobox
+        multiple
+        value={selectedNodes}
+        onValueChange={(next) => {
+          setSelectedNodes(next)
+          setSearch('')
+        }}
+      >
         <ComboboxChips ref={anchorRef}>
           {selectedNodes.map((nodeId) => (
             <ComboboxChip key={nodeId} value={nodeId}>
