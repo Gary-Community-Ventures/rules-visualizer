@@ -157,7 +157,7 @@ export function Node({ node }: NodeProps) {
 
   return (
     <div
-      className={cn(config.bg, 'relative z-10')}
+      className={cn(config.bg, 'relative z-10 h-full')}
       onMouseEnter={() => {
         setHoveredNodeId(node.id)
         setIsHovered(true)
