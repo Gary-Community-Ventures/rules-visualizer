@@ -13,10 +13,10 @@ type ArrowProps = {
 }
 
 const COLORS = {
-  active: '#0052A3',
-  inactive: '#8C8CA0',
-  cycleActive: '#D55E00',
-  cycleInactive: '#E8A872',
+  active: '#003D7A',
+  inactive: '#B0B0C0',
+  cycleActive: '#C04E00',
+  cycleInactive: '#D4935A',
 }
 
 function Arrow({
@@ -190,11 +190,18 @@ function Arrow({
 
   const dashSize = 8 * scale
 
+  const hoverStroke = isHoverAnimated ? strokeWidth * 1.5 : strokeWidth
+  const hoverColor = isHoverAnimated
+    ? isBackEdge
+      ? '#A33D00'
+      : '#002D5C'
+    : color
+
   return (
     <path
       d={path}
-      stroke={color}
-      strokeWidth={strokeWidth}
+      stroke={hoverColor}
+      strokeWidth={hoverStroke}
       fill="none"
       strokeDasharray={
         isDashed || isHoverAnimated ? `${dashSize},${dashSize}` : undefined
