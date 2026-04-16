@@ -13,10 +13,10 @@ type ArrowProps = {
 }
 
 const COLORS = {
-  active: '#001970',
-  inactive: '#c0c0d8',
-  cycleActive: '#dc2626',
-  cycleInactive: '#fca5a5',
+  active: '#0052A3',
+  inactive: '#8C8CA0',
+  cycleActive: '#D55E00',
+  cycleInactive: '#E8A872',
 }
 
 function Arrow({

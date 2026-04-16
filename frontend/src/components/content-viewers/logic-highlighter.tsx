@@ -15,11 +15,11 @@ import type { ReactNode } from 'react'
 
 // --- Shared color classes ---
 const C = {
-  keyword: 'text-blue-600',
-  path: 'text-purple-600',
-  literal: 'text-amber-700',
-  muted: 'text-gray-400',
-  op: 'text-blue-500',
+  keyword: 'text-blue-700',
+  path: 'text-violet-700',
+  literal: 'text-amber-800',
+  muted: 'text-gray-500',
+  op: 'text-blue-600',
 } as const
 
 // --- Public component ---
@@ -163,7 +163,7 @@ function renderFactGraph(
         return (
           <span
             key={i}
-            className={`${XML_COLORS.path} cursor-pointer hover:text-purple-800 hover:underline`}
+            className={`${XML_COLORS.path} cursor-pointer hover:text-violet-900 hover:underline`}
             onClick={() => onNavigate(inner)}
             title={`Go to ${inner}`}
           >
@@ -259,7 +259,7 @@ function renderRac(
       return (
         <span
           key={i}
-          className={`${RAC_COLORS.variable} cursor-pointer hover:text-purple-800 hover:underline`}
+          className={`${RAC_COLORS.variable} cursor-pointer hover:text-violet-900 hover:underline`}
           onClick={() => onNavigate(t.value)}
           title={`Go to ${t.value}`}
         >

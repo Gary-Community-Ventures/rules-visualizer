@@ -428,10 +428,10 @@ function ToolCallView({ message }: { message: ToolCallMessage }) {
           <span className="text-xs text-muted-foreground">Running...</span>
         )}
         {message.status === 'success' && (
-          <span className="text-xs text-emerald-600">Done</span>
+          <span className="text-xs text-sky-700">Done</span>
         )}
         {message.status === 'error' && (
-          <span className="text-xs text-red-600">Error</span>
+          <span className="text-xs text-orange-700">Error</span>
         )}
       </button>
       {expanded && message.result && (
@@ -708,7 +708,7 @@ function CodeBlock({ children }: { children: ReactNode }) {
         className="absolute right-2 top-2 p-1.5 rounded bg-muted/80 hover:bg-muted opacity-0 group-hover:opacity-100 transition-opacity"
       >
         {copied ? (
-          <Check className="size-3.5 text-emerald-500" />
+          <Check className="size-3.5 text-sky-600" />
         ) : (
           <Copy className="size-3.5 text-muted-foreground" />
         )}

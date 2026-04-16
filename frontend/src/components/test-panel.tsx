@@ -403,8 +403,8 @@ export function TestPanel() {
           className={cn(
             'px-4 py-2 text-xs border-b',
             failCount === 0
-              ? 'bg-emerald-50 text-emerald-700'
-              : 'bg-red-50 text-red-700'
+              ? 'bg-sky-100 text-sky-800'
+              : 'bg-orange-100 text-orange-800'
           )}
         >
           {passCount} passed, {failCount} failed
@@ -412,7 +412,7 @@ export function TestPanel() {
       )}
 
       {error && (
-        <div className="px-4 py-2 bg-red-50 text-red-700 text-xs border-b">
+        <div className="px-4 py-2 bg-orange-100 text-orange-800 text-xs border-b">
           {error}
         </div>
       )}
@@ -585,9 +585,9 @@ function TestItem({
           )}
           {result &&
             (result.passed ? (
-              <CheckCircle className="size-3.5 text-emerald-600 shrink-0" />
+              <CheckCircle className="size-3.5 text-sky-700 shrink-0" />
             ) : (
-              <XCircle className="size-3.5 text-red-600 shrink-0" />
+              <XCircle className="size-3.5 text-orange-700 shrink-0" />
             ))}
           {editingName ? (
             <Input
@@ -733,7 +733,7 @@ function TestItem({
             ))}
 
           {result?.error && (
-            <p className="text-xs text-red-600">Error: {result.error}</p>
+            <p className="text-xs text-orange-700">Error: {result.error}</p>
           )}
         </div>
       )}
@@ -807,15 +807,15 @@ function EditableSection({
               key={path}
               className={cn(
                 'text-xs font-mono',
-                exp && !exp.passed && 'text-red-700'
+                exp && !exp.passed && 'text-orange-800'
               )}
             >
               <div className="flex items-center gap-1">
                 {exp &&
                   (exp.passed ? (
-                    <Check className="size-3 text-emerald-600 shrink-0" />
+                    <Check className="size-3 text-sky-700 shrink-0" />
                   ) : (
-                    <X className="size-3 text-red-600 shrink-0" />
+                    <X className="size-3 text-orange-700 shrink-0" />
                   ))}
                 <span className="text-muted-foreground truncate flex-1">
                   {path}
@@ -857,7 +857,7 @@ function EditableSection({
                 <div className="ml-4 flex gap-2">
                   <span>= {formatDisplayValue(value)}</span>
                   {exp && !exp.passed && (
-                    <span className="text-red-500">
+                    <span className="text-orange-600">
                       got {formatDisplayValue(exp.actual)}
                     </span>
                   )}
@@ -906,7 +906,7 @@ function EditableSection({
                 }}
               />
               <button
-                className="p-0.5 text-emerald-600 hover:text-emerald-700 disabled:opacity-30 disabled:cursor-not-allowed"
+                className="p-0.5 text-sky-700 hover:text-sky-800 disabled:opacity-30 disabled:cursor-not-allowed"
                 onClick={onAdd}
                 disabled={!newPath.trim()}
                 title="Add"

@@ -241,7 +241,7 @@ export function ToolBar() {
       <div className="ml-auto flex items-center gap-2">
         {executionError && (
           <span
-            className="text-xs text-red-600 max-w-48 truncate"
+            className="text-xs text-orange-700 max-w-48 truncate"
             title={executionError}
           >
             {executionError}
@@ -261,7 +261,7 @@ export function ToolBar() {
         )}
         {!activeTest && executionResults && (
           <button
-            className="flex items-center gap-1.5 text-xs text-emerald-600 bg-emerald-50 rounded px-2 h-7 shrink-0"
+            className="flex items-center gap-1.5 text-xs text-sky-700 bg-sky-100 rounded px-2 h-7 shrink-0"
             onClick={clearExecution}
             title="Clear execution results"
           >

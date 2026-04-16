@@ -57,40 +57,40 @@ const NODE_TYPE_CONFIG: Record<
 > = {
   input: {
     icon: PencilLine,
-    bg: 'bg-blue-50',
-    border: 'border-blue-200',
+    bg: 'bg-blue-100',
+    border: 'border-blue-400',
     label: 'Input',
-    badgeBg: 'bg-blue-100 text-blue-700',
+    badgeBg: 'bg-blue-200 text-blue-800',
   },
   constant: {
     icon: BookOpen,
-    bg: 'bg-gray-50',
-    border: 'border-gray-200',
+    bg: 'bg-stone-100',
+    border: 'border-stone-300',
     label: 'Constant',
-    badgeBg: 'bg-gray-100 text-gray-600',
+    badgeBg: 'bg-stone-200 text-stone-700',
   },
   computed: {
     icon: GitBranch,
-    bg: 'bg-purple-50',
-    border: 'border-purple-200',
+    bg: 'bg-violet-100',
+    border: 'border-violet-300',
     label: 'Computed',
-    badgeBg: 'bg-purple-100 text-purple-700',
+    badgeBg: 'bg-violet-200 text-violet-800',
   },
   entity: {
     icon: Box,
-    bg: 'bg-teal-50',
-    border: 'border-teal-200',
+    bg: 'bg-cyan-100',
+    border: 'border-cyan-300',
     label: 'Entity',
-    badgeBg: 'bg-teal-100 text-teal-700',
+    badgeBg: 'bg-cyan-200 text-cyan-800',
   },
 }
 
 const DEFAULT_CONFIG = {
   icon: Box,
-  bg: 'bg-gray-50',
-  border: 'border-gray-200',
+  bg: 'bg-stone-100',
+  border: 'border-stone-300',
   label: 'Node',
-  badgeBg: 'bg-gray-100 text-gray-700',
+  badgeBg: 'bg-stone-200 text-stone-700',
 }
 
 type NodeProps = {
@@ -171,8 +171,8 @@ export function Node({ node }: NodeProps) {
         className={cn(
           hasOverride
             ? isInput
-              ? 'border-blue-400 ring-1 ring-blue-400'
-              : 'border-amber-400 ring-1 ring-amber-400'
+              ? 'border-blue-500 ring-1 ring-blue-500'
+              : 'border-amber-500 ring-1 ring-amber-500'
             : config.border,
           'border h-full relative flex flex-col items-center',
           isInput ? 'px-5 py-4' : 'p-5'
@@ -214,7 +214,7 @@ export function Node({ node }: NodeProps) {
               : undefined
             if (testValue !== undefined) {
               return (
-                <div className="mt-1.5 font-mono text-xs text-blue-700 bg-blue-50 rounded px-2 py-0.5 border border-blue-200">
+                <div className="mt-1.5 font-mono text-xs text-blue-800 bg-blue-100 rounded px-2 py-0.5 border border-blue-300">
                   {formatResultValue(testValue)}
                 </div>
               )
@@ -235,8 +235,8 @@ export function Node({ node }: NodeProps) {
               className={cn(
                 'h-8 w-32 text-sm font-mono text-center',
                 hasOverride
-                  ? 'border-blue-400 ring-1 ring-blue-400'
-                  : 'border-blue-300'
+                  ? 'border-blue-500 ring-1 ring-blue-500'
+                  : 'border-blue-400'
               )}
               placeholder={
                 declaredDefault ?? typeHint?.toLowerCase() ?? 'required'
@@ -269,7 +269,7 @@ export function Node({ node }: NodeProps) {
               className={cn(
                 'h-5 w-20 text-[11px] font-mono text-center border-dashed',
                 hasOverride
-                  ? 'border-amber-400 ring-1 ring-amber-400'
+                  ? 'border-amber-500 ring-1 ring-amber-500'
                   : 'border-muted-foreground/30'
               )}
               placeholder={
@@ -298,7 +298,7 @@ export function Node({ node }: NodeProps) {
           const testExp =
             nodePath && activeTest ? activeTest.expectations[nodePath] : null
 
-          // In test mode: always show the computed value (same emerald styling
+          // In test mode: always show the computed value (same sky styling
           // as a normal execution result). For asserted nodes, add a
           // pass/fail indicator; failing nodes also show the expected value.
           if (activeTest && nodePath) {
@@ -314,23 +314,23 @@ export function Node({ node }: NodeProps) {
                 className={cn(
                   'mt-2 font-mono rounded px-2 py-0.5 max-w-44 text-center text-xs border',
                   failed
-                    ? 'bg-red-50 text-red-800 border-red-200'
-                    : 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                    ? 'bg-orange-100 text-orange-800 border-orange-300'
+                    : 'bg-sky-100 text-sky-800 border-sky-300'
                 )}
               >
                 <div className="flex items-center gap-1 justify-center">
                   {testExp && passed && (
-                    <CheckCircle className="size-3 text-emerald-600 shrink-0" />
+                    <CheckCircle className="size-3 text-sky-700 shrink-0" />
                   )}
                   {failed && (
-                    <XCircle className="size-3 text-red-600 shrink-0" />
+                    <XCircle className="size-3 text-orange-700 shrink-0" />
                   )}
                   <span className="truncate">
                     {formatResultValue(computed)}
                   </span>
                 </div>
                 {failed && (
-                  <div className="text-[10px] text-red-500 truncate">
+                  <div className="text-[10px] text-orange-600 truncate">
                     expected {formatResultValue(testExp.expected)}
                   </div>
                 )}
@@ -344,7 +344,7 @@ export function Node({ node }: NodeProps) {
               <div
                 className={cn(
                   'mt-2 font-mono rounded px-2 py-0.5 truncate max-w-36 text-center',
-                  'text-xs bg-emerald-50 text-emerald-800 border border-emerald-200'
+                  'text-xs bg-sky-100 text-sky-800 border border-sky-300'
                 )}
               >
                 {formatResultValue(result.value)}
@@ -688,7 +688,7 @@ function CopyableName({ name }: { name: string }) {
       }}
     >
       {copied ? (
-        <span className="text-emerald-600 flex items-center gap-1">
+        <span className="text-sky-700 flex items-center gap-1">
           <Check className="size-3" />
           Copied
         </span>
@@ -876,8 +876,8 @@ export function NodePanel() {
                   'h-8 text-sm font-mono flex-1',
                   inputOverrides[openNode] &&
                     (isInput
-                      ? 'border-blue-400 ring-1 ring-blue-400'
-                      : 'border-amber-400 ring-1 ring-amber-400')
+                      ? 'border-blue-500 ring-1 ring-blue-500'
+                      : 'border-amber-500 ring-1 ring-amber-500')
                 )}
                 placeholder={
                   isInput
@@ -917,7 +917,7 @@ export function NodePanel() {
             <label className="text-sm font-medium text-muted-foreground">
               Result
             </label>
-            <pre className="text-sm bg-emerald-50 text-emerald-800 rounded-md p-3 overflow-x-auto">
+            <pre className="text-sm bg-sky-100 text-sky-800 rounded-md p-3 overflow-x-auto">
               {JSON.stringify(executionResults[openNode].value, null, 2)}
             </pre>
             {executionResults[openNode].entity && (

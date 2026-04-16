@@ -235,7 +235,7 @@ export function ExecutionPanel() {
 
       {/* Status banners */}
       {executionError && (
-        <div className="px-4 py-2 bg-red-50 text-red-700 text-xs border-b">
+        <div className="px-4 py-2 bg-orange-100 text-orange-800 text-xs border-b">
           {executionError}
         </div>
       )}
@@ -246,7 +246,7 @@ export function ExecutionPanel() {
         </div>
       )}
       {executionResults && (
-        <div className="px-4 py-2 bg-emerald-50 text-emerald-700 text-xs border-b">
+        <div className="px-4 py-2 bg-sky-100 text-sky-800 text-xs border-b">
           {Object.keys(executionResults).length} nodes computed
         </div>
       )}
@@ -269,7 +269,7 @@ export function ExecutionPanel() {
                 Inputs
                 {inputCount === inputNodes.length &&
                 (collectionNames.length === 0 || totalCollectionRows > 0) ? (
-                  <span className="font-normal text-emerald-600">All set</span>
+                  <span className="font-normal text-sky-700">All set</span>
                 ) : inputCount > 0 || totalCollectionRows > 0 ? (
                   <span className="font-normal">
                     {inputCount} of {inputNodes.length}
@@ -496,7 +496,7 @@ export function ExecutionPanel() {
                   setJsonError(null)
                 }}
               />
-              {jsonError && <p className="text-xs text-red-600">{jsonError}</p>}
+              {jsonError && <p className="text-xs text-orange-700">{jsonError}</p>}
             </div>
           )}
         </div>
@@ -550,7 +550,7 @@ function NodeField({
             </span>
           )}
           {required && !hasValue && (
-            <span className="ml-1 text-red-400">*</span>
+            <span className="ml-1 text-orange-500">*</span>
           )}
         </label>
         {hasValue && (
@@ -570,7 +570,7 @@ function NodeField({
         onBlur={onBlur}
       />
       {result !== undefined && (
-        <p className="text-xs font-mono text-emerald-700 truncate">
+        <p className="text-xs font-mono text-sky-800 truncate">
           = {formatValue(result)}
         </p>
       )}
