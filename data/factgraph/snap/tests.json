@@ -145,7 +145,7 @@
       "/householdSize": 1
     },
     "expect": {
-      "/standardDeduction": 209
+      "/standardDeduction": 210
     }
   }
 ]

@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/resizable'
 import { useEffect, useMemo, type PropsWithChildren } from 'react'
 import { AIPanel } from '@/components/ai-panel'
+import { Legend } from '@/components/legend'
 import { ExecutionPanel } from '@/components/execution-panel'
 import { TestPanel } from '@/components/test-panel'
 import { NodePanel, nodeElementId } from '@/components/node'
@@ -67,6 +68,7 @@ export function HomePage() {
           <Rows rows={rows} />
         </PanContainer>
         <Arrows rows={rows} />
+        <Legend />
       </NodeMapLayout>
     </>
   )

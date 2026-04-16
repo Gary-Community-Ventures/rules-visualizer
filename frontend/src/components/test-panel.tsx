@@ -403,7 +403,7 @@ export function TestPanel() {
           className={cn(
             'px-4 py-2 text-xs border-b',
             failCount === 0
-              ? 'bg-sky-100 text-sky-800'
+              ? 'bg-emerald-100 text-emerald-800'
               : 'bg-orange-100 text-orange-800'
           )}
         >
@@ -585,7 +585,7 @@ function TestItem({
           )}
           {result &&
             (result.passed ? (
-              <CheckCircle className="size-3.5 text-sky-700 shrink-0" />
+              <CheckCircle className="size-3.5 text-emerald-700 shrink-0" />
             ) : (
               <XCircle className="size-3.5 text-orange-700 shrink-0" />
             ))}
@@ -813,7 +813,7 @@ function EditableSection({
               <div className="flex items-center gap-1">
                 {exp &&
                   (exp.passed ? (
-                    <Check className="size-3 text-sky-700 shrink-0" />
+                    <Check className="size-3 text-emerald-700 shrink-0" />
                   ) : (
                     <X className="size-3 text-orange-700 shrink-0" />
                   ))}
@@ -906,7 +906,7 @@ function EditableSection({
                 }}
               />
               <button
-                className="p-0.5 text-sky-700 hover:text-sky-800 disabled:opacity-30 disabled:cursor-not-allowed"
+                className="p-0.5 text-emerald-700 hover:text-emerald-800 disabled:opacity-30 disabled:cursor-not-allowed"
                 onClick={onAdd}
                 disabled={!newPath.trim()}
                 title="Add"

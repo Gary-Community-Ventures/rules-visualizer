@@ -246,7 +246,7 @@ export function ExecutionPanel() {
         </div>
       )}
       {executionResults && (
-        <div className="px-4 py-2 bg-sky-100 text-sky-800 text-xs border-b">
+        <div className="px-4 py-2 bg-emerald-100 text-emerald-800 text-xs border-b">
           {Object.keys(executionResults).length} nodes computed
         </div>
       )}
@@ -269,7 +269,7 @@ export function ExecutionPanel() {
                 Inputs
                 {inputCount === inputNodes.length &&
                 (collectionNames.length === 0 || totalCollectionRows > 0) ? (
-                  <span className="font-normal text-sky-700">All set</span>
+                  <span className="font-normal text-emerald-700">All set</span>
                 ) : inputCount > 0 || totalCollectionRows > 0 ? (
                   <span className="font-normal">
                     {inputCount} of {inputNodes.length}
@@ -570,7 +570,7 @@ function NodeField({
         onBlur={onBlur}
       />
       {result !== undefined && (
-        <p className="text-xs font-mono text-sky-800 truncate">
+        <p className="text-xs font-mono text-emerald-800 truncate">
           = {formatValue(result)}
         </p>
       )}

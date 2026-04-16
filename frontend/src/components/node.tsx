@@ -45,7 +45,7 @@ function getNodeRole(content: NodeContent): string {
   return content.role
 }
 
-const NODE_TYPE_CONFIG: Record<
+export const NODE_TYPE_CONFIG: Record<
   string,
   {
     icon: typeof Variable
@@ -64,10 +64,10 @@ const NODE_TYPE_CONFIG: Record<
   },
   constant: {
     icon: BookOpen,
-    bg: 'bg-stone-100',
-    border: 'border-stone-300',
+    bg: 'bg-gray-100',
+    border: 'border-gray-300',
     label: 'Constant',
-    badgeBg: 'bg-stone-200 text-stone-700',
+    badgeBg: 'bg-gray-200 text-gray-700',
   },
   computed: {
     icon: GitBranch,
@@ -78,19 +78,19 @@ const NODE_TYPE_CONFIG: Record<
   },
   entity: {
     icon: Box,
-    bg: 'bg-cyan-100',
-    border: 'border-cyan-300',
+    bg: 'bg-amber-50',
+    border: 'border-amber-200',
     label: 'Entity',
-    badgeBg: 'bg-cyan-200 text-cyan-800',
+    badgeBg: 'bg-amber-100 text-amber-800',
   },
 }
 
 const DEFAULT_CONFIG = {
   icon: Box,
-  bg: 'bg-stone-100',
-  border: 'border-stone-300',
+  bg: 'bg-gray-100',
+  border: 'border-gray-300',
   label: 'Node',
-  badgeBg: 'bg-stone-200 text-stone-700',
+  badgeBg: 'bg-gray-200 text-gray-700',
 }
 
 type NodeProps = {
@@ -172,10 +172,9 @@ export function Node({ node }: NodeProps) {
           hasOverride
             ? isInput
               ? 'border-blue-500 ring-1 ring-blue-500'
-              : 'border-amber-500 ring-1 ring-amber-500'
+              : 'border-yellow-400 ring-1 ring-yellow-400'
             : config.border,
-          'border h-full relative flex flex-col items-center',
-          isInput ? 'px-5 py-4' : 'p-5'
+          'border h-full relative flex flex-col items-center p-4'
         )}
         onClick={() => {
           setOpenNode(node.id)
@@ -226,14 +225,14 @@ export function Node({ node }: NodeProps) {
         {isInput && !isCollection && (
           <div
             className={cn(
-              'mt-2 flex items-center gap-1 h-8',
+              'mt-1.5 flex items-center gap-1 h-6',
               activeTest && 'invisible'
             )}
             onClick={(e) => e.stopPropagation()}
           >
             <Input
               className={cn(
-                'h-8 w-32 text-sm font-mono text-center',
+                'h-6 w-28 text-xs font-mono text-center',
                 hasOverride
                   ? 'border-blue-500 ring-1 ring-blue-500'
                   : 'border-blue-400'
@@ -260,16 +259,16 @@ export function Node({ node }: NodeProps) {
         {isEditable && !isInput && (
           <div
             className={cn(
-              'mt-1.5 flex items-center gap-1 h-5',
+              'mt-1.5 flex items-center gap-1 h-6',
               (activeTest || (!hasOverride && !isHovered)) && 'invisible'
             )}
             onClick={(e) => e.stopPropagation()}
           >
             <Input
               className={cn(
-                'h-5 w-20 text-[11px] font-mono text-center border-dashed',
+                'h-6 w-20 text-xs font-mono text-center border-dashed',
                 hasOverride
-                  ? 'border-amber-500 ring-1 ring-amber-500'
+                  ? 'border-yellow-400 ring-1 ring-yellow-400'
                   : 'border-muted-foreground/30'
               )}
               placeholder={
@@ -315,12 +314,12 @@ export function Node({ node }: NodeProps) {
                   'mt-2 font-mono rounded px-2 py-0.5 max-w-44 text-center text-xs border',
                   failed
                     ? 'bg-orange-100 text-orange-800 border-orange-300'
-                    : 'bg-sky-100 text-sky-800 border-sky-300'
+                    : 'bg-emerald-100 text-emerald-800 border-emerald-300'
                 )}
               >
                 <div className="flex items-center gap-1 justify-center">
                   {testExp && passed && (
-                    <CheckCircle className="size-3 text-sky-700 shrink-0" />
+                    <CheckCircle className="size-3 text-emerald-700 shrink-0" />
                   )}
                   {failed && (
                     <XCircle className="size-3 text-orange-700 shrink-0" />
@@ -344,7 +343,7 @@ export function Node({ node }: NodeProps) {
               <div
                 className={cn(
                   'mt-2 font-mono rounded px-2 py-0.5 truncate max-w-36 text-center',
-                  'text-xs bg-sky-100 text-sky-800 border border-sky-300'
+                  'text-xs bg-emerald-100 text-emerald-800 border border-emerald-300'
                 )}
               >
                 {formatResultValue(result.value)}
@@ -688,7 +687,7 @@ function CopyableName({ name }: { name: string }) {
       }}
     >
       {copied ? (
-        <span className="text-sky-700 flex items-center gap-1">
+        <span className="text-emerald-700 flex items-center gap-1">
           <Check className="size-3" />
           Copied
         </span>
@@ -877,7 +876,7 @@ export function NodePanel() {
                   inputOverrides[openNode] &&
                     (isInput
                       ? 'border-blue-500 ring-1 ring-blue-500'
-                      : 'border-amber-500 ring-1 ring-amber-500')
+                      : 'border-yellow-400 ring-1 ring-yellow-400')
                 )}
                 placeholder={
                   isInput
@@ -917,7 +916,7 @@ export function NodePanel() {
             <label className="text-sm font-medium text-muted-foreground">
               Result
             </label>
-            <pre className="text-sm bg-sky-100 text-sky-800 rounded-md p-3 overflow-x-auto">
+            <pre className="text-sm bg-emerald-100 text-emerald-800 rounded-md p-3 overflow-x-auto">
               {JSON.stringify(executionResults[openNode].value, null, 2)}
             </pre>
             {executionResults[openNode].entity && (

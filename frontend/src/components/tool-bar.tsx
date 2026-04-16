@@ -261,7 +261,7 @@ export function ToolBar() {
         )}
         {!activeTest && executionResults && (
           <button
-            className="flex items-center gap-1.5 text-xs text-sky-700 bg-sky-100 rounded px-2 h-7 shrink-0"
+            className="flex items-center gap-1.5 text-xs text-emerald-700 bg-emerald-100 rounded px-2 h-7 shrink-0"
             onClick={clearExecution}
             title="Clear execution results"
           >
