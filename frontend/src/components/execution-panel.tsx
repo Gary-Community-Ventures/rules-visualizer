@@ -496,7 +496,9 @@ export function ExecutionPanel() {
                   setJsonError(null)
                 }}
               />
-              {jsonError && <p className="text-xs text-orange-700">{jsonError}</p>}
+              {jsonError && (
+                <p className="text-xs text-orange-700">{jsonError}</p>
+              )}
             </div>
           )}
         </div>
