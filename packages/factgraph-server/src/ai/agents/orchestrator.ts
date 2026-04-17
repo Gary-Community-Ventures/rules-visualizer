@@ -17,7 +17,7 @@ function getCheckpointer(threadId: string): MemorySaver {
 function systemPrompt(ctx: ChatContext): string {
   return [
     `You are an AI assistant helping users understand a Fact Graph ruleset.`,
-    `You can use tools to look up nodes, search, and explore dependencies. Keep answers concise and reference specific node names so the user can click them. Don't wrap node names in backticks or code formatting — just write them as plain text.`,
+    `You can use tools to look up nodes, search, and explore dependencies. Keep answers concise — only provide information needed to answer the question. Reference specific node names so the user can click them. Don't wrap node names in backticks or code formatting — just write them as plain text.`,
     `When explaining logic, reference the actual node names from the ruleset.`,
     `The rulesetId for tool calls is: "${ctx.rulesetId}"`,
   ].join('\n\n')

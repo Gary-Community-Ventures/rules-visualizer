@@ -47,7 +47,7 @@
     </Fact>
 
     <!-- ============================================================ -->
-    <!-- CONSTANTS — federal SNAP parameters (FY2024)                 -->
+    <!-- CONSTANTS — federal SNAP parameters (FY2026, effective 2025-10-01) -->
     <!-- ============================================================ -->
 
     <Fact path="/earnedIncomeDeductionRate">
@@ -63,23 +63,23 @@
 
     <Fact path="/standardDeduction4">
       <Name>Standard deduction (4 persons)</Name>
-      <Derived><Dollar>225</Dollar></Derived>
+      <Derived><Dollar>223</Dollar></Derived>
     </Fact>
 
     <Fact path="/standardDeduction5">
       <Name>Standard deduction (5 persons)</Name>
-      <Derived><Dollar>263</Dollar></Derived>
+      <Derived><Dollar>261</Dollar></Derived>
     </Fact>
 
     <Fact path="/standardDeduction6Plus">
       <Name>Standard deduction (6+ persons)</Name>
-      <Derived><Dollar>300</Dollar></Derived>
+      <Derived><Dollar>299</Dollar></Derived>
     </Fact>
 
     <Fact path="/excessShelterDeductionCap">
       <Name>Excess shelter deduction cap</Name>
       <Description>Cap on excess shelter deduction for non-elderly/disabled households</Description>
-      <Derived><Dollar>672</Dollar></Derived>
+      <Derived><Dollar>744</Dollar></Derived>
     </Fact>
 
     <Fact path="/medicalDeductionThreshold">
@@ -102,8 +102,8 @@
 
     <Fact path="/minimumBenefit">
       <Name>Minimum benefit</Name>
-      <Description>Minimum monthly benefit for 1-2 person households</Description>
-      <Derived><Dollar>23</Dollar></Derived>
+      <Description>Minimum monthly benefit for 1-2 person households (8% of 1-person max allotment, rounded)</Description>
+      <Derived><Dollar>24</Dollar></Derived>
     </Fact>
 
     <Fact path="/grossIncomeLimitRate">
@@ -112,60 +112,60 @@
       <Derived><Rational>13/10</Rational></Derived>
     </Fact>
 
-    <!-- FPL monthly amounts by household size (FY2024, 48 states + DC) -->
+    <!-- FPL monthly amounts by household size (2025 HHS poverty guidelines, 48 states + DC) -->
 
     <Fact path="/fplMonthly1">
       <Name>FPL monthly (1 person)</Name>
-      <Derived><Dollar>1255</Dollar></Derived>
+      <Derived><Dollar>1304</Dollar></Derived>
     </Fact>
 
     <Fact path="/fplMonthly2">
       <Name>FPL monthly (2 persons)</Name>
-      <Derived><Dollar>1705</Dollar></Derived>
+      <Derived><Dollar>1763</Dollar></Derived>
     </Fact>
 
     <Fact path="/fplMonthly3">
       <Name>FPL monthly (3 persons)</Name>
-      <Derived><Dollar>2155</Dollar></Derived>
+      <Derived><Dollar>2221</Dollar></Derived>
     </Fact>
 
     <Fact path="/fplMonthly4">
       <Name>FPL monthly (4 persons)</Name>
-      <Derived><Dollar>2605</Dollar></Derived>
+      <Derived><Dollar>2679</Dollar></Derived>
     </Fact>
 
     <Fact path="/fplMonthlyPerAdditional">
       <Name>FPL monthly per additional person</Name>
       <Description>Additional FPL amount per person beyond 4</Description>
-      <Derived><Dollar>450</Dollar></Derived>
+      <Derived><Dollar>458</Dollar></Derived>
     </Fact>
 
-    <!-- Max allotment by household size (FY2024, 48 states + DC) -->
+    <!-- Max allotment by household size (FY2026, 48 states + DC) -->
 
     <Fact path="/maxAllotment1">
       <Name>Max allotment (1 person)</Name>
-      <Derived><Dollar>292</Dollar></Derived>
+      <Derived><Dollar>298</Dollar></Derived>
     </Fact>
 
     <Fact path="/maxAllotment2">
       <Name>Max allotment (2 persons)</Name>
-      <Derived><Dollar>536</Dollar></Derived>
+      <Derived><Dollar>546</Dollar></Derived>
     </Fact>
 
     <Fact path="/maxAllotment3">
       <Name>Max allotment (3 persons)</Name>
-      <Derived><Dollar>768</Dollar></Derived>
+      <Derived><Dollar>785</Dollar></Derived>
     </Fact>
 
     <Fact path="/maxAllotment4">
       <Name>Max allotment (4 persons)</Name>
-      <Derived><Dollar>975</Dollar></Derived>
+      <Derived><Dollar>994</Dollar></Derived>
     </Fact>
 
     <Fact path="/maxAllotmentPerAdditional">
       <Name>Max allotment per additional person</Name>
       <Description>Additional max allotment per person beyond 4</Description>
-      <Derived><Dollar>195</Dollar></Derived>
+      <Derived><Dollar>218</Dollar></Derived>
     </Fact>
 
     <!-- ============================================================ -->

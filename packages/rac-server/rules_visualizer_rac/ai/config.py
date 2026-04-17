@@ -17,7 +17,7 @@ def get_model(model_id: str | None = None) -> ChatOpenAI:
         raise RuntimeError("OPEN_ROUTER_KEY environment variable is required")
 
     return ChatOpenAI(
-        model=model_id or os.environ.get("AI_MODEL", "moonshotai/kimi-k2"),
+        model=model_id or os.environ.get("AI_MODEL", "openai/gpt-oss-120b"),
         api_key=api_key,
         base_url="https://openrouter.ai/api/v1",
         streaming=True,
