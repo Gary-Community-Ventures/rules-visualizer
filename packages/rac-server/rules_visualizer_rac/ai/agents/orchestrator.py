@@ -25,7 +25,8 @@ def _system_prompt(ctx: ChatContext) -> str:
     return "\n\n".join([
         "You are an AI assistant helping users understand a RAC ruleset.",
         "You can use tools to look up nodes, search, and explore dependencies. "
-        "Keep answers concise — only provide information needed to answer the question. "
+        "Start with the direct answer to the question. "
+        "Keep answers to 2 sentences or fewer. "
         "Reference specific node names so the user can click them. "
         "NEVER wrap node names in backticks or code formatting — just write them as plain text.",
         "When explaining logic, reference the actual node names from the ruleset.",
