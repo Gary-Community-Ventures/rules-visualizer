@@ -140,10 +140,37 @@
       <Writable><Boolean /></Writable>
     </Fact>
 
-    <Fact path="/meetsAssetTest">
-      <Name>Meets asset test</Name>
-      <Description>Whether the household's countable resources are within the SNAP asset limit</Description>
-      <Writable><Boolean /></Writable>
+    <Fact path="/members/*/abawdCountableMonthsUsed">
+      <Name>ABAWD countable months used</Name>
+      <Description>Number of months in the last 36-month window where this member received SNAP without meeting the ABAWD work requirement (7 CFR § 273.24(b)(1)(i))</Description>
+      <Writable><Int /></Writable>
+    </Fact>
+
+    <!-- Per-member countable assets (7 CFR § 273.8(c)(1)). Excluded per
+         7 USC § 2014(g)(2–5): home, retirement accounts, 529/Coverdell,
+         vehicles (subject to state fair-market-value exemptions). -->
+    <Fact path="/members/*/cashOnHand">
+      <Name>Cash on hand</Name>
+      <Description>Currency and cash this member holds</Description>
+      <Writable><Dollar /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/bankAccountAssets">
+      <Name>Bank account assets</Name>
+      <Description>Balances in checking and savings accounts</Description>
+      <Writable><Dollar /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/stockAssets">
+      <Name>Stock assets</Name>
+      <Description>Value of countable stock holdings</Description>
+      <Writable><Dollar /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/bondAssets">
+      <Name>Bond assets</Name>
+      <Description>Value of countable bond holdings</Description>
+      <Writable><Dollar /></Writable>
     </Fact>
 
     <Fact path="/meetsCategoricalEligibility">
@@ -295,6 +322,25 @@
       <Derived><Int>14</Int></Derived>
     </Fact>
 
+    <Fact path="/abawdCountableMonthsLimit">
+      <Name>ABAWD countable months limit</Name>
+      <Description>Maximum countable months a member may receive SNAP without meeting ABAWD work requirements in a 36-month period (7 CFR § 273.24(b)(1))</Description>
+      <Derived><Int>3</Int></Derived>
+    </Fact>
+
+    <!-- SNAP asset test limits (7 USC § 2014(g)(1)(A); FY2025 amounts effective 2024-10-01) -->
+    <Fact path="/assetLimitStandard">
+      <Name>Asset limit (standard)</Name>
+      <Description>Maximum countable assets for households without an elderly or disabled member</Description>
+      <Derived><Dollar>3000</Dollar></Derived>
+    </Fact>
+
+    <Fact path="/assetLimitElderlyDisabled">
+      <Name>Asset limit (elderly/disabled)</Name>
+      <Description>Maximum countable assets for households with an elderly or disabled member</Description>
+      <Derived><Dollar>4500</Dollar></Derived>
+    </Fact>
+
     <Fact path="/medicalDeductionThreshold">
       <Name>Medical deduction threshold</Name>
       <Description>Only medical expenses above this threshold are deductible</Description>
@@ -338,32 +384,24 @@
       <Derived><Rational>13/10</Rational></Derived>
     </Fact>
 
-    <!-- FPL monthly amounts by household size (2025 HHS poverty guidelines, 48 states + DC) -->
-
-    <Fact path="/fplMonthly1">
-      <Name>FPL monthly (1 person)</Name>
-      <Derived><Dollar>1304</Dollar></Derived>
+    <Fact path="/netIncomeLimitRate">
+      <Name>Net income limit rate</Name>
+      <Description>Net income must be at or below 100% of FPL</Description>
+      <Derived><Rational>1/1</Rational></Derived>
     </Fact>
 
-    <Fact path="/fplMonthly2">
-      <Name>FPL monthly (2 persons)</Name>
-      <Derived><Dollar>1763</Dollar></Derived>
+    <!-- FPL annual amounts (2025 HHS poverty guidelines, 48 states + DC).
+         Monthly values are derived by rounding annual / 12 to the nearest
+         whole dollar (half-up), matching HHS's published monthly table. -->
+    <Fact path="/fplAnnual1">
+      <Name>FPL annual (1 person)</Name>
+      <Derived><Dollar>15650</Dollar></Derived>
     </Fact>
 
-    <Fact path="/fplMonthly3">
-      <Name>FPL monthly (3 persons)</Name>
-      <Derived><Dollar>2221</Dollar></Derived>
-    </Fact>
-
-    <Fact path="/fplMonthly4">
-      <Name>FPL monthly (4 persons)</Name>
-      <Derived><Dollar>2679</Dollar></Derived>
-    </Fact>
-
-    <Fact path="/fplMonthlyPerAdditional">
-      <Name>FPL monthly per additional person</Name>
-      <Description>Additional FPL amount per person beyond 4</Description>
-      <Derived><Dollar>458</Dollar></Derived>
+    <Fact path="/fplAnnualPerAdditional">
+      <Name>FPL annual per additional person</Name>
+      <Description>Additional annual FPL amount for each person beyond the first</Description>
+      <Derived><Dollar>5500</Dollar></Derived>
     </Fact>
 
     <!-- Max allotment by household size (FY2026, 48 states + DC, effective 2025-10-01) -->
@@ -649,9 +687,23 @@
       </Derived>
     </Fact>
 
+    <!-- 3-in-36 time limit: a non-exempt, non-working ABAWD retains eligibility
+         as long as they haven't yet used all three countable months in the
+         36-month window (7 CFR § 273.24(b)(1)). -->
+    <Fact path="/members/*/hasAbawdMonthsRemaining">
+      <Name>Has ABAWD months remaining</Name>
+      <Description>Whether this member still has countable SNAP months available in the 36-month window</Description>
+      <Derived>
+        <LessThan>
+          <Left><Dependency path="../abawdCountableMonthsUsed" /></Left>
+          <Right><Dependency path="/abawdCountableMonthsLimit" /></Right>
+        </LessThan>
+      </Derived>
+    </Fact>
+
     <Fact path="/members/*/meetsAbawdWorkRequirements">
       <Name>Meets ABAWD work requirements</Name>
-      <Description>Age-exempt, working ≥20 hours/week, disabled, pregnant, or a parent of a child under the ABAWD dependent threshold</Description>
+      <Description>Age-exempt, working ≥20 hours/week, disabled, pregnant, a parent of a child under the ABAWD dependent threshold, or still within the 3-month countable allowance in the 36-month window</Description>
       <Derived>
         <Any>
           <Dependency path="../meetsAbawdAgeExemption" />
@@ -662,20 +714,34 @@
             <Dependency path="../isParent" />
             <Dependency path="/hasChildUnderAbawdDependentLimit" />
           </All>
+          <Dependency path="../hasAbawdMonthsRemaining" />
+        </Any>
+      </Derived>
+    </Fact>
+
+    <!-- Overall ABAWD status: the member personally meets ABAWD work
+         requirements OR the household is exempt from ABAWD (has a dependent
+         child under the ABAWD age threshold). Extracted as its own node so
+         downstream consumers (e.g. the 3-in-36 countable-months input UI)
+         can key off a single boolean. -->
+    <Fact path="/members/*/satisfiesAbawd">
+      <Name>Satisfies ABAWD</Name>
+      <Description>Whether this member is OK under ABAWD rules this month: household has a dependent child under the ABAWD age threshold, OR the member personally meets ABAWD work requirements</Description>
+      <Derived>
+        <Any>
+          <Dependency path="/hasChildUnderAbawdDependentLimit" />
+          <Dependency path="../meetsAbawdWorkRequirements" />
         </Any>
       </Derived>
     </Fact>
 
     <Fact path="/members/*/meetsWorkRequirements">
       <Name>Meets work requirements</Name>
-      <Description>Meets general work requirements (always) and ABAWD work requirements unless the household has a dependent child under the ABAWD age threshold</Description>
+      <Description>Meets general work requirements and satisfies ABAWD rules</Description>
       <Derived>
         <All>
           <Dependency path="../meetsGeneralWorkRequirements" />
-          <Any>
-            <Dependency path="/hasChildUnderAbawdDependentLimit" />
-            <Dependency path="../meetsAbawdWorkRequirements" />
-          </Any>
+          <Dependency path="../satisfiesAbawd" />
         </All>
       </Derived>
     </Fact>
@@ -698,6 +764,19 @@
           <Dependency path="../isImmigrationEligible" />
           <Dependency path="../meetsWorkRequirements" />
         </All>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/snapAssets">
+      <Name>SNAP assets</Name>
+      <Description>Countable liquid resources held by this member (cash, bank, stock, bond) per 7 CFR § 273.8(c)(1)</Description>
+      <Derived>
+        <Add>
+          <Dependency path="../cashOnHand" />
+          <Dependency path="../bankAccountAssets" />
+          <Dependency path="../stockAssets" />
+          <Dependency path="../bondAssets" />
+        </Add>
       </Derived>
     </Fact>
 
@@ -819,6 +898,46 @@
       </Derived>
     </Fact>
 
+    <!-- SNAP asset test (7 USC § 2014(g), 7 CFR § 273.8). Mirrors
+         PolicyEngine-US meets_snap_asset_test. -->
+    <Fact path="/snapAssets">
+      <Name>SNAP assets</Name>
+      <Description>Total countable liquid resources across all household members</Description>
+      <Derived>
+        <CollectionSum>
+          <Dependency path="/members/*/snapAssets" />
+        </CollectionSum>
+      </Derived>
+    </Fact>
+
+    <Fact path="/assetLimit">
+      <Name>Asset limit</Name>
+      <Description>Applicable asset limit for this household: elderly/disabled amount if any member is age 60+ or disabled, otherwise the standard amount</Description>
+      <Derived>
+        <Switch>
+          <Case>
+            <When><Dependency path="/hasElderlyOrDisabledMember" /></When>
+            <Then><Dependency path="/assetLimitElderlyDisabled" /></Then>
+          </Case>
+          <Case>
+            <When><True /></When>
+            <Then><Dependency path="/assetLimitStandard" /></Then>
+          </Case>
+        </Switch>
+      </Derived>
+    </Fact>
+
+    <Fact path="/meetsAssetTest">
+      <Name>Meets asset test</Name>
+      <Description>Whether the household's countable resources are at or below the applicable SNAP asset limit</Description>
+      <Derived>
+        <LessThanOrEqual>
+          <Left><Dependency path="/snapAssets" /></Left>
+          <Right><Dependency path="/assetLimit" /></Right>
+        </LessThanOrEqual>
+      </Derived>
+    </Fact>
+
     <!-- Colorado applies the full SUA to every household, regardless of utility expenses -->
     <Fact path="/utilityAllowance">
       <Name>Utility allowance</Name>
@@ -859,64 +978,33 @@
       </Derived>
     </Fact>
 
-    <!-- FPL lookup based on household size -->
+    <Fact path="/federalPovertyLevelAnnual">
+      <Name>Federal poverty level (annual)</Name>
+      <Description>Annual FPL for this household size: 1-person amount + (householdSize − 1) × per-additional</Description>
+      <Derived>
+        <Add>
+          <Dependency path="/fplAnnual1" />
+          <Multiply>
+            <Dependency path="/fplAnnualPerAdditional" />
+            <Subtract>
+              <Minuend><Dependency path="/householdSize" /></Minuend>
+              <Subtrahends><Int>1</Int></Subtrahends>
+            </Subtract>
+          </Multiply>
+        </Add>
+      </Derived>
+    </Fact>
+
     <Fact path="/federalPovertyLevelMonthly">
       <Name>Federal poverty level (monthly)</Name>
-      <Description>Monthly FPL for this household size</Description>
+      <Description>Monthly FPL = annual FPL / 12, rounded to the nearest whole dollar</Description>
       <Derived>
-        <Switch>
-          <Case>
-            <When>
-              <LessThanOrEqual>
-                <Left><Dependency path="/householdSize" /></Left>
-                <Right><Int>1</Int></Right>
-              </LessThanOrEqual>
-            </When>
-            <Then><Dependency path="/fplMonthly1" /></Then>
-          </Case>
-          <Case>
-            <When>
-              <Equal>
-                <Left><Dependency path="/householdSize" /></Left>
-                <Right><Int>2</Int></Right>
-              </Equal>
-            </When>
-            <Then><Dependency path="/fplMonthly2" /></Then>
-          </Case>
-          <Case>
-            <When>
-              <Equal>
-                <Left><Dependency path="/householdSize" /></Left>
-                <Right><Int>3</Int></Right>
-              </Equal>
-            </When>
-            <Then><Dependency path="/fplMonthly3" /></Then>
-          </Case>
-          <Case>
-            <When>
-              <LessThanOrEqual>
-                <Left><Dependency path="/householdSize" /></Left>
-                <Right><Int>4</Int></Right>
-              </LessThanOrEqual>
-            </When>
-            <Then><Dependency path="/fplMonthly4" /></Then>
-          </Case>
-          <Case>
-            <When><True /></When>
-            <Then>
-              <Add>
-                <Dependency path="/fplMonthly4" />
-                <Multiply>
-                  <Dependency path="/fplMonthlyPerAdditional" />
-                  <Subtract>
-                    <Minuend><Dependency path="/householdSize" /></Minuend>
-                    <Subtrahends><Int>4</Int></Subtrahends>
-                  </Subtract>
-                </Multiply>
-              </Add>
-            </Then>
-          </Case>
-        </Switch>
+        <Round>
+          <Divide>
+            <Dividend><Dependency path="/federalPovertyLevelAnnual" /></Dividend>
+            <Divisors><Int>12</Int></Divisors>
+          </Divide>
+        </Round>
       </Derived>
     </Fact>
 
@@ -1160,9 +1248,12 @@
     <!-- Net income test: 100% FPL -->
     <Fact path="/netIncomeLimit">
       <Name>Net income limit</Name>
-      <Description>100% of FPL — maximum net monthly income for eligibility</Description>
+      <Description>Maximum net monthly income for eligibility: netIncomeLimitRate × monthly FPL</Description>
       <Derived>
-        <Dependency path="/federalPovertyLevelMonthly" />
+        <Multiply>
+          <Dependency path="/federalPovertyLevelMonthly" />
+          <Dependency path="/netIncomeLimitRate" />
+        </Multiply>
       </Derived>
     </Fact>
 

@@ -8,7 +8,6 @@
       "/unearnedIncome": 0,
       "/dependentCareExpenses": 0,
       "/shelterCosts": 0,
-      "/meetsAssetTest": true,
       "/meetsCategoricalEligibility": false
     },
     "entities": {
@@ -26,7 +25,12 @@
           "isParent": false,
           "isFullTimeCollegeStudent": false,
           "isPregnant": false,
-          "isIncapableOfSelfCare": false
+          "isIncapableOfSelfCare": false,
+          "abawdCountableMonthsUsed": 0,
+          "cashOnHand": 0,
+          "bankAccountAssets": 0,
+          "stockAssets": 0,
+          "bondAssets": 0
         }
       ]
     },
@@ -47,7 +51,6 @@
       "/unearnedIncome": 0,
       "/dependentCareExpenses": 0,
       "/shelterCosts": 800,
-      "/meetsAssetTest": true,
       "/meetsCategoricalEligibility": false
     },
     "entities": {
@@ -65,7 +68,12 @@
           "isParent": false,
           "isFullTimeCollegeStudent": false,
           "isPregnant": false,
-          "isIncapableOfSelfCare": false
+          "isIncapableOfSelfCare": false,
+          "abawdCountableMonthsUsed": 0,
+          "cashOnHand": 0,
+          "bankAccountAssets": 0,
+          "stockAssets": 0,
+          "bondAssets": 0
         },
         {
           "isElderly": false,
@@ -80,7 +88,12 @@
           "isParent": false,
           "isFullTimeCollegeStudent": false,
           "isPregnant": false,
-          "isIncapableOfSelfCare": false
+          "isIncapableOfSelfCare": false,
+          "abawdCountableMonthsUsed": 0,
+          "cashOnHand": 0,
+          "bankAccountAssets": 0,
+          "stockAssets": 0,
+          "bondAssets": 0
         },
         {
           "isElderly": false,
@@ -95,7 +108,12 @@
           "isParent": false,
           "isFullTimeCollegeStudent": false,
           "isPregnant": false,
-          "isIncapableOfSelfCare": false
+          "isIncapableOfSelfCare": false,
+          "abawdCountableMonthsUsed": 0,
+          "cashOnHand": 0,
+          "bankAccountAssets": 0,
+          "stockAssets": 0,
+          "bondAssets": 0
         }
       ]
     },
@@ -122,7 +140,6 @@
       "/unearnedIncome": 0,
       "/dependentCareExpenses": 0,
       "/shelterCosts": 0,
-      "/meetsAssetTest": true,
       "/meetsCategoricalEligibility": false
     },
     "entities": {
@@ -140,7 +157,12 @@
           "isParent": false,
           "isFullTimeCollegeStudent": false,
           "isPregnant": false,
-          "isIncapableOfSelfCare": false
+          "isIncapableOfSelfCare": false,
+          "abawdCountableMonthsUsed": 0,
+          "cashOnHand": 0,
+          "bankAccountAssets": 0,
+          "stockAssets": 0,
+          "bondAssets": 0
         },
         {
           "isElderly": false,
@@ -155,7 +177,12 @@
           "isParent": false,
           "isFullTimeCollegeStudent": false,
           "isPregnant": false,
-          "isIncapableOfSelfCare": false
+          "isIncapableOfSelfCare": false,
+          "abawdCountableMonthsUsed": 0,
+          "cashOnHand": 0,
+          "bankAccountAssets": 0,
+          "stockAssets": 0,
+          "bondAssets": 0
         }
       ]
     },
@@ -174,7 +201,6 @@
       "/unearnedIncome": 1800,
       "/dependentCareExpenses": 0,
       "/shelterCosts": 1200,
-      "/meetsAssetTest": true,
       "/meetsCategoricalEligibility": false
     },
     "entities": {
@@ -192,7 +218,12 @@
           "isParent": false,
           "isFullTimeCollegeStudent": false,
           "isPregnant": false,
-          "isIncapableOfSelfCare": false
+          "isIncapableOfSelfCare": false,
+          "abawdCountableMonthsUsed": 0,
+          "cashOnHand": 0,
+          "bankAccountAssets": 0,
+          "stockAssets": 0,
+          "bondAssets": 0
         },
         {
           "isElderly": false,
@@ -207,7 +238,12 @@
           "isParent": false,
           "isFullTimeCollegeStudent": false,
           "isPregnant": false,
-          "isIncapableOfSelfCare": false
+          "isIncapableOfSelfCare": false,
+          "abawdCountableMonthsUsed": 0,
+          "cashOnHand": 0,
+          "bankAccountAssets": 0,
+          "stockAssets": 0,
+          "bondAssets": 0
         }
       ]
     },
@@ -234,7 +270,6 @@
       "/unearnedIncome": 3900,
       "/dependentCareExpenses": 0,
       "/shelterCosts": 200,
-      "/meetsAssetTest": true,
       "/meetsCategoricalEligibility": false
     },
     "entities": {
@@ -252,7 +287,12 @@
           "isParent": false,
           "isFullTimeCollegeStudent": false,
           "isPregnant": false,
-          "isIncapableOfSelfCare": false
+          "isIncapableOfSelfCare": false,
+          "abawdCountableMonthsUsed": 0,
+          "cashOnHand": 0,
+          "bankAccountAssets": 0,
+          "stockAssets": 0,
+          "bondAssets": 0
         },
         {
           "isElderly": false,
@@ -267,7 +307,12 @@
           "isParent": false,
           "isFullTimeCollegeStudent": false,
           "isPregnant": false,
-          "isIncapableOfSelfCare": false
+          "isIncapableOfSelfCare": false,
+          "abawdCountableMonthsUsed": 0,
+          "cashOnHand": 0,
+          "bankAccountAssets": 0,
+          "stockAssets": 0,
+          "bondAssets": 0
         },
         {
           "isElderly": false,
@@ -282,7 +327,12 @@
           "isParent": false,
           "isFullTimeCollegeStudent": false,
           "isPregnant": false,
-          "isIncapableOfSelfCare": false
+          "isIncapableOfSelfCare": false,
+          "abawdCountableMonthsUsed": 0,
+          "cashOnHand": 0,
+          "bankAccountAssets": 0,
+          "stockAssets": 0,
+          "bondAssets": 0
         },
         {
           "isElderly": false,
@@ -297,7 +347,12 @@
           "isParent": false,
           "isFullTimeCollegeStudent": false,
           "isPregnant": false,
-          "isIncapableOfSelfCare": false
+          "isIncapableOfSelfCare": false,
+          "abawdCountableMonthsUsed": 0,
+          "cashOnHand": 0,
+          "bankAccountAssets": 0,
+          "stockAssets": 0,
+          "bondAssets": 0
         },
         {
           "isElderly": false,
@@ -312,12 +367,17 @@
           "isParent": false,
           "isFullTimeCollegeStudent": false,
           "isPregnant": false,
-          "isIncapableOfSelfCare": false
+          "isIncapableOfSelfCare": false,
+          "abawdCountableMonthsUsed": 0,
+          "cashOnHand": 0,
+          "bankAccountAssets": 0,
+          "stockAssets": 0,
+          "bondAssets": 0
         }
       ]
     },
     "expect": {
-      "/federalPovertyLevelMonthly": 3055,
+      "/federalPovertyLevelMonthly": 3138,
       "/grossIncomeEligible": true,
       "/earnedIncomeDeduction": 0,
       "/standardDeduction": 263,
@@ -338,7 +398,6 @@
       "/unearnedIncome": 1250,
       "/dependentCareExpenses": 0,
       "/shelterCosts": 0,
-      "/meetsAssetTest": true,
       "/meetsCategoricalEligibility": false
     },
     "entities": {
@@ -356,7 +415,12 @@
           "isParent": false,
           "isFullTimeCollegeStudent": false,
           "isPregnant": false,
-          "isIncapableOfSelfCare": false
+          "isIncapableOfSelfCare": false,
+          "abawdCountableMonthsUsed": 0,
+          "cashOnHand": 0,
+          "bankAccountAssets": 0,
+          "stockAssets": 0,
+          "bondAssets": 0
         }
       ]
     },
@@ -376,7 +440,6 @@
       "/unearnedIncome": 0,
       "/dependentCareExpenses": 300,
       "/shelterCosts": 900,
-      "/meetsAssetTest": true,
       "/meetsCategoricalEligibility": false
     },
     "expect": {
@@ -409,7 +472,12 @@
           "isParent": false,
           "isFullTimeCollegeStudent": false,
           "isPregnant": false,
-          "isIncapableOfSelfCare": false
+          "isIncapableOfSelfCare": false,
+          "abawdCountableMonthsUsed": 0,
+          "cashOnHand": 0,
+          "bankAccountAssets": 0,
+          "stockAssets": 0,
+          "bondAssets": 0
         },
         {
           "isElderly": false,
@@ -424,7 +492,12 @@
           "isParent": false,
           "isFullTimeCollegeStudent": false,
           "isPregnant": false,
-          "isIncapableOfSelfCare": false
+          "isIncapableOfSelfCare": false,
+          "abawdCountableMonthsUsed": 0,
+          "cashOnHand": 0,
+          "bankAccountAssets": 0,
+          "stockAssets": 0,
+          "bondAssets": 0
         },
         {
           "isElderly": false,
@@ -439,7 +512,12 @@
           "isParent": false,
           "isFullTimeCollegeStudent": false,
           "isPregnant": false,
-          "isIncapableOfSelfCare": false
+          "isIncapableOfSelfCare": false,
+          "abawdCountableMonthsUsed": 0,
+          "cashOnHand": 0,
+          "bankAccountAssets": 0,
+          "stockAssets": 0,
+          "bondAssets": 0
         },
         {
           "isElderly": false,
@@ -454,7 +532,12 @@
           "isParent": false,
           "isFullTimeCollegeStudent": false,
           "isPregnant": false,
-          "isIncapableOfSelfCare": false
+          "isIncapableOfSelfCare": false,
+          "abawdCountableMonthsUsed": 0,
+          "cashOnHand": 0,
+          "bankAccountAssets": 0,
+          "stockAssets": 0,
+          "bondAssets": 0
         }
       ]
     }
@@ -468,12 +551,11 @@
       "/unearnedIncome": 500,
       "/dependentCareExpenses": 0,
       "/shelterCosts": 1000,
-      "/meetsAssetTest": true,
       "/meetsCategoricalEligibility": false
     },
     "expect": {
       "/grossMonthlyIncome": 3000,
-      "/federalPovertyLevelMonthly": 3595,
+      "/federalPovertyLevelMonthly": 3596,
       "/grossIncomeEligible": true,
       "/earnedIncomeDeduction": 500,
       "/standardDeduction": 299,
@@ -502,7 +584,12 @@
           "isParent": false,
           "isFullTimeCollegeStudent": false,
           "isPregnant": false,
-          "isIncapableOfSelfCare": false
+          "isIncapableOfSelfCare": false,
+          "abawdCountableMonthsUsed": 0,
+          "cashOnHand": 0,
+          "bankAccountAssets": 0,
+          "stockAssets": 0,
+          "bondAssets": 0
         },
         {
           "isElderly": false,
@@ -517,7 +604,12 @@
           "isParent": false,
           "isFullTimeCollegeStudent": false,
           "isPregnant": false,
-          "isIncapableOfSelfCare": false
+          "isIncapableOfSelfCare": false,
+          "abawdCountableMonthsUsed": 0,
+          "cashOnHand": 0,
+          "bankAccountAssets": 0,
+          "stockAssets": 0,
+          "bondAssets": 0
         },
         {
           "isElderly": false,
@@ -532,7 +624,12 @@
           "isParent": false,
           "isFullTimeCollegeStudent": false,
           "isPregnant": false,
-          "isIncapableOfSelfCare": false
+          "isIncapableOfSelfCare": false,
+          "abawdCountableMonthsUsed": 0,
+          "cashOnHand": 0,
+          "bankAccountAssets": 0,
+          "stockAssets": 0,
+          "bondAssets": 0
         },
         {
           "isElderly": false,
@@ -547,7 +644,12 @@
           "isParent": false,
           "isFullTimeCollegeStudent": false,
           "isPregnant": false,
-          "isIncapableOfSelfCare": false
+          "isIncapableOfSelfCare": false,
+          "abawdCountableMonthsUsed": 0,
+          "cashOnHand": 0,
+          "bankAccountAssets": 0,
+          "stockAssets": 0,
+          "bondAssets": 0
         },
         {
           "isElderly": false,
@@ -562,7 +664,12 @@
           "isParent": false,
           "isFullTimeCollegeStudent": false,
           "isPregnant": false,
-          "isIncapableOfSelfCare": false
+          "isIncapableOfSelfCare": false,
+          "abawdCountableMonthsUsed": 0,
+          "cashOnHand": 0,
+          "bankAccountAssets": 0,
+          "stockAssets": 0,
+          "bondAssets": 0
         },
         {
           "isElderly": false,
@@ -577,7 +684,12 @@
           "isParent": false,
           "isFullTimeCollegeStudent": false,
           "isPregnant": false,
-          "isIncapableOfSelfCare": false
+          "isIncapableOfSelfCare": false,
+          "abawdCountableMonthsUsed": 0,
+          "cashOnHand": 0,
+          "bankAccountAssets": 0,
+          "stockAssets": 0,
+          "bondAssets": 0
         }
       ]
     }
@@ -591,7 +703,6 @@
       "/unearnedIncome": 0,
       "/dependentCareExpenses": 0,
       "/shelterCosts": 1500,
-      "/meetsAssetTest": true,
       "/meetsCategoricalEligibility": false
     },
     "expect": {
@@ -624,7 +735,12 @@
           "isParent": false,
           "isFullTimeCollegeStudent": false,
           "isPregnant": false,
-          "isIncapableOfSelfCare": false
+          "isIncapableOfSelfCare": false,
+          "abawdCountableMonthsUsed": 0,
+          "cashOnHand": 0,
+          "bankAccountAssets": 0,
+          "stockAssets": 0,
+          "bondAssets": 0
         }
       ]
     }
