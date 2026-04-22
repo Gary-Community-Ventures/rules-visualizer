@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { useModelContext } from '@/context/model-context'
+import { useAddToFilter } from './use-add-to-filter'
 
 function isInputFocused(): boolean {
   const el = document.activeElement
@@ -44,7 +45,11 @@ export function useKeyboardShortcuts() {
     setRightBar,
     workspaceItems,
     setWorkspaceItems,
+    setShowChildren,
+    selectedNodes,
+    setSelectedNodes,
   } = useModelContext()
+  const addToFilter = useAddToFilter()
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
@@ -162,6 +167,25 @@ export function useKeyboardShortcuts() {
             }, 100)
           }
           break
+        case 'x':
+          e.preventDefault()
+          if (openNode) {
+            setShowChildren((prev) => ({
+              ...prev,
+              [openNode]: prev[openNode] !== true,
+            }))
+          }
+          break
+        case 'f':
+          e.preventDefault()
+          if (openNode) {
+            if (selectedNodes.includes(openNode)) {
+              setSelectedNodes((prev) => prev.filter((id) => id !== openNode))
+            } else {
+              addToFilter(openNode)
+            }
+          }
+          break
       }
     }
 
@@ -176,6 +200,10 @@ export function useKeyboardShortcuts() {
     setRightBar,
     workspaceItems,
     setWorkspaceItems,
+    setShowChildren,
+    selectedNodes,
+    setSelectedNodes,
+    addToFilter,
     model.nodes,
   ])
 }

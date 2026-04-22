@@ -32,25 +32,30 @@ export function startWatcher(dataDir: string): void {
     )
   }
 
-  // Watch all XML files in ruleset subdirectories
-  const watcher = chokidar.watch('*/*.xml', {
-    cwd: dataDir,
+  // Watch the data directory. Chokidar v4+ removed glob support, so we watch
+  // recursively and filter to XML files by extension.
+  const watcher = chokidar.watch(dataDir, {
     ignoreInitial: true,
     usePolling: true,
     interval: 500,
+    ignored: (p) => {
+      // Skip node_modules/.git and anything that isn't XML (except dirs)
+      if (p.includes('node_modules') || p.includes('/.git/')) return true
+      return false
+    },
   })
 
-  watcher.on('change', (filePath) => {
-    const rulesetId = filePath.split(path.sep)[0]
-    console.log(`File changed: ${filePath}`)
+  const handleFileEvent = (absPath: string, eventType: string) => {
+    if (!absPath.endsWith('.xml')) return
+    const relative = path.relative(dataDir, absPath)
+    const rulesetId = relative.split(path.sep)[0]
+    if (!rulesetId) return
+    console.log(`File ${eventType}: ${relative}`)
     handleChange(rulesetId)
-  })
+  }
 
-  watcher.on('add', (filePath) => {
-    const rulesetId = filePath.split(path.sep)[0]
-    console.log(`File added: ${filePath}`)
-    handleChange(rulesetId)
-  })
+  watcher.on('change', (p) => handleFileEvent(p, 'changed'))
+  watcher.on('add', (p) => handleFileEvent(p, 'added'))
 
   console.log(`Watching ${dataDir} for XML changes...`)
 }

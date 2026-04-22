@@ -39,6 +39,7 @@ import {
 import * as ContextMenu from '@radix-ui/react-context-menu'
 import { HoverCard, HoverCardTrigger, HoverCardContent } from './ui/hover-card'
 import { resolveRacLogic } from '@/lib/logic'
+import { useAddToFilter } from '@/lib/use-add-to-filter'
 
 function getNodeRole(content: NodeContent): string {
   if (content.type === 'entity') return 'entity'
@@ -713,6 +714,7 @@ export function NodePanel() {
     selectedNodes,
     setSelectedNodes,
   } = useMainContext()
+  const addToFilter = useAddToFilter()
   const openNodeData = useFindNode(openNode)
 
   if (openNode === null || openNodeData === undefined) {
@@ -828,6 +830,68 @@ export function NodePanel() {
                   Add with all dependents (
                   {getAllDependents(openNode, model.nodes).length})
                 </ContextMenu.Item>
+                <ContextMenu.Separator className="h-px my-1 bg-border" />
+                <ContextMenu.Item
+                  className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-xs outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
+                  onSelect={() => {
+                    const direct = new Set(
+                      openNodeData.dependencies.filter(
+                        (id) => model.nodes[id]
+                      )
+                    )
+                    setWorkspaceItems((prev) =>
+                      prev.filter((id) => id !== openNode && !direct.has(id))
+                    )
+                  }}
+                >
+                  Remove with dependencies (
+                  {
+                    openNodeData.dependencies.filter((id) => model.nodes[id])
+                      .length
+                  }
+                  )
+                </ContextMenu.Item>
+                <ContextMenu.Item
+                  className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-xs outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
+                  onSelect={() => {
+                    const direct = new Set(getDependents(openNode, model.nodes))
+                    setWorkspaceItems((prev) =>
+                      prev.filter((id) => id !== openNode && !direct.has(id))
+                    )
+                  }}
+                >
+                  Remove with dependents (
+                  {getDependents(openNode, model.nodes).length})
+                </ContextMenu.Item>
+                <ContextMenu.Separator className="h-px my-1 bg-border" />
+                <ContextMenu.Item
+                  className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-xs outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
+                  onSelect={() => {
+                    const deps = new Set(
+                      getAllDependencies(openNode, model.nodes)
+                    )
+                    setWorkspaceItems((prev) =>
+                      prev.filter((id) => id !== openNode && !deps.has(id))
+                    )
+                  }}
+                >
+                  Remove with all dependencies (
+                  {getAllDependencies(openNode, model.nodes).length})
+                </ContextMenu.Item>
+                <ContextMenu.Item
+                  className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-xs outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
+                  onSelect={() => {
+                    const deps = new Set(
+                      getAllDependents(openNode, model.nodes)
+                    )
+                    setWorkspaceItems((prev) =>
+                      prev.filter((id) => id !== openNode && !deps.has(id))
+                    )
+                  }}
+                >
+                  Remove with all dependents (
+                  {getAllDependents(openNode, model.nodes).length})
+                </ContextMenu.Item>
               </ContextMenu.Content>
             </ContextMenu.Portal>
           </ContextMenu.Root>
@@ -835,13 +899,13 @@ export function NodePanel() {
             variant="ghost"
             size="icon"
             className="h-7 w-7"
-            title={inFilter ? 'Remove from filter' : 'Add to filter'}
+            title={inFilter ? 'Remove from filter (F)' : 'Add to filter (F)'}
             onClick={() =>
               inFilter
                 ? setSelectedNodes((prev) =>
                     prev.filter((id) => id !== openNode)
                   )
-                : setSelectedNodes((prev) => [...prev, openNode])
+                : addToFilter(openNode)
             }
           >
             {inFilter ? (

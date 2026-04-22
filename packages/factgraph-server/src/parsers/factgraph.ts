@@ -58,6 +58,10 @@ type ParsedFact = {
   logic?: string // raw XML for this <Fact> block
 }
 
+// Node IDs are just the fact's path. Paths are already unique within a
+// ruleset, so this keeps workspace/selection state stable across edits
+// (inserting or reordering <Fact> elements no longer shifts IDs).
+
 /**
  * Parse multiple Fact Graph XML module files into a single Model.
  * Each file is a <FactDictionaryModule> containing <Facts><Fact>...</Fact></Facts>.
@@ -83,7 +87,7 @@ export function parseFactGraphModules(
 
   for (let i = 0; i < allFacts.length; i++) {
     const fact = allFacts[i]
-    const id = `fg-${i + 1}`
+    const id = fact.path
     pathToId[fact.path] = id
 
     const isWritable = fact.raw.Writable !== undefined
@@ -150,7 +154,7 @@ export function parseFactGraphModules(
   // Phase 3: Resolve dependencies
   for (let i = 0; i < allFacts.length; i++) {
     const fact = allFacts[i]
-    const id = `fg-${i + 1}`
+    const id = fact.path
 
     // Collect all <Dependency> elements from the entire fact tree
     const depPaths = collectDependencyPaths(fact.raw)

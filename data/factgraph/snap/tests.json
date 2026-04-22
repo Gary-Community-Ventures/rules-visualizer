@@ -6,18 +6,36 @@
     "inputs": {
       "/grossEarnedIncome": 0,
       "/unearnedIncome": 0,
-      "/householdSize": 1,
       "/dependentCareExpenses": 0,
       "/shelterCosts": 0,
-      "/medicalExpensesElderlyDisabled": 0,
-      "/hasElderlyOrDisabledMember": false
+      "/meetsAssetTest": true,
+      "/meetsCategoricalEligibility": false
+    },
+    "entities": {
+      "/members": [
+        {
+          "isElderly": false,
+          "isDisabled": false,
+          "medicalExpenses": 0,
+          "isImmigrationEligible": true,
+          "age": 40,
+          "isHigherEdStudent": false,
+          "weeklyWorkHours": 40,
+          "isWorkStudy": false,
+          "receivesTanf": false,
+          "isParent": false,
+          "isFullTimeCollegeStudent": false,
+          "isPregnant": false,
+          "isIncapableOfSelfCare": false
+        }
+      ]
     },
     "expect": {
       "/grossIncomeEligible": true,
       "/netIncomeEligible": true,
       "/eligible": true,
-      "/maxAllotment": 292,
-      "/snap": 292
+      "/maxAllotment": 298,
+      "/snap": 298
     }
   },
   {
@@ -27,11 +45,59 @@
     "inputs": {
       "/grossEarnedIncome": 1500,
       "/unearnedIncome": 0,
-      "/householdSize": 3,
       "/dependentCareExpenses": 0,
       "/shelterCosts": 800,
-      "/medicalExpensesElderlyDisabled": 0,
-      "/hasElderlyOrDisabledMember": false
+      "/meetsAssetTest": true,
+      "/meetsCategoricalEligibility": false
+    },
+    "entities": {
+      "/members": [
+        {
+          "isElderly": false,
+          "isDisabled": false,
+          "medicalExpenses": 0,
+          "isImmigrationEligible": true,
+          "age": 40,
+          "isHigherEdStudent": false,
+          "weeklyWorkHours": 40,
+          "isWorkStudy": false,
+          "receivesTanf": false,
+          "isParent": false,
+          "isFullTimeCollegeStudent": false,
+          "isPregnant": false,
+          "isIncapableOfSelfCare": false
+        },
+        {
+          "isElderly": false,
+          "isDisabled": false,
+          "medicalExpenses": 0,
+          "isImmigrationEligible": true,
+          "age": 40,
+          "isHigherEdStudent": false,
+          "weeklyWorkHours": 40,
+          "isWorkStudy": false,
+          "receivesTanf": false,
+          "isParent": false,
+          "isFullTimeCollegeStudent": false,
+          "isPregnant": false,
+          "isIncapableOfSelfCare": false
+        },
+        {
+          "isElderly": false,
+          "isDisabled": false,
+          "medicalExpenses": 0,
+          "isImmigrationEligible": true,
+          "age": 40,
+          "isHigherEdStudent": false,
+          "weeklyWorkHours": 40,
+          "isWorkStudy": false,
+          "receivesTanf": false,
+          "isParent": false,
+          "isFullTimeCollegeStudent": false,
+          "isPregnant": false,
+          "isIncapableOfSelfCare": false
+        }
+      ]
     },
     "expect": {
       "/grossMonthlyIncome": 1500,
@@ -41,10 +107,10 @@
       "/shelterDeduction": 304.5,
       "/netMonthlyIncome": 686.5,
       "/eligible": true,
-      "/maxAllotment": 768,
+      "/maxAllotment": 785,
       "/expectedFoodContribution": 205.95,
-      "/calculatedBenefit": 562.05,
-      "/snap": 562.05
+      "/calculatedBenefit": 579.05,
+      "/snap": 579.05
     }
   },
   {
@@ -54,11 +120,44 @@
     "inputs": {
       "/grossEarnedIncome": 5000,
       "/unearnedIncome": 0,
-      "/householdSize": 2,
       "/dependentCareExpenses": 0,
       "/shelterCosts": 0,
-      "/medicalExpensesElderlyDisabled": 0,
-      "/hasElderlyOrDisabledMember": false
+      "/meetsAssetTest": true,
+      "/meetsCategoricalEligibility": false
+    },
+    "entities": {
+      "/members": [
+        {
+          "isElderly": false,
+          "isDisabled": false,
+          "medicalExpenses": 0,
+          "isImmigrationEligible": true,
+          "age": 40,
+          "isHigherEdStudent": false,
+          "weeklyWorkHours": 40,
+          "isWorkStudy": false,
+          "receivesTanf": false,
+          "isParent": false,
+          "isFullTimeCollegeStudent": false,
+          "isPregnant": false,
+          "isIncapableOfSelfCare": false
+        },
+        {
+          "isElderly": false,
+          "isDisabled": false,
+          "medicalExpenses": 0,
+          "isImmigrationEligible": true,
+          "age": 40,
+          "isHigherEdStudent": false,
+          "weeklyWorkHours": 40,
+          "isWorkStudy": false,
+          "receivesTanf": false,
+          "isParent": false,
+          "isFullTimeCollegeStudent": false,
+          "isPregnant": false,
+          "isIncapableOfSelfCare": false
+        }
+      ]
     },
     "expect": {
       "/grossIncomeEligible": false,
@@ -69,27 +168,61 @@
   {
     "id": "snap-fg-4",
     "name": "Elderly/disabled — exempt from gross test",
-    "description": "Elderly household skips gross test; uncapped shelter deduction.",
+    "description": "Elderly household skips gross test; uncapped shelter deduction. Only the elderly member's medical expenses count.",
     "inputs": {
       "/grossEarnedIncome": 0,
       "/unearnedIncome": 1800,
-      "/householdSize": 2,
       "/dependentCareExpenses": 0,
       "/shelterCosts": 1200,
-      "/medicalExpensesElderlyDisabled": 200,
-      "/hasElderlyOrDisabledMember": true
+      "/meetsAssetTest": true,
+      "/meetsCategoricalEligibility": false
+    },
+    "entities": {
+      "/members": [
+        {
+          "isElderly": true,
+          "isDisabled": false,
+          "medicalExpenses": 200,
+          "isImmigrationEligible": true,
+          "age": 40,
+          "isHigherEdStudent": false,
+          "weeklyWorkHours": 40,
+          "isWorkStudy": false,
+          "receivesTanf": false,
+          "isParent": false,
+          "isFullTimeCollegeStudent": false,
+          "isPregnant": false,
+          "isIncapableOfSelfCare": false
+        },
+        {
+          "isElderly": false,
+          "isDisabled": false,
+          "medicalExpenses": 0,
+          "isImmigrationEligible": true,
+          "age": 40,
+          "isHigherEdStudent": false,
+          "weeklyWorkHours": 40,
+          "isWorkStudy": false,
+          "receivesTanf": false,
+          "isParent": false,
+          "isFullTimeCollegeStudent": false,
+          "isPregnant": false,
+          "isIncapableOfSelfCare": false
+        }
+      ]
     },
     "expect": {
       "/grossMonthlyIncome": 1800,
+      "/medicalExpensesElderlyDisabled": 200,
       "/medicalDeduction": 165,
       "/incomeAfterPreliminaryDeductions": 1426,
       "/shelterDeduction": 487,
       "/netMonthlyIncome": 939,
       "/netIncomeEligible": true,
       "/eligible": true,
-      "/maxAllotment": 536,
-      "/calculatedBenefit": 254.3,
-      "/snap": 254.3
+      "/maxAllotment": 546,
+      "/calculatedBenefit": 264.3,
+      "/snap": 264.3
     }
   },
   {
@@ -99,11 +232,89 @@
     "inputs": {
       "/grossEarnedIncome": 0,
       "/unearnedIncome": 3900,
-      "/householdSize": 5,
       "/dependentCareExpenses": 0,
       "/shelterCosts": 200,
-      "/medicalExpensesElderlyDisabled": 0,
-      "/hasElderlyOrDisabledMember": false
+      "/meetsAssetTest": true,
+      "/meetsCategoricalEligibility": false
+    },
+    "entities": {
+      "/members": [
+        {
+          "isElderly": false,
+          "isDisabled": false,
+          "medicalExpenses": 0,
+          "isImmigrationEligible": true,
+          "age": 40,
+          "isHigherEdStudent": false,
+          "weeklyWorkHours": 40,
+          "isWorkStudy": false,
+          "receivesTanf": false,
+          "isParent": false,
+          "isFullTimeCollegeStudent": false,
+          "isPregnant": false,
+          "isIncapableOfSelfCare": false
+        },
+        {
+          "isElderly": false,
+          "isDisabled": false,
+          "medicalExpenses": 0,
+          "isImmigrationEligible": true,
+          "age": 40,
+          "isHigherEdStudent": false,
+          "weeklyWorkHours": 40,
+          "isWorkStudy": false,
+          "receivesTanf": false,
+          "isParent": false,
+          "isFullTimeCollegeStudent": false,
+          "isPregnant": false,
+          "isIncapableOfSelfCare": false
+        },
+        {
+          "isElderly": false,
+          "isDisabled": false,
+          "medicalExpenses": 0,
+          "isImmigrationEligible": true,
+          "age": 40,
+          "isHigherEdStudent": false,
+          "weeklyWorkHours": 40,
+          "isWorkStudy": false,
+          "receivesTanf": false,
+          "isParent": false,
+          "isFullTimeCollegeStudent": false,
+          "isPregnant": false,
+          "isIncapableOfSelfCare": false
+        },
+        {
+          "isElderly": false,
+          "isDisabled": false,
+          "medicalExpenses": 0,
+          "isImmigrationEligible": true,
+          "age": 40,
+          "isHigherEdStudent": false,
+          "weeklyWorkHours": 40,
+          "isWorkStudy": false,
+          "receivesTanf": false,
+          "isParent": false,
+          "isFullTimeCollegeStudent": false,
+          "isPregnant": false,
+          "isIncapableOfSelfCare": false
+        },
+        {
+          "isElderly": false,
+          "isDisabled": false,
+          "medicalExpenses": 0,
+          "isImmigrationEligible": true,
+          "age": 40,
+          "isHigherEdStudent": false,
+          "weeklyWorkHours": 40,
+          "isWorkStudy": false,
+          "receivesTanf": false,
+          "isParent": false,
+          "isFullTimeCollegeStudent": false,
+          "isPregnant": false,
+          "isIncapableOfSelfCare": false
+        }
+      ]
     },
     "expect": {
       "/federalPovertyLevelMonthly": 3055,
@@ -125,15 +336,33 @@
     "inputs": {
       "/grossEarnedIncome": 0,
       "/unearnedIncome": 1250,
-      "/householdSize": 1,
       "/dependentCareExpenses": 0,
       "/shelterCosts": 0,
-      "/medicalExpensesElderlyDisabled": 0,
-      "/hasElderlyOrDisabledMember": false
+      "/meetsAssetTest": true,
+      "/meetsCategoricalEligibility": false
+    },
+    "entities": {
+      "/members": [
+        {
+          "isElderly": false,
+          "isDisabled": false,
+          "medicalExpenses": 0,
+          "isImmigrationEligible": true,
+          "age": 40,
+          "isHigherEdStudent": false,
+          "weeklyWorkHours": 40,
+          "isWorkStudy": false,
+          "receivesTanf": false,
+          "isParent": false,
+          "isFullTimeCollegeStudent": false,
+          "isPregnant": false,
+          "isIncapableOfSelfCare": false
+        }
+      ]
     },
     "expect": {
       "/eligible": true,
-      "/maxAllotment": 292,
+      "/maxAllotment": 298,
       "/calculatedBenefit": 0,
       "/snap": 23
     }
@@ -142,10 +371,30 @@
     "id": "65856a19-0e32-4181-a901-1a3eed6af2ca",
     "name": "Test 7",
     "inputs": {
-      "/householdSize": 1
+      "/meetsAssetTest": true,
+      "/meetsCategoricalEligibility": false
     },
     "expect": {
       "/standardDeduction": 210
+    },
+    "entities": {
+      "/members": [
+        {
+          "isElderly": false,
+          "isDisabled": false,
+          "medicalExpenses": 0,
+          "age": 40,
+          "isHigherEdStudent": false,
+          "weeklyWorkHours": 40,
+          "isWorkStudy": false,
+          "receivesTanf": false,
+          "isImmigrationEligible": true,
+          "isParent": false,
+          "isFullTimeCollegeStudent": false,
+          "isPregnant": false,
+          "isIncapableOfSelfCare": false
+        }
+      ]
     }
   }
 ]

@@ -159,10 +159,12 @@ def _ir_to_model(
                 seen_paths.add(var_path)
                 input_vars.append((var_path, vd))
 
-    # Build path→id map for all variables
+    # Build path→id map for all variables. IDs are just the variable path —
+    # paths are unique and this keeps workspace/selection state stable across
+    # edits (reordering variables no longer shifts IDs).
     all_paths = list(ir.order) + [p for p, _ in input_vars]
-    for i, var_path in enumerate(all_paths):
-        path_to_id[var_path] = f"rac-{i + 1}"
+    for var_path in all_paths:
+        path_to_id[var_path] = var_path
 
     # Build nodes from compiled IR
     for i, var_path in enumerate(ir.order):
@@ -313,9 +315,9 @@ def _modules_to_model(modules: list[Any], ruleset_id: str, logic_blocks: dict[st
             seen_paths.add(var_path)
             all_vars.append((var_path, vd, filename))
 
-    # Build path→id map
-    for i, (var_path, _, _) in enumerate(all_vars):
-        path_to_id[var_path] = f"rac-{i + 1}"
+    # Build path→id map — IDs are just the variable path (stable across edits)
+    for var_path, _, _ in all_vars:
+        path_to_id[var_path] = var_path
 
     # Build nodes
     for i, (var_path, vd, filename) in enumerate(all_vars):
