@@ -11,6 +11,7 @@ import {
   Loader2,
   SlidersHorizontal,
   FlaskConical,
+  BookOpen,
   X,
   Calendar,
   ChevronLeft,
@@ -304,6 +305,14 @@ export function ToolBar() {
           onClick={() => setRightBar(rightBar === 'tests' ? null : 'tests')}
         >
           <FlaskConical className="size-4" />
+        </Button>
+        <Button
+          variant={rightBar === 'policy' ? 'default' : 'outline'}
+          size="icon"
+          title="Policy Documents"
+          onClick={() => setRightBar(rightBar === 'policy' ? null : 'policy')}
+        >
+          <BookOpen className="size-4" />
         </Button>
         <Button
           variant={rightBar === 'ai' ? 'default' : 'outline'}

@@ -4,6 +4,8 @@ import { useMainContext } from '@/context'
 import { getNodePath } from '@/context/model-context'
 import { parseFromBlocks, getBlockForYear } from '@/lib/logic'
 import { LogicHighlighter } from './logic-highlighter'
+import { resolveCitationUrl } from 'rules-visualizer-shared-types/citations'
+import { ExternalLink } from 'lucide-react'
 
 type Props = {
   content: Extract<NodeContent, { format: 'rac'; type: 'variable' }>
@@ -75,11 +77,33 @@ export function RacVariableViewer({ content }: Props) {
     )
   }
 
+  const sourceUrl = content.source
+    ? resolveCitationUrl(content.source)
+    : undefined
+
   const hasAdvanced = !!(content.entity || content.unit)
 
   return (
     <div className="flex flex-col gap-3 text-sm">
       {logicDisplay}
+      {content.source && (
+        <div className="flex items-center gap-1.5 text-xs">
+          <span className="text-muted-foreground font-medium">Source</span>
+          {sourceUrl ? (
+            <a
+              href={sourceUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 hover:underline flex items-center gap-0.5"
+            >
+              {content.source}
+              <ExternalLink className="size-2.5" />
+            </a>
+          ) : (
+            <span>{content.source}</span>
+          )}
+        </div>
+      )}
       {hasAdvanced && (
         <AdvancedSection>
           {content.entity && <Field label="Entity" value={content.entity} />}

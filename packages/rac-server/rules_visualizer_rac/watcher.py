@@ -8,7 +8,7 @@ from threading import Timer
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler, FileSystemEvent
 
-from .parser import parse_rac_directory
+from .parser import parse_rac_directory, resolve_references
 from .server import set_rulesets, set_compiled_ir, get_rulesets, broadcast_reload
 
 
@@ -55,6 +55,7 @@ class RacFileHandler(FileSystemEventHandler):
 
         try:
             model, ir = parse_rac_directory(str(ruleset_dir), ruleset_id)
+            resolve_references(model, str(ruleset_dir))
             rulesets = get_rulesets()
             rulesets[ruleset_id] = model
             set_rulesets(rulesets)

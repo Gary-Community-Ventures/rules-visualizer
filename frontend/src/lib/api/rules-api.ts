@@ -1,4 +1,4 @@
-import type { Model, RuleFormat } from '@/lib/model'
+import type { Model, RuleFormat, PolicyReferences } from '@/lib/model'
 import { MOCK_RULESETS, MOCK_MODELS } from './mock-data'
 
 const API_BASE = import.meta.env.VITE_API_URL ?? ''
@@ -159,4 +159,25 @@ export async function executeRuleset(
     { inputs, entities, as_of: asOfDate }
   )
   return data.results
+}
+
+// --- Policy references ---
+
+export async function getReferences(
+  rulesetId: string
+): Promise<PolicyReferences> {
+  return get<PolicyReferences>(`/api/rulesets/${rulesetId}/references`)
+}
+
+export async function saveReferences(
+  rulesetId: string,
+  refs: PolicyReferences
+): Promise<PolicyReferences> {
+  const res = await fetch(`${API_BASE}/api/rulesets/${rulesetId}/references`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(refs),
+  })
+  if (!res.ok) throw new Error(`API error: ${res.status}`)
+  return res.json()
 }

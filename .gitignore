@@ -66,3 +66,6 @@ pnpm-lock.yaml
 # TypeScript
 *.tsbuildinfo
 .stashed/
+
+# Policy document PDFs (large binaries — keep alongside data but don't commit)
+data/**/*.pdf

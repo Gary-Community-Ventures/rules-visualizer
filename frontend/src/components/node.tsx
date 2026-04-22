@@ -7,6 +7,7 @@ import {
   isCollectionParent,
   getCollectionInfo,
   getTypeHint,
+  getNodePath,
 } from '@/context/model-context'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
@@ -27,10 +28,20 @@ import {
   BookmarkCheck,
   Filter,
   FilterX,
+  ExternalLink,
+  ChevronDown,
+  ChevronRight,
+  FileText,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ContentViewer } from './content-viewers'
-import type { ModelNode, NodeContent } from '@/lib/model'
+import type {
+  ModelNode,
+  NodeContent,
+  ResolvedReference,
+  PolicyReferences,
+} from '@/lib/model'
+import { getReferences, saveReferences } from '@/lib/api/rules-api'
 import {
   getDependents,
   getAllDependencies,
@@ -415,6 +426,9 @@ export function NodeViewer({ node }: NodeViewerProps) {
       {/* Connections */}
       <NodeLinkList label="Dependencies" nodeIds={deps} />
       <NodeLinkList label="Used by" nodeIds={dependents} />
+
+      {/* Policy references */}
+      <PolicyReferencesList node={node} />
     </section>
   )
 }
@@ -652,6 +666,358 @@ export function NodeLink({
   )
 }
 
+function PolicyReferencesList({ node }: { node: ModelNode }) {
+  const { model, refreshModel, openPolicyAtPage } = useMainContext()
+  const references = node.references ?? []
+  const [expanded, setExpanded] = useState<Set<string>>(new Set())
+  const [adding, setAdding] = useState(false)
+  const [manifest, setManifest] = useState<PolicyReferences | null>(null)
+  const [addMode, setAddMode] = useState<'pick' | 'new'>('pick')
+  const [newDocTitle, setNewDocTitle] = useState('')
+  const [newDocUrl, setNewDocUrl] = useState('')
+  const [newDocFile, setNewDocFile] = useState('')
+  const [newSectionLabel, setNewSectionLabel] = useState('')
+  const [newSectionText, setNewSectionText] = useState('')
+  const [selectedDocId, setSelectedDocId] = useState('')
+  const [selectedSectionId, setSelectedSectionId] = useState('')
+  const [saving, setSaving] = useState(false)
+
+  const nodePath = getNodePath(node.content)
+
+  const toggle = (sectionId: string) => {
+    setExpanded((prev) => {
+      const next = new Set(prev)
+      if (next.has(sectionId)) next.delete(sectionId)
+      else next.add(sectionId)
+      return next
+    })
+  }
+
+  const openAdd = async () => {
+    try {
+      const refs = await getReferences(model.id)
+      setManifest(refs)
+      setAdding(true)
+      setAddMode(refs.sections.length > 0 ? 'pick' : 'new')
+      setSelectedDocId(refs.documents[0]?.id ?? '')
+      setSelectedSectionId('')
+    } catch (e) {
+      console.error('Failed to load references:', e)
+    }
+  }
+
+  const cancelAdd = () => {
+    setAdding(false)
+    setNewDocTitle('')
+    setNewDocUrl('')
+    setNewDocFile('')
+    setNewSectionLabel('')
+    setNewSectionText('')
+  }
+
+  const handleAdd = async () => {
+    if (!manifest || !nodePath) return
+    setSaving(true)
+    try {
+      const updated = { ...manifest }
+      let sectionId = selectedSectionId
+
+      if (addMode === 'new') {
+        // Create document if needed
+        let docId = selectedDocId
+        if (!docId && newDocTitle.trim()) {
+          docId = newDocTitle
+            .trim()
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-')
+          updated.documents = [
+            ...updated.documents,
+            {
+              id: docId,
+              title: newDocTitle.trim(),
+              url: newDocUrl.trim() || undefined,
+              file: newDocFile.trim() || undefined,
+            },
+          ]
+        }
+        if (!docId) return
+
+        // Create section
+        sectionId = `${docId}__${newSectionLabel
+          .trim()
+          .toLowerCase()
+          .replace(/[^a-z0-9.]+/g, '-')}`
+        updated.sections = [
+          ...updated.sections,
+          {
+            id: sectionId,
+            documentId: docId,
+            label: newSectionLabel.trim(),
+            text: newSectionText.trim(),
+          },
+        ]
+      }
+
+      if (!sectionId) return
+
+      // Add mapping
+      updated.mappings = [...updated.mappings, { nodePath, sectionId }]
+
+      await saveReferences(model.id, updated)
+      refreshModel()
+      cancelAdd()
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleRemove = async (sectionId: string) => {
+    if (!nodePath) return
+    setSaving(true)
+    try {
+      const refs = await getReferences(model.id)
+      refs.mappings = refs.mappings.filter(
+        (m) => !(m.nodePath === nodePath && m.sectionId === sectionId)
+      )
+      await saveReferences(model.id, refs)
+      refreshModel()
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  // Group by document
+  const byDocument = new Map<string, ResolvedReference[]>()
+  for (const ref of references) {
+    const list = byDocument.get(ref.document.id) ?? []
+    list.push(ref)
+    byDocument.set(ref.document.id, list)
+  }
+
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="flex items-center gap-1.5">
+        <label className="text-sm font-medium text-muted-foreground flex items-center gap-1.5">
+          <BookOpen className="size-3.5" />
+          Policy
+        </label>
+        {!adding && (
+          <button
+            className="p-0.5 text-muted-foreground hover:text-foreground"
+            onClick={openAdd}
+            title="Link policy section"
+          >
+            <Plus className="size-3" />
+          </button>
+        )}
+      </div>
+
+      {references.length === 0 && !adding && (
+        <span className="text-[10px] text-muted-foreground italic">
+          No policy references linked
+        </span>
+      )}
+
+      <div className="flex flex-col gap-2">
+        {Array.from(byDocument.entries()).map(([docId, refs]) => (
+          <div key={docId} className="flex flex-col gap-1.5">
+            <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
+              {refs[0].document.file ? (
+                <FileText className="size-2.5 shrink-0" />
+              ) : null}
+              {refs[0].document.url ? (
+                <a
+                  href={refs[0].document.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-foreground flex items-center gap-1"
+                >
+                  {refs[0].document.title}
+                  <ExternalLink className="size-2.5" />
+                </a>
+              ) : (
+                <span>{refs[0].document.title}</span>
+              )}
+            </div>
+            {refs.map((ref) => {
+              const isOpen = expanded.has(ref.section.id)
+              return (
+                <div
+                  key={ref.section.id}
+                  className="border rounded-md px-3 py-2 hover:bg-muted/50 transition-colors"
+                >
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      className="flex items-center gap-1.5 flex-1 text-left"
+                      onClick={() => toggle(ref.section.id)}
+                    >
+                      {isOpen ? (
+                        <ChevronDown className="size-3 text-muted-foreground shrink-0" />
+                      ) : (
+                        <ChevronRight className="size-3 text-muted-foreground shrink-0" />
+                      )}
+                      <span className="text-xs font-medium">
+                        {ref.section.label}
+                      </span>
+                    </button>
+                    {ref.section.page && (
+                      <button
+                        className="p-0.5 text-muted-foreground hover:text-blue-600 shrink-0"
+                        onClick={() =>
+                          openPolicyAtPage(ref.section.page!, [ref.section.id])
+                        }
+                        title={`View in PDF (page ${ref.section.page})`}
+                      >
+                        <FileText className="size-3" />
+                      </button>
+                    )}
+                    <button
+                      className="p-0.5 text-muted-foreground hover:text-red-600 shrink-0"
+                      onClick={() => handleRemove(ref.section.id)}
+                      disabled={saving}
+                      title="Remove reference"
+                    >
+                      <X className="size-3" />
+                    </button>
+                  </div>
+                  {isOpen && (
+                    <p className="mt-2 text-xs text-muted-foreground whitespace-pre-wrap leading-relaxed ml-[18px]">
+                      {ref.section.text}
+                    </p>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        ))}
+      </div>
+
+      {/* Add reference form */}
+      {adding && manifest && (
+        <div className="border rounded-md p-3 space-y-2 bg-muted/30">
+          <div className="flex gap-1.5 text-[10px]">
+            <button
+              className={cn(
+                'px-2 py-0.5 rounded',
+                addMode === 'pick'
+                  ? 'bg-foreground text-background'
+                  : 'text-muted-foreground hover:text-foreground'
+              )}
+              onClick={() => setAddMode('pick')}
+            >
+              Existing section
+            </button>
+            <button
+              className={cn(
+                'px-2 py-0.5 rounded',
+                addMode === 'new'
+                  ? 'bg-foreground text-background'
+                  : 'text-muted-foreground hover:text-foreground'
+              )}
+              onClick={() => setAddMode('new')}
+            >
+              New section
+            </button>
+          </div>
+
+          {addMode === 'pick' ? (
+            <div className="space-y-1.5">
+              <select
+                className="w-full h-7 text-xs border rounded px-2 bg-background"
+                value={selectedSectionId}
+                onChange={(e) => setSelectedSectionId(e.target.value)}
+              >
+                <option value="">Select a section...</option>
+                {manifest.sections.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          ) : (
+            <div className="space-y-1.5">
+              {manifest.documents.length > 0 ? (
+                <select
+                  className="w-full h-7 text-xs border rounded px-2 bg-background"
+                  value={selectedDocId}
+                  onChange={(e) => setSelectedDocId(e.target.value)}
+                >
+                  <option value="">New document...</option>
+                  {manifest.documents.map((d) => (
+                    <option key={d.id} value={d.id}>
+                      {d.title}
+                    </option>
+                  ))}
+                </select>
+              ) : null}
+              {!selectedDocId && (
+                <>
+                  <Input
+                    className="h-7 text-xs"
+                    placeholder="Document title"
+                    value={newDocTitle}
+                    onChange={(e) => setNewDocTitle(e.target.value)}
+                  />
+                  <Input
+                    className="h-7 text-xs"
+                    placeholder="Document URL (optional)"
+                    value={newDocUrl}
+                    onChange={(e) => setNewDocUrl(e.target.value)}
+                  />
+                  <Input
+                    className="h-7 text-xs"
+                    placeholder="PDF file path (optional, e.g. policy/snap.pdf)"
+                    value={newDocFile}
+                    onChange={(e) => setNewDocFile(e.target.value)}
+                  />
+                </>
+              )}
+              <Input
+                className="h-7 text-xs"
+                placeholder="Section label (e.g. 4.407.2 — Earned Income Deduction)"
+                value={newSectionLabel}
+                onChange={(e) => setNewSectionLabel(e.target.value)}
+              />
+              <textarea
+                className="w-full text-xs border rounded px-2 py-1.5 bg-background resize-y min-h-[60px]"
+                placeholder="Paste the policy text for this section..."
+                rows={4}
+                value={newSectionText}
+                onChange={(e) => setNewSectionText(e.target.value)}
+              />
+            </div>
+          )}
+
+          <div className="flex gap-1.5 justify-end">
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-6 text-[11px]"
+              onClick={cancelAdd}
+            >
+              Cancel
+            </Button>
+            <Button
+              size="sm"
+              className="h-6 text-[11px]"
+              onClick={handleAdd}
+              disabled={
+                saving ||
+                (addMode === 'pick' && !selectedSectionId) ||
+                (addMode === 'new' &&
+                  (!newSectionLabel.trim() || !newSectionText.trim()))
+              }
+            >
+              {saving ? 'Saving...' : 'Link'}
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 export function NodeLinkList({
   label,
   nodeIds,
@@ -835,9 +1201,7 @@ export function NodePanel() {
                   className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-xs outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
                   onSelect={() => {
                     const direct = new Set(
-                      openNodeData.dependencies.filter(
-                        (id) => model.nodes[id]
-                      )
+                      openNodeData.dependencies.filter((id) => model.nodes[id])
                     )
                     setWorkspaceItems((prev) =>
                       prev.filter((id) => id !== openNode && !direct.has(id))

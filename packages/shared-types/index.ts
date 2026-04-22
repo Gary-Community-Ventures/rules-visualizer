@@ -134,6 +134,7 @@ export type ModelNode = {
   overridable: boolean // whether this node's value can be overridden during execution
   description?: string
   tags?: string[]
+  references?: ResolvedReference[]
 }
 
 export type ModelNodes = Record<string, ModelNode>
@@ -153,4 +154,61 @@ export type RulesetSummary = {
   id: string
   name: string
   format: RuleFormat
+}
+
+// ---------------------------------------------------------------------------
+// Policy references (citations to source policy documents)
+// ---------------------------------------------------------------------------
+
+/** A source policy document (e.g. a statute, regulation, or rule manual) */
+export type PolicyDocument = {
+  id: string
+  title: string
+  url?: string
+  /** Path to a local file (e.g. PDF) relative to the ruleset data directory */
+  file?: string
+}
+
+/** A bounding rectangle normalized to 0-1 page coordinates */
+export type NormalizedRect = {
+  x: number
+  y: number
+  w: number
+  h: number
+}
+
+/** Section status: linked to nodes, explicitly skipped, or unmarked */
+export type SectionStatus = 'linked' | 'skipped'
+
+/** An excerpted section of a policy document */
+export type PolicySection = {
+  id: string
+  documentId: string
+  label: string
+  text: string
+  /** PDF page number where this section was captured from */
+  page?: number
+  /** Bounding boxes of the selected text on the PDF page (normalized 0-1) */
+  rects?: NormalizedRect[]
+  /** Whether this section is skipped/not-implementing */
+  status?: SectionStatus
+}
+
+/** A mapping from a node path to a policy section (many-to-many) */
+export type PolicyMapping = {
+  nodePath: string
+  sectionId: string
+}
+
+/** The full references manifest for a ruleset */
+export type PolicyReferences = {
+  documents: PolicyDocument[]
+  sections: PolicySection[]
+  mappings: PolicyMapping[]
+}
+
+/** A resolved reference with full section text and parent document info */
+export type ResolvedReference = {
+  section: PolicySection
+  document: PolicyDocument
 }

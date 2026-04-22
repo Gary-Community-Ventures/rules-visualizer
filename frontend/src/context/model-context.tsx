@@ -19,7 +19,7 @@ import { onReload } from '@/lib/api/live-reload'
 import { useLocalStorage } from '@/lib/use-local-storage'
 import { useAppContext } from './app-context'
 
-export type RightBarOptions = 'ai' | 'execution' | 'tests' | null
+export type RightBarOptions = 'ai' | 'execution' | 'tests' | 'policy' | null
 
 /** Check if a node is an "input" that users must provide values for */
 export function isInputNode(node: ModelNode): boolean {
@@ -230,6 +230,12 @@ type ModelContextValue = {
       computedValues: Record<string, unknown>
     } | null>
   >
+  refreshModel: () => void
+  /** Open the policy panel and navigate to a specific page, optionally focusing a section */
+  openPolicyAtPage: (page: number, focusSectionIds?: string[]) => void
+  policyTargetPage: number | null
+  policyFocusSectionIds: string[] | null
+  clearPolicyTarget: () => void
 }
 
 const ModelContext = createContext<ModelContextValue | undefined>(undefined)
@@ -449,6 +455,19 @@ export function ModelProvider({
     computedValues: Record<string, unknown>
   } | null>(null)
 
+  const [policyTargetPage, setPolicyTargetPage] = useState<number | null>(null)
+  const [policyFocusSectionIds, setPolicyFocusSectionIds] = useState<
+    string[] | null
+  >(null)
+  const openPolicyAtPage = useCallback(
+    (page: number, focusSectionIds?: string[]) => {
+      setPolicyTargetPage(page)
+      setPolicyFocusSectionIds(focusSectionIds ?? null)
+      setRightBar('policy')
+    },
+    [setRightBar]
+  )
+
   const loadModel = useCallback(() => {
     setIsLoading(true)
     setError(null)
@@ -542,6 +561,14 @@ export function ModelProvider({
       setWorkspaceItems,
       activeTest,
       setActiveTest,
+      refreshModel: loadModel,
+      openPolicyAtPage,
+      policyTargetPage,
+      policyFocusSectionIds,
+      clearPolicyTarget: () => {
+        setPolicyTargetPage(null)
+        setPolicyFocusSectionIds(null)
+      },
     }),
     [
       rulesetId,
@@ -584,6 +611,10 @@ export function ModelProvider({
       setWorkspaceItems,
       activeTest,
       setActiveTest,
+      loadModel,
+      openPolicyAtPage,
+      policyTargetPage,
+      policyFocusSectionIds,
     ]
   )
 

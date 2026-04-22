@@ -14,4 +14,10 @@ export type {
   ModelNodes,
   Model,
   RulesetSummary,
+  PolicyDocument,
+  PolicySection,
+  PolicyMapping,
+  PolicyReferences,
+  ResolvedReference,
+  NormalizedRect,
 } from 'rules-visualizer-shared-types'

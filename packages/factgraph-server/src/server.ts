@@ -7,6 +7,7 @@ import { WebSocketServer, type WebSocket } from 'ws'
 import type { Server } from 'node:http'
 import rulesetRoutes from './routes/rulesets.js'
 import testRoutes from './routes/tests.js'
+import referenceRoutes from './routes/references.js'
 import { handleAiChat } from './routes/ai.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -54,6 +55,7 @@ app.use(express.json())
 // API routes
 app.use('/api', rulesetRoutes)
 app.use('/api', testRoutes)
+app.use('/api', referenceRoutes)
 
 // Serve pre-built frontend static files if they exist
 if (fs.existsSync(FRONTEND_DIR)) {

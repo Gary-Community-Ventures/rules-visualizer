@@ -20,7 +20,10 @@ import {
   ArrowRight,
   Pencil,
   Filter,
+  FileText,
+  ClipboardCopy,
 } from 'lucide-react'
+import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
 import {
   listTests,
   createTest,
@@ -364,27 +367,38 @@ export function TestPanel() {
           )}
         </div>
         <div className="flex gap-1.5">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleNewTest}
-            className="h-7 text-xs gap-1"
-            title="Create a new empty test"
-          >
-            <Plus className="size-3" />
-            New
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleSaveAsTest}
-            disabled={!executionResults}
-            className="h-7 text-xs gap-1"
-            title="Save current execution as a test"
-          >
-            <Plus className="size-3" />
-            Save
-          </Button>
+          <DropdownMenu.Root>
+            <DropdownMenu.Trigger asChild>
+              <Button variant="outline" size="sm" className="h-7 text-xs gap-1">
+                <Plus className="size-3" />
+                New
+                <ChevronDown className="size-2.5 opacity-50" />
+              </Button>
+            </DropdownMenu.Trigger>
+            <DropdownMenu.Portal>
+              <DropdownMenu.Content
+                className="z-50 min-w-[180px] bg-popover border rounded-md shadow-md p-1 text-popover-foreground animate-in fade-in-0 zoom-in-95"
+                sideOffset={4}
+                align="end"
+              >
+                <DropdownMenu.Item
+                  className="flex items-center gap-2 px-2 py-1.5 text-xs rounded-sm cursor-pointer outline-none hover:bg-accent focus:bg-accent"
+                  onSelect={handleNewTest}
+                >
+                  <FileText className="size-3.5 text-muted-foreground" />
+                  Blank test
+                </DropdownMenu.Item>
+                <DropdownMenu.Item
+                  className="flex items-center gap-2 px-2 py-1.5 text-xs rounded-sm cursor-pointer outline-none hover:bg-accent focus:bg-accent disabled:opacity-50 disabled:cursor-not-allowed"
+                  onSelect={handleSaveAsTest}
+                  disabled={!executionResults}
+                >
+                  <ClipboardCopy className="size-3.5 text-muted-foreground" />
+                  From current execution
+                </DropdownMenu.Item>
+              </DropdownMenu.Content>
+            </DropdownMenu.Portal>
+          </DropdownMenu.Root>
           <Button
             size="sm"
             onClick={handleRunAll}
@@ -579,7 +593,10 @@ function TestItem({
   }
 
   return (
-    <div ref={itemRef} className={cn('px-4 py-2', isSelected && 'bg-blue-50/50')}>
+    <div
+      ref={itemRef}
+      className={cn('px-4 py-2', isSelected && 'bg-blue-50/50')}
+    >
       <div className="flex items-center gap-2">
         <button
           className="flex items-center gap-1.5 flex-1 text-left min-w-0"

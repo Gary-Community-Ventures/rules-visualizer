@@ -508,6 +508,52 @@ def _path_to_name(path: str) -> str:
     return parts[-1] if parts else path
 
 
+# --- Policy references ---
+
+
+def resolve_references(model: dict[str, Any], ruleset_dir: str) -> None:
+    """Load references.json and attach resolved references to model nodes."""
+    ref_path = Path(ruleset_dir) / "references.json"
+    if not ref_path.is_file():
+        return
+
+    import json
+
+    try:
+        refs = json.loads(ref_path.read_text(encoding="utf-8"))
+    except Exception as e:
+        print(f"  Warning: failed to parse references.json: {e}")
+        return
+
+    docs_by_id = {d["id"]: d for d in refs.get("documents", [])}
+    sections_by_id = {s["id"]: s for s in refs.get("sections", [])}
+
+    # Group mappings by node path
+    mappings_by_path: dict[str, list[str]] = {}
+    for m in refs.get("mappings", []):
+        mappings_by_path.setdefault(m["nodePath"], []).append(m["sectionId"])
+
+    # Resolve onto nodes (RAC nodes use variable name as node.name)
+    for node in model.get("nodes", {}).values():
+        node_name = node.get("name", "")
+        section_ids = mappings_by_path.get(node_name)
+        if not section_ids:
+            continue
+
+        resolved = []
+        for section_id in section_ids:
+            section = sections_by_id.get(section_id)
+            if not section:
+                continue
+            doc = docs_by_id.get(section.get("documentId", ""))
+            if not doc:
+                continue
+            resolved.append({"section": section, "document": doc})
+
+        if resolved:
+            node["references"] = resolved
+
+
 def _id_to_name(ruleset_id: str) -> str:
     """Convert a ruleset ID to a display name."""
     return ruleset_id.replace("-", " ").replace("_", " ").title()

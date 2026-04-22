@@ -7,7 +7,7 @@ import os
 import webbrowser
 from pathlib import Path
 
-from .parser import parse_rac_directory
+from .parser import parse_rac_directory, resolve_references
 from .server import set_rulesets, set_compiled_ir, set_ruleset_dir, run_server
 from .watcher import start_watcher
 
@@ -77,6 +77,7 @@ def main() -> None:
             ruleset_id = subdir.name
             try:
                 model, ir = parse_rac_directory(str(subdir), ruleset_id)
+                resolve_references(model, str(subdir))
                 rulesets[ruleset_id] = model
                 set_compiled_ir(ruleset_id, ir)
                 set_ruleset_dir(ruleset_id, str(subdir))
@@ -94,6 +95,7 @@ def main() -> None:
             ruleset_id = data_dir.name
             try:
                 model, ir = parse_rac_directory(str(data_dir), ruleset_id)
+                resolve_references(model, str(data_dir))
                 rulesets[ruleset_id] = model
                 set_compiled_ir(ruleset_id, ir)
                 set_ruleset_dir(ruleset_id, str(data_dir))

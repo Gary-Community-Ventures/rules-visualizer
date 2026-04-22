@@ -735,6 +735,90 @@ async def handle_tests_run(request: web.Request) -> web.Response:
     return _json_response({"results": results})
 
 
+# --- Policy references CRUD ---
+
+
+def _refs_path(ruleset_id: str) -> Path | None:
+    rac_dir = _ruleset_dirs.get(ruleset_id)
+    if not rac_dir:
+        return None
+    return Path(rac_dir) / "references.json"
+
+
+def _read_refs(ruleset_id: str) -> dict:
+    p = _refs_path(ruleset_id)
+    if not p or not p.exists():
+        return {"documents": [], "sections": [], "mappings": []}
+    try:
+        return json.loads(p.read_text())
+    except Exception:
+        return {"documents": [], "sections": [], "mappings": []}
+
+
+def _write_refs(ruleset_id: str, refs: dict) -> None:
+    p = _refs_path(ruleset_id)
+    if p:
+        p.write_text(json.dumps(refs, indent=2) + "\n")
+
+
+async def handle_refs_get(request: web.Request) -> web.Response:
+    ruleset_id = request.match_info["id"]
+    if ruleset_id not in _rulesets:
+        return _json_response({"error": "Ruleset not found"}, status=404)
+    return _json_response(_read_refs(ruleset_id))
+
+
+async def handle_refs_put(request: web.Request) -> web.Response:
+    ruleset_id = request.match_info["id"]
+    if ruleset_id not in _rulesets:
+        return _json_response({"error": "Ruleset not found"}, status=404)
+    body = await request.json()
+    if not isinstance(body.get("documents"), list) or not isinstance(
+        body.get("sections"), list
+    ) or not isinstance(body.get("mappings"), list):
+        return _json_response({"error": "Invalid references format"}, status=400)
+    _write_refs(ruleset_id, body)
+    # Reload model so nodes get updated references
+    rac_dir = _ruleset_dirs.get(ruleset_id)
+    if rac_dir:
+        try:
+            from .parser import parse_rac_directory, resolve_references
+
+            model, ir = parse_rac_directory(rac_dir, ruleset_id)
+            resolve_references(model, rac_dir)
+            _rulesets[ruleset_id] = model
+            if ir:
+                _compiled_irs[ruleset_id] = ir
+        except Exception as e:
+            print(f"  Warning: failed to reload model after reference save: {e}")
+    return _json_response(body)
+
+
+async def handle_refs_file(request: web.Request) -> web.Response:
+    """GET /api/rulesets/:id/references/files/:filename — serve a policy document file."""
+    ruleset_id = request.match_info["id"]
+    filename = request.match_info["filename"]
+    if ruleset_id not in _rulesets:
+        return _json_response({"error": "Ruleset not found"}, status=404)
+    rac_dir = _ruleset_dirs.get(ruleset_id)
+    if not rac_dir:
+        return _json_response({"error": "No data directory"}, status=500)
+
+    # Prevent path traversal
+    safe_name = Path(filename).name
+    file_path = Path(rac_dir) / safe_name
+    if not file_path.is_file():
+        return _json_response({"error": "File not found"}, status=404)
+
+    content_types = {
+        ".pdf": "application/pdf",
+        ".txt": "text/plain",
+        ".md": "text/markdown",
+    }
+    ct = content_types.get(file_path.suffix.lower(), "application/octet-stream")
+    return web.FileResponse(file_path, headers={"Content-Type": ct})
+
+
 def _create_app() -> web.Application:
     """Create the aiohttp application with all routes."""
     app = web.Application(middlewares=[basic_auth_middleware, cors_middleware])
@@ -753,6 +837,13 @@ def _create_app() -> web.Application:
         "/api/rulesets/{id}/tests/{testId}", handle_tests_delete
     )
     app.router.add_post("/api/rulesets/{id}/tests/run", handle_tests_run)
+
+    # References
+    app.router.add_get("/api/rulesets/{id}/references", handle_refs_get)
+    app.router.add_put("/api/rulesets/{id}/references", handle_refs_put)
+    app.router.add_get(
+        "/api/rulesets/{id}/references/files/{filename}", handle_refs_file
+    )
 
     # WebSocket
     app.router.add_get("/ws", handle_ws)
