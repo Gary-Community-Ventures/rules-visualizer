@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { cn } from '@/lib/utils'
 import { formatDisplayValue } from '@/lib/format'
 import { useMainContext } from '@/context'
@@ -99,9 +99,11 @@ export function TestPanel() {
     try {
       const r = await runTests(model.id)
       setResults(r)
-      // Auto-select first failed test, or first test
+      // Auto-select and expand first failed test, or first test
       const failed = r.find((t) => !t.passed)
-      setSelectedTestId(failed?.testId ?? r[0]?.testId ?? null)
+      const targetId = failed?.testId ?? r[0]?.testId ?? null
+      setSelectedTestId(targetId)
+      setExpandedTest(targetId)
     } catch (e) {
       setError((e as Error).message)
     } finally {
@@ -119,6 +121,7 @@ export function TestPanel() {
         return [...next, ...r]
       })
       setSelectedTestId(testId)
+      setExpandedTest(testId)
     } catch (e) {
       setError((e as Error).message)
     } finally {
@@ -501,6 +504,7 @@ function TestItem({
   overridePaths,
   allPaths,
 }: TestItemProps) {
+  const itemRef = useRef<HTMLDivElement>(null)
   const [editingName, setEditingName] = useState(false)
   const [nameValue, setNameValue] = useState(test.name)
   const [editingField, setEditingField] = useState<{
@@ -511,6 +515,12 @@ function TestItem({
   const [addingField, setAddingField] = useState<Section | null>(null)
   const [newPath, setNewPath] = useState('')
   const [newValue, setNewValue] = useState('')
+
+  useEffect(() => {
+    if (isSelected && isExpanded && itemRef.current) {
+      itemRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+    }
+  }, [isSelected, isExpanded])
 
   const saveName = () => {
     if (nameValue.trim() && nameValue !== test.name) {
@@ -569,7 +579,7 @@ function TestItem({
   }
 
   return (
-    <div className={cn('px-4 py-2', isSelected && 'bg-blue-50/50')}>
+    <div ref={itemRef} className={cn('px-4 py-2', isSelected && 'bg-blue-50/50')}>
       <div className="flex items-center gap-2">
         <button
           className="flex items-center gap-1.5 flex-1 text-left min-w-0"
@@ -654,6 +664,11 @@ function TestItem({
 
       {isExpanded && (
         <div className="mt-2 ml-5 space-y-3">
+          {test.description && (
+            <p className="text-[11px] text-muted-foreground -mt-1">
+              {test.description}
+            </p>
+          )}
           {(
             [
               {
@@ -853,14 +868,19 @@ function EditableSection({
                     autoFocus
                   />
                 </div>
+              ) : exp && !exp.passed ? (
+                <div className="ml-4 flex items-center gap-1.5">
+                  <span className="text-muted-foreground/60 line-through">
+                    {formatDisplayValue(value)}
+                  </span>
+                  <span className="text-muted-foreground/40">&rarr;</span>
+                  <span className="text-orange-700 font-medium">
+                    {formatDisplayValue(exp.actual)}
+                  </span>
+                </div>
               ) : (
-                <div className="ml-4 flex gap-2">
+                <div className="ml-4">
                   <span>= {formatDisplayValue(value)}</span>
-                  {exp && !exp.passed && (
-                    <span className="text-orange-600">
-                      got {formatDisplayValue(exp.actual)}
-                    </span>
-                  )}
                 </div>
               )}
             </div>
