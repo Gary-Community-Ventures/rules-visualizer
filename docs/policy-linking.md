@@ -19,14 +19,15 @@ RAC variables support a `source:` field that cites the legal authority:
 
 ```yaml
 earned_income_deduction_rate:
-    description: "20% earned income deduction"
-    source: "7 USC 2014(e)(1)"
-    from 2024-10-01: 0.20
+  description: '20% earned income deduction'
+  source: '7 USC 2014(e)(1)'
+  from 2024-10-01: 0.20
 ```
 
 This shows in the node detail panel as a "Source" line. When the citation matches a known pattern (USC, CFR, IRC), it becomes a clickable link to the relevant legal database (Cornell Law, eCFR).
 
 Supported patterns:
+
 - **USC**: `7 USC 2014` links to `law.cornell.edu/uscode/text/7/2014`
 - **CFR**: `7 CFR 273.9` links to `ecfr.gov/current/title-7/section-273.9`
 - **IRC**: `IRC 21` resolves as `26 USC 21`
@@ -86,19 +87,27 @@ The manifest has three sections: documents, sections, and mappings.
     }
   ],
   "mappings": [
-    { "nodePath": "/earnedIncomeDeduction", "sectionId": "10-ccr-2506-1__4.407.2" },
-    { "nodePath": "/earnedIncomeDeductionRate", "sectionId": "10-ccr-2506-1__4.407.2" }
+    {
+      "nodePath": "/earnedIncomeDeduction",
+      "sectionId": "10-ccr-2506-1__4.407.2"
+    },
+    {
+      "nodePath": "/earnedIncomeDeductionRate",
+      "sectionId": "10-ccr-2506-1__4.407.2"
+    }
   ]
 }
 ```
 
 **Documents** define source policy documents. Fields:
+
 - `id` — unique identifier
 - `title` — display name
 - `file` — (optional) path to a PDF relative to the ruleset data directory
 - `url` — (optional) external URL
 
 **Sections** are excerpts from a document. Fields:
+
 - `id` — unique identifier (convention: `{documentId}__{section-number}`)
 - `documentId` — which document this comes from
 - `label` — display label (e.g., "4.407.2 — Earned Income Deduction")
@@ -108,6 +117,7 @@ The manifest has three sections: documents, sections, and mappings.
 - `status` — (optional) `"linked"` or `"skipped"`. Skipped sections are visually grayed out
 
 **Mappings** connect nodes to sections (many-to-many):
+
 - `nodePath` — the node's path (e.g., `/earnedIncomeDeduction` for FG, `earned_income_deduction` for RAC)
 - `sectionId` — the section's ID
 
@@ -130,13 +140,13 @@ Open the Policy panel by clicking the BookOpen icon in the toolbar.
 
 Sections with stored bounding boxes (`rects`) show as colored overlays on the PDF:
 
-| Color | Meaning |
-|-------|---------|
-| **Amber** | Section linked to nodes |
-| **Blue** (with border) | Focused section — navigated here from a node's detail panel |
-| **Gray** (with border) | Skipped — marked as not relevant to the rules |
-| **Green** (with border) | Preview — currently being selected for a new section |
-| **Cyan** | Search result highlight (text-based, not bounding box) |
+| Color                   | Meaning                                                     |
+| ----------------------- | ----------------------------------------------------------- |
+| **Amber**               | Section linked to nodes                                     |
+| **Blue** (with border)  | Focused section — navigated here from a node's detail panel |
+| **Gray** (with border)  | Skipped — marked as not relevant to the rules               |
+| **Green** (with border) | Preview — currently being selected for a new section        |
+| **Cyan**                | Search result highlight (text-based, not bounding box)      |
 
 ### Creating a section link
 
@@ -156,6 +166,7 @@ Sections with stored bounding boxes (`rects`) show as colored overlays on the PD
 ### Clicking an overlay
 
 Click any overlay on the PDF to see a popover with:
+
 - The section label
 - List of linked nodes (clickable — navigates to the node detail panel)
 - "Link more nodes" button to add additional node mappings
@@ -165,6 +176,7 @@ Click any overlay on the PDF to see a popover with:
 ### Navigating from a node
 
 In the node detail panel, each policy reference shows a file icon button. Click it to:
+
 - Open the Policy panel
 - Navigate to the correct page
 - Highlight the section's overlay in blue
@@ -174,12 +186,14 @@ In the node detail panel, each policy reference shows a file icon button. Click 
 Below "Dependencies" and "Used by", the node detail shows a **Policy** section listing all linked references.
 
 Each reference shows:
+
 - Document title (with external link icon if the document has a URL)
 - Section label (collapsible — click to expand/collapse the excerpted text)
 - File icon button to jump to the PDF location (if the section has a page number)
 - X button to remove the link
 
 Click the **+** button to add a reference:
+
 - **"Existing section"** tab: pick from sections already in the manifest
 - **"New section"** tab: create a new document and/or section with pasted text
 
@@ -215,6 +229,7 @@ Both servers load `references.json` at startup and resolve mappings onto model n
 ### Shared types
 
 All types are defined in `packages/shared-types/index.ts`:
+
 - `PolicyDocument`, `PolicySection`, `PolicyMapping`, `PolicyReferences`
 - `NormalizedRect`, `SectionStatus`, `ResolvedReference`
 
