@@ -16,8 +16,8 @@
       "/grossIncomeEligible": true,
       "/netIncomeEligible": true,
       "/eligible": true,
-      "/maxAllotment": 292,
-      "/snap": 292
+      "/maxAllotment": 298,
+      "/snap": 298
     }
   },
   {
@@ -41,10 +41,10 @@
       "/shelterDeduction": 304.5,
       "/netMonthlyIncome": 686.5,
       "/eligible": true,
-      "/maxAllotment": 768,
+      "/maxAllotment": 785,
       "/expectedFoodContribution": 205.95,
-      "/calculatedBenefit": 562.05,
-      "/snap": 562.05
+      "/calculatedBenefit": 579.05,
+      "/snap": 579.05
     }
   },
   {
@@ -87,9 +87,9 @@
       "/netMonthlyIncome": 939,
       "/netIncomeEligible": true,
       "/eligible": true,
-      "/maxAllotment": 536,
-      "/calculatedBenefit": 254.3,
-      "/snap": 254.3
+      "/maxAllotment": 546,
+      "/calculatedBenefit": 264.3,
+      "/snap": 264.3
     }
   },
   {
@@ -106,13 +106,13 @@
       "/hasElderlyOrDisabledMember": false
     },
     "expect": {
-      "/federalPovertyLevelMonthly": 3055,
+      "/federalPovertyLevelMonthly": 3137,
       "/grossIncomeEligible": true,
       "/earnedIncomeDeduction": 0,
-      "/standardDeduction": 263,
-      "/incomeAfterPreliminaryDeductions": 3637,
+      "/standardDeduction": 261,
+      "/incomeAfterPreliminaryDeductions": 3639,
       "/shelterDeduction": 0,
-      "/netMonthlyIncome": 3637,
+      "/netMonthlyIncome": 3639,
       "/netIncomeEligible": false,
       "/eligible": false,
       "/snap": 0
@@ -121,7 +121,7 @@
   {
     "id": "snap-fg-6",
     "name": "Minimum benefit floor for small household",
-    "description": "1-person household where calculated benefit would be zero; min $23 applies.",
+    "description": "1-person household where calculated benefit would be zero; min $24 applies.",
     "inputs": {
       "/grossEarnedIncome": 0,
       "/unearnedIncome": 1250,
@@ -133,19 +133,97 @@
     },
     "expect": {
       "/eligible": true,
-      "/maxAllotment": 292,
+      "/maxAllotment": 298,
       "/calculatedBenefit": 0,
-      "/snap": 23
+      "/snap": 24
     }
   },
   {
-    "id": "65856a19-0e32-4181-a901-1a3eed6af2ca",
-    "name": "Test 7",
+    "id": "snap-fg-7",
+    "name": "4-person household with dependent care expenses",
+    "description": "Tests the 4-person standard deduction and max allotment, plus dependent care deduction path.",
     "inputs": {
-      "/householdSize": 1
+      "/grossEarnedIncome": 2000,
+      "/unearnedIncome": 0,
+      "/householdSize": 4,
+      "/dependentCareExpenses": 300,
+      "/shelterCosts": 900,
+      "/medicalExpensesElderlyDisabled": 0,
+      "/hasElderlyOrDisabledMember": false
     },
     "expect": {
-      "/standardDeduction": 210
+      "/grossMonthlyIncome": 2000,
+      "/earnedIncomeDeduction": 400,
+      "/standardDeduction": 223,
+      "/incomeAfterPreliminaryDeductions": 1077,
+      "/shelterDeduction": 361.5,
+      "/netMonthlyIncome": 715.5,
+      "/grossIncomeEligible": true,
+      "/netIncomeEligible": true,
+      "/eligible": true,
+      "/maxAllotment": 994,
+      "/expectedFoodContribution": 214.65,
+      "/calculatedBenefit": 779.35,
+      "/snap": 779.35
+    }
+  },
+  {
+    "id": "snap-fg-8",
+    "name": "6-person household — extended allotment formula",
+    "description": "Tests the 6+ standard deduction and the per-additional-person max allotment/FPL formulas.",
+    "inputs": {
+      "/grossEarnedIncome": 2500,
+      "/unearnedIncome": 500,
+      "/householdSize": 6,
+      "/dependentCareExpenses": 0,
+      "/shelterCosts": 1000,
+      "/medicalExpensesElderlyDisabled": 0,
+      "/hasElderlyOrDisabledMember": false
+    },
+    "expect": {
+      "/grossMonthlyIncome": 3000,
+      "/federalPovertyLevelMonthly": 3595,
+      "/grossIncomeEligible": true,
+      "/earnedIncomeDeduction": 500,
+      "/standardDeduction": 299,
+      "/incomeAfterPreliminaryDeductions": 2201,
+      "/shelterDeduction": 0,
+      "/netMonthlyIncome": 2201,
+      "/netIncomeEligible": true,
+      "/eligible": true,
+      "/maxAllotment": 1430,
+      "/expectedFoodContribution": 660.3,
+      "/calculatedBenefit": 769.7,
+      "/snap": 769.7
+    }
+  },
+  {
+    "id": "snap-fg-9",
+    "name": "Shelter deduction hits cap for non-elderly household",
+    "description": "Low-income single person with high shelter costs — shelter deduction is capped at $744.",
+    "inputs": {
+      "/grossEarnedIncome": 500,
+      "/unearnedIncome": 0,
+      "/householdSize": 1,
+      "/dependentCareExpenses": 0,
+      "/shelterCosts": 1500,
+      "/medicalExpensesElderlyDisabled": 0,
+      "/hasElderlyOrDisabledMember": false
+    },
+    "expect": {
+      "/grossMonthlyIncome": 500,
+      "/earnedIncomeDeduction": 100,
+      "/standardDeduction": 209,
+      "/incomeAfterPreliminaryDeductions": 191,
+      "/excessShelterCost": 1404.5,
+      "/shelterDeduction": 744,
+      "/netMonthlyIncome": 0,
+      "/grossIncomeEligible": true,
+      "/netIncomeEligible": true,
+      "/eligible": true,
+      "/maxAllotment": 298,
+      "/calculatedBenefit": 298,
+      "/snap": 298
     }
   }
 ]

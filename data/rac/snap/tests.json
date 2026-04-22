@@ -143,5 +143,96 @@
       "calculated_benefit": 0,
       "monthly_snap_benefit": 23
     }
+  },
+  {
+    "id": "snap-rac-7",
+    "name": "4-person household with dependent care expenses",
+    "description": "Tests the 4-person standard deduction and max allotment, plus dependent care deduction path.",
+    "asOf": "2024-10-01",
+    "inputs": {
+      "gross_earned_income": 2000,
+      "unearned_income": 0,
+      "household_size": 4,
+      "dependent_care_expenses": 300,
+      "shelter_costs": 900,
+      "medical_expenses_elderly_disabled": 0,
+      "has_elderly_or_disabled_member": false
+    },
+    "expect": {
+      "gross_monthly_income": 2000,
+      "earned_income_deduction": 400,
+      "standard_deduction": 225,
+      "income_after_preliminary_deductions": 1075,
+      "shelter_deduction": 362.5,
+      "net_monthly_income": 712.5,
+      "gross_income_eligible": true,
+      "net_income_eligible": true,
+      "eligible": true,
+      "max_allotment": 975,
+      "expected_food_contribution": 213.75,
+      "calculated_benefit": 761.25,
+      "monthly_snap_benefit": 761.25
+    }
+  },
+  {
+    "id": "snap-rac-8",
+    "name": "6-person household — extended allotment formula",
+    "description": "Tests the 6+ standard deduction and the per-additional-person max allotment/FPL formulas.",
+    "asOf": "2024-10-01",
+    "inputs": {
+      "gross_earned_income": 2500,
+      "unearned_income": 500,
+      "household_size": 6,
+      "dependent_care_expenses": 0,
+      "shelter_costs": 1000,
+      "medical_expenses_elderly_disabled": 0,
+      "has_elderly_or_disabled_member": false
+    },
+    "expect": {
+      "gross_monthly_income": 3000,
+      "federal_poverty_level_monthly": 3505,
+      "gross_income_eligible": true,
+      "earned_income_deduction": 500,
+      "standard_deduction": 300,
+      "income_after_preliminary_deductions": 2200,
+      "shelter_deduction": 0,
+      "net_monthly_income": 2200,
+      "net_income_eligible": true,
+      "eligible": true,
+      "max_allotment": 1365,
+      "expected_food_contribution": 660,
+      "calculated_benefit": 705,
+      "monthly_snap_benefit": 705
+    }
+  },
+  {
+    "id": "snap-rac-9",
+    "name": "Shelter deduction hits cap for non-elderly household",
+    "description": "Low-income single person with high shelter costs — shelter deduction is capped at $672.",
+    "asOf": "2024-10-01",
+    "inputs": {
+      "gross_earned_income": 500,
+      "unearned_income": 0,
+      "household_size": 1,
+      "dependent_care_expenses": 0,
+      "shelter_costs": 1500,
+      "medical_expenses_elderly_disabled": 0,
+      "has_elderly_or_disabled_member": false
+    },
+    "expect": {
+      "gross_monthly_income": 500,
+      "earned_income_deduction": 100,
+      "standard_deduction": 209,
+      "income_after_preliminary_deductions": 191,
+      "excess_shelter_cost": 1404.5,
+      "shelter_deduction": 672,
+      "net_monthly_income": 0,
+      "gross_income_eligible": true,
+      "net_income_eligible": true,
+      "eligible": true,
+      "max_allotment": 292,
+      "calculated_benefit": 292,
+      "monthly_snap_benefit": 292
+    }
   }
 ]

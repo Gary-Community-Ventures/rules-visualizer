@@ -9,7 +9,7 @@ export function Legend() {
   const [open, setOpen] = useState(false)
 
   return (
-    <div className="absolute bottom-4 left-4 z-10">
+    <div className="absolute bottom-4 left-4 z-[4]">
       <div
         className={cn(
           'bg-background/95 backdrop-blur-sm border rounded-md shadow-sm',
