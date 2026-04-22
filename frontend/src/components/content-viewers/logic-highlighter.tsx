@@ -17,9 +17,9 @@ import type { ReactNode } from 'react'
 const C = {
   keyword: 'text-blue-700',
   path: 'text-violet-700',
-  literal: 'text-amber-800',
+  literal: 'text-amber-700',
   muted: 'text-gray-500',
-  op: 'text-blue-600',
+  op: 'text-blue-700',
 } as const
 
 // --- Public component ---
