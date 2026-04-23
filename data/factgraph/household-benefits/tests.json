@@ -8,15 +8,19 @@
     "entities": {
       "/members": [
         {
-          "age": 5,
-          "isDisabled": false,
-          "monthlyIncome": 0
+          "/members/*/age": 5,
+          "/members/*/isDisabled": false,
+          "/members/*/monthlyIncome": 0
         }
       ]
     },
     "expect": {
-      "/members/*/isChild": [true],
-      "/members/*/memberBenefit": [150],
+      "/members/*/isChild": [
+        true
+      ],
+      "/members/*/memberBenefit": [
+        150
+      ],
       "/totalMonthlyBenefit": 150
     }
   },
@@ -29,25 +33,33 @@
     "entities": {
       "/members": [
         {
-          "age": 5,
-          "isDisabled": false,
-          "monthlyIncome": 0
+          "/members/*/age": 5,
+          "/members/*/isDisabled": false,
+          "/members/*/monthlyIncome": 0
         },
         {
-          "age": 70,
-          "isDisabled": true,
-          "monthlyIncome": 1500
+          "/members/*/age": 70,
+          "/members/*/isDisabled": true,
+          "/members/*/monthlyIncome": 1500
         },
         {
-          "age": 35,
-          "isDisabled": false,
-          "monthlyIncome": 3000
+          "/members/*/age": 35,
+          "/members/*/isDisabled": false,
+          "/members/*/monthlyIncome": 3000
         }
       ]
     },
     "expect": {
-      "/members/*/isChild": [true, false, false],
-      "/members/*/memberBenefit": [150, 275, 0],
+      "/members/*/isChild": [
+        true,
+        false,
+        false
+      ],
+      "/members/*/memberBenefit": [
+        150,
+        275,
+        0
+      ],
       "/totalMonthlyBenefit": 425
     }
   }

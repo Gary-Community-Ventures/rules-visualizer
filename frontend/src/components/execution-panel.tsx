@@ -9,6 +9,8 @@ import {
   isOverridable,
   isCollectionParent,
   getCollectionInputs,
+  getCollectionOverridableFields,
+  getCollectionDisplayName,
   getTypeHint,
 } from '@/context/model-context'
 import { Button } from './ui/button'
@@ -66,29 +68,49 @@ export function ExecutionPanel() {
   const [jsonText, setJsonText] = useState('')
   const [jsonError, setJsonError] = useState<string | null>(null)
 
-  // Collection inputs (per-member fields) — works for both RAC and Fact Graph
-  const collectionInputs = useMemo(
-    () => getCollectionInputs(model.nodes),
+  // Collection fields (per-member) grouped by collection — split into
+  // inputs (shown in the Inputs section) and overrides (shown under the
+  // Overrides section, same member-card layout).
+  const collectionFields = useMemo(
+    () => getCollectionOverridableFields(model.nodes),
     [model.nodes]
   )
+  const collectionInputs = useMemo(() => {
+    const result: typeof collectionFields = {}
+    for (const [collection, fields] of Object.entries(collectionFields)) {
+      const inputFields = fields.filter((f) => !f.isOverride)
+      if (inputFields.length > 0) result[collection] = inputFields
+    }
+    return result
+  }, [collectionFields])
+  const collectionOverrides = useMemo(() => {
+    const result: typeof collectionFields = {}
+    for (const [collection, fields] of Object.entries(collectionFields)) {
+      const overrideFields = fields.filter((f) => f.isOverride)
+      if (overrideFields.length > 0) result[collection] = overrideFields
+    }
+    return result
+  }, [collectionFields])
   const collectionNames = Object.keys(collectionInputs)
+  const collectionOverrideNames = Object.keys(collectionOverrides)
   const totalCollectionRows = Object.values(entityData).reduce(
     (s, rows) => s + rows.length,
     0
   )
 
-  // IDs of nodes that belong to collections (should NOT appear in scalar inputs)
+  // IDs of every collection-scoped node (input or override) + collection
+  // parents — these never belong in the scalar Inputs / Constants / Computed
+  // buckets; they render inside the per-collection EntityEditors instead.
   const collectionNodeIds = useMemo(() => {
     const ids = new Set<string>()
-    for (const fields of Object.values(collectionInputs)) {
+    for (const fields of Object.values(collectionFields)) {
       for (const f of fields) ids.add(f.nodeId)
     }
-    // Also exclude Collection parent nodes
     for (const node of Object.values(model.nodes)) {
       if (isCollectionParent(node)) ids.add(node.id)
     }
     return ids
-  }, [collectionInputs, model.nodes])
+  }, [collectionFields, model.nodes])
 
   const { inputNodes, constantNodes, computedNodes } = useMemo(() => {
     const inputs: ModelNode[] = []
@@ -329,6 +351,7 @@ export function ExecutionPanel() {
                         }))
                       }
                       onBlur={runOnBlur}
+                      results={executionResults}
                     />
                   )
                 })}
@@ -445,6 +468,29 @@ export function ExecutionPanel() {
                     )}
                   </div>
                 )}
+
+                {/* Per-member overrides — same member-card layout as the
+                    Inputs section, scoped to derived/constant fields. */}
+                {collectionOverrideNames.map((collectionName) => {
+                  const fields = collectionOverrides[collectionName]
+                  const rows = entityData[collectionName] ?? []
+                  return (
+                    <EntityEditor
+                      key={collectionName}
+                      entityName={collectionName}
+                      fields={fields}
+                      rows={rows}
+                      onChange={(newRows) =>
+                        setEntityData((prev) => ({
+                          ...prev,
+                          [collectionName]: newRows,
+                        }))
+                      }
+                      onBlur={runOnBlur}
+                      results={executionResults}
+                    />
+                  )
+                })}
               </div>
             )}
           </div>
@@ -604,6 +650,7 @@ type EntityField = {
   fieldName: string
   default?: string
   typeHint?: string
+  isOverride?: boolean
 }
 
 type EntityEditorProps = {
@@ -612,14 +659,21 @@ type EntityEditorProps = {
   rows: Record<string, string>[]
   onChange: (rows: Record<string, string>[]) => void
   onBlur: () => void
+  /** Full executionResults payload keyed by fact path. Used as a
+   *  placeholder/seed source for override fields: when the user edits one
+   *  member for an override field, the other members are pre-filled with
+   *  their currently-computed values so promoting the fact to writable
+   *  doesn't leave unset members Incomplete. */
+  results?: Record<string, { value: unknown }> | null
 }
 
-function EntityEditor({
+export function EntityEditor({
   entityName,
   fields,
   rows,
   onChange,
   onBlur,
+  results,
 }: EntityEditorProps) {
   const addRow = () => {
     const newRow: Record<string, string> = {}
@@ -630,23 +684,43 @@ function EntityEditor({
   }
 
   const updateField = (rowIdx: number, fieldPath: string, value: string) => {
-    const updated = rows.map((row, i) =>
-      i === rowIdx ? { ...row, [fieldPath]: value } : row
-    )
+    // On the very first edit for an override field, seed the other rows
+    // with their current computed values so execution has a value for
+    // every member once the fact is promoted to writable. Subsequent
+    // edits just update the targeted row.
+    const fieldIsOverride = fields.find((f) => f.path === fieldPath)?.isOverride
+    const anyExistingValue = rows.some((r) => r[fieldPath] !== undefined)
+    const resultArr = results?.[fieldPath]?.value
+    const seedOthers =
+      fieldIsOverride && !anyExistingValue && Array.isArray(resultArr)
+    const updated = rows.map((row, i) => {
+      if (i === rowIdx) return { ...row, [fieldPath]: value }
+      if (!seedOthers) return row
+      if (row[fieldPath] !== undefined) return row
+      const computed = (resultArr as unknown[])[i]
+      if (computed === null || computed === undefined) return row
+      return { ...row, [fieldPath]: String(computed) }
+    })
     onChange(updated)
+  }
+
+  const clearField = (rowIdx: number, fieldPath: string) => {
+    const updated = rows.map((row, i) => {
+      if (i !== rowIdx) return row
+      const next = { ...row }
+      delete next[fieldPath]
+      return next
+    })
+    onChange(updated)
+    onBlur()
   }
 
   const removeRow = (rowIdx: number) => {
     onChange(rows.filter((_, i) => i !== rowIdx))
+    onBlur()
   }
 
-  // Clean up display name: strip leading / for Fact Graph paths
-  const displayName = entityName.startsWith('/')
-    ? entityName
-        .slice(1)
-        .replace(/[-_]/g, ' ')
-        .replace(/\b\w/g, (c) => c.toUpperCase())
-    : entityName
+  const displayName = getCollectionDisplayName(entityName)
 
   return (
     <div className="border-t pt-3 mt-3">
@@ -674,35 +748,65 @@ function EntityEditor({
                 <Trash2 className="size-2.5" />
               </button>
             </div>
-            {fields.map((field) => (
-              <div key={field.path} className="flex items-center gap-2">
-                <span
-                  className="text-[11px] text-muted-foreground w-24 shrink-0 truncate"
-                  title={field.path}
-                >
-                  {field.fieldName}
-                  {field.typeHint && (
-                    <span className="ml-0.5 opacity-60">
-                      ({field.typeHint})
-                    </span>
+            {fields.map((field) => {
+              const hasValue = !!row[field.path]
+              const isOverride = field.isOverride === true
+              const resultArr = results?.[field.path]?.value
+              const memberResult = Array.isArray(resultArr)
+                ? resultArr[rowIdx]
+                : undefined
+              const computedPlaceholder =
+                isOverride &&
+                !hasValue &&
+                memberResult !== undefined &&
+                memberResult !== null
+                  ? formatValue(memberResult)
+                  : undefined
+              return (
+                <div key={field.path} className="flex items-center gap-2">
+                  <span
+                    className="text-[11px] text-muted-foreground w-24 shrink-0 truncate"
+                    title={field.path}
+                  >
+                    {field.fieldName}
+                    {field.typeHint && (
+                      <span className="ml-0.5 opacity-60">
+                        ({field.typeHint})
+                      </span>
+                    )}
+                  </span>
+                  <Input
+                    className={cn(
+                      'h-6 text-xs font-mono flex-1',
+                      hasValue &&
+                        (isOverride
+                          ? 'border-yellow-400 ring-1 ring-yellow-400'
+                          : 'border-blue-400 ring-1 ring-blue-400')
+                    )}
+                    placeholder={
+                      computedPlaceholder ??
+                      field.default ??
+                      field.typeHint?.toLowerCase() ??
+                      (isOverride ? 'override' : 'value')
+                    }
+                    value={row[field.path] ?? ''}
+                    onChange={(e) =>
+                      updateField(rowIdx, field.path, e.target.value)
+                    }
+                    onBlur={onBlur}
+                  />
+                  {hasValue && isOverride && (
+                    <button
+                      className="text-muted-foreground hover:text-foreground"
+                      title="Clear override"
+                      onClick={() => clearField(rowIdx, field.path)}
+                    >
+                      <Trash2 className="size-3" />
+                    </button>
                   )}
-                </span>
-                <Input
-                  className={cn(
-                    'h-6 text-xs font-mono flex-1',
-                    row[field.path] && 'border-blue-400 ring-1 ring-blue-400'
-                  )}
-                  placeholder={
-                    field.default ?? field.typeHint?.toLowerCase() ?? 'value'
-                  }
-                  value={row[field.path] ?? ''}
-                  onChange={(e) =>
-                    updateField(rowIdx, field.path, e.target.value)
-                  }
-                  onBlur={onBlur}
-                />
-              </div>
-            ))}
+                </div>
+              )
+            })}
           </div>
         ))}
       </div>

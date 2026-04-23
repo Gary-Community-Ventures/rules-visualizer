@@ -3,7 +3,9 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useLayoutEffect,
   useMemo,
+  useRef,
   useState,
   type Dispatch,
   type ReactNode,
@@ -110,57 +112,78 @@ export function isCollectionParent(node: ModelNode): boolean {
   )
 }
 
-/** Get collection input fields grouped by collection name (works for both formats) */
-export function getCollectionInputs(nodes: Record<string, ModelNode>): Record<
-  string,
-  {
-    nodeId: string
-    path: string
-    fieldName: string
-    default?: string
-    typeHint?: string
-  }[]
-> {
-  const result: Record<
-    string,
-    {
-      nodeId: string
-      path: string
-      fieldName: string
-      default?: string
-      typeHint?: string
-    }[]
-  > = {}
+type CollectionField = {
+  nodeId: string
+  path: string
+  fieldName: string
+  default?: string
+  typeHint?: string
+  /** True when the field backs a derived/constant node — writing to it acts
+   *  as a per-member override rather than a primary input. */
+  isOverride?: boolean
+}
+
+function collectCollectionFields(
+  nodes: Record<string, ModelNode>,
+  accept: (node: ModelNode) => boolean
+): Record<string, CollectionField[]> {
+  const result: Record<string, CollectionField[]> = {}
   for (const [nodeId, node] of Object.entries(nodes)) {
-    if (!isInputNode(node)) continue
+    if (!accept(node)) continue
     if (isCollectionParent(node)) continue
     const info = getCollectionInfo(node)
     if (!info) continue
     if (!result[info.collection]) result[info.collection] = []
 
-    // Extract the field name (last path segment for FG, variable name for RAC)
     const c = node.content
-    let fieldName = node.name
-    let fieldPath = c.type !== 'entity' ? c.path : ''
-    let defaultVal: string | undefined
-    if (c.format === 'rac' && c.type === 'variable') {
-      defaultVal = c.default
-      fieldPath = c.path
-    } else if (c.format === 'factGraph') {
-      // For /members/*/age, the field path for entity data is just "age"
-      const segments = c.path.split('/')
-      fieldPath = segments[segments.length - 1]
-    }
+    const fieldPath = getCollectionFieldKey(node) ?? ''
+    const defaultVal =
+      c.type !== 'entity' && c.format === 'rac' && c.type === 'variable'
+        ? c.default
+        : undefined
 
     result[info.collection].push({
       nodeId,
       path: fieldPath,
-      fieldName,
+      fieldName: node.name,
       default: defaultVal,
       typeHint: getTypeHint(node),
+      isOverride: !isInputNode(node),
     })
   }
   return result
+}
+
+/** Collection input fields, keyed by collection name. Only writable inputs. */
+export function getCollectionInputs(
+  nodes: Record<string, ModelNode>
+): Record<string, CollectionField[]> {
+  return collectCollectionFields(nodes, isInputNode)
+}
+
+/** Every per-member field the user can set a value for — inputs plus
+ *  overridable derived/constant fields. Used by the in-graph collection
+ *  editor, which treats derived entries as per-member overrides. */
+export function getCollectionOverridableFields(
+  nodes: Record<string, ModelNode>
+): Record<string, CollectionField[]> {
+  return collectCollectionFields(
+    nodes,
+    (node) => isInputNode(node) || isOverridable(node)
+  )
+}
+
+/** The key used for this node's value in an entityData row — always the
+ *  node's full path. Returns undefined for entity nodes. */
+export function getCollectionFieldKey(node: ModelNode): string | undefined {
+  const c = node.content
+  if (c.type === 'entity') return undefined
+  return c.path
+}
+
+/** Human-readable collection name (e.g. "/members" → "members"). */
+export function getCollectionDisplayName(collection: string): string {
+  return collection.startsWith('/') ? collection.slice(1) : collection
 }
 
 /** Get the variable path for a node (used as the key in execution inputs) */
@@ -394,15 +417,36 @@ export function ModelProvider({
     setExecutionError(null)
   }, [])
 
+  // Keep refs of the current execution inputs so runExecution doesn't need
+  // them in its dep list. Without this, the callback's closure is captured
+  // at the time an event handler runs — so a handler that both dispatches
+  // setEntityData and calls runOnBlur would execute against pre-update
+  // data. useLayoutEffect runs synchronously after commit (before the next
+  // task), so by the time the setTimeout inside runOnBlur fires, the refs
+  // are guaranteed to reflect the committed state.
+  const inputOverridesRef = useRef(inputOverrides)
+  const entityDataRef = useRef(entityData)
+  const asOfDateRef = useRef(asOfDate)
+  const modelNodesRef = useRef(model.nodes)
+  useLayoutEffect(() => {
+    inputOverridesRef.current = inputOverrides
+    entityDataRef.current = entityData
+    asOfDateRef.current = asOfDate
+    modelNodesRef.current = model.nodes
+  })
+
   const runExecution = useCallback(() => {
     setIsExecuting(true)
     setExecutionError(null)
-    const inputs = parseOverrides(inputOverrides, model.nodes)
-    // Parse entity data: convert string values to typed
+    const inputs = parseOverrides(
+      inputOverridesRef.current,
+      modelNodesRef.current
+    )
+    const currentEntityData = entityDataRef.current
     const entities: Record<string, Record<string, unknown>[]> | undefined =
-      Object.keys(entityData).length > 0
+      Object.keys(currentEntityData).length > 0
         ? Object.fromEntries(
-            Object.entries(entityData).map(([entity, rows]) => [
+            Object.entries(currentEntityData).map(([entity, rows]) => [
               entity,
               rows.map((row, i) => {
                 const parsed: Record<string, unknown> = { id: i + 1 }
@@ -419,28 +463,36 @@ export function ModelProvider({
             ])
           )
         : undefined
-    executeRuleset(rulesetId, inputs, entities, asOfDate)
+    executeRuleset(rulesetId, inputs, entities, asOfDateRef.current)
       .then((results) => setExecutionResults(results))
       .catch((err) => {
         const message = err instanceof Error ? err.message : 'Execution failed'
         setExecutionError(message)
       })
       .finally(() => setIsExecuting(false))
-  }, [rulesetId, inputOverrides, entityData, asOfDate, model.nodes])
+  }, [rulesetId])
 
   const clearExecution = useCallback(() => {
     setExecutionResults(null)
     setExecutionError(null)
   }, [])
 
-  // Auto-run execution when an input field loses focus
+  // runOnBlur can be called from an event handler that also dispatched a
+  // setState; defer with a macrotask so React commits (which re-renders the
+  // provider and updates the refs above) before runExecution reads them.
+  // A microtask isn't enough — React's commit in default-priority lanes
+  // can run after the microtask queue drains.
   const runOnBlur = useCallback(() => {
-    const hasAnyInput = Object.values(inputOverrides).some((v) => v !== '')
-    const hasEntityData = Object.values(entityData).some(
-      (rows) => rows.length > 0
-    )
-    if (hasAnyInput || hasEntityData) runExecution()
-  }, [inputOverrides, entityData, runExecution])
+    setTimeout(() => {
+      const hasAnyInput = Object.values(inputOverridesRef.current).some(
+        (v) => v !== ''
+      )
+      const hasEntityData = Object.values(entityDataRef.current).some(
+        (rows) => rows.length > 0
+      )
+      if (hasAnyInput || hasEntityData) runExecution()
+    }, 0)
+  }, [runExecution])
 
   const [workspaceItems, setWorkspaceItems] = useLocalStorage<string[]>(
     `workspace:${rulesetId}`,

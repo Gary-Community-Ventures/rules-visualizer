@@ -372,11 +372,34 @@ export function executeFactGraph(
     }
   }
 
-  // If there are derived overrides, rebuild the graph with those facts as writables
+  // Per-member derived fields referenced in entityData also need to be
+  // promoted to writable so graph.set can stamp per-instance overrides.
+  // Row keys are full fact paths like "/members/*/isEligibleMember".
+  const perMemberDerivedOverrides = new Set<string>()
+  if (entities) {
+    for (const rows of Object.values(entities)) {
+      for (const row of rows) {
+        for (const fieldPath of Object.keys(row)) {
+          if (fieldPath === 'id') continue
+          const fact = facts.find((f) => f.path === fieldPath)
+          if (fact && !fact.raw['Writable']) {
+            perMemberDerivedOverrides.add(fieldPath)
+          }
+        }
+      }
+    }
+  }
+
+  const pathsToPromote = new Set<string>([
+    ...Object.keys(derivedOverrides),
+    ...perMemberDerivedOverrides,
+  ])
+
+  // Rebuild the graph with the promoted facts reshaped as writables.
   const effectiveFacts =
-    Object.keys(derivedOverrides).length > 0
+    pathsToPromote.size > 0
       ? facts.map((f) => {
-          if (f.path in derivedOverrides) {
+          if (pathsToPromote.has(f.path)) {
             const modelNode = modelNodes
               ? Object.values(modelNodes).find(
                   (n) =>
@@ -444,15 +467,14 @@ export function executeFactGraph(
     // Save after creating collection so the engine registers the items
     graph.save()
 
-    // Set per-item values
+    // Set per-item values. Row keys are full fact paths like "/members/*/age";
+    // swap `/*/` for `/#${uuid}/` to produce the per-instance path.
     for (let i = 0; i < entityRows.length; i++) {
       const row = entityRows[i]
       const uuid = uuids[i]
-      for (const [fieldName, value] of Object.entries(row)) {
-        if (fieldName === 'id') continue
-        // Find the fact for this field to determine its type
-        const fieldPath = `${prefix}/*/${fieldName}`
-        const itemPath = `${prefix}/#${uuid}/${fieldName}`
+      for (const [fieldPath, value] of Object.entries(row)) {
+        if (fieldPath === 'id') continue
+        const itemPath = fieldPath.replace('/*/', `/#${uuid}/`)
         try {
           const typedValue = createTypedValue(fieldPath, value, effectiveFacts)
           if (typedValue !== undefined) {

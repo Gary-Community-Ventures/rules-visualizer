@@ -21,6 +21,10 @@ function isAnyDropdownOpen(): boolean {
   return !!document.querySelector('[data-radix-popper-content-wrapper]')
 }
 
+function isAnyDialogOpen(): boolean {
+  return !!document.querySelector('[role="dialog"][data-state="open"]')
+}
+
 function openTemporarily(name: 'history' | 'workspace') {
   if (isAnyDropdownOpen()) return
 
@@ -58,7 +62,7 @@ export function useKeyboardShortcuts() {
           ;(document.activeElement as HTMLElement)?.blur()
           return
         }
-        if (isAnyDropdownOpen()) {
+        if (isAnyDialogOpen() || isAnyDropdownOpen()) {
           dropdownClosedAt = Date.now()
           return
         }

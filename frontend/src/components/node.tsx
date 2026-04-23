@@ -6,9 +6,19 @@ import {
   isOverridable,
   isCollectionParent,
   getCollectionInfo,
+  getCollectionFieldKey,
+  getCollectionOverridableFields,
+  getCollectionDisplayName,
   getTypeHint,
   getNodePath,
 } from '@/context/model-context'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from './ui/dialog'
+import { EntityEditor } from './execution-panel'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
 import {
@@ -121,6 +131,7 @@ import { formatBadgeValue as formatResultValue } from '@/lib/format'
 
 export function Node({ node }: NodeProps) {
   const {
+    model,
     setHoveredNodeId,
     showChildren,
     setShowChildren,
@@ -131,15 +142,33 @@ export function Node({ node }: NodeProps) {
     clearInputOverride,
     runOnBlur,
     activeTest,
+    entityData,
+    setEntityData,
   } = useMainContext()
 
   const [isHovered, setIsHovered] = useState(false)
+  const [collectionEditorOpen, setCollectionEditorOpen] = useState(false)
   const result = executionResults?.[node.id]
   const overrideValue = inputOverrides[node.id] ?? ''
-  const hasOverride = overrideValue !== ''
   const isInput = isInputNode(node)
-  const isCollection = !!getCollectionInfo(node) || isCollectionParent(node)
+  const collectionInfo = getCollectionInfo(node)
+  const isCollection = !!collectionInfo || isCollectionParent(node)
   const isEditable = isOverridable(node) && !isCollection
+
+  // For collection-scoped nodes, any row with a non-empty value for this
+  // node's field counts as an override (derived) or an input value (input).
+  const collectionFieldPath = collectionInfo
+    ? getCollectionFieldKey(node)
+    : undefined
+  const hasCollectionValue =
+    isCollection && collectionInfo && collectionFieldPath
+      ? (entityData[collectionInfo.collection] ?? []).some(
+          (row) => row[collectionFieldPath] !== undefined && row[collectionFieldPath] !== ''
+        )
+      : false
+  const hasOverride = isCollection
+    ? hasCollectionValue
+    : overrideValue !== ''
   const declaredDefault = (() => {
     const c = node.content
     if (c.format === 'rac' && c.type === 'variable' && c.default)
@@ -205,10 +234,7 @@ export function Node({ node }: NodeProps) {
             {(() => {
               const info = getCollectionInfo(node)
               if (!info) return ''
-              const name = info.collection.startsWith('/')
-                ? info.collection.slice(1)
-                : info.collection
-              return `per ${name}`
+              return `per ${getCollectionDisplayName(info.collection)}`
             })()}
           </span>
         )}
@@ -260,6 +286,61 @@ export function Node({ node }: NodeProps) {
               <button
                 className="text-muted-foreground hover:text-foreground"
                 onClick={() => clearInputOverride(node.id)}
+              >
+                <Trash2 className="size-3" />
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* Collection-scoped nodes: edit-members button mirrors the scalar
+            input/override affordance — always visible for inputs and while
+            any override value is set, hover-only otherwise. */}
+        {isCollection && !isCollectionParent(node) && collectionInfo && (
+          <div
+            className={cn(
+              'mt-1.5 flex items-center gap-1 h-6',
+              activeTest && 'invisible',
+              !activeTest &&
+                !isInput &&
+                !hasOverride &&
+                !isHovered &&
+                'invisible'
+            )}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              className={cn(
+                'h-6 px-2 rounded border text-[11px] flex items-center gap-1',
+                hasOverride
+                  ? isInput
+                    ? 'border-blue-500 ring-1 ring-blue-500'
+                    : 'border-dashed border-yellow-400 ring-1 ring-yellow-400'
+                  : isInput
+                    ? 'border-blue-400'
+                    : 'border-dashed border-muted-foreground/40 text-muted-foreground hover:bg-muted hover:text-foreground'
+              )}
+              onClick={() => setCollectionEditorOpen(true)}
+            >
+              <Plus className="size-3" />
+              Edit members
+            </button>
+            {hasOverride && collectionFieldPath && (
+              <button
+                className="text-muted-foreground hover:text-foreground"
+                title={isInput ? 'Clear values' : 'Clear override'}
+                onClick={() => {
+                  setEntityData((prev) => {
+                    const rows = prev[collectionInfo.collection] ?? []
+                    const cleared = rows.map((row) => {
+                      const next = { ...row }
+                      delete next[collectionFieldPath]
+                      return next
+                    })
+                    return { ...prev, [collectionInfo.collection]: cleared }
+                  })
+                  runOnBlur()
+                }}
               >
                 <Trash2 className="size-3" />
               </button>
@@ -351,16 +432,28 @@ export function Node({ node }: NodeProps) {
 
           // Normal execution result (non-test mode)
           if (result && !activeTest) {
-            return (
-              <div
-                className={cn(
-                  'mt-2 font-mono rounded px-2 py-0.5 truncate max-w-36 text-center',
-                  'text-xs bg-emerald-100 text-emerald-800 border border-emerald-300'
-                )}
-              >
-                {formatResultValue(result.value)}
-              </div>
+            const badgeClasses = cn(
+              'mt-2 font-mono rounded px-2 py-0.5 truncate max-w-36 text-center',
+              'text-xs bg-emerald-100 text-emerald-800 border border-emerald-300'
             )
+            if (isCollection && collectionInfo) {
+              return (
+                <button
+                  className={cn(
+                    badgeClasses,
+                    'hover:bg-emerald-200 hover:border-emerald-400'
+                  )}
+                  title="Edit members"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setCollectionEditorOpen(true)
+                  }}
+                >
+                  {formatResultValue(result.value)}
+                </button>
+              )
+            }
+            return <div className={badgeClasses}>{formatResultValue(result.value)}</div>
           }
 
           return null
@@ -380,7 +473,87 @@ export function Node({ node }: NodeProps) {
           )}
         </Button>
       )}
+      {isCollection && collectionInfo && (
+        <CollectionEditorDialog
+          open={collectionEditorOpen}
+          onOpenChange={setCollectionEditorOpen}
+          collection={collectionInfo.collection}
+          fieldPath={collectionFieldPath}
+          fieldLabel={node.name}
+          nodes={model.nodes}
+          entityData={entityData}
+          setEntityData={setEntityData}
+          onBlur={runOnBlur}
+          results={executionResults}
+        />
+      )}
     </div>
+  )
+}
+
+type CollectionEditorDialogProps = {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  collection: string
+  /** Restrict the editor to a single field path (e.g. "isElderly"). */
+  fieldPath?: string
+  fieldLabel?: string
+  nodes: Record<string, ModelNode>
+  entityData: Record<string, Record<string, string>[]>
+  setEntityData: (
+    updater: (prev: Record<string, Record<string, string>[]>) => Record<string, Record<string, string>[]>
+  ) => void
+  onBlur: () => void
+  results?: Record<string, { value: unknown }> | null
+}
+
+function CollectionEditorDialog({
+  open,
+  onOpenChange,
+  collection,
+  fieldPath,
+  fieldLabel,
+  nodes,
+  entityData,
+  setEntityData,
+  onBlur,
+  results,
+}: CollectionEditorDialogProps) {
+  const allFields = getCollectionOverridableFields(nodes)[collection] ?? []
+  const fields = fieldPath
+    ? allFields.filter((f) => f.path === fieldPath)
+    : allFields
+  const rows = entityData[collection] ?? []
+  const collectionLabel = getCollectionDisplayName(collection)
+  const title = fieldLabel
+    ? `${fieldLabel} · ${collectionLabel}`
+    : collectionLabel
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>{title}</DialogTitle>
+        </DialogHeader>
+        <div className="max-h-[70vh] overflow-y-auto pr-1">
+          {fields.length === 0 ? (
+            <p className="text-xs text-muted-foreground py-6 text-center">
+              No editable field for this node.
+            </p>
+          ) : (
+            <EntityEditor
+              entityName={collection}
+              fields={fields}
+              rows={rows}
+              onChange={(newRows) =>
+                setEntityData((prev) => ({ ...prev, [collection]: newRows }))
+              }
+              onBlur={onBlur}
+              results={results}
+            />
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
   )
 }
 
@@ -1079,6 +1252,8 @@ export function NodePanel() {
     setWorkspaceItems,
     selectedNodes,
     setSelectedNodes,
+    entityData,
+    setEntityData,
   } = useMainContext()
   const addToFilter = useAddToFilter()
   const openNodeData = useFindNode(openNode)
@@ -1091,7 +1266,13 @@ export function NodePanel() {
   const inFilter = selectedNodes.includes(openNode)
   const isInput = isInputNode(openNodeData)
   const isConstant = isConstantNode(openNodeData)
-  const canEdit = isOverridable(openNodeData)
+  const panelCollectionInfo = getCollectionInfo(openNodeData)
+  const panelIsCollection =
+    !!panelCollectionInfo || isCollectionParent(openNodeData)
+  const panelFieldPath = panelCollectionInfo
+    ? getCollectionFieldKey(openNodeData)
+    : undefined
+  const canEdit = isOverridable(openNodeData) && !panelIsCollection
 
   const config =
     NODE_TYPE_CONFIG[getNodeRole(openNodeData.content)] ?? DEFAULT_CONFIG
@@ -1290,6 +1471,36 @@ export function NodePanel() {
       </div>
       <div className="flex-1 overflow-y-auto p-5">
         <NodeViewer node={openNodeData} />
+
+        {/* Full member editor (same layout as the Inputs panel) when the
+            open node is collection-scoped. */}
+        {panelIsCollection &&
+          panelCollectionInfo &&
+          !isCollectionParent(openNodeData) &&
+          (() => {
+            const collection = panelCollectionInfo.collection
+            const fields =
+              getCollectionOverridableFields(model.nodes)[collection] ?? []
+            if (fields.length === 0) return null
+            const rows = entityData[collection] ?? []
+            return (
+              <div className="mt-6">
+                <EntityEditor
+                  entityName={collection}
+                  fields={fields}
+                  rows={rows}
+                  onChange={(newRows) =>
+                    setEntityData((prev) => ({
+                      ...prev,
+                      [collection]: newRows,
+                    }))
+                  }
+                  onBlur={runOnBlur}
+                  results={executionResults}
+                />
+              </div>
+            )
+          })()}
 
         {/* Per-node value entry */}
         {canEdit && (

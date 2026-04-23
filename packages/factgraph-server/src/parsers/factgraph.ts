@@ -550,12 +550,6 @@ function inferType(node: unknown): string | undefined {
   return undefined
 }
 
-/** Extract a short display name from a fact path (last segment). */
-function pathToNodeName(path: string): string {
-  const parts = path.split('/')
-  return parts[parts.length - 1] || path
-}
-
 /**
  * Resolve a dependency path relative to the owning fact's path.
  * Absolute paths (starting with /) are returned as-is.
