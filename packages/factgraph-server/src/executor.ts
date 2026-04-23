@@ -409,6 +409,7 @@ export function executeFactGraph(
       hasValue: boolean
       get: unknown
     }
+    getVect: (path: string) => unknown
     save: () => { valid: boolean }
   }
 
@@ -528,18 +529,89 @@ export function executeFactGraph(
       continue
     }
 
-    // Scalar facts
+    // Scalar facts — try get() first, fall back to getVect() for collection aggregations
     try {
       const result = graph.get(fact.path)
       if (result.complete && result.hasValue) {
         results[fact.path] = extractValue(result.get)
       }
-    } catch {
-      // Skip facts that can't be read
+    } catch (e) {
+      // Collection aggregation facts (Any, All over collection paths) need getVect
+      const msg = e instanceof Error ? e.message : String(e)
+      if (msg.includes('getVect')) {
+        try {
+          const vectResult = graph.getVect(fact.path)
+          const extracted = extractVectValue(vectResult)
+          if (extracted !== undefined) {
+            results[fact.path] = extracted
+          }
+        } catch {
+          // Skip if getVect also fails
+        }
+      }
     }
   }
 
   return results
+}
+
+/**
+ * Extract a scalar value from a getVect result (MaybeVector).
+ * For Any aggregations, returns true if any element is truthy.
+ * For All aggregations, returns true if all elements are truthy.
+ * For other vector results, returns the array of values.
+ */
+function extractVectValue(vectResult: unknown): unknown {
+  if (!vectResult || typeof vectResult !== 'object') return undefined
+
+  // Find the complete flag
+  const completeKey = Object.keys(vectResult).find((k) => k.endsWith('__f_c'))
+  if (completeKey && !(vectResult as Record<string, unknown>)[completeKey]) {
+    return undefined // not complete
+  }
+
+  // Find the vector
+  const vectKey = Object.keys(vectResult).find((k) => k.includes('__f_vect'))
+  if (!vectKey) return undefined
+
+  const vect = (vectResult as Record<string, unknown>)[vectKey]
+  if (!vect || typeof vect !== 'object') return undefined
+
+  // Extract values from the Scala Vector (prefix1.u is the backing array)
+  const prefix1Key = Object.keys(vect).find((k) => k.includes('prefix1'))
+  if (!prefix1Key) return undefined
+
+  const arrObj = (vect as Record<string, unknown>)[prefix1Key] as {
+    u?: unknown[]
+  }
+  if (!arrObj?.u) return undefined
+
+  const values = arrObj.u.map((item) => {
+    if (item === null || item === undefined) return null
+    if (typeof item === 'boolean' || typeof item === 'number') return item
+    // Wrapped Result$Complete — extract the inner value
+    if (typeof item === 'object') {
+      const valKey = Object.keys(item as object).find((k) =>
+        k.endsWith('__f_v')
+      )
+      if (valKey) return extractValue((item as Record<string, unknown>)[valKey])
+    }
+    return extractValue(item)
+  })
+
+  // For boolean vectors (Any/All results), reduce to a single value
+  if (
+    values.length > 0 &&
+    values.every((v) => typeof v === 'boolean' || v === null)
+  ) {
+    return values.some((v) => v === true)
+  }
+
+  // Single-element non-boolean vector — unwrap to scalar
+  if (values.length === 1) return values[0]
+
+  // Multi-element vector — return the array
+  return values
 }
 
 function createTypedValue(
