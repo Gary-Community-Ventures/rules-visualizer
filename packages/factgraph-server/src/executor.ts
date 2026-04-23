@@ -599,18 +599,7 @@ function extractVectValue(vectResult: unknown): unknown {
     return extractValue(item)
   })
 
-  // For boolean vectors (Any/All results), reduce to a single value
-  if (
-    values.length > 0 &&
-    values.every((v) => typeof v === 'boolean' || v === null)
-  ) {
-    return values.some((v) => v === true)
-  }
-
-  // Single-element non-boolean vector — unwrap to scalar
   if (values.length === 1) return values[0]
-
-  // Multi-element vector — return the array
   return values
 }
 

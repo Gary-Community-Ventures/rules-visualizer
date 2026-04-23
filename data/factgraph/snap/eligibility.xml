@@ -173,6 +173,12 @@
       <Writable><Dollar /></Writable>
     </Fact>
 
+    <!-- TODO: derive from the household's benefit inputs instead of taking
+         it as a boolean. Mirror PolicyEngine-US meets_snap_categorical_eligibility:
+         pure-SSI household, pure-TANF household, or state BBCE (broad-based
+         categorical eligibility via TANF-funded non-cash benefits, with
+         state-specific gross-income and asset limits). Colorado's BBCE uses
+         a 200% FPL gross-income limit and no asset test. -->
     <Fact path="/meetsCategoricalEligibility">
       <Name>Meets categorical eligibility</Name>
       <Description>Whether the household qualifies via SSI/TANF or broad-based categorical eligibility (BBCE), which overrides the income and asset tests</Description>
@@ -819,9 +825,14 @@
       <Name>Elderly or disabled member</Name>
       <Description>Whether the household has any member who is age 60+ or disabled</Description>
       <Derived>
-        <Any>
-          <Dependency path="/members/*/isElderlyOrDisabled" />
-        </Any>
+        <GreaterThan>
+          <Left>
+            <Count>
+              <Dependency path="/members/*/isElderlyOrDisabled" />
+            </Count>
+          </Left>
+          <Right><Int>0</Int></Right>
+        </GreaterThan>
       </Derived>
     </Fact>
 
@@ -840,9 +851,14 @@
       <Name>Has child under two-parent limit</Name>
       <Description>Whether the household has any member under age 6 (two-parent parent exception threshold)</Description>
       <Derived>
-        <Any>
-          <Dependency path="/members/*/isChildUnderTwoParentLimit" />
-        </Any>
+        <GreaterThan>
+          <Left>
+            <Count>
+              <Dependency path="/members/*/isChildUnderTwoParentLimit" />
+            </Count>
+          </Left>
+          <Right><Int>0</Int></Right>
+        </GreaterThan>
       </Derived>
     </Fact>
 
@@ -850,9 +866,14 @@
       <Name>Has child under single-parent limit</Name>
       <Description>Whether the household has any member under age 12 (single-parent parent exception threshold)</Description>
       <Derived>
-        <Any>
-          <Dependency path="/members/*/isChildUnderSingleParentLimit" />
-        </Any>
+        <GreaterThan>
+          <Left>
+            <Count>
+              <Dependency path="/members/*/isChildUnderSingleParentLimit" />
+            </Count>
+          </Left>
+          <Right><Int>0</Int></Right>
+        </GreaterThan>
       </Derived>
     </Fact>
 
@@ -861,9 +882,14 @@
       <Name>Has dependent child under ABAWD limit</Name>
       <Description>Whether the household has any member under the ABAWD dependent-child age threshold (14 post-HR1)</Description>
       <Derived>
-        <Any>
-          <Dependency path="/members/*/isChildUnderAbawdDependentLimit" />
-        </Any>
+        <GreaterThan>
+          <Left>
+            <Count>
+              <Dependency path="/members/*/isChildUnderAbawdDependentLimit" />
+            </Count>
+          </Left>
+          <Right><Int>0</Int></Right>
+        </GreaterThan>
       </Derived>
     </Fact>
 
@@ -871,9 +897,14 @@
       <Name>Has caring-dependent child</Name>
       <Description>Whether the household has any member under the general work caring-dependent-child threshold (6)</Description>
       <Derived>
-        <Any>
-          <Dependency path="/members/*/isChildUnderGeneralCaringLimit" />
-        </Any>
+        <GreaterThan>
+          <Left>
+            <Count>
+              <Dependency path="/members/*/isChildUnderGeneralCaringLimit" />
+            </Count>
+          </Left>
+          <Right><Int>0</Int></Right>
+        </GreaterThan>
       </Derived>
     </Fact>
 
@@ -881,9 +912,14 @@
       <Name>Has incapable member</Name>
       <Description>Whether the household has any member incapable of self-care</Description>
       <Derived>
-        <Any>
-          <Dependency path="/members/*/isIncapableOfSelfCare" />
-        </Any>
+        <GreaterThan>
+          <Left>
+            <Count>
+              <Dependency path="/members/*/isIncapableOfSelfCare" />
+            </Count>
+          </Left>
+          <Right><Int>0</Int></Right>
+        </GreaterThan>
       </Derived>
     </Fact>
 
@@ -1287,11 +1323,12 @@
 
     <Fact path="/hasEligiblePerson">
       <Name>Has eligible person</Name>
-      <Description>Whether the household contains at least one member who personally qualifies for SNAP (not an ineligible student and immigration-eligible)</Description>
+      <Description>Whether the household contains at least one member who personally qualifies for SNAP (not an ineligible student, immigration-eligible, and meets work requirements)</Description>
       <Derived>
-        <Any>
-          <Dependency path="/members/*/isEligibleMember" />
-        </Any>
+        <GreaterThan>
+          <Left><Dependency path="/householdSize" /></Left>
+          <Right><Int>0</Int></Right>
+        </GreaterThan>
       </Derived>
     </Fact>
 
