@@ -36,6 +36,7 @@ const API_BASE = import.meta.env.VITE_API_URL ?? ''
 let _savedPage = 1
 let _savedScale = 1.0
 let _savedScrollTop = 0
+let _savedDocId: string | null = null
 
 /**
  * Capture the current browser selection's bounding rects,
@@ -160,6 +161,22 @@ export function PolicyPanel() {
   const [nodeSearch, setNodeSearch] = useState('')
   const [saving, setSaving] = useState(false)
 
+  // Stable setters — write to module-level vars so state survives remounts
+  const setStableDoc = useCallback((doc: PolicyDocument) => {
+    _savedDocId = doc.id
+    setSelectedDoc(doc)
+  }, [])
+
+  const setStableScale = useCallback((s: number) => {
+    _savedScale = s
+    setScaleRaw(s)
+  }, [])
+
+  const setStablePage = useCallback((page: number) => {
+    _savedPage = page
+    setPageNumber(page)
+  }, [])
+
   // Build node path list for the picker
   const allNodes: { path: string; name: string; label?: string }[] = []
   for (const node of Object.values(model.nodes)) {
@@ -181,16 +198,30 @@ export function PolicyPanel() {
       )
     : allNodes
 
+  // If there's a pending navigation target, save the doc ID immediately
+  // so loadRefs picks it up on first mount
+  if (policyTargetDocId) {
+    _savedDocId = policyTargetDocId
+  }
+
   // Load references manifest
   const loadRefs = useCallback(() => {
     getReferences(model.id)
       .then((r) => {
         setRefs(r)
-        const fileDoc = r.documents.find((d) => d.file)
-        if (fileDoc && !selectedDoc) setSelectedDoc(fileDoc)
+        // Restore saved document (may have been set by pending navigation)
+        const targetId = _savedDocId
+        const saved = targetId
+          ? r.documents.find((d) => d.id === targetId)
+          : null
+        const fileDoc = saved ?? r.documents.find((d) => d.file)
+        if (fileDoc) {
+          _savedDocId = fileDoc.id
+          setSelectedDoc(fileDoc)
+        }
       })
       .catch(() => setRefs(null))
-  }, [model.id, selectedDoc])
+  }, [model.id])
 
   useEffect(() => {
     loadRefs()
@@ -201,8 +232,10 @@ export function PolicyPanel() {
     if (policyTargetPage && policyTargetPage > 0) {
       // Switch to the correct document if specified
       if (policyTargetDocId && refs) {
-        const targetDoc = refs.documents.find((d) => d.id === policyTargetDocId)
-        if (targetDoc) setSelectedDoc(targetDoc)
+        const targetDoc = refs.documents.find(
+          (d) => d.id === policyTargetDocId
+        )
+        if (targetDoc) setStableDoc(targetDoc)
       }
       setStablePage(policyTargetPage)
       if (activeSectionId && activeSectionId.length > 0) {
@@ -216,6 +249,8 @@ export function PolicyPanel() {
     policyTargetDocId,
     refs,
     clearPolicyTarget,
+    setStableDoc,
+    setStablePage,
   ])
 
   // Save scroll position on scroll, restore on mount
@@ -333,16 +368,6 @@ export function PolicyPanel() {
       container.removeEventListener('mouseup', handleMouseUp)
     }
   }, [currentPageSections])
-
-  const setStableScale = useCallback((s: number) => {
-    _savedScale = s
-    setScaleRaw(s)
-  }, [])
-
-  const setStablePage = useCallback((page: number) => {
-    _savedPage = page
-    setPageNumber(page)
-  }, [])
 
   const onDocumentLoadSuccess = useCallback((pdf: { numPages: number }) => {
     setNumPages(pdf.numPages)
@@ -648,7 +673,7 @@ export function PolicyPanel() {
               onChange={(e) => {
                 const doc = fileDocuments.find((d) => d.id === e.target.value)
                 if (doc) {
-                  setSelectedDoc(doc)
+                  setStableDoc(doc)
                   setStablePage(1)
                 }
               }}

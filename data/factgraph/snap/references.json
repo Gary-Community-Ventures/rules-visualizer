@@ -4,6 +4,16 @@
       "id": "10-ccr-2506-1",
       "title": "10 CCR 2506-1 — Colorado SNAP Rules",
       "file": "10 CCR 2506-1 SNAP.pdf"
+    },
+    {
+      "id": "snap-financial-eligibility",
+      "title": "SNAP Financial Eligibility FY2026",
+      "file": "SNAPFinancialEligibility.pdf"
+    },
+    {
+      "id": "snap-student-decision-tree",
+      "title": "Students SNAP Decision Tree",
+      "file": "StudentsSNAPDecisionTree.pdf"
     }
   ],
   "sections": [
@@ -90,7 +100,76 @@
         }
       ],
       "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__test",
+      "documentId": "10-ccr-2506-1",
+      "label": "test",
+      "text": "A face-to-face interview may be conducted at the local office or a mutually acceptable location,\nincluding the household's residence upon household request. If the interview is to be conducted\nat the residence, it must be scheduled in advance. The interview shall be conducted as an official\nand confidential discussion of household circumstances. The applicant's right to privacy shall be\nprotected during the interview. Facilities shall be adequate to preserve the privacy and\nconfidentiality of the interview",
+      "page": 28,
+      "rects": [
+        {
+          "x": 0.16680722891566263,
+          "y": 0.22284502788104088,
+          "w": 0.7033081348832831,
+          "h": 0.01486988847583643
+        },
+        {
+          "x": 0.16680722891566263,
+          "y": 0.23725023234200743,
+          "w": 0.7111032803087349,
+          "h": 0.01486988847583643
+        },
+        {
+          "x": 0.16680722891566263,
+          "y": 0.2518006505576208,
+          "w": 0.7220707831325301,
+          "h": 0.01486988847583643
+        },
+        {
+          "x": 0.16680722891566263,
+          "y": 0.2663510687732342,
+          "w": 0.7132075960090362,
+          "h": 0.01486988847583643
+        },
+        {
+          "x": 0.16680722891566263,
+          "y": 0.2809014869888476,
+          "w": 0.6433566100338856,
+          "h": 0.01486988847583643
+        },
+        {
+          "x": 0.16680722891566263,
+          "y": 0.29545190520446096,
+          "w": 0.2341704513365964,
+          "h": 0.01486988847583643
+        }
+      ]
+    },
+    {
+      "id": "snap-financial-eligibility__test",
+      "documentId": "snap-financial-eligibility",
+      "label": "test",
+      "text": "MONTHLY FINANCIAL ELIGIBILITY STANDARDS",
+      "page": 1,
+      "rects": [
+        {
+          "x": 0.047734375,
+          "y": 0.08517992424242424,
+          "w": 0.7077548217773437,
+          "h": 0.021212121212121213
+        }
+      ]
     }
   ],
-  "mappings": []
+  "mappings": [
+    {
+      "nodePath": "/snap",
+      "sectionId": "10-ccr-2506-1__test"
+    },
+    {
+      "nodePath": "/snap",
+      "sectionId": "snap-financial-eligibility__test"
+    }
+  ]
 }
