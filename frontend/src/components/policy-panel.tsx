@@ -252,34 +252,42 @@ export function PolicyPanel() {
         setSelectedText(text)
         setCapturedRects(captureSelectionRects(pageRef.current))
         setClickedSectionId(null)
-      } else if (isClick && pageRef.current) {
-        // Click without selection — check if we hit an overlay rect
-        const pageRect = pageRef.current.getBoundingClientRect()
-        const nx = (e.clientX - pageRect.left) / pageRect.width
-        const ny = (e.clientY - pageRect.top) / pageRect.height
-
-        let hitSection: string | null = null
-        for (const section of currentPageSections) {
-          for (const rect of section.rects ?? []) {
-            if (
-              nx >= rect.x &&
-              nx <= rect.x + rect.w &&
-              ny >= rect.y &&
-              ny <= rect.y + rect.h
-            ) {
-              hitSection = section.id
-              break
-            }
-          }
-          if (hitSection) break
+      } else {
+        // No meaningful selection — clear the selection bar
+        if (!showLinkForm) {
+          setSelectedText('')
+          setCapturedRects([])
         }
 
-        if (hitSection) {
-          setClickedSectionId((prev) =>
-            prev === hitSection ? null : hitSection
-          )
-        } else {
-          setClickedSectionId(null)
+        // Click without selection — check if we hit an overlay rect
+        if (isClick && pageRef.current) {
+          const pageRect = pageRef.current.getBoundingClientRect()
+          const nx = (e.clientX - pageRect.left) / pageRect.width
+          const ny = (e.clientY - pageRect.top) / pageRect.height
+
+          let hitSection: string | null = null
+          for (const section of currentPageSections) {
+            for (const rect of section.rects ?? []) {
+              if (
+                nx >= rect.x &&
+                nx <= rect.x + rect.w &&
+                ny >= rect.y &&
+                ny <= rect.y + rect.h
+              ) {
+                hitSection = section.id
+                break
+              }
+            }
+            if (hitSection) break
+          }
+
+          if (hitSection) {
+            setClickedSectionId((prev) =>
+              prev === hitSection ? null : hitSection
+            )
+          } else {
+            setClickedSectionId(null)
+          }
         }
       }
 
@@ -547,11 +555,16 @@ export function PolicyPanel() {
               }}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
-                  if (searchResults.length > 0) {
+                  if (
+                    searchResults.length > 0 &&
+                    searchHighlight === searchQuery
+                  ) {
+                    // Same query — cycle through results
                     const nextIdx = (searchIndex + 1) % searchResults.length
                     setSearchIndex(nextIdx)
                     setPageNumber(searchResults[nextIdx])
                   } else {
+                    // New query — run fresh search
                     runSearch(searchQuery)
                   }
                 }
@@ -883,7 +896,7 @@ export function PolicyPanel() {
                           height: `${rect.h * 100}%`,
                           background: bg,
                           border,
-                          zIndex: 10,
+                          zIndex: 1,
                         }}
                       />
                     ))}
@@ -1062,7 +1075,7 @@ export function PolicyPanel() {
                       height: `${rect.h * 100}%`,
                       background: 'rgba(34, 197, 94, 0.3)',
                       border: '1px solid rgba(34, 197, 94, 0.6)',
-                      zIndex: 15,
+                      zIndex: 1,
                     }}
                   />
                 ))}
