@@ -19,12 +19,24 @@
     "entities": {
       "/members": [
         {
-          "isElderly": false, "isDisabled": false, "medicalExpenses": 0,
-          "age": 30, "isHigherEdStudent": false, "weeklyWorkHours": 40,
-          "isWorkStudy": false, "isParent": false, "isFullTimeCollegeStudent": false,
-          "receivesTanf": false, "isImmigrationEligible": true, "isPregnant": false,
-          "isIncapableOfSelfCare": false, "abawdCountableMonthsUsed": 0,
-          "cashOnHand": 0, "bankAccountAssets": 0, "stockAssets": 0, "bondAssets": 0
+          "isElderly": false,
+          "isDisabled": false,
+          "medicalExpenses": 0,
+          "age": 30,
+          "isHigherEdStudent": false,
+          "weeklyWorkHours": 40,
+          "isWorkStudy": false,
+          "isParent": false,
+          "isFullTimeCollegeStudent": false,
+          "receivesTanf": false,
+          "isImmigrationEligible": true,
+          "isPregnant": false,
+          "isIncapableOfSelfCare": false,
+          "abawdCountableMonthsUsed": 0,
+          "cashOnHand": 0,
+          "bankAccountAssets": 0,
+          "stockAssets": 0,
+          "bondAssets": 0
         }
       ]
     },
@@ -58,12 +70,24 @@
     "entities": {
       "/members": [
         {
-          "isElderly": false, "isDisabled": false, "medicalExpenses": 0,
-          "age": 30, "isHigherEdStudent": false, "weeklyWorkHours": 40,
-          "isWorkStudy": false, "isParent": false, "isFullTimeCollegeStudent": false,
-          "receivesTanf": false, "isImmigrationEligible": true, "isPregnant": false,
-          "isIncapableOfSelfCare": false, "abawdCountableMonthsUsed": 0,
-          "cashOnHand": 0, "bankAccountAssets": 0, "stockAssets": 0, "bondAssets": 0
+          "isElderly": false,
+          "isDisabled": false,
+          "medicalExpenses": 0,
+          "age": 30,
+          "isHigherEdStudent": false,
+          "weeklyWorkHours": 40,
+          "isWorkStudy": false,
+          "isParent": false,
+          "isFullTimeCollegeStudent": false,
+          "receivesTanf": false,
+          "isImmigrationEligible": true,
+          "isPregnant": false,
+          "isIncapableOfSelfCare": false,
+          "abawdCountableMonthsUsed": 0,
+          "cashOnHand": 0,
+          "bankAccountAssets": 0,
+          "stockAssets": 0,
+          "bondAssets": 0
         }
       ]
     },
@@ -102,12 +126,24 @@
     "entities": {
       "/members": [
         {
-          "isElderly": false, "isDisabled": false, "medicalExpenses": 0,
-          "age": 30, "isHigherEdStudent": false, "weeklyWorkHours": 40,
-          "isWorkStudy": false, "isParent": false, "isFullTimeCollegeStudent": false,
-          "receivesTanf": false, "isImmigrationEligible": true, "isPregnant": false,
-          "isIncapableOfSelfCare": false, "abawdCountableMonthsUsed": 0,
-          "cashOnHand": 0, "bankAccountAssets": 0, "stockAssets": 0, "bondAssets": 0
+          "isElderly": false,
+          "isDisabled": false,
+          "medicalExpenses": 0,
+          "age": 30,
+          "isHigherEdStudent": false,
+          "weeklyWorkHours": 40,
+          "isWorkStudy": false,
+          "isParent": false,
+          "isFullTimeCollegeStudent": false,
+          "receivesTanf": false,
+          "isImmigrationEligible": true,
+          "isPregnant": false,
+          "isIncapableOfSelfCare": false,
+          "abawdCountableMonthsUsed": 0,
+          "cashOnHand": 0,
+          "bankAccountAssets": 0,
+          "stockAssets": 0,
+          "bondAssets": 0
         }
       ]
     },
@@ -137,12 +173,24 @@
     "entities": {
       "/members": [
         {
-          "isElderly": true, "isDisabled": false, "medicalExpenses": 200,
-          "age": 65, "isHigherEdStudent": false, "weeklyWorkHours": 0,
-          "isWorkStudy": false, "isParent": false, "isFullTimeCollegeStudent": false,
-          "receivesTanf": false, "isImmigrationEligible": true, "isPregnant": false,
-          "isIncapableOfSelfCare": false, "abawdCountableMonthsUsed": 0,
-          "cashOnHand": 0, "bankAccountAssets": 0, "stockAssets": 0, "bondAssets": 0
+          "isElderly": true,
+          "isDisabled": false,
+          "medicalExpenses": 200,
+          "age": 65,
+          "isHigherEdStudent": false,
+          "weeklyWorkHours": 0,
+          "isWorkStudy": false,
+          "isParent": false,
+          "isFullTimeCollegeStudent": false,
+          "receivesTanf": false,
+          "isImmigrationEligible": true,
+          "isPregnant": false,
+          "isIncapableOfSelfCare": false,
+          "abawdCountableMonthsUsed": 0,
+          "cashOnHand": 0,
+          "bankAccountAssets": 0,
+          "stockAssets": 0,
+          "bondAssets": 0
         }
       ]
     },
@@ -182,12 +230,24 @@
     "entities": {
       "/members": [
         {
-          "isElderly": false, "isDisabled": false, "medicalExpenses": 0,
-          "age": 30, "isHigherEdStudent": false, "weeklyWorkHours": 40,
-          "isWorkStudy": false, "isParent": false, "isFullTimeCollegeStudent": false,
-          "receivesTanf": false, "isImmigrationEligible": true, "isPregnant": false,
-          "isIncapableOfSelfCare": false, "abawdCountableMonthsUsed": 0,
-          "cashOnHand": 0, "bankAccountAssets": 0, "stockAssets": 0, "bondAssets": 0
+          "isElderly": false,
+          "isDisabled": false,
+          "medicalExpenses": 0,
+          "age": 30,
+          "isHigherEdStudent": false,
+          "weeklyWorkHours": 40,
+          "isWorkStudy": false,
+          "isParent": false,
+          "isFullTimeCollegeStudent": false,
+          "receivesTanf": false,
+          "isImmigrationEligible": true,
+          "isPregnant": false,
+          "isIncapableOfSelfCare": false,
+          "abawdCountableMonthsUsed": 0,
+          "cashOnHand": 0,
+          "bankAccountAssets": 0,
+          "stockAssets": 0,
+          "bondAssets": 0
         }
       ]
     },
@@ -218,12 +278,24 @@
     "entities": {
       "/members": [
         {
-          "isElderly": false, "isDisabled": false, "medicalExpenses": 0,
-          "age": 30, "isHigherEdStudent": false, "weeklyWorkHours": 40,
-          "isWorkStudy": false, "isParent": false, "isFullTimeCollegeStudent": false,
-          "receivesTanf": false, "isImmigrationEligible": true, "isPregnant": false,
-          "isIncapableOfSelfCare": false, "abawdCountableMonthsUsed": 0,
-          "cashOnHand": 0, "bankAccountAssets": 0, "stockAssets": 0, "bondAssets": 0
+          "isElderly": false,
+          "isDisabled": false,
+          "medicalExpenses": 0,
+          "age": 30,
+          "isHigherEdStudent": false,
+          "weeklyWorkHours": 40,
+          "isWorkStudy": false,
+          "isParent": false,
+          "isFullTimeCollegeStudent": false,
+          "receivesTanf": false,
+          "isImmigrationEligible": true,
+          "isPregnant": false,
+          "isIncapableOfSelfCare": false,
+          "abawdCountableMonthsUsed": 0,
+          "cashOnHand": 0,
+          "bankAccountAssets": 0,
+          "stockAssets": 0,
+          "bondAssets": 0
         }
       ]
     },
@@ -263,12 +335,24 @@
     "entities": {
       "/members": [
         {
-          "isElderly": false, "isDisabled": false, "medicalExpenses": 0,
-          "age": 30, "isHigherEdStudent": false, "weeklyWorkHours": 40,
-          "isWorkStudy": false, "isParent": false, "isFullTimeCollegeStudent": false,
-          "receivesTanf": false, "isImmigrationEligible": true, "isPregnant": false,
-          "isIncapableOfSelfCare": false, "abawdCountableMonthsUsed": 0,
-          "cashOnHand": 0, "bankAccountAssets": 0, "stockAssets": 0, "bondAssets": 0
+          "isElderly": false,
+          "isDisabled": false,
+          "medicalExpenses": 0,
+          "age": 30,
+          "isHigherEdStudent": false,
+          "weeklyWorkHours": 40,
+          "isWorkStudy": false,
+          "isParent": false,
+          "isFullTimeCollegeStudent": false,
+          "receivesTanf": false,
+          "isImmigrationEligible": true,
+          "isPregnant": false,
+          "isIncapableOfSelfCare": false,
+          "abawdCountableMonthsUsed": 0,
+          "cashOnHand": 0,
+          "bankAccountAssets": 0,
+          "stockAssets": 0,
+          "bondAssets": 0
         }
       ]
     },
@@ -302,12 +386,24 @@
     "entities": {
       "/members": [
         {
-          "isElderly": false, "isDisabled": false, "medicalExpenses": 0,
-          "age": 30, "isHigherEdStudent": false, "weeklyWorkHours": 40,
-          "isWorkStudy": false, "isParent": false, "isFullTimeCollegeStudent": false,
-          "receivesTanf": false, "isImmigrationEligible": true, "isPregnant": false,
-          "isIncapableOfSelfCare": false, "abawdCountableMonthsUsed": 0,
-          "cashOnHand": 2000, "bankAccountAssets": 1500, "stockAssets": 0, "bondAssets": 0
+          "isElderly": false,
+          "isDisabled": false,
+          "medicalExpenses": 0,
+          "age": 30,
+          "isHigherEdStudent": false,
+          "weeklyWorkHours": 40,
+          "isWorkStudy": false,
+          "isParent": false,
+          "isFullTimeCollegeStudent": false,
+          "receivesTanf": false,
+          "isImmigrationEligible": true,
+          "isPregnant": false,
+          "isIncapableOfSelfCare": false,
+          "abawdCountableMonthsUsed": 0,
+          "cashOnHand": 2000,
+          "bankAccountAssets": 1500,
+          "stockAssets": 0,
+          "bondAssets": 0
         }
       ]
     },
@@ -339,12 +435,24 @@
     "entities": {
       "/members": [
         {
-          "isElderly": true, "isDisabled": false, "medicalExpenses": 0,
-          "age": 65, "isHigherEdStudent": false, "weeklyWorkHours": 0,
-          "isWorkStudy": false, "isParent": false, "isFullTimeCollegeStudent": false,
-          "receivesTanf": false, "isImmigrationEligible": true, "isPregnant": false,
-          "isIncapableOfSelfCare": false, "abawdCountableMonthsUsed": 0,
-          "cashOnHand": 2000, "bankAccountAssets": 2000, "stockAssets": 0, "bondAssets": 0
+          "isElderly": true,
+          "isDisabled": false,
+          "medicalExpenses": 0,
+          "age": 65,
+          "isHigherEdStudent": false,
+          "weeklyWorkHours": 0,
+          "isWorkStudy": false,
+          "isParent": false,
+          "isFullTimeCollegeStudent": false,
+          "receivesTanf": false,
+          "isImmigrationEligible": true,
+          "isPregnant": false,
+          "isIncapableOfSelfCare": false,
+          "abawdCountableMonthsUsed": 0,
+          "cashOnHand": 2000,
+          "bankAccountAssets": 2000,
+          "stockAssets": 0,
+          "bondAssets": 0
         }
       ]
     },
@@ -376,12 +484,24 @@
     "entities": {
       "/members": [
         {
-          "isElderly": false, "isDisabled": false, "medicalExpenses": 0,
-          "age": 35, "isHigherEdStudent": false, "weeklyWorkHours": 40,
-          "isWorkStudy": false, "isParent": false, "isFullTimeCollegeStudent": false,
-          "receivesTanf": false, "isImmigrationEligible": true, "isPregnant": false,
-          "isIncapableOfSelfCare": false, "abawdCountableMonthsUsed": 0,
-          "cashOnHand": 500, "bankAccountAssets": 1000, "stockAssets": 200, "bondAssets": 100
+          "isElderly": false,
+          "isDisabled": false,
+          "medicalExpenses": 0,
+          "age": 35,
+          "isHigherEdStudent": false,
+          "weeklyWorkHours": 40,
+          "isWorkStudy": false,
+          "isParent": false,
+          "isFullTimeCollegeStudent": false,
+          "receivesTanf": false,
+          "isImmigrationEligible": true,
+          "isPregnant": false,
+          "isIncapableOfSelfCare": false,
+          "abawdCountableMonthsUsed": 0,
+          "cashOnHand": 500,
+          "bankAccountAssets": 1000,
+          "stockAssets": 200,
+          "bondAssets": 100
         }
       ]
     },
@@ -419,12 +539,24 @@
     "entities": {
       "/members": [
         {
-          "isElderly": false, "isDisabled": true, "medicalExpenses": 150,
-          "age": 45, "isHigherEdStudent": false, "weeklyWorkHours": 0,
-          "isWorkStudy": false, "isParent": false, "isFullTimeCollegeStudent": false,
-          "receivesTanf": false, "isImmigrationEligible": true, "isPregnant": false,
-          "isIncapableOfSelfCare": false, "abawdCountableMonthsUsed": 0,
-          "cashOnHand": 0, "bankAccountAssets": 0, "stockAssets": 0, "bondAssets": 0
+          "isElderly": false,
+          "isDisabled": true,
+          "medicalExpenses": 150,
+          "age": 45,
+          "isHigherEdStudent": false,
+          "weeklyWorkHours": 0,
+          "isWorkStudy": false,
+          "isParent": false,
+          "isFullTimeCollegeStudent": false,
+          "receivesTanf": false,
+          "isImmigrationEligible": true,
+          "isPregnant": false,
+          "isIncapableOfSelfCare": false,
+          "abawdCountableMonthsUsed": 0,
+          "cashOnHand": 0,
+          "bankAccountAssets": 0,
+          "stockAssets": 0,
+          "bondAssets": 0
         }
       ]
     },
@@ -457,12 +589,24 @@
     "entities": {
       "/members": [
         {
-          "isElderly": false, "isDisabled": false, "medicalExpenses": 0,
-          "age": 30, "isHigherEdStudent": false, "weeklyWorkHours": 40,
-          "isWorkStudy": false, "isParent": false, "isFullTimeCollegeStudent": false,
-          "receivesTanf": false, "isImmigrationEligible": true, "isPregnant": false,
-          "isIncapableOfSelfCare": false, "abawdCountableMonthsUsed": 0,
-          "cashOnHand": 10000, "bankAccountAssets": 0, "stockAssets": 0, "bondAssets": 0
+          "isElderly": false,
+          "isDisabled": false,
+          "medicalExpenses": 0,
+          "age": 30,
+          "isHigherEdStudent": false,
+          "weeklyWorkHours": 40,
+          "isWorkStudy": false,
+          "isParent": false,
+          "isFullTimeCollegeStudent": false,
+          "receivesTanf": false,
+          "isImmigrationEligible": true,
+          "isPregnant": false,
+          "isIncapableOfSelfCare": false,
+          "abawdCountableMonthsUsed": 0,
+          "cashOnHand": 10000,
+          "bankAccountAssets": 0,
+          "stockAssets": 0,
+          "bondAssets": 0
         }
       ]
     },
@@ -493,12 +637,24 @@
     "entities": {
       "/members": [
         {
-          "isElderly": false, "isDisabled": false, "medicalExpenses": 0,
-          "age": 30, "isHigherEdStudent": false, "weeklyWorkHours": 40,
-          "isWorkStudy": false, "isParent": false, "isFullTimeCollegeStudent": false,
-          "receivesTanf": false, "isImmigrationEligible": true, "isPregnant": false,
-          "isIncapableOfSelfCare": false, "abawdCountableMonthsUsed": 0,
-          "cashOnHand": 0, "bankAccountAssets": 0, "stockAssets": 0, "bondAssets": 0
+          "isElderly": false,
+          "isDisabled": false,
+          "medicalExpenses": 0,
+          "age": 30,
+          "isHigherEdStudent": false,
+          "weeklyWorkHours": 40,
+          "isWorkStudy": false,
+          "isParent": false,
+          "isFullTimeCollegeStudent": false,
+          "receivesTanf": false,
+          "isImmigrationEligible": true,
+          "isPregnant": false,
+          "isIncapableOfSelfCare": false,
+          "abawdCountableMonthsUsed": 0,
+          "cashOnHand": 0,
+          "bankAccountAssets": 0,
+          "stockAssets": 0,
+          "bondAssets": 0
         }
       ]
     },
@@ -529,12 +685,24 @@
     "entities": {
       "/members": [
         {
-          "isElderly": false, "isDisabled": false, "medicalExpenses": 0,
-          "age": 30, "isHigherEdStudent": false, "weeklyWorkHours": 40,
-          "isWorkStudy": false, "isParent": false, "isFullTimeCollegeStudent": false,
-          "receivesTanf": false, "isImmigrationEligible": true, "isPregnant": false,
-          "isIncapableOfSelfCare": false, "abawdCountableMonthsUsed": 0,
-          "cashOnHand": 0, "bankAccountAssets": 0, "stockAssets": 0, "bondAssets": 0
+          "isElderly": false,
+          "isDisabled": false,
+          "medicalExpenses": 0,
+          "age": 30,
+          "isHigherEdStudent": false,
+          "weeklyWorkHours": 40,
+          "isWorkStudy": false,
+          "isParent": false,
+          "isFullTimeCollegeStudent": false,
+          "receivesTanf": false,
+          "isImmigrationEligible": true,
+          "isPregnant": false,
+          "isIncapableOfSelfCare": false,
+          "abawdCountableMonthsUsed": 0,
+          "cashOnHand": 0,
+          "bankAccountAssets": 0,
+          "stockAssets": 0,
+          "bondAssets": 0
         }
       ]
     },
@@ -569,12 +737,24 @@
     "entities": {
       "/members": [
         {
-          "isElderly": false, "isDisabled": false, "medicalExpenses": 0,
-          "age": 30, "isHigherEdStudent": false, "weeklyWorkHours": 40,
-          "isWorkStudy": false, "isParent": false, "isFullTimeCollegeStudent": false,
-          "receivesTanf": false, "isImmigrationEligible": true, "isPregnant": false,
-          "isIncapableOfSelfCare": false, "abawdCountableMonthsUsed": 0,
-          "cashOnHand": 0, "bankAccountAssets": 0, "stockAssets": 0, "bondAssets": 0
+          "isElderly": false,
+          "isDisabled": false,
+          "medicalExpenses": 0,
+          "age": 30,
+          "isHigherEdStudent": false,
+          "weeklyWorkHours": 40,
+          "isWorkStudy": false,
+          "isParent": false,
+          "isFullTimeCollegeStudent": false,
+          "receivesTanf": false,
+          "isImmigrationEligible": true,
+          "isPregnant": false,
+          "isIncapableOfSelfCare": false,
+          "abawdCountableMonthsUsed": 0,
+          "cashOnHand": 0,
+          "bankAccountAssets": 0,
+          "stockAssets": 0,
+          "bondAssets": 0
         }
       ]
     },
@@ -605,28 +785,64 @@
     "entities": {
       "/members": [
         {
-          "isElderly": false, "isDisabled": false, "medicalExpenses": 0,
-          "age": 35, "isHigherEdStudent": false, "weeklyWorkHours": 40,
-          "isWorkStudy": false, "isParent": false, "isFullTimeCollegeStudent": false,
-          "receivesTanf": false, "isImmigrationEligible": true, "isPregnant": false,
-          "isIncapableOfSelfCare": false, "abawdCountableMonthsUsed": 0,
-          "cashOnHand": 0, "bankAccountAssets": 0, "stockAssets": 0, "bondAssets": 0
+          "isElderly": false,
+          "isDisabled": false,
+          "medicalExpenses": 0,
+          "age": 35,
+          "isHigherEdStudent": false,
+          "weeklyWorkHours": 40,
+          "isWorkStudy": false,
+          "isParent": false,
+          "isFullTimeCollegeStudent": false,
+          "receivesTanf": false,
+          "isImmigrationEligible": true,
+          "isPregnant": false,
+          "isIncapableOfSelfCare": false,
+          "abawdCountableMonthsUsed": 0,
+          "cashOnHand": 0,
+          "bankAccountAssets": 0,
+          "stockAssets": 0,
+          "bondAssets": 0
         },
         {
-          "isElderly": false, "isDisabled": false, "medicalExpenses": 0,
-          "age": 33, "isHigherEdStudent": false, "weeklyWorkHours": 40,
-          "isWorkStudy": false, "isParent": false, "isFullTimeCollegeStudent": false,
-          "receivesTanf": false, "isImmigrationEligible": true, "isPregnant": false,
-          "isIncapableOfSelfCare": false, "abawdCountableMonthsUsed": 0,
-          "cashOnHand": 0, "bankAccountAssets": 0, "stockAssets": 0, "bondAssets": 0
+          "isElderly": false,
+          "isDisabled": false,
+          "medicalExpenses": 0,
+          "age": 33,
+          "isHigherEdStudent": false,
+          "weeklyWorkHours": 40,
+          "isWorkStudy": false,
+          "isParent": false,
+          "isFullTimeCollegeStudent": false,
+          "receivesTanf": false,
+          "isImmigrationEligible": true,
+          "isPregnant": false,
+          "isIncapableOfSelfCare": false,
+          "abawdCountableMonthsUsed": 0,
+          "cashOnHand": 0,
+          "bankAccountAssets": 0,
+          "stockAssets": 0,
+          "bondAssets": 0
         },
         {
-          "isElderly": false, "isDisabled": false, "medicalExpenses": 0,
-          "age": 5, "isHigherEdStudent": false, "weeklyWorkHours": 0,
-          "isWorkStudy": false, "isParent": false, "isFullTimeCollegeStudent": false,
-          "receivesTanf": false, "isImmigrationEligible": true, "isPregnant": false,
-          "isIncapableOfSelfCare": false, "abawdCountableMonthsUsed": 0,
-          "cashOnHand": 0, "bankAccountAssets": 0, "stockAssets": 0, "bondAssets": 0
+          "isElderly": false,
+          "isDisabled": false,
+          "medicalExpenses": 0,
+          "age": 5,
+          "isHigherEdStudent": false,
+          "weeklyWorkHours": 0,
+          "isWorkStudy": false,
+          "isParent": false,
+          "isFullTimeCollegeStudent": false,
+          "receivesTanf": false,
+          "isImmigrationEligible": true,
+          "isPregnant": false,
+          "isIncapableOfSelfCare": false,
+          "abawdCountableMonthsUsed": 0,
+          "cashOnHand": 0,
+          "bankAccountAssets": 0,
+          "stockAssets": 0,
+          "bondAssets": 0
         }
       ]
     },
@@ -667,20 +883,44 @@
     "entities": {
       "/members": [
         {
-          "isElderly": true, "isDisabled": false, "medicalExpenses": 200,
-          "age": 65, "isHigherEdStudent": false, "weeklyWorkHours": 0,
-          "isWorkStudy": false, "isParent": false, "isFullTimeCollegeStudent": false,
-          "receivesTanf": false, "isImmigrationEligible": true, "isPregnant": false,
-          "isIncapableOfSelfCare": false, "abawdCountableMonthsUsed": 0,
-          "cashOnHand": 0, "bankAccountAssets": 0, "stockAssets": 0, "bondAssets": 0
+          "isElderly": true,
+          "isDisabled": false,
+          "medicalExpenses": 200,
+          "age": 65,
+          "isHigherEdStudent": false,
+          "weeklyWorkHours": 0,
+          "isWorkStudy": false,
+          "isParent": false,
+          "isFullTimeCollegeStudent": false,
+          "receivesTanf": false,
+          "isImmigrationEligible": true,
+          "isPregnant": false,
+          "isIncapableOfSelfCare": false,
+          "abawdCountableMonthsUsed": 0,
+          "cashOnHand": 0,
+          "bankAccountAssets": 0,
+          "stockAssets": 0,
+          "bondAssets": 0
         },
         {
-          "isElderly": false, "isDisabled": false, "medicalExpenses": 0,
-          "age": 25, "isHigherEdStudent": false, "weeklyWorkHours": 40,
-          "isWorkStudy": false, "isParent": false, "isFullTimeCollegeStudent": false,
-          "receivesTanf": false, "isImmigrationEligible": true, "isPregnant": false,
-          "isIncapableOfSelfCare": false, "abawdCountableMonthsUsed": 0,
-          "cashOnHand": 0, "bankAccountAssets": 0, "stockAssets": 0, "bondAssets": 0
+          "isElderly": false,
+          "isDisabled": false,
+          "medicalExpenses": 0,
+          "age": 25,
+          "isHigherEdStudent": false,
+          "weeklyWorkHours": 40,
+          "isWorkStudy": false,
+          "isParent": false,
+          "isFullTimeCollegeStudent": false,
+          "receivesTanf": false,
+          "isImmigrationEligible": true,
+          "isPregnant": false,
+          "isIncapableOfSelfCare": false,
+          "abawdCountableMonthsUsed": 0,
+          "cashOnHand": 0,
+          "bankAccountAssets": 0,
+          "stockAssets": 0,
+          "bondAssets": 0
         }
       ]
     },
@@ -720,44 +960,104 @@
     "entities": {
       "/members": [
         {
-          "isElderly": false, "isDisabled": false, "medicalExpenses": 0,
-          "age": 40, "isHigherEdStudent": false, "weeklyWorkHours": 40,
-          "isWorkStudy": false, "isParent": false, "isFullTimeCollegeStudent": false,
-          "receivesTanf": false, "isImmigrationEligible": true, "isPregnant": false,
-          "isIncapableOfSelfCare": false, "abawdCountableMonthsUsed": 0,
-          "cashOnHand": 0, "bankAccountAssets": 0, "stockAssets": 0, "bondAssets": 0
+          "isElderly": false,
+          "isDisabled": false,
+          "medicalExpenses": 0,
+          "age": 40,
+          "isHigherEdStudent": false,
+          "weeklyWorkHours": 40,
+          "isWorkStudy": false,
+          "isParent": false,
+          "isFullTimeCollegeStudent": false,
+          "receivesTanf": false,
+          "isImmigrationEligible": true,
+          "isPregnant": false,
+          "isIncapableOfSelfCare": false,
+          "abawdCountableMonthsUsed": 0,
+          "cashOnHand": 0,
+          "bankAccountAssets": 0,
+          "stockAssets": 0,
+          "bondAssets": 0
         },
         {
-          "isElderly": false, "isDisabled": false, "medicalExpenses": 0,
-          "age": 38, "isHigherEdStudent": false, "weeklyWorkHours": 40,
-          "isWorkStudy": false, "isParent": false, "isFullTimeCollegeStudent": false,
-          "receivesTanf": false, "isImmigrationEligible": true, "isPregnant": false,
-          "isIncapableOfSelfCare": false, "abawdCountableMonthsUsed": 0,
-          "cashOnHand": 0, "bankAccountAssets": 0, "stockAssets": 0, "bondAssets": 0
+          "isElderly": false,
+          "isDisabled": false,
+          "medicalExpenses": 0,
+          "age": 38,
+          "isHigherEdStudent": false,
+          "weeklyWorkHours": 40,
+          "isWorkStudy": false,
+          "isParent": false,
+          "isFullTimeCollegeStudent": false,
+          "receivesTanf": false,
+          "isImmigrationEligible": true,
+          "isPregnant": false,
+          "isIncapableOfSelfCare": false,
+          "abawdCountableMonthsUsed": 0,
+          "cashOnHand": 0,
+          "bankAccountAssets": 0,
+          "stockAssets": 0,
+          "bondAssets": 0
         },
         {
-          "isElderly": false, "isDisabled": false, "medicalExpenses": 0,
-          "age": 15, "isHigherEdStudent": false, "weeklyWorkHours": 0,
-          "isWorkStudy": false, "isParent": false, "isFullTimeCollegeStudent": false,
-          "receivesTanf": false, "isImmigrationEligible": true, "isPregnant": false,
-          "isIncapableOfSelfCare": false, "abawdCountableMonthsUsed": 0,
-          "cashOnHand": 0, "bankAccountAssets": 0, "stockAssets": 0, "bondAssets": 0
+          "isElderly": false,
+          "isDisabled": false,
+          "medicalExpenses": 0,
+          "age": 15,
+          "isHigherEdStudent": false,
+          "weeklyWorkHours": 0,
+          "isWorkStudy": false,
+          "isParent": false,
+          "isFullTimeCollegeStudent": false,
+          "receivesTanf": false,
+          "isImmigrationEligible": true,
+          "isPregnant": false,
+          "isIncapableOfSelfCare": false,
+          "abawdCountableMonthsUsed": 0,
+          "cashOnHand": 0,
+          "bankAccountAssets": 0,
+          "stockAssets": 0,
+          "bondAssets": 0
         },
         {
-          "isElderly": false, "isDisabled": false, "medicalExpenses": 0,
-          "age": 12, "isHigherEdStudent": false, "weeklyWorkHours": 0,
-          "isWorkStudy": false, "isParent": false, "isFullTimeCollegeStudent": false,
-          "receivesTanf": false, "isImmigrationEligible": true, "isPregnant": false,
-          "isIncapableOfSelfCare": false, "abawdCountableMonthsUsed": 0,
-          "cashOnHand": 0, "bankAccountAssets": 0, "stockAssets": 0, "bondAssets": 0
+          "isElderly": false,
+          "isDisabled": false,
+          "medicalExpenses": 0,
+          "age": 12,
+          "isHigherEdStudent": false,
+          "weeklyWorkHours": 0,
+          "isWorkStudy": false,
+          "isParent": false,
+          "isFullTimeCollegeStudent": false,
+          "receivesTanf": false,
+          "isImmigrationEligible": true,
+          "isPregnant": false,
+          "isIncapableOfSelfCare": false,
+          "abawdCountableMonthsUsed": 0,
+          "cashOnHand": 0,
+          "bankAccountAssets": 0,
+          "stockAssets": 0,
+          "bondAssets": 0
         },
         {
-          "isElderly": false, "isDisabled": false, "medicalExpenses": 0,
-          "age": 10, "isHigherEdStudent": false, "weeklyWorkHours": 0,
-          "isWorkStudy": false, "isParent": false, "isFullTimeCollegeStudent": false,
-          "receivesTanf": false, "isImmigrationEligible": true, "isPregnant": false,
-          "isIncapableOfSelfCare": false, "abawdCountableMonthsUsed": 0,
-          "cashOnHand": 0, "bankAccountAssets": 0, "stockAssets": 0, "bondAssets": 0
+          "isElderly": false,
+          "isDisabled": false,
+          "medicalExpenses": 0,
+          "age": 10,
+          "isHigherEdStudent": false,
+          "weeklyWorkHours": 0,
+          "isWorkStudy": false,
+          "isParent": false,
+          "isFullTimeCollegeStudent": false,
+          "receivesTanf": false,
+          "isImmigrationEligible": true,
+          "isPregnant": false,
+          "isIncapableOfSelfCare": false,
+          "abawdCountableMonthsUsed": 0,
+          "cashOnHand": 0,
+          "bankAccountAssets": 0,
+          "stockAssets": 0,
+          "bondAssets": 0
         }
       ]
     },
