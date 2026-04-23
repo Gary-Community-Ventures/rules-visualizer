@@ -667,7 +667,8 @@ export function NodeLink({
 }
 
 function PolicyReferencesList({ node }: { node: ModelNode }) {
-  const { model, refreshModel, openPolicyAtPage } = useMainContext()
+  const { model, refreshModel, openPolicyAtPage, openPolicyForLinking } =
+    useMainContext()
   const references = node.references ?? []
   const [expanded, setExpanded] = useState<Set<string>>(new Set())
   const [adding, setAdding] = useState(false)
@@ -696,9 +697,20 @@ function PolicyReferencesList({ node }: { node: ModelNode }) {
   const openAdd = async () => {
     try {
       const refs = await getReferences(model.id)
+      // If there's a PDF document, open the policy panel for select-to-link
+      const hasPdf = refs.documents.some((d) => d.file)
+      if (hasPdf && nodePath) {
+        openPolicyForLinking(nodePath)
+        return
+      }
+      // Otherwise fall back to the form-based approach
       setManifest(refs)
       setAdding(true)
-      setAddMode(refs.sections.length > 0 ? 'pick' : 'new')
+      setAddMode(
+        refs.sections.filter((s) => s.status !== 'skipped').length > 0
+          ? 'pick'
+          : 'new'
+      )
       setSelectedDocId(refs.documents[0]?.id ?? '')
       setSelectedSectionId('')
     } catch (e) {
@@ -779,6 +791,11 @@ function PolicyReferencesList({ node }: { node: ModelNode }) {
       refs.mappings = refs.mappings.filter(
         (m) => !(m.nodePath === nodePath && m.sectionId === sectionId)
       )
+      // Remove orphaned sections (no remaining mappings, not skipped)
+      const mappedSectionIds = new Set(refs.mappings.map((m) => m.sectionId))
+      refs.sections = refs.sections.filter(
+        (s) => s.status === 'skipped' || mappedSectionIds.has(s.id)
+      )
       await saveReferences(model.id, refs)
       refreshModel()
     } finally {
@@ -844,28 +861,31 @@ function PolicyReferencesList({ node }: { node: ModelNode }) {
               return (
                 <div
                   key={ref.section.id}
-                  className="border rounded-md px-3 py-2 hover:bg-muted/50 transition-colors"
+                  className="border rounded-md px-3 py-2 hover:bg-muted/50 transition-colors cursor-pointer"
+                  onClick={() => toggle(ref.section.id)}
                 >
                   <div className="flex items-center gap-1.5">
-                    <button
-                      className="flex items-center gap-1.5 flex-1 text-left"
-                      onClick={() => toggle(ref.section.id)}
-                    >
+                    <div className="flex items-center gap-1.5 flex-1 min-w-0">
                       {isOpen ? (
                         <ChevronDown className="size-3 text-muted-foreground shrink-0" />
                       ) : (
                         <ChevronRight className="size-3 text-muted-foreground shrink-0" />
                       )}
-                      <span className="text-xs font-medium">
+                      <span className="text-xs font-medium truncate">
                         {ref.section.label}
                       </span>
-                    </button>
+                    </div>
                     {ref.section.page && (
                       <button
                         className="p-0.5 text-muted-foreground hover:text-blue-600 shrink-0"
-                        onClick={() =>
-                          openPolicyAtPage(ref.section.page!, [ref.section.id])
-                        }
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          openPolicyAtPage(
+                            ref.section.page!,
+                            [ref.section.id],
+                            ref.document.id
+                          )
+                        }}
                         title={`View in PDF (page ${ref.section.page})`}
                       >
                         <FileText className="size-3" />
@@ -873,7 +893,10 @@ function PolicyReferencesList({ node }: { node: ModelNode }) {
                     )}
                     <button
                       className="p-0.5 text-muted-foreground hover:text-red-600 shrink-0"
-                      onClick={() => handleRemove(ref.section.id)}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleRemove(ref.section.id)
+                      }}
                       disabled={saving}
                       title="Remove reference"
                     >
@@ -928,11 +951,13 @@ function PolicyReferencesList({ node }: { node: ModelNode }) {
                 onChange={(e) => setSelectedSectionId(e.target.value)}
               >
                 <option value="">Select a section...</option>
-                {manifest.sections.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.label}
-                  </option>
-                ))}
+                {manifest.sections
+                  .filter((s) => s.status !== 'skipped')
+                  .map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.label}
+                    </option>
+                  ))}
               </select>
             </div>
           ) : (

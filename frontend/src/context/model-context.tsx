@@ -232,10 +232,19 @@ type ModelContextValue = {
   >
   refreshModel: () => void
   /** Open the policy panel and navigate to a specific page, optionally focusing a section */
-  openPolicyAtPage: (page: number, focusSectionIds?: string[]) => void
+  openPolicyAtPage: (
+    page: number,
+    focusSectionIds?: string[],
+    documentId?: string
+  ) => void
   policyTargetPage: number | null
   policyFocusSectionIds: string[] | null
+  policyTargetDocId: string | null
   clearPolicyTarget: () => void
+  /** Node path to pre-select when opening the policy panel for linking */
+  policyLinkNodePath: string | null
+  openPolicyForLinking: (nodePath: string) => void
+  clearPolicyLinkNode: () => void
 }
 
 const ModelContext = createContext<ModelContextValue | undefined>(undefined)
@@ -459,10 +468,25 @@ export function ModelProvider({
   const [policyFocusSectionIds, setPolicyFocusSectionIds] = useState<
     string[] | null
   >(null)
+  const [policyTargetDocId, setPolicyTargetDocId] = useState<string | null>(
+    null
+  )
   const openPolicyAtPage = useCallback(
-    (page: number, focusSectionIds?: string[]) => {
+    (page: number, focusSectionIds?: string[], documentId?: string) => {
       setPolicyTargetPage(page)
       setPolicyFocusSectionIds(focusSectionIds ?? null)
+      setPolicyTargetDocId(documentId ?? null)
+      setRightBar('policy')
+    },
+    [setRightBar]
+  )
+
+  const [policyLinkNodePath, setPolicyLinkNodePath] = useState<string | null>(
+    null
+  )
+  const openPolicyForLinking = useCallback(
+    (nodePath: string) => {
+      setPolicyLinkNodePath(nodePath)
       setRightBar('policy')
     },
     [setRightBar]
@@ -565,10 +589,15 @@ export function ModelProvider({
       openPolicyAtPage,
       policyTargetPage,
       policyFocusSectionIds,
+      policyTargetDocId,
       clearPolicyTarget: () => {
         setPolicyTargetPage(null)
         setPolicyFocusSectionIds(null)
+        setPolicyTargetDocId(null)
       },
+      policyLinkNodePath,
+      openPolicyForLinking,
+      clearPolicyLinkNode: () => setPolicyLinkNodePath(null),
     }),
     [
       rulesetId,
@@ -615,6 +644,9 @@ export function ModelProvider({
       openPolicyAtPage,
       policyTargetPage,
       policyFocusSectionIds,
+      policyTargetDocId,
+      policyLinkNodePath,
+      openPolicyForLinking,
     ]
   )
 
