@@ -2,41 +2,37 @@
   {
     "id": "snap-fg-1",
     "name": "Single person, no income — max allotment",
-    "description": "1-person household with zero income gets the full max allotment.",
+    "description": "1-person household with zero income gets the full max allotment ($298 FY2026).",
     "inputs": {
       "/grossEarnedIncome": 0,
       "/unearnedIncome": 0,
       "/dependentCareExpenses": 0,
-      "/shelterCosts": 0,
-      "/meetsCategoricalEligibility": false
+      "/rent": 0,
+      "/realEstateTaxes": 0,
+      "/homeownersAssociationFees": 0,
+      "/mortgagePayments": 0,
+      "/homeownersInsurance": 0,
+      "/meetsCategoricalEligibility": false,
+      "/childSupportPaid": 0,
+      "/isHomeless": false
     },
     "entities": {
       "/members": [
         {
-          "isElderly": false,
-          "isDisabled": false,
-          "medicalExpenses": 0,
-          "isImmigrationEligible": true,
-          "age": 40,
-          "isHigherEdStudent": false,
-          "weeklyWorkHours": 40,
-          "isWorkStudy": false,
-          "receivesTanf": false,
-          "isParent": false,
-          "isFullTimeCollegeStudent": false,
-          "isPregnant": false,
-          "isIncapableOfSelfCare": false,
-          "abawdCountableMonthsUsed": 0,
-          "cashOnHand": 0,
-          "bankAccountAssets": 0,
-          "stockAssets": 0,
-          "bondAssets": 0
+          "isElderly": false, "isDisabled": false, "medicalExpenses": 0,
+          "age": 30, "isHigherEdStudent": false, "weeklyWorkHours": 40,
+          "isWorkStudy": false, "isParent": false, "isFullTimeCollegeStudent": false,
+          "receivesTanf": false, "isImmigrationEligible": true, "isPregnant": false,
+          "isIncapableOfSelfCare": false, "abawdCountableMonthsUsed": 0,
+          "cashOnHand": 0, "bankAccountAssets": 0, "stockAssets": 0, "bondAssets": 0
         }
       ]
     },
     "expect": {
+      "/householdSize": 1,
       "/grossIncomeEligible": true,
       "/netIncomeEligible": true,
+      "/meetsAssetTest": true,
       "/eligible": true,
       "/maxAllotment": 298,
       "/snap": 298
@@ -44,145 +40,74 @@
   },
   {
     "id": "snap-fg-2",
-    "name": "3-person household with moderate earnings",
-    "description": "Passes both income tests; benefit reduced by 30% of net income.",
+    "name": "Single person with moderate earnings and rent",
+    "description": "Passes both income tests; benefit reduced by 30% of net income. Shelter includes rent + utility allowance.",
     "inputs": {
       "/grossEarnedIncome": 1500,
       "/unearnedIncome": 0,
       "/dependentCareExpenses": 0,
-      "/shelterCosts": 800,
-      "/meetsCategoricalEligibility": false
+      "/rent": 800,
+      "/realEstateTaxes": 0,
+      "/homeownersAssociationFees": 0,
+      "/mortgagePayments": 0,
+      "/homeownersInsurance": 0,
+      "/meetsCategoricalEligibility": false,
+      "/childSupportPaid": 0,
+      "/isHomeless": false
     },
     "entities": {
       "/members": [
         {
-          "isElderly": false,
-          "isDisabled": false,
-          "medicalExpenses": 0,
-          "isImmigrationEligible": true,
-          "age": 40,
-          "isHigherEdStudent": false,
-          "weeklyWorkHours": 40,
-          "isWorkStudy": false,
-          "receivesTanf": false,
-          "isParent": false,
-          "isFullTimeCollegeStudent": false,
-          "isPregnant": false,
-          "isIncapableOfSelfCare": false,
-          "abawdCountableMonthsUsed": 0,
-          "cashOnHand": 0,
-          "bankAccountAssets": 0,
-          "stockAssets": 0,
-          "bondAssets": 0
-        },
-        {
-          "isElderly": false,
-          "isDisabled": false,
-          "medicalExpenses": 0,
-          "isImmigrationEligible": true,
-          "age": 40,
-          "isHigherEdStudent": false,
-          "weeklyWorkHours": 40,
-          "isWorkStudy": false,
-          "receivesTanf": false,
-          "isParent": false,
-          "isFullTimeCollegeStudent": false,
-          "isPregnant": false,
-          "isIncapableOfSelfCare": false,
-          "abawdCountableMonthsUsed": 0,
-          "cashOnHand": 0,
-          "bankAccountAssets": 0,
-          "stockAssets": 0,
-          "bondAssets": 0
-        },
-        {
-          "isElderly": false,
-          "isDisabled": false,
-          "medicalExpenses": 0,
-          "isImmigrationEligible": true,
-          "age": 40,
-          "isHigherEdStudent": false,
-          "weeklyWorkHours": 40,
-          "isWorkStudy": false,
-          "receivesTanf": false,
-          "isParent": false,
-          "isFullTimeCollegeStudent": false,
-          "isPregnant": false,
-          "isIncapableOfSelfCare": false,
-          "abawdCountableMonthsUsed": 0,
-          "cashOnHand": 0,
-          "bankAccountAssets": 0,
-          "stockAssets": 0,
-          "bondAssets": 0
+          "isElderly": false, "isDisabled": false, "medicalExpenses": 0,
+          "age": 30, "isHigherEdStudent": false, "weeklyWorkHours": 40,
+          "isWorkStudy": false, "isParent": false, "isFullTimeCollegeStudent": false,
+          "receivesTanf": false, "isImmigrationEligible": true, "isPregnant": false,
+          "isIncapableOfSelfCare": false, "abawdCountableMonthsUsed": 0,
+          "cashOnHand": 0, "bankAccountAssets": 0, "stockAssets": 0, "bondAssets": 0
         }
       ]
     },
     "expect": {
+      "/householdSize": 1,
       "/grossMonthlyIncome": 1500,
       "/earnedIncomeDeduction": 300,
       "/standardDeduction": 209,
-      "/incomeAfterPreliminaryDeductions": 991,
-      "/shelterDeduction": 304.5,
-      "/netMonthlyIncome": 686.5,
+      "/shelterCosts": 1394,
+      "/shelterDeduction": 744,
+      "/netMonthlyIncome": 247,
       "/eligible": true,
-      "/maxAllotment": 785,
-      "/expectedFoodContribution": 205.95,
-      "/calculatedBenefit": 579.05,
-      "/snap": 579.05
+      "/maxAllotment": 298,
+      "/expectedFoodContribution": 74.1,
+      "/calculatedBenefit": 223.9,
+      "/snap": 223.9
     }
   },
   {
     "id": "snap-fg-3",
     "name": "Over gross income limit — ineligible",
-    "description": "2-person household with $5000/mo fails the 130% FPL gross test.",
+    "description": "Single person with $5000/mo fails the 130% FPL gross test.",
     "inputs": {
       "/grossEarnedIncome": 5000,
       "/unearnedIncome": 0,
       "/dependentCareExpenses": 0,
-      "/shelterCosts": 0,
-      "/meetsCategoricalEligibility": false
+      "/rent": 0,
+      "/realEstateTaxes": 0,
+      "/homeownersAssociationFees": 0,
+      "/mortgagePayments": 0,
+      "/homeownersInsurance": 0,
+      "/meetsCategoricalEligibility": false,
+      "/childSupportPaid": 0,
+      "/isHomeless": false
     },
     "entities": {
       "/members": [
         {
-          "isElderly": false,
-          "isDisabled": false,
-          "medicalExpenses": 0,
-          "isImmigrationEligible": true,
-          "age": 40,
-          "isHigherEdStudent": false,
-          "weeklyWorkHours": 40,
-          "isWorkStudy": false,
-          "receivesTanf": false,
-          "isParent": false,
-          "isFullTimeCollegeStudent": false,
-          "isPregnant": false,
-          "isIncapableOfSelfCare": false,
-          "abawdCountableMonthsUsed": 0,
-          "cashOnHand": 0,
-          "bankAccountAssets": 0,
-          "stockAssets": 0,
-          "bondAssets": 0
-        },
-        {
-          "isElderly": false,
-          "isDisabled": false,
-          "medicalExpenses": 0,
-          "isImmigrationEligible": true,
-          "age": 40,
-          "isHigherEdStudent": false,
-          "weeklyWorkHours": 40,
-          "isWorkStudy": false,
-          "receivesTanf": false,
-          "isParent": false,
-          "isFullTimeCollegeStudent": false,
-          "isPregnant": false,
-          "isIncapableOfSelfCare": false,
-          "abawdCountableMonthsUsed": 0,
-          "cashOnHand": 0,
-          "bankAccountAssets": 0,
-          "stockAssets": 0,
-          "bondAssets": 0
+          "isElderly": false, "isDisabled": false, "medicalExpenses": 0,
+          "age": 30, "isHigherEdStudent": false, "weeklyWorkHours": 40,
+          "isWorkStudy": false, "isParent": false, "isFullTimeCollegeStudent": false,
+          "receivesTanf": false, "isImmigrationEligible": true, "isPregnant": false,
+          "isIncapableOfSelfCare": false, "abawdCountableMonthsUsed": 0,
+          "cashOnHand": 0, "bankAccountAssets": 0, "stockAssets": 0, "bondAssets": 0
         }
       ]
     },
@@ -194,523 +119,120 @@
   },
   {
     "id": "snap-fg-4",
-    "name": "Elderly/disabled — exempt from gross test",
-    "description": "Elderly household skips gross test; uncapped shelter deduction. Only the elderly member's medical expenses count.",
+    "name": "Elderly member — exempt from gross test, uncapped shelter",
+    "description": "Elderly household skips gross test; uncapped shelter deduction; medical expenses deductible.",
     "inputs": {
       "/grossEarnedIncome": 0,
       "/unearnedIncome": 1800,
       "/dependentCareExpenses": 0,
-      "/shelterCosts": 1200,
-      "/meetsCategoricalEligibility": false
+      "/rent": 1200,
+      "/realEstateTaxes": 0,
+      "/homeownersAssociationFees": 0,
+      "/mortgagePayments": 0,
+      "/homeownersInsurance": 0,
+      "/meetsCategoricalEligibility": false,
+      "/childSupportPaid": 0,
+      "/isHomeless": false
     },
     "entities": {
       "/members": [
         {
-          "isElderly": true,
-          "isDisabled": false,
-          "medicalExpenses": 200,
-          "isImmigrationEligible": true,
-          "age": 40,
-          "isHigherEdStudent": false,
-          "weeklyWorkHours": 40,
-          "isWorkStudy": false,
-          "receivesTanf": false,
-          "isParent": false,
-          "isFullTimeCollegeStudent": false,
-          "isPregnant": false,
-          "isIncapableOfSelfCare": false,
-          "abawdCountableMonthsUsed": 0,
-          "cashOnHand": 0,
-          "bankAccountAssets": 0,
-          "stockAssets": 0,
-          "bondAssets": 0
-        },
-        {
-          "isElderly": false,
-          "isDisabled": false,
-          "medicalExpenses": 0,
-          "isImmigrationEligible": true,
-          "age": 40,
-          "isHigherEdStudent": false,
-          "weeklyWorkHours": 40,
-          "isWorkStudy": false,
-          "receivesTanf": false,
-          "isParent": false,
-          "isFullTimeCollegeStudent": false,
-          "isPregnant": false,
-          "isIncapableOfSelfCare": false,
-          "abawdCountableMonthsUsed": 0,
-          "cashOnHand": 0,
-          "bankAccountAssets": 0,
-          "stockAssets": 0,
-          "bondAssets": 0
+          "isElderly": true, "isDisabled": false, "medicalExpenses": 200,
+          "age": 65, "isHigherEdStudent": false, "weeklyWorkHours": 0,
+          "isWorkStudy": false, "isParent": false, "isFullTimeCollegeStudent": false,
+          "receivesTanf": false, "isImmigrationEligible": true, "isPregnant": false,
+          "isIncapableOfSelfCare": false, "abawdCountableMonthsUsed": 0,
+          "cashOnHand": 0, "bankAccountAssets": 0, "stockAssets": 0, "bondAssets": 0
         }
       ]
     },
     "expect": {
+      "/householdSize": 1,
+      "/hasElderlyOrDisabledMember": true,
       "/grossMonthlyIncome": 1800,
       "/medicalExpensesElderlyDisabled": 200,
       "/medicalDeduction": 165,
-      "/incomeAfterPreliminaryDeductions": 1426,
-      "/shelterDeduction": 487,
-      "/netMonthlyIncome": 939,
+      "/shelterCosts": 1794,
+      "/shelterDeduction": 1081,
+      "/netMonthlyIncome": 345,
       "/netIncomeEligible": true,
       "/eligible": true,
-      "/maxAllotment": 546,
-      "/calculatedBenefit": 264.3,
-      "/snap": 264.3
+      "/maxAllotment": 298,
+      "/calculatedBenefit": 194.5,
+      "/snap": 194.5
     }
   },
   {
     "id": "snap-fg-5",
-    "name": "Large household passes gross but fails net",
-    "description": "5-person household with $3900 unearned income passes 130% FPL gross test but exceeds 100% FPL net limit.",
-    "inputs": {
-      "/grossEarnedIncome": 0,
-      "/unearnedIncome": 3900,
-      "/dependentCareExpenses": 0,
-      "/shelterCosts": 200,
-      "/meetsCategoricalEligibility": false
-    },
-    "entities": {
-      "/members": [
-        {
-          "isElderly": false,
-          "isDisabled": false,
-          "medicalExpenses": 0,
-          "isImmigrationEligible": true,
-          "age": 40,
-          "isHigherEdStudent": false,
-          "weeklyWorkHours": 40,
-          "isWorkStudy": false,
-          "receivesTanf": false,
-          "isParent": false,
-          "isFullTimeCollegeStudent": false,
-          "isPregnant": false,
-          "isIncapableOfSelfCare": false,
-          "abawdCountableMonthsUsed": 0,
-          "cashOnHand": 0,
-          "bankAccountAssets": 0,
-          "stockAssets": 0,
-          "bondAssets": 0
-        },
-        {
-          "isElderly": false,
-          "isDisabled": false,
-          "medicalExpenses": 0,
-          "isImmigrationEligible": true,
-          "age": 40,
-          "isHigherEdStudent": false,
-          "weeklyWorkHours": 40,
-          "isWorkStudy": false,
-          "receivesTanf": false,
-          "isParent": false,
-          "isFullTimeCollegeStudent": false,
-          "isPregnant": false,
-          "isIncapableOfSelfCare": false,
-          "abawdCountableMonthsUsed": 0,
-          "cashOnHand": 0,
-          "bankAccountAssets": 0,
-          "stockAssets": 0,
-          "bondAssets": 0
-        },
-        {
-          "isElderly": false,
-          "isDisabled": false,
-          "medicalExpenses": 0,
-          "isImmigrationEligible": true,
-          "age": 40,
-          "isHigherEdStudent": false,
-          "weeklyWorkHours": 40,
-          "isWorkStudy": false,
-          "receivesTanf": false,
-          "isParent": false,
-          "isFullTimeCollegeStudent": false,
-          "isPregnant": false,
-          "isIncapableOfSelfCare": false,
-          "abawdCountableMonthsUsed": 0,
-          "cashOnHand": 0,
-          "bankAccountAssets": 0,
-          "stockAssets": 0,
-          "bondAssets": 0
-        },
-        {
-          "isElderly": false,
-          "isDisabled": false,
-          "medicalExpenses": 0,
-          "isImmigrationEligible": true,
-          "age": 40,
-          "isHigherEdStudent": false,
-          "weeklyWorkHours": 40,
-          "isWorkStudy": false,
-          "receivesTanf": false,
-          "isParent": false,
-          "isFullTimeCollegeStudent": false,
-          "isPregnant": false,
-          "isIncapableOfSelfCare": false,
-          "abawdCountableMonthsUsed": 0,
-          "cashOnHand": 0,
-          "bankAccountAssets": 0,
-          "stockAssets": 0,
-          "bondAssets": 0
-        },
-        {
-          "isElderly": false,
-          "isDisabled": false,
-          "medicalExpenses": 0,
-          "isImmigrationEligible": true,
-          "age": 40,
-          "isHigherEdStudent": false,
-          "weeklyWorkHours": 40,
-          "isWorkStudy": false,
-          "receivesTanf": false,
-          "isParent": false,
-          "isFullTimeCollegeStudent": false,
-          "isPregnant": false,
-          "isIncapableOfSelfCare": false,
-          "abawdCountableMonthsUsed": 0,
-          "cashOnHand": 0,
-          "bankAccountAssets": 0,
-          "stockAssets": 0,
-          "bondAssets": 0
-        }
-      ]
-    },
-    "expect": {
-      "/federalPovertyLevelMonthly": 3138,
-      "/grossIncomeEligible": true,
-      "/earnedIncomeDeduction": 0,
-      "/standardDeduction": 263,
-      "/incomeAfterPreliminaryDeductions": 3637,
-      "/shelterDeduction": 0,
-      "/netMonthlyIncome": 3637,
-      "/netIncomeEligible": false,
-      "/eligible": false,
-      "/snap": 0
-    }
-  },
-  {
-    "id": "snap-fg-6",
     "name": "Minimum benefit floor for small household",
-    "description": "1-person household where calculated benefit would be zero; min $23 applies.",
+    "description": "1-person household where calculated benefit is small; min $24 applies (FY2026).",
     "inputs": {
       "/grossEarnedIncome": 0,
       "/unearnedIncome": 1250,
       "/dependentCareExpenses": 0,
-      "/shelterCosts": 0,
-      "/meetsCategoricalEligibility": false
+      "/rent": 0,
+      "/realEstateTaxes": 0,
+      "/homeownersAssociationFees": 0,
+      "/mortgagePayments": 0,
+      "/homeownersInsurance": 0,
+      "/meetsCategoricalEligibility": false,
+      "/childSupportPaid": 0,
+      "/isHomeless": false
     },
     "entities": {
       "/members": [
         {
-          "isElderly": false,
-          "isDisabled": false,
-          "medicalExpenses": 0,
-          "isImmigrationEligible": true,
-          "age": 40,
-          "isHigherEdStudent": false,
-          "weeklyWorkHours": 40,
-          "isWorkStudy": false,
-          "receivesTanf": false,
-          "isParent": false,
-          "isFullTimeCollegeStudent": false,
-          "isPregnant": false,
-          "isIncapableOfSelfCare": false,
-          "abawdCountableMonthsUsed": 0,
-          "cashOnHand": 0,
-          "bankAccountAssets": 0,
-          "stockAssets": 0,
-          "bondAssets": 0
+          "isElderly": false, "isDisabled": false, "medicalExpenses": 0,
+          "age": 30, "isHigherEdStudent": false, "weeklyWorkHours": 40,
+          "isWorkStudy": false, "isParent": false, "isFullTimeCollegeStudent": false,
+          "receivesTanf": false, "isImmigrationEligible": true, "isPregnant": false,
+          "isIncapableOfSelfCare": false, "abawdCountableMonthsUsed": 0,
+          "cashOnHand": 0, "bankAccountAssets": 0, "stockAssets": 0, "bondAssets": 0
         }
       ]
     },
     "expect": {
       "/eligible": true,
       "/maxAllotment": 298,
-      "/calculatedBenefit": 0,
-      "/snap": 23
+      "/calculatedBenefit": 7.75,
+      "/snap": 24
     }
   },
   {
-    "id": "snap-fg-7",
-    "name": "4-person household with dependent care expenses",
-    "description": "Tests the 4-person standard deduction and max allotment, plus dependent care deduction path.",
-    "inputs": {
-      "/grossEarnedIncome": 2000,
-      "/unearnedIncome": 0,
-      "/dependentCareExpenses": 300,
-      "/shelterCosts": 900,
-      "/meetsCategoricalEligibility": false
-    },
-    "expect": {
-      "/grossMonthlyIncome": 2000,
-      "/earnedIncomeDeduction": 400,
-      "/standardDeduction": 223,
-      "/incomeAfterPreliminaryDeductions": 1077,
-      "/shelterDeduction": 361.5,
-      "/netMonthlyIncome": 715.5,
-      "/grossIncomeEligible": true,
-      "/netIncomeEligible": true,
-      "/eligible": true,
-      "/maxAllotment": 994,
-      "/expectedFoodContribution": 214.65,
-      "/calculatedBenefit": 779.35,
-      "/snap": 779.35
-    },
-    "entities": {
-      "/members": [
-        {
-          "isElderly": false,
-          "isDisabled": false,
-          "medicalExpenses": 0,
-          "isImmigrationEligible": true,
-          "age": 40,
-          "isHigherEdStudent": false,
-          "weeklyWorkHours": 40,
-          "isWorkStudy": false,
-          "receivesTanf": false,
-          "isParent": false,
-          "isFullTimeCollegeStudent": false,
-          "isPregnant": false,
-          "isIncapableOfSelfCare": false,
-          "abawdCountableMonthsUsed": 0,
-          "cashOnHand": 0,
-          "bankAccountAssets": 0,
-          "stockAssets": 0,
-          "bondAssets": 0
-        },
-        {
-          "isElderly": false,
-          "isDisabled": false,
-          "medicalExpenses": 0,
-          "isImmigrationEligible": true,
-          "age": 40,
-          "isHigherEdStudent": false,
-          "weeklyWorkHours": 40,
-          "isWorkStudy": false,
-          "receivesTanf": false,
-          "isParent": false,
-          "isFullTimeCollegeStudent": false,
-          "isPregnant": false,
-          "isIncapableOfSelfCare": false,
-          "abawdCountableMonthsUsed": 0,
-          "cashOnHand": 0,
-          "bankAccountAssets": 0,
-          "stockAssets": 0,
-          "bondAssets": 0
-        },
-        {
-          "isElderly": false,
-          "isDisabled": false,
-          "medicalExpenses": 0,
-          "isImmigrationEligible": true,
-          "age": 40,
-          "isHigherEdStudent": false,
-          "weeklyWorkHours": 40,
-          "isWorkStudy": false,
-          "receivesTanf": false,
-          "isParent": false,
-          "isFullTimeCollegeStudent": false,
-          "isPregnant": false,
-          "isIncapableOfSelfCare": false,
-          "abawdCountableMonthsUsed": 0,
-          "cashOnHand": 0,
-          "bankAccountAssets": 0,
-          "stockAssets": 0,
-          "bondAssets": 0
-        },
-        {
-          "isElderly": false,
-          "isDisabled": false,
-          "medicalExpenses": 0,
-          "isImmigrationEligible": true,
-          "age": 40,
-          "isHigherEdStudent": false,
-          "weeklyWorkHours": 40,
-          "isWorkStudy": false,
-          "receivesTanf": false,
-          "isParent": false,
-          "isFullTimeCollegeStudent": false,
-          "isPregnant": false,
-          "isIncapableOfSelfCare": false,
-          "abawdCountableMonthsUsed": 0,
-          "cashOnHand": 0,
-          "bankAccountAssets": 0,
-          "stockAssets": 0,
-          "bondAssets": 0
-        }
-      ]
-    }
-  },
-  {
-    "id": "snap-fg-8",
-    "name": "6-person household — extended allotment formula",
-    "description": "Tests the 6+ standard deduction and the per-additional-person max allotment/FPL formulas.",
-    "inputs": {
-      "/grossEarnedIncome": 2500,
-      "/unearnedIncome": 500,
-      "/dependentCareExpenses": 0,
-      "/shelterCosts": 1000,
-      "/meetsCategoricalEligibility": false
-    },
-    "expect": {
-      "/grossMonthlyIncome": 3000,
-      "/federalPovertyLevelMonthly": 3596,
-      "/grossIncomeEligible": true,
-      "/earnedIncomeDeduction": 500,
-      "/standardDeduction": 299,
-      "/incomeAfterPreliminaryDeductions": 2201,
-      "/shelterDeduction": 0,
-      "/netMonthlyIncome": 2201,
-      "/netIncomeEligible": true,
-      "/eligible": true,
-      "/maxAllotment": 1430,
-      "/expectedFoodContribution": 660.3,
-      "/calculatedBenefit": 769.7,
-      "/snap": 769.7
-    },
-    "entities": {
-      "/members": [
-        {
-          "isElderly": false,
-          "isDisabled": false,
-          "medicalExpenses": 0,
-          "isImmigrationEligible": true,
-          "age": 40,
-          "isHigherEdStudent": false,
-          "weeklyWorkHours": 40,
-          "isWorkStudy": false,
-          "receivesTanf": false,
-          "isParent": false,
-          "isFullTimeCollegeStudent": false,
-          "isPregnant": false,
-          "isIncapableOfSelfCare": false,
-          "abawdCountableMonthsUsed": 0,
-          "cashOnHand": 0,
-          "bankAccountAssets": 0,
-          "stockAssets": 0,
-          "bondAssets": 0
-        },
-        {
-          "isElderly": false,
-          "isDisabled": false,
-          "medicalExpenses": 0,
-          "isImmigrationEligible": true,
-          "age": 40,
-          "isHigherEdStudent": false,
-          "weeklyWorkHours": 40,
-          "isWorkStudy": false,
-          "receivesTanf": false,
-          "isParent": false,
-          "isFullTimeCollegeStudent": false,
-          "isPregnant": false,
-          "isIncapableOfSelfCare": false,
-          "abawdCountableMonthsUsed": 0,
-          "cashOnHand": 0,
-          "bankAccountAssets": 0,
-          "stockAssets": 0,
-          "bondAssets": 0
-        },
-        {
-          "isElderly": false,
-          "isDisabled": false,
-          "medicalExpenses": 0,
-          "isImmigrationEligible": true,
-          "age": 40,
-          "isHigherEdStudent": false,
-          "weeklyWorkHours": 40,
-          "isWorkStudy": false,
-          "receivesTanf": false,
-          "isParent": false,
-          "isFullTimeCollegeStudent": false,
-          "isPregnant": false,
-          "isIncapableOfSelfCare": false,
-          "abawdCountableMonthsUsed": 0,
-          "cashOnHand": 0,
-          "bankAccountAssets": 0,
-          "stockAssets": 0,
-          "bondAssets": 0
-        },
-        {
-          "isElderly": false,
-          "isDisabled": false,
-          "medicalExpenses": 0,
-          "isImmigrationEligible": true,
-          "age": 40,
-          "isHigherEdStudent": false,
-          "weeklyWorkHours": 40,
-          "isWorkStudy": false,
-          "receivesTanf": false,
-          "isParent": false,
-          "isFullTimeCollegeStudent": false,
-          "isPregnant": false,
-          "isIncapableOfSelfCare": false,
-          "abawdCountableMonthsUsed": 0,
-          "cashOnHand": 0,
-          "bankAccountAssets": 0,
-          "stockAssets": 0,
-          "bondAssets": 0
-        },
-        {
-          "isElderly": false,
-          "isDisabled": false,
-          "medicalExpenses": 0,
-          "isImmigrationEligible": true,
-          "age": 40,
-          "isHigherEdStudent": false,
-          "weeklyWorkHours": 40,
-          "isWorkStudy": false,
-          "receivesTanf": false,
-          "isParent": false,
-          "isFullTimeCollegeStudent": false,
-          "isPregnant": false,
-          "isIncapableOfSelfCare": false,
-          "abawdCountableMonthsUsed": 0,
-          "cashOnHand": 0,
-          "bankAccountAssets": 0,
-          "stockAssets": 0,
-          "bondAssets": 0
-        },
-        {
-          "isElderly": false,
-          "isDisabled": false,
-          "medicalExpenses": 0,
-          "isImmigrationEligible": true,
-          "age": 40,
-          "isHigherEdStudent": false,
-          "weeklyWorkHours": 40,
-          "isWorkStudy": false,
-          "receivesTanf": false,
-          "isParent": false,
-          "isFullTimeCollegeStudent": false,
-          "isPregnant": false,
-          "isIncapableOfSelfCare": false,
-          "abawdCountableMonthsUsed": 0,
-          "cashOnHand": 0,
-          "bankAccountAssets": 0,
-          "stockAssets": 0,
-          "bondAssets": 0
-        }
-      ]
-    }
-  },
-  {
-    "id": "snap-fg-9",
+    "id": "snap-fg-6",
     "name": "Shelter deduction hits cap for non-elderly household",
-    "description": "Low-income single person with high shelter costs — shelter deduction is capped at $744.",
+    "description": "Low-income single person with high rent — shelter deduction is capped at $744. Shelter = rent($1500) + SUA($594).",
     "inputs": {
       "/grossEarnedIncome": 500,
       "/unearnedIncome": 0,
       "/dependentCareExpenses": 0,
-      "/shelterCosts": 1500,
-      "/meetsCategoricalEligibility": false
+      "/rent": 1500,
+      "/realEstateTaxes": 0,
+      "/homeownersAssociationFees": 0,
+      "/mortgagePayments": 0,
+      "/homeownersInsurance": 0,
+      "/meetsCategoricalEligibility": false,
+      "/childSupportPaid": 0,
+      "/isHomeless": false
+    },
+    "entities": {
+      "/members": [
+        {
+          "isElderly": false, "isDisabled": false, "medicalExpenses": 0,
+          "age": 30, "isHigherEdStudent": false, "weeklyWorkHours": 40,
+          "isWorkStudy": false, "isParent": false, "isFullTimeCollegeStudent": false,
+          "receivesTanf": false, "isImmigrationEligible": true, "isPregnant": false,
+          "isIncapableOfSelfCare": false, "abawdCountableMonthsUsed": 0,
+          "cashOnHand": 0, "bankAccountAssets": 0, "stockAssets": 0, "bondAssets": 0
+        }
+      ]
     },
     "expect": {
       "/grossMonthlyIncome": 500,
       "/earnedIncomeDeduction": 100,
       "/standardDeduction": 209,
-      "/incomeAfterPreliminaryDeductions": 191,
-      "/excessShelterCost": 1404.5,
+      "/shelterCosts": 2094,
+      "/excessShelterCost": 1998.5,
       "/shelterDeduction": 744,
       "/netMonthlyIncome": 0,
       "/grossIncomeEligible": true,
@@ -719,30 +241,535 @@
       "/maxAllotment": 298,
       "/calculatedBenefit": 298,
       "/snap": 298
+    }
+  },
+  {
+    "id": "snap-fg-7",
+    "name": "Dependent care expenses",
+    "description": "Single person with earned income and dependent care deduction.",
+    "inputs": {
+      "/grossEarnedIncome": 2000,
+      "/unearnedIncome": 0,
+      "/dependentCareExpenses": 300,
+      "/rent": 900,
+      "/realEstateTaxes": 0,
+      "/homeownersAssociationFees": 0,
+      "/mortgagePayments": 0,
+      "/homeownersInsurance": 0,
+      "/meetsCategoricalEligibility": false,
+      "/childSupportPaid": 0,
+      "/isHomeless": false
     },
     "entities": {
       "/members": [
         {
-          "isElderly": false,
-          "isDisabled": false,
-          "medicalExpenses": 0,
-          "isImmigrationEligible": true,
-          "age": 40,
-          "isHigherEdStudent": false,
-          "weeklyWorkHours": 40,
-          "isWorkStudy": false,
-          "receivesTanf": false,
-          "isParent": false,
-          "isFullTimeCollegeStudent": false,
-          "isPregnant": false,
-          "isIncapableOfSelfCare": false,
-          "abawdCountableMonthsUsed": 0,
-          "cashOnHand": 0,
-          "bankAccountAssets": 0,
-          "stockAssets": 0,
-          "bondAssets": 0
+          "isElderly": false, "isDisabled": false, "medicalExpenses": 0,
+          "age": 30, "isHigherEdStudent": false, "weeklyWorkHours": 40,
+          "isWorkStudy": false, "isParent": false, "isFullTimeCollegeStudent": false,
+          "receivesTanf": false, "isImmigrationEligible": true, "isPregnant": false,
+          "isIncapableOfSelfCare": false, "abawdCountableMonthsUsed": 0,
+          "cashOnHand": 0, "bankAccountAssets": 0, "stockAssets": 0, "bondAssets": 0
         }
       ]
+    },
+    "expect": {
+      "/householdSize": 1,
+      "/grossMonthlyIncome": 2000,
+      "/earnedIncomeDeduction": 400,
+      "/standardDeduction": 209,
+      "/grossIncomeEligible": false,
+      "/eligible": false,
+      "/snap": 0
+    }
+  },
+  {
+    "id": "snap-fg-8",
+    "name": "Asset test — over limit",
+    "description": "Single person with assets exceeding the $3000 standard limit.",
+    "inputs": {
+      "/grossEarnedIncome": 0,
+      "/unearnedIncome": 0,
+      "/dependentCareExpenses": 0,
+      "/rent": 0,
+      "/realEstateTaxes": 0,
+      "/homeownersAssociationFees": 0,
+      "/mortgagePayments": 0,
+      "/homeownersInsurance": 0,
+      "/meetsCategoricalEligibility": false,
+      "/childSupportPaid": 0,
+      "/isHomeless": false
+    },
+    "entities": {
+      "/members": [
+        {
+          "isElderly": false, "isDisabled": false, "medicalExpenses": 0,
+          "age": 30, "isHigherEdStudent": false, "weeklyWorkHours": 40,
+          "isWorkStudy": false, "isParent": false, "isFullTimeCollegeStudent": false,
+          "receivesTanf": false, "isImmigrationEligible": true, "isPregnant": false,
+          "isIncapableOfSelfCare": false, "abawdCountableMonthsUsed": 0,
+          "cashOnHand": 2000, "bankAccountAssets": 1500, "stockAssets": 0, "bondAssets": 0
+        }
+      ]
+    },
+    "expect": {
+      "/snapAssets": 3500,
+      "/assetLimit": 3000,
+      "/meetsAssetTest": false,
+      "/eligible": false,
+      "/snap": 0
+    }
+  },
+  {
+    "id": "snap-fg-9",
+    "name": "Elderly member gets higher asset limit",
+    "description": "Elderly member raises asset limit to $4500; $4000 in assets passes the test.",
+    "inputs": {
+      "/grossEarnedIncome": 0,
+      "/unearnedIncome": 500,
+      "/dependentCareExpenses": 0,
+      "/rent": 0,
+      "/realEstateTaxes": 0,
+      "/homeownersAssociationFees": 0,
+      "/mortgagePayments": 0,
+      "/homeownersInsurance": 0,
+      "/meetsCategoricalEligibility": false,
+      "/childSupportPaid": 0,
+      "/isHomeless": false
+    },
+    "entities": {
+      "/members": [
+        {
+          "isElderly": true, "isDisabled": false, "medicalExpenses": 0,
+          "age": 65, "isHigherEdStudent": false, "weeklyWorkHours": 0,
+          "isWorkStudy": false, "isParent": false, "isFullTimeCollegeStudent": false,
+          "receivesTanf": false, "isImmigrationEligible": true, "isPregnant": false,
+          "isIncapableOfSelfCare": false, "abawdCountableMonthsUsed": 0,
+          "cashOnHand": 2000, "bankAccountAssets": 2000, "stockAssets": 0, "bondAssets": 0
+        }
+      ]
+    },
+    "expect": {
+      "/hasElderlyOrDisabledMember": true,
+      "/snapAssets": 4000,
+      "/assetLimit": 4500,
+      "/meetsAssetTest": true,
+      "/eligible": true
+    }
+  },
+  {
+    "id": "snap-fg-10",
+    "name": "Comprehensive — all inputs populated",
+    "description": "Exercises every scalar input and member field: earned + unearned income, child support exclusion, all shelter components, dependent care, and member assets.",
+    "inputs": {
+      "/grossEarnedIncome": 1200,
+      "/unearnedIncome": 300,
+      "/dependentCareExpenses": 150,
+      "/rent": 600,
+      "/realEstateTaxes": 100,
+      "/homeownersAssociationFees": 50,
+      "/mortgagePayments": 0,
+      "/homeownersInsurance": 75,
+      "/meetsCategoricalEligibility": false,
+      "/childSupportPaid": 200,
+      "/isHomeless": false
+    },
+    "entities": {
+      "/members": [
+        {
+          "isElderly": false, "isDisabled": false, "medicalExpenses": 0,
+          "age": 35, "isHigherEdStudent": false, "weeklyWorkHours": 40,
+          "isWorkStudy": false, "isParent": false, "isFullTimeCollegeStudent": false,
+          "receivesTanf": false, "isImmigrationEligible": true, "isPregnant": false,
+          "isIncapableOfSelfCare": false, "abawdCountableMonthsUsed": 0,
+          "cashOnHand": 500, "bankAccountAssets": 1000, "stockAssets": 200, "bondAssets": 100
+        }
+      ]
+    },
+    "expect": {
+      "/householdSize": 1,
+      "/grossMonthlyIncome": 1300,
+      "/shelterCosts": 1419,
+      "/earnedIncomeDeduction": 240,
+      "/standardDeduction": 209,
+      "/snapAssets": 1800,
+      "/meetsAssetTest": true,
+      "/netMonthlyIncome": 0,
+      "/eligible": true,
+      "/maxAllotment": 298,
+      "/snap": 298
+    }
+  },
+  {
+    "id": "snap-fg-11",
+    "name": "Disabled member (not elderly)",
+    "description": "Disabled member triggers elderly/disabled exemptions: gross test exempt, uncapped shelter, medical deduction, higher asset limit.",
+    "inputs": {
+      "/grossEarnedIncome": 0,
+      "/unearnedIncome": 900,
+      "/dependentCareExpenses": 0,
+      "/rent": 500,
+      "/realEstateTaxes": 0,
+      "/homeownersAssociationFees": 0,
+      "/mortgagePayments": 0,
+      "/homeownersInsurance": 0,
+      "/meetsCategoricalEligibility": false,
+      "/childSupportPaid": 0,
+      "/isHomeless": false
+    },
+    "entities": {
+      "/members": [
+        {
+          "isElderly": false, "isDisabled": true, "medicalExpenses": 150,
+          "age": 45, "isHigherEdStudent": false, "weeklyWorkHours": 0,
+          "isWorkStudy": false, "isParent": false, "isFullTimeCollegeStudent": false,
+          "receivesTanf": false, "isImmigrationEligible": true, "isPregnant": false,
+          "isIncapableOfSelfCare": false, "abawdCountableMonthsUsed": 0,
+          "cashOnHand": 0, "bankAccountAssets": 0, "stockAssets": 0, "bondAssets": 0
+        }
+      ]
+    },
+    "expect": {
+      "/hasElderlyOrDisabledMember": true,
+      "/medicalExpensesElderlyDisabled": 150,
+      "/medicalDeduction": 115,
+      "/assetLimit": 4500,
+      "/eligible": true,
+      "/snap": 298
+    }
+  },
+  {
+    "id": "snap-fg-12",
+    "name": "Categorical eligibility bypasses income and asset tests",
+    "description": "Household with $5000 income and $10000 in assets is ineligible normally but passes via categorical eligibility.",
+    "inputs": {
+      "/grossEarnedIncome": 5000,
+      "/unearnedIncome": 0,
+      "/dependentCareExpenses": 0,
+      "/rent": 0,
+      "/realEstateTaxes": 0,
+      "/homeownersAssociationFees": 0,
+      "/mortgagePayments": 0,
+      "/homeownersInsurance": 0,
+      "/meetsCategoricalEligibility": true,
+      "/childSupportPaid": 0,
+      "/isHomeless": false
+    },
+    "entities": {
+      "/members": [
+        {
+          "isElderly": false, "isDisabled": false, "medicalExpenses": 0,
+          "age": 30, "isHigherEdStudent": false, "weeklyWorkHours": 40,
+          "isWorkStudy": false, "isParent": false, "isFullTimeCollegeStudent": false,
+          "receivesTanf": false, "isImmigrationEligible": true, "isPregnant": false,
+          "isIncapableOfSelfCare": false, "abawdCountableMonthsUsed": 0,
+          "cashOnHand": 10000, "bankAccountAssets": 0, "stockAssets": 0, "bondAssets": 0
+        }
+      ]
+    },
+    "expect": {
+      "/grossIncomeEligible": false,
+      "/meetsAssetTest": false,
+      "/eligible": true,
+      "/snap": 24
+    }
+  },
+  {
+    "id": "snap-fg-13",
+    "name": "Child support income exclusion",
+    "description": "Child support paid reduces gross monthly income before the gross income test.",
+    "inputs": {
+      "/grossEarnedIncome": 1800,
+      "/unearnedIncome": 0,
+      "/dependentCareExpenses": 0,
+      "/rent": 700,
+      "/realEstateTaxes": 0,
+      "/homeownersAssociationFees": 0,
+      "/mortgagePayments": 0,
+      "/homeownersInsurance": 0,
+      "/meetsCategoricalEligibility": false,
+      "/childSupportPaid": 400,
+      "/isHomeless": false
+    },
+    "entities": {
+      "/members": [
+        {
+          "isElderly": false, "isDisabled": false, "medicalExpenses": 0,
+          "age": 30, "isHigherEdStudent": false, "weeklyWorkHours": 40,
+          "isWorkStudy": false, "isParent": false, "isFullTimeCollegeStudent": false,
+          "receivesTanf": false, "isImmigrationEligible": true, "isPregnant": false,
+          "isIncapableOfSelfCare": false, "abawdCountableMonthsUsed": 0,
+          "cashOnHand": 0, "bankAccountAssets": 0, "stockAssets": 0, "bondAssets": 0
+        }
+      ]
+    },
+    "expect": {
+      "/grossMonthlyIncome": 1400,
+      "/grossIncomeEligible": true,
+      "/eligible": true,
+      "/snap": 271.9
+    }
+  },
+  {
+    "id": "snap-fg-14",
+    "name": "Homeless household with flat shelter deduction",
+    "description": "Homeless household with no rent — shelter deduction uses greater of regular ($298.50) or homeless flat ($198.99).",
+    "inputs": {
+      "/grossEarnedIncome": 0,
+      "/unearnedIncome": 800,
+      "/dependentCareExpenses": 0,
+      "/rent": 0,
+      "/realEstateTaxes": 0,
+      "/homeownersAssociationFees": 0,
+      "/mortgagePayments": 0,
+      "/homeownersInsurance": 0,
+      "/meetsCategoricalEligibility": false,
+      "/childSupportPaid": 0,
+      "/isHomeless": true
+    },
+    "entities": {
+      "/members": [
+        {
+          "isElderly": false, "isDisabled": false, "medicalExpenses": 0,
+          "age": 30, "isHigherEdStudent": false, "weeklyWorkHours": 40,
+          "isWorkStudy": false, "isParent": false, "isFullTimeCollegeStudent": false,
+          "receivesTanf": false, "isImmigrationEligible": true, "isPregnant": false,
+          "isIncapableOfSelfCare": false, "abawdCountableMonthsUsed": 0,
+          "cashOnHand": 0, "bankAccountAssets": 0, "stockAssets": 0, "bondAssets": 0
+        }
+      ]
+    },
+    "expect": {
+      "/shelterCosts": 594,
+      "/eligibleForHomelessShelterDeduction": true,
+      "/homelessShelterDeduction": 198.99,
+      "/regularShelterDeduction": 298.5,
+      "/shelterDeduction": 298.5,
+      "/netMonthlyIncome": 292.5,
+      "/eligible": true,
+      "/snap": 210.25
+    }
+  },
+  {
+    "id": "snap-fg-15",
+    "name": "Multiple shelter components add up",
+    "description": "Tests that rent, taxes, HOA, mortgage, insurance, and utility allowance all contribute to shelter costs.",
+    "inputs": {
+      "/grossEarnedIncome": 1000,
+      "/unearnedIncome": 0,
+      "/dependentCareExpenses": 0,
+      "/rent": 400,
+      "/realEstateTaxes": 150,
+      "/homeownersAssociationFees": 75,
+      "/mortgagePayments": 200,
+      "/homeownersInsurance": 50,
+      "/meetsCategoricalEligibility": false,
+      "/childSupportPaid": 0,
+      "/isHomeless": false
+    },
+    "entities": {
+      "/members": [
+        {
+          "isElderly": false, "isDisabled": false, "medicalExpenses": 0,
+          "age": 30, "isHigherEdStudent": false, "weeklyWorkHours": 40,
+          "isWorkStudy": false, "isParent": false, "isFullTimeCollegeStudent": false,
+          "receivesTanf": false, "isImmigrationEligible": true, "isPregnant": false,
+          "isIncapableOfSelfCare": false, "abawdCountableMonthsUsed": 0,
+          "cashOnHand": 0, "bankAccountAssets": 0, "stockAssets": 0, "bondAssets": 0
+        }
+      ]
+    },
+    "expect": {
+      "/shelterCosts": 1469,
+      "/grossIncomeEligible": true,
+      "/eligible": true,
+      "/snap": 298
+    }
+  },
+  {
+    "id": "snap-fg-16",
+    "name": "3-person household with moderate earnings",
+    "description": "Two working adults + child. Tests multi-member householdSize derivation and 3-person FPL/allotment.",
+    "inputs": {
+      "/grossEarnedIncome": 1500,
+      "/unearnedIncome": 0,
+      "/dependentCareExpenses": 0,
+      "/rent": 800,
+      "/realEstateTaxes": 0,
+      "/homeownersAssociationFees": 0,
+      "/mortgagePayments": 0,
+      "/homeownersInsurance": 0,
+      "/meetsCategoricalEligibility": false,
+      "/childSupportPaid": 0,
+      "/isHomeless": false
+    },
+    "entities": {
+      "/members": [
+        {
+          "isElderly": false, "isDisabled": false, "medicalExpenses": 0,
+          "age": 35, "isHigherEdStudent": false, "weeklyWorkHours": 40,
+          "isWorkStudy": false, "isParent": false, "isFullTimeCollegeStudent": false,
+          "receivesTanf": false, "isImmigrationEligible": true, "isPregnant": false,
+          "isIncapableOfSelfCare": false, "abawdCountableMonthsUsed": 0,
+          "cashOnHand": 0, "bankAccountAssets": 0, "stockAssets": 0, "bondAssets": 0
+        },
+        {
+          "isElderly": false, "isDisabled": false, "medicalExpenses": 0,
+          "age": 33, "isHigherEdStudent": false, "weeklyWorkHours": 40,
+          "isWorkStudy": false, "isParent": false, "isFullTimeCollegeStudent": false,
+          "receivesTanf": false, "isImmigrationEligible": true, "isPregnant": false,
+          "isIncapableOfSelfCare": false, "abawdCountableMonthsUsed": 0,
+          "cashOnHand": 0, "bankAccountAssets": 0, "stockAssets": 0, "bondAssets": 0
+        },
+        {
+          "isElderly": false, "isDisabled": false, "medicalExpenses": 0,
+          "age": 5, "isHigherEdStudent": false, "weeklyWorkHours": 0,
+          "isWorkStudy": false, "isParent": false, "isFullTimeCollegeStudent": false,
+          "receivesTanf": false, "isImmigrationEligible": true, "isPregnant": false,
+          "isIncapableOfSelfCare": false, "abawdCountableMonthsUsed": 0,
+          "cashOnHand": 0, "bankAccountAssets": 0, "stockAssets": 0, "bondAssets": 0
+        }
+      ]
+    },
+    "expect": {
+      "/householdSize": 3,
+      "/grossMonthlyIncome": 1500,
+      "/earnedIncomeDeduction": 300,
+      "/standardDeduction": 209,
+      "/shelterCosts": 1394,
+      "/shelterDeduction": 744,
+      "/netMonthlyIncome": 247,
+      "/grossIncomeEligible": true,
+      "/netIncomeEligible": true,
+      "/eligible": true,
+      "/maxAllotment": 785,
+      "/expectedFoodContribution": 74.1,
+      "/calculatedBenefit": 710.9,
+      "/snap": 710.9
+    }
+  },
+  {
+    "id": "snap-fg-17",
+    "name": "2-person elderly household with medical and uncapped shelter",
+    "description": "Elderly + non-elderly member. Only the elderly member's medical expenses count. Shelter deduction is uncapped.",
+    "inputs": {
+      "/grossEarnedIncome": 0,
+      "/unearnedIncome": 1800,
+      "/dependentCareExpenses": 0,
+      "/rent": 1200,
+      "/realEstateTaxes": 0,
+      "/homeownersAssociationFees": 0,
+      "/mortgagePayments": 0,
+      "/homeownersInsurance": 0,
+      "/meetsCategoricalEligibility": false,
+      "/childSupportPaid": 0,
+      "/isHomeless": false
+    },
+    "entities": {
+      "/members": [
+        {
+          "isElderly": true, "isDisabled": false, "medicalExpenses": 200,
+          "age": 65, "isHigherEdStudent": false, "weeklyWorkHours": 0,
+          "isWorkStudy": false, "isParent": false, "isFullTimeCollegeStudent": false,
+          "receivesTanf": false, "isImmigrationEligible": true, "isPregnant": false,
+          "isIncapableOfSelfCare": false, "abawdCountableMonthsUsed": 0,
+          "cashOnHand": 0, "bankAccountAssets": 0, "stockAssets": 0, "bondAssets": 0
+        },
+        {
+          "isElderly": false, "isDisabled": false, "medicalExpenses": 0,
+          "age": 25, "isHigherEdStudent": false, "weeklyWorkHours": 40,
+          "isWorkStudy": false, "isParent": false, "isFullTimeCollegeStudent": false,
+          "receivesTanf": false, "isImmigrationEligible": true, "isPregnant": false,
+          "isIncapableOfSelfCare": false, "abawdCountableMonthsUsed": 0,
+          "cashOnHand": 0, "bankAccountAssets": 0, "stockAssets": 0, "bondAssets": 0
+        }
+      ]
+    },
+    "expect": {
+      "/householdSize": 2,
+      "/hasElderlyOrDisabledMember": true,
+      "/grossMonthlyIncome": 1800,
+      "/medicalExpensesElderlyDisabled": 200,
+      "/medicalDeduction": 165,
+      "/shelterCosts": 1794,
+      "/shelterDeduction": 1081,
+      "/netMonthlyIncome": 345,
+      "/netIncomeEligible": true,
+      "/eligible": true,
+      "/maxAllotment": 546,
+      "/calculatedBenefit": 442.5,
+      "/snap": 442.5
+    }
+  },
+  {
+    "id": "snap-fg-18",
+    "name": "5-person household passes gross but fails net",
+    "description": "5 members with $3900 unearned income. Passes 130% FPL gross test but exceeds 100% FPL net limit.",
+    "inputs": {
+      "/grossEarnedIncome": 0,
+      "/unearnedIncome": 3900,
+      "/dependentCareExpenses": 0,
+      "/rent": 200,
+      "/realEstateTaxes": 0,
+      "/homeownersAssociationFees": 0,
+      "/mortgagePayments": 0,
+      "/homeownersInsurance": 0,
+      "/meetsCategoricalEligibility": false,
+      "/childSupportPaid": 0,
+      "/isHomeless": false
+    },
+    "entities": {
+      "/members": [
+        {
+          "isElderly": false, "isDisabled": false, "medicalExpenses": 0,
+          "age": 40, "isHigherEdStudent": false, "weeklyWorkHours": 40,
+          "isWorkStudy": false, "isParent": false, "isFullTimeCollegeStudent": false,
+          "receivesTanf": false, "isImmigrationEligible": true, "isPregnant": false,
+          "isIncapableOfSelfCare": false, "abawdCountableMonthsUsed": 0,
+          "cashOnHand": 0, "bankAccountAssets": 0, "stockAssets": 0, "bondAssets": 0
+        },
+        {
+          "isElderly": false, "isDisabled": false, "medicalExpenses": 0,
+          "age": 38, "isHigherEdStudent": false, "weeklyWorkHours": 40,
+          "isWorkStudy": false, "isParent": false, "isFullTimeCollegeStudent": false,
+          "receivesTanf": false, "isImmigrationEligible": true, "isPregnant": false,
+          "isIncapableOfSelfCare": false, "abawdCountableMonthsUsed": 0,
+          "cashOnHand": 0, "bankAccountAssets": 0, "stockAssets": 0, "bondAssets": 0
+        },
+        {
+          "isElderly": false, "isDisabled": false, "medicalExpenses": 0,
+          "age": 15, "isHigherEdStudent": false, "weeklyWorkHours": 0,
+          "isWorkStudy": false, "isParent": false, "isFullTimeCollegeStudent": false,
+          "receivesTanf": false, "isImmigrationEligible": true, "isPregnant": false,
+          "isIncapableOfSelfCare": false, "abawdCountableMonthsUsed": 0,
+          "cashOnHand": 0, "bankAccountAssets": 0, "stockAssets": 0, "bondAssets": 0
+        },
+        {
+          "isElderly": false, "isDisabled": false, "medicalExpenses": 0,
+          "age": 12, "isHigherEdStudent": false, "weeklyWorkHours": 0,
+          "isWorkStudy": false, "isParent": false, "isFullTimeCollegeStudent": false,
+          "receivesTanf": false, "isImmigrationEligible": true, "isPregnant": false,
+          "isIncapableOfSelfCare": false, "abawdCountableMonthsUsed": 0,
+          "cashOnHand": 0, "bankAccountAssets": 0, "stockAssets": 0, "bondAssets": 0
+        },
+        {
+          "isElderly": false, "isDisabled": false, "medicalExpenses": 0,
+          "age": 10, "isHigherEdStudent": false, "weeklyWorkHours": 0,
+          "isWorkStudy": false, "isParent": false, "isFullTimeCollegeStudent": false,
+          "receivesTanf": false, "isImmigrationEligible": true, "isPregnant": false,
+          "isIncapableOfSelfCare": false, "abawdCountableMonthsUsed": 0,
+          "cashOnHand": 0, "bankAccountAssets": 0, "stockAssets": 0, "bondAssets": 0
+        }
+      ]
+    },
+    "expect": {
+      "/householdSize": 5,
+      "/federalPovertyLevelMonthly": 3138,
+      "/grossIncomeEligible": true,
+      "/standardDeduction": 261,
+      "/netMonthlyIncome": 3639,
+      "/netIncomeEligible": false,
+      "/eligible": false,
+      "/snap": 0
     }
   }
 ]

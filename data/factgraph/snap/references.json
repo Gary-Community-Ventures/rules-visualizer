@@ -110,6 +110,46 @@
         }
       ],
       "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1776966757297",
+      "documentId": "10-ccr-2506-1",
+      "label": "Skipped",
+      "text": "persons aged sixty (60) and older, or for Supplemental Security Income (SSI) recipients, and their\nspouses. This also includes federally subsidized housing for persons aged sixty (60) and older at which\nmeals are prepared for and served to the residents. It also includes private establishments that contract\nwith an appropriate state or local agency to offer meals at concessional prices to persons aged sixty (60)\nand older or SSI recipients, and their spouse",
+      "page": 3,
+      "rects": [
+        {
+          "x": 0.10773343373493977,
+          "y": 0.38374186802973975,
+          "w": 0.7258090761483434,
+          "h": 0.01486988847583643
+        },
+        {
+          "x": 0.10773343373493977,
+          "y": 0.39826324349442377,
+          "w": 0.7654710443335844,
+          "h": 0.01486988847583643
+        },
+        {
+          "x": 0.10773343373493977,
+          "y": 0.41284270446096655,
+          "w": 0.7667038074171687,
+          "h": 0.01486988847583643
+        },
+        {
+          "x": 0.10773343373493977,
+          "y": 0.4273931226765799,
+          "w": 0.7756672980986447,
+          "h": 0.01486988847583643
+        },
+        {
+          "x": 0.10773343373493977,
+          "y": 0.44179832713754646,
+          "w": 0.34274537603539157,
+          "h": 0.01486988847583643
+        }
+      ],
+      "status": "skipped"
     }
   ],
   "mappings": [
@@ -232,10 +272,6 @@
     {
       "nodePath": "/medicalDeductionThreshold",
       "sectionId": "10-ccr-2506-1__4.407.6"
-    },
-    {
-      "nodePath": "/snap",
-      "sectionId": "10-ccr-2506-1__4.207.3"
     },
     {
       "nodePath": "/calculatedBenefit",
