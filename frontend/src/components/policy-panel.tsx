@@ -32,6 +32,12 @@ pdfjs.GlobalWorkerOptions.workerSrc = new URL(
 
 const API_BASE = import.meta.env.VITE_API_URL ?? ''
 
+// Module-level stores — survive component remounts from refreshModel()
+let _savedPage = 1
+let _savedScale = 1.0
+let _savedScrollTop = 0
+let _savedDocId: string | null = null
+
 /**
  * Capture the current browser selection's bounding rects,
  * normalized to 0-1 coordinates relative to the page container.
@@ -110,16 +116,20 @@ function captureSelectionRects(pageEl: HTMLElement | null): NormalizedRect[] {
 export function PolicyPanel() {
   const {
     model,
+    refreshModel,
     policyTargetPage,
     policyFocusSectionIds: activeSectionId,
+    policyTargetDocId,
     clearPolicyTarget,
     setOpenNode,
+    policyLinkNodePath,
+    clearPolicyLinkNode,
   } = useMainContext()
   const [refs, setRefs] = useState<PolicyReferences | null>(null)
   const [selectedDoc, setSelectedDoc] = useState<PolicyDocument | null>(null)
   const [numPages, setNumPages] = useState<number>(0)
   const [pageNumber, setPageNumber] = useState(1)
-  const [scale, setScale] = useState(1.0)
+  const [scale, setScaleRaw] = useState(_savedScale)
   const [error, setError] = useState<string | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const pageRef = useRef<HTMLDivElement>(null)
@@ -151,6 +161,22 @@ export function PolicyPanel() {
   const [nodeSearch, setNodeSearch] = useState('')
   const [saving, setSaving] = useState(false)
 
+  // Stable setters — write to module-level vars so state survives remounts
+  const setStableDoc = useCallback((doc: PolicyDocument) => {
+    _savedDocId = doc.id
+    setSelectedDoc(doc)
+  }, [])
+
+  const setStableScale = useCallback((s: number) => {
+    _savedScale = s
+    setScaleRaw(s)
+  }, [])
+
+  const setStablePage = useCallback((page: number) => {
+    _savedPage = page
+    setPageNumber(page)
+  }, [])
+
   // Build node path list for the picker
   const allNodes: { path: string; name: string; label?: string }[] = []
   for (const node of Object.values(model.nodes)) {
@@ -172,16 +198,30 @@ export function PolicyPanel() {
       )
     : allNodes
 
+  // If there's a pending navigation target, save the doc ID immediately
+  // so loadRefs picks it up on first mount
+  if (policyTargetDocId) {
+    _savedDocId = policyTargetDocId
+  }
+
   // Load references manifest
   const loadRefs = useCallback(() => {
     getReferences(model.id)
       .then((r) => {
         setRefs(r)
-        const fileDoc = r.documents.find((d) => d.file)
-        if (fileDoc && !selectedDoc) setSelectedDoc(fileDoc)
+        // Restore saved document (may have been set by pending navigation)
+        const targetId = _savedDocId
+        const saved = targetId
+          ? r.documents.find((d) => d.id === targetId)
+          : null
+        const fileDoc = saved ?? r.documents.find((d) => d.file)
+        if (fileDoc) {
+          _savedDocId = fileDoc.id
+          setSelectedDoc(fileDoc)
+        }
       })
       .catch(() => setRefs(null))
-  }, [model.id, selectedDoc])
+  }, [model.id])
 
   useEffect(() => {
     loadRefs()
@@ -190,14 +230,41 @@ export function PolicyPanel() {
   // Navigate to target page when opened from a node reference
   useEffect(() => {
     if (policyTargetPage && policyTargetPage > 0) {
-      setPageNumber(policyTargetPage)
-      // activeSectionId is repurposed to pass section ID from node link
+      // Switch to the correct document if specified
+      if (policyTargetDocId && refs) {
+        const targetDoc = refs.documents.find(
+          (d) => d.id === policyTargetDocId
+        )
+        if (targetDoc) setStableDoc(targetDoc)
+      }
+      setStablePage(policyTargetPage)
       if (activeSectionId && activeSectionId.length > 0) {
         setFocusedSectionId(activeSectionId[0])
       }
       clearPolicyTarget()
     }
-  }, [policyTargetPage, activeSectionId, clearPolicyTarget])
+  }, [
+    policyTargetPage,
+    activeSectionId,
+    policyTargetDocId,
+    refs,
+    clearPolicyTarget,
+    setStableDoc,
+    setStablePage,
+  ])
+
+  // Save scroll position on scroll, restore on mount
+  useEffect(() => {
+    const container = containerRef.current
+    if (!container) return
+    // Restore saved scroll position
+    container.scrollTop = _savedScrollTop
+    const handleScroll = () => {
+      _savedScrollTop = container.scrollTop
+    }
+    container.addEventListener('scroll', handleScroll, { passive: true })
+    return () => container.removeEventListener('scroll', handleScroll)
+  }, [])
 
   // Track container width for responsive PDF sizing
   useEffect(() => {
@@ -252,34 +319,42 @@ export function PolicyPanel() {
         setSelectedText(text)
         setCapturedRects(captureSelectionRects(pageRef.current))
         setClickedSectionId(null)
-      } else if (isClick && pageRef.current) {
-        // Click without selection — check if we hit an overlay rect
-        const pageRect = pageRef.current.getBoundingClientRect()
-        const nx = (e.clientX - pageRect.left) / pageRect.width
-        const ny = (e.clientY - pageRect.top) / pageRect.height
-
-        let hitSection: string | null = null
-        for (const section of currentPageSections) {
-          for (const rect of section.rects ?? []) {
-            if (
-              nx >= rect.x &&
-              nx <= rect.x + rect.w &&
-              ny >= rect.y &&
-              ny <= rect.y + rect.h
-            ) {
-              hitSection = section.id
-              break
-            }
-          }
-          if (hitSection) break
+      } else {
+        // No meaningful selection — clear the selection bar
+        if (!showLinkForm) {
+          setSelectedText('')
+          setCapturedRects([])
         }
 
-        if (hitSection) {
-          setClickedSectionId((prev) =>
-            prev === hitSection ? null : hitSection
-          )
-        } else {
-          setClickedSectionId(null)
+        // Click without selection — check if we hit an overlay rect
+        if (isClick && pageRef.current) {
+          const pageRect = pageRef.current.getBoundingClientRect()
+          const nx = (e.clientX - pageRect.left) / pageRect.width
+          const ny = (e.clientY - pageRect.top) / pageRect.height
+
+          let hitSection: string | null = null
+          for (const section of currentPageSections) {
+            for (const rect of section.rects ?? []) {
+              if (
+                nx >= rect.x &&
+                nx <= rect.x + rect.w &&
+                ny >= rect.y &&
+                ny <= rect.y + rect.h
+              ) {
+                hitSection = section.id
+                break
+              }
+            }
+            if (hitSection) break
+          }
+
+          if (hitSection) {
+            setClickedSectionId((prev) =>
+              prev === hitSection ? null : hitSection
+            )
+          } else {
+            setClickedSectionId(null)
+          }
         }
       }
 
@@ -294,16 +369,18 @@ export function PolicyPanel() {
     }
   }, [currentPageSections])
 
-  const hasLoadedRef = useRef(false)
   const onDocumentLoadSuccess = useCallback((pdf: { numPages: number }) => {
     setNumPages(pdf.numPages)
-    // Only reset to page 1 on first load, not on re-renders
-    if (!hasLoadedRef.current) {
-      setPageNumber(1)
-      hasLoadedRef.current = true
-    }
+    // Restore the page from module-level store (survives component remounts)
+    setPageNumber(_savedPage)
     setError(null)
     pdfDocRef.current = pdf as unknown as pdfjs.PDFDocumentProxy
+    // Restore scroll position after PDF renders
+    requestAnimationFrame(() => {
+      if (containerRef.current) {
+        containerRef.current.scrollTop = _savedScrollTop
+      }
+    })
   }, [])
 
   const onDocumentLoadError = useCallback((err: Error) => {
@@ -342,7 +419,7 @@ export function PolicyPanel() {
     setSearchIndex(0)
     setSearchHighlight(query.trim())
     if (matches.length > 0) {
-      setPageNumber(matches[0])
+      setStablePage(matches[0])
     }
     setIsSearching(false)
   }, [])
@@ -350,7 +427,7 @@ export function PolicyPanel() {
   const startLinking = () => {
     setShowLinkForm(true)
     setSectionLabel('')
-    setSelectedNodePaths([])
+    setSelectedNodePaths(policyLinkNodePath ? [policyLinkNodePath] : [])
     setNodeSearch('')
   }
 
@@ -359,6 +436,7 @@ export function PolicyPanel() {
     setSelectedText('')
     setCapturedRects([])
     setSelectedNodePaths([])
+    clearPolicyLinkNode()
     window.getSelection()?.removeAllRanges()
   }
 
@@ -404,6 +482,7 @@ export function PolicyPanel() {
 
       await saveReferences(model.id, updated)
       setRefs(updated)
+      refreshModel()
       cancelLinking()
     } finally {
       setSaving(false)
@@ -432,6 +511,7 @@ export function PolicyPanel() {
       }
       await saveReferences(model.id, updated)
       setRefs(updated)
+      refreshModel()
       cancelLinking()
     } finally {
       setSaving(false)
@@ -449,6 +529,7 @@ export function PolicyPanel() {
       }
       await saveReferences(model.id, updated)
       setRefs(updated)
+      refreshModel()
       setClickedSectionId(null)
     } finally {
       setSaving(false)
@@ -474,6 +555,7 @@ export function PolicyPanel() {
       }
       await saveReferences(model.id, updated)
       setRefs(updated)
+      refreshModel()
       setAddingToSectionId(null)
       setSelectedNodePaths([])
       setNodeSearch('')
@@ -547,11 +629,16 @@ export function PolicyPanel() {
               }}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
-                  if (searchResults.length > 0) {
+                  if (
+                    searchResults.length > 0 &&
+                    searchHighlight === searchQuery
+                  ) {
+                    // Same query — cycle through results
                     const nextIdx = (searchIndex + 1) % searchResults.length
                     setSearchIndex(nextIdx)
-                    setPageNumber(searchResults[nextIdx])
+                    setStablePage(searchResults[nextIdx])
                   } else {
+                    // New query — run fresh search
                     runSearch(searchQuery)
                   }
                 }
@@ -586,9 +673,8 @@ export function PolicyPanel() {
               onChange={(e) => {
                 const doc = fileDocuments.find((d) => d.id === e.target.value)
                 if (doc) {
-                  setSelectedDoc(doc)
-                  setPageNumber(1)
-                  hasLoadedRef.current = false
+                  setStableDoc(doc)
+                  setStablePage(1)
                 }
               }}
             >
@@ -610,7 +696,7 @@ export function PolicyPanel() {
               variant="outline"
               size="icon"
               className="size-6"
-              onClick={() => setPageNumber((p) => Math.max(1, p - 1))}
+              onClick={() => setStablePage(Math.max(1, pageNumber - 1))}
               disabled={pageNumber <= 1}
             >
               <ChevronLeft className="size-3" />
@@ -622,7 +708,7 @@ export function PolicyPanel() {
               variant="outline"
               size="icon"
               className="size-6"
-              onClick={() => setPageNumber((p) => Math.min(numPages, p + 1))}
+              onClick={() => setStablePage(Math.min(numPages, pageNumber + 1))}
               disabled={pageNumber >= numPages}
             >
               <ChevronRight className="size-3" />
@@ -633,7 +719,7 @@ export function PolicyPanel() {
               variant="outline"
               size="icon"
               className="size-6"
-              onClick={() => setScale((s) => Math.max(0.5, s - 0.15))}
+              onClick={() => setStableScale(Math.max(0.5, scale - 0.15))}
               disabled={scale <= 0.5}
             >
               <ZoomOut className="size-3" />
@@ -645,11 +731,31 @@ export function PolicyPanel() {
               variant="outline"
               size="icon"
               className="size-6"
-              onClick={() => setScale((s) => Math.min(3, s + 0.15))}
+              onClick={() => setStableScale(Math.min(3, scale + 0.15))}
               disabled={scale >= 3}
             >
               <ZoomIn className="size-3" />
             </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Linking mode banner — shown when opened from a node's "+" button */}
+      {policyLinkNodePath && !showLinkForm && (
+        <div className="px-4 py-2 border-b bg-violet-50 shrink-0">
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-xs text-violet-800">
+              Select text to link to{' '}
+              <span className="font-mono font-semibold">
+                {policyLinkNodePath}
+              </span>
+            </p>
+            <button
+              className="p-0.5 text-violet-600 hover:text-violet-800"
+              onClick={clearPolicyLinkNode}
+            >
+              <X className="size-3" />
+            </button>
           </div>
         </div>
       )}
@@ -883,7 +989,7 @@ export function PolicyPanel() {
                           height: `${rect.h * 100}%`,
                           background: bg,
                           border,
-                          zIndex: 10,
+                          zIndex: 1,
                         }}
                       />
                     ))}
@@ -1062,7 +1168,7 @@ export function PolicyPanel() {
                       height: `${rect.h * 100}%`,
                       background: 'rgba(34, 197, 94, 0.3)',
                       border: '1px solid rgba(34, 197, 94, 0.6)',
-                      zIndex: 15,
+                      zIndex: 1,
                     }}
                   />
                 ))}

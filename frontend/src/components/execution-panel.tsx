@@ -193,9 +193,28 @@ export function ExecutionPanel() {
       }
     }
 
+    // Include entity data (collections)
+    const entities: Record<string, Record<string, unknown>[]> = {}
+    for (const [collName, rows] of Object.entries(entityData)) {
+      if (rows.length === 0) continue
+      entities[collName] = rows.map((row) => {
+        const parsed: Record<string, unknown> = {}
+        for (const [k, v] of Object.entries(row)) {
+          if (v === '') continue
+          try {
+            parsed[k] = JSON.parse(v)
+          } catch {
+            parsed[k] = v
+          }
+        }
+        return parsed
+      })
+    }
+
     const json: Record<string, unknown> = {}
     if (Object.keys(inputs).length > 0) json.inputs = inputs
     if (Object.keys(overrides).length > 0) json.overrides = overrides
+    if (Object.keys(entities).length > 0) json.entities = entities
 
     setJsonText(JSON.stringify(json, null, 2))
     setSection('json', true)
@@ -231,6 +250,26 @@ export function ExecutionPanel() {
             nodeId,
             typeof value === 'string' ? value : JSON.stringify(value)
           )
+        }
+      }
+
+      // Import entity data (collections)
+      if (parsed.entities && typeof parsed.entities === 'object') {
+        const imported: Record<string, Record<string, string>[]> = {}
+        for (const [collName, rows] of Object.entries(
+          parsed.entities as Record<string, Record<string, unknown>[]>
+        )) {
+          if (!Array.isArray(rows)) continue
+          imported[collName] = rows.map((row) => {
+            const stringRow: Record<string, string> = {}
+            for (const [k, v] of Object.entries(row)) {
+              stringRow[k] = typeof v === 'string' ? v : JSON.stringify(v)
+            }
+            return stringRow
+          })
+        }
+        if (Object.keys(imported).length > 0) {
+          setEntityData((prev) => ({ ...prev, ...imported }))
         }
       }
     } catch {
@@ -352,6 +391,8 @@ export function ExecutionPanel() {
                       }
                       onBlur={runOnBlur}
                       results={executionResults}
+                      sectionState={sectionState}
+                      setSection={setSection}
                     />
                   )
                 })}
@@ -488,6 +529,9 @@ export function ExecutionPanel() {
                       }
                       onBlur={runOnBlur}
                       results={executionResults}
+                      sectionState={sectionState}
+                      setSection={setSection}
+                      sectionKey={`entity-override:${collectionName}`}
                     />
                   )
                 })}
@@ -665,6 +709,11 @@ type EntityEditorProps = {
    *  their currently-computed values so promoting the fact to writable
    *  doesn't leave unset members Incomplete. */
   results?: Record<string, { value: unknown }> | null
+  sectionState: Record<string, boolean>
+  setSection: (key: string, open: boolean) => void
+  /** Override the section key so two editors for the same collection
+   *  (e.g. inputs + overrides) don't share collapse state. */
+  sectionKey?: string
 }
 
 export function EntityEditor({
@@ -674,7 +723,21 @@ export function EntityEditor({
   onChange,
   onBlur,
   results,
+  sectionState,
+  setSection,
+  sectionKey: sectionKeyOverride,
 }: EntityEditorProps) {
+  const sectionKey = sectionKeyOverride ?? `entity:${entityName}`
+  const collapsed = sectionState[sectionKey] === false // default open
+
+  const isRowCollapsed = (idx: number) =>
+    sectionState[`${sectionKey}/${idx}`] === false // default open
+
+  const toggleRow = (idx: number) => {
+    const key = `${sectionKey}/${idx}`
+    setSection(key, sectionState[key] === false)
+  }
+
   const addRow = () => {
     const newRow: Record<string, string> = {}
     for (const field of fields) {
@@ -724,101 +787,147 @@ export function EntityEditor({
 
   return (
     <div className="border-t pt-3 mt-3">
-      <div className="text-xs font-semibold text-muted-foreground mb-2 flex items-center gap-1.5">
+      <button
+        className="text-xs font-semibold text-muted-foreground mb-2 flex items-center gap-1.5 w-full"
+        onClick={() => setSection(sectionKey, collapsed)}
+      >
+        {collapsed ? (
+          <ChevronRight className="size-3" />
+        ) : (
+          <ChevronDown className="size-3" />
+        )}
         <Users className="size-3" />
         {displayName}
         {rows.length > 0 && (
           <span className="font-normal text-blue-600">{rows.length}</span>
         )}
-      </div>
-      <div className="space-y-3">
-        {rows.map((row, rowIdx) => (
-          <div
-            key={rowIdx}
-            className="border rounded-md p-2 space-y-1.5 bg-blue-50/30"
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-medium text-muted-foreground">
-                #{rowIdx + 1}
-              </span>
-              <button
-                className="text-muted-foreground hover:text-foreground"
-                onClick={() => removeRow(rowIdx)}
-              >
-                <Trash2 className="size-2.5" />
-              </button>
-            </div>
-            {fields.map((field) => {
-              const hasValue = !!row[field.path]
-              const isOverride = field.isOverride === true
-              const resultArr = results?.[field.path]?.value
-              const memberResult = Array.isArray(resultArr)
-                ? resultArr[rowIdx]
-                : undefined
-              const computedPlaceholder =
-                isOverride &&
-                !hasValue &&
-                memberResult !== undefined &&
-                memberResult !== null
-                  ? formatValue(memberResult)
-                  : undefined
+      </button>
+      {!collapsed && (
+        <>
+          <div className="space-y-2">
+            {rows.map((row, rowIdx) => {
+              const rowCollapsed = isRowCollapsed(rowIdx)
+              const filledCount = fields.filter(
+                (f) => row[f.path] && row[f.path] !== ''
+              ).length
               return (
-                <div key={field.path} className="flex items-center gap-2">
-                  <span
-                    className="text-[11px] text-muted-foreground w-24 shrink-0 truncate"
-                    title={field.path}
+                <div key={rowIdx} className="border rounded-md bg-blue-50/30">
+                  <div
+                    className="flex items-center justify-between px-2 py-1.5 cursor-pointer"
+                    onClick={() => toggleRow(rowIdx)}
                   >
-                    {field.fieldName}
-                    {field.typeHint && (
-                      <span className="ml-0.5 opacity-60">
-                        ({field.typeHint})
+                    <div className="flex items-center gap-1.5">
+                      {rowCollapsed ? (
+                        <ChevronRight className="size-2.5 text-muted-foreground" />
+                      ) : (
+                        <ChevronDown className="size-2.5 text-muted-foreground" />
+                      )}
+                      <span className="text-[11px] font-medium text-muted-foreground">
+                        #{rowIdx + 1}
                       </span>
-                    )}
-                  </span>
-                  <Input
-                    className={cn(
-                      'h-6 text-xs font-mono flex-1',
-                      hasValue &&
-                        (isOverride
-                          ? 'border-yellow-400 ring-1 ring-yellow-400'
-                          : 'border-blue-400 ring-1 ring-blue-400')
-                    )}
-                    placeholder={
-                      computedPlaceholder ??
-                      field.default ??
-                      field.typeHint?.toLowerCase() ??
-                      (isOverride ? 'override' : 'value')
-                    }
-                    value={row[field.path] ?? ''}
-                    onChange={(e) =>
-                      updateField(rowIdx, field.path, e.target.value)
-                    }
-                    onBlur={onBlur}
-                  />
-                  {hasValue && isOverride && (
+                      {rowCollapsed && filledCount > 0 && (
+                        <span className="text-[10px] text-blue-600">
+                          {filledCount} field{filledCount !== 1 ? 's' : ''} set
+                        </span>
+                      )}
+                    </div>
                     <button
                       className="text-muted-foreground hover:text-foreground"
-                      title="Clear override"
-                      onClick={() => clearField(rowIdx, field.path)}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        removeRow(rowIdx)
+                      }}
                     >
-                      <Trash2 className="size-3" />
+                      <Trash2 className="size-2.5" />
                     </button>
+                  </div>
+                  {!rowCollapsed && (
+                    <div className="px-2 pb-2 space-y-1.5">
+                      {fields.map((field) => {
+                        const hasValue = !!row[field.path]
+                        const isOverride = field.isOverride === true
+                        const resultArr = results?.[field.path]?.value
+                        const memberResult = Array.isArray(resultArr)
+                          ? resultArr[rowIdx]
+                          : undefined
+                        const computedPlaceholder =
+                          isOverride &&
+                          !hasValue &&
+                          memberResult !== undefined &&
+                          memberResult !== null
+                            ? formatValue(memberResult)
+                            : undefined
+                        return (
+                          <div
+                            key={field.path}
+                            className="flex items-center gap-2"
+                          >
+                            <span
+                              className="text-[11px] text-muted-foreground w-24 shrink-0 truncate"
+                              title={field.path}
+                            >
+                              {field.fieldName}
+                              {field.typeHint && (
+                                <span className="ml-0.5 opacity-60">
+                                  ({field.typeHint})
+                                </span>
+                              )}
+                            </span>
+                            <Input
+                              className={cn(
+                                'h-6 text-xs font-mono flex-1',
+                                hasValue &&
+                                  (isOverride
+                                    ? 'border-yellow-400 ring-1 ring-yellow-400'
+                                    : 'border-blue-400 ring-1 ring-blue-400')
+                              )}
+                              placeholder={
+                                computedPlaceholder ??
+                                field.default ??
+                                field.typeHint?.toLowerCase() ??
+                                (isOverride ? 'override' : 'value')
+                              }
+                              value={row[field.path] ?? ''}
+                              onChange={(e) =>
+                                updateField(
+                                  rowIdx,
+                                  field.path,
+                                  e.target.value
+                                )
+                              }
+                              onBlur={onBlur}
+                            />
+                            {hasValue && isOverride && (
+                              <button
+                                className="text-muted-foreground hover:text-foreground"
+                                title="Clear override"
+                                onClick={() =>
+                                  clearField(rowIdx, field.path)
+                                }
+                              >
+                                <Trash2 className="size-3" />
+                              </button>
+                            )}
+                          </div>
+                        )
+                      })}
+                    </div>
                   )}
                 </div>
               )
             })}
           </div>
-        ))}
-      </div>
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={addRow}
-        className="mt-2 h-7 text-xs gap-1.5 w-full"
-      >
-        <Plus className="size-3" />
-        Add {displayName}
-      </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={addRow}
+            className="mt-2 h-7 text-xs gap-1.5 w-full"
+          >
+            <Plus className="size-3" />
+            Add {displayName}
+          </Button>
+        </>
+      )}
     </div>
   )
 }
