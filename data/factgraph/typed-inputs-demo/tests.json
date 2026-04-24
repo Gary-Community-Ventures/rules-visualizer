@@ -1,0 +1,48 @@
+[
+  {
+    "id": "typed-inputs-1",
+    "name": "Each scalar type filled in",
+    "description": "Exercises the household-level typed inputs: Dollar, Int, Boolean, Day, String, Rational, Enum.",
+    "inputs": {
+      "/amount": 1234.56,
+      "/count": 3,
+      "/flag": true,
+      "/eventDate": "2026-04-24",
+      "/note": "hello",
+      "/ratio": "1/2",
+      "/status": "approved"
+    },
+    "expect": {}
+  },
+  {
+    "id": "typed-inputs-2",
+    "name": "Two items in the collection",
+    "description": "Exercises per-member typed inputs inside a collection.",
+    "inputs": {},
+    "entities": {
+      "/items": [
+        {
+          "/items/*/label": "apple",
+          "/items/*/quantity": 4,
+          "/items/*/unitPrice": 1.25,
+          "/items/*/inStock": true,
+          "/items/*/receivedOn": "2026-04-01",
+          "/items/*/category": "food"
+        },
+        {
+          "/items/*/label": "shirt",
+          "/items/*/quantity": 2,
+          "/items/*/unitPrice": 19.99,
+          "/items/*/inStock": false,
+          "/items/*/receivedOn": "2026-03-15",
+          "/items/*/category": "clothing"
+        }
+      ]
+    },
+    "expect": {
+      "/itemCount": 2,
+      "/totalCost": 44.98,
+      "/hasInStock": true
+    }
+  }
+]

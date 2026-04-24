@@ -40,6 +40,34 @@ export function isOverridable(node: ModelNode): boolean {
   return node.overridable
 }
 
+/** Static enum options for this node, if it's a writable Enum whose
+ *  target EnumOptions fact was resolvable. */
+export function getNodeEnumOptions(node: ModelNode): string[] | undefined {
+  const c = node.content
+  if (c.type === 'entity') return undefined
+  if (c.format === 'factGraph' && c.type === 'writable') {
+    return c.enumOptions
+  }
+  return undefined
+}
+
+/** Raw fact-graph type name for this node, if available. Used to pick the
+ *  right typed input (Boolean → select, Day → date picker, etc.). */
+export function getNodeTypeName(node: ModelNode): string | undefined {
+  const c = node.content
+  if (c.type === 'entity') return undefined
+  if (c.format === 'factGraph') {
+    return c.type === 'writable' ? c.typeName : c.dataType
+  }
+  if (c.format === 'rac' && c.type === 'variable') {
+    if (c.unit === 'USD') return 'Dollar'
+    if (c.default === 'true' || c.default === 'false') return 'Boolean'
+    if (c.default && /^\d+$/.test(c.default)) return 'Int'
+    if (c.default && /^\d+\.\d+$/.test(c.default)) return 'Dollar'
+  }
+  return undefined
+}
+
 /** Get a short type hint for a node's value (e.g. "USD", "Boolean", "Integer") */
 export function getTypeHint(node: ModelNode): string | undefined {
   const c = node.content
@@ -118,6 +146,8 @@ type CollectionField = {
   fieldName: string
   default?: string
   typeHint?: string
+  typeName?: string
+  enumOptions?: string[]
   /** True when the field backs a derived/constant node — writing to it acts
    *  as a per-member override rather than a primary input. */
   isOverride?: boolean
@@ -148,6 +178,8 @@ function collectCollectionFields(
       fieldName: node.name,
       default: defaultVal,
       typeHint: getTypeHint(node),
+      typeName: getNodeTypeName(node),
+      enumOptions: getNodeEnumOptions(node),
       isOverride: !isInputNode(node),
     })
   }

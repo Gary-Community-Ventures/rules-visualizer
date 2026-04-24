@@ -11,8 +11,11 @@ import {
   getCollectionInputs,
   getCollectionOverridableFields,
   getCollectionDisplayName,
+  getNodeTypeName,
+  getNodeEnumOptions,
   getTypeHint,
 } from '@/context/model-context'
+import { TypedValueInput } from './typed-value-input'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
 import { Textarea } from './ui/textarea'
@@ -620,12 +623,6 @@ function NodeField({
   const typeHint = getTypeHint(node)
   const hasValue = value !== ''
 
-  const ringClass = hasValue
-    ? colorScheme === 'input'
-      ? 'border-blue-400 ring-1 ring-blue-400'
-      : 'border-amber-400 ring-1 ring-amber-400'
-    : ''
-
   return (
     <div className="space-y-1">
       <div className="flex items-center justify-between">
@@ -649,11 +646,14 @@ function NodeField({
           </button>
         )}
       </div>
-      <Input
-        className={cn('h-7 text-xs font-mono', ringClass)}
+      <TypedValueInput
+        typeName={getNodeTypeName(node)}
+        enumOptions={getNodeEnumOptions(node)}
+        className="h-7 text-xs"
+        isOverride={colorScheme === 'override'}
         placeholder={defaultValue ?? (required ? 'required' : 'default')}
         value={value}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={onChange}
         onBlur={onBlur}
       />
       {result !== undefined && (
@@ -689,6 +689,8 @@ type EntityField = {
   fieldName: string
   default?: string
   typeHint?: string
+  typeName?: string
+  enumOptions?: string[]
   isOverride?: boolean
 }
 
@@ -805,14 +807,11 @@ export function EntityEditor({
                       </span>
                     )}
                   </span>
-                  <Input
-                    className={cn(
-                      'h-6 text-xs font-mono flex-1',
-                      hasValue &&
-                        (isOverride
-                          ? 'border-yellow-400 ring-1 ring-yellow-400'
-                          : 'border-blue-400 ring-1 ring-blue-400')
-                    )}
+                  <TypedValueInput
+                    typeName={field.typeName}
+                    enumOptions={field.enumOptions}
+                    className="h-6 text-xs flex-1"
+                    isOverride={isOverride}
                     placeholder={
                       computedPlaceholder ??
                       field.default ??
@@ -820,15 +819,15 @@ export function EntityEditor({
                       (isOverride ? 'override' : 'value')
                     }
                     value={row[field.path] ?? ''}
-                    onChange={(e) =>
-                      updateField(rowIdx, field.path, e.target.value)
+                    onChange={(val) =>
+                      updateField(rowIdx, field.path, val)
                     }
                     onBlur={onBlur}
                   />
-                  {hasValue && isOverride && (
+                  {hasValue && (
                     <button
                       className="text-muted-foreground hover:text-foreground"
-                      title="Clear override"
+                      title={isOverride ? 'Clear override' : 'Clear value'}
                       onClick={() => clearField(rowIdx, field.path)}
                     >
                       <Trash2 className="size-3" />

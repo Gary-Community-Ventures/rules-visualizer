@@ -280,7 +280,7 @@ function inferWritableType(
   if (typeName === 'Int') return 'Int'
   if (typeName === 'String') return 'String'
   if (typeName === 'Day') return 'Day'
-  if (typeName === 'Rational') return 'Int'
+  if (typeName === 'Rational') return 'Rational'
 
   // Arithmetic operations produce Dollar by default
   const dollarOps = new Set([
@@ -663,6 +663,11 @@ function createTypedValue(
     case 'Day': {
       const result = sfg.DayFactory(String(value))
       return result.isRight ? result.right : undefined
+    }
+    case 'Rational': {
+      const match = String(value).match(/^(-?\d+)\/(-?\d+)$/)
+      if (!match) return undefined
+      return sfg.Rational(Number(match[1]), Number(match[2]))
     }
     default:
       return undefined

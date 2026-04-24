@@ -1,0 +1,178 @@
+<FactDictionaryModule>
+  <Facts>
+    <!-- ============================================================ -->
+    <!-- Typed-input demo — one writable per fact-graph data type      -->
+    <!-- so the frontend's TypedValueInput dispatch can be exercised.  -->
+    <!-- ============================================================ -->
+
+    <!-- Dollar: $ prefix, numeric step=0.01 -->
+    <Fact path="/amount">
+      <Name>Amount</Name>
+      <Description>Any Dollar value — renders as a currency field</Description>
+      <Writable><Dollar /></Writable>
+    </Fact>
+
+    <!-- Int: numeric step=1 -->
+    <Fact path="/count">
+      <Name>Count</Name>
+      <Description>Integer value — renders as a numeric field with step 1</Description>
+      <Writable><Int /></Writable>
+    </Fact>
+
+    <!-- Boolean: tri-state select (blank / true / false) -->
+    <Fact path="/flag">
+      <Name>Flag</Name>
+      <Description>Boolean value — renders as a dropdown with blank/true/false</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <!-- Day: native date picker -->
+    <Fact path="/eventDate">
+      <Name>Event date</Name>
+      <Description>Day value — renders as a native date picker (ISO YYYY-MM-DD)</Description>
+      <Writable><Day /></Writable>
+    </Fact>
+
+    <!-- String: plain text -->
+    <Fact path="/note">
+      <Name>Note</Name>
+      <Description>Free-form text — renders as a plain input</Description>
+      <Writable><String /></Writable>
+    </Fact>
+
+    <!-- Rational: plain text (format a/b) -->
+    <Fact path="/ratio">
+      <Name>Ratio</Name>
+      <Description>Rational value — plain text fallback; type a/b e.g. 1/2</Description>
+      <Writable><Rational /></Writable>
+    </Fact>
+
+    <!-- Enum: dropdown with static options from /statusOptions -->
+    <Fact path="/status">
+      <Name>Status</Name>
+      <Description>Enum with three static options — renders as a dropdown</Description>
+      <Writable><Enum optionsPath="/statusOptions" /></Writable>
+    </Fact>
+
+    <Fact path="/statusOptions">
+      <Name>Status options</Name>
+      <Description>Enum option set for /status</Description>
+      <Derived>
+        <EnumOptions>
+          <String value="pending" />
+          <String value="approved" />
+          <String value="denied" />
+        </EnumOptions>
+      </Derived>
+    </Fact>
+
+    <!-- Collection with one input per type so the EntityEditor can
+         exercise the same dispatch inside a per-member card. -->
+    <Fact path="/items">
+      <Name>Items</Name>
+      <Description>Collection to demo per-member typed inputs</Description>
+      <Writable><Collection /></Writable>
+    </Fact>
+
+    <Fact path="/items/*/label">
+      <Name>Label</Name>
+      <Description>Per-member String</Description>
+      <Writable><String /></Writable>
+    </Fact>
+
+    <Fact path="/items/*/quantity">
+      <Name>Quantity</Name>
+      <Description>Per-member Int</Description>
+      <Writable><Int /></Writable>
+    </Fact>
+
+    <Fact path="/items/*/unitPrice">
+      <Name>Unit price</Name>
+      <Description>Per-member Dollar</Description>
+      <Writable><Dollar /></Writable>
+    </Fact>
+
+    <Fact path="/items/*/inStock">
+      <Name>In stock</Name>
+      <Description>Per-member Boolean</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/items/*/receivedOn">
+      <Name>Received on</Name>
+      <Description>Per-member Day</Description>
+      <Writable><Day /></Writable>
+    </Fact>
+
+    <Fact path="/items/*/category">
+      <Name>Category</Name>
+      <Description>Per-member Enum</Description>
+      <Writable><Enum optionsPath="/itemCategoryOptions" /></Writable>
+    </Fact>
+
+    <Fact path="/itemCategoryOptions">
+      <Name>Item category options</Name>
+      <Description>Enum option set for /items/*/category</Description>
+      <Derived>
+        <EnumOptions>
+          <String value="food" />
+          <String value="clothing" />
+          <String value="housing" />
+          <String value="other" />
+        </EnumOptions>
+      </Derived>
+    </Fact>
+
+    <!-- ============================================================ -->
+    <!-- Derived: exercise typed-output inference + per-member sums.   -->
+    <!-- ============================================================ -->
+
+    <!-- Per-member: total cost for the line -->
+    <Fact path="/items/*/lineTotal">
+      <Name>Line total</Name>
+      <Description>unitPrice × quantity</Description>
+      <Derived>
+        <Multiply>
+          <Dependency path="../unitPrice" />
+          <Dependency path="../quantity" />
+        </Multiply>
+      </Derived>
+    </Fact>
+
+    <!-- Household-level totals -->
+    <Fact path="/itemCount">
+      <Name>Item count</Name>
+      <Description>Number of items in the collection</Description>
+      <Derived>
+        <CollectionSize>
+          <Dependency path="/items" />
+        </CollectionSize>
+      </Derived>
+    </Fact>
+
+    <Fact path="/totalCost">
+      <Name>Total cost</Name>
+      <Description>Sum of per-member lineTotal values</Description>
+      <Derived>
+        <CollectionSum>
+          <Dependency path="/items/*/lineTotal" />
+        </CollectionSum>
+      </Derived>
+    </Fact>
+
+    <Fact path="/hasInStock">
+      <Name>Has in-stock item</Name>
+      <Description>Whether any member is currently in stock</Description>
+      <Derived>
+        <GreaterThan>
+          <Left>
+            <Count>
+              <Dependency path="/items/*/inStock" />
+            </Count>
+          </Left>
+          <Right><Int>0</Int></Right>
+        </GreaterThan>
+      </Derived>
+    </Fact>
+  </Facts>
+</FactDictionaryModule>

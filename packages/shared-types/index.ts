@@ -97,6 +97,10 @@ export type FactGraphWritable = {
   typeName: WritableTypeName
   label?: string
   enumOptionsPath?: string
+  /** Static Enum option values (when the target fact's EnumOptions are
+   *  simple <String value="..."/> children). Unset if the options are
+   *  conditional or can't be resolved statically. */
+  enumOptions?: string[]
   limits?: Limit[]
   collectionItemPath?: string
   logic?: string // inner <Writable> or <Derived> XML

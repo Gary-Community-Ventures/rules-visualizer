@@ -9,9 +9,12 @@ import {
   getCollectionFieldKey,
   getCollectionOverridableFields,
   getCollectionDisplayName,
+  getNodeTypeName,
+  getNodeEnumOptions,
   getTypeHint,
   getNodePath,
 } from '@/context/model-context'
+import { TypedValueInput } from './typed-value-input'
 import {
   Dialog,
   DialogContent,
@@ -268,18 +271,15 @@ export function Node({ node }: NodeProps) {
             )}
             onClick={(e) => e.stopPropagation()}
           >
-            <Input
-              className={cn(
-                'h-6 w-28 text-xs font-mono text-center',
-                hasOverride
-                  ? 'border-blue-500 ring-1 ring-blue-500'
-                  : 'border-blue-400'
-              )}
+            <TypedValueInput
+              typeName={getNodeTypeName(node)}
+              enumOptions={getNodeEnumOptions(node)}
+              className="h-6 w-28 text-xs text-center"
               placeholder={
                 declaredDefault ?? typeHint?.toLowerCase() ?? 'required'
               }
               value={overrideValue}
-              onChange={(e) => setInputOverride(node.id, e.target.value)}
+              onChange={(val) => setInputOverride(node.id, val)}
               onBlur={runOnBlur}
             />
             {hasOverride && (
@@ -357,19 +357,17 @@ export function Node({ node }: NodeProps) {
             )}
             onClick={(e) => e.stopPropagation()}
           >
-            <Input
-              className={cn(
-                'h-6 w-20 text-xs font-mono text-center border-dashed',
-                hasOverride
-                  ? 'border-yellow-400 ring-1 ring-yellow-400'
-                  : 'border-muted-foreground/30'
-              )}
+            <TypedValueInput
+              typeName={getNodeTypeName(node)}
+              enumOptions={getNodeEnumOptions(node)}
+              className="h-6 w-20 text-xs text-center border-dashed"
+              isOverride
               placeholder={
                 typeHint?.toLowerCase() ??
                 (isConstantNode(node) ? 'override' : 'pin')
               }
               value={overrideValue}
-              onChange={(e) => setInputOverride(node.id, e.target.value)}
+              onChange={(val) => setInputOverride(node.id, val)}
               onBlur={runOnBlur}
             />
             {hasOverride && (
@@ -1268,17 +1266,10 @@ export function NodePanel() {
     model,
     openNode,
     setOpenNode,
-    executionResults,
-    inputOverrides,
-    setInputOverride,
-    clearInputOverride,
-    runOnBlur,
     workspaceItems,
     setWorkspaceItems,
     selectedNodes,
     setSelectedNodes,
-    entityData,
-    setEntityData,
   } = useMainContext()
   const addToFilter = useAddToFilter()
   const openNodeData = useFindNode(openNode)
@@ -1289,15 +1280,6 @@ export function NodePanel() {
 
   const inWorkspace = workspaceItems.includes(openNode)
   const inFilter = selectedNodes.includes(openNode)
-  const isInput = isInputNode(openNodeData)
-  const isConstant = isConstantNode(openNodeData)
-  const panelCollectionInfo = getCollectionInfo(openNodeData)
-  const panelIsCollection =
-    !!panelCollectionInfo || isCollectionParent(openNodeData)
-  const panelFieldPath = panelCollectionInfo
-    ? getCollectionFieldKey(openNodeData)
-    : undefined
-  const canEdit = isOverridable(openNodeData) && !panelIsCollection
 
   const config =
     NODE_TYPE_CONFIG[getNodeRole(openNodeData.content)] ?? DEFAULT_CONFIG
@@ -1497,100 +1479,9 @@ export function NodePanel() {
       <div className="flex-1 overflow-y-auto p-5">
         <NodeViewer node={openNodeData} />
 
-        {/* Full member editor (same layout as the Inputs panel) when the
-            open node is collection-scoped. */}
-        {panelIsCollection &&
-          panelCollectionInfo &&
-          !isCollectionParent(openNodeData) &&
-          (() => {
-            const collection = panelCollectionInfo.collection
-            const fields =
-              getCollectionOverridableFields(model.nodes)[collection] ?? []
-            if (fields.length === 0) return null
-            const rows = entityData[collection] ?? []
-            return (
-              <div className="mt-6">
-                <EntityEditor
-                  entityName={collection}
-                  fields={fields}
-                  rows={rows}
-                  onChange={(newRows) =>
-                    setEntityData((prev) => ({
-                      ...prev,
-                      [collection]: newRows,
-                    }))
-                  }
-                  onBlur={runOnBlur}
-                  results={executionResults}
-                />
-              </div>
-            )
-          })()}
-
-        {/* Per-node value entry */}
-        {canEdit && (
-          <div className="mt-6 flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-muted-foreground">
-              {isInput ? 'Value' : isConstant ? 'Override' : 'Pin Value'}
-            </label>
-            <div className="flex gap-1.5">
-              <Input
-                className={cn(
-                  'h-8 text-sm font-mono flex-1',
-                  inputOverrides[openNode] &&
-                    (isInput
-                      ? 'border-blue-500 ring-1 ring-blue-500'
-                      : 'border-yellow-400 ring-1 ring-yellow-400')
-                )}
-                placeholder={
-                  isInput
-                    ? 'Enter value...'
-                    : isConstant
-                      ? 'Override default...'
-                      : 'Pin to value...'
-                }
-                value={inputOverrides[openNode] ?? ''}
-                onChange={(e) => setInputOverride(openNode, e.target.value)}
-                onBlur={runOnBlur}
-              />
-              {inputOverrides[openNode] && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 shrink-0"
-                  onClick={() => clearInputOverride(openNode)}
-                >
-                  <Trash2 className="size-3.5" />
-                </Button>
-              )}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              {isInput
-                ? 'Provide this value before running'
-                : isConstant
-                  ? 'Override this constant for simulation'
-                  : 'Pin this node to skip its computation'}
-            </p>
-          </div>
-        )}
-
-        {/* Execution result */}
-        {executionResults?.[openNode] && (
-          <div className="mt-6 flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-muted-foreground">
-              Result
-            </label>
-            <pre className="text-sm bg-emerald-100 text-emerald-800 rounded-md p-3 overflow-x-auto">
-              {JSON.stringify(executionResults[openNode].value, null, 2)}
-            </pre>
-            {executionResults[openNode].entity && (
-              <span className="text-xs text-muted-foreground">
-                Entity: {executionResults[openNode].entity}
-              </span>
-            )}
-          </div>
-        )}
+        {/* Per-member editor scoped to this node's field. */}
       </div>
     </div>
   )
 }
+

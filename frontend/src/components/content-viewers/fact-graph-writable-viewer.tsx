@@ -24,14 +24,6 @@ export function FactGraphWritableViewer({ content }: Props) {
   )
   return (
     <div className="flex flex-col gap-3 text-sm">
-      {content.enumOptionsPath && (
-        <Field label="Options Path" value={content.enumOptionsPath} />
-      )}
-
-      {content.collectionItemPath && (
-        <Field label="Collection" value={content.collectionItemPath} />
-      )}
-
       {content.limits && content.limits.length > 0 && (
         <div>
           <span className="text-muted-foreground font-medium">Validation</span>
@@ -59,6 +51,12 @@ export function FactGraphWritableViewer({ content }: Props) {
       <AdvancedSection>
         <Field label="Type" value={content.typeName} />
         <Field label="Path" value={content.path} />
+        {content.enumOptionsPath && (
+          <Field label="Options Path" value={content.enumOptionsPath} />
+        )}
+        {content.collectionItemPath && (
+          <Field label="Collection" value={content.collectionItemPath} />
+        )}
       </AdvancedSection>
     </div>
   )

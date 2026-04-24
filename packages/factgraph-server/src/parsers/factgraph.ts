@@ -139,6 +139,28 @@ export function parseFactGraphModules(
     nodes[id] = node
   }
 
+  // Resolve static Enum options: for each writable Enum with an
+  // enumOptionsPath, look up the target fact's <EnumOptions> derivation and
+  // collect its simple <String value="..."/> children. Conditional options
+  // (EnumOption with When/Then) are skipped — they stay unresolved and the
+  // frontend falls back to a text input.
+  for (const node of Object.values(nodes)) {
+    const content = node.content
+    if (
+      content.format !== 'factGraph' ||
+      content.type !== 'writable' ||
+      content.typeName !== 'Enum' ||
+      !content.enumOptionsPath
+    ) {
+      continue
+    }
+    const target = allFacts.find((f) => f.path === content.enumOptionsPath)
+    if (!target) continue
+    const derived = target.raw.Derived as Record<string, unknown> | undefined
+    const opts = extractEnumOptions(derived)
+    if (opts) content.enumOptions = opts
+  }
+
   // Build a suffix lookup for fuzzy resolution of collection item references.
   // E.g. /primaryFiler/age65OrOlder should match /filers/*/age65OrOlder.
   // Key: last path segment(s) after a wildcard, Value: node id
@@ -586,6 +608,40 @@ function dedentXml(text: string): string {
     ...lines.map((l) => l.match(/^(\s*)/)?.[1].length ?? 0)
   )
   return lines.map((l) => l.slice(minIndent)).join('\n')
+}
+
+/**
+ * Extract static enum options from an <EnumOptions> Derived expression,
+ * e.g. <EnumOptions><String value="A"/><String value="B"/></EnumOptions>.
+ * Returns undefined if the options are conditional (EnumOption children)
+ * or if the structure doesn't match.
+ */
+function extractEnumOptions(
+  derived: Record<string, unknown> | undefined
+): string[] | undefined {
+  if (!derived) return undefined
+  const enumOptions = derived['EnumOptions'] as
+    | Record<string, unknown>
+    | undefined
+  if (!enumOptions) return undefined
+  // Conditional options use <EnumOption> children — skip those.
+  if (enumOptions['EnumOption']) return undefined
+  const strings = enumOptions['String']
+  if (!strings) return undefined
+  const list = Array.isArray(strings) ? strings : [strings]
+  const values: string[] = []
+  for (const item of list) {
+    if (typeof item === 'string') {
+      values.push(item)
+      continue
+    }
+    if (typeof item === 'object' && item !== null) {
+      const value = (item as Record<string, unknown>)['@_value']
+      if (typeof value === 'string') values.push(value)
+      else if (typeof value === 'number') values.push(String(value))
+    }
+  }
+  return values.length > 0 ? values : undefined
 }
 
 function parseLimits(writable: Record<string, unknown>): Limit[] | undefined {
