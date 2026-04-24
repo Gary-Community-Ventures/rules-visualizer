@@ -404,7 +404,7 @@ export function Node({ node }: NodeProps) {
             return (
               <div
                 className={cn(
-                  'mt-2 font-mono rounded px-2 py-0.5 max-w-44 text-center text-xs border',
+                  'mt-2 max-w-full font-mono rounded px-2 py-0.5 text-center text-xs border',
                   failed
                     ? 'bg-orange-100 text-orange-800 border-orange-300'
                     : 'bg-emerald-100 text-emerald-800 border-emerald-300'
@@ -433,7 +433,7 @@ export function Node({ node }: NodeProps) {
           // Normal execution result (non-test mode)
           if (result && !activeTest) {
             const badgeClasses = cn(
-              'mt-2 font-mono rounded px-2 py-0.5 truncate max-w-36 text-center',
+              'mt-2 max-w-full font-mono rounded px-2 py-0.5 truncate text-center',
               'text-xs bg-emerald-100 text-emerald-800 border border-emerald-300'
             )
             if (isCollection && collectionInfo) {
@@ -528,9 +528,6 @@ function CollectionEditorDialog({
   const title = fieldLabel
     ? `${fieldLabel} · ${collectionLabel}`
     : collectionLabel
-  const [sectionState, setSectionState] = useState<Record<string, boolean>>({})
-  const setSection = (key: string, val: boolean) =>
-    setSectionState((prev) => ({ ...prev, [key]: val }))
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
@@ -552,8 +549,6 @@ function CollectionEditorDialog({
               }
               onBlur={onBlur}
               results={results}
-              sectionState={sectionState}
-              setSection={setSection}
             />
           )}
         </div>
@@ -1287,11 +1282,6 @@ export function NodePanel() {
   } = useMainContext()
   const addToFilter = useAddToFilter()
   const openNodeData = useFindNode(openNode)
-  const [panelSectionState, setPanelSectionState] = useState<
-    Record<string, boolean>
-  >({})
-  const setPanelSection = (key: string, val: boolean) =>
-    setPanelSectionState((prev) => ({ ...prev, [key]: val }))
 
   if (openNode === null || openNodeData === undefined) {
     return null
@@ -1532,8 +1522,6 @@ export function NodePanel() {
                   }
                   onBlur={runOnBlur}
                   results={executionResults}
-                  sectionState={panelSectionState}
-                  setSection={setPanelSection}
                 />
               </div>
             )
