@@ -686,8 +686,29 @@ function extractValue(raw: unknown): unknown {
   if (raw === null || raw === undefined) return null
   if (typeof raw === 'boolean' || typeof raw === 'number') return raw
 
-  // Scala.js objects have toString methods
+  // Unwrap Scala collection/wrapper types using the bundle's helpers
   const str = String(raw)
+  if (str.startsWith('Collection(')) {
+    try {
+      return sfg.convertCollectionToArray(raw)
+    } catch {
+      return str
+    }
+  }
+  if (str.startsWith('List(')) {
+    try {
+      return sfg.scalaListToJsArray(raw)
+    } catch {
+      return str
+    }
+  }
+  if (str.startsWith('Set(')) {
+    try {
+      return Array.from(sfg.scalaSetToJsSet(raw) as Set<unknown>)
+    } catch {
+      return str
+    }
+  }
 
   // Try to parse as number
   if (/^-?\d+(\.\d+)?$/.test(str)) return Number(str)
