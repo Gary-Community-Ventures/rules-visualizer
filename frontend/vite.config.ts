@@ -8,6 +8,8 @@ const PROXY_TARGET = process.env.PROXY_TARGET || 'http://localhost:5000'
 
 // https://vite.dev/config/
 export default defineConfig({
+  // Read .env from the repo root so frontend (VITE_*) and backend share one file.
+  envDir: path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..'),
   plugins: [react(), tailwindcss()],
   resolve: {
     alias: {

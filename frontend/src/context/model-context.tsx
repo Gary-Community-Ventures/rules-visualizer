@@ -21,7 +21,13 @@ import { onReload } from '@/lib/api/live-reload'
 import { useLocalStorage } from '@/lib/use-local-storage'
 import { useAppContext } from './app-context'
 
-export type RightBarOptions = 'ai' | 'execution' | 'tests' | 'policy' | null
+export type RightBarOptions =
+  | 'ai'
+  | 'execution'
+  | 'tests'
+  | 'policy'
+  | 'tasks'
+  | null
 
 /** Check if a node is an "input" that users must provide values for */
 export function isInputNode(node: ModelNode): boolean {

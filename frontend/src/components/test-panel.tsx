@@ -346,7 +346,7 @@ export function TestPanel() {
 
   return (
     <div className="flex flex-col h-full bg-background">
-      <div className="flex items-center justify-between px-4 py-3 border-b shrink-0">
+      <div className="flex items-center px-4 py-3 border-b shrink-0">
         <div className="flex items-center gap-1.5">
           <h2 className="text-sm font-semibold">Tests</h2>
           {selectedPaths && (
@@ -366,7 +366,7 @@ export function TestPanel() {
             </Button>
           )}
         </div>
-        <div className="flex gap-1.5">
+        <div className="flex gap-1.5 mx-auto">
           <DropdownMenu.Root>
             <DropdownMenu.Trigger asChild>
               <Button variant="outline" size="sm" className="h-7 text-xs gap-1">
@@ -413,6 +413,14 @@ export function TestPanel() {
             Run all
           </Button>
         </div>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7"
+          onClick={() => setRightBar(null)}
+        >
+          <X className="size-4" />
+        </Button>
       </div>
 
       {results.length > 0 && (

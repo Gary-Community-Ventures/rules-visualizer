@@ -17,6 +17,7 @@ import {
   ChevronLeft,
   ChevronRight,
   History,
+  Hammer,
 } from 'lucide-react'
 import { ButtonGroup } from './ui/button-group'
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
@@ -314,6 +315,16 @@ export function ToolBar() {
         >
           <BookOpen className="size-4" />
         </Button>
+        {import.meta.env.VITE_TASKS_ENABLED === '1' && (
+          <Button
+            variant={rightBar === 'tasks' ? 'default' : 'outline'}
+            size="icon"
+            title="Tasks"
+            onClick={() => setRightBar(rightBar === 'tasks' ? null : 'tasks')}
+          >
+            <Hammer className="size-4" />
+          </Button>
+        )}
         <Button
           variant={rightBar === 'ai' ? 'default' : 'outline'}
           size="icon"

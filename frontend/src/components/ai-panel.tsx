@@ -12,6 +12,7 @@ import {
   type Dispatch,
   type SetStateAction,
 } from 'react'
+import { NodeAutocompleteInput } from './node-autocomplete-input'
 import { useMainContext } from '@/context'
 import { cn } from '@/lib/utils'
 import { onAiEvent, sendWsMessage, type AiEvent } from '@/lib/api/live-reload'
@@ -291,7 +292,7 @@ function ChatBox({ onPasswordError }: { onPasswordError: () => void }) {
 
   return (
     <div className="border-t p-3 shrink-0 flex flex-col gap-2">
-      <ChatInput
+      <NodeAutocompleteInput
         value={message}
         onChange={setMessage}
         onSubmit={handleSubmit}
@@ -437,134 +438,6 @@ function ToolCallView({ message }: { message: ToolCallMessage }) {
       {expanded && message.result && (
         <div className="px-3 py-2 font-mono text-xs whitespace-pre-wrap bg-muted/20">
           {message.result}
-        </div>
-      )}
-    </div>
-  )
-}
-
-function ChatInput({
-  value,
-  onChange,
-  onSubmit,
-  placeholder,
-}: {
-  value: string
-  onChange: (value: string) => void
-  onSubmit: () => void
-  placeholder?: string
-}) {
-  const { model } = useMainContext()
-  const [showSuggestions, setShowSuggestions] = useState(false)
-  const [selectedIndex, setSelectedIndex] = useState(0)
-  const textareaRef = useRef<HTMLTextAreaElement>(null)
-
-  const nodeNames = useMemo(
-    () => Object.values(model.nodes).map((n) => n.name),
-    [model.nodes]
-  )
-
-  // Get the current word being typed (after last space or start)
-  const currentWord = useMemo(() => {
-    const textarea = textareaRef.current
-    if (!textarea) return ''
-    const pos = textarea.selectionStart
-    const textBefore = value.slice(0, pos)
-    const match = textBefore.match(/\S+$/)
-    return match ? match[0] : ''
-  }, [value])
-
-  const suggestions = useMemo(() => {
-    if (currentWord.length < 2) return []
-    const q = currentWord.toLowerCase()
-    return nodeNames
-      .filter((name) => name.toLowerCase().includes(q))
-      .slice(0, 8)
-  }, [currentWord, nodeNames])
-
-  useEffect(() => {
-    setShowSuggestions(suggestions.length > 0)
-    setSelectedIndex(0)
-  }, [suggestions])
-
-  const applySuggestion = (name: string) => {
-    const textarea = textareaRef.current
-    if (!textarea) return
-    const pos = textarea.selectionStart
-    const textBefore = value.slice(0, pos)
-    const wordStart = textBefore.search(/\S+$/)
-    const newValue =
-      value.slice(0, wordStart === -1 ? pos : wordStart) +
-      name +
-      ' ' +
-      value.slice(pos)
-    onChange(newValue)
-    setShowSuggestions(false)
-    textarea.focus()
-  }
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (showSuggestions && suggestions.length > 0) {
-      if (e.key === 'ArrowDown') {
-        e.preventDefault()
-        setSelectedIndex((i) => Math.min(i + 1, suggestions.length - 1))
-        return
-      }
-      if (e.key === 'ArrowUp') {
-        e.preventDefault()
-        setSelectedIndex((i) => Math.max(i - 1, 0))
-        return
-      }
-      if (
-        e.key === 'Tab' ||
-        (e.key === 'Enter' && suggestions.length > 0 && showSuggestions)
-      ) {
-        e.preventDefault()
-        applySuggestion(suggestions[selectedIndex])
-        return
-      }
-      if (e.key === 'Escape') {
-        setShowSuggestions(false)
-        return
-      }
-    }
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      onSubmit()
-    }
-  }
-
-  return (
-    <div className="relative">
-      <textarea
-        ref={textareaRef}
-        className="w-full resize-none rounded-md border bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-        rows={3}
-        placeholder={placeholder}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        onKeyDown={handleKeyDown}
-        onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
-      />
-      {showSuggestions && (
-        <div className="absolute bottom-full left-0 right-0 mb-1 max-h-48 overflow-y-auto rounded-md border bg-popover p-1 shadow-md z-50">
-          {suggestions.map((name, i) => (
-            <button
-              key={name}
-              className={cn(
-                'flex w-full items-center rounded-sm px-2 py-1.5 text-xs text-left transition-colors',
-                i === selectedIndex
-                  ? 'bg-accent text-accent-foreground'
-                  : 'hover:bg-accent/50'
-              )}
-              onMouseDown={(e) => {
-                e.preventDefault()
-                applySuggestion(name)
-              }}
-            >
-              <span className="font-mono truncate">{name}</span>
-            </button>
-          ))}
         </div>
       )}
     </div>

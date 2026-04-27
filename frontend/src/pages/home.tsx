@@ -16,6 +16,7 @@ import { Legend } from '@/components/legend'
 import { ExecutionPanel } from '@/components/execution-panel'
 import { TestPanel } from '@/components/test-panel'
 import { PolicyPanel } from '@/components/policy-panel'
+import { TasksPanel } from '@/components/tasks-panel'
 import { NodePanel, nodeElementId } from '@/components/node'
 
 export function HomePage() {
@@ -140,6 +141,7 @@ export function NodeMapLayout({ children }: PropsWithChildren) {
             {rightBar === 'execution' && <ExecutionPanel />}
             {rightBar === 'tests' && <TestPanel />}
             {rightBar === 'policy' && <PolicyPanel />}
+            {rightBar === 'tasks' && <TasksPanel />}
           </ResizablePanel>
         </>
       )}
