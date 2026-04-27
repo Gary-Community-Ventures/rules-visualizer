@@ -33,7 +33,8 @@ export function BooleanInput({
   isOverride,
 }: BaseInputProps) {
   const [focused, setFocused] = useState(false)
-  const emptyLabel = focused || value !== '' ? '(empty)' : (placeholder ?? '(empty)')
+  const emptyLabel =
+    focused || value !== '' ? '(empty)' : (placeholder ?? '(empty)')
   return (
     <select
       className={cn(
@@ -72,7 +73,11 @@ export function DayInput({
   return (
     <Input
       type="date"
-      className={cn('font-mono', filledRing(value !== '', isOverride), className)}
+      className={cn(
+        'font-mono',
+        filledRing(value !== '', isOverride),
+        className
+      )}
       placeholder={placeholder}
       value={value}
       onChange={(e) => onChange(e.target.value)}
@@ -100,7 +105,11 @@ export function DollarInput({
       <Input
         type="text"
         inputMode="decimal"
-        className={cn('pl-5 font-mono', filledRing(value !== '', isOverride), className)}
+        className={cn(
+          'pl-5 font-mono',
+          filledRing(value !== '', isOverride),
+          className
+        )}
         placeholder={placeholder}
         value={value}
         onChange={(e) => {
@@ -128,7 +137,11 @@ export function IntegerInput({
     <Input
       type="text"
       inputMode="numeric"
-      className={cn('font-mono', filledRing(value !== '', isOverride), className)}
+      className={cn(
+        'font-mono',
+        filledRing(value !== '', isOverride),
+        className
+      )}
       placeholder={placeholder}
       value={value}
       onChange={(e) => {
@@ -158,9 +171,9 @@ export function RationalInput({
   const acceptInt = (s: string) => s === '' || /^-?\d*$/.test(s)
   // Split a caller-supplied placeholder like "1/2" into per-side hints so
   // the computed-value placeholder shows on both inputs, not just the num.
-  const [numPlaceholder = 'n', denPlaceholder = 'd'] = (placeholder ?? '').includes(
-    '/'
-  )
+  const [numPlaceholder = 'n', denPlaceholder = 'd'] = (
+    placeholder ?? ''
+  ).includes('/')
     ? (placeholder as string).split('/')
     : ['n', 'd']
   const part =
@@ -214,7 +227,8 @@ export function EnumInput({
   options,
 }: BaseInputProps & { options: string[] }) {
   const [focused, setFocused] = useState(false)
-  const emptyLabel = focused || value !== '' ? '(empty)' : (placeholder ?? '(empty)')
+  const emptyLabel =
+    focused || value !== '' ? '(empty)' : (placeholder ?? '(empty)')
   return (
     <select
       className={cn(
@@ -255,7 +269,11 @@ export function TextInput({
 }: BaseInputProps) {
   return (
     <Input
-      className={cn('font-mono', filledRing(value !== '', isOverride), className)}
+      className={cn(
+        'font-mono',
+        filledRing(value !== '', isOverride),
+        className
+      )}
       placeholder={placeholder}
       value={value}
       onChange={(e) => onChange(e.target.value)}

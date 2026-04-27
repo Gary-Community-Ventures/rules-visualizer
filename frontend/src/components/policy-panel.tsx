@@ -232,9 +232,7 @@ export function PolicyPanel() {
     if (policyTargetPage && policyTargetPage > 0) {
       // Switch to the correct document if specified
       if (policyTargetDocId && refs) {
-        const targetDoc = refs.documents.find(
-          (d) => d.id === policyTargetDocId
-        )
+        const targetDoc = refs.documents.find((d) => d.id === policyTargetDocId)
         if (targetDoc) setStableDoc(targetDoc)
       }
       setStablePage(policyTargetPage)

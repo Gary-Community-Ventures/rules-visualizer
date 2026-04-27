@@ -579,10 +579,9 @@ function readFactValue(graph: unknown, path: string): unknown {
   const fact = g.getFact(path)
 
   // Call the Scala-mangled get method
-  const getFn =
-    fact[
-      'get__Lgov_irs_factgraph_monads_MaybeVector'
-    ] as () => Record<string, unknown>
+  const getFn = fact[
+    'get__Lgov_irs_factgraph_monads_MaybeVector'
+  ] as () => Record<string, unknown>
   if (!getFn) return undefined
   const mv = getFn.call(fact)
   if (!mv || typeof mv !== 'object') return undefined

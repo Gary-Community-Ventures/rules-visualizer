@@ -95,8 +95,14 @@ The manifest has three sections: documents, sections, and mappings.
     }
   ],
   "mappings": [
-    { "nodePath": "/earnedIncomeDeduction", "sectionId": "10-ccr-2506-1__4.407.2" },
-    { "nodePath": "/earnedIncomeDeductionRate", "sectionId": "10-ccr-2506-1__4.407.2" }
+    {
+      "nodePath": "/earnedIncomeDeduction",
+      "sectionId": "10-ccr-2506-1__4.407.2"
+    },
+    {
+      "nodePath": "/earnedIncomeDeductionRate",
+      "sectionId": "10-ccr-2506-1__4.407.2"
+    }
   ]
 }
 ```

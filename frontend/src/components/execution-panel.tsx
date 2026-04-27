@@ -819,9 +819,7 @@ export function EntityEditor({
                       (isOverride ? 'override' : 'value')
                     }
                     value={row[field.path] ?? ''}
-                    onChange={(val) =>
-                      updateField(rowIdx, field.path, val)
-                    }
+                    onChange={(val) => updateField(rowIdx, field.path, val)}
                     onBlur={onBlur}
                   />
                   {hasValue && (
