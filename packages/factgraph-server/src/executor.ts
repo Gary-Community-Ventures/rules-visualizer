@@ -38,6 +38,8 @@ type DigestFact = {
   writable: DigestWritable | null
   derived: DigestNode | null
   placeholder: DigestNode | null
+  overrideCondition: DigestNode | null
+  overrideDefault: DigestNode | null
 }
 
 function processOptions(
@@ -206,7 +208,22 @@ function createGraph(rulesetId: string, facts: ParsedFact[]): unknown {
       ? processDerived(raw['Placeholder'] as Record<string, unknown>)
       : null
 
-    return { path: fact.path, writable, derived, placeholder }
+    const override = raw['Override'] as Record<string, unknown> | undefined
+    const overrideCondition = override?.['Condition']
+      ? processDerived(override['Condition'] as Record<string, unknown>)
+      : null
+    const overrideDefault = override?.['Default']
+      ? processDerived(override['Default'] as Record<string, unknown>)
+      : null
+
+    return {
+      path: fact.path,
+      writable,
+      derived,
+      placeholder,
+      overrideCondition,
+      overrideDefault,
+    }
   })
 
   // Create the Scala.js graph
@@ -217,7 +234,9 @@ function createGraph(rulesetId: string, facts: ParsedFact[]): unknown {
         fact.path,
         fact.writable,
         fact.derived,
-        fact.placeholder
+        fact.placeholder,
+        fact.overrideCondition,
+        fact.overrideDefault
       )
     )
   )
@@ -464,8 +483,7 @@ export function executeFactGraph(
       continue
     }
 
-    // Save after creating collection so the engine registers the items
-    graph.save()
+    // (In factgraph 3.1 the graph evaluates eagerly — no save() needed)
 
     // Set per-item values. Row keys are full fact paths like "/members/*/age";
     // swap `/*/` for `/#${uuid}/` to produce the per-instance path.
@@ -513,10 +531,9 @@ export function executeFactGraph(
     }
   }
 
-  // Save to trigger computation
-  graph.save()
-
   // Read all fact values
+  // In factgraph 3.1, graph.get()/getVect()/save() were removed.
+  // Instead, use getFact(path) and read via the Scala-mangled get method.
   const results: Record<string, unknown> = {}
   for (const fact of facts) {
     // For collection item facts (with /*), read per-instance values
@@ -529,12 +546,8 @@ export function executeFactGraph(
         for (const uuid of uuids) {
           const itemPath = `${prefix}/#${uuid}/${fieldSuffix}`
           try {
-            const result = graph.get(itemPath)
-            if (result.complete && result.hasValue) {
-              perInstanceValues.push(extractValue(result.get))
-            } else {
-              perInstanceValues.push(null)
-            }
+            const value = readFactValue(graph, itemPath)
+            perInstanceValues.push(value)
           } catch {
             perInstanceValues.push(null)
           }
@@ -551,26 +564,14 @@ export function executeFactGraph(
       continue
     }
 
-    // Scalar facts — try get() first, fall back to getVect() for collection aggregations
+    // Scalar facts
     try {
-      const result = graph.get(fact.path)
-      if (result.complete && result.hasValue) {
-        results[fact.path] = extractValue(result.get)
+      const value = readFactValue(graph, fact.path)
+      if (value !== undefined) {
+        results[fact.path] = value
       }
-    } catch (e) {
-      // Collection aggregation facts (Any, All over collection paths) need getVect
-      const msg = e instanceof Error ? e.message : String(e)
-      if (msg.includes('getVect')) {
-        try {
-          const vectResult = graph.getVect(fact.path)
-          const extracted = extractVectValue(vectResult)
-          if (extracted !== undefined) {
-            results[fact.path] = extracted
-          }
-        } catch {
-          // Skip if getVect also fails
-        }
-      }
+    } catch {
+      // Skip facts that can't be read
     }
   }
 
@@ -578,51 +579,75 @@ export function executeFactGraph(
 }
 
 /**
- * Extract a scalar value from a getVect result (MaybeVector).
- * For Any aggregations, returns true if any element is truthy.
- * For All aggregations, returns true if all elements are truthy.
- * For other vector results, returns the array of values.
+ * Read a fact value from the graph using the factgraph 3.1 API.
+ *
+ * In 3.1, graph.get()/getVect() were removed. Instead we use
+ * getFact(path) → Fact, then call the Scala-mangled get method
+ * which returns a MaybeVector wrapping a Result.
+ *
+ * MaybeVector$Single.x → Result$Complete._f_v = the value
+ * MaybeVector$Single.x → Result$Incomplete (anonymous) = no value
+ * MaybeVector$Vect._f_vect → Scala Vector of Results
  */
-function extractVectValue(vectResult: unknown): unknown {
-  if (!vectResult || typeof vectResult !== 'object') return undefined
+function readFactValue(graph: unknown, path: string): unknown {
+  const g = graph as {
+    getFact: (p: string) => Record<string, unknown>
+  }
+  const fact = g.getFact(path)
 
-  // Find the complete flag
-  const completeKey = Object.keys(vectResult).find((k) => k.endsWith('__f_c'))
-  if (completeKey && !(vectResult as Record<string, unknown>)[completeKey]) {
-    return undefined // not complete
+  // Call the Scala-mangled get method
+  const getFn = fact[
+    'get__Lgov_irs_factgraph_monads_MaybeVector'
+  ] as () => Record<string, unknown>
+  if (!getFn) return undefined
+  const mv = getFn.call(fact)
+  if (!mv || typeof mv !== 'object') return undefined
+
+  // Single result (scalar facts)
+  const singleKey = Object.keys(mv).find((k) => k.includes('Single__f_x'))
+  if (singleKey) {
+    const result = mv[singleKey] as Record<string, unknown>
+    if (!result || typeof result !== 'object') return undefined
+    // Check for Complete (has __f_v field) vs Incomplete
+    const valueKey = Object.keys(result).find((k) => k.endsWith('__f_v'))
+    if (!valueKey) return undefined // Incomplete
+    return extractValue(result[valueKey])
   }
 
-  // Find the vector
-  const vectKey = Object.keys(vectResult).find((k) => k.includes('__f_vect'))
-  if (!vectKey) return undefined
+  // Vector result (collection aggregations like Any/All)
+  const vectKey = Object.keys(mv).find((k) => k.includes('__f_vect'))
+  if (vectKey) {
+    const completeKey = Object.keys(mv).find((k) => k.endsWith('__f_c'))
+    if (completeKey && !mv[completeKey]) return undefined
 
-  const vect = (vectResult as Record<string, unknown>)[vectKey]
-  if (!vect || typeof vect !== 'object') return undefined
+    const vect = mv[vectKey] as Record<string, unknown>
+    if (!vect || typeof vect !== 'object') return undefined
 
-  // Extract values from the Scala Vector (prefix1.u is the backing array)
-  const prefix1Key = Object.keys(vect).find((k) => k.includes('prefix1'))
-  if (!prefix1Key) return undefined
+    // Extract from Scala Vector backing array
+    const prefix1Key = Object.keys(vect).find((k) => k.includes('prefix1'))
+    if (!prefix1Key) return undefined
 
-  const arrObj = (vect as Record<string, unknown>)[prefix1Key] as {
-    u?: unknown[]
+    const arrObj = vect[prefix1Key] as { u?: unknown[] }
+    if (!arrObj?.u) return undefined
+
+    const values = arrObj.u.map((item) => {
+      if (item === null || item === undefined) return null
+      if (typeof item === 'boolean' || typeof item === 'number') return item
+      if (typeof item === 'object') {
+        const valKey = Object.keys(item as object).find((k) =>
+          k.endsWith('__f_v')
+        )
+        if (valKey)
+          return extractValue((item as Record<string, unknown>)[valKey])
+      }
+      return extractValue(item)
+    })
+
+    if (values.length === 1) return values[0]
+    return values
   }
-  if (!arrObj?.u) return undefined
 
-  const values = arrObj.u.map((item) => {
-    if (item === null || item === undefined) return null
-    if (typeof item === 'boolean' || typeof item === 'number') return item
-    // Wrapped Result$Complete — extract the inner value
-    if (typeof item === 'object') {
-      const valKey = Object.keys(item as object).find((k) =>
-        k.endsWith('__f_v')
-      )
-      if (valKey) return extractValue((item as Record<string, unknown>)[valKey])
-    }
-    return extractValue(item)
-  })
-
-  if (values.length === 1) return values[0]
-  return values
+  return undefined
 }
 
 function createTypedValue(
@@ -678,8 +703,29 @@ function extractValue(raw: unknown): unknown {
   if (raw === null || raw === undefined) return null
   if (typeof raw === 'boolean' || typeof raw === 'number') return raw
 
-  // Scala.js objects have toString methods
+  // Unwrap Scala collection/wrapper types using the bundle's helpers
   const str = String(raw)
+  if (str.startsWith('Collection(')) {
+    try {
+      return sfg.convertCollectionToArray(raw)
+    } catch {
+      return str
+    }
+  }
+  if (str.startsWith('List(')) {
+    try {
+      return sfg.scalaListToJsArray(raw)
+    } catch {
+      return str
+    }
+  }
+  if (str.startsWith('Set(')) {
+    try {
+      return Array.from(sfg.scalaSetToJsSet(raw) as Set<unknown>)
+    } catch {
+      return str
+    }
+  }
 
   // Try to parse as number
   if (/^-?\d+(\.\d+)?$/.test(str)) return Number(str)

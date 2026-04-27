@@ -15,12 +15,7 @@ import {
   getNodePath,
 } from '@/context/model-context'
 import { TypedValueInput } from './typed-value-input'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from './ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog'
 import { EntityEditor } from './execution-panel'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
@@ -166,12 +161,12 @@ export function Node({ node }: NodeProps) {
   const hasCollectionValue =
     isCollection && collectionInfo && collectionFieldPath
       ? (entityData[collectionInfo.collection] ?? []).some(
-          (row) => row[collectionFieldPath] !== undefined && row[collectionFieldPath] !== ''
+          (row) =>
+            row[collectionFieldPath] !== undefined &&
+            row[collectionFieldPath] !== ''
         )
       : false
-  const hasOverride = isCollection
-    ? hasCollectionValue
-    : overrideValue !== ''
+  const hasOverride = isCollection ? hasCollectionValue : overrideValue !== ''
   const declaredDefault = (() => {
     const c = node.content
     if (c.format === 'rac' && c.type === 'variable' && c.default)
@@ -451,7 +446,11 @@ export function Node({ node }: NodeProps) {
                 </button>
               )
             }
-            return <div className={badgeClasses}>{formatResultValue(result.value)}</div>
+            return (
+              <div className={badgeClasses}>
+                {formatResultValue(result.value)}
+              </div>
+            )
           }
 
           return null
@@ -499,7 +498,9 @@ type CollectionEditorDialogProps = {
   nodes: Record<string, ModelNode>
   entityData: Record<string, Record<string, string>[]>
   setEntityData: (
-    updater: (prev: Record<string, Record<string, string>[]>) => Record<string, Record<string, string>[]>
+    updater: (
+      prev: Record<string, Record<string, string>[]>
+    ) => Record<string, Record<string, string>[]>
   ) => void
   onBlur: () => void
   results?: Record<string, { value: unknown }> | null
@@ -1484,4 +1485,3 @@ export function NodePanel() {
     </div>
   )
 }
-
