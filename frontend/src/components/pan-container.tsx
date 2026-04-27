@@ -21,6 +21,14 @@ export function PanContainer({ children, className }: PanContainerProps) {
   const dragStart = useRef({ x: 0, y: 0, offsetX: 0, offsetY: 0 })
   const containerRef = useRef<HTMLDivElement>(null)
   const contentRef = useRef<HTMLDivElement>(null)
+  // Keep transform values in refs so the wheel handler always sees the
+  // freshest scale/offset — without these, a pan-mousemove and a wheel
+  // event interleaving in the same frame race against React state and
+  // produce glitchy jumps.
+  const scaleRef = useRef(scale)
+  const offsetRef = useRef(offset)
+  scaleRef.current = scale
+  offsetRef.current = offset
 
   const handleMouseDown = (e: React.MouseEvent) => {
     // Only pan with left mouse button
@@ -101,7 +109,9 @@ export function PanContainer({ children, className }: PanContainerProps) {
     return () => window.removeEventListener('mouseup', handleGlobalMouseUp)
   }, [])
 
-  // Add wheel listener with { passive: false } to allow preventDefault
+  // Wheel handler — registered once, reads scale/offset through refs so
+  // there's no stale-closure race when pan-mousemove and wheel events
+  // interleave (which is what made drag+pinch jumpy on trackpads).
   useEffect(() => {
     const container = containerRef.current
     if (!container) return
@@ -110,30 +120,28 @@ export function PanContainer({ children, className }: PanContainerProps) {
       e.preventDefault()
 
       const rect = container.getBoundingClientRect()
-
-      // Mouse position relative to container
       const mouseX = e.clientX - rect.left
       const mouseY = e.clientY - rect.top
 
-      // Calculate new scale
+      const prevScale = scaleRef.current
+      const prevOffset = offsetRef.current
       const delta = -e.deltaY * ZOOM_SENSITIVITY
       const newScale = Math.min(
         MAX_SCALE,
-        Math.max(MIN_SCALE, scale * (1 + delta))
+        Math.max(MIN_SCALE, prevScale * (1 + delta))
       )
-
-      // Adjust offset to zoom towards mouse position
-      const scaleRatio = newScale / scale
-      const newOffsetX = mouseX - (mouseX - offset.x) * scaleRatio
-      const newOffsetY = mouseY - (mouseY - offset.y) * scaleRatio
-
+      if (newScale === prevScale) return
+      const scaleRatio = newScale / prevScale
       setScale(newScale)
-      setOffset({ x: newOffsetX, y: newOffsetY })
+      setOffset({
+        x: mouseX - (mouseX - prevOffset.x) * scaleRatio,
+        y: mouseY - (mouseY - prevOffset.y) * scaleRatio,
+      })
     }
 
     container.addEventListener('wheel', onWheel, { passive: false })
     return () => container.removeEventListener('wheel', onWheel)
-  }, [scale, offset])
+  }, [])
 
   // Dispatch event when transform changes so arrows recalculate
   useEffect(() => {

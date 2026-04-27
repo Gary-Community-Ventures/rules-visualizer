@@ -27,6 +27,7 @@ import {
   Download,
   Plus,
   Users,
+  X,
 } from 'lucide-react'
 import type { ModelNode } from '@/lib/model'
 
@@ -43,6 +44,7 @@ export function ExecutionPanel() {
     executionError,
     runOnBlur,
     clearExecution,
+    setRightBar,
   } = useMainContext()
 
   // Persist section expand states across panel open/close
@@ -285,16 +287,26 @@ export function ExecutionPanel() {
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b shrink-0">
         <h2 className="text-sm font-semibold">Execute Rules</h2>
-        {executionResults && (
+        <div className="flex items-center gap-1">
+          {executionResults && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={clearExecution}
+              className="h-7 text-xs"
+            >
+              Clear results
+            </Button>
+          )}
           <Button
             variant="ghost"
-            size="sm"
-            onClick={clearExecution}
-            className="h-7 text-xs"
+            size="icon"
+            className="h-7 w-7"
+            onClick={() => setRightBar(null)}
           >
-            Clear results
+            <X className="size-4" />
           </Button>
-        )}
+        </div>
       </div>
 
       {/* Status banners */}

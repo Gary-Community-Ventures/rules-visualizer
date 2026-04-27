@@ -124,6 +124,7 @@ export function PolicyPanel() {
     setOpenNode,
     policyLinkNodePath,
     clearPolicyLinkNode,
+    setRightBar,
   } = useMainContext()
   const [refs, setRefs] = useState<PolicyReferences | null>(null)
   const [selectedDoc, setSelectedDoc] = useState<PolicyDocument | null>(null)
@@ -654,6 +655,14 @@ export function PolicyPanel() {
             )}
           </div>
         )}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7 ml-auto shrink-0"
+          onClick={() => setRightBar(null)}
+        >
+          <X className="size-4" />
+        </Button>
       </div>
 
       {/* Document selector */}
