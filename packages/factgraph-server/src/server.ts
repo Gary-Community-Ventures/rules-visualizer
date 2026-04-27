@@ -57,7 +57,13 @@ app.use(express.json())
 app.use('/api', rulesetRoutes)
 app.use('/api', testRoutes)
 app.use('/api', referenceRoutes)
-app.use('/api', taskRoutes)
+// Tasks routes spawn the Claude CLI as a child process with bypassPermissions
+// — only mount them when explicitly enabled. Independent of the frontend's
+// VITE_TASKS_ENABLED flag (which only hides the toolbar button).
+if (process.env.TASKS_ENABLED === '1') {
+  app.use('/api', taskRoutes)
+  console.log('Tasks API enabled (TASKS_ENABLED=1)')
+}
 
 // Serve pre-built frontend static files if they exist
 if (fs.existsSync(FRONTEND_DIR)) {
