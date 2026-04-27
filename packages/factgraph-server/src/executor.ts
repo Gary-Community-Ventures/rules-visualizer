@@ -209,14 +209,12 @@ function createGraph(rulesetId: string, facts: ParsedFact[]): unknown {
       : null
 
     const override = raw['Override'] as Record<string, unknown> | undefined
-    const overrideCondition =
-      override?.['Condition']
-        ? processDerived(override['Condition'] as Record<string, unknown>)
-        : null
-    const overrideDefault =
-      override?.['Default']
-        ? processDerived(override['Default'] as Record<string, unknown>)
-        : null
+    const overrideCondition = override?.['Condition']
+      ? processDerived(override['Condition'] as Record<string, unknown>)
+      : null
+    const overrideDefault = override?.['Default']
+      ? processDerived(override['Default'] as Record<string, unknown>)
+      : null
 
     return {
       path: fact.path,
