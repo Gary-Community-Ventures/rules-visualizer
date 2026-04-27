@@ -9,8 +9,7 @@ export function getModel(modelId?: string): ChatOpenAI {
   if (!apiKey)
     throw new Error('OPEN_ROUTER_KEY environment variable is required')
 
-  const selectedModel =
-    modelId || process.env.AI_MODEL || 'openai/gpt-oss-120b'
+  const selectedModel = modelId || process.env.AI_MODEL || 'openai/gpt-oss-120b'
   console.log(`[AI] Using model: ${selectedModel}`)
 
   return new ChatOpenAI({

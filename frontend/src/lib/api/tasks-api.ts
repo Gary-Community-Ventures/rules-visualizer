@@ -37,9 +37,7 @@ export function listTasks(rulesetId: string): Promise<{ tasks: Task[] }> {
 }
 
 export function getTask(rulesetId: string, threadId: string): Promise<Task> {
-  return api(
-    `/api/rulesets/${encodeURIComponent(rulesetId)}/tasks/${threadId}`
-  )
+  return api(`/api/rulesets/${encodeURIComponent(rulesetId)}/tasks/${threadId}`)
 }
 
 export function createTask(

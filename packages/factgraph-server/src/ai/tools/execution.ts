@@ -73,7 +73,10 @@ export const listWritableInputs = tool(
         const prefix = collMatch[1]
         if (!collectionInputs[prefix]) collectionInputs[prefix] = []
         collectionInputs[prefix].push(line)
-      } else if (c.typeName !== 'Collection' && c.typeName !== 'CollectionItem') {
+      } else if (
+        c.typeName !== 'Collection' &&
+        c.typeName !== 'CollectionItem'
+      ) {
         entries.push(line)
       }
     }

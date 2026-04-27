@@ -174,11 +174,12 @@ function parseSummaryMarker(
     return {
       summary: typeof parsed.summary === 'string' ? parsed.summary : '',
       modifiedPaths: Array.isArray(parsed.modifiedPaths)
-        ? parsed.modifiedPaths.filter((p: unknown): p is string => typeof p === 'string')
+        ? parsed.modifiedPaths.filter(
+            (p: unknown): p is string => typeof p === 'string'
+          )
         : [],
     }
   } catch {
     return undefined
   }
 }
-

@@ -1196,12 +1196,8 @@
       ]
     },
     "expect": {
-      "/members/*/hasAbawdMonthsRemaining": [
-        false
-      ],
-      "/members/*/satisfiesAbawd": [
-        false
-      ],
+      "/members/*/hasAbawdMonthsRemaining": [false],
+      "/members/*/satisfiesAbawd": [false],
       "/eligible": false,
       "/snap": 0
     }
@@ -1269,10 +1265,7 @@
     },
     "expect": {
       "/hasChildUnderAbawdDependentLimit": true,
-      "/members/*/satisfiesAbawd": [
-        true,
-        true
-      ],
+      "/members/*/satisfiesAbawd": [true, true],
       "/eligible": true,
       "/snap": 298
     }
@@ -1319,15 +1312,9 @@
       ]
     },
     "expect": {
-      "/members/*/meetsAbawdWorkHoursThreshold": [
-        false
-      ],
-      "/members/*/satisfiesAbawd": [
-        true
-      ],
-      "/members/*/meetsWorkRequirements": [
-        false
-      ],
+      "/members/*/meetsAbawdWorkHoursThreshold": [false],
+      "/members/*/satisfiesAbawd": [true],
+      "/members/*/meetsWorkRequirements": [false],
       "/eligible": false
     }
   },
@@ -1373,15 +1360,9 @@
       ]
     },
     "expect": {
-      "/members/*/meetsAbawdWorkHoursThreshold": [
-        true
-      ],
-      "/members/*/satisfiesAbawd": [
-        true
-      ],
-      "/members/*/meetsWorkRequirements": [
-        false
-      ],
+      "/members/*/meetsAbawdWorkHoursThreshold": [true],
+      "/members/*/satisfiesAbawd": [true],
+      "/members/*/meetsWorkRequirements": [false],
       "/eligible": false
     }
   },
@@ -1427,15 +1408,9 @@
       ]
     },
     "expect": {
-      "/members/*/meetsAbawdAgeExemption": [
-        true
-      ],
-      "/members/*/satisfiesAbawd": [
-        true
-      ],
-      "/members/*/meetsGeneralWorkRequirements": [
-        false
-      ],
+      "/members/*/meetsAbawdAgeExemption": [true],
+      "/members/*/satisfiesAbawd": [true],
+      "/members/*/meetsGeneralWorkRequirements": [false],
       "/eligible": false,
       "/snap": 0
     }
@@ -1482,12 +1457,8 @@
       ]
     },
     "expect": {
-      "/members/*/satisfiesAbawd": [
-        true
-      ],
-      "/members/*/meetsGeneralWorkRequirements": [
-        false
-      ],
+      "/members/*/satisfiesAbawd": [true],
+      "/members/*/meetsGeneralWorkRequirements": [false],
       "/eligible": false,
       "/snap": 0
     }

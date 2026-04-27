@@ -59,11 +59,7 @@ export interface AgentRunner {
    * Send a follow-up prompt to an existing thread. Resumes the same agent
    * session so the agent retains context.
    */
-  follow(
-    threadId: string,
-    prompt: string,
-    ctx: AgentContext
-  ): Promise<void>
+  follow(threadId: string, prompt: string, ctx: AgentContext): Promise<void>
 
   /** Best-effort cancellation of an in-flight task. */
   cancel(threadId: string): Promise<void>

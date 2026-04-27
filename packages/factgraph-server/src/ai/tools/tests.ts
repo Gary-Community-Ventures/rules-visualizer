@@ -130,9 +130,7 @@ export const runTests = tool(
           facts,
           allInputs,
           model.nodes as Record<string, { content: { dataType?: string } }>,
-          test.entities as
-            | Record<string, Record<string, unknown>[]>
-            | undefined
+          test.entities as Record<string, Record<string, unknown>[]> | undefined
         )
 
         let allPassed = true

@@ -202,7 +202,6 @@ export function NodeAutocompleteInput({
   )
 }
 
-
 type CaretRect = { top: number; left: number; height: number }
 
 // Style props that affect text wrapping/measurement; we copy these from the
@@ -267,8 +266,7 @@ function getViewportCaretRect(
   div.appendChild(span)
 
   const lineHeight =
-    parseFloat(computed.lineHeight) ||
-    parseFloat(computed.fontSize) * 1.2
+    parseFloat(computed.lineHeight) || parseFloat(computed.fontSize) * 1.2
 
   const localTop =
     span.offsetTop + parseFloat(computed.borderTopWidth) - textarea.scrollTop

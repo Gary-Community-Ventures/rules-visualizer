@@ -40,9 +40,7 @@ function buildNodeIndex(rulesetId: string): string {
     if (compact) {
       bucket.push(node.name)
     } else {
-      const desc = node.description
-        ? ` — ${node.description.slice(0, 60)}`
-        : ''
+      const desc = node.description ? ` — ${node.description.slice(0, 60)}` : ''
       bucket.push(`${node.name}${desc}`)
     }
   }
