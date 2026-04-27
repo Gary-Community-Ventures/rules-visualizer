@@ -12,7 +12,20 @@ export function FactGraphDerivedViewer({ content }: Props) {
   const { model, setOpenNode } = useMainContext()
 
   const navigateToPath = useCallback(
-    (path: string) => {
+    (rawPath: string) => {
+      // Resolve relative paths (e.g. ../meetsAbawdWorkRequirements)
+      // against the current node's path
+      let path = rawPath
+      if (path.startsWith('..') && content.path) {
+        const segments = content.path.split('/')
+        segments.pop() // remove current node's field name
+        for (const seg of rawPath.split('/')) {
+          if (seg === '..') segments.pop()
+          else segments.push(seg)
+        }
+        path = segments.join('/')
+      }
+
       for (const [nodeId, node] of Object.entries(model.nodes)) {
         if (getNodePath(node.content) === path) {
           setOpenNode(nodeId)
@@ -20,7 +33,7 @@ export function FactGraphDerivedViewer({ content }: Props) {
         }
       }
     },
-    [model.nodes, setOpenNode]
+    [model.nodes, setOpenNode, content.path]
   )
 
   return (

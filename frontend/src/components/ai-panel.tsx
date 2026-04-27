@@ -266,16 +266,27 @@ function ChatBox({ onPasswordError }: { onPasswordError: () => void }) {
     setIsLoading(true)
     aiContentRef.current = ''
 
-    // Build history from existing messages (skip greeting and tool calls)
-    const history = messages
-      .filter(
-        (m): m is UserMessage | AIMessage =>
-          m !== GREETING && m.type !== 'toolCall'
-      )
-      .map((m) => ({
-        role: m.type === 'userMessage' ? 'user' : 'assistant',
-        content: m.message,
-      }))
+    // Build history from existing messages (include tool call summaries)
+    const history: { role: string; content: string }[] = []
+    for (const m of messages) {
+      if (m === GREETING) continue
+      if (m.type === 'userMessage') {
+        history.push({ role: 'user', content: m.message })
+      } else if (m.type === 'aiMessage') {
+        history.push({ role: 'assistant', content: m.message })
+      } else if (m.type === 'toolCall' && m.status === 'success' && m.result) {
+        // Summarize tool results so the model retains context.
+        // Truncate large results to avoid blowing up the context.
+        const truncated =
+          m.result.length > 500
+            ? m.result.slice(0, 500) + '... (truncated)'
+            : m.result
+        history.push({
+          role: 'assistant',
+          content: `[Tool: ${m.name}] ${truncated}`,
+        })
+      }
+    }
 
     const reqId = ++requestIdRef.current
 
@@ -515,10 +526,7 @@ function ChatInput({
         setSelectedIndex((i) => Math.max(i - 1, 0))
         return
       }
-      if (
-        e.key === 'Tab' ||
-        (e.key === 'Enter' && suggestions.length > 0 && showSuggestions)
-      ) {
+      if (e.key === 'Tab') {
         e.preventDefault()
         applySuggestion(suggestions[selectedIndex])
         return

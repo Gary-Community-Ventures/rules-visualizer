@@ -9,8 +9,12 @@ export function getModel(modelId?: string): ChatOpenAI {
   if (!apiKey)
     throw new Error('OPEN_ROUTER_KEY environment variable is required')
 
+  const selectedModel =
+    modelId || process.env.AI_MODEL || 'openai/gpt-oss-120b'
+  console.log(`[AI] Using model: ${selectedModel}`)
+
   return new ChatOpenAI({
-    model: modelId || process.env.AI_MODEL || 'openai/gpt-oss-120b',
+    model: selectedModel,
     apiKey,
     configuration: {
       baseURL: 'https://openrouter.ai/api/v1',
@@ -20,5 +24,6 @@ export function getModel(modelId?: string): ChatOpenAI {
       },
     },
     streaming: true,
+    maxTokens: 16384,
   })
 }

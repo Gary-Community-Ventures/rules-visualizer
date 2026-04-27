@@ -1071,5 +1071,425 @@
       "/eligible": false,
       "/snap": 0
     }
+  },
+  {
+    "id": "f4d2182d-68a2-4064-89cf-252231593bee",
+    "name": "Student exclusion – non-elderly non-disabled higher-ed student not meeting exceptions",
+    "description": "A single-member household with a higher-ed student who does not meet any statutory student exemptions should be ineligible for SNAP despite zero income and assets.",
+    "inputs": {
+      "/grossEarnedIncome": 0,
+      "/unearnedIncome": 0,
+      "/dependentCareExpenses": 0,
+      "/rent": 0,
+      "/realEstateTaxes": 0,
+      "/homeownersAssociationFees": 0,
+      "/mortgagePayments": 0,
+      "/homeownersInsurance": 0,
+      "/meetsCategoricalEligibility": false,
+      "/childSupportPaid": 0,
+      "/isHomeless": false
+    },
+    "entities": {
+      "/members": [
+        {
+          "/members/*/isElderly": false,
+          "/members/*/isDisabled": false,
+          "/members/*/medicalExpenses": 0,
+          "/members/*/age": 22,
+          "/members/*/isHigherEdStudent": true,
+          "/members/*/weeklyWorkHours": 10,
+          "/members/*/isWorkStudy": false,
+          "/members/*/isParent": false,
+          "/members/*/isFullTimeCollegeStudent": false,
+          "/members/*/receivesTanf": false,
+          "/members/*/isImmigrationEligible": true,
+          "/members/*/isPregnant": false,
+          "/members/*/isIncapableOfSelfCare": false,
+          "/members/*/abawdCountableMonthsUsed": 0,
+          "/members/*/cashOnHand": 0,
+          "/members/*/bankAccountAssets": 0,
+          "/members/*/stockAssets": 0,
+          "/members/*/bondAssets": 0
+        }
+      ]
+    },
+    "expect": {
+      "/eligible": false,
+      "/snap": 0
+    }
+  },
+  {
+    "id": "53ae4516-5aca-4102-8386-98e83d38595b",
+    "name": "Pregnant exemption test",
+    "description": "Single pregnant adult with low income meets eligibility despite low work hours due to pregnancy exemption.",
+    "inputs": {
+      "/grossEarnedIncome": 500,
+      "/unearnedIncome": 0,
+      "/dependentCareExpenses": 0,
+      "/rent": 0,
+      "/realEstateTaxes": 0,
+      "/homeownersAssociationFees": 0,
+      "/mortgagePayments": 0,
+      "/homeownersInsurance": 0,
+      "/meetsCategoricalEligibility": false,
+      "/childSupportPaid": 0,
+      "/isHomeless": false
+    },
+    "entities": {
+      "/members": [
+        {
+          "/members/*/weeklyWorkHours": 30,
+          "/members/*/isPregnant": true,
+          "/members/*/isImmigrationEligible": true,
+          "/members/*/age": 30,
+          "/members/*/cashOnHand": 0,
+          "/members/*/bankAccountAssets": 0,
+          "/members/*/stockAssets": 0,
+          "/members/*/bondAssets": 0
+        }
+      ]
+    },
+    "expect": {
+      "/eligible": true,
+      "/snap": 298
+    }
+  },
+  {
+    "id": "f14f4312-7516-4b16-9e6d-45adcff8efd7",
+    "name": "ABAWD months exhausted - ineligible",
+    "description": "Single childless adult who has used all 36 countable months should be ineligible despite meeting other requirements",
+    "inputs": {
+      "/grossEarnedIncome": 0,
+      "/unearnedIncome": 0,
+      "/dependentCareExpenses": 0,
+      "/rent": 0,
+      "/realEstateTaxes": 0,
+      "/homeownersAssociationFees": 0,
+      "/mortgagePayments": 0,
+      "/homeownersInsurance": 0,
+      "/meetsCategoricalEligibility": false,
+      "/childSupportPaid": 0,
+      "/isHomeless": false
+    },
+    "entities": {
+      "/members": [
+        {
+          "/members/*/age": 35,
+          "/members/*/isElderly": false,
+          "/members/*/isDisabled": false,
+          "/members/*/isHigherEdStudent": false,
+          "/members/*/weeklyWorkHours": 10,
+          "/members/*/isWorkStudy": false,
+          "/members/*/isParent": false,
+          "/members/*/isFullTimeCollegeStudent": false,
+          "/members/*/receivesTanf": false,
+          "/members/*/isImmigrationEligible": true,
+          "/members/*/isPregnant": false,
+          "/members/*/isIncapableOfSelfCare": false,
+          "/members/*/abawdCountableMonthsUsed": 36,
+          "/members/*/cashOnHand": 0,
+          "/members/*/bankAccountAssets": 0,
+          "/members/*/stockAssets": 0,
+          "/members/*/bondAssets": 0,
+          "/members/*/medicalExpenses": 0
+        }
+      ]
+    },
+    "expect": {
+      "/members/*/hasAbawdMonthsRemaining": [
+        false
+      ],
+      "/members/*/satisfiesAbawd": [
+        false
+      ],
+      "/eligible": false,
+      "/snap": 0
+    }
+  },
+  {
+    "id": "a4553e75-ac9c-447e-b5ee-38fa28c89f1b",
+    "name": "ABAWD parent exemption - eligible",
+    "description": "Parent with dependent child under 14 should be exempt from ABAWD work requirements even with low work hours",
+    "inputs": {
+      "/grossEarnedIncome": 0,
+      "/unearnedIncome": 0,
+      "/dependentCareExpenses": 0,
+      "/rent": 400,
+      "/realEstateTaxes": 0,
+      "/homeownersAssociationFees": 0,
+      "/mortgagePayments": 0,
+      "/homeownersInsurance": 0,
+      "/meetsCategoricalEligibility": false,
+      "/childSupportPaid": 0,
+      "/isHomeless": false
+    },
+    "entities": {
+      "/members": [
+        {
+          "/members/*/age": 30,
+          "/members/*/isElderly": false,
+          "/members/*/isDisabled": false,
+          "/members/*/isHigherEdStudent": false,
+          "/members/*/weeklyWorkHours": 10,
+          "/members/*/isWorkStudy": false,
+          "/members/*/isParent": true,
+          "/members/*/isFullTimeCollegeStudent": false,
+          "/members/*/receivesTanf": false,
+          "/members/*/isImmigrationEligible": true,
+          "/members/*/isPregnant": false,
+          "/members/*/isIncapableOfSelfCare": false,
+          "/members/*/abawdCountableMonthsUsed": 0,
+          "/members/*/cashOnHand": 0,
+          "/members/*/bankAccountAssets": 0,
+          "/members/*/stockAssets": 0,
+          "/members/*/bondAssets": 0,
+          "/members/*/medicalExpenses": 0
+        },
+        {
+          "/members/*/age": 10,
+          "/members/*/isElderly": false,
+          "/members/*/isDisabled": false,
+          "/members/*/isHigherEdStudent": false,
+          "/members/*/weeklyWorkHours": 0,
+          "/members/*/isWorkStudy": false,
+          "/members/*/isParent": false,
+          "/members/*/isFullTimeCollegeStudent": false,
+          "/members/*/receivesTanf": false,
+          "/members/*/isImmigrationEligible": true,
+          "/members/*/isPregnant": false,
+          "/members/*/isIncapableOfSelfCare": false,
+          "/members/*/abawdCountableMonthsUsed": 0,
+          "/members/*/cashOnHand": 0,
+          "/members/*/bankAccountAssets": 0,
+          "/members/*/stockAssets": 0,
+          "/members/*/bondAssets": 0,
+          "/members/*/medicalExpenses": 0
+        }
+      ]
+    },
+    "expect": {
+      "/hasChildUnderAbawdDependentLimit": true,
+      "/members/*/satisfiesAbawd": [
+        true,
+        true
+      ],
+      "/eligible": true,
+      "/snap": 298
+    }
+  },
+  {
+    "id": "87821c37-68e1-43be-8685-e944d00e46ae",
+    "name": "ABAWD work hours threshold - just under",
+    "description": "Single adult working exactly 19 hours per week should not meet ABAWD work requirements (needs 20+ hours)",
+    "inputs": {
+      "/grossEarnedIncome": 760,
+      "/unearnedIncome": 0,
+      "/dependentCareExpenses": 0,
+      "/rent": 0,
+      "/realEstateTaxes": 0,
+      "/homeownersAssociationFees": 0,
+      "/mortgagePayments": 0,
+      "/homeownersInsurance": 0,
+      "/meetsCategoricalEligibility": false,
+      "/childSupportPaid": 0,
+      "/isHomeless": false
+    },
+    "entities": {
+      "/members": [
+        {
+          "/members/*/age": 25,
+          "/members/*/isElderly": false,
+          "/members/*/isDisabled": false,
+          "/members/*/isHigherEdStudent": false,
+          "/members/*/weeklyWorkHours": 19,
+          "/members/*/isWorkStudy": false,
+          "/members/*/isParent": false,
+          "/members/*/isFullTimeCollegeStudent": false,
+          "/members/*/receivesTanf": false,
+          "/members/*/isImmigrationEligible": true,
+          "/members/*/isPregnant": false,
+          "/members/*/isIncapableOfSelfCare": false,
+          "/members/*/abawdCountableMonthsUsed": 0,
+          "/members/*/cashOnHand": 0,
+          "/members/*/bankAccountAssets": 0,
+          "/members/*/stockAssets": 0,
+          "/members/*/bondAssets": 0,
+          "/members/*/medicalExpenses": 0
+        }
+      ]
+    },
+    "expect": {
+      "/members/*/meetsAbawdWorkHoursThreshold": [
+        false
+      ],
+      "/members/*/satisfiesAbawd": [
+        true
+      ],
+      "/members/*/meetsWorkRequirements": [
+        false
+      ],
+      "/eligible": false
+    }
+  },
+  {
+    "id": "a6b3744d-a509-42b1-a330-4bf1e6235d3e",
+    "name": "ABAWD work hours threshold - meets requirement",
+    "description": "Single adult working exactly 20 hours per week should meet ABAWD work requirements",
+    "inputs": {
+      "/grossEarnedIncome": 800,
+      "/unearnedIncome": 0,
+      "/dependentCareExpenses": 0,
+      "/rent": 0,
+      "/realEstateTaxes": 0,
+      "/homeownersAssociationFees": 0,
+      "/mortgagePayments": 0,
+      "/homeownersInsurance": 0,
+      "/meetsCategoricalEligibility": false,
+      "/childSupportPaid": 0,
+      "/isHomeless": false
+    },
+    "entities": {
+      "/members": [
+        {
+          "/members/*/age": 25,
+          "/members/*/isElderly": false,
+          "/members/*/isDisabled": false,
+          "/members/*/isHigherEdStudent": false,
+          "/members/*/weeklyWorkHours": 20,
+          "/members/*/isWorkStudy": false,
+          "/members/*/isParent": false,
+          "/members/*/isFullTimeCollegeStudent": false,
+          "/members/*/receivesTanf": false,
+          "/members/*/isImmigrationEligible": true,
+          "/members/*/isPregnant": false,
+          "/members/*/isIncapableOfSelfCare": false,
+          "/members/*/abawdCountableMonthsUsed": 0,
+          "/members/*/cashOnHand": 0,
+          "/members/*/bankAccountAssets": 0,
+          "/members/*/stockAssets": 0,
+          "/members/*/bondAssets": 0,
+          "/members/*/medicalExpenses": 0
+        }
+      ]
+    },
+    "expect": {
+      "/members/*/meetsAbawdWorkHoursThreshold": [
+        true
+      ],
+      "/members/*/satisfiesAbawd": [
+        true
+      ],
+      "/members/*/meetsWorkRequirements": [
+        false
+      ],
+      "/eligible": false
+    }
+  },
+  {
+    "id": "39a1b92f-5185-44a8-ade1-e1f68f988a5c",
+    "name": "ABAWD age exemption - age 17",
+    "description": "A 17-year-old is ABAWD-exempt but still subject to general work requirements (ages 16-59), so they're ineligible unless they work 30+ hours",
+    "inputs": {
+      "/grossEarnedIncome": 0,
+      "/unearnedIncome": 0,
+      "/dependentCareExpenses": 0,
+      "/rent": 300,
+      "/realEstateTaxes": 0,
+      "/homeownersAssociationFees": 0,
+      "/mortgagePayments": 0,
+      "/homeownersInsurance": 0,
+      "/meetsCategoricalEligibility": false,
+      "/childSupportPaid": 0,
+      "/isHomeless": false
+    },
+    "entities": {
+      "/members": [
+        {
+          "/members/*/age": 17,
+          "/members/*/isElderly": false,
+          "/members/*/isDisabled": false,
+          "/members/*/isHigherEdStudent": false,
+          "/members/*/weeklyWorkHours": 0,
+          "/members/*/isWorkStudy": false,
+          "/members/*/isParent": false,
+          "/members/*/isFullTimeCollegeStudent": false,
+          "/members/*/receivesTanf": false,
+          "/members/*/isImmigrationEligible": true,
+          "/members/*/isPregnant": false,
+          "/members/*/isIncapableOfSelfCare": false,
+          "/members/*/abawdCountableMonthsUsed": 0,
+          "/members/*/cashOnHand": 0,
+          "/members/*/bankAccountAssets": 0,
+          "/members/*/stockAssets": 0,
+          "/members/*/bondAssets": 0,
+          "/members/*/medicalExpenses": 0
+        }
+      ]
+    },
+    "expect": {
+      "/members/*/meetsAbawdAgeExemption": [
+        true
+      ],
+      "/members/*/satisfiesAbawd": [
+        true
+      ],
+      "/members/*/meetsGeneralWorkRequirements": [
+        false
+      ],
+      "/eligible": false,
+      "/snap": 0
+    }
+  },
+  {
+    "id": "a14bbeae-e01e-43f4-8d81-a34164d19bde",
+    "name": "ABAWD pregnancy exemption",
+    "description": "Pregnant member is ABAWD-exempt but still subject to general work requirements, so ineligible with only 10 hours of work",
+    "inputs": {
+      "/grossEarnedIncome": 0,
+      "/unearnedIncome": 0,
+      "/dependentCareExpenses": 0,
+      "/rent": 500,
+      "/realEstateTaxes": 0,
+      "/homeownersAssociationFees": 0,
+      "/mortgagePayments": 0,
+      "/homeownersInsurance": 0,
+      "/meetsCategoricalEligibility": false,
+      "/childSupportPaid": 0,
+      "/isHomeless": false
+    },
+    "entities": {
+      "/members": [
+        {
+          "/members/*/age": 28,
+          "/members/*/isElderly": false,
+          "/members/*/isDisabled": false,
+          "/members/*/isHigherEdStudent": false,
+          "/members/*/weeklyWorkHours": 0,
+          "/members/*/isWorkStudy": false,
+          "/members/*/isParent": false,
+          "/members/*/isFullTimeCollegeStudent": false,
+          "/members/*/receivesTanf": false,
+          "/members/*/isImmigrationEligible": true,
+          "/members/*/isPregnant": true,
+          "/members/*/isIncapableOfSelfCare": false,
+          "/members/*/abawdCountableMonthsUsed": 20,
+          "/members/*/cashOnHand": 0,
+          "/members/*/bankAccountAssets": 0,
+          "/members/*/stockAssets": 0,
+          "/members/*/bondAssets": 0,
+          "/members/*/medicalExpenses": 0
+        }
+      ]
+    },
+    "expect": {
+      "/members/*/satisfiesAbawd": [
+        true
+      ],
+      "/members/*/meetsGeneralWorkRequirements": [
+        false
+      ],
+      "/eligible": false,
+      "/snap": 0
+    }
   }
 ]
