@@ -15,13 +15,13 @@ export function FactGraphWritableViewer({ content }: Props) {
     (rawPath: string) => {
       let path = rawPath
       if (path.startsWith('..') && content.path) {
-        const segments = content.path.split('/')
+        const segments = content.path.split('/').filter(Boolean)
         segments.pop()
-        for (const seg of rawPath.split('/')) {
-          if (seg === '..') segments.pop()
-          else segments.push(seg)
+        let remaining = rawPath
+        while (remaining.startsWith('../')) {
+          remaining = remaining.slice(3)
         }
-        path = segments.join('/')
+        path = '/' + segments.join('/') + '/' + remaining
       }
 
       for (const [nodeId, node] of Object.entries(model.nodes)) {

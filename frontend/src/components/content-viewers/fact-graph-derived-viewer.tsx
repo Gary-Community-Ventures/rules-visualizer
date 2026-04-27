@@ -14,16 +14,18 @@ export function FactGraphDerivedViewer({ content }: Props) {
   const navigateToPath = useCallback(
     (rawPath: string) => {
       // Resolve relative paths (e.g. ../meetsAbawdWorkRequirements)
-      // against the current node's path
+      // against the current node's path. In fact graph, ../ means
+      // "sibling in the same collection" — pop the field name, strip
+      // ../ prefixes, append the remainder.
       let path = rawPath
       if (path.startsWith('..') && content.path) {
-        const segments = content.path.split('/')
+        const segments = content.path.split('/').filter(Boolean)
         segments.pop() // remove current node's field name
-        for (const seg of rawPath.split('/')) {
-          if (seg === '..') segments.pop()
-          else segments.push(seg)
+        let remaining = rawPath
+        while (remaining.startsWith('../')) {
+          remaining = remaining.slice(3)
         }
-        path = segments.join('/')
+        path = '/' + segments.join('/') + '/' + remaining
       }
 
       for (const [nodeId, node] of Object.entries(model.nodes)) {
