@@ -1,0 +1,159 @@
+<?xml version="1.0"?>
+<?xml-model href="./FactDictionaryModule.rng"?>
+<FactDictionaryModule>
+  <Facts>
+    <Fact path="/elderlyAndDisabledTaxCreditAmount">
+      <Writable>
+        <Dollar/>
+      </Writable>
+      <Placeholder>
+        <Dollar>0</Dollar>
+      </Placeholder>
+    </Fact>
+    <Fact path="/flowIsEligibleForEDC">
+      <Description>If taxpayers are MFS and do not live together all year, or any non-MFS status, they are eligible </Description>
+      <Derived>
+        <LessThan>
+          <Left>
+            <Dependency path="/agi"/>
+          </Left>
+          <Right>
+            <Dependency path="/maxAGIForElderlyAndDisabledTaxCredit"/>
+          </Right>
+        </LessThan>
+      </Derived>
+    </Fact>
+    <Fact path="/maxAGIForElderlyAndDisabledTaxCredit">
+      <TaxYear>2025</TaxYear>
+      <Derived>
+        <Switch>
+          <Case>
+            <When>
+              <Dependency path="/isFilingStatusMFJ"/>
+            </When>
+            <Then>
+              <!-- Uses upper limit & assumes both qualify -->
+              <Dollar>25000</Dollar>
+            </Then>
+          </Case>
+          <Case>
+            <When>
+              <All>
+                <Dependency path="/isFilingStatusMFS"/>
+                <Not>
+                  <Dependency path="/isMFSLivedTogether"/>
+                </Not>
+              </All>
+            </When>
+            <Then>
+              <Dollar>12500</Dollar>
+            </Then>
+          </Case>
+          <Case>
+            <When>
+              <All>
+                <Dependency path="/isFilingStatusMFS"/>
+                <Dependency path="/isMFSLivedTogether"/>
+              </All>
+            </When>
+            <Then>
+              <Dollar>0</Dollar>
+            </Then>
+          </Case>
+          <Case>
+            <When>
+              <True/>
+            </When>
+            <Then>
+              <Dollar>17500</Dollar>
+            </Then>
+          </Case>
+        </Switch>
+      </Derived>
+    </Fact>
+    <Fact path="/maxElderlyAndDisabledTaxCredit">
+      <TaxYear>2025</TaxYear>
+      <Derived>
+        <Switch>
+          <Case>
+            <When>
+              <Dependency path="/isFilingStatusMFJ"/>
+            </When>
+            <Then>
+              <Dollar>7500</Dollar>
+            </Then>
+          </Case>
+          <Case>
+            <When>
+              <All>
+                <Dependency path="/isFilingStatusMFS"/>
+                <Not>
+                  <Dependency path="/isMFSLivedTogether"/>
+                </Not>
+              </All>
+            </When>
+            <Then>
+              <Dollar>3750</Dollar>
+            </Then>
+          </Case>
+          <Case>
+            <When>
+              <All>
+                <Dependency path="/isFilingStatusMFS"/>
+                <Dependency path="/isMFSLivedTogether"/>
+              </All>
+            </When>
+            <Then>
+              <Dollar>0</Dollar>
+            </Then>
+          </Case>
+          <Case>
+            <When>
+              <True/>
+            </When>
+            <Then>
+              <Dollar>5000</Dollar>
+            </Then>
+          </Case>
+        </Switch>
+      </Derived>
+    </Fact>
+    <Fact path="/isEDCOverMax">
+      <Derived>
+        <Switch>
+          <Case>
+            <When>
+              <GreaterThan>
+                <Left>
+                  <Dependency path="/elderlyAndDisabledTaxCreditAmount"/>
+                </Left>
+                <Right>
+                  <Dependency path="/maxElderlyAndDisabledTaxCredit"/>
+                </Right>
+              </GreaterThan>
+            </When>
+            <Then>
+              <True/>
+            </Then>
+          </Case>
+          <Case>
+            <When>
+              <True/>
+            </When>
+            <Then>
+              <False/>
+            </Then>
+          </Case>
+        </Switch>
+      </Derived>
+    </Fact>
+    <Fact path="/totalEdc">
+      <Derived>
+        <LesserOf>
+          <Dependency path="/maxElderlyAndDisabledTaxCredit"/>
+          <Dependency path="/elderlyAndDisabledTaxCreditAmount"/>
+        </LesserOf>
+      </Derived>
+    </Fact>
+  </Facts>
+</FactDictionaryModule>
