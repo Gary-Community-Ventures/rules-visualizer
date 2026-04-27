@@ -38,6 +38,8 @@ type DigestFact = {
   writable: DigestWritable | null
   derived: DigestNode | null
   placeholder: DigestNode | null
+  overrideCondition: DigestNode | null
+  overrideDefault: DigestNode | null
 }
 
 function processOptions(
@@ -206,7 +208,24 @@ function createGraph(rulesetId: string, facts: ParsedFact[]): unknown {
       ? processDerived(raw['Placeholder'] as Record<string, unknown>)
       : null
 
-    return { path: fact.path, writable, derived, placeholder }
+    const override = raw['Override'] as Record<string, unknown> | undefined
+    const overrideCondition =
+      override?.['Condition']
+        ? processDerived(override['Condition'] as Record<string, unknown>)
+        : null
+    const overrideDefault =
+      override?.['Default']
+        ? processDerived(override['Default'] as Record<string, unknown>)
+        : null
+
+    return {
+      path: fact.path,
+      writable,
+      derived,
+      placeholder,
+      overrideCondition,
+      overrideDefault,
+    }
   })
 
   // Create the Scala.js graph
@@ -218,8 +237,8 @@ function createGraph(rulesetId: string, facts: ParsedFact[]): unknown {
         fact.writable,
         fact.derived,
         fact.placeholder,
-        null,
-        null
+        fact.overrideCondition,
+        fact.overrideDefault
       )
     )
   )
