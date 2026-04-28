@@ -57,18 +57,14 @@ function buildNodeIndex(rulesetId: string): string {
     if (compact) {
       bucket.push(node.name)
     } else {
-      const desc = node.description
-        ? ` — ${node.description.slice(0, 60)}`
-        : ''
+      const desc = node.description ? ` — ${node.description.slice(0, 60)}` : ''
       bucket.push(`${node.name}${desc}`)
     }
   }
 
   // Root/output nodes: computed nodes that no other node depends on
   const rootNodes = nodes
-    .filter(
-      (n) => n.content.type === 'derived' && !isDependedOn.has(n.id)
-    )
+    .filter((n) => n.content.type === 'derived' && !isDependedOn.has(n.id))
     .map((n) => n.name)
 
   // Build summary header
