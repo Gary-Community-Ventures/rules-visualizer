@@ -1,30 +1,10 @@
+// MUST be the first import — populates process.env from .env before any
+// other module's top-level code runs (ES module imports are hoisted, so
+// inline loadEnv() calls execute too late for env-gated mount decisions).
+import './load-env.js'
+
 import path from 'node:path'
 import fs from 'node:fs'
-
-// Load .env — search from cwd upward to find it
-function loadEnv() {
-  let dir = process.cwd()
-  while (true) {
-    const envFile = path.join(dir, '.env')
-    if (fs.existsSync(envFile)) {
-      for (const line of fs.readFileSync(envFile, 'utf-8').split('\n')) {
-        const trimmed = line.trim()
-        if (!trimmed || trimmed.startsWith('#')) continue
-        const eq = trimmed.indexOf('=')
-        if (eq === -1) continue
-        const key = trimmed.slice(0, eq)
-        const value = trimmed.slice(eq + 1)
-        if (!process.env[key]) process.env[key] = value
-      }
-      return
-    }
-    const parent = path.dirname(dir)
-    if (parent === dir) return
-    dir = parent
-  }
-}
-loadEnv()
-
 import { loadFactGraphData } from './store.js'
 import { createServer } from './server.js'
 import { startWatcher } from './watcher.js'

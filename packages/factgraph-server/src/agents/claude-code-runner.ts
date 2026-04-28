@@ -1,5 +1,5 @@
 import { spawn, type ChildProcess } from 'node:child_process'
-import { patchTask, setStatus } from './store.js'
+import { finishLastIteration, patchTask } from './store.js'
 import type { AgentContext, AgentRunner } from './types.js'
 
 const SUMMARY_MARKER_START = '<<TASK_RESULT>>'
@@ -133,32 +133,44 @@ async function spawnClaude(
 
   proc.on('error', (err) => {
     inflight.delete(threadId)
-    setStatus(ctx.rulesetId, threadId, 'failed', {
-      error: err.message,
-    })
+    finishLastIteration(
+      ctx.rulesetId,
+      threadId,
+      { status: 'failed', error: err.message, modifiedPaths: [] },
+      'failed'
+    )
   })
 
   proc.on('close', (code) => {
     inflight.delete(threadId)
+    if (providerSessionId) {
+      patchTask(ctx.rulesetId, threadId, { sessionId: providerSessionId })
+    }
     if (code === 0) {
       const parsed = parseSummaryMarker(lastAssistantText)
-      setStatus(ctx.rulesetId, threadId, 'ready', {
-        summary: parsed?.summary ?? lastAssistantText.slice(0, 240),
-        modifiedPaths: parsed?.modifiedPaths ?? [],
-        sessionId: providerSessionId,
-      })
+      finishLastIteration(
+        ctx.rulesetId,
+        threadId,
+        {
+          status: 'ready',
+          summary: parsed?.summary ?? lastAssistantText.slice(0, 240),
+          modifiedPaths: parsed?.modifiedPaths ?? [],
+        },
+        'ready'
+      )
     } else {
-      setStatus(ctx.rulesetId, threadId, 'failed', {
-        error: stderrBuf.slice(-2000) || `exited with code ${code}`,
-        sessionId: providerSessionId,
-      })
+      finishLastIteration(
+        ctx.rulesetId,
+        threadId,
+        {
+          status: 'failed',
+          error: stderrBuf.slice(-2000) || `exited with code ${code}`,
+          modifiedPaths: [],
+        },
+        'failed'
+      )
     }
   })
-
-  // Mark the existing thread as running again on follow-up.
-  if (resume) {
-    patchTask(ctx.rulesetId, threadId, { status: 'running' })
-  }
 }
 
 function parseSummaryMarker(

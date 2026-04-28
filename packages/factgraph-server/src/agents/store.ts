@@ -1,7 +1,58 @@
 import path from 'node:path'
 import fs from 'node:fs'
 import { randomUUID } from 'node:crypto'
-import type { Task, TaskStatus } from './types.js'
+import type { Task, TaskIteration, TaskStatus } from './types.js'
+
+// Old (pre-iterations) on-disk shape we still need to migrate from.
+type LegacyTask = {
+  threadId: string
+  rulesetId: string
+  prompt?: string
+  followUps?: string[]
+  status: TaskStatus
+  sessionId?: string
+  summary?: string
+  modifiedPaths?: string[]
+  error?: string
+  createdAt: string
+  updatedAt: string
+  iterations?: TaskIteration[]
+}
+
+function migrateTask(raw: LegacyTask): Task {
+  if (Array.isArray(raw.iterations)) {
+    // Already migrated.
+    return raw as unknown as Task
+  }
+  const prompts = [raw.prompt ?? '', ...(raw.followUps ?? [])]
+  const iterations: TaskIteration[] = prompts.map((p, i) => {
+    const isLast = i === prompts.length - 1
+    return {
+      prompt: p,
+      // Old format stored only the latest run's outcome; attribute it to the
+      // last iteration. Earlier iterations are silently 'ready' with no body.
+      status: isLast
+        ? raw.status === 'running' || raw.status === 'failed'
+          ? raw.status
+          : 'ready'
+        : 'ready',
+      summary: isLast ? raw.summary : undefined,
+      modifiedPaths: isLast ? raw.modifiedPaths ?? [] : [],
+      error: isLast ? raw.error : undefined,
+      startedAt: raw.createdAt,
+      completedAt: isLast ? raw.updatedAt : raw.updatedAt,
+    }
+  })
+  return {
+    threadId: raw.threadId,
+    rulesetId: raw.rulesetId,
+    iterations,
+    status: raw.status,
+    sessionId: raw.sessionId,
+    createdAt: raw.createdAt,
+    updatedAt: raw.updatedAt,
+  }
+}
 
 const ROOT = path.resolve(process.cwd(), '.claude-tasks')
 
@@ -29,7 +80,7 @@ export function readTask(
   const file = taskFile(rulesetId, threadId)
   if (!fs.existsSync(file)) return undefined
   try {
-    return JSON.parse(fs.readFileSync(file, 'utf-8')) as Task
+    return migrateTask(JSON.parse(fs.readFileSync(file, 'utf-8')))
   } catch {
     return undefined
   }
@@ -50,7 +101,7 @@ export function listTasks(rulesetId: string): Task[] {
   const tasks: Task[] = []
   for (const f of files) {
     try {
-      tasks.push(JSON.parse(fs.readFileSync(path.join(dir, f), 'utf-8')))
+      tasks.push(migrateTask(JSON.parse(fs.readFileSync(path.join(dir, f), 'utf-8'))))
     } catch {
       // skip malformed files
     }
@@ -83,4 +134,32 @@ export function setStatus(
   extra?: Partial<Task>
 ): Task | undefined {
   return patchTask(rulesetId, threadId, { ...extra, status })
+}
+
+/**
+ * Update the most recently appended iteration (the one currently running)
+ * with what the agent reported back. Also bumps top-level task status to
+ * mirror the iteration's outcome.
+ */
+export function finishLastIteration(
+  rulesetId: string,
+  threadId: string,
+  patch: Partial<TaskIteration>,
+  outerStatus: TaskStatus
+): Task | undefined {
+  const existing = readTask(rulesetId, threadId)
+  if (!existing) return undefined
+  const last = existing.iterations[existing.iterations.length - 1]
+  if (!last) return undefined
+  const next: Task = {
+    ...existing,
+    iterations: [
+      ...existing.iterations.slice(0, -1),
+      { ...last, ...patch, completedAt: new Date().toISOString() },
+    ],
+    status: outerStatus,
+    updatedAt: new Date().toISOString(),
+  }
+  writeTask(next)
+  return next
 }

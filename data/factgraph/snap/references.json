@@ -145,31 +145,12 @@
           "h": 0.01486988847583643
         }
       ]
-    },
-    {
-      "id": "snap-financial-eligibility__test",
-      "documentId": "snap-financial-eligibility",
-      "label": "test",
-      "text": "MONTHLY FINANCIAL ELIGIBILITY STANDARDS",
-      "page": 1,
-      "rects": [
-        {
-          "x": 0.047734375,
-          "y": 0.08517992424242424,
-          "w": 0.7077548217773437,
-          "h": 0.021212121212121213
-        }
-      ]
     }
   ],
   "mappings": [
     {
       "nodePath": "/snap",
       "sectionId": "10-ccr-2506-1__test"
-    },
-    {
-      "nodePath": "/snap",
-      "sectionId": "snap-financial-eligibility__test"
     }
   ]
 }

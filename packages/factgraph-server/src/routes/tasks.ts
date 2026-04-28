@@ -3,6 +3,7 @@ import path from 'node:path'
 import fs from 'node:fs'
 import { claudeCodeRunner } from '../agents/claude-code-runner.js'
 import {
+  finishLastIteration,
   getTaskDir,
   listTasks,
   newThreadId,
@@ -71,10 +72,10 @@ router.post('/rulesets/:id/tasks', async (req, res) => {
   const task: Task = {
     threadId,
     rulesetId,
-    prompt,
-    followUps: [],
+    iterations: [
+      { prompt, status: 'running', modifiedPaths: [], startedAt: now },
+    ],
     status: 'running',
-    modifiedPaths: [],
     createdAt: now,
     updatedAt: now,
   }
@@ -83,9 +84,16 @@ router.post('/rulesets/:id/tasks', async (req, res) => {
     await runner.start(threadId, prompt, ctx)
     res.json({ task: withRuntime(task) })
   } catch (err) {
-    setStatus(rulesetId, threadId, 'failed', {
-      error: err instanceof Error ? err.message : String(err),
-    })
+    finishLastIteration(
+      rulesetId,
+      threadId,
+      {
+        status: 'failed',
+        error: err instanceof Error ? err.message : String(err),
+        modifiedPaths: [],
+      },
+      'failed'
+    )
     res.status(500).json({ error: 'Failed to start agent' })
   }
 })
@@ -107,17 +115,30 @@ router.post('/rulesets/:id/tasks/:threadId/follow', async (req, res) => {
     res.status(404).json({ error: 'Ruleset not found' })
     return
   }
-  task.followUps.push(prompt)
+  const now = new Date().toISOString()
+  task.iterations.push({
+    prompt,
+    status: 'running',
+    modifiedPaths: [],
+    startedAt: now,
+  })
   task.status = 'running'
-  task.updatedAt = new Date().toISOString()
+  task.updatedAt = now
   writeTask(task)
   try {
     await runner.follow(threadId, prompt, ctx)
     res.json({ task: withRuntime(task) })
   } catch (err) {
-    setStatus(rulesetId, threadId, 'failed', {
-      error: err instanceof Error ? err.message : String(err),
-    })
+    finishLastIteration(
+      rulesetId,
+      threadId,
+      {
+        status: 'failed',
+        error: err instanceof Error ? err.message : String(err),
+        modifiedPaths: [],
+      },
+      'failed'
+    )
     res.status(500).json({ error: 'Failed to follow up agent' })
   }
 })

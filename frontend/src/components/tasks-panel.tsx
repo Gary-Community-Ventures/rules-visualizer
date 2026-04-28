@@ -7,6 +7,7 @@ import {
   listTasks,
   setTaskStatus,
   type Task,
+  type TaskIteration,
   type TaskStatus,
 } from '@/lib/api/tasks-api'
 import { Button } from './ui/button'
@@ -134,6 +135,73 @@ export function TasksPanel() {
   )
 }
 
+function IterationView({
+  iteration,
+  index,
+  total,
+  nodes,
+  onOpenNode,
+  muted,
+}: {
+  iteration: TaskIteration
+  index: number
+  total: number
+  nodes: Record<string, { name: string }>
+  onOpenNode: (id: string | null) => void
+  muted?: boolean
+}) {
+  return (
+    <div
+      className={cn(
+        'rounded border bg-muted/30 p-2 space-y-1.5',
+        muted && 'opacity-70'
+      )}
+    >
+      <p className="text-[10px] uppercase tracking-wide text-muted-foreground">
+        {index === 1 ? 'Prompt' : 'Follow-up'} {index}/{total}
+      </p>
+      <div className="text-xs whitespace-pre-wrap rounded border bg-background px-2 py-1.5">
+        {iteration.prompt}
+      </div>
+      {iteration.status === 'running' && (
+        <p className="flex items-center gap-1 text-[11px] text-blue-700">
+          <Loader2 className="size-3 animate-spin" /> Running…
+        </p>
+      )}
+      {iteration.summary && (
+        <p className="text-xs text-muted-foreground whitespace-pre-wrap">
+          {iteration.summary}
+        </p>
+      )}
+      {iteration.error && (
+        <pre className="text-[11px] text-red-700 bg-red-50 border border-red-200 rounded p-1.5 overflow-auto">
+          {iteration.error}
+        </pre>
+      )}
+      {iteration.modifiedPaths.length > 0 && (
+        <div>
+          <p className="text-[11px] font-medium text-muted-foreground mb-1">
+            Modified
+          </p>
+          <ul className="space-y-0.5">
+            {iteration.modifiedPaths.map((p) => (
+              <li key={p}>
+                <button
+                  className="text-xs font-mono text-blue-700 hover:underline"
+                  onClick={() => onOpenNode(p)}
+                  title={nodes[p] ? `Open ${nodes[p].name}` : p}
+                >
+                  {p}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  )
+}
+
 function statusIcon(status: TaskStatus) {
   switch (status) {
     case 'running':
@@ -161,12 +229,16 @@ function TaskCard({
   onChange: (task: Task) => void
 }) {
   const [expanded, setExpanded] = useState(task.status === 'ready')
+  const [showHistory, setShowHistory] = useState(false)
   const [followUp, setFollowUp] = useState('')
   const [busy, setBusy] = useState(false)
   const [copied, setCopied] = useState(false)
 
   const isArchived = task.status === 'archived'
   const isRunning = task.status === 'running'
+  const iterations = task.iterations
+  const latestIteration = iterations[iterations.length - 1]
+  const headerPrompt = iterations[0]?.prompt ?? ''
 
   async function copyResumeCommand() {
     if (!task.resumeCommand) return
@@ -219,7 +291,7 @@ function TaskCard({
             isArchived && 'line-through'
           )}
         >
-          {task.prompt}
+          {headerPrompt}
         </span>
       </button>
       {expanded && (
@@ -240,35 +312,46 @@ function TaskCard({
               {copied ? 'Copied' : 'Copy resume command'}
             </Button>
           )}
-          {task.summary && (
-            <p className="text-xs text-muted-foreground whitespace-pre-wrap">
-              {task.summary}
-            </p>
+          {iterations.length > 1 && (
+            <button
+              type="button"
+              className="flex items-center gap-1 text-[11px] font-medium text-muted-foreground hover:text-foreground"
+              onClick={() => setShowHistory((v) => !v)}
+            >
+              {showHistory ? (
+                <ChevronDown className="size-3" />
+              ) : (
+                <ChevronRight className="size-3" />
+              )}
+              {showHistory
+                ? 'Hide previous iterations'
+                : `Show ${iterations.length - 1} previous iteration${
+                    iterations.length - 1 === 1 ? '' : 's'
+                  }`}
+            </button>
           )}
-          {task.error && (
-            <pre className="text-[11px] text-red-700 bg-red-50 border border-red-200 rounded p-1.5 overflow-auto">
-              {task.error}
-            </pre>
-          )}
-          {task.modifiedPaths.length > 0 && (
-            <div>
-              <p className="text-[11px] font-medium text-muted-foreground mb-1">
-                Modified
-              </p>
-              <ul className="space-y-0.5">
-                {task.modifiedPaths.map((p) => (
-                  <li key={p}>
-                    <button
-                      className="text-xs font-mono text-blue-700 hover:underline"
-                      onClick={() => onOpenNode(p)}
-                      title={nodes[p] ? `Open ${nodes[p].name}` : p}
-                    >
-                      {p}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </div>
+          {showHistory &&
+            iterations
+              .slice(0, -1)
+              .map((it, i) => (
+                <IterationView
+                  key={i}
+                  iteration={it}
+                  index={i + 1}
+                  total={iterations.length}
+                  nodes={nodes}
+                  onOpenNode={onOpenNode}
+                  muted
+                />
+              ))}
+          {latestIteration && (
+            <IterationView
+              iteration={latestIteration}
+              index={iterations.length}
+              total={iterations.length}
+              nodes={nodes}
+              onOpenNode={onOpenNode}
+            />
           )}
           {!isArchived && task.status !== 'complete' && (
             <div className="space-y-1.5">

@@ -5,17 +5,23 @@ export type TaskStatus =
   | 'archived'
   | 'failed'
 
-export type Task = {
-  threadId: string
-  rulesetId: string
+export type TaskIteration = {
   prompt: string
-  followUps: string[]
-  resumeCommand?: string
-  status: TaskStatus
-  sessionId?: string
+  status: 'running' | 'ready' | 'failed'
   summary?: string
   modifiedPaths: string[]
   error?: string
+  startedAt: string
+  completedAt?: string
+}
+
+export type Task = {
+  threadId: string
+  rulesetId: string
+  iterations: TaskIteration[]
+  status: TaskStatus
+  sessionId?: string
+  resumeCommand?: string
   createdAt: string
   updatedAt: string
 }
