@@ -21,8 +21,8 @@ function buildNodeIndex(rulesetId: string): string {
   const model = getRuleset(rulesetId)
   if (!model) return ''
 
-  const nodeCount = Object.keys(model.nodes).length
-  // For large rulesets, just list names (no descriptions) to keep prompt manageable
+  const nodes = Object.values(model.nodes)
+  const nodeCount = nodes.length
   const compact = nodeCount > 200
 
   const byType: Record<string, string[]> = {
@@ -31,21 +31,61 @@ function buildNodeIndex(rulesetId: string): string {
     computed: [],
   }
 
-  for (const node of Object.values(model.nodes)) {
+  // Track which nodes are depended on by others
+  const isDependedOn = new Set<string>()
+  const collections = new Set<string>()
+
+  for (const node of nodes) {
+    for (const depId of node.dependencies) {
+      isDependedOn.add(depId)
+    }
+  }
+
+  for (const node of nodes) {
     const c = node.content
     if (c.type === 'entity') continue
+
+    // Detect collections
+    if ('path' in c && c.path.includes('/*')) {
+      const collPrefix = c.path.replace(/\/\*\/.*$/, '')
+      collections.add(collPrefix)
+    }
+
     const role =
       c.type === 'writable' ? 'input' : 'role' in c ? c.role : 'computed'
     const bucket = byType[role] ?? byType['computed']
     if (compact) {
       bucket.push(node.name)
     } else {
-      const desc = node.description ? ` — ${node.description.slice(0, 60)}` : ''
+      const desc = node.description
+        ? ` — ${node.description.slice(0, 60)}`
+        : ''
       bucket.push(`${node.name}${desc}`)
     }
   }
 
-  const sections: string[] = []
+  // Root/output nodes: computed nodes that no other node depends on
+  const rootNodes = nodes
+    .filter(
+      (n) => n.content.type === 'derived' && !isDependedOn.has(n.id)
+    )
+    .map((n) => n.name)
+
+  // Build summary header
+  const summary = [
+    `Ruleset: ${model.name} (${nodeCount} nodes)`,
+    `  Inputs: ${byType.input.length}, Constants: ${byType.constant.length}, Computed: ${byType.computed.length}`,
+    collections.size > 0
+      ? `  Collections: ${[...collections].join(', ')}`
+      : null,
+    rootNodes.length > 0
+      ? `  Root outputs (not used by other nodes): ${rootNodes.slice(0, 20).join(', ')}${rootNodes.length > 20 ? ` ... and ${rootNodes.length - 20} more` : ''}`
+      : null,
+  ]
+    .filter(Boolean)
+    .join('\n')
+
+  const sections: string[] = [summary]
   if (byType.input.length)
     sections.push(
       `Inputs (${byType.input.length}):\n${byType.input.join('\n')}`
