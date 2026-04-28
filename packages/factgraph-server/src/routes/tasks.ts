@@ -146,11 +146,7 @@ router.post('/rulesets/:id/tasks/:threadId/follow', async (req, res) => {
 router.post('/rulesets/:id/tasks/:threadId/status', (req, res) => {
   const { id: rulesetId, threadId } = req.params
   const status = String(req.body?.status ?? '')
-  if (
-    status !== 'ready' &&
-    status !== 'complete' &&
-    status !== 'archived'
-  ) {
+  if (status !== 'ready' && status !== 'complete' && status !== 'archived') {
     res.status(400).json({ error: 'invalid status transition' })
     return
   }

@@ -9,22 +9,60 @@ function getModel(rulesetId: string): Model {
   return model
 }
 
+/** Look up a node by name, tolerating missing leading `/`. */
+function findNode(
+  nameMap: Map<string, ModelNode>,
+  name: string
+): ModelNode | undefined {
+  const lower = name.toLowerCase()
+  return nameMap.get(lower) ?? nameMap.get('/' + lower)
+}
+
 export const listNodes = tool(
-  (input: { rulesetId: string }) => {
+  (input: { rulesetId: string; filter?: string }) => {
     const model = getModel(input.rulesetId)
-    const entries = Object.values(model.nodes).map((n) => {
+    let nodes = Object.values(model.nodes)
+
+    if (input.filter) {
+      const q = input.filter.toLowerCase()
+      nodes = nodes.filter(
+        (n) =>
+          n.content.type === q ||
+          (n.content.type !== 'entity' &&
+            'role' in n.content &&
+            n.content.role === q)
+      )
+    }
+
+    const entries = nodes.map((n) => {
       const c = n.content
       const type = c.type === 'entity' ? 'entity' : `${c.type} (${c.format})`
       return `- ${n.name} [${type}]${n.description ? ': ' + n.description.slice(0, 80) : ''}`
     })
-    return `Found ${entries.length} nodes:\n${entries.join('\n')}`
+
+    const total = entries.length
+    const MAX = 100
+    if (entries.length > MAX) {
+      entries.length = MAX
+      entries.push(
+        `... and ${total - MAX} more. Use filter param (writable, derived, constant, computed) or search_nodes to narrow results.`
+      )
+    }
+
+    return `Found ${total} nodes:\n${entries.join('\n')}`
   },
   {
     name: 'list_nodes',
     description:
-      'List all nodes in the ruleset with their type and a brief description.',
+      'List nodes in the ruleset. Use filter to narrow by type: "writable", "derived", "constant", "computed". For large rulesets, prefer search_nodes instead.',
     schema: z.object({
       rulesetId: z.string().describe('The ruleset ID'),
+      filter: z
+        .string()
+        .optional()
+        .describe(
+          'Filter by node type: "writable", "derived", "constant", "computed"'
+        ),
     }),
   }
 )
@@ -37,7 +75,7 @@ export const getNodes = tool(
       nameMap.set(node.name.toLowerCase(), node)
     }
     const results = input.names.map((name) => {
-      const node = nameMap.get(name.toLowerCase())
+      const node = findNode(nameMap, name)
       if (!node) return `Node "${name}" not found.`
       // Resolve dependency IDs to names
       const depNames = node.dependencies
@@ -115,7 +153,7 @@ export const getDependencies = tool(
     for (const node of Object.values(model.nodes)) {
       nameMap.set(node.name.toLowerCase(), node)
     }
-    const node = nameMap.get(input.name.toLowerCase())
+    const node = findNode(nameMap, input.name)
     if (!node) return `Node "${input.name}" not found.`
     const deps = node.dependencies
       .map((id) => model.nodes[id])

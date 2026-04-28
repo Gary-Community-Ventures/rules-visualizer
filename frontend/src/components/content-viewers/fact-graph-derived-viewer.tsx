@@ -12,7 +12,22 @@ export function FactGraphDerivedViewer({ content }: Props) {
   const { model, setOpenNode } = useMainContext()
 
   const navigateToPath = useCallback(
-    (path: string) => {
+    (rawPath: string) => {
+      // Resolve relative paths (e.g. ../meetsAbawdWorkRequirements)
+      // against the current node's path. In fact graph, ../ means
+      // "sibling in the same collection" — pop the field name, strip
+      // ../ prefixes, append the remainder.
+      let path = rawPath
+      if (path.startsWith('..') && content.path) {
+        const segments = content.path.split('/').filter(Boolean)
+        segments.pop() // remove current node's field name
+        let remaining = rawPath
+        while (remaining.startsWith('../')) {
+          remaining = remaining.slice(3)
+        }
+        path = '/' + segments.join('/') + '/' + remaining
+      }
+
       for (const [nodeId, node] of Object.entries(model.nodes)) {
         if (getNodePath(node.content) === path) {
           setOpenNode(nodeId)
@@ -20,7 +35,7 @@ export function FactGraphDerivedViewer({ content }: Props) {
         }
       }
     },
-    [model.nodes, setOpenNode]
+    [model.nodes, setOpenNode, content.path]
   )
 
   return (

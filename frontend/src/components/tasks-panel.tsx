@@ -122,9 +122,7 @@ export function TasksPanel() {
               onOpenNode={setOpenNode}
               onChange={(next) =>
                 setTasks((prev) =>
-                  prev.map((p) =>
-                    p.threadId === next.threadId ? next : p
-                  )
+                  prev.map((p) => (p.threadId === next.threadId ? next : p))
                 )
               }
             />
@@ -270,10 +268,7 @@ function TaskCard({
 
   return (
     <div
-      className={cn(
-        'border-b px-3 py-2 text-sm',
-        isArchived && 'opacity-60'
-      )}
+      className={cn('border-b px-3 py-2 text-sm', isArchived && 'opacity-60')}
     >
       <button
         className="w-full flex items-start gap-2 text-left"

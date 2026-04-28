@@ -12,7 +12,18 @@ export function FactGraphWritableViewer({ content }: Props) {
   const { model, setOpenNode } = useMainContext()
 
   const navigateToPath = useCallback(
-    (path: string) => {
+    (rawPath: string) => {
+      let path = rawPath
+      if (path.startsWith('..') && content.path) {
+        const segments = content.path.split('/').filter(Boolean)
+        segments.pop()
+        let remaining = rawPath
+        while (remaining.startsWith('../')) {
+          remaining = remaining.slice(3)
+        }
+        path = '/' + segments.join('/') + '/' + remaining
+      }
+
       for (const [nodeId, node] of Object.entries(model.nodes)) {
         if (getNodePath(node.content) === path) {
           setOpenNode(nodeId)
@@ -20,7 +31,7 @@ export function FactGraphWritableViewer({ content }: Props) {
         }
       }
     },
-    [model.nodes, setOpenNode]
+    [model.nodes, setOpenNode, content.path]
   )
   return (
     <div className="flex flex-col gap-3 text-sm">

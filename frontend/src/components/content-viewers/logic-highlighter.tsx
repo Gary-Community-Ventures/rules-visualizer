@@ -118,9 +118,12 @@ function tokenizeXml(xml: string): XmlToken[] {
           pos++ // closing "
           const raw = xml.slice(qStart, pos)
           const inner = raw.slice(1, -1)
-          // Highlight path attributes specially
+          // Highlight path attributes specially (absolute or relative)
           tokens.push({
-            type: inner.startsWith('/') ? 'path' : 'attr-value',
+            type:
+              inner.startsWith('/') || inner.startsWith('..')
+                ? 'path'
+                : 'attr-value',
             value: raw,
           })
         }
