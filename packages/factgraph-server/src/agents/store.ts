@@ -37,7 +37,7 @@ function migrateTask(raw: LegacyTask): Task {
           : 'ready'
         : 'ready',
       summary: isLast ? raw.summary : undefined,
-      modifiedPaths: isLast ? raw.modifiedPaths ?? [] : [],
+      modifiedPaths: isLast ? (raw.modifiedPaths ?? []) : [],
       error: isLast ? raw.error : undefined,
       startedAt: raw.createdAt,
       completedAt: isLast ? raw.updatedAt : raw.updatedAt,
@@ -101,7 +101,9 @@ export function listTasks(rulesetId: string): Task[] {
   const tasks: Task[] = []
   for (const f of files) {
     try {
-      tasks.push(migrateTask(JSON.parse(fs.readFileSync(path.join(dir, f), 'utf-8'))))
+      tasks.push(
+        migrateTask(JSON.parse(fs.readFileSync(path.join(dir, f), 'utf-8')))
+      )
     } catch {
       // skip malformed files
     }

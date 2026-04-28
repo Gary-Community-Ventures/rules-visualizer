@@ -81,6 +81,11 @@ export const getNodes = tool(
       const depNames = node.dependencies
         .map((id) => model.nodes[id]?.name)
         .filter(Boolean)
+      // Policy references
+      const refs = node.references?.length
+        ? `Policy references:\n${node.references.map((r) => `  - [${r.document.title}] ${r.section.label}: ${r.section.text.slice(0, 200)}${r.section.text.length > 200 ? '...' : ''}`).join('\n')}`
+        : null
+
       return [
         `Name: ${node.name}`,
         node.description ? `Description: ${node.description}` : null,
@@ -101,6 +106,7 @@ export const getNodes = tool(
         node.content.dataType
           ? `Returns: ${node.content.dataType}`
           : null,
+        refs,
       ]
         .filter(Boolean)
         .join('\n')
