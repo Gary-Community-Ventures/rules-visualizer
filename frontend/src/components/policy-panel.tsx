@@ -12,17 +12,7 @@ import type {
 } from '@/lib/model'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
-import {
-  ChevronLeft,
-  ChevronRight,
-  ZoomIn,
-  ZoomOut,
-  FileText,
-  Link,
-  X,
-  Check,
-  Search,
-} from 'lucide-react'
+import { FileText, Link, X, Check, Search } from 'lucide-react'
 
 // Configure pdf.js worker
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
@@ -33,85 +23,8 @@ pdfjs.GlobalWorkerOptions.workerSrc = new URL(
 const API_BASE = import.meta.env.VITE_API_URL ?? ''
 
 // Module-level stores — survive component remounts from refreshModel()
-let _savedPage = 1
-let _savedScale = 1.0
 let _savedScrollTop = 0
 let _savedDocId: string | null = null
-
-/**
- * Capture the current browser selection's bounding rects,
- * normalized to 0-1 coordinates relative to the page container.
- * Merges rects on the same line into full-width bands for clean highlighting.
- */
-function captureSelectionRects(pageEl: HTMLElement | null): NormalizedRect[] {
-  if (!pageEl) return []
-  const selection = window.getSelection()
-  if (!selection || selection.rangeCount === 0) return []
-
-  const pageRect = pageEl.getBoundingClientRect()
-  if (pageRect.width === 0 || pageRect.height === 0) return []
-
-  // Collect all raw rects
-  const rawRects: {
-    top: number
-    bottom: number
-    left: number
-    right: number
-  }[] = []
-  for (let i = 0; i < selection.rangeCount; i++) {
-    const range = selection.getRangeAt(i)
-    const clientRects = range.getClientRects()
-    for (let j = 0; j < clientRects.length; j++) {
-      const r = clientRects[j]
-      if (r.width < 2 || r.height < 2) continue
-      if (r.right < pageRect.left || r.left > pageRect.right) continue
-      rawRects.push({
-        top: r.top - pageRect.top,
-        bottom: r.bottom - pageRect.top,
-        left: r.left - pageRect.left,
-        right: r.right - pageRect.left,
-      })
-    }
-  }
-
-  if (rawRects.length === 0) return []
-
-  // Merge rects on the same line (similar y position) into full-width bands
-  // Sort by top position
-  rawRects.sort((a, b) => a.top - b.top)
-
-  const lines: { top: number; bottom: number; left: number; right: number }[] =
-    []
-  let current = { ...rawRects[0] }
-
-  for (let i = 1; i < rawRects.length; i++) {
-    const r = rawRects[i]
-    // Same line if vertical overlap > 50% of the smaller height
-    const overlap =
-      Math.min(current.bottom, r.bottom) - Math.max(current.top, r.top)
-    const minH = Math.min(current.bottom - current.top, r.bottom - r.top)
-    if (overlap > minH * 0.5) {
-      // Merge into current line
-      current.top = Math.min(current.top, r.top)
-      current.bottom = Math.max(current.bottom, r.bottom)
-      current.left = Math.min(current.left, r.left)
-      current.right = Math.max(current.right, r.right)
-    } else {
-      lines.push(current)
-      current = { ...r }
-    }
-  }
-  lines.push(current)
-
-  // Add small horizontal padding and normalize to 0-1
-  const pad = pageRect.width * 0.01
-  return lines.map((line) => ({
-    x: Math.max(0, line.left - pad) / pageRect.width,
-    y: line.top / pageRect.height,
-    w: Math.min(1, (line.right - line.left + pad * 2) / pageRect.width),
-    h: (line.bottom - line.top) / pageRect.height,
-  }))
-}
 
 export function PolicyPanel() {
   const {
@@ -129,11 +42,17 @@ export function PolicyPanel() {
   const [refs, setRefs] = useState<PolicyReferences | null>(null)
   const [selectedDoc, setSelectedDoc] = useState<PolicyDocument | null>(null)
   const [numPages, setNumPages] = useState<number>(0)
-  const [pageNumber, setPageNumber] = useState(1)
-  const [scale, setScaleRaw] = useState(_savedScale)
+  // Intrinsic page dimensions (PDF user units) for each page, 0-indexed.
+  // Used both for placeholder sizing pre-render and for caret-from-scroll math.
+  const [pageDimensions, setPageDimensions] = useState<
+    { width: number; height: number }[]
+  >([])
+  // Pages currently in (or near) the viewport — only these mount react-pdf <Page>.
+  const [visiblePages, setVisiblePages] = useState<Set<number>>(new Set())
   const [error, setError] = useState<string | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
-  const pageRef = useRef<HTMLDivElement>(null)
+  // Per-page wrapper refs, indexed 1..numPages to match react-pdf's pageNumber.
+  const pageRefs = useRef<Map<number, HTMLDivElement>>(new Map())
   const [containerWidth, setContainerWidth] = useState(0)
 
   // Search state
@@ -153,29 +72,38 @@ export function PolicyPanel() {
     null
   )
 
-  // Selection capture state
-  const [selectedText, setSelectedText] = useState('')
+  // Selection capture state — a single normalized box drawn by the user on
+  // a single page. No text extraction; the box itself + page is all that's
+  // stored. Replaces browser text-selection.
   const [capturedRects, setCapturedRects] = useState<NormalizedRect[]>([])
+  const [selectionPage, setSelectionPage] = useState<number | null>(null)
+  // While the user is drag-drawing, this is the live in-progress box.
+  // Cleared on mouseup once the box becomes a captured selection.
+  const [drawingBox, setDrawingBox] = useState<{
+    pageNum: number
+    startX: number
+    startY: number
+    currentX: number
+    currentY: number
+  } | null>(null)
   const [showLinkForm, setShowLinkForm] = useState(false)
   const [sectionLabel, setSectionLabel] = useState('')
   const [selectedNodePaths, setSelectedNodePaths] = useState<string[]>([])
   const [nodeSearch, setNodeSearch] = useState('')
   const [saving, setSaving] = useState(false)
 
-  // Stable setters — write to module-level vars so state survives remounts
+  // Stable setter — write to module-level var so state survives remounts
   const setStableDoc = useCallback((doc: PolicyDocument) => {
     _savedDocId = doc.id
     setSelectedDoc(doc)
   }, [])
 
-  const setStableScale = useCallback((s: number) => {
-    _savedScale = s
-    setScaleRaw(s)
-  }, [])
-
-  const setStablePage = useCallback((page: number) => {
-    _savedPage = page
-    setPageNumber(page)
+  // Scroll the continuous PDF view to a specific page (1-indexed).
+  const scrollToPage = useCallback((page: number) => {
+    const wrapper = pageRefs.current.get(page)
+    const container = containerRef.current
+    if (!wrapper || !container) return
+    container.scrollTo({ top: wrapper.offsetTop - 8, behavior: 'auto' })
   }, [])
 
   // Build node path list for the picker
@@ -236,7 +164,17 @@ export function PolicyPanel() {
         const targetDoc = refs.documents.find((d) => d.id === policyTargetDocId)
         if (targetDoc) setStableDoc(targetDoc)
       }
-      setStablePage(policyTargetPage)
+      // Defer the scroll until the page wrapper exists in the DOM. The
+      // wrapper appears as soon as numPages is set in onDocumentLoadSuccess,
+      // but it may not be there on the first effect tick.
+      const tryScroll = () => {
+        if (pageRefs.current.has(policyTargetPage)) {
+          scrollToPage(policyTargetPage)
+        } else {
+          requestAnimationFrame(tryScroll)
+        }
+      }
+      tryScroll()
       if (activeSectionId && activeSectionId.length > 0) {
         setFocusedSectionId(activeSectionId[0])
       }
@@ -249,7 +187,7 @@ export function PolicyPanel() {
     refs,
     clearPolicyTarget,
     setStableDoc,
-    setStablePage,
+    scrollToPage,
   ])
 
   // Save scroll position on scroll, restore on mount
@@ -278,109 +216,248 @@ export function PolicyPanel() {
     return () => observer.disconnect()
   }, [])
 
-  // Gather sections that have rects on the current page
-  const currentPageSections =
-    refs?.sections.filter(
-      (s) =>
-        s.documentId === selectedDoc?.id &&
-        s.page === pageNumber &&
-        s.rects &&
-        s.rects.length > 0
-    ) ?? []
-
-  // Listen for text selection and overlay clicks in the PDF area
-  const mouseDownPos = useRef<{ x: number; y: number } | null>(null)
-
+  // Virtualization: only mount react-pdf <Page> for pages within ~1 viewport
+  // of the visible area. Re-run when numPages changes (new document) so new
+  // page wrappers get observed.
   useEffect(() => {
-    const container = containerRef.current
-    if (!container) return
-
-    const handleMouseDown = (e: MouseEvent) => {
-      mouseDownPos.current = { x: e.clientX, y: e.clientY }
-    }
-
-    const handleMouseUp = (e: MouseEvent) => {
-      // Ignore events inside popovers
-      if ((e.target as HTMLElement).closest('[data-policy-popover]')) return
-
-      const selection = window.getSelection()
-      const text = selection?.toString().trim()
-
-      // Check if this was a click (not a drag) — detect overlay hit
-      const downPos = mouseDownPos.current
-      const isClick =
-        downPos &&
-        Math.abs(e.clientX - downPos.x) < 5 &&
-        Math.abs(e.clientY - downPos.y) < 5
-
-      if (text && text.length > 10) {
-        // Text selection — capture it
-        setSelectedText(text)
-        setCapturedRects(captureSelectionRects(pageRef.current))
-        setClickedSectionId(null)
-      } else {
-        // No meaningful selection — clear the selection bar
-        if (!showLinkForm) {
-          setSelectedText('')
-          setCapturedRects([])
-        }
-
-        // Click without selection — check if we hit an overlay rect
-        if (isClick && pageRef.current) {
-          const pageRect = pageRef.current.getBoundingClientRect()
-          const nx = (e.clientX - pageRect.left) / pageRect.width
-          const ny = (e.clientY - pageRect.top) / pageRect.height
-
-          let hitSection: string | null = null
-          for (const section of currentPageSections) {
-            for (const rect of section.rects ?? []) {
-              if (
-                nx >= rect.x &&
-                nx <= rect.x + rect.w &&
-                ny >= rect.y &&
-                ny <= rect.y + rect.h
-              ) {
-                hitSection = section.id
-                break
-              }
-            }
-            if (hitSection) break
-          }
-
-          if (hitSection) {
-            setClickedSectionId((prev) =>
-              prev === hitSection ? null : hitSection
+    const root = containerRef.current
+    if (!root || numPages === 0) return
+    const observer = new IntersectionObserver(
+      (entries) => {
+        setVisiblePages((prev) => {
+          let changed = false
+          const next = new Set(prev)
+          for (const entry of entries) {
+            const pageNum = Number(
+              (entry.target as HTMLDivElement).dataset.page
             )
-          } else {
-            setClickedSectionId(null)
+            if (!Number.isFinite(pageNum)) continue
+            if (entry.isIntersecting) {
+              if (!next.has(pageNum)) {
+                next.add(pageNum)
+                changed = true
+              }
+            } else if (next.has(pageNum)) {
+              next.delete(pageNum)
+              changed = true
+            }
           }
+          return changed ? next : prev
+        })
+      },
+      { root, rootMargin: '500px 0px', threshold: 0 }
+    )
+    for (const el of pageRefs.current.values()) observer.observe(el)
+    return () => observer.disconnect()
+  }, [numPages])
+
+  // Helper: per-page list of sections (with rects) for the current document.
+  const sectionsForPage = useCallback(
+    (page: number) =>
+      refs?.sections.filter(
+        (s) =>
+          s.documentId === selectedDoc?.id &&
+          s.page === page &&
+          s.rects &&
+          s.rects.length > 0
+      ) ?? [],
+    [refs, selectedDoc]
+  )
+
+  // Find the page wrapper whose bounding rect contains a given client point.
+  // Lets click/selection code work without knowing a single "current page".
+  const findPageAt = useCallback(
+    (clientX: number, clientY: number) => {
+      for (const [pageNum, el] of pageRefs.current) {
+        const r = el.getBoundingClientRect()
+        if (
+          clientX >= r.left &&
+          clientX <= r.right &&
+          clientY >= r.top &&
+          clientY <= r.bottom
+        ) {
+          return { pageNum, el, rect: r }
         }
       }
+      return null
+    },
+    []
+  )
 
-      mouseDownPos.current = null
+  // Mousedown on a page wrapper starts a box-draw. We deliberately do NOT
+  // use the container-level handler / window text-selection: the user wants
+  // to draw a rectangle and have us extract the text inside it.
+  const handlePageMouseDown = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>, pageNum: number) => {
+      // Skip if the click started on a popover, button, or input — those
+      // own their own gestures.
+      if (
+        (e.target as HTMLElement).closest(
+          'button, input, [data-policy-popover]'
+        )
+      )
+        return
+      const wrapper = pageRefs.current.get(pageNum)
+      if (!wrapper) return
+      const rect = wrapper.getBoundingClientRect()
+      if (rect.width === 0 || rect.height === 0) return
+      const x = (e.clientX - rect.left) / rect.width
+      const y = (e.clientY - rect.top) / rect.height
+      setDrawingBox({
+        pageNum,
+        startX: x,
+        startY: y,
+        currentX: x,
+        currentY: y,
+      })
+      // Suppress browser text selection while we're drawing.
+      e.preventDefault()
+    },
+    []
+  )
+
+  // While drawing, follow the cursor on the document; finalize on mouseup.
+  useEffect(() => {
+    if (!drawingBox) return
+    const onMove = (e: MouseEvent) => {
+      setDrawingBox((prev) => {
+        if (!prev) return null
+        const wrapper = pageRefs.current.get(prev.pageNum)
+        if (!wrapper) return prev
+        const rect = wrapper.getBoundingClientRect()
+        if (rect.width === 0 || rect.height === 0) return prev
+        const x = Math.max(
+          0,
+          Math.min(1, (e.clientX - rect.left) / rect.width)
+        )
+        const y = Math.max(
+          0,
+          Math.min(1, (e.clientY - rect.top) / rect.height)
+        )
+        return { ...prev, currentX: x, currentY: y }
+      })
     }
-
-    container.addEventListener('mousedown', handleMouseDown)
-    container.addEventListener('mouseup', handleMouseUp)
+    const onUp = (e: MouseEvent) => {
+      // Snapshot the latest drawingBox via setter, then clear it.
+      setDrawingBox((prev) => {
+        if (!prev) return null
+        finalizeDraw(prev, e)
+        return null
+      })
+    }
+    document.addEventListener('mousemove', onMove)
+    document.addEventListener('mouseup', onUp)
     return () => {
-      container.removeEventListener('mousedown', handleMouseDown)
-      container.removeEventListener('mouseup', handleMouseUp)
+      document.removeEventListener('mousemove', onMove)
+      document.removeEventListener('mouseup', onUp)
     }
-  }, [currentPageSections])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [drawingBox !== null])
 
-  const onDocumentLoadSuccess = useCallback((pdf: { numPages: number }) => {
-    setNumPages(pdf.numPages)
-    // Restore the page from module-level store (survives component remounts)
-    setPageNumber(_savedPage)
-    setError(null)
-    pdfDocRef.current = pdf as unknown as pdfjs.PDFDocumentProxy
-    // Restore scroll position after PDF renders
-    requestAnimationFrame(() => {
-      if (containerRef.current) {
-        containerRef.current.scrollTop = _savedScrollTop
+  // Escape clears an in-progress draw or a captured selection BEFORE the
+  // global Escape handler in use-keyboard-shortcuts (which would close the
+  // right panel). Capture-phase listeners on window run before capture-phase
+  // listeners on document, so this fires first and we stopPropagation so
+  // the global handler doesn't see the keystroke.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return
+      if (drawingBox || capturedRects.length > 0) {
+        e.stopPropagation()
+        e.preventDefault()
+        setDrawingBox(null)
+        setCapturedRects([])
+        setSelectionPage(null)
+        // If the link form is open, close that too.
+        if (showLinkForm) {
+          setShowLinkForm(false)
+          setSelectedNodePaths([])
+          clearPolicyLinkNode()
+        }
       }
-    })
-  }, [])
+    }
+    window.addEventListener('keydown', onKey, true)
+    return () => window.removeEventListener('keydown', onKey, true)
+  }, [drawingBox, capturedRects.length, showLinkForm, clearPolicyLinkNode])
+
+  const finalizeDraw = (
+    box: NonNullable<typeof drawingBox>,
+    e: MouseEvent
+  ) => {
+    const x0 = Math.min(box.startX, box.currentX)
+    const y0 = Math.min(box.startY, box.currentY)
+    const w = Math.abs(box.currentX - box.startX)
+    const h = Math.abs(box.currentY - box.startY)
+
+    // Tiny box → treat as a click (hit-test existing section overlays).
+    if (w < 0.005 && h < 0.005) {
+      const hit = findPageAt(e.clientX, e.clientY)
+      if (hit) {
+        const nx = (e.clientX - hit.rect.left) / hit.rect.width
+        const ny = (e.clientY - hit.rect.top) / hit.rect.height
+        let hitSection: string | null = null
+        for (const section of sectionsForPage(hit.pageNum)) {
+          for (const r of section.rects ?? []) {
+            if (
+              nx >= r.x &&
+              nx <= r.x + r.w &&
+              ny >= r.y &&
+              ny <= r.y + r.h
+            ) {
+              hitSection = section.id
+              break
+            }
+          }
+          if (hitSection) break
+        }
+        setClickedSectionId((prev) =>
+          hitSection ? (prev === hitSection ? null : hitSection) : null
+        )
+      } else {
+        setClickedSectionId(null)
+      }
+      // Clear any leftover capture state if we weren't in the middle of saving.
+      if (!showLinkForm) {
+        setCapturedRects([])
+        setSelectionPage(null)
+      }
+      return
+    }
+
+    setCapturedRects([{ x: x0, y: y0, w, h }])
+    setSelectionPage(box.pageNum)
+    setClickedSectionId(null)
+  }
+
+  const onDocumentLoadSuccess = useCallback(
+    async (pdf: pdfjs.PDFDocumentProxy) => {
+      setError(null)
+      pdfDocRef.current = pdf
+      // Fetch intrinsic dimensions FIRST so the first render of the page
+      // loop reserves the right scroll height (no jank/reflow). Then reveal
+      // the pages by setting numPages.
+      try {
+        const dims = await Promise.all(
+          Array.from({ length: pdf.numPages }, async (_, i) => {
+            const page = await pdf.getPage(i + 1)
+            const viewport = page.getViewport({ scale: 1 })
+            return { width: viewport.width, height: viewport.height }
+          })
+        )
+        setPageDimensions(dims)
+      } catch {
+        // ignore — dimensions aren't strictly required (placeholders fall back)
+      }
+      setNumPages(pdf.numPages)
+      // Restore scroll position after PDF renders
+      requestAnimationFrame(() => {
+        if (containerRef.current) {
+          containerRef.current.scrollTop = _savedScrollTop
+        }
+      })
+    },
+    []
+  )
 
   const onDocumentLoadError = useCallback((err: Error) => {
     setError(err.message)
@@ -418,10 +495,10 @@ export function PolicyPanel() {
     setSearchIndex(0)
     setSearchHighlight(query.trim())
     if (matches.length > 0) {
-      setStablePage(matches[0])
+      scrollToPage(matches[0])
     }
     setIsSearching(false)
-  }, [])
+  }, [scrollToPage])
 
   const startLinking = () => {
     setShowLinkForm(true)
@@ -432,11 +509,10 @@ export function PolicyPanel() {
 
   const cancelLinking = () => {
     setShowLinkForm(false)
-    setSelectedText('')
     setCapturedRects([])
+    setSelectionPage(null)
     setSelectedNodePaths([])
     clearPolicyLinkNode()
-    window.getSelection()?.removeAllRanges()
   }
 
   const toggleNodePath = (path: string) => {
@@ -450,7 +526,8 @@ export function PolicyPanel() {
       !refs ||
       !selectedDoc ||
       !sectionLabel.trim() ||
-      selectedNodePaths.length === 0
+      selectedNodePaths.length === 0 ||
+      selectionPage === null
     )
       return
     setSaving(true)
@@ -468,8 +545,7 @@ export function PolicyPanel() {
             id: sectionId,
             documentId: selectedDoc.id,
             label: sectionLabel.trim(),
-            text: selectedText,
-            page: pageNumber,
+            page: selectionPage,
             rects: capturedRects.length > 0 ? capturedRects : undefined,
           },
         ],
@@ -489,7 +565,7 @@ export function PolicyPanel() {
   }
 
   const handleSkip = async () => {
-    if (!refs || !selectedDoc || !selectedText) return
+    if (!refs || !selectedDoc || selectionPage === null) return
     setSaving(true)
     try {
       const sectionId = `${selectedDoc.id}__skip-${Date.now()}`
@@ -501,8 +577,7 @@ export function PolicyPanel() {
             id: sectionId,
             documentId: selectedDoc.id,
             label: 'Skipped',
-            text: selectedText,
-            page: pageNumber,
+            page: selectionPage,
             rects: capturedRects.length > 0 ? capturedRects : undefined,
             status: 'skipped',
           },
@@ -569,8 +644,9 @@ export function PolicyPanel() {
     : null
 
   const fileDocuments = refs?.documents.filter((d) => d.file) ?? []
-  const pageWidth =
-    containerWidth > 0 ? (containerWidth - 32) * scale : undefined
+  // Pages always render at the panel's natural width (no zoom slider; the
+  // user resizes the panel itself to grow/shrink).
+  const pageWidth = containerWidth > 0 ? containerWidth - 32 : undefined
 
   // Search-only text highlighting (still uses customTextRenderer for search)
   const customTextRenderer = useCallback(
@@ -635,7 +711,7 @@ export function PolicyPanel() {
                     // Same query — cycle through results
                     const nextIdx = (searchIndex + 1) % searchResults.length
                     setSearchIndex(nextIdx)
-                    setStablePage(searchResults[nextIdx])
+                    scrollToPage(searchResults[nextIdx])
                   } else {
                     // New query — run fresh search
                     runSearch(searchQuery)
@@ -681,7 +757,7 @@ export function PolicyPanel() {
                 const doc = fileDocuments.find((d) => d.id === e.target.value)
                 if (doc) {
                   setStableDoc(doc)
-                  setStablePage(1)
+                  if (containerRef.current) containerRef.current.scrollTop = 0
                 }
               }}
             >
@@ -692,58 +768,6 @@ export function PolicyPanel() {
               ))}
             </select>
           )}
-        </div>
-      )}
-
-      {/* Controls */}
-      {pdfUrl && numPages > 0 && (
-        <div className="flex items-center justify-between px-4 py-1.5 border-b shrink-0">
-          <div className="flex items-center gap-1">
-            <Button
-              variant="outline"
-              size="icon"
-              className="size-6"
-              onClick={() => setStablePage(Math.max(1, pageNumber - 1))}
-              disabled={pageNumber <= 1}
-            >
-              <ChevronLeft className="size-3" />
-            </Button>
-            <span className="text-xs text-muted-foreground px-1">
-              {pageNumber} / {numPages}
-            </span>
-            <Button
-              variant="outline"
-              size="icon"
-              className="size-6"
-              onClick={() => setStablePage(Math.min(numPages, pageNumber + 1))}
-              disabled={pageNumber >= numPages}
-            >
-              <ChevronRight className="size-3" />
-            </Button>
-          </div>
-          <div className="flex items-center gap-1">
-            <Button
-              variant="outline"
-              size="icon"
-              className="size-6"
-              onClick={() => setStableScale(Math.max(0.5, scale - 0.15))}
-              disabled={scale <= 0.5}
-            >
-              <ZoomOut className="size-3" />
-            </Button>
-            <span className="text-xs text-muted-foreground px-1">
-              {Math.round(scale * 100)}%
-            </span>
-            <Button
-              variant="outline"
-              size="icon"
-              className="size-6"
-              onClick={() => setStableScale(Math.min(3, scale + 0.15))}
-              disabled={scale >= 3}
-            >
-              <ZoomIn className="size-3" />
-            </Button>
-          </div>
         </div>
       )}
 
@@ -768,14 +792,13 @@ export function PolicyPanel() {
       )}
 
       {/* Selection capture bar */}
-      {selectedText && !showLinkForm && (
+      {selectionPage !== null && capturedRects[0] && !showLinkForm && (
         <div className="px-4 py-2 border-b bg-blue-50 shrink-0">
-          <div className="flex items-center justify-between gap-2">
-            <p className="text-xs text-blue-800 truncate flex-1">
-              Selected: &ldquo;{selectedText.slice(0, 80)}
-              {selectedText.length > 80 ? '...' : ''}&rdquo;
-            </p>
-            <div className="flex gap-1 shrink-0">
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-blue-800">
+              Captured selection on page {selectionPage}
+            </span>
+            <div className="flex gap-1 shrink-0 ml-auto">
               <Button
                 size="sm"
                 className="h-6 text-[11px] gap-1"
@@ -817,10 +840,6 @@ export function PolicyPanel() {
             >
               <X className="size-3.5" />
             </button>
-          </div>
-
-          <div className="text-[11px] text-muted-foreground bg-background border rounded p-2 max-h-20 overflow-y-auto whitespace-pre-wrap">
-            {selectedText}
           </div>
 
           <Input
@@ -945,18 +964,43 @@ export function PolicyPanel() {
               </p>
             }
           >
-            <div ref={pageRef} className="relative inline-block">
-              <Page
-                pageNumber={pageNumber}
-                width={pageWidth}
-                renderAnnotationLayer
-                renderTextLayer
-                customTextRenderer={
-                  searchHighlight ? customTextRenderer : undefined
-                }
-              />
+            <div className="flex flex-col items-center gap-2">
+              {Array.from({ length: numPages }, (_, i) => {
+                const pageNum = i + 1
+                const dim = pageDimensions[i]
+                const aspect = dim ? dim.height / dim.width : 11 / 8.5
+                const w = pageWidth ?? 0
+                const placeholderHeight = w * aspect
+                const inView = visiblePages.has(pageNum)
+                const pageSections = sectionsForPage(pageNum)
+                return (
+            <div
+              key={pageNum}
+              ref={(el) => {
+                if (el) pageRefs.current.set(pageNum, el)
+                else pageRefs.current.delete(pageNum)
+              }}
+              data-page={pageNum}
+              className="relative bg-white shadow-sm select-none"
+              style={{
+                width: w || undefined,
+                minHeight: placeholderHeight || undefined,
+              }}
+              onMouseDown={(e) => handlePageMouseDown(e, pageNum)}
+            >
+              {inView && pageWidth && (
+                <Page
+                  pageNumber={pageNum}
+                  width={pageWidth}
+                  renderAnnotationLayer
+                  renderTextLayer
+                  customTextRenderer={
+                    searchHighlight ? customTextRenderer : undefined
+                  }
+                />
+              )}
               {/* Bounding box overlays for sections on this page */}
-              {currentPageSections.map((section) => {
+              {pageSections.map((section) => {
                 const isFocused = section.id === focusedSectionId
                 const isClicked = section.id === clickedSectionId
                 const isSkipped = section.status === 'skipped'
@@ -1162,8 +1206,8 @@ export function PolicyPanel() {
                   </div>
                 )
               })}
-              {/* Green preview overlay for current selection while link form is open */}
-              {showLinkForm &&
+              {/* Captured-selection preview (after a draw, before save) */}
+              {selectionPage === pageNum &&
                 capturedRects.map((rect, i) => (
                   <div
                     key={`preview-${i}`}
@@ -1173,12 +1217,36 @@ export function PolicyPanel() {
                       top: `${rect.y * 100}%`,
                       width: `${rect.w * 100}%`,
                       height: `${rect.h * 100}%`,
-                      background: 'rgba(34, 197, 94, 0.3)',
+                      background: 'rgba(34, 197, 94, 0.25)',
                       border: '1px solid rgba(34, 197, 94, 0.6)',
-                      zIndex: 1,
+                      zIndex: 2,
                     }}
                   />
                 ))}
+              {/* Live drag-in-progress rectangle */}
+              {drawingBox && drawingBox.pageNum === pageNum && (() => {
+                const x = Math.min(drawingBox.startX, drawingBox.currentX)
+                const y = Math.min(drawingBox.startY, drawingBox.currentY)
+                const wRel = Math.abs(drawingBox.currentX - drawingBox.startX)
+                const hRel = Math.abs(drawingBox.currentY - drawingBox.startY)
+                return (
+                  <div
+                    className="absolute pointer-events-none"
+                    style={{
+                      left: `${x * 100}%`,
+                      top: `${y * 100}%`,
+                      width: `${wRel * 100}%`,
+                      height: `${hRel * 100}%`,
+                      background: 'rgba(59, 130, 246, 0.18)',
+                      border: '1px dashed rgba(59, 130, 246, 0.7)',
+                      zIndex: 3,
+                    }}
+                  />
+                )
+              })()}
+            </div>
+                )
+              })}
             </div>
           </Document>
         ) : null}

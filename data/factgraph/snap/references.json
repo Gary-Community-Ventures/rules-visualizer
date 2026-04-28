@@ -18,54 +18,9 @@
   ],
   "sections": [
     {
-      "id": "10-ccr-2506-1__skip-1776896664590",
-      "documentId": "10-ccr-2506-1",
-      "label": "Skipped",
-      "text": "“Administrative law judge (ALJ)” means a person that may preside over state-level fair hearings and\nadministrative disqualification hearings.",
-      "page": 1,
-      "rects": [
-        {
-          "x": 0.10780873493975904,
-          "y": 0.4357574349442379,
-          "w": 0.7404698677522591,
-          "h": 0.01486988847583643
-        },
-        {
-          "x": 0.10780873493975904,
-          "y": 0.4503078531598513,
-          "w": 0.3046970891378012,
-          "h": 0.01486988847583643
-        }
-      ],
-      "status": "skipped"
-    },
-    {
-      "id": "10-ccr-2506-1__skip-1776896671108",
-      "documentId": "10-ccr-2506-1",
-      "label": "Skipped",
-      "text": "“Administrative adjudicator” means a person who presides over state-level fair hearings and\nadministrative disqualification hearings",
-      "page": 1,
-      "rects": [
-        {
-          "x": 0.10780873493975904,
-          "y": 0.4800185873605948,
-          "w": 0.6833189006024096,
-          "h": 0.01486988847583643
-        },
-        {
-          "x": 0.10780873493975904,
-          "y": 0.4945399628252788,
-          "w": 0.30011959949171685,
-          "h": 0.01486988847583643
-        }
-      ],
-      "status": "skipped"
-    },
-    {
       "id": "10-ccr-2506-1__skip-1776966757297",
       "documentId": "10-ccr-2506-1",
       "label": "Skipped",
-      "text": "persons aged sixty (60) and older, or for Supplemental Security Income (SSI) recipients, and their\nspouses. This also includes federally subsidized housing for persons aged sixty (60) and older at which\nmeals are prepared for and served to the residents. It also includes private establishments that contract\nwith an appropriate state or local agency to offer meals at concessional prices to persons aged sixty (60)\nand older or SSI recipients, and their spouse",
       "page": 3,
       "rects": [
         {
@@ -102,52 +57,114 @@
       "status": "skipped"
     },
     {
+      "id": "10-ccr-2506-1__skip-1777395152384",
+      "documentId": "10-ccr-2506-1",
+      "label": "Skipped",
+      "page": 4,
+      "rects": [
+        {
+          "x": 0,
+          "y": 0,
+          "w": 1,
+          "h": 0.9993412545441237
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1777396855674",
+      "documentId": "10-ccr-2506-1",
+      "label": "Skipped",
+      "page": 1,
+      "rects": [
+        {
+          "x": 0.09895813160850536,
+          "y": 0.1005611672278339,
+          "w": 0.33835547465045124,
+          "h": 0.02011223344556677
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1777396859968",
+      "documentId": "10-ccr-2506-1",
+      "label": "Skipped",
+      "page": 1,
+      "rects": [
+        {
+          "x": 0.10639451566675703,
+          "y": 0.13408155630377852,
+          "w": 0.4251132886633874,
+          "h": 0.020112233445566785
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1777396864278",
+      "documentId": "10-ccr-2506-1",
+      "label": "Skipped",
+      "page": 1,
+      "rects": [
+        {
+          "x": 0.10639451566675703,
+          "y": 0.16377104377104376,
+          "w": 0.3135675277896123,
+          "h": 0.01915450804339694
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1777397755587",
+      "documentId": "10-ccr-2506-1",
+      "label": "Skipped",
+      "page": 1,
+      "rects": [
+        {
+          "x": 0.08565056798383162,
+          "y": 0.8875006731649523,
+          "w": 0.9143494320161684,
+          "h": 0.11249932683504771
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "snap-financial-eligibility__test",
+      "documentId": "snap-financial-eligibility",
+      "label": "test",
+      "page": 1,
+      "rects": [
+        {
+          "x": 0.04050499736980537,
+          "y": 0.12994479171419446,
+          "w": 0.9138047644097091,
+          "h": 0.23068850663868232
+        }
+      ]
+    },
+    {
       "id": "10-ccr-2506-1__test",
       "documentId": "10-ccr-2506-1",
       "label": "test",
-      "text": "A face-to-face interview may be conducted at the local office or a mutually acceptable location,\nincluding the household's residence upon household request. If the interview is to be conducted\nat the residence, it must be scheduled in advance. The interview shall be conducted as an official\nand confidential discussion of household circumstances. The applicant's right to privacy shall be\nprotected during the interview. Facilities shall be adequate to preserve the privacy and\nconfidentiality of the interview",
-      "page": 28,
+      "page": 1,
       "rects": [
         {
-          "x": 0.16680722891566263,
-          "y": 0.22284502788104088,
-          "w": 0.7033081348832831,
-          "h": 0.01486988847583643
-        },
-        {
-          "x": 0.16680722891566263,
-          "y": 0.23725023234200743,
-          "w": 0.7111032803087349,
-          "h": 0.01486988847583643
-        },
-        {
-          "x": 0.16680722891566263,
-          "y": 0.2518006505576208,
-          "w": 0.7220707831325301,
-          "h": 0.01486988847583643
-        },
-        {
-          "x": 0.16680722891566263,
-          "y": 0.2663510687732342,
-          "w": 0.7132075960090362,
-          "h": 0.01486988847583643
-        },
-        {
-          "x": 0.16680722891566263,
-          "y": 0.2809014869888476,
-          "w": 0.6433566100338856,
-          "h": 0.01486988847583643
-        },
-        {
-          "x": 0.16680722891566263,
-          "y": 0.29545190520446096,
-          "w": 0.2341704513365964,
-          "h": 0.01486988847583643
+          "x": 0.07195758945973338,
+          "y": 0.09060513870899727,
+          "w": 0.49645279488578775,
+          "h": 0.10217175216120968
         }
       ]
     }
   ],
   "mappings": [
+    {
+      "nodePath": "/snap",
+      "sectionId": "snap-financial-eligibility__test"
+    },
     {
       "nodePath": "/snap",
       "sectionId": "10-ccr-2506-1__test"

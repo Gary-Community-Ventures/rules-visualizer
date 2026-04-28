@@ -604,6 +604,20 @@ export function ModelProvider({
       })
   }, [rulesetId, updateTabName])
 
+  // Silent refetch — used after writes (e.g. saveReferences). Refreshes the
+  // model in place without flipping isLoading, so HomePage doesn't unmount
+  // the whole layout (which resets resizable-panel sizes).
+  const refreshModel = useCallback(() => {
+    getRuleset(rulesetId)
+      .then((data) => {
+        setModel(data)
+        if (data.name) updateTabName(rulesetId, data.name)
+      })
+      .catch((err) => {
+        console.error('Silent refresh failed:', err)
+      })
+  }, [rulesetId, updateTabName])
+
   // Load model from API
   useEffect(() => {
     loadModel()
@@ -624,14 +638,16 @@ export function ModelProvider({
     }
   }, [model.format])
 
-  // Live reload: re-fetch when backend notifies of file changes
+  // Live reload: re-fetch when backend notifies of file changes. Use the
+  // silent refresh so editing an XML file doesn't blank the whole layout
+  // and reset the user's panel sizes.
   useEffect(() => {
     return onReload((changedRulesetId) => {
       if (!changedRulesetId || changedRulesetId === rulesetId) {
-        loadModel()
+        refreshModel()
       }
     })
-  }, [rulesetId, loadModel])
+  }, [rulesetId, refreshModel])
 
   const value: ModelContextValue = useMemo(
     () => ({
@@ -675,7 +691,7 @@ export function ModelProvider({
       setWorkspaceItems,
       activeTest,
       setActiveTest,
-      refreshModel: loadModel,
+      refreshModel,
       openPolicyAtPage,
       policyTargetPage,
       policyFocusSectionIds,
@@ -731,6 +747,7 @@ export function ModelProvider({
       activeTest,
       setActiveTest,
       loadModel,
+      refreshModel,
       openPolicyAtPage,
       policyTargetPage,
       policyFocusSectionIds,

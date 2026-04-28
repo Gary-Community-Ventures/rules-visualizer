@@ -17,6 +17,7 @@ import {
 import { TypedValueInput } from './typed-value-input'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog'
 import { EntityEditor } from './execution-panel'
+import { PdfBoxPreview } from './pdf-box-preview'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
 import {
@@ -37,9 +38,9 @@ import {
   Filter,
   FilterX,
   ExternalLink,
+  FileText,
   ChevronDown,
   ChevronRight,
-  FileText,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ContentViewer } from './content-viewers'
@@ -842,7 +843,18 @@ function PolicyReferencesList({ node }: { node: ModelNode }) {
   const { model, refreshModel, openPolicyAtPage, openPolicyForLinking } =
     useMainContext()
   const references = node.references ?? []
-  const [expanded, setExpanded] = useState<Set<string>>(new Set())
+  // Collapsed = preview hidden, only the label row shown. Toggled per ref.
+  // Default expanded (PdfBoxPreview is the whole point of the list); user
+  // can collapse individual refs to clear vertical space.
+  const [collapsed, setCollapsed] = useState<Set<string>>(new Set())
+  const toggleCollapsed = (sectionId: string) => {
+    setCollapsed((prev) => {
+      const next = new Set(prev)
+      if (next.has(sectionId)) next.delete(sectionId)
+      else next.add(sectionId)
+      return next
+    })
+  }
   const [adding, setAdding] = useState(false)
   const [manifest, setManifest] = useState<PolicyReferences | null>(null)
   const [addMode, setAddMode] = useState<'pick' | 'new'>('pick')
@@ -850,21 +862,11 @@ function PolicyReferencesList({ node }: { node: ModelNode }) {
   const [newDocUrl, setNewDocUrl] = useState('')
   const [newDocFile, setNewDocFile] = useState('')
   const [newSectionLabel, setNewSectionLabel] = useState('')
-  const [newSectionText, setNewSectionText] = useState('')
   const [selectedDocId, setSelectedDocId] = useState('')
   const [selectedSectionId, setSelectedSectionId] = useState('')
   const [saving, setSaving] = useState(false)
 
   const nodePath = getNodePath(node.content)
-
-  const toggle = (sectionId: string) => {
-    setExpanded((prev) => {
-      const next = new Set(prev)
-      if (next.has(sectionId)) next.delete(sectionId)
-      else next.add(sectionId)
-      return next
-    })
-  }
 
   const openAdd = async () => {
     try {
@@ -896,7 +898,6 @@ function PolicyReferencesList({ node }: { node: ModelNode }) {
     setNewDocUrl('')
     setNewDocFile('')
     setNewSectionLabel('')
-    setNewSectionText('')
   }
 
   const handleAdd = async () => {
@@ -937,7 +938,6 @@ function PolicyReferencesList({ node }: { node: ModelNode }) {
             id: sectionId,
             documentId: docId,
             label: newSectionLabel.trim(),
-            text: newSectionText.trim(),
           },
         ]
       }
@@ -1029,35 +1029,48 @@ function PolicyReferencesList({ node }: { node: ModelNode }) {
               )}
             </div>
             {refs.map((ref) => {
-              const isOpen = expanded.has(ref.section.id)
+              const file = ref.document.file
+              const pdfUrl = file
+                ? `${import.meta.env.VITE_API_URL ?? ''}/api/rulesets/${model.id}/references/files/${encodeURIComponent(file)}`
+                : null
+              const box = ref.section.rects?.[0]
+              const page = ref.section.page
+              const hasPreview = pdfUrl && box && page !== undefined
+              const isCollapsed = collapsed.has(ref.section.id)
               return (
                 <div
                   key={ref.section.id}
-                  className="border rounded-md px-3 py-2 hover:bg-muted/50 transition-colors cursor-pointer"
-                  onClick={() => toggle(ref.section.id)}
+                  className="border rounded-md px-3 py-2 hover:bg-muted/50 transition-colors space-y-1.5"
                 >
                   <div className="flex items-center gap-1.5">
-                    <div className="flex items-center gap-1.5 flex-1 min-w-0">
-                      {isOpen ? (
-                        <ChevronDown className="size-3 text-muted-foreground shrink-0" />
-                      ) : (
-                        <ChevronRight className="size-3 text-muted-foreground shrink-0" />
-                      )}
-                      <span className="text-xs font-medium truncate">
-                        {ref.section.label}
-                      </span>
-                    </div>
+                    {hasPreview ? (
+                      <button
+                        className="p-0.5 text-muted-foreground hover:text-foreground shrink-0"
+                        onClick={() => toggleCollapsed(ref.section.id)}
+                        title={isCollapsed ? 'Expand' : 'Collapse'}
+                      >
+                        {isCollapsed ? (
+                          <ChevronRight className="size-3" />
+                        ) : (
+                          <ChevronDown className="size-3" />
+                        )}
+                      </button>
+                    ) : (
+                      <span className="size-3 shrink-0" />
+                    )}
+                    <span className="text-xs font-medium truncate flex-1 min-w-0">
+                      {ref.section.label}
+                    </span>
                     {ref.section.page && (
                       <button
                         className="p-0.5 text-muted-foreground hover:text-blue-600 shrink-0"
-                        onClick={(e) => {
-                          e.stopPropagation()
+                        onClick={() =>
                           openPolicyAtPage(
                             ref.section.page!,
                             [ref.section.id],
                             ref.document.id
                           )
-                        }}
+                        }
                         title={`View in PDF (page ${ref.section.page})`}
                       >
                         <FileText className="size-3" />
@@ -1065,20 +1078,20 @@ function PolicyReferencesList({ node }: { node: ModelNode }) {
                     )}
                     <button
                       className="p-0.5 text-muted-foreground hover:text-red-600 shrink-0"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        handleRemove(ref.section.id)
-                      }}
+                      onClick={() => handleRemove(ref.section.id)}
                       disabled={saving}
                       title="Remove reference"
                     >
                       <X className="size-3" />
                     </button>
                   </div>
-                  {isOpen && (
-                    <p className="mt-2 text-xs text-muted-foreground whitespace-pre-wrap leading-relaxed ml-[18px]">
-                      {ref.section.text}
-                    </p>
+                  {hasPreview && !isCollapsed && (
+                    <PdfBoxPreview
+                      pdfUrl={pdfUrl}
+                      pageNum={page}
+                      box={box}
+                      className="rounded border bg-white"
+                    />
                   )}
                 </div>
               )
@@ -1176,13 +1189,6 @@ function PolicyReferencesList({ node }: { node: ModelNode }) {
                 value={newSectionLabel}
                 onChange={(e) => setNewSectionLabel(e.target.value)}
               />
-              <textarea
-                className="w-full text-xs border rounded px-2 py-1.5 bg-background resize-y min-h-[60px]"
-                placeholder="Paste the policy text for this section..."
-                rows={4}
-                value={newSectionText}
-                onChange={(e) => setNewSectionText(e.target.value)}
-              />
             </div>
           )}
 
@@ -1202,8 +1208,7 @@ function PolicyReferencesList({ node }: { node: ModelNode }) {
               disabled={
                 saving ||
                 (addMode === 'pick' && !selectedSectionId) ||
-                (addMode === 'new' &&
-                  (!newSectionLabel.trim() || !newSectionText.trim()))
+                (addMode === 'new' && !newSectionLabel.trim())
               }
             >
               {saving ? 'Saving...' : 'Link'}

@@ -189,10 +189,11 @@ export type PolicySection = {
   id: string
   documentId: string
   label: string
-  text: string
   /** PDF page number where this section was captured from */
   page?: number
-  /** Bounding boxes of the selected text on the PDF page (normalized 0-1) */
+  /** Bounding boxes on the PDF page (normalized 0-1). With the box-draw
+   *  capture model this is exactly one rect; previews are rendered from
+   *  the PDF directly so we don't need a text snapshot. */
   rects?: NormalizedRect[]
   /** Whether this section is skipped/not-implementing */
   status?: SectionStatus
