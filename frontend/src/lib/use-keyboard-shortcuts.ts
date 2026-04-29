@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { useModelContext } from '@/context/model-context'
+import { useModelContext, getNodePath } from '@/context/model-context'
 import { useAddToFilter } from './use-add-to-filter'
 
 function isInputFocused(): boolean {
@@ -38,7 +38,7 @@ function openTemporarily(name: 'history' | 'workspace') {
   }, 500)
 }
 
-export function useKeyboardShortcuts() {
+export function useKeyboardShortcuts(active: boolean = true) {
   const {
     model,
     openNode,
@@ -52,10 +52,12 @@ export function useKeyboardShortcuts() {
     setShowChildren,
     selectedNodes,
     setSelectedNodes,
+    openPolicyForLinking,
   } = useModelContext()
   const addToFilter = useAddToFilter()
 
   useEffect(() => {
+    if (!active) return
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === 'Escape') {
         if (isInputFocused()) {
@@ -171,6 +173,45 @@ export function useKeyboardShortcuts() {
             }, 100)
           }
           break
+        // Right-bar panels. Pressing the same key again toggles the panel
+        // closed; otherwise switches to it.
+        case 'p':
+          e.preventDefault()
+          setRightBar(rightBar === 'policy' ? null : 'policy')
+          break
+        case 'P': {
+          // Shift+P opens the policy panel pre-wired to link a section
+          // to the currently open node. Falls back to a plain open if no
+          // node is open or it has no path.
+          e.preventDefault()
+          const nodePath = openNode
+            ? getNodePath(model.nodes[openNode]?.content)
+            : undefined
+          if (nodePath) {
+            openPolicyForLinking(nodePath)
+          } else {
+            setRightBar(rightBar === 'policy' ? null : 'policy')
+          }
+          break
+        }
+        case 't':
+          e.preventDefault()
+          setRightBar(rightBar === 'tests' ? null : 'tests')
+          break
+        case 'b':
+          e.preventDefault()
+          setRightBar(rightBar === 'tasks' ? null : 'tasks')
+          break
+        case 'i':
+          e.preventDefault()
+          setRightBar(rightBar === 'execution' ? null : 'execution')
+          break
+        case '?':
+          // Cheatsheet — HomePage owns the modal state and listens for
+          // this event so the hook stays state-free.
+          e.preventDefault()
+          window.dispatchEvent(new CustomEvent('open-shortcuts'))
+          break
         case 'x':
           e.preventDefault()
           if (openNode) {
@@ -196,6 +237,7 @@ export function useKeyboardShortcuts() {
     document.addEventListener('keydown', handleKeyDown, true)
     return () => document.removeEventListener('keydown', handleKeyDown, true)
   }, [
+    active,
     openNode,
     setOpenNode,
     goBackNode,
@@ -208,6 +250,7 @@ export function useKeyboardShortcuts() {
     selectedNodes,
     setSelectedNodes,
     addToFilter,
+    openPolicyForLinking,
     model.nodes,
   ])
 }
