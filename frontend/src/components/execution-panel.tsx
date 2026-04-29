@@ -1,5 +1,4 @@
 import { useState, useMemo } from 'react'
-import { cn } from '@/lib/utils'
 import { formatDisplayValue as formatValue } from '@/lib/format'
 import { useMainContext } from '@/context'
 import {
@@ -8,7 +7,6 @@ import {
   isConstantNode,
   isOverridable,
   isCollectionParent,
-  getCollectionInputs,
   getCollectionOverridableFields,
   getCollectionDisplayName,
   getNodeTypeName,
@@ -17,7 +15,6 @@ import {
 } from '@/context/model-context'
 import { TypedValueInput } from './typed-value-input'
 import { Button } from './ui/button'
-import { Input } from './ui/input'
 import { Textarea } from './ui/textarea'
 import {
   Trash2,
@@ -26,7 +23,6 @@ import {
   Upload,
   Download,
   Plus,
-  Users,
   X,
 } from 'lucide-react'
 import type { ModelNode } from '@/lib/model'
