@@ -271,7 +271,7 @@ export function Node({ node }: NodeProps) {
             <TypedValueInput
               typeName={getNodeTypeName(node)}
               enumOptions={getNodeEnumOptions(node)}
-              className="h-6 w-28 text-xs text-center"
+              className="h-6 w-28 text-xs text-center bg-white"
               placeholder={
                 declaredDefault ?? typeHint?.toLowerCase() ?? 'required'
               }
@@ -357,7 +357,7 @@ export function Node({ node }: NodeProps) {
             <TypedValueInput
               typeName={getNodeTypeName(node)}
               enumOptions={getNodeEnumOptions(node)}
-              className="h-6 w-20 text-xs text-center border-dashed"
+              className="h-6 w-20 text-xs text-center border-dashed bg-white"
               isOverride
               placeholder={
                 typeHint?.toLowerCase() ??
