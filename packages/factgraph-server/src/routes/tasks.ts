@@ -12,7 +12,33 @@ import {
   writeTask,
 } from '../agents/store.js'
 import { getDataDir } from '../store.js'
-import type { AgentContext, AgentRunner, Task } from '../agents/types.js'
+import type {
+  AgentContext,
+  AgentRunner,
+  Task,
+  TaskSource,
+} from '../agents/types.js'
+
+function parseSources(raw: unknown): TaskSource[] | undefined {
+  if (!Array.isArray(raw)) return undefined
+  const out: TaskSource[] = []
+  for (const r of raw) {
+    if (!r || typeof r !== 'object') continue
+    const o = r as Record<string, unknown>
+    if (typeof o.sectionId !== 'string' || typeof o.text !== 'string') continue
+    out.push({
+      sectionId: o.sectionId,
+      text: o.text,
+      comment: typeof o.comment === 'string' ? o.comment : undefined,
+      documentTitle:
+        typeof o.documentTitle === 'string' ? o.documentTitle : undefined,
+      documentFile:
+        typeof o.documentFile === 'string' ? o.documentFile : undefined,
+      page: typeof o.page === 'number' ? o.page : undefined,
+    })
+  }
+  return out.length > 0 ? out : undefined
+}
 
 // DI seam — swap this if we add another agent backend.
 const runner: AgentRunner = claudeCodeRunner
@@ -62,6 +88,7 @@ router.post('/rulesets/:id/tasks', async (req, res) => {
     res.status(400).json({ error: 'prompt is required' })
     return
   }
+  const sources = parseSources(req.body?.sources)
   const ctx = buildContext(rulesetId)
   if (!ctx) {
     res.status(404).json({ error: 'Ruleset not found' })
@@ -73,7 +100,13 @@ router.post('/rulesets/:id/tasks', async (req, res) => {
     threadId,
     rulesetId,
     iterations: [
-      { prompt, status: 'running', modifiedPaths: [], startedAt: now },
+      {
+        prompt,
+        sources,
+        status: 'running',
+        modifiedPaths: [],
+        startedAt: now,
+      },
     ],
     status: 'running',
     createdAt: now,
@@ -81,7 +114,7 @@ router.post('/rulesets/:id/tasks', async (req, res) => {
   }
   writeTask(task)
   try {
-    await runner.start(threadId, prompt, ctx)
+    await runner.start(threadId, prompt, ctx, sources)
     res.json({ task: withRuntime(task) })
   } catch (err) {
     finishLastIteration(
@@ -105,6 +138,7 @@ router.post('/rulesets/:id/tasks/:threadId/follow', async (req, res) => {
     res.status(400).json({ error: 'prompt is required' })
     return
   }
+  const sources = parseSources(req.body?.sources)
   const task = readTask(rulesetId, threadId)
   if (!task) {
     res.status(404).json({ error: 'Task not found' })
@@ -118,6 +152,7 @@ router.post('/rulesets/:id/tasks/:threadId/follow', async (req, res) => {
   const now = new Date().toISOString()
   task.iterations.push({
     prompt,
+    sources,
     status: 'running',
     modifiedPaths: [],
     startedAt: now,
@@ -126,7 +161,7 @@ router.post('/rulesets/:id/tasks/:threadId/follow', async (req, res) => {
   task.updatedAt = now
   writeTask(task)
   try {
-    await runner.follow(threadId, prompt, ctx)
+    await runner.follow(threadId, prompt, ctx, sources)
     res.json({ task: withRuntime(task) })
   } catch (err) {
     finishLastIteration(
@@ -161,7 +196,22 @@ router.post('/rulesets/:id/tasks/:threadId/status', (req, res) => {
 router.post('/rulesets/:id/tasks/:threadId/cancel', async (req, res) => {
   const { id: rulesetId, threadId } = req.params
   await runner.cancel(threadId)
-  const task = setStatus(rulesetId, threadId, 'archived')
+  // Force-finalize a still-running iteration so the UI reflects the stop
+  // immediately, instead of waiting for the runner's close handler — and
+  // so orphan tasks (proc lost across a server restart, or close event
+  // missed) get a clean exit instead of being stuck on "Running…" forever.
+  // The runner's close handler writes the same thing again later if the
+  // proc was actually killed; the redundant write is harmless.
+  let task = readTask(rulesetId, threadId)
+  const last = task?.iterations[task.iterations.length - 1]
+  if (last?.status === 'running') {
+    task = finishLastIteration(
+      rulesetId,
+      threadId,
+      { status: 'failed', error: 'Stopped by user', modifiedPaths: [] },
+      'failed'
+    )
+  }
   res.json({ task: task ? withRuntime(task) : task })
 })
 

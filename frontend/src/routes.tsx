@@ -8,7 +8,13 @@ import {
   useNavigate,
   useParams,
 } from '@tanstack/react-router'
-import { AppProvider, ModelProvider, useAppContext, type Tab } from '@/context'
+import {
+  AppProvider,
+  ModelProvider,
+  PanelProvider,
+  useAppContext,
+  type Tab,
+} from '@/context'
 import { HomePage } from './pages/home'
 import { RulesetListPage } from './pages/ruleset-list'
 import { TabBar } from './components/tab-bar'
@@ -62,7 +68,9 @@ function RootLayout() {
           className="flex-1 flex-col min-h-0"
         >
           <ModelProvider rulesetId={tab.rulesetId}>
-            <HomePage />
+            <PanelProvider>
+              <HomePage />
+            </PanelProvider>
           </ModelProvider>
         </div>
       ))}

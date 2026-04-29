@@ -188,13 +188,20 @@ export type SectionStatus = 'linked' | 'skipped'
 export type PolicySection = {
   id: string
   documentId: string
-  label: string
+  /** Optional human-readable note the user can attach (e.g. "Earned income
+   *  exclusion clause"). Sections start without one and the user adds it
+   *  later via the popover. Empty/missing is a valid state. */
+  comment?: string
   /** PDF page number where this section was captured from */
   page?: number
   /** Bounding boxes on the PDF page (normalized 0-1). With the box-draw
-   *  capture model this is exactly one rect; previews are rendered from
-   *  the PDF directly so we don't need a text snapshot. */
+   *  capture model this is exactly one rect; visual previews are rendered
+   *  from the PDF directly. */
   rects?: NormalizedRect[]
+  /** Text extracted from inside the captured box at save time. Stored so
+   *  the AI tools can include the policy excerpt without re-loading the
+   *  PDF. Snapshot — won't auto-update if the underlying PDF changes. */
+  text: string
   /** Whether this section is skipped/not-implementing */
   status?: SectionStatus
 }

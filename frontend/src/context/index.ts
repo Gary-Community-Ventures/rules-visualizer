@@ -6,3 +6,5 @@ export {
   useModelContext as useMainContext,
   useFindNode,
 } from './model-context'
+export { PanelProvider, usePanelContext } from './panel-context'
+export type { TaskBuilderSource } from './panel-context'

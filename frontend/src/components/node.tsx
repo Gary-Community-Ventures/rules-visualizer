@@ -43,6 +43,7 @@ import {
   ChevronRight,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { ALLOW_WRITES } from '@/lib/allow-writes'
 import { ContentViewer } from './content-viewers'
 import type {
   ModelNode,
@@ -927,17 +928,17 @@ function PolicyReferencesList({ node }: { node: ModelNode }) {
         }
         if (!docId) return
 
-        // Create section
-        sectionId = `${docId}__${newSectionLabel
-          .trim()
-          .toLowerCase()
-          .replace(/[^a-z0-9.]+/g, '-')}`
+        // Create section. No PDF box → no auto-id from a label. Use a
+        // timestamp-based id; the optional comment is stored separately.
+        sectionId = `${docId}__${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`
+        const trimmed = newSectionLabel.trim()
         updated.sections = [
           ...updated.sections,
           {
             id: sectionId,
             documentId: docId,
-            label: newSectionLabel.trim(),
+            text: '',
+            ...(trimmed ? { comment: trimmed } : {}),
           },
         ]
       }
@@ -990,7 +991,7 @@ function PolicyReferencesList({ node }: { node: ModelNode }) {
           <BookOpen className="size-3.5" />
           Policy
         </label>
-        {!adding && (
+        {ALLOW_WRITES && !adding && (
           <button
             className="p-0.5 text-muted-foreground hover:text-foreground"
             onClick={openAdd}
@@ -1059,7 +1060,9 @@ function PolicyReferencesList({ node }: { node: ModelNode }) {
                       <span className="size-3 shrink-0" />
                     )}
                     <span className="text-xs font-medium truncate flex-1 min-w-0">
-                      {ref.section.label}
+                      {ref.section.page
+                        ? `Page ${ref.section.page}`
+                        : 'Untitled section'}
                     </span>
                     {ref.section.page && (
                       <button
@@ -1076,14 +1079,16 @@ function PolicyReferencesList({ node }: { node: ModelNode }) {
                         <FileText className="size-3" />
                       </button>
                     )}
-                    <button
-                      className="p-0.5 text-muted-foreground hover:text-red-600 shrink-0"
-                      onClick={() => handleRemove(ref.section.id)}
-                      disabled={saving}
-                      title="Remove reference"
-                    >
-                      <X className="size-3" />
-                    </button>
+                    {ALLOW_WRITES && (
+                      <button
+                        className="p-0.5 text-muted-foreground hover:text-red-600 shrink-0"
+                        onClick={() => handleRemove(ref.section.id)}
+                        disabled={saving}
+                        title="Remove reference"
+                      >
+                        <X className="size-3" />
+                      </button>
+                    )}
                   </div>
                   {hasPreview && !isCollapsed && (
                     <PdfBoxPreview
@@ -1093,6 +1098,11 @@ function PolicyReferencesList({ node }: { node: ModelNode }) {
                       className="rounded border bg-white"
                     />
                   )}
+                  {!isCollapsed && ref.section.comment && (
+                    <p className="text-xs text-muted-foreground italic whitespace-pre-wrap leading-relaxed">
+                      {ref.section.comment}
+                    </p>
+                  )}
                 </div>
               )
             })}
@@ -1101,7 +1111,7 @@ function PolicyReferencesList({ node }: { node: ModelNode }) {
       </div>
 
       {/* Add reference form */}
-      {adding && manifest && (
+      {ALLOW_WRITES && adding && manifest && (
         <div className="border rounded-md p-3 space-y-2 bg-muted/30">
           <div className="flex gap-1.5 text-[10px]">
             <button
@@ -1140,7 +1150,8 @@ function PolicyReferencesList({ node }: { node: ModelNode }) {
                   .filter((s) => s.status !== 'skipped')
                   .map((s) => (
                     <option key={s.id} value={s.id}>
-                      {s.label}
+                      {s.comment ||
+                        (s.page ? `Page ${s.page}` : 'Untitled section')}
                     </option>
                   ))}
               </select>
@@ -1185,7 +1196,7 @@ function PolicyReferencesList({ node }: { node: ModelNode }) {
               )}
               <Input
                 className="h-7 text-xs"
-                placeholder="Section label (e.g. 4.407.2 — Earned Income Deduction)"
+                placeholder="Comment (optional)"
                 value={newSectionLabel}
                 onChange={(e) => setNewSectionLabel(e.target.value)}
               />
@@ -1207,8 +1218,7 @@ function PolicyReferencesList({ node }: { node: ModelNode }) {
               onClick={handleAdd}
               disabled={
                 saving ||
-                (addMode === 'pick' && !selectedSectionId) ||
-                (addMode === 'new' && !newSectionLabel.trim())
+                (addMode === 'pick' && !selectedSectionId)
               }
             >
               {saving ? 'Saving...' : 'Link'}
@@ -1482,7 +1492,7 @@ export function NodePanel() {
           </Button>
         </div>
       </div>
-      <div className="flex-1 overflow-y-auto p-5">
+      <div className="flex-1 overflow-y-auto p-5 [scrollbar-gutter:stable]">
         <NodeViewer node={openNodeData} />
 
         {/* Per-member editor scoped to this node's field. */}

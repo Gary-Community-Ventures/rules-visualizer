@@ -18,156 +18,112 @@
   ],
   "sections": [
     {
-      "id": "10-ccr-2506-1__skip-1776966757297",
-      "documentId": "10-ccr-2506-1",
-      "label": "Skipped",
-      "page": 3,
-      "rects": [
-        {
-          "x": 0.10773343373493977,
-          "y": 0.38374186802973975,
-          "w": 0.7258090761483434,
-          "h": 0.01486988847583643
-        },
-        {
-          "x": 0.10773343373493977,
-          "y": 0.39826324349442377,
-          "w": 0.7654710443335844,
-          "h": 0.01486988847583643
-        },
-        {
-          "x": 0.10773343373493977,
-          "y": 0.41284270446096655,
-          "w": 0.7667038074171687,
-          "h": 0.01486988847583643
-        },
-        {
-          "x": 0.10773343373493977,
-          "y": 0.4273931226765799,
-          "w": 0.7756672980986447,
-          "h": 0.01486988847583643
-        },
-        {
-          "x": 0.10773343373493977,
-          "y": 0.44179832713754646,
-          "w": 0.34274537603539157,
-          "h": 0.01486988847583643
-        }
-      ],
-      "status": "skipped"
-    },
-    {
-      "id": "10-ccr-2506-1__skip-1777395152384",
-      "documentId": "10-ccr-2506-1",
-      "label": "Skipped",
-      "page": 4,
-      "rects": [
-        {
-          "x": 0,
-          "y": 0,
-          "w": 1,
-          "h": 0.9993412545441237
-        }
-      ],
-      "status": "skipped"
-    },
-    {
-      "id": "10-ccr-2506-1__skip-1777396855674",
-      "documentId": "10-ccr-2506-1",
-      "label": "Skipped",
-      "page": 1,
-      "rects": [
-        {
-          "x": 0.09895813160850536,
-          "y": 0.1005611672278339,
-          "w": 0.33835547465045124,
-          "h": 0.02011223344556677
-        }
-      ],
-      "status": "skipped"
-    },
-    {
-      "id": "10-ccr-2506-1__skip-1777396859968",
-      "documentId": "10-ccr-2506-1",
-      "label": "Skipped",
-      "page": 1,
-      "rects": [
-        {
-          "x": 0.10639451566675703,
-          "y": 0.13408155630377852,
-          "w": 0.4251132886633874,
-          "h": 0.020112233445566785
-        }
-      ],
-      "status": "skipped"
-    },
-    {
-      "id": "10-ccr-2506-1__skip-1777396864278",
-      "documentId": "10-ccr-2506-1",
-      "label": "Skipped",
-      "page": 1,
-      "rects": [
-        {
-          "x": 0.10639451566675703,
-          "y": 0.16377104377104376,
-          "w": 0.3135675277896123,
-          "h": 0.01915450804339694
-        }
-      ],
-      "status": "skipped"
-    },
-    {
-      "id": "10-ccr-2506-1__skip-1777397755587",
-      "documentId": "10-ccr-2506-1",
-      "label": "Skipped",
-      "page": 1,
-      "rects": [
-        {
-          "x": 0.08565056798383162,
-          "y": 0.8875006731649523,
-          "w": 0.9143494320161684,
-          "h": 0.11249932683504771
-        }
-      ],
-      "status": "skipped"
-    },
-    {
       "id": "snap-financial-eligibility__test",
       "documentId": "snap-financial-eligibility",
       "label": "test",
+      "text": "Household Size Net Income 100% FPL Gross Income 130% FPL Gross Income 165% FPL Gross Income 200% FPL 1 $1,305 $1,696 $2,152 $2,610 2 $1,763 $2,292 $2,909 $3,526 3 $2,221 $2,888 $3,665 $4,442 4 $2,680 $3,483 $4,421 $5,360 5 $3,138 $4,079 $5,177 $6,276 6 $3,596 $4,675 $5,934 $7,192 7 $4,055 $5,271 $6,690 $8,110 8 $4,513 $5,867 $7,446 $9,026 Each additional member +$459 +$596 +$757 +$918",
       "page": 1,
       "rects": [
         {
-          "x": 0.04050499736980537,
-          "y": 0.12994479171419446,
-          "w": 0.9138047644097091,
+          "x": 0.03569549860975427,
+          "y": 0.13286489939316512,
+          "w": 0.9186142631697602,
           "h": 0.23068850663868232
         }
       ]
     },
     {
-      "id": "10-ccr-2506-1__test",
+      "id": "10-ccr-2506-1__min-allotment",
       "documentId": "10-ccr-2506-1",
-      "label": "test",
+      "label": "min allotment",
+      "text": "Household Size Minimum Monthly Allotment Effective October 1, 2025 1-2 $ 24",
+      "page": 39,
+      "rects": [
+        {
+          "x": 0.16514601883404786,
+          "y": 0.40906066397678204,
+          "w": 0.6671796562969476,
+          "h": 0.04802151907694485
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__moj0f3ng-8fmr",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Allotment” means the total amount of SNAP benefits a household is authorized to receive in a particular month.",
       "page": 1,
       "rects": [
         {
-          "x": 0.07195758945973338,
-          "y": 0.09060513870899727,
-          "w": 0.49645279488578775,
-          "h": 0.10217175216120968
+          "x": 0.10901024520272565,
+          "y": 0.6682220564646901,
+          "w": 0.7739846389076557,
+          "h": 0.03660108809144359
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__moj0f5y1-q30i",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Appeal” means a request made by a household to have a decision about its case reviewed by an impartial third party to determine whether the decision was correct. The term appeal includes state level fair hearings and local-level dispute resolution conferences.",
+      "page": 1,
+      "rects": [
+        {
+          "x": 0.10905148860298708,
+          "y": 0.7122252700176971,
+          "w": 0.759433204138961,
+          "h": 0.05248035390448979
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__moj2hddx-j3aa",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Administrative adjudicator” means a person who presides over state-level fair hearings and administrative disqualification hearings.",
+      "page": 1,
+      "rects": [
+        {
+          "x": 0.10871014136878662,
+          "y": 0.4753462904231385,
+          "w": 0.6735187848598589,
+          "h": 0.039950665473963844
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__moj6laif-835z",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Able-Bodied Adult Without Dependents (ABAWD)” means an individual aged eighteen (18) through the age of fifty-four (54) without a physical or mental disability who lives in a household with no one under the age of eighteen (18).",
+      "page": 1,
+      "rects": [
+        {
+          "x": 0.1018944414126452,
+          "y": 0.3257929455706497,
+          "w": 0.7908318390894207,
+          "h": 0.05783306726106208
         }
       ]
     }
   ],
   "mappings": [
     {
+      "nodePath": "/minimumBenefit",
+      "sectionId": "10-ccr-2506-1__min-allotment"
+    },
+    {
+      "nodePath": "/snap",
+      "sectionId": "10-ccr-2506-1__moj0f3ng-8fmr"
+    },
+    {
       "nodePath": "/snap",
       "sectionId": "snap-financial-eligibility__test"
     },
     {
-      "nodePath": "/snap",
-      "sectionId": "10-ccr-2506-1__test"
+      "nodePath": "/federalPovertyLevelMonthly",
+      "sectionId": "snap-financial-eligibility__test"
+    },
+    {
+      "nodePath": "/federalPovertyLevelAnnual",
+      "sectionId": "snap-financial-eligibility__test"
     }
   ]
 }

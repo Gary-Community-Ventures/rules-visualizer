@@ -58,11 +58,12 @@ app.use('/api', rulesetRoutes)
 app.use('/api', testRoutes)
 app.use('/api', referenceRoutes)
 // Tasks routes spawn the Claude CLI as a child process with bypassPermissions
-// — only mount them when explicitly enabled. Independent of the frontend's
-// VITE_TASKS_ENABLED flag (which only hides the toolbar button).
-if (process.env.TASKS_ENABLED === '1') {
+// — only mount them when writes are explicitly enabled. The same flag also
+// gates references writes (see routes/references.ts) so the UI's read-only
+// mode and the server's accept/reject behavior stay aligned.
+if (process.env.ALLOW_WRITES === '1') {
   app.use('/api', taskRoutes)
-  console.log('Tasks API enabled (TASKS_ENABLED=1)')
+  console.log('Writes enabled (ALLOW_WRITES=1) — Tasks API mounted')
 }
 
 // Serve pre-built frontend static files if they exist

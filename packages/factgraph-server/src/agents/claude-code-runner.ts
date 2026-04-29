@@ -1,20 +1,68 @@
 import { spawn, type ChildProcess } from 'node:child_process'
 import { finishLastIteration, patchTask } from './store.js'
-import type { AgentContext, AgentRunner } from './types.js'
+import type { AgentContext, AgentRunner, TaskSource } from './types.js'
 
 const SUMMARY_MARKER_START = '<<TASK_RESULT>>'
 const SUMMARY_MARKER_END = '<<TASK_END>>'
 
 const SYSTEM_PROMPT = `You are editing fact-graph XML rulesets in the current working directory.
 
+If the user attaches policy sources (delimited by <policy-sources> in their
+message), they are excerpts from policy PDFs the user wants you to cite as
+the basis for your changes. Each source has a sectionId. After you create
+or edit a fact node that derives from a source, ALSO add an entry to the
+ruleset's references.json mapping the new node's path to that section's
+id, so the visualizer surfaces the link on the node:
+
+  // references.json — append to the "mappings" array
+  { "nodePath": "/yourNewFactName", "sectionId": "<sectionId from source>" }
+
+(nodePath is the fact's NAME — the same value used in <Fact path="…"> — not
+the section's label.) Don't invent new sectionId values; use the ones the
+user gave you. If a node already exists with the right mapping, leave it
+alone.
+
 When you finish, print exactly one line in this form (and nothing after it):
 ${SUMMARY_MARKER_START}{"summary":"<one-sentence summary>","modifiedPaths":["/factPath",...]}${SUMMARY_MARKER_END}
 
 Only include fact paths you actually added or edited. The visualizer parses this line to surface what you touched.`
 
+/**
+ * The Claude CLI interprets a prompt starting with `/` as a slash command,
+ * so "/abawdAgeExemptUpper add a doc string" comes back as
+ * "Unknown command: /abawdAgeExemptUpper". Fact paths starting with `/`
+ * are the normal way users reference nodes here — escape the leading slash
+ * with a backslash so the CLI no longer parses it as a command.
+ */
+function escapeLeadingSlashCommand(prompt: string): string {
+  return prompt.startsWith('/') ? `\\${prompt}` : prompt
+}
+
+/** Render attached sources as a labeled block injected into the user prompt. */
+function formatSources(sources: TaskSource[] | undefined): string {
+  if (!sources || sources.length === 0) return ''
+  const esc = (s: string) => s.replace(/"/g, '&quot;')
+  const blocks = sources.map((s, i) => {
+    const attrs: string[] = [`index="${i + 1}"`, `sectionId="${s.sectionId}"`]
+    if (s.documentTitle) attrs.push(`document="${esc(s.documentTitle)}"`)
+    // file + page give the agent enough to locate this source on disk
+    // (e.g. via `pdftotext -l N -f N <file>`) for surrounding context.
+    if (s.documentFile) attrs.push(`file="${esc(s.documentFile)}"`)
+    if (s.page !== undefined) attrs.push(`page="${s.page}"`)
+    if (s.comment) attrs.push(`comment="${esc(s.comment)}"`)
+    const text = (s.text ?? '').trim()
+    return `<source ${attrs.join(' ')}>\n${text || '(no text captured)'}\n</source>`
+  })
+  return `\n\n<policy-sources>\n${blocks.join('\n')}\n</policy-sources>`
+}
+
 const ALLOWED_TOOLS = ['Edit', 'Write', 'Read', 'Glob', 'Grep'] as const
 
 const inflight = new Map<string, ChildProcess>()
+// Threads we've intentionally killed via the Stop button — used by the
+// close handler to skip the "exited with code 143" failure path so the
+// iteration doesn't get marked as failed-with-noise after a clean cancel.
+const cancelledThreads = new Set<string>()
 
 /**
  * Implementation of AgentRunner backed by the `claude` CLI installed on the
@@ -23,17 +71,18 @@ const inflight = new Map<string, ChildProcess>()
  * restricted to file edits inside that directory.
  */
 export const claudeCodeRunner: AgentRunner = {
-  async start(threadId, prompt, ctx) {
-    await spawnClaude(threadId, prompt, ctx, false)
+  async start(threadId, prompt, ctx, sources) {
+    await spawnClaude(threadId, prompt, ctx, false, sources)
   },
 
-  async follow(threadId, prompt, ctx) {
-    await spawnClaude(threadId, prompt, ctx, true)
+  async follow(threadId, prompt, ctx, sources) {
+    await spawnClaude(threadId, prompt, ctx, true, sources)
   },
 
   async cancel(threadId) {
     const proc = inflight.get(threadId)
     if (proc) {
+      cancelledThreads.add(threadId)
       proc.kill('SIGTERM')
       inflight.delete(threadId)
     }
@@ -54,8 +103,10 @@ async function spawnClaude(
   threadId: string,
   prompt: string,
   ctx: AgentContext,
-  resume: boolean
+  resume: boolean,
+  sources?: TaskSource[]
 ): Promise<void> {
+  const fullPrompt = `${escapeLeadingSlashCommand(prompt)}${formatSources(sources)}`
   const args = [
     '--print',
     '--output-format',
@@ -73,7 +124,7 @@ async function spawnClaude(
   } else {
     args.push('--session-id', threadId)
   }
-  args.push(prompt)
+  args.push(fullPrompt)
 
   const proc = spawn('claude', args, {
     cwd: ctx.cwd,
@@ -145,6 +196,20 @@ async function spawnClaude(
     inflight.delete(threadId)
     if (providerSessionId) {
       patchTask(ctx.rulesetId, threadId, { sessionId: providerSessionId })
+    }
+    // User pressed Stop — mark the iteration as no-longer-running with a
+    // clean "Stopped" note (instead of the SIGTERM exit-code-143 failure
+    // noise) and bump the task to 'failed' so it stays in the panel for
+    // the user to read, retry, or archive on their own.
+    if (cancelledThreads.has(threadId)) {
+      cancelledThreads.delete(threadId)
+      finishLastIteration(
+        ctx.rulesetId,
+        threadId,
+        { status: 'failed', error: 'Stopped by user', modifiedPaths: [] },
+        'failed'
+      )
+      return
     }
     if (code === 0) {
       const parsed = parseSummaryMarker(lastAssistantText)

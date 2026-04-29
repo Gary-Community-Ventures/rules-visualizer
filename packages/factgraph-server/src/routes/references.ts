@@ -43,6 +43,13 @@ router.get('/rulesets/:id/references', (req, res) => {
 
 // PUT /api/rulesets/:id/references — replace the entire manifest
 router.put('/rulesets/:id/references', (req, res) => {
+  // Writes (add/remove/edit refs) are gated by the same flag as the Tasks
+  // API. When unset, the UI hides write affordances; the server still
+  // refuses the call as a defense-in-depth measure.
+  if (process.env.ALLOW_WRITES !== '1') {
+    res.status(403).json({ error: 'References are read-only (ALLOW_WRITES is not set)' })
+    return
+  }
   const rulesetId = req.params.id
   const model = getRuleset(rulesetId)
   if (!model) {

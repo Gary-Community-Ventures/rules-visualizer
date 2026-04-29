@@ -12,12 +12,37 @@ export type TaskStatus =
   | 'failed'
 
 /**
+ * A policy reference attached to a task iteration as supporting context.
+ * The runner formats these into the agent's system prompt so the agent can
+ * cite them when implementing nodes (and link them via references.json).
+ */
+export type TaskSource = {
+  /** PolicySection.id this came from. The agent uses this when adding
+   *  a mapping in references.json after creating/editing a node. */
+  sectionId: string
+  /** Snapshot of the text inside the user's drawn box (focused excerpt). */
+  text: string
+  /** Optional comment the user attached to the section. */
+  comment?: string
+  /** Document title (for human-readability in the agent's context). */
+  documentTitle?: string
+  /** PDF file path relative to the ruleset directory, if the doc has one.
+   *  Combined with `page`, the agent can locate the source on disk if it
+   *  needs to look up surrounding context. */
+  documentFile?: string
+  /** PDF page number, for citation and look-up. */
+  page?: number
+}
+
+/**
  * One round-trip with the agent: the user's prompt plus whatever the agent
  * reported back when that run finished. Tasks accumulate iterations as the
  * user follows up, so the full history is preserved instead of overwritten.
  */
 export type TaskIteration = {
   prompt: string
+  /** Policy sources the user attached to this prompt at submit time. */
+  sources?: TaskSource[]
   status: 'running' | 'ready' | 'failed'
   /** Short human-readable summary the agent emitted for this iteration. */
   summary?: string
@@ -65,13 +90,23 @@ export interface AgentRunner {
    * updates back to it). The runner uses the same id as the provider
    * session id when applicable.
    */
-  start(threadId: string, prompt: string, ctx: AgentContext): Promise<void>
+  start(
+    threadId: string,
+    prompt: string,
+    ctx: AgentContext,
+    sources?: TaskSource[]
+  ): Promise<void>
 
   /**
    * Send a follow-up prompt to an existing thread. Resumes the same agent
    * session so the agent retains context.
    */
-  follow(threadId: string, prompt: string, ctx: AgentContext): Promise<void>
+  follow(
+    threadId: string,
+    prompt: string,
+    ctx: AgentContext,
+    sources?: TaskSource[]
+  ): Promise<void>
 
   /** Best-effort cancellation of an in-flight task. */
   cancel(threadId: string): Promise<void>

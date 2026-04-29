@@ -2,8 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { Document, Page, pdfjs } from 'react-pdf'
 import 'react-pdf/dist/Page/AnnotationLayer.css'
 import 'react-pdf/dist/Page/TextLayer.css'
-import { useMainContext } from '@/context'
-import { getNodePath } from '@/context/model-context'
+import { useMainContext, usePanelContext } from '@/context'
 import { getReferences, saveReferences } from '@/lib/api/rules-api'
 import type {
   PolicyDocument,
@@ -11,8 +10,24 @@ import type {
   NormalizedRect,
 } from '@/lib/model'
 import { Button } from './ui/button'
-import { Input } from './ui/input'
-import { FileText, Link, X, Check, Search } from 'lucide-react'
+import { ButtonGroup } from './ui/button-group'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from './ui/select'
+import { SectionPopover } from './section-popover'
+import { cn } from '@/lib/utils'
+import { ALLOW_WRITES } from '@/lib/allow-writes'
+import {
+  FileText,
+  X,
+  Search,
+  ChevronLeft,
+  ChevronRight,
+} from 'lucide-react'
 
 // Configure pdf.js worker
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
@@ -25,6 +40,69 @@ const API_BASE = import.meta.env.VITE_API_URL ?? ''
 // Module-level stores — survive component remounts from refreshModel()
 let _savedScrollTop = 0
 let _savedDocId: string | null = null
+
+/**
+ * Walk pdf.js's text items on a page and concatenate the str of every item
+ * whose bounding box overlaps the user-drawn box. Coords are normalized
+ * 0-1 in our world and PDF user space (origin bottom-left) in pdf.js, so
+ * we flip Y when comparing.
+ */
+/**
+ * Walk pdf.js's text items and keep words whose bounding boxes are fully
+ * inside the user's drawn box. We approximate per-word x-bounds by treating
+ * the run's character widths as uniform — pdf.js doesn't expose per-glyph
+ * positions, but uniform spacing is close enough for typical proportional
+ * fonts and lets the user grab partial sentences without dragging in the
+ * trailing word that overflows the box.
+ */
+async function extractTextInBox(
+  pdfDoc: pdfjs.PDFDocumentProxy,
+  pageNum: number,
+  pdfDim: { width: number; height: number },
+  box: { x: number; y: number; w: number; h: number }
+): Promise<string> {
+  const page = await pdfDoc.getPage(pageNum)
+  const content = await page.getTextContent()
+  const parts: string[] = []
+  const boxLeft = box.x
+  const boxRight = box.x + box.w
+  const boxTop = box.y
+  const boxBottom = box.y + box.h
+  for (const item of content.items) {
+    if (!('str' in item)) continue
+    const str = item.str
+    if (!str) continue
+    const transform = (item as { transform: number[] }).transform
+    const itemWidth = (item as { width: number }).width
+    const itemHeight = (item as { height: number }).height
+    if (itemWidth <= 0) continue
+
+    // Item bbox in normalized coords (top-left origin).
+    const top = (pdfDim.height - transform[5] - itemHeight) / pdfDim.height
+    const bottom = (pdfDim.height - transform[5]) / pdfDim.height
+    // Vertical containment: a word's vertical bounds match the run's.
+    if (top < boxTop || bottom > boxBottom) continue
+
+    // Walk runs of non-whitespace and decide per-word.
+    const len = str.length
+    let i = 0
+    while (i < len) {
+      while (i < len && /\s/.test(str[i])) i++
+      if (i >= len) break
+      const wordStart = i
+      while (i < len && !/\s/.test(str[i])) i++
+      const wordEnd = i
+      const wordLeft =
+        (transform[4] + (wordStart / len) * itemWidth) / pdfDim.width
+      const wordRight =
+        (transform[4] + (wordEnd / len) * itemWidth) / pdfDim.width
+      if (wordLeft >= boxLeft && wordRight <= boxRight) {
+        parts.push(str.slice(wordStart, wordEnd))
+      }
+    }
+  }
+  return parts.join(' ').replace(/\s+/g, ' ').trim()
+}
 
 export function PolicyPanel() {
   const {
@@ -39,6 +117,13 @@ export function PolicyPanel() {
     clearPolicyLinkNode,
     setRightBar,
   } = useMainContext()
+  const {
+    addTaskBuilderSource,
+    taskBuilderSources,
+    addFollowUpSource,
+    followUpSources,
+    attachTarget,
+  } = usePanelContext()
   const [refs, setRefs] = useState<PolicyReferences | null>(null)
   const [selectedDoc, setSelectedDoc] = useState<PolicyDocument | null>(null)
   const [numPages, setNumPages] = useState<number>(0)
@@ -56,6 +141,7 @@ export function PolicyPanel() {
   const [containerWidth, setContainerWidth] = useState(0)
 
   // Search state
+  const [searchOpen, setSearchOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState<number[]>([])
   const [searchIndex, setSearchIndex] = useState(0)
@@ -67,10 +153,18 @@ export function PolicyPanel() {
   const [focusedSectionId, setFocusedSectionId] = useState<string | null>(null)
   // Clicked section in the PDF — shows linked nodes popover
   const [clickedSectionId, setClickedSectionId] = useState<string | null>(null)
-  // Adding nodes to an existing section (reuse the node picker UI)
-  const [addingToSectionId, setAddingToSectionId] = useState<string | null>(
-    null
-  )
+
+  // What does drawing on a page do?
+  //  - 'read'  — drawing disabled, native text selection works (copy etc.)
+  //  - 'link'  — draw → opens link form to label + map nodes
+  //  - 'skip'  — draw → saved immediately as a skipped section, no form
+  type Mode = 'read' | 'link' | 'skip'
+  const [mode, setMode] = useState<Mode>('read')
+  // If the panel was opened from a node's '+ link' button, auto-switch to
+  // link mode so the user's first draw goes straight into the form.
+  useEffect(() => {
+    if (policyLinkNodePath) setMode('link')
+  }, [policyLinkNodePath])
 
   // Selection capture state — a single normalized box drawn by the user on
   // a single page. No text extraction; the box itself + page is all that's
@@ -86,10 +180,6 @@ export function PolicyPanel() {
     currentX: number
     currentY: number
   } | null>(null)
-  const [showLinkForm, setShowLinkForm] = useState(false)
-  const [sectionLabel, setSectionLabel] = useState('')
-  const [selectedNodePaths, setSelectedNodePaths] = useState<string[]>([])
-  const [nodeSearch, setNodeSearch] = useState('')
   const [saving, setSaving] = useState(false)
 
   // Stable setter — write to module-level var so state survives remounts
@@ -105,27 +195,6 @@ export function PolicyPanel() {
     if (!wrapper || !container) return
     container.scrollTo({ top: wrapper.offsetTop - 8, behavior: 'auto' })
   }, [])
-
-  // Build node path list for the picker
-  const allNodes: { path: string; name: string; label?: string }[] = []
-  for (const node of Object.values(model.nodes)) {
-    const path = getNodePath(node.content)
-    if (!path) continue
-    const label =
-      node.content.type !== 'entity'
-        ? (node.content as { label?: string }).label
-        : undefined
-    allNodes.push({ path, name: node.name, label })
-  }
-
-  const filteredNodes = nodeSearch
-    ? allNodes.filter(
-        (n) =>
-          n.name.toLowerCase().includes(nodeSearch.toLowerCase()) ||
-          n.path.toLowerCase().includes(nodeSearch.toLowerCase()) ||
-          (n.label?.toLowerCase().includes(nodeSearch.toLowerCase()) ?? false)
-      )
-    : allNodes
 
   // If there's a pending navigation target, save the doc ID immediately
   // so loadRefs picks it up on first mount
@@ -289,6 +358,13 @@ export function PolicyPanel() {
   // to draw a rectangle and have us extract the text inside it.
   const handlePageMouseDown = useCallback(
     (e: React.MouseEvent<HTMLDivElement>, pageNum: number) => {
+      // Read-only mode → never start a draw, regardless of the cached
+      // mode state (the toolbar is hidden but mode could still be flipped
+      // via stale openPolicyForLinking calls).
+      if (!ALLOW_WRITES) return
+      // Read mode → leave the native text-selection gesture alone so the
+      // user can highlight + copy.
+      if (mode === 'read') return
       // Skip if the click started on a popover, button, or input — those
       // own their own gestures.
       if (
@@ -313,7 +389,7 @@ export function PolicyPanel() {
       // Suppress browser text selection while we're drawing.
       e.preventDefault()
     },
-    []
+    [mode]
   )
 
   // While drawing, follow the cursor on the document; finalize on mouseup.
@@ -362,71 +438,106 @@ export function PolicyPanel() {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== 'Escape') return
-      if (drawingBox || capturedRects.length > 0) {
+      if (drawingBox) {
         e.stopPropagation()
         e.preventDefault()
         setDrawingBox(null)
-        setCapturedRects([])
-        setSelectionPage(null)
-        // If the link form is open, close that too.
-        if (showLinkForm) {
-          setShowLinkForm(false)
-          setSelectedNodePaths([])
-          clearPolicyLinkNode()
-        }
+      } else if (clickedSectionId) {
+        e.stopPropagation()
+        e.preventDefault()
+        setClickedSectionId(null)
       }
     }
     window.addEventListener('keydown', onKey, true)
     return () => window.removeEventListener('keydown', onKey, true)
-  }, [drawingBox, capturedRects.length, showLinkForm, clearPolicyLinkNode])
+  }, [drawingBox, clickedSectionId])
+
+  // Hit-test a click against the section overlays on whichever page was
+  // clicked. Used both for click handlers (read mode → native click event)
+  // and for the tiny-drag fall-through in finalizeDraw.
+  const handleSectionClickAt = useCallback(
+    (clientX: number, clientY: number) => {
+      const hit = findPageAt(clientX, clientY)
+      if (!hit) {
+        setClickedSectionId(null)
+        return
+      }
+      const nx = (clientX - hit.rect.left) / hit.rect.width
+      const ny = (clientY - hit.rect.top) / hit.rect.height
+      let hitSection: string | null = null
+      for (const section of sectionsForPage(hit.pageNum)) {
+        for (const r of section.rects ?? []) {
+          if (
+            nx >= r.x &&
+            nx <= r.x + r.w &&
+            ny >= r.y &&
+            ny <= r.y + r.h
+          ) {
+            hitSection = section.id
+            break
+          }
+        }
+        if (hitSection) break
+      }
+      setClickedSectionId((prev) =>
+        hitSection ? (prev === hitSection ? null : hitSection) : null
+      )
+    },
+    [findPageAt, sectionsForPage]
+  )
+
+  // onClick on the page wrapper. Browser fires click only when mousedown
+  // and mouseup are on the same target without significant drag, so this
+  // doesn't fight native text-selection in read mode.
+  const handlePageClick = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      // Don't handle clicks that originated inside the popover itself.
+      if ((e.target as HTMLElement).closest('[data-policy-popover]')) return
+      // Suppress the click that follows a successful drag.
+      if (justDraggedRef.current) {
+        justDraggedRef.current = false
+        return
+      }
+      handleSectionClickAt(e.clientX, e.clientY)
+    },
+    [handleSectionClickAt]
+  )
 
   const finalizeDraw = (
     box: NonNullable<typeof drawingBox>,
-    e: MouseEvent
+    _e: MouseEvent
   ) => {
     const x0 = Math.min(box.startX, box.currentX)
     const y0 = Math.min(box.startY, box.currentY)
     const w = Math.abs(box.currentX - box.startX)
     const h = Math.abs(box.currentY - box.startY)
 
-    // Tiny box → treat as a click (hit-test existing section overlays).
+    // Tiny box → no save. The browser will dispatch onClick on the page
+    // wrapper next, which runs handleSectionClickAt and toggles the popover.
     if (w < 0.005 && h < 0.005) {
-      const hit = findPageAt(e.clientX, e.clientY)
-      if (hit) {
-        const nx = (e.clientX - hit.rect.left) / hit.rect.width
-        const ny = (e.clientY - hit.rect.top) / hit.rect.height
-        let hitSection: string | null = null
-        for (const section of sectionsForPage(hit.pageNum)) {
-          for (const r of section.rects ?? []) {
-            if (
-              nx >= r.x &&
-              nx <= r.x + r.w &&
-              ny >= r.y &&
-              ny <= r.y + r.h
-            ) {
-              hitSection = section.id
-              break
-            }
-          }
-          if (hitSection) break
-        }
-        setClickedSectionId((prev) =>
-          hitSection ? (prev === hitSection ? null : hitSection) : null
-        )
-      } else {
-        setClickedSectionId(null)
-      }
-      // Clear any leftover capture state if we weren't in the middle of saving.
-      if (!showLinkForm) {
-        setCapturedRects([])
-        setSelectionPage(null)
-      }
+      setCapturedRects([])
+      setSelectionPage(null)
       return
     }
 
-    setCapturedRects([{ x: x0, y: y0, w, h }])
-    setSelectionPage(box.pageNum)
+    const finalBox = { x: x0, y: y0, w, h }
     setClickedSectionId(null)
+
+    if (mode === 'skip') {
+      // Quick path: save as skipped immediately. Lets the user keep
+      // blasting through skip selections.
+      void saveSkippedBox(box.pageNum, finalBox)
+      return
+    }
+
+    if (mode === 'link') {
+      // Save as an unlinked section. The user can click it later to attach
+      // nodes / a comment via the popover. If we were opened from a node's
+      // '+ link' button, auto-link to that node.
+      const autoLink = policyLinkNodePath ? [policyLinkNodePath] : []
+      void saveLinkBox(box.pageNum, finalBox, autoLink)
+      return
+    }
   }
 
   const onDocumentLoadSuccess = useCallback(
@@ -463,6 +574,9 @@ export function PolicyPanel() {
     setError(err.message)
   }, [])
 
+  // Bumped on every runSearch call so a stale (slow) search whose query is
+  // already obsolete doesn't overwrite results from a newer one.
+  const searchTokenRef = useRef(0)
   const runSearch = useCallback(async (query: string) => {
     const pdf = pdfDocRef.current
     if (!pdf || !query.trim()) {
@@ -470,6 +584,7 @@ export function PolicyPanel() {
       setSearchHighlight('')
       return
     }
+    const myToken = ++searchTokenRef.current
 
     setIsSearching(true)
     const matches: number[] = []
@@ -491,6 +606,8 @@ export function PolicyPanel() {
       // ignore search errors
     }
 
+    // Drop stale results — a newer query has been kicked off since.
+    if (myToken !== searchTokenRef.current) return
     setSearchResults(matches)
     setSearchIndex(0)
     setSearchHighlight(query.trim())
@@ -500,74 +617,372 @@ export function PolicyPanel() {
     setIsSearching(false)
   }, [scrollToPage])
 
-  const startLinking = () => {
-    setShowLinkForm(true)
-    setSectionLabel('')
-    setSelectedNodePaths(policyLinkNodePath ? [policyLinkNodePath] : [])
-    setNodeSearch('')
-  }
-
-  const cancelLinking = () => {
-    setShowLinkForm(false)
-    setCapturedRects([])
-    setSelectionPage(null)
-    setSelectedNodePaths([])
-    clearPolicyLinkNode()
-  }
-
-  const toggleNodePath = (path: string) => {
-    setSelectedNodePaths((prev) =>
-      prev.includes(path) ? prev.filter((p) => p !== path) : [...prev, path]
-    )
-  }
-
-  const handleSave = async () => {
-    if (
-      !refs ||
-      !selectedDoc ||
-      !sectionLabel.trim() ||
-      selectedNodePaths.length === 0 ||
-      selectionPage === null
-    )
+  // Debounced search-as-you-type. Empty query clears results immediately.
+  useEffect(() => {
+    if (!searchOpen) return
+    if (!searchQuery.trim()) {
+      setSearchResults([])
+      setSearchHighlight('')
       return
+    }
+    if (searchHighlight === searchQuery.trim()) return
+    const id = setTimeout(() => runSearch(searchQuery), 250)
+    return () => clearTimeout(id)
+  }, [searchQuery, searchOpen, searchHighlight, runSearch])
+
+  const stepSearch = useCallback(
+    (dir: 1 | -1) => {
+      if (searchResults.length === 0) return
+      const next =
+        (searchIndex + dir + searchResults.length) % searchResults.length
+      setSearchIndex(next)
+      scrollToPage(searchResults[next])
+    },
+    [searchIndex, searchResults, scrollToPage]
+  )
+
+  // ────────────────────────────────────────────────────────────────────
+  // Edit existing section box: drag to move, arrow keys to grow/shrink,
+  // Delete to remove. We update refs optimistically while editing and
+  // persist with a debounce (or on mouseup for drags).
+  // ────────────────────────────────────────────────────────────────────
+  const [dragState, setDragState] = useState<{
+    sectionId: string
+    pageNum: number
+    startClientX: number
+    startClientY: number
+    startRect: NormalizedRect
+  } | null>(null)
+  // Mutable across mousemoves so the drag effect doesn't re-run mid-drag.
+  const dragMovedRef = useRef(false)
+  // Set on mouseup if the section was actually dragged. Read by
+  // handlePageClick to skip the popover-toggle that would otherwise fire.
+  const justDraggedRef = useRef(false)
+
+  // Mirror refs in a ref so the debounced saver always sees the latest copy.
+  const refsRef = useRef<PolicyReferences | null>(null)
+  useEffect(() => {
+    refsRef.current = refs
+  }, [refs])
+
+  // Mirror page dimensions for the debounced saver (which re-extracts text).
+  const pageDimsRef = useRef<{ width: number; height: number }[]>([])
+  useEffect(() => {
+    pageDimsRef.current = pageDimensions
+  }, [pageDimensions])
+
+  // Section IDs whose rect has been edited since the last persist; their
+  // captured `text` needs to be re-extracted before saving.
+  const dirtyRectsRef = useRef<Set<string>>(new Set())
+
+  const persistRefsDebounced = useRef<ReturnType<typeof setTimeout> | null>(
+    null
+  )
+  const schedulePersist = useCallback(() => {
+    if (persistRefsDebounced.current)
+      clearTimeout(persistRefsDebounced.current)
+    persistRefsDebounced.current = setTimeout(async () => {
+      const r = refsRef.current
+      if (!r) return
+      // Re-extract text for any sections whose rect was just edited so the
+      // saved `text` stays in sync with the current box.
+      const dirty = dirtyRectsRef.current
+      dirtyRectsRef.current = new Set()
+      const pdf = pdfDocRef.current
+      let next = r
+      if (pdf && dirty.size > 0) {
+        const updates = new Map<string, string>()
+        for (const sectionId of dirty) {
+          const sec = r.sections.find((s) => s.id === sectionId)
+          const rect = sec?.rects?.[0]
+          if (!sec || !rect || sec.page === undefined) continue
+          const dim = pageDimsRef.current[sec.page - 1]
+          if (!dim) continue
+          const text = await extractTextInBox(pdf, sec.page, dim, rect).catch(
+            () => null
+          )
+          if (typeof text === 'string') updates.set(sectionId, text)
+        }
+        if (updates.size > 0) {
+          next = {
+            ...r,
+            sections: r.sections.map((s) =>
+              updates.has(s.id) ? { ...s, text: updates.get(s.id)! } : s
+            ),
+          }
+          setRefs(next)
+        }
+      }
+      saveReferences(model.id, next).then(() => refreshModel())
+    }, 250)
+  }, [model.id, refreshModel])
+
+  // Apply a new rect to a section locally (no save). Used by drag and keys.
+  const applyRectEdit = useCallback(
+    (sectionId: string, rect: NormalizedRect) => {
+      dirtyRectsRef.current.add(sectionId)
+      setRefs((prev) =>
+        prev
+          ? {
+              ...prev,
+              sections: prev.sections.map((s) =>
+                s.id === sectionId ? { ...s, rects: [rect] } : s
+              ),
+            }
+          : prev
+      )
+    },
+    []
+  )
+
+  // Mousedown on a section overlay rect → maybe-drag.
+  const startSectionDrag = (
+    e: React.MouseEvent<HTMLDivElement>,
+    sectionId: string,
+    pageNum: number,
+    rect: NormalizedRect
+  ) => {
+    // Read-only mode: ignore mousedown so the section overlay never drags
+    // and the popover-toggle path on plain click still works.
+    if (!ALLOW_WRITES) return
+    // Don't fight the page wrapper: stop the wrapper's mousedown so it
+    // doesn't kick off a brand-new draw. preventDefault stops native
+    // text-selection from hijacking the drag in read mode.
+    e.stopPropagation()
+    e.preventDefault()
+    dragMovedRef.current = false
+    setDragState({
+      sectionId,
+      pageNum,
+      startClientX: e.clientX,
+      startClientY: e.clientY,
+      startRect: rect,
+    })
+  }
+
+  // Drag effect: while a drag is active, follow the cursor; persist on up.
+  useEffect(() => {
+    if (!dragState) return
+    const onMove = (e: MouseEvent) => {
+      const wrapper = pageRefs.current.get(dragState.pageNum)
+      if (!wrapper) return
+      const wrap = wrapper.getBoundingClientRect()
+      if (wrap.width === 0 || wrap.height === 0) return
+      const dx = (e.clientX - dragState.startClientX) / wrap.width
+      const dy = (e.clientY - dragState.startClientY) / wrap.height
+      if (
+        !dragMovedRef.current &&
+        Math.hypot(
+          e.clientX - dragState.startClientX,
+          e.clientY - dragState.startClientY
+        ) > 3
+      ) {
+        dragMovedRef.current = true
+      }
+      const r = dragState.startRect
+      const next: NormalizedRect = {
+        x: Math.max(0, Math.min(1 - r.w, r.x + dx)),
+        y: Math.max(0, Math.min(1 - r.h, r.y + dy)),
+        w: r.w,
+        h: r.h,
+      }
+      applyRectEdit(dragState.sectionId, next)
+    }
+    const onUp = () => {
+      const moved = dragMovedRef.current
+      setDragState(null)
+      if (moved) {
+        justDraggedRef.current = true
+        schedulePersist()
+      }
+    }
+    document.addEventListener('mousemove', onMove)
+    document.addEventListener('mouseup', onUp)
+    return () => {
+      document.removeEventListener('mousemove', onMove)
+      document.removeEventListener('mouseup', onUp)
+    }
+  }, [dragState, applyRectEdit, schedulePersist])
+
+  // Keyboard editing (arrow keys / Delete) for the currently selected section.
+  useEffect(() => {
+    if (!clickedSectionId) return
+    // Read-only mode: don't bind the editing keys at all.
+    if (!ALLOW_WRITES) return
+    const STEP = 0.005 // ~half a percent of the page per press
+    const onKey = (e: KeyboardEvent) => {
+      // Skip when the user is typing in the popover (comment, node search).
+      const t = e.target as HTMLElement | null
+      if (
+        t &&
+        (t.tagName === 'INPUT' ||
+          t.tagName === 'TEXTAREA' ||
+          (t as HTMLElement).isContentEditable)
+      )
+        return
+
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+        e.preventDefault()
+        e.stopPropagation()
+        const r = refsRef.current
+        if (!r) return
+        const updated: PolicyReferences = {
+          ...r,
+          sections: r.sections.filter((s) => s.id !== clickedSectionId),
+          mappings: r.mappings.filter((m) => m.sectionId !== clickedSectionId),
+        }
+        setRefs(updated)
+        setClickedSectionId(null)
+        schedulePersist()
+        return
+      }
+
+      if (
+        e.key !== 'ArrowUp' &&
+        e.key !== 'ArrowDown' &&
+        e.key !== 'ArrowLeft' &&
+        e.key !== 'ArrowRight'
+      )
+        return
+
+      const r = refsRef.current
+      if (!r) return
+      const sec = r.sections.find((s) => s.id === clickedSectionId)
+      const rect = sec?.rects?.[0]
+      if (!rect) return
+
+      e.preventDefault()
+      e.stopPropagation()
+      const next: NormalizedRect = { ...rect }
+      if (e.shiftKey) {
+        if (e.key === 'ArrowRight')
+          next.x = Math.max(0, Math.min(1 - next.w, next.x + STEP))
+        else if (e.key === 'ArrowLeft')
+          next.x = Math.max(0, Math.min(1 - next.w, next.x - STEP))
+        else if (e.key === 'ArrowDown')
+          next.y = Math.max(0, Math.min(1 - next.h, next.y + STEP))
+        else if (e.key === 'ArrowUp')
+          next.y = Math.max(0, Math.min(1 - next.h, next.y - STEP))
+      } else {
+        if (e.key === 'ArrowRight')
+          next.w = Math.max(0.01, Math.min(1 - next.x, next.w + STEP))
+        else if (e.key === 'ArrowLeft')
+          next.w = Math.max(0.01, next.w - STEP)
+        else if (e.key === 'ArrowDown')
+          next.h = Math.max(0.01, Math.min(1 - next.y, next.h + STEP))
+        else if (e.key === 'ArrowUp')
+          next.h = Math.max(0.01, next.h - STEP)
+      }
+      applyRectEdit(clickedSectionId, next)
+      schedulePersist()
+    }
+    window.addEventListener('keydown', onKey, true)
+    return () => window.removeEventListener('keydown', onKey, true)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [clickedSectionId, applyRectEdit, schedulePersist])
+
+  const saveLinkBox = async (
+    page: number,
+    rect: NormalizedRect,
+    autoNodes: string[]
+  ) => {
+    if (!refs || !selectedDoc) return
     setSaving(true)
     try {
-      const sectionId = `${selectedDoc.id}__${sectionLabel
-        .trim()
-        .toLowerCase()
-        .replace(/[^a-z0-9.]+/g, '-')}`
-
+      const pdf = pdfDocRef.current
+      const dim = pageDimensions[page - 1]
+      const text =
+        pdf && dim
+          ? await extractTextInBox(pdf, page, dim, rect).catch(() => '')
+          : ''
+      const sectionId = `${selectedDoc.id}__${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`
       const updated: PolicyReferences = {
-        documents: [...refs.documents],
+        ...refs,
         sections: [
           ...refs.sections,
           {
             id: sectionId,
             documentId: selectedDoc.id,
-            label: sectionLabel.trim(),
-            page: selectionPage,
-            rects: capturedRects.length > 0 ? capturedRects : undefined,
+            text,
+            page,
+            rects: [rect],
           },
         ],
-        mappings: [
-          ...refs.mappings,
-          ...selectedNodePaths.map((nodePath) => ({ nodePath, sectionId })),
-        ],
+        mappings:
+          autoNodes.length > 0
+            ? [
+                ...refs.mappings,
+                ...autoNodes.map((nodePath) => ({ nodePath, sectionId })),
+              ]
+            : refs.mappings,
       }
-
       await saveReferences(model.id, updated)
       setRefs(updated)
       refreshModel()
-      cancelLinking()
+      // Open the popover on the new section so the user can immediately
+      // tweak it (link nodes, add a comment, resize, etc.).
+      setClickedSectionId(sectionId)
+      if (autoNodes.length > 0) clearPolicyLinkNode()
     } finally {
       setSaving(false)
     }
   }
 
-  const handleSkip = async () => {
-    if (!refs || !selectedDoc || selectionPage === null) return
+  // Replace the linked-node mappings for a single section. Used by the
+  // popover's combobox multiselect — every value change autosaves.
+  const setSectionMappingsLocal = (sectionId: string, names: string[]) => {
+    setRefs((prev) =>
+      prev
+        ? {
+            ...prev,
+            mappings: [
+              ...prev.mappings.filter((m) => m.sectionId !== sectionId),
+              ...names.map((nodePath) => ({ nodePath, sectionId })),
+            ],
+          }
+        : prev
+    )
+    schedulePersist()
+  }
+
+  // Update an existing section's optional comment. Empty string clears.
+  const updateSectionComment = async (
+    sectionId: string,
+    comment: string
+  ) => {
+    if (!refs) return
+    const trimmed = comment.trim()
     setSaving(true)
     try {
+      const updated: PolicyReferences = {
+        ...refs,
+        sections: refs.sections.map((s) =>
+          s.id === sectionId
+            ? { ...s, comment: trimmed === '' ? undefined : trimmed }
+            : s
+        ),
+      }
+      await saveReferences(model.id, updated)
+      setRefs(updated)
+      refreshModel()
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  // Save a skipped section directly from a (page, box) without depending on
+  // the React state being committed. Used by skip-mode draw, which fires
+  // straight from finalizeDraw before setCapturedRects has propagated.
+  const saveSkippedBox = async (page: number, rect: NormalizedRect) => {
+    if (!refs || !selectedDoc) return
+    setSaving(true)
+    try {
+      const pdf = pdfDocRef.current
+      const dim = pageDimensions[page - 1]
+      const text =
+        pdf && dim
+          ? await extractTextInBox(pdf, page, dim, rect).catch(() => '')
+          : ''
       const sectionId = `${selectedDoc.id}__skip-${Date.now()}`
       const updated: PolicyReferences = {
         ...refs,
@@ -576,9 +991,9 @@ export function PolicyPanel() {
           {
             id: sectionId,
             documentId: selectedDoc.id,
-            label: 'Skipped',
-            page: selectionPage,
-            rects: capturedRects.length > 0 ? capturedRects : undefined,
+            text,
+            page,
+            rects: [rect],
             status: 'skipped',
           },
         ],
@@ -586,7 +1001,6 @@ export function PolicyPanel() {
       await saveReferences(model.id, updated)
       setRefs(updated)
       refreshModel()
-      cancelLinking()
     } finally {
       setSaving(false)
     }
@@ -604,35 +1018,6 @@ export function PolicyPanel() {
       await saveReferences(model.id, updated)
       setRefs(updated)
       refreshModel()
-      setClickedSectionId(null)
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  const handleAddNodesToSection = async (sectionId: string) => {
-    if (!refs || selectedNodePaths.length === 0) return
-    setSaving(true)
-    try {
-      const existing = new Set(
-        refs.mappings
-          .filter((m) => m.sectionId === sectionId)
-          .map((m) => m.nodePath)
-      )
-      const newMappings = selectedNodePaths
-        .filter((p) => !existing.has(p))
-        .map((nodePath) => ({ nodePath, sectionId }))
-
-      const updated: PolicyReferences = {
-        ...refs,
-        mappings: [...refs.mappings, ...newMappings],
-      }
-      await saveReferences(model.id, updated)
-      setRefs(updated)
-      refreshModel()
-      setAddingToSectionId(null)
-      setSelectedNodePaths([])
-      setNodeSearch('')
       setClickedSectionId(null)
     } finally {
       setSaving(false)
@@ -685,51 +1070,38 @@ export function PolicyPanel() {
 
   return (
     <div className="flex flex-col h-full bg-background">
-      {/* Header */}
+      {/* Header — title, doc picker, close */}
       <div className="flex items-center gap-2 px-4 py-3 border-b shrink-0">
         <h2 className="text-sm font-semibold shrink-0">Policy</h2>
-        {pdfUrl && (
-          <div className="flex items-center gap-1 flex-1 min-w-0">
-            <Search className="size-3 text-muted-foreground shrink-0" />
-            <input
-              className="flex-1 h-6 text-xs bg-transparent border-b border-transparent focus:border-foreground outline-none min-w-0"
-              placeholder="Search PDF..."
-              value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value)
-                if (!e.target.value) {
-                  setSearchResults([])
-                  setSearchHighlight('')
+        {fileDocuments.length > 0 && (
+          fileDocuments.length === 1 ? (
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground flex-1 min-w-0">
+              <FileText className="size-3 shrink-0" />
+              <span className="truncate">{fileDocuments[0].title}</span>
+            </div>
+          ) : (
+            <Select
+              value={selectedDoc?.id}
+              onValueChange={(id) => {
+                const doc = fileDocuments.find((d) => d.id === id)
+                if (doc) {
+                  setStableDoc(doc)
+                  if (containerRef.current) containerRef.current.scrollTop = 0
                 }
               }}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  if (
-                    searchResults.length > 0 &&
-                    searchHighlight === searchQuery
-                  ) {
-                    // Same query — cycle through results
-                    const nextIdx = (searchIndex + 1) % searchResults.length
-                    setSearchIndex(nextIdx)
-                    scrollToPage(searchResults[nextIdx])
-                  } else {
-                    // New query — run fresh search
-                    runSearch(searchQuery)
-                  }
-                }
-              }}
-            />
-            {searchResults.length > 0 && (
-              <span className="text-[10px] text-muted-foreground shrink-0">
-                {searchIndex + 1}/{searchResults.length}
-              </span>
-            )}
-            {isSearching && (
-              <span className="text-[10px] text-muted-foreground shrink-0">
-                searching...
-              </span>
-            )}
-          </div>
+            >
+              <SelectTrigger className="flex-1 min-w-0">
+                <SelectValue placeholder="Select a document..." />
+              </SelectTrigger>
+              <SelectContent>
+                {fileDocuments.map((d) => (
+                  <SelectItem key={d.id} value={d.id}>
+                    {d.title}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )
         )}
         <Button
           variant="ghost"
@@ -741,42 +1113,107 @@ export function PolicyPanel() {
         </Button>
       </div>
 
-      {/* Document selector */}
-      {fileDocuments.length > 0 && (
-        <div className="px-4 py-2 border-b shrink-0">
-          {fileDocuments.length === 1 ? (
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <FileText className="size-3" />
-              <span className="truncate">{fileDocuments[0].title}</span>
+      {/* Mode toolbar + collapsible search on the same row */}
+      {pdfUrl && (
+        <div className="flex items-center gap-2 px-4 py-1.5 border-b shrink-0">
+          {ALLOW_WRITES && (
+            <ButtonGroup>
+              {(['read', 'link', 'skip'] as const).map((m) => (
+                <Button
+                  key={m}
+                  size="sm"
+                  variant={mode === m ? 'default' : 'outline'}
+                  className="h-7 text-[11px] capitalize"
+                  onClick={() => setMode(m)}
+                >
+                  {m}
+                </Button>
+              ))}
+            </ButtonGroup>
+          )}
+          {searchOpen ? (
+            <div className="flex items-center gap-1 flex-1 min-w-0">
+              <Search className="size-3 text-muted-foreground shrink-0" />
+              <input
+                autoFocus
+                className="flex-1 h-6 text-xs bg-transparent border-b border-input focus:border-foreground outline-none min-w-0 transition-colors"
+                placeholder="Search PDF..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault()
+                    stepSearch(e.shiftKey ? -1 : 1)
+                  } else if (e.key === 'Escape') {
+                    setSearchOpen(false)
+                  }
+                }}
+              />
+              {isSearching && (
+                <span className="text-[10px] text-muted-foreground shrink-0">
+                  searching…
+                </span>
+              )}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 shrink-0"
+                disabled={searchResults.length === 0}
+                onClick={() => stepSearch(-1)}
+                title="Previous match (Shift+Enter)"
+              >
+                <ChevronLeft className="size-3" />
+              </Button>
+              {searchResults.length > 0 && (
+                <span className="text-[10px] text-muted-foreground shrink-0 tabular-nums">
+                  {searchIndex + 1}/{searchResults.length}
+                </span>
+              )}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 shrink-0"
+                disabled={searchResults.length === 0}
+                onClick={() => stepSearch(1)}
+                title="Next match (Enter)"
+              >
+                <ChevronRight className="size-3" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 shrink-0"
+                onClick={() => {
+                  setSearchOpen(false)
+                  setSearchQuery('')
+                  setSearchResults([])
+                  setSearchHighlight('')
+                }}
+              >
+                <X className="size-3" />
+              </Button>
             </div>
           ) : (
-            <select
-              className="w-full h-7 text-xs border rounded px-2 bg-background"
-              value={selectedDoc?.id ?? ''}
-              onChange={(e) => {
-                const doc = fileDocuments.find((d) => d.id === e.target.value)
-                if (doc) {
-                  setStableDoc(doc)
-                  if (containerRef.current) containerRef.current.scrollTop = 0
-                }
-              }}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 ml-auto shrink-0"
+              onClick={() => setSearchOpen(true)}
+              title="Search"
             >
-              {fileDocuments.map((d) => (
-                <option key={d.id} value={d.id}>
-                  {d.title}
-                </option>
-              ))}
-            </select>
+              <Search className="size-3.5" />
+            </Button>
           )}
         </div>
       )}
 
-      {/* Linking mode banner — shown when opened from a node's "+" button */}
-      {policyLinkNodePath && !showLinkForm && (
+      {/* Linking mode banner — shown when opened from a node's "+" button.
+          Each link-mode draw auto-attaches to this node until cleared. */}
+      {policyLinkNodePath && (
         <div className="px-4 py-2 border-b bg-violet-50 shrink-0">
           <div className="flex items-center justify-between gap-2">
             <p className="text-xs text-violet-800">
-              Select text to link to{' '}
+              Drag a box to link to{' '}
               <span className="font-mono font-semibold">
                 {policyLinkNodePath}
               </span>
@@ -787,148 +1224,6 @@ export function PolicyPanel() {
             >
               <X className="size-3" />
             </button>
-          </div>
-        </div>
-      )}
-
-      {/* Selection capture bar */}
-      {selectionPage !== null && capturedRects[0] && !showLinkForm && (
-        <div className="px-4 py-2 border-b bg-blue-50 shrink-0">
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-blue-800">
-              Captured selection on page {selectionPage}
-            </span>
-            <div className="flex gap-1 shrink-0 ml-auto">
-              <Button
-                size="sm"
-                className="h-6 text-[11px] gap-1"
-                onClick={startLinking}
-              >
-                <Link className="size-3" />
-                Link to nodes
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-6 text-[11px] gap-1"
-                onClick={handleSkip}
-                disabled={saving}
-              >
-                Skip
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-6 text-[11px]"
-                onClick={cancelLinking}
-              >
-                <X className="size-3" />
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Link form */}
-      {showLinkForm && (
-        <div className="px-4 py-3 border-b bg-muted/30 shrink-0 space-y-2 max-h-[50%] overflow-y-auto">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold">Create policy section</span>
-            <button
-              className="p-0.5 text-muted-foreground hover:text-foreground"
-              onClick={cancelLinking}
-            >
-              <X className="size-3.5" />
-            </button>
-          </div>
-
-          <Input
-            className="h-7 text-xs"
-            placeholder="Section label (e.g. 4.407.2 — Earned Income Deduction)"
-            value={sectionLabel}
-            onChange={(e) => setSectionLabel(e.target.value)}
-            autoFocus
-          />
-
-          <div>
-            <span className="text-[10px] font-semibold text-muted-foreground uppercase">
-              Link to nodes
-            </span>
-            {selectedNodePaths.length > 0 && (
-              <div className="flex flex-wrap gap-1 mt-1">
-                {selectedNodePaths.map((p) => (
-                  <span
-                    key={p}
-                    className="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-blue-100 text-blue-800 text-[10px] rounded cursor-pointer hover:bg-blue-200"
-                    onClick={() => toggleNodePath(p)}
-                  >
-                    {p}
-                    <X className="size-2.5" />
-                  </span>
-                ))}
-              </div>
-            )}
-            <Input
-              className="h-7 text-xs mt-1"
-              placeholder="Search nodes..."
-              value={nodeSearch}
-              onChange={(e) => setNodeSearch(e.target.value)}
-            />
-            {nodeSearch && (
-              <div className="border rounded mt-1 max-h-32 overflow-y-auto bg-background">
-                {filteredNodes.slice(0, 20).map((n) => {
-                  const isSelected = selectedNodePaths.includes(n.name)
-                  return (
-                    <button
-                      key={n.path}
-                      className={`w-full text-left px-2 py-1 text-xs hover:bg-muted flex items-center gap-1.5 ${isSelected ? 'bg-blue-50' : ''}`}
-                      onClick={() => {
-                        toggleNodePath(n.name)
-                        setNodeSearch('')
-                      }}
-                    >
-                      {isSelected && (
-                        <Check className="size-3 text-blue-600 shrink-0" />
-                      )}
-                      <span className="font-mono text-[11px] truncate">
-                        {n.name}
-                      </span>
-                      {n.label && (
-                        <span className="text-muted-foreground truncate">
-                          {n.label}
-                        </span>
-                      )}
-                    </button>
-                  )
-                })}
-                {filteredNodes.length === 0 && (
-                  <p className="px-2 py-1 text-xs text-muted-foreground">
-                    No matching nodes
-                  </p>
-                )}
-              </div>
-            )}
-          </div>
-
-          <div className="flex gap-1.5 justify-end pt-1">
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-6 text-[11px]"
-              onClick={cancelLinking}
-            >
-              Cancel
-            </Button>
-            <Button
-              size="sm"
-              className="h-6 text-[11px]"
-              onClick={handleSave}
-              disabled={
-                saving || !sectionLabel.trim() || selectedNodePaths.length === 0
-              }
-            >
-              {saving ? 'Saving...' : 'Save section'}
-            </Button>
           </div>
         </div>
       )}
@@ -981,12 +1276,16 @@ export function PolicyPanel() {
                 else pageRefs.current.delete(pageNum)
               }}
               data-page={pageNum}
-              className="relative bg-white shadow-sm select-none"
+              className={cn(
+                'relative bg-white shadow-sm',
+                mode !== 'read' && 'select-none'
+              )}
               style={{
                 width: w || undefined,
                 minHeight: placeholderHeight || undefined,
               }}
               onMouseDown={(e) => handlePageMouseDown(e, pageNum)}
+              onClick={handlePageClick}
             >
               {inView && pageWidth && (
                 <Page
@@ -1028,11 +1327,13 @@ export function PolicyPanel() {
 
                 return (
                   <div key={section.id}>
-                    {/* Highlight rects */}
+                    {/* Highlight rects. Sit above react-pdf's TextLayer
+                        (z-index 2) and AnnotationLayer (z-index 3) so
+                        mousedown lands on us, not the text layer. */}
                     {(section.rects ?? []).map((rect, i) => (
                       <div
                         key={`${section.id}-${i}`}
-                        className="absolute pointer-events-none"
+                        className="absolute"
                         style={{
                           left: `${rect.x * 100}%`,
                           top: `${rect.y * 100}%`,
@@ -1040,168 +1341,65 @@ export function PolicyPanel() {
                           height: `${rect.h * 100}%`,
                           background: bg,
                           border,
-                          zIndex: 1,
+                          zIndex: 10,
+                          cursor: isClicked ? 'move' : 'pointer',
                         }}
+                        onMouseDown={(e) =>
+                          startSectionDrag(e, section.id, pageNum, rect)
+                        }
                       />
                     ))}
-                    {/* Popover showing linked nodes */}
+                    {/* Popover — opens on click; portaled to body and
+                        clamped to viewport so it stays on screen even when
+                        the section is huge. */}
                     {isClicked && section.rects && section.rects.length > 0 && (
-                      <div
-                        data-policy-popover
-                        className="absolute z-20 bg-popover border rounded-md shadow-lg p-2 min-w-[200px]"
-                        style={{
-                          left: `${section.rects[0].x * 100}%`,
-                          top: `${(section.rects[section.rects.length - 1].y + section.rects[section.rects.length - 1].h) * 100}%`,
-                          marginTop: 4,
+                      <SectionPopover
+                        section={section}
+                        pageWrapper={pageRefs.current.get(pageNum) ?? null}
+                        editable={ALLOW_WRITES}
+                        isSkipped={isSkipped}
+                        linkedNames={linkedNodes.map((n) => n.name)}
+                        onLinkedNamesChange={(names) =>
+                          setSectionMappingsLocal(section.id, names)
+                        }
+                        onCommentChange={(c) =>
+                          updateSectionComment(section.id, c)
+                        }
+                        onRemove={() => handleRemoveSection(section.id)}
+                        onClose={() => setClickedSectionId(null)}
+                        onOpenNode={(name) => {
+                          const id = Object.entries(model.nodes).find(
+                            ([, n]) => n.name === name
+                          )?.[0]
+                          if (id) {
+                            setOpenNode(id)
+                            setClickedSectionId(null)
+                          }
                         }}
-                      >
-                        <div className="flex items-center justify-between gap-2 mb-1">
-                          <span className="text-xs font-semibold truncate">
-                            {section.label}
-                          </span>
-                          <button
-                            className="p-0.5 text-muted-foreground hover:text-foreground shrink-0"
-                            onClick={() => setClickedSectionId(null)}
-                          >
-                            <X className="size-3" />
-                          </button>
-                        </div>
-                        {isSkipped ? (
-                          <div className="space-y-1">
-                            <p className="text-[10px] text-muted-foreground italic">
-                              Marked as not relevant
-                            </p>
-                            <button
-                              className="text-[10px] text-red-600 hover:underline"
-                              onClick={() => handleRemoveSection(section.id)}
-                              disabled={saving}
-                            >
-                              Remove marking
-                            </button>
-                          </div>
-                        ) : linkedNodes.length > 0 ? (
-                          <div className="space-y-0.5">
-                            <span className="text-[10px] text-muted-foreground uppercase font-semibold">
-                              Linked nodes
-                            </span>
-                            {linkedNodes.map((n) => (
-                              <button
-                                key={n.id}
-                                className="block w-full text-left text-xs font-mono text-violet-700 hover:underline px-1 py-0.5 rounded hover:bg-muted"
-                                onClick={() => {
-                                  setOpenNode(n.id)
-                                  setClickedSectionId(null)
-                                }}
-                              >
-                                {n.name}
-                              </button>
-                            ))}
-                          </div>
-                        ) : (
-                          <p className="text-[10px] text-muted-foreground italic">
-                            No nodes linked
-                          </p>
-                        )}
-
-                        {/* Add more nodes (only for non-skipped sections) */}
-                        {!isSkipped && addingToSectionId === section.id ? (
-                          <div className="mt-2 pt-2 border-t space-y-1">
-                            {selectedNodePaths.length > 0 && (
-                              <div className="flex flex-wrap gap-1">
-                                {selectedNodePaths.map((p) => (
-                                  <span
-                                    key={p}
-                                    className="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-blue-100 text-blue-800 text-[10px] rounded cursor-pointer hover:bg-blue-200"
-                                    onClick={() => toggleNodePath(p)}
-                                  >
-                                    {p}
-                                    <X className="size-2.5" />
-                                  </span>
-                                ))}
-                              </div>
-                            )}
-                            <Input
-                              className="h-6 text-xs"
-                              placeholder="Search nodes..."
-                              value={nodeSearch}
-                              onChange={(e) => setNodeSearch(e.target.value)}
-                              autoFocus
-                            />
-                            {nodeSearch && (
-                              <div className="border rounded max-h-24 overflow-y-auto bg-background">
-                                {filteredNodes.slice(0, 15).map((n) => {
-                                  const isSel = selectedNodePaths.includes(
-                                    n.name
-                                  )
-                                  return (
-                                    <button
-                                      key={n.path}
-                                      className={`w-full text-left px-2 py-0.5 text-[11px] hover:bg-muted flex items-center gap-1 ${isSel ? 'bg-blue-50' : ''}`}
-                                      onClick={() => {
-                                        toggleNodePath(n.name)
-                                        setNodeSearch('')
-                                      }}
-                                    >
-                                      {isSel && (
-                                        <Check className="size-2.5 text-blue-600 shrink-0" />
-                                      )}
-                                      <span className="font-mono truncate">
-                                        {n.name}
-                                      </span>
-                                    </button>
-                                  )
-                                })}
-                              </div>
-                            )}
-                            <div className="flex gap-1 justify-end">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="h-5 text-[10px]"
-                                onClick={() => {
-                                  setAddingToSectionId(null)
-                                  setSelectedNodePaths([])
-                                  setNodeSearch('')
-                                }}
-                              >
-                                Cancel
-                              </Button>
-                              <Button
-                                size="sm"
-                                className="h-5 text-[10px]"
-                                onClick={() =>
-                                  handleAddNodesToSection(section.id)
-                                }
-                                disabled={
-                                  saving || selectedNodePaths.length === 0
-                                }
-                              >
-                                {saving ? '...' : 'Add'}
-                              </Button>
-                            </div>
-                          </div>
-                        ) : !isSkipped && !addingToSectionId ? (
-                          <div className="flex items-center gap-2 mt-1.5">
-                            <button
-                              className="text-[10px] text-blue-600 hover:underline"
-                              onClick={() => {
-                                setAddingToSectionId(section.id)
-                                setSelectedNodePaths([])
-                                setNodeSearch('')
-                              }}
-                            >
-                              + Link more nodes
-                            </button>
-                            <button
-                              className="text-[10px] text-red-500 hover:underline"
-                              onClick={() => handleRemoveSection(section.id)}
-                              disabled={saving}
-                            >
-                              Remove
-                            </button>
-                          </div>
-                        ) : null}
-                      </div>
+                        nodeOptions={Object.values(model.nodes).map((n) => ({
+                          name: n.name,
+                        }))}
+                        saving={saving}
+                        alreadyInTaskBuilder={(attachTarget.kind === 'follow-up'
+                          ? (followUpSources[attachTarget.threadId] ?? [])
+                          : taskBuilderSources
+                        ).some((s) => s.sectionId === section.id)}
+                        onUseInTaskBuilder={() => {
+                          // Add is idempotent on duplicates; routing matches
+                          // the current attach target so follow-up composes
+                          // get their own source bag instead of polluting
+                          // the new-task builder.
+                          if (attachTarget.kind === 'follow-up') {
+                            addFollowUpSource(attachTarget.threadId, {
+                              sectionId: section.id,
+                            })
+                          } else {
+                            addTaskBuilderSource({ sectionId: section.id })
+                          }
+                          setClickedSectionId(null)
+                          setRightBar('tasks')
+                        }}
+                      />
                     )}
                   </div>
                 )

@@ -1,7 +1,6 @@
 import { tool } from '@langchain/core/tools'
 import { z } from 'zod'
 import { getRuleset } from '../../store.js'
-import { getPageText } from '../../pdf-text.js'
 import type { Model, ModelNode } from '../../types.js'
 
 function getModel(rulesetId: string): Model {
@@ -85,7 +84,7 @@ export const listNodes = tool(
 )
 
 export const getNodes = tool(
-  async (input: {
+  (input: {
     rulesetId: string
     names: string[]
     includeReferences?: boolean
@@ -97,78 +96,70 @@ export const getNodes = tool(
     }
     const includeRefs = input.includeReferences === true
 
-    const results = await Promise.all(
-      input.names.map(async (name) => {
-        const node = findNode(nameMap, name)
-        if (!node) return `Node "${name}" not found.`
-        // Resolve dependency IDs to names
-        const depNames = node.dependencies
-          .map((id) => model.nodes[id]?.name)
-          .filter(Boolean)
+    const results = input.names.map((name) => {
+      const node = findNode(nameMap, name)
+      if (!node) return `Node "${name}" not found.`
+      // Resolve dependency IDs to names
+      const depNames = node.dependencies
+        .map((id) => model.nodes[id]?.name)
+        .filter(Boolean)
 
-        // Policy references — minimal by default, full page text on opt-in.
-        let refs: string | null = null
-        if (node.references?.length) {
-          if (includeRefs) {
-            // Dedupe (document, page) so we don't emit the same page twice
-            // for a node that has multiple highlights on it.
-            const seen = new Set<string>()
-            const lines: string[] = []
-            for (const r of node.references) {
-              const page = r.section.page
-              const key = `${r.document.id}|${page ?? '?'}`
-              if (seen.has(key)) continue
-              seen.add(key)
-              const pageText = page
-                ? await getPageText(input.rulesetId, r.document.id, page)
-                : ''
-              lines.push(
-                `  - [${r.document.title}] ${r.section.label}${page ? ` (p.${page})` : ''}\n    Page text: ${pageText || '(no text extracted)'}`
-              )
-            }
-            refs = `Policy references:\n${lines.join('\n')}`
-          } else {
-            refs = `Policy references (${node.references.length}; pass includeReferences=true for the page text):\n${node.references
-              .map(
-                (r) =>
-                  `  - [${r.document.title}] ${r.section.label}${r.section.page ? ` (p.${r.section.page})` : ''}`
-              )
-              .join('\n')}`
-          }
+      // Policy references — labels only by default, snapshotted box text on opt-in.
+      // Sections may not have a comment; fall back to page or '(unlabeled)'.
+      type Ref = NonNullable<typeof node.references>[number]
+      const refLabel = (r: Ref) => {
+        const c = r.section.comment?.trim()
+        if (c) return c
+        if (r.section.page) return `p.${r.section.page}`
+        return '(unlabeled)'
+      }
+      let refs: string | null = null
+      if (node.references?.length) {
+        if (includeRefs) {
+          refs = `Policy references:\n${node.references
+            .map(
+              (r) =>
+                `  - [${r.document.title}] ${refLabel(r)}\n    ${r.section.text || '(no text captured)'}`
+            )
+            .join('\n')}`
+        } else {
+          refs = `Policy references (${node.references.length}; pass includeReferences=true for excerpt text):\n${node.references
+            .map((r) => `  - [${r.document.title}] ${refLabel(r)}`)
+            .join('\n')}`
         }
+      }
 
-        return [
-          `Name: ${node.name}`,
-          node.description ? `Description: ${node.description}` : null,
-          `Type: ${node.content.type}`,
-          node.content.type !== 'entity' && 'path' in node.content
-            ? `Path: ${node.content.path}`
-            : null,
-          depNames.length > 0
-            ? `Dependencies: ${depNames.join(', ')}`
-            : 'Dependencies: none (leaf node)',
-          node.content.type !== 'entity' &&
-          'logic' in node.content &&
-          node.content.logic
-            ? `Logic:\n${node.content.logic}`
-            : null,
-          node.content.type !== 'entity' &&
-          'dataType' in node.content &&
-          node.content.dataType
-            ? `Returns: ${node.content.dataType}`
-            : null,
-          refs,
-        ]
-          .filter(Boolean)
-          .join('\n')
-      })
-    )
+      return [
+        `Name: ${node.name}`,
+        node.description ? `Description: ${node.description}` : null,
+        `Type: ${node.content.type}`,
+        node.content.type !== 'entity' && 'path' in node.content
+          ? `Path: ${node.content.path}`
+          : null,
+        depNames.length > 0
+          ? `Dependencies: ${depNames.join(', ')}`
+          : 'Dependencies: none (leaf node)',
+        node.content.type !== 'entity' &&
+        'logic' in node.content &&
+        node.content.logic
+          ? `Logic:\n${node.content.logic}`
+          : null,
+        node.content.type !== 'entity' &&
+        'dataType' in node.content &&
+        node.content.dataType
+          ? `Returns: ${node.content.dataType}`
+          : null,
+        refs,
+      ]
+        .filter(Boolean)
+        .join('\n')
+    })
     return results.join('\n\n---\n\n')
   },
   {
     name: 'get_nodes',
     description:
-      'Get full details for one or more nodes by name (logic, dependencies, metadata, policy reference labels). By default, policy references are listed by label only — pass includeReferences=true to also include the full PDF page text for each linked section, which is heavier but lets you reason about what the policy actually says.',
+      'Get full details for one or more nodes by name (logic, dependencies, metadata, policy reference labels). By default, policy references are listed by label only — pass includeReferences=true to also include the captured excerpt text from each linked section.',
     schema: z.object({
       rulesetId: z.string().describe('The ruleset ID'),
       names: z.array(z.string()).describe('Node names to look up'),
@@ -176,7 +167,7 @@ export const getNodes = tool(
         .boolean()
         .optional()
         .describe(
-          'If true, attach the PDF page text for each policy reference (deduped per (document, page)). Default false to keep context small.'
+          'If true, attach the captured excerpt text for each policy reference. Default false to keep context small.'
         ),
     }),
   }

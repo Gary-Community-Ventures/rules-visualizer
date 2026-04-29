@@ -3,6 +3,7 @@ import { useMainContext } from '@/context'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
 import { cn } from '@/lib/utils'
+import { ALLOW_WRITES } from '@/lib/allow-writes'
 import {
   Maximize2,
   Minimize2,
@@ -315,7 +316,7 @@ export function ToolBar() {
         >
           <BookOpen className="size-4" />
         </Button>
-        {import.meta.env.VITE_TASKS_ENABLED === '1' && (
+        {ALLOW_WRITES && (
           <Button
             variant={rightBar === 'tasks' ? 'default' : 'outline'}
             size="icon"

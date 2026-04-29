@@ -5,8 +5,20 @@ export type TaskStatus =
   | 'archived'
   | 'failed'
 
+export type TaskSource = {
+  sectionId: string
+  text: string
+  comment?: string
+  documentTitle?: string
+  /** PDF file path relative to the ruleset directory. The agent uses this
+   *  with `page` to locate the source on disk for additional context. */
+  documentFile?: string
+  page?: number
+}
+
 export type TaskIteration = {
   prompt: string
+  sources?: TaskSource[]
   status: 'running' | 'ready' | 'failed'
   summary?: string
   modifiedPaths: string[]
@@ -48,22 +60,24 @@ export function getTask(rulesetId: string, threadId: string): Promise<Task> {
 
 export function createTask(
   rulesetId: string,
-  prompt: string
+  prompt: string,
+  sources?: TaskSource[]
 ): Promise<{ task: Task }> {
   return api(`/api/rulesets/${encodeURIComponent(rulesetId)}/tasks`, {
     method: 'POST',
-    body: JSON.stringify({ prompt }),
+    body: JSON.stringify({ prompt, sources }),
   })
 }
 
 export function followTask(
   rulesetId: string,
   threadId: string,
-  prompt: string
+  prompt: string,
+  sources?: TaskSource[]
 ): Promise<{ task: Task }> {
   return api(
     `/api/rulesets/${encodeURIComponent(rulesetId)}/tasks/${threadId}/follow`,
-    { method: 'POST', body: JSON.stringify({ prompt }) }
+    { method: 'POST', body: JSON.stringify({ prompt, sources }) }
   )
 }
 
