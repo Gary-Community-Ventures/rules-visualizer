@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { useModelContext, getNodePath } from '@/context/model-context'
 import { useAddToFilter } from './use-add-to-filter'
+import { nodeElementId } from '@/components/node'
 
 function isInputFocused(): boolean {
   const el = document.activeElement
@@ -40,6 +41,7 @@ function openTemporarily(name: 'history' | 'workspace') {
 
 export function useKeyboardShortcuts(active: boolean = true) {
   const {
+    rulesetId,
     model,
     openNode,
     setOpenNode,
@@ -212,6 +214,18 @@ export function useKeyboardShortcuts(active: boolean = true) {
           e.preventDefault()
           window.dispatchEvent(new CustomEvent('open-shortcuts'))
           break
+        case '.':
+          // Recenter the canvas on the currently open node — same flow
+          // as add-to-filter (PanContainer pans + pulses).
+          if (openNode) {
+            e.preventDefault()
+            window.dispatchEvent(
+              new CustomEvent('pan-to-element', {
+                detail: { elementId: nodeElementId(rulesetId, openNode) },
+              })
+            )
+          }
+          break
         case 'x':
           e.preventDefault()
           if (openNode) {
@@ -238,6 +252,7 @@ export function useKeyboardShortcuts(active: boolean = true) {
     return () => document.removeEventListener('keydown', handleKeyDown, true)
   }, [
     active,
+    rulesetId,
     openNode,
     setOpenNode,
     goBackNode,
