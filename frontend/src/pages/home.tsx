@@ -10,7 +10,7 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
 } from '@/components/ui/resizable'
-import { useEffect, useMemo, type PropsWithChildren } from 'react'
+import { useEffect, useMemo, useState, type PropsWithChildren } from 'react'
 import { AIPanel } from '@/components/ai-panel'
 import { Legend } from '@/components/legend'
 import { ExecutionPanel } from '@/components/execution-panel'
@@ -18,9 +18,14 @@ import { TestPanel } from '@/components/test-panel'
 import { PolicyPanel } from '@/components/policy-panel'
 import { TasksPanel } from '@/components/tasks-panel'
 import { NodePanel, nodeElementId } from '@/components/node'
+import { ShortcutsCheatsheet } from '@/components/shortcuts-cheatsheet'
 
-export function HomePage() {
-  useKeyboardShortcuts()
+export function HomePage({ active = true }: { active?: boolean }) {
+  // Background tabs are kept mounted (display:none) to preserve state, so
+  // the kbd hook + the modal listener must opt out when not active —
+  // otherwise every hidden tab also processes the keystroke (silently
+  // toggles its panels and stacks duplicate cheatsheet modals).
+  useKeyboardShortcuts(active)
   const {
     model,
     selectedNodes,
@@ -30,6 +35,15 @@ export function HomePage() {
     executionResults,
     activeTest,
   } = useMainContext()
+  // The keyboard hook fires `open-shortcuts` on `?` and HomePage owns
+  // the modal state so the hook stays state-free.
+  const [shortcutsOpen, setShortcutsOpen] = useState(false)
+  useEffect(() => {
+    if (!active) return
+    const onOpen = () => setShortcutsOpen(true)
+    window.addEventListener('open-shortcuts', onOpen)
+    return () => window.removeEventListener('open-shortcuts', onOpen)
+  }, [active])
 
   const rows = useMemo(
     () => nodeRows(model.nodes, showChildren, selectedNodes),
@@ -72,6 +86,16 @@ export function HomePage() {
         <Arrows rows={rows} />
         <Legend />
       </NodeMapLayout>
+      {/* Only the active tab renders the modal. Background tabs are kept
+          mounted (display:none on the layout div), but Dialog portals to
+          body so display:none can't hide a stale-open cheatsheet from a
+          previous activation — gating render here avoids the duplicate. */}
+      {active && (
+        <ShortcutsCheatsheet
+          open={shortcutsOpen}
+          onOpenChange={setShortcutsOpen}
+        />
+      )}
     </>
   )
 }

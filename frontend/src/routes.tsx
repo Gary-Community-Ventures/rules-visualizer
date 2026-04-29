@@ -69,7 +69,7 @@ function RootLayout() {
         >
           <ModelProvider rulesetId={tab.rulesetId}>
             <PanelProvider>
-              <HomePage />
+              <HomePage active={tab.rulesetId === activeRulesetId} />
             </PanelProvider>
           </ModelProvider>
         </div>

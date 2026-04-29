@@ -302,7 +302,7 @@ export function TasksPanel() {
     <div className="flex flex-col h-full bg-background">
       <div className="flex items-center gap-2 px-4 py-3 border-b shrink-0">
         <Hammer className="size-4" />
-        <span className="text-sm font-medium">Tasks</span>
+        <span className="text-sm font-medium">Builder</span>
         <Button
           variant="ghost"
           size="icon"

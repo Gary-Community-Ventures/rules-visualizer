@@ -38,9 +38,51 @@ pdfjs.GlobalWorkerOptions.workerSrc = new URL(
 
 const API_BASE = import.meta.env.VITE_API_URL ?? ''
 
-// Module-level stores — survive component remounts from refreshModel()
+// Module-level stores — survive component remounts from refreshModel().
+// Mirror the same data into localStorage so the user's place persists
+// across full page reloads too.
 let _savedScrollTop = 0
 let _savedDocId: string | null = null
+
+const docKey = (rulesetId: string) => `policy-panel:doc:${rulesetId}`
+const scrollKey = (rulesetId: string, docId: string) =>
+  `policy-panel:scroll:${rulesetId}:${docId}`
+
+function readStoredDocId(rulesetId: string): string | null {
+  try {
+    return localStorage.getItem(docKey(rulesetId))
+  } catch {
+    return null
+  }
+}
+function writeStoredDocId(rulesetId: string, docId: string): void {
+  try {
+    localStorage.setItem(docKey(rulesetId), docId)
+  } catch {
+    // localStorage can throw in private browsing / quota-exceeded; the
+    // module-level fallback still gets remounts within a session.
+  }
+}
+function readStoredScroll(rulesetId: string, docId: string): number {
+  try {
+    const v = localStorage.getItem(scrollKey(rulesetId, docId))
+    const n = v ? parseInt(v, 10) : 0
+    return Number.isFinite(n) && n >= 0 ? n : 0
+  } catch {
+    return 0
+  }
+}
+function writeStoredScroll(
+  rulesetId: string,
+  docId: string,
+  top: number
+): void {
+  try {
+    localStorage.setItem(scrollKey(rulesetId, docId), String(Math.round(top)))
+  } catch {
+    // ignore
+  }
+}
 
 /**
  * Walk pdf.js's text items on a page and concatenate the str of every item
@@ -184,11 +226,16 @@ export function PolicyPanel() {
   } | null>(null)
   const [saving, setSaving] = useState(false)
 
-  // Stable setter — write to module-level var so state survives remounts
-  const setStableDoc = useCallback((doc: PolicyDocument) => {
-    _savedDocId = doc.id
-    setSelectedDoc(doc)
-  }, [])
+  // Stable setter — mirror to module-level var (survives remounts) and
+  // localStorage (survives page reloads).
+  const setStableDoc = useCallback(
+    (doc: PolicyDocument) => {
+      _savedDocId = doc.id
+      writeStoredDocId(model.id, doc.id)
+      setSelectedDoc(doc)
+    },
+    [model.id]
+  )
 
   // Scroll the continuous PDF view to a specific page (1-indexed).
   const scrollToPage = useCallback((page: number) => {
@@ -219,14 +266,18 @@ export function PolicyPanel() {
     getReferences(model.id)
       .then((r) => {
         setRefs(r)
-        // Restore saved document (may have been set by pending navigation)
-        const targetId = _savedDocId
+        // Doc-id resolution priority: pending navigation → module-level
+        // saved (within-session remounts) → localStorage (across reloads)
+        // → first PDF doc.
+        const targetId =
+          _savedDocId ?? readStoredDocId(model.id) ?? null
         const saved = targetId
           ? r.documents.find((d) => d.id === targetId)
           : null
         const fileDoc = saved ?? r.documents.find((d) => d.file)
         if (fileDoc) {
           _savedDocId = fileDoc.id
+          writeStoredDocId(model.id, fileDoc.id)
           setSelectedDoc(fileDoc)
         }
       })
@@ -271,18 +322,29 @@ export function PolicyPanel() {
     scrollToPage,
   ])
 
-  // Save scroll position on scroll, restore on mount
+  // Save scroll position on scroll, restore on mount + on doc switch.
+  // The handler is rebound when the active doc changes so the stored
+  // scrollTop is keyed by the doc the user is currently looking at.
   useEffect(() => {
     const container = containerRef.current
     if (!container) return
-    // Restore saved scroll position
-    container.scrollTop = _savedScrollTop
+    const docId = selectedDoc?.id ?? null
+    // Restore from the per-doc localStorage entry (falls back to the
+    // module-level scroll for first-mount-no-doc-yet edge cases).
+    if (docId) {
+      const saved = readStoredScroll(model.id, docId)
+      _savedScrollTop = saved
+      container.scrollTop = saved
+    } else {
+      container.scrollTop = _savedScrollTop
+    }
     const handleScroll = () => {
       _savedScrollTop = container.scrollTop
+      if (docId) writeStoredScroll(model.id, docId, container.scrollTop)
     }
     container.addEventListener('scroll', handleScroll, { passive: true })
     return () => container.removeEventListener('scroll', handleScroll)
-  }, [])
+  }, [model.id, selectedDoc?.id])
 
   // Track container width for responsive PDF sizing
   useEffect(() => {
@@ -572,14 +634,19 @@ export function PolicyPanel() {
         // ignore — dimensions aren't strictly required (placeholders fall back)
       }
       setNumPages(pdf.numPages)
-      // Restore scroll position after PDF renders
+      // Restore scroll position after PDF renders. Prefer the per-doc
+      // localStorage value over the in-session module fallback; the page
+      // wrappers don't exist yet at the start of this callback, so the
+      // raF gives them a tick to lay out.
       requestAnimationFrame(() => {
-        if (containerRef.current) {
-          containerRef.current.scrollTop = _savedScrollTop
-        }
+        if (!containerRef.current) return
+        const docId = selectedDoc?.id ?? null
+        containerRef.current.scrollTop = docId
+          ? readStoredScroll(model.id, docId)
+          : _savedScrollTop
       })
     },
-    []
+    [model.id, selectedDoc?.id]
   )
 
   const onDocumentLoadError = useCallback((err: Error) => {

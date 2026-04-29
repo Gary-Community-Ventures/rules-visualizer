@@ -320,7 +320,7 @@ export function ToolBar() {
           <Button
             variant={rightBar === 'tasks' ? 'default' : 'outline'}
             size="icon"
-            title="Tasks"
+            title="Builder"
             onClick={() => setRightBar(rightBar === 'tasks' ? null : 'tasks')}
           >
             <Hammer className="size-4" />
