@@ -22,13 +22,7 @@ import {
 import { SectionPopover } from './section-popover'
 import { cn } from '@/lib/utils'
 import { ALLOW_WRITES } from '@/lib/allow-writes'
-import {
-  FileText,
-  X,
-  Search,
-  ChevronLeft,
-  ChevronRight,
-} from 'lucide-react'
+import { FileText, X, Search, ChevronLeft, ChevronRight } from 'lucide-react'
 
 // Configure pdf.js worker
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
@@ -347,23 +341,20 @@ export function PolicyPanel() {
 
   // Find the page wrapper whose bounding rect contains a given client point.
   // Lets click/selection code work without knowing a single "current page".
-  const findPageAt = useCallback(
-    (clientX: number, clientY: number) => {
-      for (const [pageNum, el] of pageRefs.current) {
-        const r = el.getBoundingClientRect()
-        if (
-          clientX >= r.left &&
-          clientX <= r.right &&
-          clientY >= r.top &&
-          clientY <= r.bottom
-        ) {
-          return { pageNum, el, rect: r }
-        }
+  const findPageAt = useCallback((clientX: number, clientY: number) => {
+    for (const [pageNum, el] of pageRefs.current) {
+      const r = el.getBoundingClientRect()
+      if (
+        clientX >= r.left &&
+        clientX <= r.right &&
+        clientY >= r.top &&
+        clientY <= r.bottom
+      ) {
+        return { pageNum, el, rect: r }
       }
-      return null
-    },
-    []
-  )
+    }
+    return null
+  }, [])
 
   // Mousedown on a page wrapper starts a box-draw. We deliberately do NOT
   // use the container-level handler / window text-selection: the user wants
@@ -414,14 +405,8 @@ export function PolicyPanel() {
         if (!wrapper) return prev
         const rect = wrapper.getBoundingClientRect()
         if (rect.width === 0 || rect.height === 0) return prev
-        const x = Math.max(
-          0,
-          Math.min(1, (e.clientX - rect.left) / rect.width)
-        )
-        const y = Math.max(
-          0,
-          Math.min(1, (e.clientY - rect.top) / rect.height)
-        )
+        const x = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width))
+        const y = Math.max(0, Math.min(1, (e.clientY - rect.top) / rect.height))
         return { ...prev, currentX: x, currentY: y }
       })
     }
@@ -479,12 +464,7 @@ export function PolicyPanel() {
       let hitSection: string | null = null
       for (const section of sectionsForPage(hit.pageNum)) {
         for (const r of section.rects ?? []) {
-          if (
-            nx >= r.x &&
-            nx <= r.x + r.w &&
-            ny >= r.y &&
-            ny <= r.y + r.h
-          ) {
+          if (nx >= r.x && nx <= r.x + r.w && ny >= r.y && ny <= r.y + r.h) {
             hitSection = section.id
             break
           }
@@ -589,45 +569,48 @@ export function PolicyPanel() {
   // Bumped on every runSearch call so a stale (slow) search whose query is
   // already obsolete doesn't overwrite results from a newer one.
   const searchTokenRef = useRef(0)
-  const runSearch = useCallback(async (query: string) => {
-    const pdf = pdfDocRef.current
-    if (!pdf || !query.trim()) {
-      setSearchResults([])
-      setSearchHighlight('')
-      return
-    }
-    const myToken = ++searchTokenRef.current
-
-    setIsSearching(true)
-    const matches: number[] = []
-    const q = query.toLowerCase()
-
-    try {
-      for (let i = 1; i <= pdf.numPages; i++) {
-        const page = await pdf.getPage(i)
-        const textContent = await page.getTextContent()
-        const pageText = textContent.items
-          .map((item) => ('str' in item ? item.str : ''))
-          .join(' ')
-          .toLowerCase()
-        if (pageText.includes(q)) {
-          matches.push(i)
-        }
+  const runSearch = useCallback(
+    async (query: string) => {
+      const pdf = pdfDocRef.current
+      if (!pdf || !query.trim()) {
+        setSearchResults([])
+        setSearchHighlight('')
+        return
       }
-    } catch {
-      // ignore search errors
-    }
+      const myToken = ++searchTokenRef.current
 
-    // Drop stale results — a newer query has been kicked off since.
-    if (myToken !== searchTokenRef.current) return
-    setSearchResults(matches)
-    setSearchIndex(0)
-    setSearchHighlight(query.trim())
-    if (matches.length > 0) {
-      scrollToPage(matches[0])
-    }
-    setIsSearching(false)
-  }, [scrollToPage])
+      setIsSearching(true)
+      const matches: number[] = []
+      const q = query.toLowerCase()
+
+      try {
+        for (let i = 1; i <= pdf.numPages; i++) {
+          const page = await pdf.getPage(i)
+          const textContent = await page.getTextContent()
+          const pageText = textContent.items
+            .map((item) => ('str' in item ? item.str : ''))
+            .join(' ')
+            .toLowerCase()
+          if (pageText.includes(q)) {
+            matches.push(i)
+          }
+        }
+      } catch {
+        // ignore search errors
+      }
+
+      // Drop stale results — a newer query has been kicked off since.
+      if (myToken !== searchTokenRef.current) return
+      setSearchResults(matches)
+      setSearchIndex(0)
+      setSearchHighlight(query.trim())
+      if (matches.length > 0) {
+        scrollToPage(matches[0])
+      }
+      setIsSearching(false)
+    },
+    [scrollToPage]
+  )
 
   // Debounced search-as-you-type. Empty query clears results immediately.
   useEffect(() => {
@@ -691,8 +674,7 @@ export function PolicyPanel() {
     null
   )
   const schedulePersist = useCallback(() => {
-    if (persistRefsDebounced.current)
-      clearTimeout(persistRefsDebounced.current)
+    if (persistRefsDebounced.current) clearTimeout(persistRefsDebounced.current)
     persistRefsDebounced.current = setTimeout(async () => {
       const r = refsRef.current
       if (!r) return
@@ -878,12 +860,10 @@ export function PolicyPanel() {
       } else {
         if (e.key === 'ArrowRight')
           next.w = Math.max(0.01, Math.min(1 - next.x, next.w + STEP))
-        else if (e.key === 'ArrowLeft')
-          next.w = Math.max(0.01, next.w - STEP)
+        else if (e.key === 'ArrowLeft') next.w = Math.max(0.01, next.w - STEP)
         else if (e.key === 'ArrowDown')
           next.h = Math.max(0.01, Math.min(1 - next.y, next.h + STEP))
-        else if (e.key === 'ArrowUp')
-          next.h = Math.max(0.01, next.h - STEP)
+        else if (e.key === 'ArrowUp') next.h = Math.max(0.01, next.h - STEP)
       }
       applyRectEdit(clickedSectionId, next)
       schedulePersist()
@@ -958,10 +938,7 @@ export function PolicyPanel() {
   }
 
   // Update an existing section's optional comment. Empty string clears.
-  const updateSectionComment = async (
-    sectionId: string,
-    comment: string
-  ) => {
+  const updateSectionComment = async (sectionId: string, comment: string) => {
     if (!refs) return
     const trimmed = comment.trim()
     setSaving(true)
@@ -1084,33 +1061,33 @@ export function PolicyPanel() {
   // Drives the popover's prev/next arrows so the user can step through.
   // Sections without a page or rect are skipped — they have no anchor in
   // the PDF view, so navigating to them wouldn't show anything.
-  const orderedSections: PolicySection[] = !refs || !selectedDoc
-    ? []
-    : refs.sections
-        .filter(
-          (s) =>
-            s.documentId === selectedDoc.id &&
-            s.page !== undefined &&
-            (s.rects?.length ?? 0) > 0
-        )
-        .slice()
-        .sort((a, b) => {
-          if ((a.page ?? 0) !== (b.page ?? 0))
-            return (a.page ?? 0) - (b.page ?? 0)
-          const ar = a.rects?.[0]
-          const br = b.rects?.[0]
-          if ((ar?.y ?? 0) !== (br?.y ?? 0))
-            return (ar?.y ?? 0) - (br?.y ?? 0)
-          return (ar?.x ?? 0) - (br?.x ?? 0)
-        })
+  const orderedSections: PolicySection[] =
+    !refs || !selectedDoc
+      ? []
+      : refs.sections
+          .filter(
+            (s) =>
+              s.documentId === selectedDoc.id &&
+              s.page !== undefined &&
+              (s.rects?.length ?? 0) > 0
+          )
+          .slice()
+          .sort((a, b) => {
+            if ((a.page ?? 0) !== (b.page ?? 0))
+              return (a.page ?? 0) - (b.page ?? 0)
+            const ar = a.rects?.[0]
+            const br = b.rects?.[0]
+            if ((ar?.y ?? 0) !== (br?.y ?? 0))
+              return (ar?.y ?? 0) - (br?.y ?? 0)
+            return (ar?.x ?? 0) - (br?.x ?? 0)
+          })
   const currentSectionIndex = clickedSectionId
     ? orderedSections.findIndex((s) => s.id === clickedSectionId)
     : -1
   const prevSection =
     currentSectionIndex > 0 ? orderedSections[currentSectionIndex - 1] : null
   const nextSection =
-    currentSectionIndex >= 0 &&
-    currentSectionIndex < orderedSections.length - 1
+    currentSectionIndex >= 0 && currentSectionIndex < orderedSections.length - 1
       ? orderedSections[currentSectionIndex + 1]
       : null
 
@@ -1119,8 +1096,8 @@ export function PolicyPanel() {
       {/* Header — title, doc picker, close */}
       <div className="flex items-center gap-2 px-4 py-3 border-b shrink-0">
         <h2 className="text-sm font-semibold shrink-0">Policy</h2>
-        {fileDocuments.length > 0 && (
-          fileDocuments.length === 1 ? (
+        {fileDocuments.length > 0 &&
+          (fileDocuments.length === 1 ? (
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground flex-1 min-w-0">
               <FileText className="size-3 shrink-0" />
               <span className="truncate">{fileDocuments[0].title}</span>
@@ -1147,8 +1124,7 @@ export function PolicyPanel() {
                 ))}
               </SelectContent>
             </Select>
-          )
-        )}
+          ))}
         <Button
           variant="ghost"
           size="icon"
@@ -1209,14 +1185,10 @@ export function PolicyPanel() {
                 variant="ghost"
                 size="icon"
                 className="h-6 w-6 shrink-0"
-                disabled={
-                  currentSectionIndex === orderedSections.length - 1
-                }
+                disabled={currentSectionIndex === orderedSections.length - 1}
                 onClick={() => {
                   const target =
-                    currentSectionIndex < 0
-                      ? orderedSections[0]
-                      : nextSection
+                    currentSectionIndex < 0 ? orderedSections[0] : nextSection
                   if (target) goToSection(target)
                 }}
                 title="Next section"
@@ -1363,189 +1335,213 @@ export function PolicyPanel() {
                 const inView = visiblePages.has(pageNum)
                 const pageSections = sectionsForPage(pageNum)
                 return (
-            <div
-              key={pageNum}
-              ref={(el) => {
-                if (el) pageRefs.current.set(pageNum, el)
-                else pageRefs.current.delete(pageNum)
-              }}
-              data-page={pageNum}
-              className={cn(
-                'relative bg-white shadow-sm',
-                mode !== 'read' && 'select-none'
-              )}
-              style={{
-                width: w || undefined,
-                minHeight: placeholderHeight || undefined,
-              }}
-              onMouseDown={(e) => handlePageMouseDown(e, pageNum)}
-              onClick={handlePageClick}
-            >
-              {inView && pageWidth && (
-                <Page
-                  pageNumber={pageNum}
-                  width={pageWidth}
-                  renderAnnotationLayer
-                  renderTextLayer
-                  customTextRenderer={
-                    searchHighlight ? customTextRenderer : undefined
-                  }
-                />
-              )}
-              {/* Bounding box overlays for sections on this page */}
-              {pageSections.map((section) => {
-                const isFocused = section.id === focusedSectionId
-                const isClicked = section.id === clickedSectionId
-                const isSkipped = section.status === 'skipped'
-                const isLinked = linkedSectionIds.has(section.id)
-
-                // Orphans (unlinked, non-skipped) are rendered in rose with
-                // a dashed border so they read as "needs attention" without
-                // looking like an error. Linked sections stay amber, skipped
-                // gray, and focus/clicked override everything in blue.
-                let bg: string
-                if (isFocused || isClicked) {
-                  bg = 'rgba(59, 130, 246, 0.25)' // blue
-                } else if (isSkipped) {
-                  bg = 'rgba(156, 163, 175, 0.25)' // gray
-                } else if (isLinked) {
-                  bg = 'rgba(251, 191, 36, 0.2)' // amber
-                } else {
-                  bg = 'rgba(244, 63, 94, 0.18)' // rose — orphan
-                }
-
-                const border =
-                  isFocused || isClicked
-                    ? '1px solid rgba(59, 130, 246, 0.5)'
-                    : isSkipped
-                      ? '1px solid rgba(156, 163, 175, 0.3)'
-                      : !isLinked
-                        ? '1px dashed rgba(244, 63, 94, 0.55)'
-                        : undefined
-
-                const linkedNodes = sectionToNodes.get(section.id) ?? []
-
-                return (
-                  <div key={section.id}>
-                    {/* Highlight rects. Sit above react-pdf's TextLayer
-                        (z-index 2) and AnnotationLayer (z-index 3) so
-                        mousedown lands on us, not the text layer. */}
-                    {(section.rects ?? []).map((rect, i) => (
-                      <div
-                        key={`${section.id}-${i}`}
-                        className="absolute"
-                        style={{
-                          left: `${rect.x * 100}%`,
-                          top: `${rect.y * 100}%`,
-                          width: `${rect.w * 100}%`,
-                          height: `${rect.h * 100}%`,
-                          background: bg,
-                          border,
-                          zIndex: 10,
-                          cursor: isClicked ? 'move' : 'pointer',
-                        }}
-                        onMouseDown={(e) =>
-                          startSectionDrag(e, section.id, pageNum, rect)
+                  <div
+                    key={pageNum}
+                    ref={(el) => {
+                      if (el) pageRefs.current.set(pageNum, el)
+                      else pageRefs.current.delete(pageNum)
+                    }}
+                    data-page={pageNum}
+                    className={cn(
+                      'relative bg-white shadow-sm',
+                      mode !== 'read' && 'select-none'
+                    )}
+                    style={{
+                      width: w || undefined,
+                      minHeight: placeholderHeight || undefined,
+                    }}
+                    onMouseDown={(e) => handlePageMouseDown(e, pageNum)}
+                    onClick={handlePageClick}
+                  >
+                    {inView && pageWidth && (
+                      <Page
+                        pageNumber={pageNum}
+                        width={pageWidth}
+                        renderAnnotationLayer
+                        renderTextLayer
+                        customTextRenderer={
+                          searchHighlight ? customTextRenderer : undefined
                         }
-                      />
-                    ))}
-                    {/* Popover — opens on click; portaled to body and
-                        clamped to viewport so it stays on screen even when
-                        the section is huge. */}
-                    {isClicked && section.rects && section.rects.length > 0 && (
-                      <SectionPopover
-                        section={section}
-                        pageWrapper={pageRefs.current.get(pageNum) ?? null}
-                        editable={ALLOW_WRITES}
-                        isSkipped={isSkipped}
-                        linkedNames={linkedNodes.map((n) => n.name)}
-                        onLinkedNamesChange={(names) =>
-                          setSectionMappingsLocal(section.id, names)
-                        }
-                        onCommentChange={(c) =>
-                          updateSectionComment(section.id, c)
-                        }
-                        onRemove={() => handleRemoveSection(section.id)}
-                        onClose={() => setClickedSectionId(null)}
-                        onOpenNode={(name) => {
-                          const id = Object.entries(model.nodes).find(
-                            ([, n]) => n.name === name
-                          )?.[0]
-                          if (id) {
-                            setOpenNode(id)
-                            setClickedSectionId(null)
-                          }
-                        }}
-                        nodeOptions={Object.values(model.nodes).map((n) => ({
-                          name: n.name,
-                        }))}
-                        openNodeName={
-                          openNode ? model.nodes[openNode]?.name : undefined
-                        }
-                        saving={saving}
-                        alreadyInTaskBuilder={(attachTarget.kind === 'follow-up'
-                          ? (followUpSources[attachTarget.threadId] ?? [])
-                          : taskBuilderSources
-                        ).some((s) => s.sectionId === section.id)}
-                        onUseInTaskBuilder={() => {
-                          // Add is idempotent on duplicates; routing matches
-                          // the current attach target so follow-up composes
-                          // get their own source bag instead of polluting
-                          // the new-task builder.
-                          if (attachTarget.kind === 'follow-up') {
-                            addFollowUpSource(attachTarget.threadId, {
-                              sectionId: section.id,
-                            })
-                          } else {
-                            addTaskBuilderSource({ sectionId: section.id })
-                          }
-                          setClickedSectionId(null)
-                          setRightBar('tasks')
-                        }}
                       />
                     )}
+                    {/* Bounding box overlays for sections on this page */}
+                    {pageSections.map((section) => {
+                      const isFocused = section.id === focusedSectionId
+                      const isClicked = section.id === clickedSectionId
+                      const isSkipped = section.status === 'skipped'
+                      const isLinked = linkedSectionIds.has(section.id)
+
+                      // Orphans (unlinked, non-skipped) are rendered in rose with
+                      // a dashed border so they read as "needs attention" without
+                      // looking like an error. Linked sections stay amber, skipped
+                      // gray, and focus/clicked override everything in blue.
+                      let bg: string
+                      if (isFocused || isClicked) {
+                        bg = 'rgba(59, 130, 246, 0.25)' // blue
+                      } else if (isSkipped) {
+                        bg = 'rgba(156, 163, 175, 0.25)' // gray
+                      } else if (isLinked) {
+                        bg = 'rgba(251, 191, 36, 0.2)' // amber
+                      } else {
+                        bg = 'rgba(244, 63, 94, 0.18)' // rose — orphan
+                      }
+
+                      const border =
+                        isFocused || isClicked
+                          ? '1px solid rgba(59, 130, 246, 0.5)'
+                          : isSkipped
+                            ? '1px solid rgba(156, 163, 175, 0.3)'
+                            : !isLinked
+                              ? '1px dashed rgba(244, 63, 94, 0.55)'
+                              : undefined
+
+                      const linkedNodes = sectionToNodes.get(section.id) ?? []
+
+                      return (
+                        <div key={section.id}>
+                          {/* Highlight rects. Sit above react-pdf's TextLayer
+                        (z-index 2) and AnnotationLayer (z-index 3) so
+                        mousedown lands on us, not the text layer. */}
+                          {(section.rects ?? []).map((rect, i) => (
+                            <div
+                              key={`${section.id}-${i}`}
+                              className="absolute"
+                              style={{
+                                left: `${rect.x * 100}%`,
+                                top: `${rect.y * 100}%`,
+                                width: `${rect.w * 100}%`,
+                                height: `${rect.h * 100}%`,
+                                background: bg,
+                                border,
+                                zIndex: 10,
+                                cursor: isClicked ? 'move' : 'pointer',
+                              }}
+                              onMouseDown={(e) =>
+                                startSectionDrag(e, section.id, pageNum, rect)
+                              }
+                            />
+                          ))}
+                          {/* Popover — opens on click; portaled to body and
+                        clamped to viewport so it stays on screen even when
+                        the section is huge. */}
+                          {isClicked &&
+                            section.rects &&
+                            section.rects.length > 0 && (
+                              <SectionPopover
+                                section={section}
+                                pageWrapper={
+                                  pageRefs.current.get(pageNum) ?? null
+                                }
+                                editable={ALLOW_WRITES}
+                                isSkipped={isSkipped}
+                                linkedNames={linkedNodes.map((n) => n.name)}
+                                onLinkedNamesChange={(names) =>
+                                  setSectionMappingsLocal(section.id, names)
+                                }
+                                onCommentChange={(c) =>
+                                  updateSectionComment(section.id, c)
+                                }
+                                onRemove={() => handleRemoveSection(section.id)}
+                                onClose={() => setClickedSectionId(null)}
+                                onOpenNode={(name) => {
+                                  const id = Object.entries(model.nodes).find(
+                                    ([, n]) => n.name === name
+                                  )?.[0]
+                                  if (id) {
+                                    setOpenNode(id)
+                                    setClickedSectionId(null)
+                                  }
+                                }}
+                                nodeOptions={Object.values(model.nodes).map(
+                                  (n) => ({
+                                    name: n.name,
+                                  })
+                                )}
+                                openNodeName={
+                                  openNode
+                                    ? model.nodes[openNode]?.name
+                                    : undefined
+                                }
+                                saving={saving}
+                                alreadyInTaskBuilder={(attachTarget.kind ===
+                                'follow-up'
+                                  ? (followUpSources[attachTarget.threadId] ??
+                                    [])
+                                  : taskBuilderSources
+                                ).some((s) => s.sectionId === section.id)}
+                                onUseInTaskBuilder={() => {
+                                  // Add is idempotent on duplicates; routing matches
+                                  // the current attach target so follow-up composes
+                                  // get their own source bag instead of polluting
+                                  // the new-task builder.
+                                  if (attachTarget.kind === 'follow-up') {
+                                    addFollowUpSource(attachTarget.threadId, {
+                                      sectionId: section.id,
+                                    })
+                                  } else {
+                                    addTaskBuilderSource({
+                                      sectionId: section.id,
+                                    })
+                                  }
+                                  setClickedSectionId(null)
+                                  setRightBar('tasks')
+                                }}
+                              />
+                            )}
+                        </div>
+                      )
+                    })}
+                    {/* Captured-selection preview (after a draw, before save) */}
+                    {selectionPage === pageNum &&
+                      capturedRects.map((rect, i) => (
+                        <div
+                          key={`preview-${i}`}
+                          className="absolute pointer-events-none"
+                          style={{
+                            left: `${rect.x * 100}%`,
+                            top: `${rect.y * 100}%`,
+                            width: `${rect.w * 100}%`,
+                            height: `${rect.h * 100}%`,
+                            background: 'rgba(34, 197, 94, 0.25)',
+                            border: '1px solid rgba(34, 197, 94, 0.6)',
+                            zIndex: 2,
+                          }}
+                        />
+                      ))}
+                    {/* Live drag-in-progress rectangle */}
+                    {drawingBox &&
+                      drawingBox.pageNum === pageNum &&
+                      (() => {
+                        const x = Math.min(
+                          drawingBox.startX,
+                          drawingBox.currentX
+                        )
+                        const y = Math.min(
+                          drawingBox.startY,
+                          drawingBox.currentY
+                        )
+                        const wRel = Math.abs(
+                          drawingBox.currentX - drawingBox.startX
+                        )
+                        const hRel = Math.abs(
+                          drawingBox.currentY - drawingBox.startY
+                        )
+                        return (
+                          <div
+                            className="absolute pointer-events-none"
+                            style={{
+                              left: `${x * 100}%`,
+                              top: `${y * 100}%`,
+                              width: `${wRel * 100}%`,
+                              height: `${hRel * 100}%`,
+                              background: 'rgba(59, 130, 246, 0.18)',
+                              border: '1px dashed rgba(59, 130, 246, 0.7)',
+                              zIndex: 3,
+                            }}
+                          />
+                        )
+                      })()}
                   </div>
-                )
-              })}
-              {/* Captured-selection preview (after a draw, before save) */}
-              {selectionPage === pageNum &&
-                capturedRects.map((rect, i) => (
-                  <div
-                    key={`preview-${i}`}
-                    className="absolute pointer-events-none"
-                    style={{
-                      left: `${rect.x * 100}%`,
-                      top: `${rect.y * 100}%`,
-                      width: `${rect.w * 100}%`,
-                      height: `${rect.h * 100}%`,
-                      background: 'rgba(34, 197, 94, 0.25)',
-                      border: '1px solid rgba(34, 197, 94, 0.6)',
-                      zIndex: 2,
-                    }}
-                  />
-                ))}
-              {/* Live drag-in-progress rectangle */}
-              {drawingBox && drawingBox.pageNum === pageNum && (() => {
-                const x = Math.min(drawingBox.startX, drawingBox.currentX)
-                const y = Math.min(drawingBox.startY, drawingBox.currentY)
-                const wRel = Math.abs(drawingBox.currentX - drawingBox.startX)
-                const hRel = Math.abs(drawingBox.currentY - drawingBox.startY)
-                return (
-                  <div
-                    className="absolute pointer-events-none"
-                    style={{
-                      left: `${x * 100}%`,
-                      top: `${y * 100}%`,
-                      width: `${wRel * 100}%`,
-                      height: `${hRel * 100}%`,
-                      background: 'rgba(59, 130, 246, 0.18)',
-                      border: '1px dashed rgba(59, 130, 246, 0.7)',
-                      zIndex: 3,
-                    }}
-                  />
-                )
-              })()}
-            </div>
                 )
               })}
             </div>

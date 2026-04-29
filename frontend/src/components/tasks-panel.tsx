@@ -110,8 +110,7 @@ function formatDuration(ms: number): string {
   if (sec < 60) return `${sec}s`
   const min = Math.floor(sec / 60)
   const remSec = sec % 60
-  if (min < 60)
-    return `${min}m ${remSec.toString().padStart(2, '0')}s`
+  if (min < 60) return `${min}m ${remSec.toString().padStart(2, '0')}s`
   const hr = Math.floor(min / 60)
   const remMin = min % 60
   return `${hr}h ${remMin.toString().padStart(2, '0')}m ${remSec.toString().padStart(2, '0')}s`
@@ -129,11 +128,7 @@ function SourceChipList({
   sources: TaskBuilderSource[]
   refs: PolicyReferences | null
   onRemove: (sectionId: string) => void
-  onOpenSection: (
-    page: number,
-    sectionId: string,
-    documentId: string
-  ) => void
+  onOpenSection: (page: number, sectionId: string, documentId: string) => void
 }) {
   const [expanded, setExpanded] = useState<Set<string>>(new Set())
   const toggle = (sectionId: string) =>
@@ -407,11 +402,7 @@ function IterationView({
   nodes: Record<string, { name: string }>
   refs: PolicyReferences | null
   onOpenNode: (id: string | null) => void
-  onOpenSection: (
-    page: number,
-    sectionId: string,
-    documentId: string
-  ) => void
+  onOpenSection: (page: number, sectionId: string, documentId: string) => void
   /** Cancels the running agent. Only meaningful while iteration.status ===
    *  'running'; the Stop control next to "Running…" is the only entry
    *  point the UI exposes. */
@@ -486,11 +477,8 @@ function IterationView({
           <ul className="space-y-1">
             {iteration.sources.map((src) => {
               const isOpen = expandedSources.has(src.sectionId)
-              const liveSec = refs?.sections.find(
-                (s) => s.id === src.sectionId
-              )
-              const canNavigate =
-                !!liveSec && liveSec.page !== undefined
+              const liveSec = refs?.sections.find((s) => s.id === src.sectionId)
+              const canNavigate = !!liveSec && liveSec.page !== undefined
               return (
                 <li
                   key={src.sectionId}
@@ -664,11 +652,7 @@ function TaskCard({
   nodes: Record<string, { name: string }>
   refs: PolicyReferences | null
   onOpenNode: (id: string | null) => void
-  onOpenSection: (
-    page: number,
-    sectionId: string,
-    documentId: string
-  ) => void
+  onOpenSection: (page: number, sectionId: string, documentId: string) => void
   onChange: (task: Task) => void
 }) {
   const { setRightBar } = useMainContext()
@@ -684,9 +668,7 @@ function TaskCard({
   const cardSources = followUpSources[task.threadId] ?? []
   const cardQueue = followUpQueue[task.threadId] ?? []
   const [expanded, setExpanded] = useState(
-    task.status === 'ready' ||
-      cardSources.length > 0 ||
-      cardQueue.length > 0
+    task.status === 'ready' || cardSources.length > 0 || cardQueue.length > 0
   )
   const [showHistory, setShowHistory] = useState(false)
   const [followUp, setFollowUp] = useState('')

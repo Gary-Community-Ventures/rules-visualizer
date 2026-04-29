@@ -47,7 +47,9 @@ router.put('/rulesets/:id/references', (req, res) => {
   // API. When unset, the UI hides write affordances; the server still
   // refuses the call as a defense-in-depth measure.
   if (process.env.ALLOW_WRITES !== '1') {
-    res.status(403).json({ error: 'References are read-only (ALLOW_WRITES is not set)' })
+    res
+      .status(403)
+      .json({ error: 'References are read-only (ALLOW_WRITES is not set)' })
     return
   }
   const rulesetId = req.params.id

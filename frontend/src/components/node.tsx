@@ -1216,10 +1216,7 @@ function PolicyReferencesList({ node }: { node: ModelNode }) {
               size="sm"
               className="h-6 text-[11px]"
               onClick={handleAdd}
-              disabled={
-                saving ||
-                (addMode === 'pick' && !selectedSectionId)
-              }
+              disabled={saving || (addMode === 'pick' && !selectedSectionId)}
             >
               {saving ? 'Saving...' : 'Link'}
             </Button>

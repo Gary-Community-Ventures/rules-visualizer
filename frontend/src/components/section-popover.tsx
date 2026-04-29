@@ -1,10 +1,4 @@
-import {
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { X, Hammer } from 'lucide-react'
 import type { PolicySection } from '@/lib/model'
@@ -83,9 +77,7 @@ export function SectionPopover({
       openNodeName && matches.some((n) => n.name === openNodeName)
         ? openNodeName
         : null
-    const rest = pinName
-      ? matches.filter((n) => n.name !== pinName)
-      : matches
+    const rest = pinName ? matches.filter((n) => n.name !== pinName) : matches
     rest.sort((a, b) => {
       const aExact = a.name.toLowerCase() === q ? 0 : 1
       const bExact = b.name.toLowerCase() === q ? 0 : 1
@@ -310,8 +302,7 @@ export function SectionPopover({
                     } else if (e.key === 'ArrowUp') {
                       e.preventDefault()
                       setSelectedIndex(
-                        (i) =>
-                          (i - 1 + suggestions.length) % suggestions.length
+                        (i) => (i - 1 + suggestions.length) % suggestions.length
                       )
                     } else if (e.key === 'Enter' || e.key === 'Tab') {
                       e.preventDefault()
@@ -405,13 +396,11 @@ export function SectionPopover({
           {/* Empty-state placeholder so the popover doesn't look like a
               ghost card when a read-only section has neither links nor
               a comment. */}
-          {!editable &&
-            linkedNames.length === 0 &&
-            !section.comment && (
-              <p className="text-[11px] text-muted-foreground italic text-center py-2">
-                No linked nodes or comment for this section.
-              </p>
-            )}
+          {!editable && linkedNames.length === 0 && !section.comment && (
+            <p className="text-[11px] text-muted-foreground italic text-center py-2">
+              No linked nodes or comment for this section.
+            </p>
+          )}
 
           {editable && (
             <div className="flex items-center gap-1.5 pt-1">
