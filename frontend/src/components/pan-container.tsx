@@ -64,29 +64,6 @@ export function PanContainer({ children, className }: PanContainerProps) {
     }
   }
 
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isPanning) return
-
-    const deltaX = e.clientX - dragStart.current.x
-    const deltaY = e.clientY - dragStart.current.y
-
-    if (
-      !draggedRef.current &&
-      Math.abs(deltaX) + Math.abs(deltaY) > DRAG_THRESHOLD
-    ) {
-      draggedRef.current = true
-    }
-
-    setOffset({
-      x: dragStart.current.offsetX + deltaX,
-      y: dragStart.current.offsetY + deltaY,
-    })
-  }
-
-  const handleMouseUp = () => {
-    setIsPanning(false)
-  }
-
   const handleClickCapture = (e: React.MouseEvent) => {
     // If the user dragged before releasing, swallow the click so it doesn't
     // open whatever node happened to be under the cursor.
@@ -136,12 +113,30 @@ export function PanContainer({ children, className }: PanContainerProps) {
     setOffset({ x: 0, y: 0 })
   }
 
-  // Handle mouse leaving container or releasing outside
   useEffect(() => {
-    const handleGlobalMouseUp = () => setIsPanning(false)
-    window.addEventListener('mouseup', handleGlobalMouseUp)
-    return () => window.removeEventListener('mouseup', handleGlobalMouseUp)
-  }, [])
+    if (!isPanning) return
+    const onMove = (e: MouseEvent) => {
+      const deltaX = e.clientX - dragStart.current.x
+      const deltaY = e.clientY - dragStart.current.y
+      if (
+        !draggedRef.current &&
+        Math.abs(deltaX) + Math.abs(deltaY) > DRAG_THRESHOLD
+      ) {
+        draggedRef.current = true
+      }
+      setOffset({
+        x: dragStart.current.offsetX + deltaX,
+        y: dragStart.current.offsetY + deltaY,
+      })
+    }
+    const onUp = () => setIsPanning(false)
+    window.addEventListener('mousemove', onMove)
+    window.addEventListener('mouseup', onUp)
+    return () => {
+      window.removeEventListener('mousemove', onMove)
+      window.removeEventListener('mouseup', onUp)
+    }
+  }, [isPanning])
 
   // Wheel handler — registered once, reads scale/offset through refs so
   // there's no stale-closure race when pan-mousemove and wheel events
@@ -294,8 +289,6 @@ export function PanContainer({ children, className }: PanContainerProps) {
         className
       )}
       onMouseDown={handleMouseDown}
-      onMouseMove={handleMouseMove}
-      onMouseUp={handleMouseUp}
       onClickCapture={handleClickCapture}
     >
       <div
