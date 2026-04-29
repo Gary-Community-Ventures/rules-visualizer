@@ -107,11 +107,6 @@ export function TestPanel() {
     try {
       const r = await runTests(model.id)
       setResults(r)
-      // Auto-select and expand first failed test, or first test
-      const failed = r.find((t) => !t.passed)
-      const targetId = failed?.testId ?? r[0]?.testId ?? null
-      setSelectedTestId(targetId)
-      setExpandedTest(targetId)
     } catch (e) {
       setError((e as Error).message)
     } finally {
