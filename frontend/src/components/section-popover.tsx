@@ -336,6 +336,17 @@ export function SectionPopover({
             </div>
           )}
 
+          {/* Empty-state placeholder so the popover doesn't look like a
+              ghost card when a read-only section has neither links nor
+              a comment. */}
+          {!editable &&
+            linkedNames.length === 0 &&
+            !section.comment && (
+              <p className="text-[11px] text-muted-foreground italic text-center py-2">
+                No linked nodes or comment for this section.
+              </p>
+            )}
+
           {editable && (
             <div className="flex items-center gap-1.5 pt-1">
               {onUseInTaskBuilder && (
