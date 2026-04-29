@@ -13,10 +13,7 @@ const PREVIEW_RENDER_SCALE = 2
 const docCache = new Map<string, Promise<pdfjs.PDFDocumentProxy>>()
 // One rendered canvas per (pdfUrl, pageNum), for cropping.
 const pageCanvasCache = new Map<string, HTMLCanvasElement>()
-const pageCanvasInflight = new Map<
-  string,
-  Promise<HTMLCanvasElement | null>
->()
+const pageCanvasInflight = new Map<string, Promise<HTMLCanvasElement | null>>()
 
 function pageKey(pdfUrl: string, pageNum: number): string {
   return `${pdfUrl}::${pageNum}`

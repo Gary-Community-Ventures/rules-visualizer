@@ -33,6 +33,13 @@ export function PanContainer({ children, className }: PanContainerProps) {
   scaleRef.current = scale
   offsetRef.current = offset
 
+  // Track total drag distance so we can suppress the click event that would
+  // otherwise fire after a pan. If the mouse moved more than DRAG_THRESHOLD
+  // pixels between mousedown and mouseup, we treat it as a pan and stop the
+  // resulting click from reaching child onClick handlers (e.g. node clicks).
+  const DRAG_THRESHOLD = 5
+  const draggedRef = useRef(false)
+
   const handleMouseDown = (e: React.MouseEvent) => {
     // Only pan with left mouse button
     if (e.button !== 0) return
@@ -47,6 +54,7 @@ export function PanContainer({ children, className }: PanContainerProps) {
       cancelAnimationFrame(animFrameRef.current)
       animFrameRef.current = null
     }
+    draggedRef.current = false
     setIsPanning(true)
     dragStart.current = {
       x: e.clientX,
@@ -62,6 +70,13 @@ export function PanContainer({ children, className }: PanContainerProps) {
     const deltaX = e.clientX - dragStart.current.x
     const deltaY = e.clientY - dragStart.current.y
 
+    if (
+      !draggedRef.current &&
+      Math.abs(deltaX) + Math.abs(deltaY) > DRAG_THRESHOLD
+    ) {
+      draggedRef.current = true
+    }
+
     setOffset({
       x: dragStart.current.offsetX + deltaX,
       y: dragStart.current.offsetY + deltaY,
@@ -70,6 +85,16 @@ export function PanContainer({ children, className }: PanContainerProps) {
 
   const handleMouseUp = () => {
     setIsPanning(false)
+  }
+
+  const handleClickCapture = (e: React.MouseEvent) => {
+    // If the user dragged before releasing, swallow the click so it doesn't
+    // open whatever node happened to be under the cursor.
+    if (draggedRef.current) {
+      e.stopPropagation()
+      e.preventDefault()
+      draggedRef.current = false
+    }
   }
 
   const zoomIn = () => {
@@ -271,6 +296,7 @@ export function PanContainer({ children, className }: PanContainerProps) {
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
+      onClickCapture={handleClickCapture}
     >
       <div
         ref={contentRef}

@@ -83,7 +83,9 @@ export function PanelProvider({ children }: { children: ReactNode }) {
   const [followUpQueue, setFollowUpQueue] = useState<
     Record<string, QueuedFollowUp[]>
   >({})
-  const [attachTarget, setAttachTarget] = useState<AttachTarget>({ kind: 'new' })
+  const [attachTarget, setAttachTarget] = useState<AttachTarget>({
+    kind: 'new',
+  })
 
   const addTaskBuilderSource = useCallback((source: TaskBuilderSource) => {
     setTaskBuilderSources((prev) =>
