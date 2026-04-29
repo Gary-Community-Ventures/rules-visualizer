@@ -263,8 +263,7 @@ export function PolicyPanel() {
         // Doc-id resolution priority: pending navigation → module-level
         // saved (within-session remounts) → localStorage (across reloads)
         // → first PDF doc.
-        const targetId =
-          _savedDocId ?? readStoredDocId(model.id) ?? null
+        const targetId = _savedDocId ?? readStoredDocId(model.id) ?? null
         const saved = targetId
           ? r.documents.find((d) => d.id === targetId)
           : null
