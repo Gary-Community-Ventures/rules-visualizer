@@ -4,6 +4,7 @@ import { Button } from './ui/button'
 import { Input } from './ui/input'
 import { cn } from '@/lib/utils'
 import { ALLOW_WRITES } from '@/lib/allow-writes'
+import { nodeElementId } from './node'
 import {
   Maximize2,
   Minimize2,
@@ -152,6 +153,7 @@ function NodeNavigation() {
 
 export function ToolBar() {
   const {
+    rulesetId,
     model,
     selectedNodes,
     setSelectedNodes,
@@ -184,8 +186,22 @@ export function ToolBar() {
         multiple
         value={selectedNodes}
         onValueChange={(next) => {
+          // Detect the freshly-added id so we can pan to it after the
+          // filter rerender. Search-bar adds stay otherwise silent (no
+          // collapse-others, so we don't need useAddToFilter).
+          const added = next.filter((id) => !selectedNodes.includes(id))
           setSelectedNodes(next)
           setSearch('')
+          if (added.length > 0) {
+            const lastAdded = added[added.length - 1]
+            setTimeout(() => {
+              window.dispatchEvent(
+                new CustomEvent('pan-to-element', {
+                  detail: { elementId: nodeElementId(rulesetId, lastAdded) },
+                })
+              )
+            }, 150)
+          }
         }}
       >
         <ComboboxChips ref={anchorRef}>

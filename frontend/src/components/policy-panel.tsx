@@ -187,9 +187,9 @@ export function PolicyPanel() {
   const [searchHighlight, setSearchHighlight] = useState('')
   const pdfDocRef = useRef<pdfjs.PDFDocumentProxy | null>(null)
 
-  // The section ID to highlight with a blue overlay (from node link navigation)
-  const [focusedSectionId, setFocusedSectionId] = useState<string | null>(null)
-  // Clicked section in the PDF — shows linked nodes popover
+  // Selected section in the PDF — shows linked nodes popover and the
+  // blue overlay; cleared when the user closes the popover or clicks
+  // another section.
   const [clickedSectionId, setClickedSectionId] = useState<string | null>(null)
 
   // What does drawing on a page do?
@@ -301,7 +301,7 @@ export function PolicyPanel() {
       }
       tryScroll()
       if (activeSectionId && activeSectionId.length > 0) {
-        setFocusedSectionId(activeSectionId[0])
+        setClickedSectionId(activeSectionId[0])
       }
       clearPolicyTarget()
     }
@@ -1135,7 +1135,8 @@ export function PolicyPanel() {
             (s) =>
               s.documentId === selectedDoc.id &&
               s.page !== undefined &&
-              (s.rects?.length ?? 0) > 0
+              (s.rects?.length ?? 0) > 0 &&
+              s.status !== 'skipped'
           )
           .slice()
           .sort((a, b) => {
@@ -1432,7 +1433,6 @@ export function PolicyPanel() {
                     )}
                     {/* Bounding box overlays for sections on this page */}
                     {pageSections.map((section) => {
-                      const isFocused = section.id === focusedSectionId
                       const isClicked = section.id === clickedSectionId
                       const isSkipped = section.status === 'skipped'
                       const isLinked = linkedSectionIds.has(section.id)
@@ -1440,9 +1440,9 @@ export function PolicyPanel() {
                       // Orphans (unlinked, non-skipped) are rendered in rose with
                       // a dashed border so they read as "needs attention" without
                       // looking like an error. Linked sections stay amber, skipped
-                      // gray, and focus/clicked override everything in blue.
+                      // gray, and the selected section overrides everything in blue.
                       let bg: string
-                      if (isFocused || isClicked) {
+                      if (isClicked) {
                         bg = 'rgba(59, 130, 246, 0.25)' // blue
                       } else if (isSkipped) {
                         bg = 'rgba(156, 163, 175, 0.25)' // gray
@@ -1453,7 +1453,7 @@ export function PolicyPanel() {
                       }
 
                       const border =
-                        isFocused || isClicked
+                        isClicked
                           ? '1px solid rgba(59, 130, 246, 0.5)'
                           : isSkipped
                             ? '1px solid rgba(156, 163, 175, 0.3)'

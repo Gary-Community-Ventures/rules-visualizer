@@ -207,22 +207,22 @@
       <Derived><Rational>1/5</Rational></Derived>
     </Fact>
 
-    <Fact path="/standardDeduction1to3">
+    <Fact path="/standardDeductionHh1to3">
       <Name>Standard deduction (1-3 persons)</Name>
       <Derived><Dollar>209</Dollar></Derived>
     </Fact>
 
-    <Fact path="/standardDeduction4">
+    <Fact path="/standardDeductionHh4">
       <Name>Standard deduction (4 persons)</Name>
       <Derived><Dollar>223</Dollar></Derived>
     </Fact>
 
-    <Fact path="/standardDeduction5">
+    <Fact path="/standardDeductionHh5">
       <Name>Standard deduction (5 persons)</Name>
       <Derived><Dollar>261</Dollar></Derived>
     </Fact>
 
-    <Fact path="/standardDeduction6Plus">
+    <Fact path="/standardDeductionHh6Plus">
       <Name>Standard deduction (6+ persons)</Name>
       <Derived><Dollar>299</Dollar></Derived>
     </Fact>
@@ -377,7 +377,7 @@
       <Derived>
         <Round>
           <Multiply>
-            <Dependency path="/maxAllotment1" />
+            <Dependency path="/maxAllotmentHh1" />
             <Dependency path="/minimumBenefitRate" />
           </Multiply>
         </Round>
@@ -399,12 +399,12 @@
     <!-- FPL annual amounts (2025 HHS poverty guidelines, 48 states + DC).
          Monthly values are derived by rounding annual / 12 to the nearest
          whole dollar (half-up), matching HHS's published monthly table. -->
-    <Fact path="/fplAnnual1">
+    <Fact path="/fplAnnualHh1">
       <Name>FPL annual (1 person)</Name>
       <Derived><Dollar>15650</Dollar></Derived>
     </Fact>
 
-    <Fact path="/fplAnnualPerAdditional">
+    <Fact path="/fplAnnualHhPerAdditional">
       <Name>FPL annual per additional person</Name>
       <Description>Additional annual FPL amount for each person beyond the first</Description>
       <Derived><Dollar>5500</Dollar></Derived>
@@ -412,47 +412,47 @@
 
     <!-- Max allotment by household size (FY2026, 48 states + DC, effective 2025-10-01) -->
 
-    <Fact path="/maxAllotment1">
+    <Fact path="/maxAllotmentHh1">
       <Name>Max allotment (1 person)</Name>
       <Derived><Dollar>298</Dollar></Derived>
     </Fact>
 
-    <Fact path="/maxAllotment2">
+    <Fact path="/maxAllotmentHh2">
       <Name>Max allotment (2 persons)</Name>
       <Derived><Dollar>546</Dollar></Derived>
     </Fact>
 
-    <Fact path="/maxAllotment3">
+    <Fact path="/maxAllotmentHh3">
       <Name>Max allotment (3 persons)</Name>
       <Derived><Dollar>785</Dollar></Derived>
     </Fact>
 
-    <Fact path="/maxAllotment4">
+    <Fact path="/maxAllotmentHh4">
       <Name>Max allotment (4 persons)</Name>
       <Derived><Dollar>994</Dollar></Derived>
     </Fact>
 
-    <Fact path="/maxAllotment5">
+    <Fact path="/maxAllotmentHh5">
       <Name>Max allotment (5 persons)</Name>
       <Derived><Dollar>1183</Dollar></Derived>
     </Fact>
 
-    <Fact path="/maxAllotment6">
+    <Fact path="/maxAllotmentHh6">
       <Name>Max allotment (6 persons)</Name>
       <Derived><Dollar>1421</Dollar></Derived>
     </Fact>
 
-    <Fact path="/maxAllotment7">
+    <Fact path="/maxAllotmentHh7">
       <Name>Max allotment (7 persons)</Name>
       <Derived><Dollar>1571</Dollar></Derived>
     </Fact>
 
-    <Fact path="/maxAllotment8">
+    <Fact path="/maxAllotmentHh8">
       <Name>Max allotment (8 persons)</Name>
       <Derived><Dollar>1789</Dollar></Derived>
     </Fact>
 
-    <Fact path="/maxAllotmentPerAdditional">
+    <Fact path="/maxAllotmentHhPerAdditional">
       <Name>Max allotment per additional person</Name>
       <Description>Additional max allotment per person beyond 8</Description>
       <Derived><Dollar>218</Dollar></Derived>
@@ -1019,9 +1019,9 @@
       <Description>Annual FPL for this household size: 1-person amount + (householdSize − 1) × per-additional</Description>
       <Derived>
         <Add>
-          <Dependency path="/fplAnnual1" />
+          <Dependency path="/fplAnnualHh1" />
           <Multiply>
-            <Dependency path="/fplAnnualPerAdditional" />
+            <Dependency path="/fplAnnualHhPerAdditional" />
             <Subtract>
               <Minuend><Dependency path="/householdSize" /></Minuend>
               <Subtrahends><Int>1</Int></Subtrahends>
@@ -1094,7 +1094,7 @@
                 <Right><Int>3</Int></Right>
               </LessThanOrEqual>
             </When>
-            <Then><Dependency path="/standardDeduction1to3" /></Then>
+            <Then><Dependency path="/standardDeductionHh1to3" /></Then>
           </Case>
           <Case>
             <When>
@@ -1103,7 +1103,7 @@
                 <Right><Int>4</Int></Right>
               </Equal>
             </When>
-            <Then><Dependency path="/standardDeduction4" /></Then>
+            <Then><Dependency path="/standardDeductionHh4" /></Then>
           </Case>
           <Case>
             <When>
@@ -1112,11 +1112,11 @@
                 <Right><Int>5</Int></Right>
               </Equal>
             </When>
-            <Then><Dependency path="/standardDeduction5" /></Then>
+            <Then><Dependency path="/standardDeductionHh5" /></Then>
           </Case>
           <Case>
             <When><True /></When>
-            <Then><Dependency path="/standardDeduction6Plus" /></Then>
+            <Then><Dependency path="/standardDeductionHh6Plus" /></Then>
           </Case>
         </Switch>
       </Derived>
@@ -1359,7 +1359,7 @@
                 <Right><Int>1</Int></Right>
               </LessThanOrEqual>
             </When>
-            <Then><Dependency path="/maxAllotment1" /></Then>
+            <Then><Dependency path="/maxAllotmentHh1" /></Then>
           </Case>
           <Case>
             <When>
@@ -1368,7 +1368,7 @@
                 <Right><Int>2</Int></Right>
               </Equal>
             </When>
-            <Then><Dependency path="/maxAllotment2" /></Then>
+            <Then><Dependency path="/maxAllotmentHh2" /></Then>
           </Case>
           <Case>
             <When>
@@ -1377,7 +1377,7 @@
                 <Right><Int>3</Int></Right>
               </Equal>
             </When>
-            <Then><Dependency path="/maxAllotment3" /></Then>
+            <Then><Dependency path="/maxAllotmentHh3" /></Then>
           </Case>
           <Case>
             <When>
@@ -1386,7 +1386,7 @@
                 <Right><Int>4</Int></Right>
               </LessThanOrEqual>
             </When>
-            <Then><Dependency path="/maxAllotment4" /></Then>
+            <Then><Dependency path="/maxAllotmentHh4" /></Then>
           </Case>
           <Case>
             <When>
@@ -1395,7 +1395,7 @@
                 <Right><Int>5</Int></Right>
               </Equal>
             </When>
-            <Then><Dependency path="/maxAllotment5" /></Then>
+            <Then><Dependency path="/maxAllotmentHh5" /></Then>
           </Case>
           <Case>
             <When>
@@ -1404,7 +1404,7 @@
                 <Right><Int>6</Int></Right>
               </Equal>
             </When>
-            <Then><Dependency path="/maxAllotment6" /></Then>
+            <Then><Dependency path="/maxAllotmentHh6" /></Then>
           </Case>
           <Case>
             <When>
@@ -1413,7 +1413,7 @@
                 <Right><Int>7</Int></Right>
               </Equal>
             </When>
-            <Then><Dependency path="/maxAllotment7" /></Then>
+            <Then><Dependency path="/maxAllotmentHh7" /></Then>
           </Case>
           <Case>
             <When>
@@ -1422,15 +1422,15 @@
                 <Right><Int>8</Int></Right>
               </LessThanOrEqual>
             </When>
-            <Then><Dependency path="/maxAllotment8" /></Then>
+            <Then><Dependency path="/maxAllotmentHh8" /></Then>
           </Case>
           <Case>
             <When><True /></When>
             <Then>
               <Add>
-                <Dependency path="/maxAllotment8" />
+                <Dependency path="/maxAllotmentHh8" />
                 <Multiply>
-                  <Dependency path="/maxAllotmentPerAdditional" />
+                  <Dependency path="/maxAllotmentHhPerAdditional" />
                   <Subtract>
                     <Minuend><Dependency path="/householdSize" /></Minuend>
                     <Subtrahends><Int>8</Int></Subtrahends>

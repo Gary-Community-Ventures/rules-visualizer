@@ -124,3 +124,45 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Amber ring pulse used to draw the user's eye to a node after the
+   pan-to-element animation lands (e.g. add-to-filter, search-bar add).
+   Stays visible the whole time — pulses at higher intensity but doesn't
+   fade fully until the final stretch. Applied imperatively from
+   PanContainer, then removed when the class' lifetime ends. */
+@keyframes pan-target-pulse {
+  0% {
+    box-shadow:
+      0 0 0 0 rgba(234, 179, 8, 0),
+      0 0 0 0 rgba(234, 179, 8, 0);
+  }
+  10% {
+    box-shadow:
+      0 0 0 4px rgba(234, 179, 8, 0.95),
+      0 0 26px 8px rgba(234, 179, 8, 0.6);
+  }
+  30% {
+    box-shadow:
+      0 0 0 3px rgba(234, 179, 8, 0.45),
+      0 0 14px 4px rgba(234, 179, 8, 0.3);
+  }
+  55% {
+    box-shadow:
+      0 0 0 4px rgba(234, 179, 8, 0.95),
+      0 0 26px 8px rgba(234, 179, 8, 0.6);
+  }
+  80% {
+    box-shadow:
+      0 0 0 3px rgba(234, 179, 8, 0.45),
+      0 0 14px 4px rgba(234, 179, 8, 0.3);
+  }
+  100% {
+    box-shadow:
+      0 0 0 0 rgba(234, 179, 8, 0),
+      0 0 0 0 rgba(234, 179, 8, 0);
+  }
+}
+
+.pan-target-pulse {
+  animation: pan-target-pulse 3.2s ease-out forwards;
+}

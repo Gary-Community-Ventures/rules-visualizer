@@ -18,6 +18,9 @@ export function PanContainer({ children, className }: PanContainerProps) {
   const [offset, setOffset] = useState({ x: 0, y: 0 })
   const [scale, setScale] = useState(1)
   const [isPanning, setIsPanning] = useState(false)
+  // Active pan-to-element animation frame, so we can cancel it if the
+  // user starts panning or another pan-to fires mid-flight.
+  const animFrameRef = useRef<number | null>(null)
   const dragStart = useRef({ x: 0, y: 0, offsetX: 0, offsetY: 0 })
   const containerRef = useRef<HTMLDivElement>(null)
   const contentRef = useRef<HTMLDivElement>(null)
@@ -45,6 +48,12 @@ export function PanContainer({ children, className }: PanContainerProps) {
     if ((e.target as HTMLElement).closest('button, input, [data-no-pan]'))
       return
 
+    // User started panning — cancel any in-flight pan-to animation so the
+    // canvas tracks the cursor exactly instead of fighting the easing.
+    if (animFrameRef.current !== null) {
+      cancelAnimationFrame(animFrameRef.current)
+      animFrameRef.current = null
+    }
     draggedRef.current = false
     setIsPanning(true)
     dragStart.current = {
@@ -53,29 +62,6 @@ export function PanContainer({ children, className }: PanContainerProps) {
       offsetX: offset.x,
       offsetY: offset.y,
     }
-  }
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isPanning) return
-
-    const deltaX = e.clientX - dragStart.current.x
-    const deltaY = e.clientY - dragStart.current.y
-
-    if (
-      !draggedRef.current &&
-      Math.abs(deltaX) + Math.abs(deltaY) > DRAG_THRESHOLD
-    ) {
-      draggedRef.current = true
-    }
-
-    setOffset({
-      x: dragStart.current.offsetX + deltaX,
-      y: dragStart.current.offsetY + deltaY,
-    })
-  }
-
-  const handleMouseUp = () => {
-    setIsPanning(false)
   }
 
   const handleClickCapture = (e: React.MouseEvent) => {
@@ -127,12 +113,30 @@ export function PanContainer({ children, className }: PanContainerProps) {
     setOffset({ x: 0, y: 0 })
   }
 
-  // Handle mouse leaving container or releasing outside
   useEffect(() => {
-    const handleGlobalMouseUp = () => setIsPanning(false)
-    window.addEventListener('mouseup', handleGlobalMouseUp)
-    return () => window.removeEventListener('mouseup', handleGlobalMouseUp)
-  }, [])
+    if (!isPanning) return
+    const onMove = (e: MouseEvent) => {
+      const deltaX = e.clientX - dragStart.current.x
+      const deltaY = e.clientY - dragStart.current.y
+      if (
+        !draggedRef.current &&
+        Math.abs(deltaX) + Math.abs(deltaY) > DRAG_THRESHOLD
+      ) {
+        draggedRef.current = true
+      }
+      setOffset({
+        x: dragStart.current.offsetX + deltaX,
+        y: dragStart.current.offsetY + deltaY,
+      })
+    }
+    const onUp = () => setIsPanning(false)
+    window.addEventListener('mousemove', onMove)
+    window.addEventListener('mouseup', onUp)
+    return () => {
+      window.removeEventListener('mousemove', onMove)
+      window.removeEventListener('mouseup', onUp)
+    }
+  }, [isPanning])
 
   // Wheel handler — registered once, reads scale/offset through refs so
   // there's no stale-closure race when pan-mousemove and wheel events
@@ -173,6 +177,90 @@ export function PanContainer({ children, className }: PanContainerProps) {
     window.dispatchEvent(new CustomEvent('transform', { detail: { scale } }))
   }, [scale, offset])
 
+  // External "pan to element" event — used by useAddToFilter (and future
+  // callers) to bring a node into view, anchored at the top-middle of the
+  // container. JS-driven rAF animation (rather than CSS transition) so
+  // we don't have to fight React's commit batching when toggling the
+  // transition style and the new transform value at the same time.
+  useEffect(() => {
+    const TOP_PADDING = 80
+    const DURATION_MS = 500
+    // ease-out cubic — fast start, gentle settle.
+    const ease = (t: number) => 1 - Math.pow(1 - t, 3)
+    const onPanTo = (e: Event) => {
+      const detail = (e as CustomEvent).detail as
+        | { elementId?: string }
+        | undefined
+      const elId = detail?.elementId
+      if (!elId) return
+      const el = document.getElementById(elId)
+      const container = containerRef.current
+      if (!el || !container) return
+      const elRect = el.getBoundingClientRect()
+      const containerRect = container.getBoundingClientRect()
+      // Element's current screen position relative to the container —
+      // already includes the current scale + offset transform.
+      const elCenterX = (elRect.left + elRect.right) / 2 - containerRect.left
+      const elTopY = elRect.top - containerRect.top
+      // Back out the element's natural (untransformed) position. Inverse
+      // of `screen = natural * scale + offset`.
+      const startScale = scaleRef.current
+      const startOffset = { ...offsetRef.current }
+      const naturalX = (elCenterX - startOffset.x) / startScale
+      const naturalY = (elTopY - startOffset.y) / startScale
+      // Recompute the offset that puts the element at the target screen
+      // position at scale = 1.
+      const targetX = containerRect.width / 2
+      const targetY = TOP_PADDING
+      const targetScale = 1
+      const targetOffset = {
+        x: targetX - naturalX,
+        y: targetY - naturalY,
+      }
+
+      // Cancel any prior animation so they don't fight.
+      if (animFrameRef.current !== null) {
+        cancelAnimationFrame(animFrameRef.current)
+      }
+      const startTime = performance.now()
+      const tick = (now: number) => {
+        const elapsed = now - startTime
+        const t = Math.min(elapsed / DURATION_MS, 1)
+        const k = ease(t)
+        setScale(startScale + (targetScale - startScale) * k)
+        setOffset({
+          x: startOffset.x + (targetOffset.x - startOffset.x) * k,
+          y: startOffset.y + (targetOffset.y - startOffset.y) * k,
+        })
+        if (t < 1) {
+          animFrameRef.current = requestAnimationFrame(tick)
+        } else {
+          animFrameRef.current = null
+          // Pulse the target so the user's eye lands on it. Re-add the
+          // class on each pan-to so repeated dispatches restart the
+          // animation (toggle-off then -on next frame to reset state).
+          el.classList.remove('pan-target-pulse')
+          // Force a reflow so the browser registers the class removal
+          // before re-adding — required to restart a CSS keyframe anim.
+          void el.offsetWidth
+          el.classList.add('pan-target-pulse')
+          window.setTimeout(() => {
+            el.classList.remove('pan-target-pulse')
+          }, 3300)
+        }
+      }
+      animFrameRef.current = requestAnimationFrame(tick)
+    }
+    window.addEventListener('pan-to-element', onPanTo)
+    return () => {
+      window.removeEventListener('pan-to-element', onPanTo)
+      if (animFrameRef.current !== null) {
+        cancelAnimationFrame(animFrameRef.current)
+        animFrameRef.current = null
+      }
+    }
+  }, [])
+
   // Watch for size changes — fires when:
   //   - Tab goes from display:none (0×0) to visible (outer container)
   //   - Window/panel resizes (outer container)
@@ -201,8 +289,6 @@ export function PanContainer({ children, className }: PanContainerProps) {
         className
       )}
       onMouseDown={handleMouseDown}
-      onMouseMove={handleMouseMove}
-      onMouseUp={handleMouseUp}
       onClickCapture={handleClickCapture}
     >
       <div

@@ -35,6 +35,7 @@ const GROUPS: { name: string; items: Shortcut[] }[] = [
       { keys: 'w', description: 'Add or remove from workspace' },
       { keys: 'f', description: 'Add or remove from filter' },
       { keys: 'x', description: 'Toggle expand-children' },
+      { keys: '.', description: 'Recenter the canvas on this node' },
       {
         keys: 'Shift+P',
         description: 'Open the policy panel and link a section to this node',
