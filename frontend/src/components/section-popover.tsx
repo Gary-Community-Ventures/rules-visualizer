@@ -178,11 +178,15 @@ export function SectionPopover({
   // responsive while saves trickle out at most once per 400ms.
   const [commentDraft, setCommentDraft] = useState(section.comment ?? '')
   const lastSavedCommentRef = useRef(section.comment ?? '')
+  // Resync only when the section identity changes (clicking a different
+  // section). Depending on `section.comment` here would race with the
+  // user's typing — our own save round-trips back as a new section.comment
+  // and clobbers any character typed during the save flight.
   useEffect(() => {
-    // Resync if the section's saved comment changes externally.
     setCommentDraft(section.comment ?? '')
     lastSavedCommentRef.current = section.comment ?? ''
-  }, [section.id, section.comment])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [section.id])
 
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const scheduleCommentSave = (val: string) => {
@@ -194,14 +198,26 @@ export function SectionPopover({
       }
     }, 400)
   }
+  // Mirror the latest draft + handler into refs so the unmount cleanup
+  // (which has empty deps) reads current values instead of the closures
+  // captured at mount time. Without this, closing the popover mid-debounce
+  // either silently dropped the unsaved keystrokes OR — worse — wrote the
+  // stale-empty draft over the previously saved comment, clearing it.
+  const commentDraftRef = useRef(commentDraft)
+  useEffect(() => {
+    commentDraftRef.current = commentDraft
+  }, [commentDraft])
+  const onCommentChangeRef = useRef(onCommentChange)
+  useEffect(() => {
+    onCommentChangeRef.current = onCommentChange
+  }, [onCommentChange])
   // Flush pending save when popover unmounts.
   useEffect(() => {
     return () => {
-      if (debounceTimer.current) {
-        clearTimeout(debounceTimer.current)
-        if (commentDraft.trim() !== lastSavedCommentRef.current.trim()) {
-          onCommentChange(commentDraft)
-        }
+      if (debounceTimer.current) clearTimeout(debounceTimer.current)
+      const draft = commentDraftRef.current
+      if (draft.trim() !== lastSavedCommentRef.current.trim()) {
+        onCommentChangeRef.current(draft)
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

@@ -114,7 +114,8 @@
           "h": 0.1493249532326505
         }
       ],
-      "status": "skipped"
+      "status": "skipped",
+      "comment": "Colorado only uses the SUA (aka HCUA) because they have an energy subsidy that automatically qualifies everyone for the SUA."
     },
     {
       "id": "snap-financial-eligibility__skip-1777480512548",
