@@ -18,112 +18,167 @@
   ],
   "sections": [
     {
-      "id": "snap-financial-eligibility__test",
+      "id": "snap-financial-eligibility__mok9jjie-i12o",
       "documentId": "snap-financial-eligibility",
-      "label": "test",
+      "text": "Household Size Minimum Allotment Maximum Allotment 1 $24 $298 2 $24 $546 3 - $785 4 - $994 5 - $1,183 6 - $1,421 7 - $1,571 8 - $1,789 Each Additional Member - +$218",
+      "page": 1,
+      "rects": [
+        {
+          "x": 0.05252874426993312,
+          "y": 0.36939362138978876,
+          "w": 0.4335699256030662,
+          "h": 0.24674909887302093
+        }
+      ]
+    },
+    {
+      "id": "snap-financial-eligibility__mok9n5ha-ljn8",
+      "documentId": "snap-financial-eligibility",
       "text": "Household Size Net Income 100% FPL Gross Income 130% FPL Gross Income 165% FPL Gross Income 200% FPL 1 $1,305 $1,696 $2,152 $2,610 2 $1,763 $2,292 $2,909 $3,526 3 $2,221 $2,888 $3,665 $4,442 4 $2,680 $3,483 $4,421 $5,360 5 $3,138 $4,079 $5,177 $6,276 6 $3,596 $4,675 $5,934 $7,192 7 $4,055 $5,271 $6,690 $8,110 8 $4,513 $5,867 $7,446 $9,026 Each additional member +$459 +$596 +$757 +$918",
       "page": 1,
       "rects": [
         {
-          "x": 0.03569549860975427,
-          "y": 0.13286489939316512,
-          "w": 0.9186142631697602,
-          "h": 0.23068850663868232
+          "x": 0.04531449612985647,
+          "y": 0.13432495323265045,
+          "w": 0.8968306154655448,
+          "h": 0.225468129762285
         }
       ]
     },
     {
-      "id": "10-ccr-2506-1__min-allotment",
-      "documentId": "10-ccr-2506-1",
-      "label": "min allotment",
-      "text": "Household Size Minimum Monthly Allotment Effective October 1, 2025 1-2 $ 24",
-      "page": 39,
-      "rects": [
-        {
-          "x": 0.16514601883404786,
-          "y": 0.40906066397678204,
-          "w": 0.6671796562969476,
-          "h": 0.04802151907694485
-        }
-      ]
-    },
-    {
-      "id": "10-ccr-2506-1__moj0f3ng-8fmr",
-      "documentId": "10-ccr-2506-1",
-      "text": "“Allotment” means the total amount of SNAP benefits a household is authorized to receive in a particular month.",
+      "id": "snap-financial-eligibility__mok9pgcc-13h0",
+      "documentId": "snap-financial-eligibility",
+      "text": "Household Size Standard Deductions 1-3 $209 4 $223 5 $261 6+ $299",
       "page": 1,
       "rects": [
         {
-          "x": 0.10901024520272565,
-          "y": 0.6682220564646901,
-          "w": 0.7739846389076557,
-          "h": 0.03660108809144359
+          "x": 0.4853836326745322,
+          "y": 0.3723137290687594,
+          "w": 0.4569023822048546,
+          "h": 0.11534425331934112
         }
       ]
     },
     {
-      "id": "10-ccr-2506-1__moj0f5y1-q30i",
-      "documentId": "10-ccr-2506-1",
-      "text": "“Appeal” means a request made by a household to have a decision about its case reviewed by an impartial third party to determine whether the decision was correct. The term appeal includes state level fair hearings and local-level dispute resolution conferences.",
+      "id": "snap-financial-eligibility__mok9wzb5-zvbt",
+      "documentId": "snap-financial-eligibility",
+      "text": "Homeless Shelter Deduction: $198.99",
       "page": 1,
       "rects": [
         {
-          "x": 0.10905148860298708,
-          "y": 0.7122252700176971,
-          "w": 0.759433204138961,
-          "h": 0.05248035390448979
+          "x": 0.48778838205455777,
+          "y": 0.5460601359675138,
+          "w": 0.4569023822048546,
+          "h": 0.029201076789706626
         }
       ]
     },
     {
-      "id": "10-ccr-2506-1__moj2hddx-j3aa",
-      "documentId": "10-ccr-2506-1",
-      "text": "“Administrative adjudicator” means a person who presides over state-level fair hearings and administrative disqualification hearings.",
+      "id": "snap-financial-eligibility__mok9xjdn-xmtm",
+      "documentId": "snap-financial-eligibility",
+      "text": "Maximum Shelter Deduction: $744.00",
       "page": 1,
       "rects": [
         {
-          "x": 0.10871014136878662,
-          "y": 0.4753462904231385,
-          "w": 0.6735187848598589,
-          "h": 0.039950665473963844
+          "x": 0.4950026301946344,
+          "y": 0.5022585207829539,
+          "w": 0.44728338468475237,
+          "h": 0.03212118446867729
         }
       ]
     },
     {
-      "id": "10-ccr-2506-1__moj6laif-835z",
-      "documentId": "10-ccr-2506-1",
-      "text": "“Able-Bodied Adult Without Dependents (ABAWD)” means an individual aged eighteen (18) through the age of fifty-four (54) without a physical or mental disability who lives in a household with no one under the age of eighteen (18).",
+      "id": "snap-financial-eligibility__mok9yugc-b5j0",
+      "documentId": "snap-financial-eligibility",
+      "text": "Name Abbreviation Definition Deduction Heating/Cooling Utility Allowance HCUA Incur heating or cooling costs $594",
       "page": 1,
       "rects": [
         {
-          "x": 0.1018944414126452,
-          "y": 0.3257929455706497,
-          "w": 0.7908318390894207,
-          "h": 0.05783306726106208
+          "x": 0.05252874426993312,
+          "y": 0.626363097139207,
+          "w": 0.8921620199894792,
+          "h": 0.05734156134507461
         }
       ]
+    },
+    {
+      "id": "snap-financial-eligibility__skip-1777480459110",
+      "documentId": "snap-financial-eligibility",
+      "text": "Basic Utility Allowance BUA Incur two non-heating/ cooling utilities costs $377 One Utility Allowance OUA Incur one non- telephone, non heating/cooling utility cost $71 Telephone Allowance N/A Incur only telephone costs $97",
+      "page": 1,
+      "rects": [
+        {
+          "x": 0.04290974674983092,
+          "y": 0.6847652507186203,
+          "w": 0.9114000150296836,
+          "h": 0.1493249532326505
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "snap-financial-eligibility__skip-1777480512548",
+      "documentId": "snap-financial-eligibility",
+      "text": "ACCESSIBILITY This document is designed to comply with the Web Content Accessibility Guidelines (WCAG) 2.1 AA standard. If you experience any difficulty accessing the content or have questions regarding the process, please contact SOC_StaffDevelopment@state.co.us for assistance. SNAP Financial Eligibility Desk Aid | Version 7 | October 2025",
+      "page": 1,
+      "rects": [
+        {
+          "x": 0.04531449612985647,
+          "y": 0.851211388419948,
+          "w": 0.908995265649658,
+          "h": 0.14878861158005197
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "snap-financial-eligibility__skip-1777480525008",
+      "documentId": "snap-financial-eligibility",
+      "text": "MONTHLY FINANCIAL ELIGIBILITY STANDARDS Note: All values below are effective October 1, 2025 through September 30, 2026.",
+      "page": 1,
+      "rects": [
+        {
+          "x": 0.01886225294957541,
+          "y": 0.04088150750558927,
+          "w": 0.9546855038701435,
+          "h": 0.09052333804809051
+        }
+      ],
+      "status": "skipped"
     }
   ],
   "mappings": [
     {
+      "nodePath": "/grossIncomeLimit",
+      "sectionId": "snap-financial-eligibility__mok9n5ha-ljn8"
+    },
+    {
+      "nodePath": "/netIncomeLimit",
+      "sectionId": "snap-financial-eligibility__mok9n5ha-ljn8"
+    },
+    {
+      "nodePath": "/standardDeduction",
+      "sectionId": "snap-financial-eligibility__mok9pgcc-13h0"
+    },
+    {
       "nodePath": "/minimumBenefit",
-      "sectionId": "10-ccr-2506-1__min-allotment"
+      "sectionId": "snap-financial-eligibility__mok9jjie-i12o"
     },
     {
-      "nodePath": "/snap",
-      "sectionId": "10-ccr-2506-1__moj0f3ng-8fmr"
+      "nodePath": "/maxAllotment",
+      "sectionId": "snap-financial-eligibility__mok9jjie-i12o"
     },
     {
-      "nodePath": "/snap",
-      "sectionId": "snap-financial-eligibility__test"
+      "nodePath": "/homelessShelterDeduction",
+      "sectionId": "snap-financial-eligibility__mok9wzb5-zvbt"
     },
     {
-      "nodePath": "/federalPovertyLevelMonthly",
-      "sectionId": "snap-financial-eligibility__test"
+      "nodePath": "/excessShelterDeductionCap",
+      "sectionId": "snap-financial-eligibility__mok9xjdn-xmtm"
     },
     {
-      "nodePath": "/federalPovertyLevelAnnual",
-      "sectionId": "snap-financial-eligibility__test"
+      "nodePath": "/suaAmount",
+      "sectionId": "snap-financial-eligibility__mok9yugc-b5j0"
     }
   ]
 }

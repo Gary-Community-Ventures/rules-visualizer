@@ -34,6 +34,7 @@ export function SectionPopover({
   onUseInTaskBuilder,
   alreadyInTaskBuilder,
   nodeOptions,
+  openNodeName,
   saving,
 }: {
   section: PolicySection
@@ -57,6 +58,11 @@ export function SectionPopover({
   alreadyInTaskBuilder?: boolean
   /** Pool of pickable nodes — { name } pairs from the model. */
   nodeOptions: { name: string }[]
+  /** Name of the node currently open in the side panel. When this matches
+   *  the current search and isn't already linked, it's pinned to the top
+   *  of the suggestions list — typical workflow is "I'm reading X, link
+   *  this section to it". */
+  openNodeName?: string
   saving: boolean
 }) {
   const [search, setSearch] = useState('')
@@ -66,12 +72,30 @@ export function SectionPopover({
   const suggestions = useMemo(() => {
     if (!search.trim()) return []
     const q = search.toLowerCase()
-    return nodeOptions
-      .filter(
-        (n) => !linkedSet.has(n.name) && n.name.toLowerCase().includes(q)
-      )
-      .slice(0, 8)
-  }, [nodeOptions, linkedSet, search])
+    // Pin the side-panel's open node to the top when it matches and isn't
+    // already linked; then sort the rest by exact-match-first, then by
+    // name length (shortest first — usually the most specific match), with
+    // a stable alphabetical tiebreaker so order doesn't jitter.
+    const matches = nodeOptions.filter(
+      (n) => !linkedSet.has(n.name) && n.name.toLowerCase().includes(q)
+    )
+    const pinName =
+      openNodeName && matches.some((n) => n.name === openNodeName)
+        ? openNodeName
+        : null
+    const rest = pinName
+      ? matches.filter((n) => n.name !== pinName)
+      : matches
+    rest.sort((a, b) => {
+      const aExact = a.name.toLowerCase() === q ? 0 : 1
+      const bExact = b.name.toLowerCase() === q ? 0 : 1
+      if (aExact !== bExact) return aExact - bExact
+      if (a.name.length !== b.name.length) return a.name.length - b.name.length
+      return a.name.localeCompare(b.name)
+    })
+    const ordered = pinName ? [{ name: pinName }, ...rest] : rest
+    return ordered.slice(0, 20)
+  }, [nodeOptions, linkedSet, search, openNodeName])
 
   // Keep selectedIndex in range as suggestions change.
   useEffect(() => {
@@ -209,21 +233,47 @@ export function SectionPopover({
       </div>
 
       {isSkipped ? (
-        editable ? (
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-7 text-xs w-full"
-            onClick={onRemove}
-            disabled={saving}
-          >
-            Remove marking
-          </Button>
-        ) : (
+        <div className="space-y-2.5">
           <p className="text-[11px] text-muted-foreground italic">
             Marked as skipped
           </p>
-        )
+          {(editable || section.comment) && (
+            <div className="space-y-1">
+              <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                Comment
+              </span>
+              {editable ? (
+                <textarea
+                  className={cn(
+                    'w-full text-xs border rounded px-2 py-1.5 bg-background resize-y min-h-[60px]',
+                    'focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring'
+                  )}
+                  placeholder="Add a comment (optional)…"
+                  value={commentDraft}
+                  onChange={(e) => {
+                    setCommentDraft(e.target.value)
+                    scheduleCommentSave(e.target.value)
+                  }}
+                />
+              ) : (
+                <p className="text-xs whitespace-pre-wrap text-foreground/90">
+                  {section.comment}
+                </p>
+              )}
+            </div>
+          )}
+          {editable && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-7 text-xs w-full"
+              onClick={onRemove}
+              disabled={saving}
+            >
+              Remove marking
+            </Button>
+          )}
+        </div>
       ) : (
         <>
           {/* Linked nodes — picker only when editable; otherwise the saved

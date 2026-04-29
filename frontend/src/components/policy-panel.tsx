@@ -8,6 +8,7 @@ import type {
   PolicyDocument,
   PolicyReferences,
   NormalizedRect,
+  PolicySection,
 } from '@/lib/model'
 import { Button } from './ui/button'
 import { ButtonGroup } from './ui/button-group'
@@ -112,6 +113,7 @@ export function PolicyPanel() {
     policyFocusSectionIds: activeSectionId,
     policyTargetDocId,
     clearPolicyTarget,
+    openNode,
     setOpenNode,
     policyLinkNodePath,
     clearPolicyLinkNode,
@@ -195,6 +197,16 @@ export function PolicyPanel() {
     if (!wrapper || !container) return
     container.scrollTo({ top: wrapper.offsetTop - 8, behavior: 'auto' })
   }, [])
+
+  // Open a section's popover and scroll its page into view. Used by the
+  // popover's prev/next arrows so the user can step through the doc.
+  const goToSection = useCallback(
+    (s: PolicySection) => {
+      setClickedSectionId(s.id)
+      if (s.page !== undefined) scrollToPage(s.page)
+    },
+    [scrollToPage]
+  )
 
   // If there's a pending navigation target, save the doc ID immediately
   // so loadRefs picks it up on first mount
@@ -1068,6 +1080,40 @@ export function PolicyPanel() {
     }
   }
 
+  // Sections of the active document in reading order (page → top → left).
+  // Drives the popover's prev/next arrows so the user can step through.
+  // Sections without a page or rect are skipped — they have no anchor in
+  // the PDF view, so navigating to them wouldn't show anything.
+  const orderedSections: PolicySection[] = !refs || !selectedDoc
+    ? []
+    : refs.sections
+        .filter(
+          (s) =>
+            s.documentId === selectedDoc.id &&
+            s.page !== undefined &&
+            (s.rects?.length ?? 0) > 0
+        )
+        .slice()
+        .sort((a, b) => {
+          if ((a.page ?? 0) !== (b.page ?? 0))
+            return (a.page ?? 0) - (b.page ?? 0)
+          const ar = a.rects?.[0]
+          const br = b.rects?.[0]
+          if ((ar?.y ?? 0) !== (br?.y ?? 0))
+            return (ar?.y ?? 0) - (br?.y ?? 0)
+          return (ar?.x ?? 0) - (br?.x ?? 0)
+        })
+  const currentSectionIndex = clickedSectionId
+    ? orderedSections.findIndex((s) => s.id === clickedSectionId)
+    : -1
+  const prevSection =
+    currentSectionIndex > 0 ? orderedSections[currentSectionIndex - 1] : null
+  const nextSection =
+    currentSectionIndex >= 0 &&
+    currentSectionIndex < orderedSections.length - 1
+      ? orderedSections[currentSectionIndex + 1]
+      : null
+
   return (
     <div className="flex flex-col h-full bg-background">
       {/* Header — title, doc picker, close */}
@@ -1130,6 +1176,54 @@ export function PolicyPanel() {
                 </Button>
               ))}
             </ButtonGroup>
+          )}
+          {/* Section navigation — step through the document's anchored
+              sections in reading order. With nothing selected, prev/next
+              jump to the last/first section so the user can start
+              browsing without clicking on the PDF first. Yields the row
+              entirely when search is open so the input has full width. */}
+          {orderedSections.length > 0 && !searchOpen && (
+            <div className="flex items-center gap-0.5 shrink-0">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 shrink-0"
+                disabled={currentSectionIndex === 0}
+                onClick={() => {
+                  const target =
+                    currentSectionIndex < 0
+                      ? orderedSections[orderedSections.length - 1]
+                      : prevSection
+                  if (target) goToSection(target)
+                }}
+                title="Previous section"
+              >
+                <ChevronLeft className="size-3" />
+              </Button>
+              <span className="text-[10px] text-muted-foreground tabular-nums px-0.5 min-w-[2.5rem] text-center">
+                {currentSectionIndex >= 0
+                  ? `${currentSectionIndex + 1}/${orderedSections.length}`
+                  : `${orderedSections.length}`}
+              </span>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 shrink-0"
+                disabled={
+                  currentSectionIndex === orderedSections.length - 1
+                }
+                onClick={() => {
+                  const target =
+                    currentSectionIndex < 0
+                      ? orderedSections[0]
+                      : nextSection
+                  if (target) goToSection(target)
+                }}
+                title="Next section"
+              >
+                <ChevronRight className="size-3" />
+              </Button>
+            </div>
           )}
           {searchOpen ? (
             <div className="flex items-center gap-1 flex-1 min-w-0">
@@ -1305,6 +1399,10 @@ export function PolicyPanel() {
                 const isSkipped = section.status === 'skipped'
                 const isLinked = linkedSectionIds.has(section.id)
 
+                // Orphans (unlinked, non-skipped) are rendered in rose with
+                // a dashed border so they read as "needs attention" without
+                // looking like an error. Linked sections stay amber, skipped
+                // gray, and focus/clicked override everything in blue.
                 let bg: string
                 if (isFocused || isClicked) {
                   bg = 'rgba(59, 130, 246, 0.25)' // blue
@@ -1313,7 +1411,7 @@ export function PolicyPanel() {
                 } else if (isLinked) {
                   bg = 'rgba(251, 191, 36, 0.2)' // amber
                 } else {
-                  bg = 'rgba(251, 191, 36, 0.15)' // light amber
+                  bg = 'rgba(244, 63, 94, 0.18)' // rose — orphan
                 }
 
                 const border =
@@ -1321,7 +1419,9 @@ export function PolicyPanel() {
                     ? '1px solid rgba(59, 130, 246, 0.5)'
                     : isSkipped
                       ? '1px solid rgba(156, 163, 175, 0.3)'
-                      : undefined
+                      : !isLinked
+                        ? '1px dashed rgba(244, 63, 94, 0.55)'
+                        : undefined
 
                 const linkedNodes = sectionToNodes.get(section.id) ?? []
 
@@ -1379,6 +1479,9 @@ export function PolicyPanel() {
                         nodeOptions={Object.values(model.nodes).map((n) => ({
                           name: n.name,
                         }))}
+                        openNodeName={
+                          openNode ? model.nodes[openNode]?.name : undefined
+                        }
                         saving={saving}
                         alreadyInTaskBuilder={(attachTarget.kind === 'follow-up'
                           ? (followUpSources[attachTarget.threadId] ?? [])
