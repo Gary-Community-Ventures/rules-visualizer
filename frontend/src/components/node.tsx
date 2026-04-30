@@ -550,6 +550,7 @@ function CollectionEditorDialog({
               }
               onBlur={onBlur}
               results={results}
+              onDone={() => onOpenChange(false)}
             />
           )}
         </div>

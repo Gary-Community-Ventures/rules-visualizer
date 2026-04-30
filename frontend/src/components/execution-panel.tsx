@@ -714,6 +714,10 @@ type EntityEditorProps = {
    *  their currently-computed values so promoting the fact to writable
    *  doesn't leave unset members Incomplete. */
   results?: Record<string, { value: unknown }> | null
+  /** When provided, renders a "Done" button below "Add member" that
+   *  closes whatever surfaced the editor (e.g. the CollectionEditorDialog).
+   *  Inline usages (the execution panel) don't pass this. */
+  onDone?: () => void
 }
 
 export function EntityEditor({
@@ -723,6 +727,7 @@ export function EntityEditor({
   onChange,
   onBlur,
   results,
+  onDone,
 }: EntityEditorProps) {
   const addRow = () => {
     const newRow: Record<string, string> = {}
@@ -854,6 +859,15 @@ export function EntityEditor({
         <Plus className="size-3" />
         Add {getCollectionDisplayName(entityName)}
       </Button>
+      {onDone && (
+        <Button
+          size="sm"
+          onClick={onDone}
+          className="mt-2 h-7 text-xs w-full"
+        >
+          Done
+        </Button>
+      )}
     </>
   )
 }
