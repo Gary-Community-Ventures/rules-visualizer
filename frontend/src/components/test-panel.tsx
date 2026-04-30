@@ -2,7 +2,12 @@ import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { cn } from '@/lib/utils'
 import { formatDisplayValue } from '@/lib/format'
 import { useMainContext } from '@/context'
-import { getNodePath } from '@/context/model-context'
+import {
+  getNodePath,
+  getCollectionOverridableFields,
+  getCollectionDisplayName,
+} from '@/context/model-context'
+import { EntityEditor } from './execution-panel'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
 import {
@@ -102,11 +107,6 @@ export function TestPanel() {
     try {
       const r = await runTests(model.id)
       setResults(r)
-      // Auto-select and expand first failed test, or first test
-      const failed = r.find((t) => !t.passed)
-      const targetId = failed?.testId ?? r[0]?.testId ?? null
-      setSelectedTestId(targetId)
-      setExpandedTest(targetId)
     } catch (e) {
       setError((e as Error).message)
     } finally {
@@ -299,6 +299,13 @@ export function TestPanel() {
     setRightBar('execution')
   }
 
+  // Per-member fields by collection. Includes inputs and overridable
+  // derived/constant fields — same set the in-graph collection editor uses.
+  const collectionFields = useMemo(
+    () => getCollectionOverridableFields(model.nodes),
+    [model.nodes]
+  )
+
   // Build available path options for dropdowns
   const inputPaths: { path: string; name: string }[] = []
   const overridePaths: { path: string; name: string }[] = []
@@ -480,6 +487,7 @@ export function TestPanel() {
                 inputPaths={inputPaths}
                 overridePaths={overridePaths}
                 allPaths={allPaths}
+                collectionFields={collectionFields}
               />
             ))}
           </div>
@@ -490,6 +498,8 @@ export function TestPanel() {
 }
 
 type Section = 'input' | 'override' | 'expect'
+
+type CollectionFieldMap = ReturnType<typeof getCollectionOverridableFields>
 
 type TestItemProps = {
   test: TestCase
@@ -507,6 +517,7 @@ type TestItemProps = {
   inputPaths: { path: string; name: string }[]
   overridePaths: { path: string; name: string }[]
   allPaths: { path: string; name: string }[]
+  collectionFields: CollectionFieldMap
 }
 
 function TestItem({
@@ -525,6 +536,7 @@ function TestItem({
   inputPaths,
   overridePaths,
   allPaths,
+  collectionFields,
 }: TestItemProps) {
   const itemRef = useRef<HTMLDivElement>(null)
   const [editingName, setEditingName] = useState(false)
@@ -537,6 +549,43 @@ function TestItem({
   const [addingField, setAddingField] = useState<Section | null>(null)
   const [newPath, setNewPath] = useState('')
   const [newValue, setNewValue] = useState('')
+
+  // Local mirror of test.entities as string-rows (matches EntityEditor's
+  // contract). Synced from the persisted test on test.id / entities change;
+  // edits flow through here and only commit to the API on blur.
+  //
+  // commitEntities runs from onBlur which can fire in the same event tick as
+  // a preceding onChange. To avoid reading stale state, mirror localEntities
+  // through a ref that's updated synchronously by handleEntityChange and the
+  // prop-sync effect; commitEntities reads the ref. Same pattern model-
+  // context's runOnBlur uses for inputOverrides/entityData.
+  const [localEntities, setLocalEntities] = useState<
+    Record<string, Record<string, string>[]>
+  >(() => entitiesToStringRows(test.entities))
+  const localEntitiesRef = useRef(localEntities)
+  useEffect(() => {
+    const next = entitiesToStringRows(test.entities)
+    localEntitiesRef.current = next
+    setLocalEntities(next)
+  }, [test.id, test.entities])
+
+  const handleEntityChange = (
+    collection: string,
+    rows: Record<string, string>[]
+  ) => {
+    const next = { ...localEntitiesRef.current, [collection]: rows }
+    localEntitiesRef.current = next
+    setLocalEntities(next)
+  }
+
+  const commitEntities = () => {
+    const parsed = stringRowsToEntities(localEntitiesRef.current)
+    const currentJSON = JSON.stringify(test.entities ?? {})
+    const nextJSON = JSON.stringify(parsed)
+    if (currentJSON === nextJSON) return
+    const isEmpty = Object.keys(parsed).length === 0
+    onUpdate({ entities: isEmpty ? undefined : parsed })
+  }
 
   useEffect(() => {
     if (isSelected && isExpanded && itemRef.current) {
@@ -762,15 +811,33 @@ function TestItem({
             />
           ))}
 
-          {/* Entities */}
-          {test.entities &&
-            Object.entries(test.entities).map(([entity, rows]) => (
-              <div key={entity}>
-                <span className="text-[10px] font-semibold text-muted-foreground uppercase">
-                  {entity} ({rows.length})
-                </span>
-              </div>
-            ))}
+          {/* Entities — one editor per collection in the model. Empty
+              collections still render so users can add the first member. */}
+          {Object.keys(collectionFields).length > 0 && (
+            <div className="space-y-3">
+              {Object.entries(collectionFields).map(([collection, fields]) => {
+                const rows = localEntities[collection] ?? []
+                return (
+                  <div key={collection}>
+                    <span className="text-[10px] font-semibold text-muted-foreground uppercase">
+                      {getCollectionDisplayName(collection)} ({rows.length})
+                    </span>
+                    <div className="mt-1">
+                      <EntityEditor
+                        entityName={collection}
+                        fields={fields}
+                        rows={rows}
+                        onChange={(newRows) =>
+                          handleEntityChange(collection, newRows)
+                        }
+                        onBlur={commitEntities}
+                      />
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
 
           {result?.error && (
             <p className="text-xs text-orange-700">Error: {result.error}</p>
@@ -975,4 +1042,48 @@ function EditableSection({
       </div>
     </div>
   )
+}
+
+// --- Entity row <-> persisted-test conversions ---
+// EntityEditor edits string values; test.entities stores parsed JSON values
+// (booleans/numbers/strings). Same conventions as handleSaveAsTest /
+// handleLoadIntoExecution use for the execution-panel round-trip.
+
+function entitiesToStringRows(
+  entities: Record<string, Record<string, unknown>[]> | undefined
+): Record<string, Record<string, string>[]> {
+  if (!entities) return {}
+  const out: Record<string, Record<string, string>[]> = {}
+  for (const [collection, rows] of Object.entries(entities)) {
+    out[collection] = rows.map((row) => {
+      const r: Record<string, string> = {}
+      for (const [k, v] of Object.entries(row)) {
+        r[k] = typeof v === 'string' ? v : JSON.stringify(v)
+      }
+      return r
+    })
+  }
+  return out
+}
+
+function stringRowsToEntities(
+  local: Record<string, Record<string, string>[]>
+): Record<string, Record<string, unknown>[]> {
+  const out: Record<string, Record<string, unknown>[]> = {}
+  for (const [collection, rows] of Object.entries(local)) {
+    if (rows.length === 0) continue
+    out[collection] = rows.map((row) => {
+      const r: Record<string, unknown> = {}
+      for (const [k, v] of Object.entries(row)) {
+        if (v === '') continue
+        try {
+          r[k] = JSON.parse(v)
+        } catch {
+          r[k] = v
+        }
+      }
+      return r
+    })
+  }
+  return out
 }
