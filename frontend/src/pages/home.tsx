@@ -133,12 +133,23 @@ export function NodeMapLayout({ children }: PropsWithChildren) {
   const showNodePanel = openNode !== null && openNodeData !== undefined
 
   return (
-    <ResizablePanelGroup onLayoutChange={handleLayoutChange}>
-      <ResizablePanel defaultSize={rightBar ? 75 : 100} minSize="40%">
-        <ResizablePanelGroup onLayoutChange={handleLayoutChange}>
+    <ResizablePanelGroup
+      autoSave={`layout:outer:${rulesetId}`}
+      onLayoutChange={handleLayoutChange}
+    >
+      <ResizablePanel
+        id="main"
+        defaultSize={rightBar ? 75 : 100}
+        minSize="40%"
+      >
+        <ResizablePanelGroup
+          autoSave={`layout:inner:${rulesetId}`}
+          onLayoutChange={handleLayoutChange}
+        >
           {showNodePanel && (
             <>
               <ResizablePanel
+                id="node"
                 defaultSize={50}
                 minSize="20%"
                 className="relative z-[5]"
@@ -148,7 +159,7 @@ export function NodeMapLayout({ children }: PropsWithChildren) {
               <ResizableHandle withHandle />
             </>
           )}
-          <ResizablePanel defaultSize={50} minSize="20%">
+          <ResizablePanel id="canvas" defaultSize={50} minSize="20%">
             {children}
           </ResizablePanel>
         </ResizablePanelGroup>
@@ -157,6 +168,7 @@ export function NodeMapLayout({ children }: PropsWithChildren) {
         <>
           <ResizableHandle withHandle />
           <ResizablePanel
+            id="rightbar"
             defaultSize={25}
             minSize="20%"
             className="overflow-hidden relative z-[5]"

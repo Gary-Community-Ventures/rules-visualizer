@@ -4,6 +4,7 @@ import 'react-pdf/dist/Page/AnnotationLayer.css'
 import 'react-pdf/dist/Page/TextLayer.css'
 import { useMainContext, usePanelContext } from '@/context'
 import { getReferences, saveReferences } from '@/lib/api/rules-api'
+import { onReload } from '@/lib/api/live-reload'
 import type {
   PolicyDocument,
   PolicyReferences,
@@ -280,6 +281,16 @@ export function PolicyPanel() {
   useEffect(() => {
     loadRefs()
   }, [loadRefs])
+
+  // Refetch refs when the backend signals a ruleset reload (e.g. the file
+  // watcher saw references.json change because the AI builder wrote it).
+  // Without this, our local refs stay stale and our next save PUTs that
+  // stale snapshot back over the file, eating the AI's edit.
+  useEffect(() => {
+    return onReload((changedRulesetId) => {
+      if (!changedRulesetId || changedRulesetId === model.id) loadRefs()
+    })
+  }, [model.id, loadRefs])
 
   // Navigate to target page when opened from a node reference
   useEffect(() => {
@@ -565,9 +576,12 @@ export function PolicyPanel() {
     const w = Math.abs(box.currentX - box.startX)
     const h = Math.abs(box.currentY - box.startY)
 
-    // Tiny box → no save. The browser will dispatch onClick on the page
-    // wrapper next, which runs handleSectionClickAt and toggles the popover.
-    if (w < 0.005 && h < 0.005) {
+    // Below MIN_AREA → no save (cancel the draw). Lets the user bail on a
+    // mid-stroke highlight by shrinking the box back down. Accidental
+    // micro-drags from a click also fall under the threshold so the
+    // browser's followup onClick can run handleSectionClickAt.
+    const MIN_AREA = 0.0005
+    if (w * h < MIN_AREA) {
       setCapturedRects([])
       setSelectionPage(null)
       return

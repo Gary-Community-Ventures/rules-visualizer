@@ -951,6 +951,7 @@ function TaskCard({
                           'complete'
                         )
                         onChange(next)
+                        setExpanded(false)
                       } finally {
                         setBusy(false)
                       }
@@ -981,6 +982,7 @@ function TaskCard({
                                 'archived'
                               )
                               onChange(next)
+                              setExpanded(false)
                             } finally {
                               setBusy(false)
                             }

@@ -1,0 +1,153 @@
+<FactDictionaryModule>
+  <Facts>
+    <Fact path="/members">
+      <Name>Household members</Name>
+      <Description>List of household members</Description>
+      <Writable><Collection /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/age">
+      <Name>Age</Name>
+      <Description>Age of this member in years</Description>
+      <Writable><Int /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/hasPhysicalDisability">
+      <Name>Has physical disability</Name>
+      <Description>Whether this member has a physical disability</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/hasMentalDisability">
+      <Name>Has mental disability</Name>
+      <Description>Whether this member has a mental disability</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/isBoarder">
+      <Name>Is boarder</Name>
+      <Description>Whether this member resides with others and pays reasonable compensation to others for lodging and meals (10 CCR 2506-1, 4.000.1)</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/livesInBoardingHouse">
+      <Name>Lives in boarding house</Name>
+      <Description>Whether this member lives in an establishment that is licensed as a commercial enterprise and which offers meals and lodging for compensation, as described in 7 C.F.R 273.1(b)(3)(i) (10 CCR 2506-1, 4.000.1)</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/hasDisability">
+      <Name>Has disability</Name>
+      <Description>Whether this member has a physical or mental disability</Description>
+      <Derived>
+        <Any>
+          <Dependency path="../hasPhysicalDisability" />
+          <Dependency path="../hasMentalDisability" />
+        </Any>
+      </Derived>
+    </Fact>
+
+    <Fact path="/abawdAgeMin">
+      <Name>ABAWD minimum age</Name>
+      <Description>Lower bound (inclusive) of the ABAWD age range (10 CCR 2506-1, 4.000.1)</Description>
+      <Derived><Int>18</Int></Derived>
+    </Fact>
+
+    <Fact path="/abawdAgeMax">
+      <Name>ABAWD maximum age</Name>
+      <Description>Upper bound (inclusive) of the ABAWD age range (10 CCR 2506-1, 4.000.1)</Description>
+      <Derived><Int>54</Int></Derived>
+    </Fact>
+
+    <Fact path="/abawdDependentAgeLimit">
+      <Name>ABAWD dependent age limit</Name>
+      <Description>A household member younger than this age disqualifies others from ABAWD status (10 CCR 2506-1, 4.000.1)</Description>
+      <Derived><Int>18</Int></Derived>
+    </Fact>
+
+    <Fact path="/members/*/isUnderAbawdDependentAgeLimit">
+      <Name>Under ABAWD dependent age limit</Name>
+      <Description>Whether this member is younger than the ABAWD dependent age limit</Description>
+      <Derived>
+        <LessThan>
+          <Left><Dependency path="../age" /></Left>
+          <Right><Dependency path="/abawdDependentAgeLimit" /></Right>
+        </LessThan>
+      </Derived>
+    </Fact>
+
+    <Fact path="/hasMemberUnderAbawdDependentAgeLimit">
+      <Name>Has member under ABAWD dependent age limit</Name>
+      <Description>Whether the household contains anyone younger than the ABAWD dependent age limit</Description>
+      <Derived>
+        <GreaterThan>
+          <Left>
+            <Count>
+              <Dependency path="/members/*/isUnderAbawdDependentAgeLimit" />
+            </Count>
+          </Left>
+          <Right><Int>0</Int></Right>
+        </GreaterThan>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/isAbawd">
+      <Name>Is ABAWD</Name>
+      <Description>Able-Bodied Adult Without Dependents: aged 18 through 54, without a physical or mental disability, in a household with no one under 18 (10 CCR 2506-1, 4.000.1)</Description>
+      <Derived>
+        <All>
+          <GreaterThanOrEqual>
+            <Left><Dependency path="../age" /></Left>
+            <Right><Dependency path="/abawdAgeMin" /></Right>
+          </GreaterThanOrEqual>
+          <LessThanOrEqual>
+            <Left><Dependency path="../age" /></Left>
+            <Right><Dependency path="/abawdAgeMax" /></Right>
+          </LessThanOrEqual>
+          <Not>
+            <Dependency path="../hasDisability" />
+          </Not>
+          <Not>
+            <Dependency path="/hasMemberUnderAbawdDependentAgeLimit" />
+          </Not>
+        </All>
+      </Derived>
+    </Fact>
+
+    <Fact path="/applicationFilingDate">
+      <Name>Application filing date</Name>
+      <Description>The date an application for public assistance is received by the county office (10 CCR 2506-1, 4.000.1)</Description>
+      <Writable><Day /></Writable>
+    </Fact>
+
+    <Fact path="/isApplicationForRecertification">
+      <Name>Application for recertification</Name>
+      <Description>Whether this application was submitted prior to the last month of the certification period to determine the household's continued eligibility for the next certification period (10 CCR 2506-1, 4.000.1)</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/allotment">
+      <Name>Allotment</Name>
+      <Description>The total amount of SNAP benefits the household is authorized to receive in a particular month (10 CCR 2506-1, 4.000.1). Placeholder.</Description>
+      <Writable><Dollar /></Writable>
+    </Fact>
+
+    <Fact path="/basicUtilityAllowance">
+      <Name>Basic Utility Allowance</Name>
+      <Description>A fixed deduction applied to a household that does not pay for heating or cooling and incurs at least two non-heating or non-cooling utility costs, such as electricity, water, sewer, trash, cooking fuel, or telephone (10 CCR 2506-1, 4.000.1). Placeholder.</Description>
+      <Writable><Dollar /></Writable>
+    </Fact>
+
+    <Fact path="/hasBasicCategoricalEligibility">
+      <Name>Has Basic Categorical Eligibility</Name>
+      <Description>Whether the household qualifies for Basic Categorical Eligibility (BCE): not eligible for Expanded Categorical Eligibility and contains only members who receive, or are eligible to receive, benefits from Colorado Works, SSI, Old Age Pension, Aid to the Needy and Disabled, Aid to the Blind, or a combination of these (10 CCR 2506-1, 4.000.1). Placeholder.</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/certificationPeriod">
+      <Name>Certification period</Name>
+      <Description>The period of time for which a household has been certified to receive benefits (10 CCR 2506-1, 4.000.1). Placeholder.</Description>
+      <Writable><Int /></Writable>
+    </Fact>
+  </Facts>
+</FactDictionaryModule>
