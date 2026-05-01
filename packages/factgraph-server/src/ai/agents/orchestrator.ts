@@ -117,7 +117,9 @@ Example for a /members collection with two members:
     { "/members/*/age": 30, "/members/*/isElderly": false }
   ]}
 
-Scalar (non-collection) inputs go in the "inputs" parameter as usual. Never use numeric indexes like members/0/age — always use the /* wildcard path as the key within entity rows.`,
+Scalar (non-collection) inputs go in the "inputs" parameter as usual. Never use numeric indexes like members/0/age — always use the /* wildcard path as the key within entity rows.
+
+When the user asks for a profile/scenario they want to see in the graph (e.g. "show me a profile where the user is eligible"), pass applyToUi=true on execute_graph — the resolved inputs will be written into their UI (replacing existing inputs) so the values appear directly on the nodes. Omit applyToUi for sandbox/what-if computations the user didn't ask to see.`,
     `Be efficient with tool calls — batch node lookups into a single get_nodes call instead of calling it repeatedly. After at most 5-6 tool calls, synthesize what you have and respond to the user. You can always make more calls if they ask follow-up questions.
 
 Start with the direct answer to the question. Keep answers to 2 sentences or fewer. Reference specific node names so the user can click them. Don't wrap node names in backticks or code formatting — just write them as plain text.`,
@@ -125,6 +127,11 @@ Start with the direct answer to the question. Keep answers to 2 sentences or few
     `The rulesetId for tool calls is: "${ctx.rulesetId}"`,
     `Here is the complete node index for this ruleset. Use get_nodes to see full details for specific nodes.\n\n${nodeIndex}`,
   ].join('\n\n')
+}
+
+export type ToolApplyPayload = {
+  inputs: Record<string, unknown>
+  entities?: Record<string, Record<string, unknown>[]>
 }
 
 export type AgentEvent =
@@ -136,6 +143,12 @@ export type AgentEvent =
       id: string
       result: string
       status: string
+      /** Resolved inputs/entities the tool ran with — present whenever
+       *  execute_graph completed; the FE shows a Reapply button. */
+      apply?: ToolApplyPayload
+      /** Auto-apply on receipt (corresponds to the AI's applyToUi flag).
+       *  When false, the FE shows the Reapply button but doesn't push. */
+      autoApply?: boolean
     }
   | { type: 'done' }
   | { type: 'error'; content: string }
@@ -225,6 +238,14 @@ export async function* streamAgent(
               : (event.run_id ?? 'unknown')
 
           const result = output.content
+          // Tools using responseFormat='content_and_artifact' attach the
+          // structured payload here. execute_graph uses it to push the
+          // resolved inputs back to the FE — autoApply mirrors the AI's
+          // applyToUi flag, the apply payload is always set on success so
+          // the user can Reapply manually even when the AI didn't flag it.
+          const artifact = output.artifact as
+            | { apply?: ToolApplyPayload; autoApply?: boolean }
+            | undefined
           toolCallCount++
           console.log(
             `[AI] Tool ${toolName} completed (${typeof result === 'string' ? result.length : 0} chars)`
@@ -236,6 +257,8 @@ export async function* streamAgent(
             id: toolId,
             result,
             status: 'success',
+            apply: artifact?.apply,
+            autoApply: artifact?.autoApply,
           }
         }
       }

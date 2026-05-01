@@ -10,6 +10,70 @@ import { createRequire } from 'node:module'
 const require = createRequire(import.meta.url)
 const sfg = require('../vendor/factgraph-scala.cjs')
 
+// --- Vendored bundle bug fix ------------------------------------------
+// factgraph-scala.cjs has a copy-paste defect in
+// DigestNodeWrapper.overrideDefaultOption (~line 77205): it null-checks
+// `this.overrideDefault` correctly but then runs
+// `toNative(this.overrideCondition)` — so the condition node gets handed
+// to Override.apply as BOTH the condition and the default, and the
+// Override Switch evaluates to the condition's boolean instead of the
+// Default's value.
+//
+// Why nobody upstream noticed: Direct File's own processFactsToDigestWrapper.ts
+// does NOT pass overrides through this wrapper — their WrappedFact only
+// carries {path, writable, derived, placeholder} and override handling
+// goes through the Scala XML loader path (DefaultFactDictConfig.fromXml).
+// We extended the digest with overrideCondition/overrideDefault so we
+// could keep one JS-driven loading path; that surfaced this stale getter.
+//
+// The runtime patch shadows the buggy getter on the wrapper prototype.
+// Original getter is captured for the null-overrideDefault short-circuit
+// (avoids needing the bundle's None singleton). For the non-null case we
+// borrow the *working* sibling `overrideConditionOption` getter by
+// stuffing our overrideDefault into a throwaway wrapper's condition slot
+// — same toNative helper, but now reading from the right field.
+const dnwProto = sfg.DigestNodeWrapper?.prototype as
+  | { __overrideDefaultOptionPatched?: boolean }
+  | undefined
+if (dnwProto && !dnwProto.__overrideDefaultOptionPatched) {
+  // Capture the buggy original so the null-overrideDefault short-circuit
+  // can still hand back the bundle's None singleton without us having to
+  // reach into non-exported internals.
+  const origGetter = Object.getOwnPropertyDescriptor(
+    dnwProto,
+    'overrideDefaultOption'
+  )?.get
+  if (!origGetter)
+    throw new Error(
+      'factgraph-scala bundle changed shape — no overrideDefaultOption getter to patch'
+    )
+  Object.defineProperty(dnwProto, 'overrideDefaultOption', {
+    configurable: true,
+    get(this: {
+      path: string
+      overrideDefault: unknown
+    }): unknown {
+      // overrideDefault === null: the original returns None correctly,
+      // so just delegate. Avoids needing access to the bundle's None.
+      if (this.overrideDefault === null) return origGetter.call(this)
+      // overrideDefault !== null: the original would (buggily) toNative
+      // the *condition*. The sibling getter `overrideConditionOption`
+      // wires its own field through toNative correctly — borrow it by
+      // putting our default into a temp wrapper's condition slot.
+      const tmp = new sfg.DigestNodeWrapper(
+        this.path,
+        null,
+        null,
+        null,
+        this.overrideDefault,
+        null
+      )
+      return tmp.overrideConditionOption
+    },
+  })
+  dnwProto.__overrideDefaultOptionPatched = true
+}
+
 // --- Digest conversion ---
 // Converts fast-xml-parser output to the {typeName, options, children} format.
 // This mirrors processFactsToDigestWrapper.ts from Direct File.

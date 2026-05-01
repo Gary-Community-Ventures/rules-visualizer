@@ -67,6 +67,8 @@ export async function handleAiChat(
             name: event.name,
             id: event.id,
             result: event.result,
+            apply: event.apply,
+            autoApply: event.autoApply,
           })
           break
         case 'done':

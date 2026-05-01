@@ -3,11 +3,13 @@ import {
   useCallback,
   useContext,
   useMemo,
+  useRef,
   useState,
   type Dispatch,
   type ReactNode,
   type SetStateAction,
 } from 'react'
+import type { AiChatMessage } from '@/lib/ai-chat-types'
 
 /**
  * Side-panel state that needs to outlive the panel itself.
@@ -54,6 +56,14 @@ export type EditingProfile = {
   description?: string
 }
 
+export type AiSendMessageArgs = {
+  rulesetId: string
+  message: string
+  password: string
+  history: { role: string; content: string }[]
+}
+export type AiSendMessage = (args: AiSendMessageArgs) => void
+
 type PanelContextValue = {
   /** Tasks panel — in-progress prompt + attached sources for the new task. */
   taskBuilderDraft: string
@@ -84,6 +94,18 @@ type PanelContextValue = {
    *  and "Save changes" overwrites the underlying file/local profile. */
   editingProfile: EditingProfile | null
   setEditingProfile: (p: EditingProfile | null) => void
+
+  /** AI sidebar chat — survives close/reopen of the AI panel. */
+  aiChatMessages: AiChatMessage[]
+  setAiChatMessages: Dispatch<SetStateAction<AiChatMessage[]>>
+  aiChatLoading: boolean
+  setAiChatLoading: Dispatch<SetStateAction<boolean>>
+  /** Stable handle the WS-stream hook (mounted at HomePage level) writes
+   *  on installation; ChatBox dereferences it on submit. Ref instead of
+   *  state because the function is opaque to renders — UI doesn't need
+   *  to react when it changes. Default is a no-op so handleSubmit before
+   *  the listener is installed is safe. */
+  aiSendMessageRef: { current: AiSendMessage }
 }
 
 const PanelContext = createContext<PanelContextValue | undefined>(undefined)
@@ -105,6 +127,17 @@ export function PanelProvider({ children }: { children: ReactNode }) {
   const [editingProfile, setEditingProfile] = useState<EditingProfile | null>(
     null
   )
+  const [aiChatMessages, setAiChatMessages] = useState<AiChatMessage[]>([
+    {
+      type: 'aiMessage',
+      message:
+        'Ask me about the rules in this ruleset. I can explain how nodes are connected, what inputs are needed, or how a computation works.',
+    },
+  ])
+  const [aiChatLoading, setAiChatLoading] = useState(false)
+  // Stable ref overwritten by useAiChatStream on mount (HomePage). No-op
+  // default keeps ChatBox safe before that effect has fired.
+  const aiSendMessageRef = useRef<AiSendMessage>(() => {})
 
   const addTaskBuilderSource = useCallback((source: TaskBuilderSource) => {
     setTaskBuilderSources((prev) =>
@@ -202,6 +235,11 @@ export function PanelProvider({ children }: { children: ReactNode }) {
       setAttachTarget,
       editingProfile,
       setEditingProfile,
+      aiChatMessages,
+      setAiChatMessages,
+      aiChatLoading,
+      setAiChatLoading,
+      aiSendMessageRef,
     }),
     [
       taskBuilderDraft,
@@ -218,6 +256,8 @@ export function PanelProvider({ children }: { children: ReactNode }) {
       removeQueuedFollowUp,
       attachTarget,
       editingProfile,
+      aiChatMessages,
+      aiChatLoading,
     ]
   )
 

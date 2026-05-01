@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useMainContext, usePanelContext } from '@/context'
-import { getNodePath } from '@/context/model-context'
 import { Button } from './ui/button'
 import { Users, X, Trash2, ArrowRight, HardDrive, FileText } from 'lucide-react'
 import {
@@ -61,47 +60,20 @@ export function ProfilesPanel() {
 
   const loadProfile = (profile: ProfileWithSource) => {
     // Wipe both buckets so the profile is the complete state, then apply
-    // the snapshot. Build the next inputOverrides/entityData ourselves
-    // (mirroring applySnapshot) and pass them straight to runExecution
-    // — refs mirror committed state on the next render, but we want the
-    // run to use the JUST-applied data, not last render's snapshot.
+    // the snapshot. applySnapshot returns the just-built panel-shape
+    // snapshot — we hand it straight to runExecution because refs lag a
+    // render behind setState (we want the run to use the JUST-applied
+    // data, not the previous render's).
     clearAll()
     setEntityData({})
     if (profile.asOf) setAsOfDate(profile.asOf)
-    applySnapshot(model.nodes, profile, setInputOverride, setEntityData)
-
-    const nextInputOverrides: Record<string, string> = {}
-    const applyBag = (bag: Record<string, unknown> | undefined) => {
-      if (!bag) return
-      for (const [path, value] of Object.entries(bag)) {
-        for (const [nodeId, node] of Object.entries(model.nodes)) {
-          if (getNodePath(node.content) === path) {
-            nextInputOverrides[nodeId] =
-              typeof value === 'string' ? value : JSON.stringify(value)
-            break
-          }
-        }
-      }
-    }
-    applyBag(profile.inputs)
-    applyBag(profile.overrides)
-    const nextEntityData: Record<string, Record<string, string>[]> = {}
-    if (profile.entities) {
-      for (const [entity, rows] of Object.entries(profile.entities)) {
-        nextEntityData[entity] = rows.map((row) => {
-          const stringRow: Record<string, string> = {}
-          for (const [k, v] of Object.entries(row)) {
-            stringRow[k] = typeof v === 'string' ? v : JSON.stringify(v)
-          }
-          return stringRow
-        })
-      }
-    }
-    runExecution({
-      inputOverrides: nextInputOverrides,
-      entityData: nextEntityData,
-      asOfDate: profile.asOf,
-    })
+    const snapshot = applySnapshot(
+      model.nodes,
+      profile,
+      setInputOverride,
+      setEntityData
+    )
+    runExecution({ ...snapshot, asOfDate: profile.asOf })
   }
 
   // Edit = load profile values into the execution panel + flip the panel

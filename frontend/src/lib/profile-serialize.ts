@@ -60,7 +60,70 @@ export function snapshotExecution(
   }
 }
 
-/** Apply a profile/test snapshot back onto the execution-panel state. */
+/** Snapshot ready for runExecution: panel-state shape (string values keyed
+ *  by node id / collection path), already resolved against the model. */
+export type ExecutionSnapshot = {
+  inputOverrides: Record<string, string>
+  entityData: Record<string, Record<string, string>[]>
+}
+
+/** Build a path → nodeId index once. The earlier per-call O(N×M) lookup
+ *  in applySnapshot/loadProfile/useApplyAiInputs is now O(N+M). */
+function buildPathIndex(
+  nodes: Record<string, ModelNode>
+): Map<string, string> {
+  const map = new Map<string, string>()
+  for (const [nodeId, node] of Object.entries(nodes)) {
+    const path = getNodePath(node.content)
+    if (path) map.set(path, nodeId)
+  }
+  return map
+}
+
+const stringify = (v: unknown): string =>
+  typeof v === 'string' ? v : JSON.stringify(v)
+
+/** Convert a wire-format snapshot ({path: value} bags + {coll: [{path: value}]})
+ *  into the panel-state shape — without writing it anywhere. The setter-based
+ *  applySnapshot wraps this; loadProfile and useApplyAiInputs both end up
+ *  needing the result for the synchronous runExecution call (refs lag a
+ *  render behind setState), and now share one implementation. */
+export function buildSnapshot(
+  nodes: Record<string, ModelNode>,
+  snap: Pick<Profile, 'inputs' | 'overrides' | 'entities'>
+): ExecutionSnapshot {
+  const pathToNodeId = buildPathIndex(nodes)
+
+  const inputOverrides: Record<string, string> = {}
+  const fold = (bag: Record<string, unknown>) => {
+    for (const [path, value] of Object.entries(bag)) {
+      const nodeId = pathToNodeId.get(path)
+      if (!nodeId) continue
+      inputOverrides[nodeId] = stringify(value)
+    }
+  }
+  if (snap.inputs) fold(snap.inputs)
+  if (snap.overrides) fold(snap.overrides)
+
+  const entityData: Record<string, Record<string, string>[]> = {}
+  if (snap.entities) {
+    for (const [entity, rows] of Object.entries(snap.entities)) {
+      entityData[entity] = rows.map((row) => {
+        const stringRow: Record<string, string> = {}
+        for (const [key, val] of Object.entries(row)) {
+          stringRow[key] = stringify(val)
+        }
+        return stringRow
+      })
+    }
+  }
+
+  return { inputOverrides, entityData }
+}
+
+/** Apply a profile/test snapshot to the execution-panel state. Returns the
+ *  same snapshot in panel shape so callers can hand it to runExecution
+ *  without the ref-staleness gotcha. */
 export function applySnapshot(
   nodes: Record<string, ModelNode>,
   snap: Pick<Profile, 'inputs' | 'overrides' | 'entities'>,
@@ -72,33 +135,11 @@ export function applySnapshot(
           prev: Record<string, Record<string, string>[]>
         ) => Record<string, Record<string, string>[]>)
   ) => void
-): void {
-  const applyByPath = (bag: Record<string, unknown>) => {
-    for (const [path, value] of Object.entries(bag)) {
-      for (const [nodeId, node] of Object.entries(nodes)) {
-        if (getNodePath(node.content) === path) {
-          setInputOverride(
-            nodeId,
-            typeof value === 'string' ? value : JSON.stringify(value)
-          )
-          break
-        }
-      }
-    }
+): ExecutionSnapshot {
+  const built = buildSnapshot(nodes, snap)
+  for (const [nodeId, value] of Object.entries(built.inputOverrides)) {
+    setInputOverride(nodeId, value)
   }
-  if (snap.inputs) applyByPath(snap.inputs)
-  if (snap.overrides) applyByPath(snap.overrides)
-  if (snap.entities) {
-    const ed: Record<string, Record<string, string>[]> = {}
-    for (const [entity, rows] of Object.entries(snap.entities)) {
-      ed[entity] = rows.map((row) => {
-        const stringRow: Record<string, string> = {}
-        for (const [key, val] of Object.entries(row)) {
-          stringRow[key] = typeof val === 'string' ? val : JSON.stringify(val)
-        }
-        return stringRow
-      })
-    }
-    setEntityData(ed)
-  }
+  if (Object.keys(built.entityData).length > 0) setEntityData(built.entityData)
+  return built
 }

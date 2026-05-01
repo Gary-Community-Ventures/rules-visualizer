@@ -1,5 +1,6 @@
 import { useFindNode, useMainContext } from '@/context'
 import { useKeyboardShortcuts } from '@/lib/use-keyboard-shortcuts'
+import { useAiChatStream } from '@/lib/use-ai-chat-stream'
 import { Rows } from '@/components/node'
 import { Arrows } from '@/components/arrows'
 import { ToolBar } from '@/components/tool-bar'
@@ -27,6 +28,11 @@ export function HomePage({ active = true }: { active?: boolean }) {
   // otherwise every hidden tab also processes the keystroke (silently
   // toggles its panels and stacks duplicate cheatsheet modals).
   useKeyboardShortcuts(active)
+  // AI chat WS subscription lives at HomePage level (per-tab), not inside
+  // AIPanel — keeps the listener installed even when the user closes the
+  // sidebar mid-stream so chunks/tool events still flow into the
+  // persisted chat history.
+  useAiChatStream()
   const {
     model,
     selectedNodes,

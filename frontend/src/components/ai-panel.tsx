@@ -3,20 +3,17 @@ import {
   useMemo,
   useRef,
   useEffect,
-  createContext,
-  useContext,
   isValidElement,
   cloneElement,
-  type ReactNode,
   type ReactElement,
-  type Dispatch,
-  type SetStateAction,
+  type ReactNode,
 } from 'react'
 import { NodeAutocompleteInput } from './node-autocomplete-input'
-import { useMainContext } from '@/context'
+import { useMainContext, usePanelContext } from '@/context'
+import type { AiChatMessage, AiAssistantMessage } from '@/lib/ai-chat-types'
 import { useNodeNavigation } from '@/lib/use-node-navigation'
+import { useApplyAiInputs } from '@/lib/use-apply-ai-inputs'
 import { cn } from '@/lib/utils'
-import { onAiEvent, sendWsMessage, type AiEvent } from '@/lib/api/live-reload'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
 import { X, Send, ChevronRight, Copy, Check, Lock } from 'lucide-react'
@@ -24,100 +21,25 @@ import Markdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { SnakeLoader } from './snake-game'
 
-type UserMessage = {
-  type: 'userMessage'
-  message: string
-}
-
-type AIMessage = {
-  type: 'aiMessage'
-  message: string
-}
-
-type ToolCallMessage = {
-  type: 'toolCall'
-  name: string
-  id: string
-  status: 'pending' | 'success' | 'error'
-  result?: string
-}
-
-type ChatMessage = UserMessage | AIMessage | ToolCallMessage
-
-type ChatContextType = {
-  messages: ChatMessage[]
-  setMessages: Dispatch<SetStateAction<ChatMessage[]>>
-  addMessage: (message: ChatMessage) => void
-  scrollToBottom: () => void
-  setScrollRef: (ref: HTMLDivElement | null) => void
-  shouldAutoScroll: boolean
-  setShouldAutoScroll: Dispatch<SetStateAction<boolean>>
-  isLoading: boolean
-  setIsLoading: Dispatch<SetStateAction<boolean>>
-}
-
-const ChatContext = createContext<ChatContextType | undefined>(undefined)
-
-function useChatContext() {
-  const context = useContext(ChatContext)
-  if (!context) {
-    throw new Error('useChatContext must be used within ChatProvider')
-  }
-  return context
-}
-
-const GREETING: AIMessage = {
-  type: 'aiMessage',
-  message:
-    'Ask me about the rules in this ruleset. I can explain how nodes are connected, what inputs are needed, or how a computation works.',
-}
-
-function ChatProvider({ children }: { children: ReactNode }) {
-  const [messages, setMessages] = useState<ChatMessage[]>([GREETING])
-  const [isLoading, setIsLoading] = useState(false)
-
-  const [shouldAutoScroll, setShouldAutoScroll] = useState(true)
-  const scrollRef = useRef<HTMLDivElement | null>(null)
-
-  const addMessage = (message: ChatMessage) => {
-    setMessages((prev) => [...prev, message])
-  }
-
-  const scrollToBottom = () => {
-    scrollRef.current?.scrollTo({
-      top: scrollRef.current.scrollHeight,
-      behavior: 'smooth',
-    })
-  }
-
-  const setScrollRef = (ref: HTMLDivElement | null) => {
-    scrollRef.current = ref
-  }
-
-  return (
-    <ChatContext.Provider
-      value={{
-        messages,
-        setMessages,
-        addMessage,
-        scrollToBottom,
-        setScrollRef,
-        shouldAutoScroll,
-        setShouldAutoScroll,
-        isLoading,
-        setIsLoading,
-      }}
-    >
-      {children}
-    </ChatContext.Provider>
-  )
-}
+// The greeting is a sentinel — identity-compared in the history-builder so
+// we don't replay it as an assistant turn back to the model.
+const GREETING_TEXT =
+  'Ask me about the rules in this ruleset. I can explain how nodes are connected, what inputs are needed, or how a computation works.'
 
 export function AIPanel() {
   const { setRightBar } = useMainContext()
   const [hasPassword, setHasPassword] = useState(
     () => !!localStorage.getItem('ai-password')
   )
+
+  // The WS-stream hook (mounted at HomePage level) clears the password
+  // and dispatches this event when the backend rejects it; the panel
+  // flips back to the gate so the user can re-enter.
+  useEffect(() => {
+    const onError = () => setHasPassword(false)
+    window.addEventListener('ai-password-error', onError)
+    return () => window.removeEventListener('ai-password-error', onError)
+  }, [])
 
   return (
     <div className="flex flex-col h-full bg-background">
@@ -133,10 +55,10 @@ export function AIPanel() {
         </Button>
       </div>
       {hasPassword ? (
-        <ChatProvider>
+        <>
           <ChatScrollArea />
-          <ChatBox onPasswordError={() => setHasPassword(false)} />
-        </ChatProvider>
+          <ChatBox />
+        </>
       ) : (
         <PasswordGate onSubmit={() => setHasPassword(true)} />
       )}
@@ -181,97 +103,30 @@ function PasswordGate({ onSubmit }: { onSubmit: () => void }) {
   )
 }
 
-function ChatBox({ onPasswordError }: { onPasswordError: () => void }) {
+function ChatBox() {
   const {
-    messages,
-    addMessage,
-    setMessages,
-    setShouldAutoScroll,
-    isLoading,
-    setIsLoading,
-  } = useChatContext()
+    aiChatMessages: messages,
+    setAiChatMessages: setMessages,
+    aiChatLoading: isLoading,
+    setAiChatLoading: setIsLoading,
+    aiSendMessageRef,
+  } = usePanelContext()
   const { model } = useMainContext()
   const [message, setMessage] = useState('')
-  const requestIdRef = useRef(0)
-  const aiContentRef = useRef('')
-
-  // Listen for AI WebSocket events
-  useEffect(() => {
-    return onAiEvent((event: AiEvent) => {
-      const currentId = String(requestIdRef.current)
-      if (event.requestId !== currentId) return
-
-      switch (event.type) {
-        case 'ai-chunk':
-          aiContentRef.current += event.content
-          setMessages((prev) => {
-            const last = prev[prev.length - 1]
-            if (last?.type === 'aiMessage') {
-              return [
-                ...prev.slice(0, -1),
-                { type: 'aiMessage', message: aiContentRef.current },
-              ]
-            }
-            return [
-              ...prev,
-              { type: 'aiMessage', message: aiContentRef.current },
-            ]
-          })
-          break
-        case 'ai-tool-start':
-          aiContentRef.current = ''
-          setMessages((prev) => [
-            ...prev,
-            {
-              type: 'toolCall',
-              name: event.name,
-              id: event.id,
-              status: 'pending',
-            },
-          ])
-          break
-        case 'ai-tool-end':
-          setMessages((prev) =>
-            prev.map((m) =>
-              m.type === 'toolCall' && m.id === event.id
-                ? { ...m, status: 'success' as const, result: event.result }
-                : m
-            )
-          )
-          break
-        case 'ai-done':
-          setIsLoading(false)
-          break
-        case 'ai-error':
-          if (event.content === 'Invalid AI password') {
-            localStorage.removeItem('ai-password')
-            onPasswordError()
-            setIsLoading(false)
-            return
-          }
-          setMessages((prev) => [
-            ...prev,
-            { type: 'aiMessage', message: `Error: ${event.content}` },
-          ])
-          setIsLoading(false)
-          break
-      }
-    })
-  }, [setMessages, setIsLoading])
+  const addMessage = (m: AiChatMessage) => setMessages((prev) => [...prev, m])
 
   const handleSubmit = () => {
     if (!message.trim() || isLoading) return
     const userMsg = message.trim()
-    setShouldAutoScroll(true)
     addMessage({ type: 'userMessage', message: userMsg })
     setMessage('')
     setIsLoading(true)
-    aiContentRef.current = ''
 
     // Build history from existing messages (include tool call summaries)
     const history: { role: string; content: string }[] = []
     for (const m of messages) {
-      if (m === GREETING) continue
+      // Skip the greeting; identity-compare via the static text.
+      if (m.type === 'aiMessage' && m.message === GREETING_TEXT) continue
       if (m.type === 'userMessage') {
         history.push({ role: 'user', content: m.message })
       } else if (m.type === 'aiMessage') {
@@ -290,11 +145,7 @@ function ChatBox({ onPasswordError }: { onPasswordError: () => void }) {
       }
     }
 
-    const reqId = ++requestIdRef.current
-
-    sendWsMessage({
-      type: 'ai-chat',
-      requestId: String(reqId),
+    aiSendMessageRef.current({
       rulesetId: model.id,
       message: userMsg,
       password: localStorage.getItem('ai-password') ?? '',
@@ -325,19 +176,13 @@ function ChatBox({ onPasswordError }: { onPasswordError: () => void }) {
 }
 
 function ChatScrollArea() {
-  const {
-    messages,
-    setScrollRef,
-    scrollToBottom,
-    shouldAutoScroll,
-    setShouldAutoScroll,
-  } = useChatContext()
+  const { aiChatMessages: messages } = usePanelContext()
   const containerRef = useRef<HTMLDivElement>(null)
   const [isAtBottom, setIsAtBottom] = useState(true)
-
-  useEffect(() => {
-    setScrollRef(containerRef.current)
-  }, [setScrollRef])
+  // Local — chat history is in PanelContext but the "is the user actively
+  // following" UI state only matters while the panel is mounted.
+  const [shouldAutoScroll, setShouldAutoScroll] = useState(true)
+  const lastMessage = messages[messages.length - 1]
 
   const handleScroll = () => {
     if (!containerRef.current) return
@@ -348,17 +193,25 @@ function ChatScrollArea() {
   }
 
   useEffect(() => {
-    if (shouldAutoScroll && containerRef.current) {
+    if (!containerRef.current) return
+    // Always scroll on user submit (so the user sees their own message
+    // even if they had scrolled up); otherwise only follow when at bottom.
+    const isUserSubmit = lastMessage?.type === 'userMessage'
+    if (isUserSubmit) setShouldAutoScroll(true)
+    if (shouldAutoScroll || isUserSubmit) {
       containerRef.current.scrollTo({
         top: containerRef.current.scrollHeight,
         behavior: 'smooth',
       })
     }
-  }, [messages, shouldAutoScroll])
+  }, [messages, shouldAutoScroll, lastMessage])
 
   const handleScrollToBottom = () => {
     setShouldAutoScroll(true)
-    scrollToBottom()
+    containerRef.current?.scrollTo({
+      top: containerRef.current.scrollHeight,
+      behavior: 'smooth',
+    })
   }
 
   return (
@@ -385,7 +238,8 @@ function ChatScrollArea() {
 }
 
 function ChatContent() {
-  const { messages, isLoading } = useChatContext()
+  const { aiChatMessages: messages, aiChatLoading: isLoading } =
+    usePanelContext()
 
   return (
     <div className="flex flex-col gap-4">
@@ -401,7 +255,7 @@ function ChatContent() {
   )
 }
 
-function ChatMessageView({ message }: { message: ChatMessage }) {
+function ChatMessageView({ message }: { message: AiChatMessage }) {
   switch (message.type) {
     case 'userMessage':
       return <UserMessageView message={message} />
@@ -412,41 +266,62 @@ function ChatMessageView({ message }: { message: ChatMessage }) {
   }
 }
 
-function ToolCallView({ message }: { message: ToolCallMessage }) {
+function ToolCallView({
+  message,
+}: {
+  message: Extract<AiChatMessage, { type: 'toolCall' }>
+}) {
   const [expanded, setExpanded] = useState(false)
+  const applyAiInputs = useApplyAiInputs()
   const hasContent = !!message.result
 
   return (
     <div className="border rounded-lg overflow-hidden text-sm">
-      <button
-        type="button"
+      <div
         className={cn(
-          'flex items-center gap-2 px-3 py-1.5 bg-muted/50 w-full text-left',
-          hasContent && 'cursor-pointer hover:bg-muted/70',
+          'flex items-center gap-2 px-3 py-1.5 bg-muted/50',
           expanded && 'border-b'
         )}
-        onClick={() => hasContent && setExpanded(!expanded)}
-        disabled={!hasContent}
       >
-        {hasContent && (
-          <ChevronRight
-            className={cn(
-              'size-3 transition-transform',
-              expanded && 'rotate-90'
-            )}
-          />
+        <button
+          type="button"
+          className={cn(
+            'flex items-center gap-2 flex-1 text-left',
+            hasContent && 'cursor-pointer'
+          )}
+          onClick={() => hasContent && setExpanded(!expanded)}
+          disabled={!hasContent}
+        >
+          {hasContent && (
+            <ChevronRight
+              className={cn(
+                'size-3 transition-transform',
+                expanded && 'rotate-90'
+              )}
+            />
+          )}
+          <span className="font-mono text-xs">{message.name}</span>
+          {message.status === 'pending' && (
+            <span className="text-xs text-muted-foreground">Running...</span>
+          )}
+          {message.status === 'success' && (
+            <span className="text-xs text-emerald-700">Done</span>
+          )}
+          {message.status === 'error' && (
+            <span className="text-xs text-orange-700">Error</span>
+          )}
+        </button>
+        {message.apply && (
+          <button
+            type="button"
+            onClick={() => applyAiInputs(message.apply!)}
+            className="shrink-0 text-[10px] uppercase tracking-wide text-muted-foreground hover:text-foreground border rounded px-1.5 py-0.5 bg-background"
+            title="Reapply this snapshot to the inputs panel"
+          >
+            Reapply
+          </button>
         )}
-        <span className="font-mono text-xs">{message.name}</span>
-        {message.status === 'pending' && (
-          <span className="text-xs text-muted-foreground">Running...</span>
-        )}
-        {message.status === 'success' && (
-          <span className="text-xs text-emerald-700">Done</span>
-        )}
-        {message.status === 'error' && (
-          <span className="text-xs text-orange-700">Error</span>
-        )}
-      </button>
+      </div>
       {expanded && message.result && (
         <div className="px-3 py-2 font-mono text-xs whitespace-pre-wrap bg-muted/20">
           {message.result}
@@ -567,7 +442,11 @@ function ClickableNodeText({ text }: { text: string }) {
   )
 }
 
-function UserMessageView({ message }: { message: UserMessage }) {
+function UserMessageView({
+  message,
+}: {
+  message: Extract<AiChatMessage, { type: 'userMessage' }>
+}) {
   return (
     <div className="flex flex-col items-end">
       <div className="bg-muted rounded-lg px-3 py-2 text-sm max-w-[85%]">
@@ -649,7 +528,7 @@ function WithClickableNodes({ children }: { children: ReactNode }): ReactNode {
   return processClickableNodes(children)
 }
 
-function AIMessageView({ message }: { message: AIMessage }) {
+function AIMessageView({ message }: { message: AiAssistantMessage }) {
   return (
     <div className="bg-background border rounded-lg px-3 py-2 text-sm max-w-[85%] prose prose-sm prose-neutral dark:prose-invert prose-p:my-1 prose-pre:bg-muted prose-pre:text-foreground">
       <Markdown

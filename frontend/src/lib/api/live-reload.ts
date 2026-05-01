@@ -1,6 +1,11 @@
 type ReloadCallback = (rulesetId?: string) => void
 type AiCallback = (event: AiEvent) => void
 
+export type AiToolApplyPayload = {
+  inputs: Record<string, unknown>
+  entities?: Record<string, Record<string, unknown>[]>
+}
+
 export type AiEvent =
   | { type: 'ai-chunk'; requestId: string; content: string }
   | { type: 'ai-tool-start'; requestId: string; name: string; id: string }
@@ -10,6 +15,9 @@ export type AiEvent =
       name: string
       id: string
       result: string
+      apply?: AiToolApplyPayload
+      /** True when the tool was called with applyToUi — push to UI immediately. */
+      autoApply?: boolean
     }
   | { type: 'ai-done'; requestId: string }
   | { type: 'ai-error'; requestId: string; content: string }

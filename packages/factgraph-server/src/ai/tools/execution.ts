@@ -106,10 +106,11 @@ export const executeGraph = tool(
     entities?: Record<string, Record<string, unknown>[]>
     outputNodes?: string[]
     offset?: number
+    applyToUi?: boolean
   }) => {
     const model = getModel(input.rulesetId)
     const facts = getRawFacts(input.rulesetId)
-    if (!facts) return 'No facts available for this ruleset.'
+    if (!facts) return ['No facts available for this ruleset.', null] as const
 
     // Resolve input keys (names or paths) to canonical paths
     const resolvedInputs: Record<string, unknown> = {}
@@ -124,7 +125,10 @@ export const executeGraph = tool(
     }
 
     if (unresolved.length > 0) {
-      return `Could not resolve these input names to node paths: ${unresolved.join(', ')}. Use list_writable_inputs to see available inputs.`
+      return [
+        `Could not resolve these input names to node paths: ${unresolved.join(', ')}. Use list_writable_inputs to see available inputs.`,
+        null,
+      ] as const
     }
 
     // Resolve entity keys if provided
@@ -145,6 +149,22 @@ export const executeGraph = tool(
           return resolved
         })
       }
+    }
+
+    // The artifact carries the resolved inputs back to the orchestrator →
+    // WebSocket → frontend so the ai-panel can show a Reapply button on the
+    // tool-call message regardless of intent (lets the user inspect/replay
+    // any execute_graph the AI ran). `autoApply` controls whether the FE
+    // applies it immediately on receipt — that's the applyToUi flag.
+    const artifact: {
+      apply: {
+        inputs: Record<string, unknown>
+        entities?: Record<string, Record<string, unknown>[]>
+      }
+      autoApply: boolean
+    } = {
+      apply: { inputs: resolvedInputs, entities: resolvedEntities },
+      autoApply: !!input.applyToUi,
     }
 
     try {
@@ -196,22 +216,32 @@ export const executeGraph = tool(
             `... ${remaining} more results. Call again with offset: ${offset + PAGE_SIZE} to see the next page.`
           )
         }
-        return `Computed ${total} total results (showing ${offset + 1}–${offset + page.length}):\n${page.join('\n')}`
+        return [
+          `Computed ${total} total results (showing ${offset + 1}–${offset + page.length}):\n${page.join('\n')}`,
+          artifact,
+        ] as const
       }
 
       if (lines.length === 0) {
-        return 'Execution completed but no non-null results were produced. Some inputs may be missing.'
+        return [
+          'Execution completed but no non-null results were produced. Some inputs may be missing.',
+          artifact,
+        ] as const
       }
 
-      return `Computed ${lines.length} results:\n${lines.join('\n')}`
+      return [
+        `Computed ${lines.length} results:\n${lines.join('\n')}`,
+        artifact,
+      ] as const
     } catch (e) {
-      return `Execution failed: ${(e as Error).message}`
+      return [`Execution failed: ${(e as Error).message}`, null] as const
     }
   },
   {
     name: 'execute_graph',
     description:
-      'Execute the fact graph with specific input values and return computed results. Use node paths (like /income) or node names as input keys. Use outputNodes to filter which results to return.',
+      'Execute the fact graph with specific input values and return computed results. Use node paths (like /income) or node names as input keys. Use outputNodes to filter which results to return. Set applyToUi=true to also write the inputs into the user\'s graph view (replaces any existing inputs); use this when the user asks for a profile/scenario they want to see, not for sandbox computations.',
+    responseFormat: 'content_and_artifact',
     schema: z.object({
       rulesetId: z.string().describe('The ruleset ID'),
       inputs: z
@@ -236,6 +266,12 @@ export const executeGraph = tool(
         .optional()
         .describe(
           'Pagination offset for results. Use to fetch the next page when results are truncated.'
+        ),
+      applyToUi: z
+        .boolean()
+        .optional()
+        .describe(
+          'When true, write the resolved inputs/entities into the user\'s graph view (replaces existing inputs). Use this when the user asks for a profile/scenario; omit for sandbox computations.'
         ),
     }),
   }
