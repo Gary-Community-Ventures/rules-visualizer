@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react'
 import type { NodeContent } from '@/lib/model'
 import { useMainContext } from '@/context'
 import { getNodePath } from '@/context/model-context'
+import { useNodeNavigation } from '@/lib/use-node-navigation'
 import { LogicHighlighter } from './logic-highlighter'
 
 type Props = {
@@ -9,7 +10,8 @@ type Props = {
 }
 
 export function FactGraphDerivedViewer({ content }: Props) {
-  const { model, setOpenNode } = useMainContext()
+  const { model } = useMainContext()
+  const { setOpenNode } = useNodeNavigation()
 
   const navigateToPath = useCallback(
     (rawPath: string) => {

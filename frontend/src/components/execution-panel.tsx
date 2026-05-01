@@ -1,6 +1,13 @@
-import { useState, useMemo } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { formatDisplayValue as formatValue } from '@/lib/format'
-import { useMainContext } from '@/context'
+import { useMainContext, usePanelContext } from '@/context'
+import { snapshotExecution } from '@/lib/profile-serialize'
+import { updateProfile } from '@/lib/api/profiles-api'
+import { updateLocalProfile } from '@/lib/profile-store'
+import { Input } from './ui/input'
+import { ALLOW_WRITES } from '@/lib/allow-writes'
+import { useInputActions } from '@/lib/use-input-actions'
+import { useExecutionRunner } from '@/lib/use-execution-runner'
 import {
   getNodePath,
   isInputNode,
@@ -16,6 +23,7 @@ import {
 import { TypedValueInput } from './typed-value-input'
 import { Button } from './ui/button'
 import { Textarea } from './ui/textarea'
+import { SaveProfileModal } from './save-profile-modal'
 import {
   Trash2,
   ChevronDown,
@@ -31,17 +39,15 @@ export function ExecutionPanel() {
   const {
     model,
     inputOverrides,
-    setInputOverride,
-    clearInputOverride,
-    clearOverrides,
     entityData,
     setEntityData,
     executionResults,
     executionError,
-    runOnBlur,
-    clearExecution,
     setRightBar,
   } = useMainContext()
+  const { setInputOverride, clearInputOverride, clearOverrides } =
+    useInputActions()
+  const { runOnBlur, clearExecution } = useExecutionRunner()
 
   // Persist section expand states across panel open/close
   const [sectionState, setSectionState] = useState<Record<string, boolean>>(
@@ -68,6 +74,62 @@ export function ExecutionPanel() {
   const showJson = sectionState.json ?? false
   const [jsonText, setJsonText] = useState('')
   const [jsonError, setJsonError] = useState<string | null>(null)
+  const [saveProfileOpen, setSaveProfileOpen] = useState(false)
+
+  // Profile-edit banner state. The PanelContext holds identity (source +
+  // id) so it survives panel close/reopen; this component owns the live
+  // name/description draft so the user can rename without leaving the
+  // banner. Synced when the underlying editingProfile identity changes.
+  const { editingProfile, setEditingProfile } = usePanelContext()
+  const [editName, setEditName] = useState('')
+  const [editDescription, setEditDescription] = useState('')
+  const [editSaving, setEditSaving] = useState(false)
+  const [editError, setEditError] = useState<string | null>(null)
+  useEffect(() => {
+    if (editingProfile) {
+      setEditName(editingProfile.name)
+      setEditDescription(editingProfile.description ?? '')
+      setEditError(null)
+    }
+  }, [editingProfile?.source, editingProfile?.id])
+  const saveEditing = async () => {
+    if (!editingProfile) return
+    const name = editName.trim()
+    if (!name) {
+      setEditError('Name is required')
+      return
+    }
+    setEditSaving(true)
+    setEditError(null)
+    try {
+      const snap = snapshotExecution(model, inputOverrides, entityData)
+      const patch = {
+        name,
+        description: editDescription.trim() || undefined,
+        ...snap,
+      }
+      if (editingProfile.source === 'file') {
+        if (!ALLOW_WRITES) {
+          throw new Error('Writes disabled — cannot save file profile')
+        }
+        await updateProfile(model.id, editingProfile.id, patch)
+      } else {
+        updateLocalProfile(model.id, editingProfile.id, patch)
+      }
+      // Keep the banner up — the user might want to keep tweaking. Refresh
+      // editingProfile so a future panel close/reopen re-sticks to the
+      // saved name/description, not the pre-edit ones.
+      setEditingProfile({
+        ...editingProfile,
+        name,
+        description: editDescription.trim() || undefined,
+      })
+    } catch (e) {
+      setEditError((e as Error).message)
+    } finally {
+      setEditSaving(false)
+    }
+  }
 
   // Collection fields (per-member) grouped by collection — split into
   // inputs (shown in the Inputs section) and overrides (shown under the
@@ -284,6 +346,16 @@ export function ExecutionPanel() {
       <div className="flex items-center justify-between px-4 py-3 border-b shrink-0">
         <h2 className="text-sm font-semibold">Execute Rules</h2>
         <div className="flex items-center gap-1">
+          {!editingProfile && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setSaveProfileOpen(true)}
+              className="h-7 text-xs"
+            >
+              Save profile
+            </Button>
+          )}
           {executionResults && (
             <Button
               variant="ghost"
@@ -304,6 +376,81 @@ export function ExecutionPanel() {
           </Button>
         </div>
       </div>
+      <SaveProfileModal
+        open={saveProfileOpen}
+        onOpenChange={setSaveProfileOpen}
+        initialName={
+          editingProfile ? `${editName || editingProfile.name} (copy)` : ''
+        }
+        initialDescription={
+          editingProfile ? editDescription || editingProfile.description : ''
+        }
+        initialSaveToFile={editingProfile?.source === 'file'}
+        onSaved={(profile, source) =>
+          // Make the freshly-created profile the active one so the banner
+          // stays up — covers both "Save profile" (no prior edit) and
+          // "Save as new" (forking from an in-progress edit).
+          setEditingProfile({
+            source,
+            id: profile.id,
+            name: profile.name,
+            description: profile.description,
+          })
+        }
+      />
+      {editingProfile && (
+        <div className="border-b bg-amber-50 px-4 py-2 shrink-0 space-y-1.5">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] uppercase tracking-wide text-amber-800 font-medium">
+              Editing profile · {editingProfile.source}
+            </span>
+            <div className="flex gap-1">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-6 text-[11px]"
+                onClick={() => setEditingProfile(null)}
+                disabled={editSaving}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-6 text-[11px]"
+                onClick={() => setSaveProfileOpen(true)}
+                disabled={editSaving}
+                title="Fork the current edits into a new profile"
+              >
+                Save as new
+              </Button>
+              <Button
+                size="sm"
+                className="h-6 text-[11px]"
+                onClick={saveEditing}
+                disabled={editSaving}
+              >
+                {editSaving ? 'Saving…' : 'Save changes'}
+              </Button>
+            </div>
+          </div>
+          <Input
+            className="h-7 text-xs"
+            placeholder="Name"
+            value={editName}
+            onChange={(e) => setEditName(e.target.value)}
+          />
+          <Input
+            className="h-7 text-xs"
+            placeholder="Description (optional)"
+            value={editDescription}
+            onChange={(e) => setEditDescription(e.target.value)}
+          />
+          {editError && (
+            <p className="text-[11px] text-orange-700">{editError}</p>
+          )}
+        </div>
+      )}
 
       {/* Status banners */}
       {executionError && (
@@ -774,6 +921,13 @@ export function EntityEditor({
     onBlur()
   }
 
+  const cloneRow = (rowIdx: number) => {
+    const source = rows[rowIdx]
+    if (!source) return
+    onChange([...rows, { ...source }])
+    onBlur()
+  }
+
   return (
     <>
       <div className="space-y-2">
@@ -786,12 +940,20 @@ export function EntityEditor({
               <span className="text-[11px] font-medium text-muted-foreground">
                 #{rowIdx + 1}
               </span>
-              <button
-                className="text-[11px] text-muted-foreground hover:text-destructive"
-                onClick={() => removeRow(rowIdx)}
-              >
-                Delete member
-              </button>
+              <div className="flex items-center gap-3">
+                <button
+                  className="text-[11px] text-muted-foreground hover:text-foreground"
+                  onClick={() => cloneRow(rowIdx)}
+                >
+                  Clone member
+                </button>
+                <button
+                  className="text-[11px] text-muted-foreground hover:text-destructive"
+                  onClick={() => removeRow(rowIdx)}
+                >
+                  Delete member
+                </button>
+              </div>
             </div>
             {fields.map((field) => {
               const hasValue = !!row[field.path]

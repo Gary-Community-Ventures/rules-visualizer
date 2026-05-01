@@ -44,6 +44,16 @@ export type AttachTarget =
   | { kind: 'new' }
   | { kind: 'follow-up'; threadId: string }
 
+/** A profile being edited in the execution panel. Tracks identity + the
+ *  current draft of the renameable fields; the value edits live in the
+ *  execution panel's existing inputOverrides / entityData state. */
+export type EditingProfile = {
+  source: 'file' | 'local'
+  id: string
+  name: string
+  description?: string
+}
+
 type PanelContextValue = {
   /** Tasks panel — in-progress prompt + attached sources for the new task. */
   taskBuilderDraft: string
@@ -68,6 +78,12 @@ type PanelContextValue = {
   /** Routing for the policy panel's "Use in task" button. Defaults to 'new'. */
   attachTarget: AttachTarget
   setAttachTarget: (target: AttachTarget) => void
+
+  /** Profile currently being edited in the execution panel — its values
+   *  are live in inputOverrides / entityData while the banner is shown,
+   *  and "Save changes" overwrites the underlying file/local profile. */
+  editingProfile: EditingProfile | null
+  setEditingProfile: (p: EditingProfile | null) => void
 }
 
 const PanelContext = createContext<PanelContextValue | undefined>(undefined)
@@ -86,6 +102,9 @@ export function PanelProvider({ children }: { children: ReactNode }) {
   const [attachTarget, setAttachTarget] = useState<AttachTarget>({
     kind: 'new',
   })
+  const [editingProfile, setEditingProfile] = useState<EditingProfile | null>(
+    null
+  )
 
   const addTaskBuilderSource = useCallback((source: TaskBuilderSource) => {
     setTaskBuilderSources((prev) =>
@@ -181,6 +200,8 @@ export function PanelProvider({ children }: { children: ReactNode }) {
       removeQueuedFollowUp,
       attachTarget,
       setAttachTarget,
+      editingProfile,
+      setEditingProfile,
     }),
     [
       taskBuilderDraft,
@@ -196,6 +217,7 @@ export function PanelProvider({ children }: { children: ReactNode }) {
       enqueueFollowUp,
       removeQueuedFollowUp,
       attachTarget,
+      editingProfile,
     ]
   )
 

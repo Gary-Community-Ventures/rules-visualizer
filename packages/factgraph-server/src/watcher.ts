@@ -46,7 +46,12 @@ export function startWatcher(dataDir: string): void {
   })
 
   const handleFileEvent = (absPath: string, eventType: string) => {
-    if (!absPath.endsWith('.xml') && !absPath.endsWith('references.json')) return
+    if (
+      !absPath.endsWith('.xml') &&
+      !absPath.endsWith('references.json') &&
+      !absPath.endsWith('profiles.json')
+    )
+      return
     const relative = path.relative(dataDir, absPath)
     const rulesetId = relative.split(path.sep)[0]
     if (!rulesetId) return

@@ -14,6 +14,7 @@ import {
 } from 'react'
 import { NodeAutocompleteInput } from './node-autocomplete-input'
 import { useMainContext } from '@/context'
+import { useNodeNavigation } from '@/lib/use-node-navigation'
 import { cn } from '@/lib/utils'
 import { onAiEvent, sendWsMessage, type AiEvent } from '@/lib/api/live-reload'
 import { Button } from './ui/button'
@@ -458,7 +459,8 @@ function ToolCallView({ message }: { message: ToolCallMessage }) {
 const URL_PATTERN = /(https?:\/\/[^\s<>)"']+)/g
 
 function ClickableNodeText({ text }: { text: string }) {
-  const { model, setOpenNode } = useMainContext()
+  const { model } = useMainContext()
+  const { setOpenNode } = useNodeNavigation()
 
   const nameToId = useMemo(() => {
     const map = new Map<string, string>()

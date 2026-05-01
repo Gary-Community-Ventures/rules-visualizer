@@ -44,6 +44,10 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ALLOW_WRITES } from '@/lib/allow-writes'
+import { useInputActions } from '@/lib/use-input-actions'
+import { usePolicyNavigation } from '@/lib/use-policy-navigation'
+import { useNodeNavigation } from '@/lib/use-node-navigation'
+import { useExecutionRunner } from '@/lib/use-execution-runner'
 import { ContentViewer } from './content-viewers'
 import type {
   ModelNode,
@@ -135,16 +139,15 @@ export function Node({ node }: NodeProps) {
     setHoveredNodeId,
     showChildren,
     setShowChildren,
-    setOpenNode,
     executionResults,
     inputOverrides,
-    setInputOverride,
-    clearInputOverride,
-    runOnBlur,
     activeTest,
     entityData,
     setEntityData,
   } = useMainContext()
+  const { setOpenNode } = useNodeNavigation()
+  const { setInputOverride, clearInputOverride } = useInputActions()
+  const { runOnBlur } = useExecutionRunner()
 
   const [isHovered, setIsHovered] = useState(false)
   const [collectionEditorOpen, setCollectionEditorOpen] = useState(false)
@@ -792,7 +795,8 @@ export function NodeLink({
   name: string
   onSelect?: () => void
 }) {
-  const { model, logicYear, setOpenNode } = useMainContext()
+  const { model, logicYear } = useMainContext()
+  const { setOpenNode } = useNodeNavigation()
   const node = model.nodes[nodeId]
   const preview = node ? getNodePreview(node, logicYear) : null
 
@@ -842,7 +846,8 @@ export function NodeLink({
 }
 
 function PolicyReferencesList({ node }: { node: ModelNode }) {
-  const { model, refreshModel, openPolicyAtPage, openPolicyForLinking } =
+  const { openPolicyAtPage, openPolicyForLinking } = usePolicyNavigation()
+  const { model, refreshModel } =
     useMainContext()
   const references = node.references ?? []
   // Collapsed = preview hidden, only the label row shown. Toggled per ref.
@@ -1279,12 +1284,12 @@ export function NodePanel() {
   const {
     model,
     openNode,
-    setOpenNode,
     workspaceItems,
     setWorkspaceItems,
     selectedNodes,
     setSelectedNodes,
   } = useMainContext()
+  const { setOpenNode } = useNodeNavigation()
   const addToFilter = useAddToFilter()
   const openNodeData = useFindNode(openNode)
 

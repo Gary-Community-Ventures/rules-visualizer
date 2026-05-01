@@ -17,6 +17,7 @@ import { ExecutionPanel } from '@/components/execution-panel'
 import { TestPanel } from '@/components/test-panel'
 import { PolicyPanel } from '@/components/policy-panel'
 import { TasksPanel } from '@/components/tasks-panel'
+import { ProfilesPanel } from '@/components/profiles-panel'
 import { NodePanel, nodeElementId } from '@/components/node'
 import { ShortcutsCheatsheet } from '@/components/shortcuts-cheatsheet'
 
@@ -178,6 +179,7 @@ export function NodeMapLayout({ children }: PropsWithChildren) {
             {rightBar === 'tests' && <TestPanel />}
             {rightBar === 'policy' && <PolicyPanel />}
             {rightBar === 'tasks' && <TasksPanel />}
+            {rightBar === 'profiles' && <ProfilesPanel />}
           </ResizablePanel>
         </>
       )}

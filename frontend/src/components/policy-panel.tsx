@@ -23,6 +23,8 @@ import {
 import { SectionPopover } from './section-popover'
 import { cn } from '@/lib/utils'
 import { ALLOW_WRITES } from '@/lib/allow-writes'
+import { usePolicyNavigation } from '@/lib/use-policy-navigation'
+import { useNodeNavigation } from '@/lib/use-node-navigation'
 import { FileText, X, Search, ChevronLeft, ChevronRight } from 'lucide-react'
 
 // Configure pdf.js worker
@@ -149,13 +151,12 @@ export function PolicyPanel() {
     policyTargetPage,
     policyFocusSectionIds: activeSectionId,
     policyTargetDocId,
-    clearPolicyTarget,
     openNode,
-    setOpenNode,
     policyLinkNodePath,
-    clearPolicyLinkNode,
     setRightBar,
   } = useMainContext()
+  const { setOpenNode } = useNodeNavigation()
+  const { clearPolicyTarget, clearPolicyLinkNode } = usePolicyNavigation()
   const {
     addTaskBuilderSource,
     taskBuilderSources,
