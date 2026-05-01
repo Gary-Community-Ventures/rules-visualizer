@@ -284,7 +284,7 @@ export function PanContainer({ children, className }: PanContainerProps) {
       ref={containerRef}
       data-pan-container
       className={cn(
-        'relative overflow-hidden flex-1 z-[3]',
+        'relative overflow-clip flex-1 z-[3]',
         isPanning ? 'cursor-grabbing select-none' : 'cursor-grab',
         className
       )}

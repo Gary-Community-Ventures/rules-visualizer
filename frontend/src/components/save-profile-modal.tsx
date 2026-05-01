@@ -133,12 +133,6 @@ export function SaveProfileModal({
               Save to file
             </label>
           )}
-          {!ALLOW_WRITES && (
-            <p className="text-[11px] text-muted-foreground italic">
-              Saving to localStorage (this browser only). Enable
-              ALLOW_WRITES to save profiles to a shared file.
-            </p>
-          )}
           {error && <p className="text-xs text-orange-700">{error}</p>}
           <div className="flex justify-end gap-2 pt-1">
             <Button
