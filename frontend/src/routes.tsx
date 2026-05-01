@@ -56,6 +56,15 @@ function RootLayout() {
     }
   }, [activeRulesetId])
 
+  // Close any per-tab dropdowns (workspace, history) on tab switch so the
+  // leftover popper content from the previous tab — which portals to body
+  // and stays mounted across the display:none flip — doesn't trip the
+  // "is any dropdown open?" check used by the keyboard shortcuts.
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent('close-workspace'))
+    window.dispatchEvent(new CustomEvent('close-history'))
+  }, [activeRulesetId])
+
   return (
     <main className="flex flex-col h-screen">
       {tabs.length > 0 && <TabBar activeRulesetId={activeRulesetId} />}
