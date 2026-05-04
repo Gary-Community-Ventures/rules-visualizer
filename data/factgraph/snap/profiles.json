@@ -1,0 +1,46 @@
+[
+  {
+    "id": "e7340ed1-ae33-4697-b106-9b02efd0e7bb",
+    "name": "All 0s",
+    "description": "except age and work hours to make someone eligible.",
+    "inputs": {
+      "/childSupportPaid": 0,
+      "/dependentCareExpenses": 0,
+      "/grossEarnedIncome": 0,
+      "/homeownersAssociationFees": 0,
+      "/homeownersInsurance": 0,
+      "/mortgagePayments": 0,
+      "/isHomeless": false,
+      "/meetsCategoricalEligibility": false,
+      "/realEstateTaxes": 0,
+      "/rent": 0,
+      "/unearnedIncome": 0
+    },
+    "entities": {
+      "/members": [
+        {
+          "/members/*/isElderly": false,
+          "/members/*/isDisabled": false,
+          "/members/*/medicalExpenses": 0,
+          "/members/*/age": 30,
+          "/members/*/isHigherEdStudent": false,
+          "/members/*/weeklyWorkHours": 30,
+          "/members/*/isWorkStudy": false,
+          "/members/*/isParent": false,
+          "/members/*/isFullTimeCollegeStudent": false,
+          "/members/*/receivesTanf": false,
+          "/members/*/isImmigrationEligible": true,
+          "/members/*/isPregnant": false,
+          "/members/*/isIncapableOfSelfCare": false,
+          "/members/*/abawdCountableMonthsUsed": 0,
+          "/members/*/cashOnHand": 0,
+          "/members/*/bankAccountAssets": 0,
+          "/members/*/stockAssets": 0,
+          "/members/*/bondAssets": 0
+        }
+      ]
+    },
+    "createdAt": "2026-05-01T17:11:17.357Z",
+    "updatedAt": "2026-05-01T17:11:17.357Z"
+  }
+]

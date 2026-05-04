@@ -13,6 +13,8 @@ import {
   type TaskSource,
 } from '@/lib/api/tasks-api'
 import { getReferences } from '@/lib/api/rules-api'
+import { usePolicyNavigation } from '@/lib/use-policy-navigation'
+import { useNodeNavigation } from '@/lib/use-node-navigation'
 import type { PolicyReferences } from '@/lib/model'
 import { Button } from './ui/button'
 import { NodeAutocompleteInput } from './node-autocomplete-input'
@@ -220,8 +222,9 @@ function SourceChipList({
 }
 
 export function TasksPanel() {
-  const { rulesetId, model, setOpenNode, setRightBar, openPolicyAtPage } =
-    useMainContext()
+  const { rulesetId, model, setRightBar } = useMainContext()
+  const { setOpenNode } = useNodeNavigation()
+  const { openPolicyAtPage } = usePolicyNavigation()
   const {
     taskBuilderDraft: draft,
     setTaskBuilderDraft: setDraft,
@@ -951,6 +954,7 @@ function TaskCard({
                           'complete'
                         )
                         onChange(next)
+                        setExpanded(false)
                       } finally {
                         setBusy(false)
                       }
@@ -981,6 +985,7 @@ function TaskCard({
                                 'archived'
                               )
                               onChange(next)
+                              setExpanded(false)
                             } finally {
                               setBusy(false)
                             }

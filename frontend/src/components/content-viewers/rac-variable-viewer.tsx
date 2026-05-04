@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react'
 import type { NodeContent } from '@/lib/model'
 import { useMainContext } from '@/context'
 import { getNodePath } from '@/context/model-context'
+import { useNodeNavigation } from '@/lib/use-node-navigation'
 import { parseFromBlocks, getBlockForYear } from '@/lib/logic'
 import { LogicHighlighter } from './logic-highlighter'
 import { resolveCitationUrl } from 'rules-visualizer-shared-types/citations'
@@ -12,7 +13,8 @@ type Props = {
 }
 
 export function RacVariableViewer({ content }: Props) {
-  const { logicYear, model, setOpenNode } = useMainContext()
+  const { logicYear, model } = useMainContext()
+  const { setOpenNode } = useNodeNavigation()
 
   const navigateToPath = useCallback(
     (varName: string) => {

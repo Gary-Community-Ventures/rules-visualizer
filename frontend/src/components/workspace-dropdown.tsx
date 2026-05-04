@@ -1,13 +1,15 @@
 import { useRef, useState, useEffect } from 'react'
 import * as Popover from '@radix-ui/react-popover'
 import { useMainContext } from '@/context'
+import { useNodeNavigation } from '@/lib/use-node-navigation'
 import { Button } from './ui/button'
 import { cn } from '@/lib/utils'
 import { LayoutList, X, GripVertical } from 'lucide-react'
 
 export function WorkspaceDropdown() {
-  const { model, openNode, setOpenNode, workspaceItems, setWorkspaceItems } =
+  const { model, openNode, workspaceItems, setWorkspaceItems } =
     useMainContext()
+  const { setOpenNode } = useNodeNavigation()
   const [open, setOpen] = useState(false)
 
   const dragState = useRef<{ index: number; startY: number } | null>(null)

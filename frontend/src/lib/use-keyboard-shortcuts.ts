@@ -1,6 +1,8 @@
 import { useEffect } from 'react'
 import { useModelContext, getNodePath } from '@/context/model-context'
 import { useAddToFilter } from './use-add-to-filter'
+import { usePolicyNavigation } from './use-policy-navigation'
+import { useNodeNavigation } from './use-node-navigation'
 import { nodeElementId } from '@/components/node'
 
 function isInputFocused(): boolean {
@@ -44,9 +46,6 @@ export function useKeyboardShortcuts(active: boolean = true) {
     rulesetId,
     model,
     openNode,
-    setOpenNode,
-    goBackNode,
-    goForwardNode,
     rightBar,
     setRightBar,
     workspaceItems,
@@ -54,8 +53,9 @@ export function useKeyboardShortcuts(active: boolean = true) {
     setShowChildren,
     selectedNodes,
     setSelectedNodes,
-    openPolicyForLinking,
   } = useModelContext()
+  const { setOpenNode, goBackNode, goForwardNode } = useNodeNavigation()
+  const { openPolicyForLinking } = usePolicyNavigation()
   const addToFilter = useAddToFilter()
 
   useEffect(() => {

@@ -1,0 +1,483 @@
+{
+  "documents": [
+    {
+      "id": "10-ccr-2506-1",
+      "title": "10 CCR 2506-1 — Colorado SNAP Rules",
+      "file": "10 CCR 2506-1 SNAP.pdf"
+    }
+  ],
+  "sections": [
+    {
+      "id": "10-ccr-2506-1__skip-1777491025892",
+      "documentId": "10-ccr-2506-1",
+      "text": "DEPARTMENT OF HUMAN SERVICES Supplemental Nutrition Assistance Program (SNAP) RULE MANUAL VOLUME 4, SNAP 10 CCR 2506-1 [Editor’s Notes follow the text of the rules at the end of this CCR Document.] _________________________________________________________________________",
+      "page": 1,
+      "rects": [
+        {
+          "x": 0.011408496613668466,
+          "y": 0.005373410016372109,
+          "w": 0.9816377530694288,
+          "h": 0.2615059541301093
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1777491031669",
+      "documentId": "10-ccr-2506-1",
+      "text": "4.000 SNAP",
+      "page": 1,
+      "rects": [
+        {
+          "x": 0.10180725073340335,
+          "y": 0.2722527741628535,
+          "w": 0.13328021440730145,
+          "h": 0.019702503393364434
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1777491033756",
+      "documentId": "10-ccr-2506-1",
+      "text": "4.000.1 SNAP DEFINITIONS",
+      "page": 1,
+      "rects": [
+        {
+          "x": 0.11107891782260693,
+          "y": 0.3000153925807761,
+          "w": 0.2225200101408859,
+          "h": 0.024180345073674447
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__mokg9qpe-ps5v",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Able-Bodied Adult Without Dependents (ABAWD)” means an individual aged eighteen (18) through the age of fifty-four (54) without a physical or mental disability who lives in a household with no one under the age of eighteen (18).",
+      "page": 1,
+      "rects": [
+        {
+          "x": 0.10876100105030603,
+          "y": 0.32867357933476066,
+          "w": 0.7776610771069501,
+          "h": 0.05821194184403117
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1777491085056",
+      "documentId": "10-ccr-2506-1",
+      "text": "accused of wrongfully obtaining or attempting to obtain SNAP benefits.",
+      "page": 1,
+      "rects": [
+        {
+          "x": 0.10991995943645648,
+          "y": 0.3922589311951639,
+          "w": 0.7452102422947376,
+          "h": 0.031344891762170646
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1777491091060",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Administrative law judge (ALJ)” means a person that may preside over state-level fair hearings and administrative disqualification hearings.",
+      "page": 1,
+      "rects": [
+        {
+          "x": 0.10991995943645648,
+          "y": 0.4298728013097687,
+          "w": 0.7301437832747818,
+          "h": 0.03940500678672881
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1777491094333",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Administrative adjudicator” means a person who presides over state-level fair hearings and administrative disqualification hearings.",
+      "page": 1,
+      "rects": [
+        {
+          "x": 0.10760204266415559,
+          "y": 0.47106894476862154,
+          "w": 0.6861033646010648,
+          "h": 0.04477841680310085
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1777491211072",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Adverse action” means any action taken by a local office that causes a household’s SNAP benefits to be reduced, suspended, terminated, or denied.",
+      "page": 1,
+      "rects": [
+        {
+          "x": 0.10991995943645648,
+          "y": 0.5221163399241565,
+          "w": 0.7730252435623484,
+          "h": 0.03671830177854274
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1777491214781",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Adverse action period” means the period of time during the certification period prior to the adverse action becoming effective.",
+      "page": 1,
+      "rects": [
+        {
+          "x": 0.10760204266415559,
+          "y": 0.5642080517190714,
+          "w": 0.7811379522654014,
+          "h": 0.04298728013097686
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__mokge7h8-n5fq",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Allotment” means the total amount of SNAP benefits a household is authorized to receive in a particular month.",
+      "page": 1,
+      "rects": [
+        {
+          "x": 0.10644308427800514,
+          "y": 0.6654072736940795,
+          "w": 0.7683894100177466,
+          "h": 0.04209171179491478
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1777491713615",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Agency error claim” means that a debt has been established for the household to repay due to an over- issuance of SNAP benefits that was issued to the household resulting from an error made by the local office.",
+      "page": 1,
+      "rects": [
+        {
+          "x": 0.10760204266415559,
+          "y": 0.6098820368582343,
+          "w": 0.7730252435623483,
+          "h": 0.051047395155535136
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1777491729959",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Appeal” means a request made by a household to have a decision about its case reviewed by an impartial third party to determine whether the decision was correct. The term appeal includes state level fair hearings and local-level dispute resolution conferences.",
+      "page": 1,
+      "rects": [
+        {
+          "x": 0.10876100105030603,
+          "y": 0.7137679638414284,
+          "w": 0.7718662851761978,
+          "h": 0.048360690147349006
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1777491736593",
+      "documentId": "10-ccr-2506-1",
+      "text": "electronic state-prescribed form.",
+      "page": 1,
+      "rects": [
+        {
+          "x": 0.11339683459490783,
+          "y": 0.7746666106936456,
+          "w": 0.7289848248886314,
+          "h": 0.0349271651064188
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__mokgpiyl-dw4r",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Application filing date” means the date an application for public assistance is received by the county office.",
+      "page": 1,
+      "rects": [
+        {
+          "x": 0.10876100105030603,
+          "y": 0.8158627541524985,
+          "w": 0.7405744087501358,
+          "h": 0.03761387011460471
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mokgr2is-8w4n",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Application for recertification” means an application submitted prior to the last month of the certification period to determine a household’s continued eligibility for the next certification period.",
+      "page": 1,
+      "rects": [
+        {
+          "x": 0.10644308427800514,
+          "y": 0.8588500342834754,
+          "w": 0.7672304516315962,
+          "h": 0.04477841680310091
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1777491864475",
+      "documentId": "10-ccr-2506-1",
+      "text": "1",
+      "page": 1,
+      "rects": [
+        {
+          "x": 0.10644308427800514,
+          "y": 0.9439290262093671,
+          "w": 0.8019992032161096,
+          "h": 0.04477841680310091
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1777491868881",
+      "documentId": "10-ccr-2506-1",
+      "text": "CODE OF COLORADO REGULATIONS 10 CCR 2506-1 Supplemental Nutrition Assistance Program (SNAP)",
+      "page": 2,
+      "rects": [
+        {
+          "x": 0.10180725073340335,
+          "y": 0.025425744791010733,
+          "w": 0.7915685777407555,
+          "h": 0.056420805171907146
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1777491918818",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Application process” means the required process a household must complete for purposes of determining eligibility for SNAP benefits at application or application for recertification.",
+      "page": 2,
+      "rects": [
+        {
+          "x": 0.10644308427800514,
+          "y": 0.088115528315352,
+          "w": 0.7069646155517728,
+          "h": 0.03761387011460475
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1777491929175",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Authorized representative” means an individual who has been designated in writing by a responsible member of the household to act on behalf of or assist the household with the application process, obtaining SNAP benefits, and/or in using SNAP benefits at authorized retailers.",
+      "page": 2,
+      "rects": [
+        {
+          "x": 0.10876100105030603,
+          "y": 0.13110280844632888,
+          "w": 0.7382564919778349,
+          "h": 0.050151826819473
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1777491935442",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Automated Child Support Enforcement System (ACSES)” means the automated computer system used by the state department’s child support services to record child support payments.",
+      "page": 2,
+      "rects": [
+        {
+          "x": 0.1052841258918547,
+          "y": 0.18752361361823602,
+          "w": 0.7811379522654015,
+          "h": 0.039405006786728786
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__mokgtqxq-1opy",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Basic Categorical Eligibility (BCE)” means the status granted to any household that is not eligible for Expanded Categorical Eligibility and contains only members who receive, or are eligible to receive, benefits from Colorado Works, Supplemental Security Income (SSI), Old Age Pension, Aid to the Needy and Disabled, Aid to the Blind, or a combination of these programs.",
+      "page": 2,
+      "rects": [
+        {
+          "x": 0.10760204266415559,
+          "y": 0.2314064620852749,
+          "w": 0.7765021187207997,
+          "h": 0.07254103522102348
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__moki2xhz-tyyo",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Basic Utility Allowance (BUA)” means a fixed deduction applied to a household that does not pay for heating or cooling and incurs at least two (2) non-heating or non-cooling utility costs, such as electricity, water, sewer, trash, cooking fuel, or telephone.",
+      "page": 2,
+      "rects": [
+        {
+          "x": 0.11483314300215709,
+          "y": 0.3094308172503391,
+          "w": 0.7579410396311805,
+          "h": 0.051247691729446154
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1777494327128",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Bifurcated appeal” means an appeal that involves more than one benefit program area and where the administrative adjudicator determines to divide the appeal so that a SNAP appeal is reviewed separate from the appeal of a different benefit program area appeal.",
+      "page": 2,
+      "rects": [
+        {
+          "x": 0.11164755582377792,
+          "y": 0.3650610541817512,
+          "w": 0.7562176412667153,
+          "h": 0.0526231821807695
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__moki8its-agta",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Boarder” means an individual residing with others and paying reasonable compensation to others for lodging and meals.",
+      "page": 2,
+      "rects": [
+        {
+          "x": 0.1045326048978814,
+          "y": 0.4231821807694668,
+          "w": 0.7623161706317695,
+          "h": 0.03691476958949497
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mokkqwmq-qofn",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Boarding house” means an establishment that is licensed as a commercial enterprise and which offers meals and lodging for compensation, as described in 7 C.F.R 273.1(b)(3)(i), herein incorporated by reference. No later editions or amendments are incorporated. The regulation is available at no cost at the FNS, 3101 Park Center Dr., #906, Alexandria, VA 22302 or at https://www.ecfr.gov. This regulation is also available for public inspection and copying at the Food and Energy Assistance Division Director, Colorado Department of Human Services, 1575 Sherman Street, 3rd Floor, Denver, Colorado 80203.",
+      "page": 2,
+      "rects": [
+        {
+          "x": 0.10249976177619667,
+          "y": 0.4655948947659078,
+          "w": 0.7755296509227202,
+          "h": 0.09603178499110271
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1777498629286",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Case record” means a combination of the physical case file that contains documents pertinent to a household’s case; similar documents maintained in an electronic database; and information about the household that is contained within the statewide automated system.",
+      "page": 2,
+      "rects": [
+        {
+          "x": 0.11063113426293555,
+          "y": 0.5739829416457016,
+          "w": 0.7521519550233459,
+          "h": 0.04791065840338715
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__mokl4jjd-7fb4",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Certification period” means the period of time for which a household has been certified to receive benefits.",
+      "page": 2,
+      "rects": [
+        {
+          "x": 0.11063113426293555,
+          "y": 0.6321040682334171,
+          "w": 0.7226757297589175,
+          "h": 0.03612934895993136
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__molnzt8w-0kpp",
+      "documentId": "10-ccr-2506-1",
+      "text": "",
+      "page": 2,
+      "rects": [
+        {
+          "x": 0.49874060046698904,
+          "y": 0.4866170369949423,
+          "w": 0.16678650879741136,
+          "h": 0.01773114735466275
+        }
+      ]
+    }
+  ],
+  "mappings": [
+    {
+      "nodePath": "/allotment",
+      "sectionId": "10-ccr-2506-1__mokge7h8-n5fq"
+    },
+    {
+      "nodePath": "/abawdAgeMin",
+      "sectionId": "10-ccr-2506-1__mokg9qpe-ps5v"
+    },
+    {
+      "nodePath": "/abawdAgeMax",
+      "sectionId": "10-ccr-2506-1__mokg9qpe-ps5v"
+    },
+    {
+      "nodePath": "/abawdDependentAgeLimit",
+      "sectionId": "10-ccr-2506-1__mokg9qpe-ps5v"
+    },
+    {
+      "nodePath": "/members/*/isUnderAbawdDependentAgeLimit",
+      "sectionId": "10-ccr-2506-1__mokg9qpe-ps5v"
+    },
+    {
+      "nodePath": "/hasMemberUnderAbawdDependentAgeLimit",
+      "sectionId": "10-ccr-2506-1__mokg9qpe-ps5v"
+    },
+    {
+      "nodePath": "/members/*/hasDisability",
+      "sectionId": "10-ccr-2506-1__mokg9qpe-ps5v"
+    },
+    {
+      "nodePath": "/members/*/isAbawd",
+      "sectionId": "10-ccr-2506-1__mokg9qpe-ps5v"
+    },
+    {
+      "nodePath": "/applicationFilingDate",
+      "sectionId": "10-ccr-2506-1__mokgpiyl-dw4r"
+    },
+    {
+      "nodePath": "/isApplicationForRecertification",
+      "sectionId": "10-ccr-2506-1__mokgr2is-8w4n"
+    },
+    {
+      "nodePath": "/basicUtilityAllowance",
+      "sectionId": "10-ccr-2506-1__moki2xhz-tyyo"
+    },
+    {
+      "nodePath": "/hasBasicCategoricalEligibility",
+      "sectionId": "10-ccr-2506-1__mokgtqxq-1opy"
+    },
+    {
+      "nodePath": "/members/*/isBoarder",
+      "sectionId": "10-ccr-2506-1__moki8its-agta"
+    },
+    {
+      "nodePath": "/certificationPeriod",
+      "sectionId": "10-ccr-2506-1__mokl4jjd-7fb4"
+    },
+    {
+      "nodePath": "/members/*/livesInBoardingHouse",
+      "sectionId": "10-ccr-2506-1__mokkqwmq-qofn"
+    }
+  ]
+}

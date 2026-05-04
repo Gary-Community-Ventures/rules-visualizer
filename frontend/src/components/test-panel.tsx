@@ -29,6 +29,7 @@ import {
   ClipboardCopy,
 } from 'lucide-react'
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
+import { useInputActions } from '@/lib/use-input-actions'
 import {
   listTests,
   createTest,
@@ -45,13 +46,13 @@ export function TestPanel() {
     inputOverrides,
     entityData,
     executionResults,
-    setInputOverride,
     setEntityData,
     setRightBar,
     asOfDate,
     setActiveTest,
     selectedNodes,
   } = useMainContext()
+  const { setInputOverride } = useInputActions()
 
   const [tests, setTests] = useState<TestCase[]>([])
   const [results, setResults] = useState<TestRunResult[]>([])

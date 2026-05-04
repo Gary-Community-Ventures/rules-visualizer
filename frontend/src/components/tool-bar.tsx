@@ -4,6 +4,8 @@ import { Button } from './ui/button'
 import { Input } from './ui/input'
 import { cn } from '@/lib/utils'
 import { ALLOW_WRITES } from '@/lib/allow-writes'
+import { useNodeNavigation } from '@/lib/use-node-navigation'
+import { useExecutionRunner } from '@/lib/use-execution-runner'
 import { nodeElementId } from './node'
 import {
   Maximize2,
@@ -14,6 +16,7 @@ import {
   SlidersHorizontal,
   FlaskConical,
   BookOpen,
+  Users,
   X,
   Calendar,
   ChevronLeft,
@@ -68,10 +71,8 @@ function NodeNavigation() {
     openNode,
     nodeHistory,
     nodeHistoryIndex,
-    goBackNode,
-    goForwardNode,
-    goToHistoryIndex,
   } = useMainContext()
+  const { goBackNode, goForwardNode, goToHistoryIndex } = useNodeNavigation()
   const [historyOpen, setHistoryOpen] = useState(false)
   useEffect(() => {
     const handleOpen = () => setHistoryOpen(true)
@@ -163,11 +164,10 @@ export function ToolBar() {
     isExecuting,
     executionError,
     executionResults,
-    runExecution,
     activeTest,
     setActiveTest,
-    clearExecution,
   } = useMainContext()
+  const { runExecution, clearExecution } = useExecutionRunner()
   const [search, setSearch] = useState('')
   const anchorRef = useComboboxAnchor()
 
@@ -293,7 +293,7 @@ export function ToolBar() {
             variant="outline"
             size="sm"
             title="Run with current inputs"
-            onClick={runExecution}
+            onClick={() => runExecution()}
             disabled={isExecuting}
             className="gap-1.5 h-9"
           >
@@ -323,6 +323,16 @@ export function ToolBar() {
           onClick={() => setRightBar(rightBar === 'tests' ? null : 'tests')}
         >
           <FlaskConical className="size-4" />
+        </Button>
+        <Button
+          variant={rightBar === 'profiles' ? 'default' : 'outline'}
+          size="icon"
+          title="Profiles"
+          onClick={() =>
+            setRightBar(rightBar === 'profiles' ? null : 'profiles')
+          }
+        >
+          <Users className="size-4" />
         </Button>
         <Button
           variant={rightBar === 'policy' ? 'default' : 'outline'}

@@ -3,20 +3,14 @@ import {
   useCallback,
   useContext,
   useEffect,
-  useLayoutEffect,
   useMemo,
-  useRef,
   useState,
   type Dispatch,
   type ReactNode,
   type SetStateAction,
 } from 'react'
 import type { Model, ModelNode, NodeContent } from '@/lib/model'
-import {
-  getRuleset,
-  executeRuleset,
-  type ExecutionResults,
-} from '@/lib/api/rules-api'
+import { getRuleset, type ExecutionResults } from '@/lib/api/rules-api'
 import { onReload } from '@/lib/api/live-reload'
 import { useLocalStorage } from '@/lib/use-local-storage'
 import { useAppContext } from './app-context'
@@ -27,6 +21,7 @@ export type RightBarOptions =
   | 'tests'
   | 'policy'
   | 'tasks'
+  | 'profiles'
   | null
 
 /** Check if a node is an "input" that users must provide values for */
@@ -241,35 +236,38 @@ type ModelContextValue = {
   setSelectedNodes: Dispatch<SetStateAction<string[]>>
   showChildren: Record<string, boolean>
   setShowChildren: Dispatch<SetStateAction<Record<string, boolean>>>
+  // Node navigation — derived `openNode` (panel-aware) plus raw history
+  // state. The setOpenNode / goBack / goForward orchestrators live in
+  // lib/use-node-navigation.ts.
   openNode: string | null
-  setOpenNode: (nodeId: string | null) => void
   nodeHistory: string[]
+  setNodeHistory: Dispatch<SetStateAction<string[]>>
   nodeHistoryIndex: number
-  goBackNode: () => void
-  goForwardNode: () => void
-  goToHistoryIndex: (index: number) => void
+  setNodeHistoryIndex: Dispatch<SetStateAction<number>>
+  panelOpen: boolean
+  setPanelOpen: Dispatch<SetStateAction<boolean>>
   rightBar: RightBarOptions
   setRightBar: Dispatch<SetStateAction<RightBarOptions>>
   logicYear: number
   setLogicYear: Dispatch<SetStateAction<number>>
   asOfDate: string
   setAsOfDate: Dispatch<SetStateAction<string>>
-  // Execution
+  // Execution — raw state + setters; action helpers (setInputOverride,
+  // clearOverrides, clearAll, etc.) live in lib/use-input-actions.ts as
+  // hooks rather than being colocated here, so the context stays a thin
+  // get/set surface.
   inputOverrides: Record<string, string>
-  setInputOverride: (nodeId: string, value: string) => void
-  clearInputOverride: (nodeId: string) => void
-  clearOverrides: () => void
-  clearAll: () => void
+  setInputOverrides: Dispatch<SetStateAction<Record<string, string>>>
   entityData: Record<string, Record<string, string>[]>
   setEntityData: Dispatch<
     SetStateAction<Record<string, Record<string, string>[]>>
   >
   executionResults: ExecutionResults | null
+  setExecutionResults: Dispatch<SetStateAction<ExecutionResults | null>>
   isExecuting: boolean
+  setIsExecuting: Dispatch<SetStateAction<boolean>>
   executionError: string | null
-  runExecution: () => void
-  runOnBlur: () => void
-  clearExecution: () => void
+  setExecutionError: Dispatch<SetStateAction<string | null>>
   workspaceItems: string[]
   setWorkspaceItems: Dispatch<SetStateAction<string[]>>
   // Active test state displayed on graph nodes
@@ -292,20 +290,16 @@ type ModelContextValue = {
     } | null>
   >
   refreshModel: () => void
-  /** Open the policy panel and navigate to a specific page, optionally focusing a section */
-  openPolicyAtPage: (
-    page: number,
-    focusSectionIds?: string[],
-    documentId?: string
-  ) => void
+  // Policy navigation — raw state + setters; the openPolicyAtPage /
+  // openPolicyForLinking orchestrators live in lib/use-policy-navigation.ts.
   policyTargetPage: number | null
+  setPolicyTargetPage: Dispatch<SetStateAction<number | null>>
   policyFocusSectionIds: string[] | null
+  setPolicyFocusSectionIds: Dispatch<SetStateAction<string[] | null>>
   policyTargetDocId: string | null
-  clearPolicyTarget: () => void
-  /** Node path to pre-select when opening the policy panel for linking */
+  setPolicyTargetDocId: Dispatch<SetStateAction<string | null>>
   policyLinkNodePath: string | null
-  openPolicyForLinking: (nodePath: string) => void
-  clearPolicyLinkNode: () => void
+  setPolicyLinkNodePath: Dispatch<SetStateAction<string | null>>
 }
 
 const ModelContext = createContext<ModelContextValue | undefined>(undefined)
@@ -315,27 +309,6 @@ const EMPTY_MODEL: Model = {
   name: '',
   format: 'rac',
   nodes: {},
-}
-
-/** Convert string input overrides to typed values for the execution API */
-function parseOverrides(
-  overrides: Record<string, string>,
-  nodes: Record<string, ModelNode>
-): Record<string, unknown> {
-  const inputs: Record<string, unknown> = {}
-  for (const [nodeId, rawValue] of Object.entries(overrides)) {
-    if (rawValue === '') continue
-    const node = nodes[nodeId]
-    if (!node) continue
-    const path = getNodePath(node.content)
-    if (!path) continue
-    try {
-      inputs[path] = JSON.parse(rawValue)
-    } catch {
-      inputs[path] = rawValue
-    }
-  }
-  return inputs
 }
 
 export function ModelProvider({
@@ -363,53 +336,6 @@ export function ModelProvider({
   const openNode =
     panelOpen && nodeHistoryIndex >= 0 ? nodeHistory[nodeHistoryIndex] : null
 
-  const setOpenNode = useCallback(
-    (nodeId: string | null) => {
-      if (nodeId === null) {
-        setPanelOpen(false)
-      } else {
-        setPanelOpen(true)
-        if (
-          nodeId !==
-          (nodeHistoryIndex >= 0 ? nodeHistory[nodeHistoryIndex] : null)
-        ) {
-          setNodeHistory((prev) => [
-            ...prev.slice(0, nodeHistoryIndex + 1),
-            nodeId,
-          ])
-          setNodeHistoryIndex((prev) => prev + 1)
-        }
-      }
-    },
-    [nodeHistory, nodeHistoryIndex]
-  )
-
-  const goBackNode = useCallback(() => {
-    if (!panelOpen && nodeHistoryIndex >= 0) {
-      setPanelOpen(true)
-    } else if (nodeHistoryIndex > 0) {
-      setNodeHistoryIndex((i) => i - 1)
-      setPanelOpen(true)
-    }
-  }, [nodeHistoryIndex, panelOpen])
-
-  const goForwardNode = useCallback(() => {
-    if (nodeHistoryIndex < nodeHistory.length - 1) {
-      setNodeHistoryIndex((i) => i + 1)
-      setPanelOpen(true)
-    }
-  }, [nodeHistoryIndex, nodeHistory.length])
-
-  const goToHistoryIndex = useCallback(
-    (index: number) => {
-      if (index >= 0 && index < nodeHistory.length) {
-        setNodeHistoryIndex(index)
-        setPanelOpen(true)
-      }
-    },
-    [nodeHistory.length]
-  )
-
   const [rightBar, setRightBar] = useState<RightBarOptions>(null)
   const [logicYear, setLogicYear] = useState<number>(new Date().getFullYear())
   const [asOfDate, setAsOfDate] = useState<string>(
@@ -428,118 +354,8 @@ export function ModelProvider({
   const [isExecuting, setIsExecuting] = useState(false)
   const [executionError, setExecutionError] = useState<string | null>(null)
 
-  const setInputOverride = useCallback((nodeId: string, value: string) => {
-    setInputOverrides((prev) => ({ ...prev, [nodeId]: value }))
-  }, [])
-
-  const clearInputOverride = useCallback((nodeId: string) => {
-    setInputOverrides((prev) => {
-      const next = { ...prev }
-      delete next[nodeId]
-      return next
-    })
-  }, [])
-
-  // Clear only override values (constants + computed), keep input values
-  const clearOverrides = useCallback(() => {
-    setInputOverrides((prev) => {
-      const next: Record<string, string> = {}
-      for (const [nodeId, value] of Object.entries(prev)) {
-        const node = model.nodes[nodeId]
-        if (node && isInputNode(node)) {
-          next[nodeId] = value
-        }
-      }
-      return next
-    })
-    setExecutionResults(null)
-    setExecutionError(null)
-  }, [model.nodes])
-
-  // Clear everything — inputs, overrides, entity data, results
-  const clearAll = useCallback(() => {
-    setInputOverrides({})
-    setEntityData({})
-    setExecutionResults(null)
-    setExecutionError(null)
-  }, [])
-
   // Keep refs of the current execution inputs so runExecution doesn't need
   // them in its dep list. Without this, the callback's closure is captured
-  // at the time an event handler runs — so a handler that both dispatches
-  // setEntityData and calls runOnBlur would execute against pre-update
-  // data. useLayoutEffect runs synchronously after commit (before the next
-  // task), so by the time the setTimeout inside runOnBlur fires, the refs
-  // are guaranteed to reflect the committed state.
-  const inputOverridesRef = useRef(inputOverrides)
-  const entityDataRef = useRef(entityData)
-  const asOfDateRef = useRef(asOfDate)
-  const modelNodesRef = useRef(model.nodes)
-  useLayoutEffect(() => {
-    inputOverridesRef.current = inputOverrides
-    entityDataRef.current = entityData
-    asOfDateRef.current = asOfDate
-    modelNodesRef.current = model.nodes
-  })
-
-  const runExecution = useCallback(() => {
-    setIsExecuting(true)
-    setExecutionError(null)
-    const inputs = parseOverrides(
-      inputOverridesRef.current,
-      modelNodesRef.current
-    )
-    const currentEntityData = entityDataRef.current
-    const entities: Record<string, Record<string, unknown>[]> | undefined =
-      Object.keys(currentEntityData).length > 0
-        ? Object.fromEntries(
-            Object.entries(currentEntityData).map(([entity, rows]) => [
-              entity,
-              rows.map((row, i) => {
-                const parsed: Record<string, unknown> = { id: i + 1 }
-                for (const [key, val] of Object.entries(row)) {
-                  if (val === '') continue
-                  try {
-                    parsed[key] = JSON.parse(val)
-                  } catch {
-                    parsed[key] = val
-                  }
-                }
-                return parsed
-              }),
-            ])
-          )
-        : undefined
-    executeRuleset(rulesetId, inputs, entities, asOfDateRef.current)
-      .then((results) => setExecutionResults(results))
-      .catch((err) => {
-        const message = err instanceof Error ? err.message : 'Execution failed'
-        setExecutionError(message)
-      })
-      .finally(() => setIsExecuting(false))
-  }, [rulesetId])
-
-  const clearExecution = useCallback(() => {
-    setExecutionResults(null)
-    setExecutionError(null)
-  }, [])
-
-  // runOnBlur can be called from an event handler that also dispatched a
-  // setState; defer with a macrotask so React commits (which re-renders the
-  // provider and updates the refs above) before runExecution reads them.
-  // A microtask isn't enough — React's commit in default-priority lanes
-  // can run after the microtask queue drains.
-  const runOnBlur = useCallback(() => {
-    setTimeout(() => {
-      const hasAnyInput = Object.values(inputOverridesRef.current).some(
-        (v) => v !== ''
-      )
-      const hasEntityData = Object.values(entityDataRef.current).some(
-        (rows) => rows.length > 0
-      )
-      if (hasAnyInput || hasEntityData) runExecution()
-    }, 0)
-  }, [runExecution])
 
   const [workspaceItems, setWorkspaceItems] = useLocalStorage<string[]>(
     `workspace:${rulesetId}`,
@@ -561,25 +377,8 @@ export function ModelProvider({
   const [policyTargetDocId, setPolicyTargetDocId] = useState<string | null>(
     null
   )
-  const openPolicyAtPage = useCallback(
-    (page: number, focusSectionIds?: string[], documentId?: string) => {
-      setPolicyTargetPage(page)
-      setPolicyFocusSectionIds(focusSectionIds ?? null)
-      setPolicyTargetDocId(documentId ?? null)
-      setRightBar('policy')
-    },
-    [setRightBar]
-  )
-
   const [policyLinkNodePath, setPolicyLinkNodePath] = useState<string | null>(
     null
-  )
-  const openPolicyForLinking = useCallback(
-    (nodePath: string) => {
-      setPolicyLinkNodePath(nodePath)
-      setRightBar('policy')
-    },
-    [setRightBar]
   )
 
   const loadModel = useCallback(() => {
@@ -662,12 +461,12 @@ export function ModelProvider({
       showChildren,
       setShowChildren,
       openNode,
-      setOpenNode,
       nodeHistory,
+      setNodeHistory,
       nodeHistoryIndex,
-      goBackNode,
-      goForwardNode,
-      goToHistoryIndex,
+      setNodeHistoryIndex,
+      panelOpen,
+      setPanelOpen,
       rightBar,
       setRightBar,
       logicYear,
@@ -675,35 +474,28 @@ export function ModelProvider({
       asOfDate,
       setAsOfDate,
       inputOverrides,
-      setInputOverride,
-      clearInputOverride,
-      clearOverrides,
-      clearAll,
+      setInputOverrides,
       entityData,
       setEntityData,
       executionResults,
+      setExecutionResults,
       isExecuting,
+      setIsExecuting,
       executionError,
-      runExecution,
-      runOnBlur,
-      clearExecution,
+      setExecutionError,
       workspaceItems,
       setWorkspaceItems,
       activeTest,
       setActiveTest,
       refreshModel,
-      openPolicyAtPage,
       policyTargetPage,
+      setPolicyTargetPage,
       policyFocusSectionIds,
+      setPolicyFocusSectionIds,
       policyTargetDocId,
-      clearPolicyTarget: () => {
-        setPolicyTargetPage(null)
-        setPolicyFocusSectionIds(null)
-        setPolicyTargetDocId(null)
-      },
+      setPolicyTargetDocId,
       policyLinkNodePath,
-      openPolicyForLinking,
-      clearPolicyLinkNode: () => setPolicyLinkNodePath(null),
+      setPolicyLinkNodePath,
     }),
     [
       rulesetId,
@@ -717,12 +509,9 @@ export function ModelProvider({
       showChildren,
       setShowChildren,
       openNode,
-      setOpenNode,
       nodeHistory,
       nodeHistoryIndex,
-      goBackNode,
-      goForwardNode,
-      goToHistoryIndex,
+      panelOpen,
       rightBar,
       setRightBar,
       logicYear,
@@ -730,30 +519,21 @@ export function ModelProvider({
       asOfDate,
       setAsOfDate,
       inputOverrides,
-      setInputOverride,
-      clearInputOverride,
-      clearOverrides,
-      clearAll,
       entityData,
       setEntityData,
       executionResults,
       isExecuting,
       executionError,
-      runExecution,
-      runOnBlur,
-      clearExecution,
       workspaceItems,
       setWorkspaceItems,
       activeTest,
       setActiveTest,
       loadModel,
       refreshModel,
-      openPolicyAtPage,
       policyTargetPage,
       policyFocusSectionIds,
       policyTargetDocId,
       policyLinkNodePath,
-      openPolicyForLinking,
     ]
   )
 
