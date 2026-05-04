@@ -124,6 +124,8 @@ Both backends implement the same API contract. The frontend is format-agnostic.
 | `/api/rulesets/:id/tests/run`                       | POST                  | Run all tests (or a subset via `{ testIds }`). Always available                                   |
 | `/api/rulesets/:id/references`                      | GET / PUT             | Read or write the policy-references manifest. PUT `403` unless `ALLOW_WRITES=1`                   |
 | `/api/rulesets/:id/references/files/:filename`      | GET                   | Stream a referenced policy PDF (or other doc) from the ruleset's `references/` dir                |
+| `/api/rulesets/:id/profiles`                        | GET / POST            | List or create file-backed profiles (saved input/override/entity snapshots). POST `403` unless `ALLOW_WRITES=1` |
+| `/api/rulesets/:id/profiles/:profileId`             | PUT / DELETE          | Update or delete a profile. Both `403` unless `ALLOW_WRITES=1`                                    |
 | `/api/rulesets/:id/tasks`                           | GET / POST¹           | List active threads or spawn a new Claude-CLI agent thread (the Builder panel)                    |
 | `/api/rulesets/:id/tasks/:threadId`                 | GET¹                  | Single thread state, including iterations, summaries, and modified paths                          |
 | `/api/rulesets/:id/tasks/:threadId/follow`          | POST¹                 | Send a follow-up prompt (or queue one if the agent is still running)                              |
