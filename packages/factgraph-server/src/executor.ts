@@ -394,6 +394,7 @@ function inferWritableType(
           if (innerType === 'Dollar') return 'Dollar'
           if (innerType === 'Int') return 'Int'
           if (innerType === 'String') return 'String'
+          if (innerType === 'Enum') return 'Enum'
           if (innerType === 'True' || innerType === 'False') return 'Boolean'
           if (innerType === 'Dependency') return 'Boolean' // dependency in Then likely returns same type
           if (
@@ -429,6 +430,30 @@ function inferWritableType(
 
   // Default to Dollar for unknown types
   return 'Dollar'
+}
+
+/** Walk a derived expression tree looking for the first `<Enum optionsPath="…">`
+ *  literal. Used as a fallback when promoting a derived Enum node to writable
+ *  and the model-node didn't carry the optionsPath. */
+function findEnumOptionsPathInRaw(node: unknown): string | undefined {
+  if (node === null || node === undefined || typeof node !== 'object')
+    return undefined
+  if (Array.isArray(node)) {
+    for (const item of node) {
+      const p = findEnumOptionsPathInRaw(item)
+      if (p) return p
+    }
+    return undefined
+  }
+  const obj = node as Record<string, unknown>
+  if (typeof obj['@_optionsPath'] === 'string')
+    return obj['@_optionsPath'] as string
+  for (const [key, value] of Object.entries(obj)) {
+    if (key.startsWith('@_') || key === '#text') continue
+    const p = findEnumOptionsPathInRaw(value)
+    if (p) return p
+  }
+  return undefined
 }
 
 export function executeFactGraph(
@@ -492,11 +517,26 @@ export function executeFactGraph(
               f.raw,
               modelNode?.content as { dataType?: string } | undefined
             )
+            // Enum writables need the optionsPath attribute so EnumFactory
+            // can resolve the option set when we stamp the user's value.
+            // The model node carries it (parser pulls it from the inner
+            // <Enum optionsPath="..."> literal); fall back to scanning the
+            // raw expression directly if the model node didn't carry it.
+            const enumOptionsPath =
+              typeName === 'Enum'
+                ? ((modelNode?.content as { enumOptionsPath?: string })
+                    ?.enumOptionsPath ??
+                  findEnumOptionsPathInRaw(f.raw['Derived']))
+                : undefined
+            const writableInner =
+              typeName === 'Enum' && enumOptionsPath
+                ? { '@_optionsPath': enumOptionsPath }
+                : {}
             return {
               ...f,
               raw: {
                 ...f.raw,
-                Writable: { [typeName]: {} },
+                Writable: { [typeName]: writableInner },
                 Derived: undefined,
               },
             }
