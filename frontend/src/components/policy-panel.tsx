@@ -1467,14 +1467,13 @@ export function PolicyPanel() {
                         bg = 'rgba(244, 63, 94, 0.18)' // rose — orphan
                       }
 
-                      const border =
-                        isClicked
-                          ? '1px solid rgba(59, 130, 246, 0.5)'
-                          : isSkipped
-                            ? '1px solid rgba(156, 163, 175, 0.3)'
-                            : !isLinked
-                              ? '1px dashed rgba(244, 63, 94, 0.55)'
-                              : undefined
+                      const border = isClicked
+                        ? '1px solid rgba(59, 130, 246, 0.5)'
+                        : isSkipped
+                          ? '1px solid rgba(156, 163, 175, 0.3)'
+                          : !isLinked
+                            ? '1px dashed rgba(244, 63, 94, 0.55)'
+                            : undefined
 
                       const linkedNodes = sectionToNodes.get(section.id) ?? []
 

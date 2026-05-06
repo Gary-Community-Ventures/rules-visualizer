@@ -49,10 +49,7 @@ if (dnwProto && !dnwProto.__overrideDefaultOptionPatched) {
     )
   Object.defineProperty(dnwProto, 'overrideDefaultOption', {
     configurable: true,
-    get(this: {
-      path: string
-      overrideDefault: unknown
-    }): unknown {
+    get(this: { path: string; overrideDefault: unknown }): unknown {
       // overrideDefault === null: the original returns None correctly,
       // so just delegate. Avoids needing access to the bundle's None.
       if (this.overrideDefault === null) return origGetter.call(this)

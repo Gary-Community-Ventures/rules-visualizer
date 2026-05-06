@@ -29,7 +29,8 @@ export function useNodeNavigation() {
         return
       }
       setPanelOpen(true)
-      const current = nodeHistoryIndex >= 0 ? nodeHistory[nodeHistoryIndex] : null
+      const current =
+        nodeHistoryIndex >= 0 ? nodeHistory[nodeHistoryIndex] : null
       if (nodeId !== current) {
         setNodeHistory((prev) => [
           ...prev.slice(0, nodeHistoryIndex + 1),

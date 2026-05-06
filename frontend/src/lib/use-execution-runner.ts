@@ -1,4 +1,4 @@
-import { useCallback, useLayoutEffect, useMemo, useRef } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef } from 'react'
 import { useModelContext, getNodePath } from '@/context/model-context'
 import { executeRuleset } from '@/lib/api/rules-api'
 import type { ModelNode } from '@/lib/model'
@@ -140,6 +140,20 @@ export function useExecutionRunner() {
       )
       if (hasAnyInput || hasEntityData) runExecution()
     }, 0)
+  }, [runExecution])
+
+  // Auto-run when a simulation scenario is loaded into the execution panel
+  useEffect(() => {
+    let timeoutId: ReturnType<typeof setTimeout>
+    const handler = () => {
+      // Defer to let the state updates from the scenario loading settle
+      timeoutId = setTimeout(() => runExecution(), 100)
+    }
+    window.addEventListener('simulation-scenario-loaded', handler)
+    return () => {
+      window.removeEventListener('simulation-scenario-loaded', handler)
+      clearTimeout(timeoutId)
+    }
   }, [runExecution])
 
   return useMemo(

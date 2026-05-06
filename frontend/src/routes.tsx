@@ -17,6 +17,7 @@ import {
 } from '@/context'
 import { HomePage } from './pages/home'
 import { RulesetListPage } from './pages/ruleset-list'
+import { SimulatePage } from './pages/simulate'
 import { TabBar } from './components/tab-bar'
 
 function RootLayout() {
@@ -26,7 +27,16 @@ function RootLayout() {
     from: '/ruleset/$rulesetId',
     shouldThrow: false,
   })
+  const matchSimulate = useMatch({
+    from: '/simulate/$rulesetId',
+    shouldThrow: false,
+  })
   const activeRulesetId = matchRuleset?.params.rulesetId ?? null
+  const isSimulatePage = matchSimulate !== undefined
+  // Hide the tab bar when opened from a simulation preview (new browser tab)
+  const isSimulationPreview =
+    typeof window !== 'undefined' &&
+    new URLSearchParams(window.location.search).has('sim')
 
   const hasMatchingTab = tabs.some((t: Tab) => t.rulesetId === activeRulesetId)
   const showOutlet = activeRulesetId === null || !hasMatchingTab
@@ -67,23 +77,38 @@ function RootLayout() {
 
   return (
     <main className="flex flex-col h-screen">
-      {tabs.length > 0 && <TabBar activeRulesetId={activeRulesetId} />}
-      {tabs.map((tab: Tab) => (
-        <div
-          key={tab.rulesetId}
-          style={{
-            display: tab.rulesetId === activeRulesetId ? 'flex' : 'none',
-          }}
-          className="flex-1 flex-col min-h-0"
-        >
-          <ModelProvider rulesetId={tab.rulesetId}>
+      {tabs.length > 0 && !isSimulatePage && !isSimulationPreview && (
+        <TabBar activeRulesetId={activeRulesetId} />
+      )}
+      {isSimulationPreview && activeRulesetId ? (
+        // Simulation preview: standalone ModelProvider, no tab system
+        <div className="flex-1 flex-col min-h-0" style={{ display: 'flex' }}>
+          <ModelProvider rulesetId={activeRulesetId}>
             <PanelProvider>
-              <HomePage active={tab.rulesetId === activeRulesetId} />
+              <HomePage active />
             </PanelProvider>
           </ModelProvider>
         </div>
-      ))}
-      {showOutlet && <Outlet />}
+      ) : (
+        <>
+          {tabs.map((tab: Tab) => (
+            <div
+              key={tab.rulesetId}
+              style={{
+                display: tab.rulesetId === activeRulesetId ? 'flex' : 'none',
+              }}
+              className="flex-1 flex-col min-h-0"
+            >
+              <ModelProvider rulesetId={tab.rulesetId}>
+                <PanelProvider>
+                  <HomePage active={tab.rulesetId === activeRulesetId} />
+                </PanelProvider>
+              </ModelProvider>
+            </div>
+          ))}
+          {showOutlet && <Outlet />}
+        </>
+      )}
     </main>
   )
 }
@@ -100,7 +125,15 @@ function RulesetActivator() {
     didOpen.current = false
   }, [rulesetId])
 
+  const isSimPreview =
+    typeof window !== 'undefined' &&
+    new URLSearchParams(window.location.search).has('sim')
+
   useEffect(() => {
+    // Simulation previews bypass the tab system — ModelProvider
+    // is mounted directly by RootLayout, so no openTab needed
+    if (isSimPreview) return
+
     // Don't reopen a tab that the user just closed
     if (closedTabs.has(rulesetId)) {
       navigate({ to: '/' })
@@ -135,7 +168,17 @@ const rulesetRoute = createRoute({
   component: RulesetActivator,
 })
 
-export const routeTree = rootRoute.addChildren([rulesetListRoute, rulesetRoute])
+const simulateRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/simulate/$rulesetId',
+  component: SimulatePage,
+})
+
+export const routeTree = rootRoute.addChildren([
+  rulesetListRoute,
+  rulesetRoute,
+  simulateRoute,
+])
 
 export const router = new Router({ routeTree })
 

@@ -144,11 +144,7 @@ export function NodeMapLayout({ children }: PropsWithChildren) {
       autoSave={`layout:outer:${rulesetId}`}
       onLayoutChange={handleLayoutChange}
     >
-      <ResizablePanel
-        id="main"
-        defaultSize={rightBar ? 75 : 100}
-        minSize="40%"
-      >
+      <ResizablePanel id="main" defaultSize={rightBar ? 75 : 100} minSize="40%">
         <ResizablePanelGroup
           autoSave={`layout:inner:${rulesetId}`}
           onLayoutChange={handleLayoutChange}

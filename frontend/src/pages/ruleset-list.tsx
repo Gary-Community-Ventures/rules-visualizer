@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from '@tanstack/react-router'
+import { useNavigate, Link } from '@tanstack/react-router'
 import { useAppContext } from '@/context'
 import { listRulesets, type RulesetSummary } from '@/lib/api/rules-api'
+import { FlaskConical } from 'lucide-react'
 
 export function RulesetListPage() {
   const [rulesets, setRulesets] = useState<RulesetSummary[]>([])
@@ -41,9 +42,22 @@ export function RulesetListPage() {
               }}
             >
               <h2 className="font-medium text-sm truncate">{r.name}</h2>
-              <p className="text-xs text-muted-foreground mt-1">
-                {r.format === 'rac' ? 'Rules as Code' : 'Fact Graph'}
-              </p>
+              <div className="flex items-center gap-2 mt-1">
+                <p className="text-xs text-muted-foreground">
+                  {r.format === 'rac' ? 'Rules as Code' : 'Fact Graph'}
+                </p>
+                {r.format === 'factGraph' && (
+                  <Link
+                    to="/simulate/$rulesetId"
+                    params={{ rulesetId: r.id }}
+                    className="text-[10px] text-blue-600 hover:underline flex items-center gap-0.5"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <FlaskConical className="size-2.5" />
+                    Simulate
+                  </Link>
+                )}
+              </div>
             </button>
           ))}
         </div>

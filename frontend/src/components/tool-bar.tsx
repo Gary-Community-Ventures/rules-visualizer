@@ -66,12 +66,7 @@ function DatePicker() {
 }
 
 function NodeNavigation() {
-  const {
-    model,
-    openNode,
-    nodeHistory,
-    nodeHistoryIndex,
-  } = useMainContext()
+  const { model, openNode, nodeHistory, nodeHistoryIndex } = useMainContext()
   const { goBackNode, goForwardNode, goToHistoryIndex } = useNodeNavigation()
   const [historyOpen, setHistoryOpen] = useState(false)
   useEffect(() => {

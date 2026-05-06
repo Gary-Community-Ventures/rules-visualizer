@@ -1022,11 +1022,7 @@ export function EntityEditor({
         Add {getCollectionDisplayName(entityName)}
       </Button>
       {onDone && (
-        <Button
-          size="sm"
-          onClick={onDone}
-          className="mt-2 h-7 text-xs w-full"
-        >
+        <Button size="sm" onClick={onDone} className="mt-2 h-7 text-xs w-full">
           Done
         </Button>
       )}
