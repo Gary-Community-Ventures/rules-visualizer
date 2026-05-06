@@ -38,7 +38,7 @@ export type CaseDiff = {
   path: string
   baseValue: unknown
   editedValue: unknown
-  changeType: 'modified' | 'added' | 'removed'
+  changeType: 'changed' | 'added' | 'removed'
 }
 
 /** Full result for one scenario, comparing base vs edited */

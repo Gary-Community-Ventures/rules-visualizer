@@ -12,7 +12,11 @@ import {
   type SimulationRun,
   type CaseResult,
 } from '@/lib/api/simulation-api'
-import { listRulesets, type RulesetSummary } from '@/lib/api/rules-api'
+import {
+  listRulesets,
+  getRuleset,
+  type RulesetSummary,
+} from '@/lib/api/rules-api'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
@@ -25,6 +29,7 @@ import {
   ArrowLeft,
   FlaskConical,
   ExternalLink,
+  X,
 } from 'lucide-react'
 
 type View = 'config' | 'dashboard' | 'detail'
@@ -355,21 +360,7 @@ function ConfigView({
           </div>
         </div>
 
-        <div className="space-y-1">
-          <label className="text-xs font-medium">
-            Outcome nodes ({config.outcomeNodes.length})
-          </label>
-          <div className="flex flex-wrap gap-1">
-            {config.outcomeNodes.map((p) => (
-              <span
-                key={p}
-                className="px-1.5 py-0.5 bg-violet-100 text-violet-800 text-[10px] font-mono rounded"
-              >
-                {p}
-              </span>
-            ))}
-          </div>
-        </div>
+        <OutcomeNodeEditor config={config} setConfig={setConfig} />
 
         <details className="text-xs">
           <summary className="cursor-pointer text-muted-foreground hover:text-foreground">
@@ -834,6 +825,17 @@ function DetailView({
       `Sim case #${caseResult.scenarioId} (compared)`
     )
   }
+  const openNodeInGraph = (targetRulesetId: string, nodePath: string) => {
+    setPendingScenario({
+      rulesetId: targetRulesetId,
+      inputs: caseResult.inputs,
+      entities: caseResult.entities,
+      label: `Sim case #${caseResult.scenarioId}`,
+      focusNode: nodePath,
+    })
+    window.open(`/ruleset/${targetRulesetId}?sim=1`, '_blank')
+  }
+
   const [showAllNodes, setShowAllNodes] = useState(false)
   const diffPaths = new Set(caseResult.allDiffs.map((d) => d.path))
   const outcomePaths = new Set(caseResult.outcomeDiffs.map((d) => d.path))
@@ -919,20 +921,27 @@ function DetailView({
           </h3>
           {caseResult.outcomeDiffs.map((d) => (
             <div key={d.path} className="flex items-center gap-3 text-sm">
-              <NodeLink
-                path={d.path}
-                rulesetId={rulesetId}
-                comparedRulesetId={comparedRulesetId}
-                inputs={caseResult.inputs}
-                entities={caseResult.entities}
-                scenarioId={caseResult.scenarioId}
-              />
-              <span className="font-mono text-muted-foreground">
+              <span className="font-mono font-medium">{d.path}</span>
+              <span className="font-mono text-muted-foreground group inline-flex items-center gap-1">
                 {formatValue(d.baseValue)}
+                <button
+                  className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground"
+                  onClick={() => openNodeInGraph(rulesetId, d.path)}
+                  title={`Open in ${rulesetId}`}
+                >
+                  <ExternalLink className="size-2.5" />
+                </button>
               </span>
               <span className="text-muted-foreground">&rarr;</span>
-              <span className="font-mono font-medium">
+              <span className="font-mono font-medium group inline-flex items-center gap-1">
                 {formatValue(d.editedValue)}
+                <button
+                  className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground"
+                  onClick={() => openNodeInGraph(comparedRulesetId, d.path)}
+                  title={`Open in ${comparedRulesetId}`}
+                >
+                  <ExternalLink className="size-2.5" />
+                </button>
               </span>
             </div>
           ))}
@@ -991,13 +1000,13 @@ function DetailView({
 
       {/* Side-by-side results */}
       <div className="border rounded-lg overflow-hidden">
-        <table className="w-full text-xs">
+        <table className="w-full text-xs table-fixed">
           <thead className="bg-muted/50">
             <tr>
-              <th className="text-left px-3 py-2 font-medium">Path</th>
-              <th className="text-left px-3 py-2 font-medium">Base</th>
-              <th className="text-left px-3 py-2 font-medium">Edited</th>
-              <th className="text-left px-3 py-2 font-medium w-20">Change</th>
+              <th className="text-left px-3 py-2 font-medium w-[30%] truncate">Path</th>
+              <th className="text-left px-3 py-2 font-medium w-[25%] truncate">{rulesetId}</th>
+              <th className="text-left px-3 py-2 font-medium w-[25%] truncate">{comparedRulesetId}</th>
+              <th className="text-right px-3 py-2 font-medium w-[20%]">Change</th>
             </tr>
           </thead>
           <tbody>
@@ -1012,35 +1021,62 @@ function DetailView({
                   key={path}
                   className={cn('border-t', isDiff && 'bg-amber-50/50')}
                 >
-                  <td className="px-3 py-1.5 font-mono max-w-[200px]">
-                    <NodeLink
-                      path={path}
-                      rulesetId={rulesetId}
-                      comparedRulesetId={comparedRulesetId}
-                      inputs={caseResult.inputs}
-                      entities={caseResult.entities}
-                      scenarioId={caseResult.scenarioId}
-                    />
+                  <td
+                    className="px-3 py-1.5 font-mono truncate"
+                    title={path}
+                  >
+                    {path}
                   </td>
                   <td className="px-3 py-1.5 font-mono">
-                    {formatValue(baseVal)}
+                    <span className="inline-flex items-center gap-1 group">
+                      {formatValue(baseVal)}
+                      <button
+                        className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground shrink-0"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          openNodeInGraph(rulesetId, path)
+                        }}
+                        title={`Open in ${rulesetId}`}
+                      >
+                        <ExternalLink className="size-2.5" />
+                      </button>
+                    </span>
                   </td>
                   <td className="px-3 py-1.5 font-mono">
-                    {formatValue(editedVal)}
+                    <span className="inline-flex items-center gap-1 group">
+                      {formatValue(editedVal)}
+                      <button
+                        className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground shrink-0"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          openNodeInGraph(comparedRulesetId, path)
+                        }}
+                        title={`Open in ${comparedRulesetId}`}
+                      >
+                        <ExternalLink className="size-2.5" />
+                      </button>
+                    </span>
                   </td>
-                  <td className="px-3 py-1.5">
+                  <td className="px-3 py-1.5 text-right">
                     {diff && (
                       <span
                         className={cn(
-                          'text-[10px] px-1.5 py-0.5 rounded',
+                          'text-[10px] px-1.5 py-0.5 rounded font-mono',
                           diff.changeType === 'added'
-                            ? 'bg-emerald-100 text-emerald-700'
+                            ? 'bg-blue-100 text-blue-700'
                             : diff.changeType === 'removed'
-                              ? 'bg-red-100 text-red-700'
+                              ? 'bg-muted text-muted-foreground'
                               : 'bg-amber-100 text-amber-700'
                         )}
                       >
-                        {diff.changeType}
+                        {diff.changeType === 'added'
+                          ? 'added'
+                          : diff.changeType === 'removed'
+                            ? 'removed'
+                            : typeof diff.baseValue === 'number' &&
+                                typeof diff.editedValue === 'number'
+                              ? `${diff.editedValue - diff.baseValue > 0 ? '+' : ''}${Math.round((diff.editedValue - diff.baseValue) * 100) / 100}`
+                              : `→ ${formatValue(diff.editedValue)}`}
                       </span>
                     )}
                   </td>
@@ -1055,50 +1091,89 @@ function DetailView({
 }
 
 /** Clickable node path that opens the graph in a new browser tab. */
-function NodeLink({
-  path,
-  rulesetId,
-  comparedRulesetId,
-  inputs,
-  entities,
-  scenarioId,
+function OutcomeNodeEditor({
+  config,
+  setConfig,
 }: {
-  path: string
-  rulesetId: string
-  comparedRulesetId: string
-  inputs: Record<string, unknown>
-  entities?: Record<string, Record<string, unknown>[]>
-  scenarioId: number
+  config: SimulationConfig
+  setConfig: (c: SimulationConfig) => void
 }) {
-  const openNode = (targetRulesetId: string) => {
-    setPendingScenario({
-      rulesetId: targetRulesetId,
-      inputs,
-      entities,
-      label: `Sim case #${scenarioId}`,
-      focusNode: path,
-    })
-    window.open(`/ruleset/${targetRulesetId}?sim=1`, '_blank')
-  }
+  const { rulesetId } = useParams({ from: '/simulate/$rulesetId' })
+  const [search, setSearch] = useState('')
+  const [allPaths, setAllPaths] = useState<string[]>([])
+
+  // Load all node paths from the model
+  useEffect(() => {
+    getRuleset(rulesetId)
+      .then((model) => {
+        const paths = Object.values(model.nodes)
+          .filter((n) => n.content.type !== 'entity')
+          .map((n) => n.name)
+          .sort()
+        setAllPaths(paths)
+      })
+      .catch(() => {})
+  }, [rulesetId])
+
+  const outcomeSet = new Set(config.outcomeNodes)
+  const filtered = search
+    ? allPaths.filter(
+        (p) => p.toLowerCase().includes(search.toLowerCase()) && !outcomeSet.has(p)
+      )
+    : []
 
   return (
-    <span className="inline-flex items-center gap-1 group">
-      <span className="truncate">{path}</span>
-      <button
-        className="opacity-0 group-hover:opacity-100 text-blue-600 hover:text-blue-800 shrink-0"
-        onClick={() => openNode(rulesetId)}
-        title={`Open in base (${rulesetId})`}
-      >
-        <ExternalLink className="size-2.5" />
-      </button>
-      <button
-        className="opacity-0 group-hover:opacity-100 text-violet-600 hover:text-violet-800 shrink-0"
-        onClick={() => openNode(comparedRulesetId)}
-        title={`Open in compared (${comparedRulesetId})`}
-      >
-        <ExternalLink className="size-2.5" />
-      </button>
-    </span>
+    <div className="space-y-1.5">
+      <label className="text-xs font-medium">
+        Outcome nodes ({config.outcomeNodes.length})
+      </label>
+      <div className="flex flex-wrap gap-1">
+        {config.outcomeNodes.map((p) => (
+          <span
+            key={p}
+            className="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-violet-100 text-violet-800 text-[10px] font-mono rounded cursor-pointer hover:bg-violet-200"
+            onClick={() =>
+              setConfig({
+                ...config,
+                outcomeNodes: config.outcomeNodes.filter((n) => n !== p),
+              })
+            }
+            title="Click to remove"
+          >
+            {p}
+            <X className="size-2.5" />
+          </span>
+        ))}
+      </div>
+      <Input
+        className="h-7 text-xs font-mono"
+        placeholder="Search nodes to add..."
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+      />
+      {search && filtered.length > 0 && (
+        <div className="border rounded max-h-32 overflow-y-auto bg-background">
+          {filtered.slice(0, 15).map((p) => (
+            <button
+              key={p}
+              className="w-full text-left px-2 py-1 text-xs font-mono hover:bg-muted"
+              onClick={() => {
+                setConfig({
+                  ...config,
+                  outcomeNodes: [...config.outcomeNodes, p],
+                })
+                setSearch('')
+              }}
+            >
+              {p}
+            </button>
+          ))}
+        </div>
+      )}
+      {search && filtered.length === 0 && (
+        <p className="text-[10px] text-muted-foreground px-1">No matching nodes</p>
+      )}
+    </div>
   )
 }
 

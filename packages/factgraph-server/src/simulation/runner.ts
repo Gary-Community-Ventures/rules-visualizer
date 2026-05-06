@@ -50,7 +50,7 @@ function diffResults(
         changeType: 'removed',
       }
     } else if (!compareValues(bv, ev)) {
-      diff = { path, baseValue: bv, editedValue: ev, changeType: 'modified' }
+      diff = { path, baseValue: bv, editedValue: ev, changeType: 'changed' }
     }
 
     if (diff) {

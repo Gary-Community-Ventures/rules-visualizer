@@ -480,13 +480,6 @@ export function ModelProvider({
     setNodeHistoryIndex,
   ])
 
-  // Set browser tab title
-  useEffect(() => {
-    if (model.name) {
-      document.title = `${model.name} — Rules Visualizer`
-    }
-  }, [model.name])
-
   // Set favicon based on format
   useEffect(() => {
     const href = model.format === 'rac' ? '/favicon-rac.svg' : '/favicon-fg.svg'

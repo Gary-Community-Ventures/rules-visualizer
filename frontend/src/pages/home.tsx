@@ -42,6 +42,14 @@ export function HomePage({ active = true }: { active?: boolean }) {
     executionResults,
     activeTest,
   } = useMainContext()
+
+  // Set browser tab title only when this tab is active
+  useEffect(() => {
+    if (active && model.name) {
+      document.title = `${model.name} — Rules Visualizer`
+    }
+  }, [active, model.name])
+
   // The keyboard hook fires `open-shortcuts` on `?` and HomePage owns
   // the modal state so the hook stays state-free.
   const [shortcutsOpen, setShortcutsOpen] = useState(false)

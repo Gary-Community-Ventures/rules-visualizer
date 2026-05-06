@@ -30,7 +30,7 @@ export type CaseDiff = {
   path: string
   baseValue: unknown
   editedValue: unknown
-  changeType: 'modified' | 'added' | 'removed'
+  changeType: 'changed' | 'added' | 'removed'
 }
 
 export type CaseResult = {
