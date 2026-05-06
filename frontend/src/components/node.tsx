@@ -41,6 +41,7 @@ import {
   FileText,
   ChevronDown,
   ChevronRight,
+  LocateFixed,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ALLOW_WRITES } from '@/lib/allow-writes'
@@ -1283,6 +1284,7 @@ function CopyableName({ name }: { name: string }) {
 export function NodePanel() {
   const {
     model,
+    rulesetId,
     openNode,
     workspaceItems,
     setWorkspaceItems,
@@ -1466,6 +1468,21 @@ export function NodePanel() {
               </ContextMenu.Content>
             </ContextMenu.Portal>
           </ContextMenu.Root>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7"
+            title="Recenter on node (.)"
+            onClick={() =>
+              window.dispatchEvent(
+                new CustomEvent('pan-to-element', {
+                  detail: { elementId: nodeElementId(rulesetId, openNode) },
+                })
+              )
+            }
+          >
+            <LocateFixed className="size-4" />
+          </Button>
           <Button
             variant="ghost"
             size="icon"
