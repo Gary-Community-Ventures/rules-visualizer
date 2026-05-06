@@ -1,0 +1,1127 @@
+<?xml version="1.0"?>
+<FactDictionaryModule>
+  <Facts>
+    <!-- ============================================================ -->
+    <!-- Medicaid / CHP+ / WAWD / CWD eligibility                     -->
+    <!--                                                              -->
+    <!-- Per-member structure: each /members/*/foo determines that    -->
+    <!-- specific member's eligibility, but shared household pieces   -->
+    <!-- (income, FPL %, financial gates, plan level, WAWD/CWD income -->
+    <!-- tests) live at root. Ported from                             -->
+    <!-- rules_engine_mockup/src/lib/programs/medicaid.ts.            -->
+    <!-- ============================================================ -->
+
+
+    <!-- ============================================================ -->
+    <!-- ENUM OPTION LISTS                                            -->
+    <!-- ============================================================ -->
+
+    <Fact path="/immigrantStatusOptions">
+      <Name>Immigrant status options</Name>
+      <Derived>
+        <EnumOptions>
+          <String>Citizen</String>
+          <String>LegalPermanentResident</String>
+          <String>Refugee</String>
+          <String>Asylee</String>
+          <String>DeportationWithheld</String>
+          <String>CubanHaitianEntrant</String>
+          <String>ConditionalEntrant</String>
+          <String>ParoledForAtLeastOneYear</String>
+          <String>Undocumented</String>
+          <String>DACA</String>
+          <String>TemporaryProtectedStatus</String>
+        </EnumOptions>
+      </Derived>
+    </Fact>
+
+    <Fact path="/medicaidCategoryOptions">
+      <Name>Medicaid category options</Name>
+      <Derived>
+        <EnumOptions>
+          <String>Infant</String>
+          <String>YoungChild</String>
+          <String>OlderChild</String>
+          <String>Adult</String>
+          <String>Pregnant</String>
+          <String>SsiRecipient</String>
+          <String>Ineligible</String>
+        </EnumOptions>
+      </Derived>
+    </Fact>
+
+    <Fact path="/chpPlanLevelOptions">
+      <Name>CHP+ plan level options</Name>
+      <Derived>
+        <EnumOptions>
+          <String>FMinus</String>
+          <String>FPlus</String>
+          <String>GMinus</String>
+          <String>GPlus</String>
+          <String>J</String>
+          <String>K</String>
+          <String>L</String>
+          <String>M</String>
+          <String>O</String>
+          <String>NotEligible</String>
+        </EnumOptions>
+      </Derived>
+    </Fact>
+
+
+    <!-- ============================================================ -->
+    <!-- CONSTANTS                                                    -->
+    <!-- ============================================================ -->
+
+    <Fact path="/minimumMonthlyHoursWorked">
+      <Name>Minimum Monthly Hours Worked</Name>
+      <Derived><Int>80</Int></Derived>
+    </Fact>
+
+    <Fact path="/workMinAge">
+      <Name>Work Minimum Age</Name>
+      <Derived><Int>19</Int></Derived>
+    </Fact>
+
+    <Fact path="/workMaxAge">
+      <Name>Work Maximum Age</Name>
+      <Derived><Int>65</Int></Derived>
+    </Fact>
+
+    <Fact path="/fplLimitBaseline">
+      <Name>FPL Limit Baseline</Name>
+      <Derived><Dollar>15060</Dollar></Derived>
+    </Fact>
+
+    <Fact path="/fplLimitAdditional">
+      <Name>FPL Limit Additional</Name>
+      <Derived><Dollar>5380</Dollar></Derived>
+    </Fact>
+
+    <Fact path="/infantMaxFplPercent">
+      <Name>Infant Max FPL Percent</Name>
+      <Derived><Int>147</Int></Derived>
+    </Fact>
+
+    <Fact path="/infantMaxAge">
+      <Name>Infant Max Age</Name>
+      <Derived><Int>1</Int></Derived>
+    </Fact>
+
+    <Fact path="/youngChildMaxFplPercent">
+      <Name>Young Child Max FPL Percent</Name>
+      <Derived><Int>147</Int></Derived>
+    </Fact>
+
+    <Fact path="/youngChildMaxAge">
+      <Name>Young Child Max Age</Name>
+      <Derived><Int>6</Int></Derived>
+    </Fact>
+
+    <Fact path="/olderChildMaxFplPercent">
+      <Name>Older Child Max FPL Percent</Name>
+      <Derived><Int>147</Int></Derived>
+    </Fact>
+
+    <Fact path="/olderChildMaxAge">
+      <Name>Older Child Max Age</Name>
+      <Derived><Int>19</Int></Derived>
+    </Fact>
+
+    <Fact path="/adultMaxFplPercent">
+      <Name>Adult Max FPL Percent</Name>
+      <Derived><Int>138</Int></Derived>
+    </Fact>
+
+    <Fact path="/adultMaxAge">
+      <Name>Adult Max Age</Name>
+      <Derived><Int>65</Int></Derived>
+    </Fact>
+
+    <Fact path="/pregnantMaxFplPercent">
+      <Name>Pregnant Max FPL Percent</Name>
+      <Derived><Int>200</Int></Derived>
+    </Fact>
+
+    <Fact path="/pregnantMaxDaysAfterBirth">
+      <Name>Pregnant Max Days After Birth</Name>
+      <Derived><Int>60</Int></Derived>
+    </Fact>
+
+    <Fact path="/chpMaxAge">
+      <Name>CHP Max Age</Name>
+      <Derived><Int>19</Int></Derived>
+    </Fact>
+
+    <Fact path="/chpPlanFMinusMax">
+      <Name>CHP+ Plan F- Max FPL%</Name>
+      <Derived><Int>156</Int></Derived>
+    </Fact>
+
+    <Fact path="/chpPlanFPlusMax">
+      <Name>CHP+ Plan F+ Max FPL%</Name>
+      <Derived><Int>159</Int></Derived>
+    </Fact>
+
+    <Fact path="/chpPlanGMinusMax">
+      <Name>CHP+ Plan G- Max FPL%</Name>
+      <Derived><Int>170</Int></Derived>
+    </Fact>
+
+    <Fact path="/chpPlanGPlusMax">
+      <Name>CHP+ Plan G+ Max FPL%</Name>
+      <Derived><Int>185</Int></Derived>
+    </Fact>
+
+    <Fact path="/chpPlanJMax">
+      <Name>CHP+ Plan J Max FPL%</Name>
+      <Derived><Int>200</Int></Derived>
+    </Fact>
+
+    <Fact path="/chpPlanKMax">
+      <Name>CHP+ Plan K Max FPL%</Name>
+      <Derived><Int>213</Int></Derived>
+    </Fact>
+
+    <Fact path="/chpPlanLMax">
+      <Name>CHP+ Plan L Max FPL%</Name>
+      <Derived><Int>225</Int></Derived>
+    </Fact>
+
+    <Fact path="/chpPlanMMax">
+      <Name>CHP+ Plan M Max FPL%</Name>
+      <Derived><Int>235</Int></Derived>
+    </Fact>
+
+    <Fact path="/chpPlanOMax">
+      <Name>CHP+ Plan O Max FPL%</Name>
+      <Derived><Int>260</Int></Derived>
+    </Fact>
+
+    <Fact path="/wawdUnearnedIncomeExclusion">
+      <Name>SSA Unearned Income Exclusion</Name>
+      <Description>$20/mo × 12 months</Description>
+      <Derived><Dollar>240</Dollar></Derived>
+    </Fact>
+
+    <Fact path="/wawdEarnedIncomeExclusion">
+      <Name>SSA Earned Income Exclusion</Name>
+      <Description>$65/mo × 12 months</Description>
+      <Derived><Dollar>780</Dollar></Derived>
+    </Fact>
+
+    <Fact path="/wawdEarnedIncomePercent">
+      <Name>SSA Earned Income Percent</Name>
+      <Derived><Rational>1/2</Rational></Derived>
+    </Fact>
+
+    <Fact path="/wawdMinAge">
+      <Name>Working Adults with Disabilities Min Age</Name>
+      <Derived><Int>16</Int></Derived>
+    </Fact>
+
+    <Fact path="/wawdFplPercentMax">
+      <Name>Working Adults with Disabilities FPL Percent</Name>
+      <Derived><Int>450</Int></Derived>
+    </Fact>
+
+    <Fact path="/cwdMaxAge">
+      <Name>Children with Disabilities Max Age</Name>
+      <Derived><Int>19</Int></Derived>
+    </Fact>
+
+    <Fact path="/cwdFplPercentMax">
+      <Name>Children with Disabilities FPL Percent</Name>
+      <Derived><Int>300</Int></Derived>
+    </Fact>
+
+    <Fact path="/cwdEarnedIncomeDisregard">
+      <Name>CWD Earned Income Disregard</Name>
+      <Derived><Dollar>90</Dollar></Derived>
+    </Fact>
+
+    <Fact path="/cwdGrossIncomeDisregardPercent">
+      <Name>CWD Gross Income Disregard Percent</Name>
+      <Derived><Rational>33/100</Rational></Derived>
+    </Fact>
+
+
+    <!-- ============================================================ -->
+    <!-- HOUSEHOLD-LEVEL INPUTS                                       -->
+    <!-- ============================================================ -->
+
+    <Fact path="/members">
+      <Name>Household members</Name>
+      <Description>List of household members; each one is independently evaluated for Medicaid / CHP+ / WAWD / CWD coverage.</Description>
+      <Writable><Collection /></Writable>
+    </Fact>
+
+    <Fact path="/earnedIncome">
+      <Name>Earned Income</Name>
+      <Description>Annual household earned income (wages, salary, tips, self-employment).</Description>
+      <Writable><Dollar /></Writable>
+      <Placeholder><Dollar>20000</Dollar></Placeholder>
+    </Fact>
+
+    <Fact path="/unearnedIncome">
+      <Name>Unearned Income</Name>
+      <Description>Annual household unearned income (Social Security, pensions, unemployment, child support, investments).</Description>
+      <Writable><Dollar /></Writable>
+      <Placeholder><Dollar>0</Dollar></Placeholder>
+    </Fact>
+
+
+    <!-- ============================================================ -->
+    <!-- PER-MEMBER INPUTS                                            -->
+    <!-- ============================================================ -->
+
+    <Fact path="/members/*/age">
+      <Name>Age</Name>
+      <Description>Age of this member in years. Determines eligibility category (Infant, Young Child, Older Child, Adult) and work-requirement applicability.</Description>
+      <Writable><Int /></Writable>
+      <Placeholder><Int>30</Int></Placeholder>
+    </Fact>
+
+    <Fact path="/members/*/pregnant">
+      <Name>Children Due</Name>
+      <Description>Number of children expected from this member's current pregnancy (0 if not pregnant). Adds to household size for FPL.</Description>
+      <Writable><Int /></Writable>
+      <Placeholder><Int>0</Int></Placeholder>
+    </Fact>
+
+    <Fact path="/members/*/disabled">
+      <Name>Disabled</Name>
+      <Description>Whether this member has a qualifying disability.</Description>
+      <Writable><Boolean /></Writable>
+      <Placeholder><False/></Placeholder>
+    </Fact>
+
+    <Fact path="/members/*/veteran">
+      <Name>Veteran</Name>
+      <Description>Whether this member is a military veteran.</Description>
+      <Writable><Boolean /></Writable>
+      <Placeholder><False/></Placeholder>
+    </Fact>
+
+    <Fact path="/members/*/hasDisabledChild">
+      <Name>Has Disabled Child</Name>
+      <Description>Whether this member has a child with a disability in the household.</Description>
+      <Writable><Boolean /></Writable>
+      <Placeholder><False/></Placeholder>
+    </Fact>
+
+    <Fact path="/members/*/isFullTimeStudent">
+      <Name>Is Full-Time Student</Name>
+      <Description>Whether this member is enrolled as a full-time student.</Description>
+      <Writable><Boolean /></Writable>
+      <Placeholder><False/></Placeholder>
+    </Fact>
+
+    <Fact path="/members/*/monthlyHoursWorked">
+      <Name>Monthly Hours Worked</Name>
+      <Description>Hours per month this member works.</Description>
+      <Writable><Int /></Writable>
+      <Placeholder><Int>80</Int></Placeholder>
+    </Fact>
+
+    <Fact path="/members/*/immigrantStatus">
+      <Name>Immigrant Status</Name>
+      <Description>This member's immigration / citizenship status.</Description>
+      <Writable><Enum optionsPath="/immigrantStatusOptions" /></Writable>
+      <Placeholder><Enum optionsPath="/immigrantStatusOptions">Citizen</Enum></Placeholder>
+    </Fact>
+
+    <Fact path="/members/*/receivesSsi">
+      <Name>Receives SSI</Name>
+      <Description>Whether this member receives Supplemental Security Income.</Description>
+      <Writable><Boolean /></Writable>
+      <Placeholder><False/></Placeholder>
+    </Fact>
+
+    <Fact path="/members/*/daysSincePregnancy">
+      <Name>Days Since Pregnancy</Name>
+      <Description>Days since this member's pregnancy ended (used for postpartum coverage).</Description>
+      <Writable><Int /></Writable>
+      <Placeholder><Int>999999999</Int></Placeholder>
+    </Fact>
+
+    <Fact path="/members/*/isMember">
+      <Name>Is Member</Name>
+      <Description>Per-member sentinel boolean (always true) used to derive household_size via Count.</Description>
+      <Derived><True /></Derived>
+    </Fact>
+
+
+    <!-- ============================================================ -->
+    <!-- HOUSEHOLD-LEVEL DERIVED                                      -->
+    <!-- ============================================================ -->
+
+    <Fact path="/householdSize">
+      <Name>Household Size</Name>
+      <Description>Number of members in the household.</Description>
+      <Derived>
+        <Count>
+          <Dependency path="/members/*/isMember" />
+        </Count>
+      </Derived>
+    </Fact>
+
+    <Fact path="/householdPregnant">
+      <Name>Household Children Due</Name>
+      <Description>Total children due across all members. Adds to household size for the Medicaid FPL calculation.</Description>
+      <Derived>
+        <CollectionSum>
+          <Dependency path="/members/*/pregnant" />
+        </CollectionSum>
+      </Derived>
+    </Fact>
+
+    <Fact path="/totalIncome">
+      <Name>Total Income</Name>
+      <Description>Total annual household income (earned + unearned).</Description>
+      <Derived>
+        <Add>
+          <Dependency path="/earnedIncome" />
+          <Dependency path="/unearnedIncome" />
+        </Add>
+      </Derived>
+    </Fact>
+
+    <Fact path="/fpl">
+      <Name>FPL</Name>
+      <Description>Federal Poverty Level: baseline + additional × (household_size − 1).</Description>
+      <Derived>
+        <Add>
+          <Dependency path="/fplLimitBaseline" />
+          <Multiply>
+            <Dependency path="/fplLimitAdditional" />
+            <Subtract>
+              <Minuend><Dependency path="/householdSize" /></Minuend>
+              <Subtrahends><Int>1</Int></Subtrahends>
+            </Subtract>
+          </Multiply>
+        </Add>
+      </Derived>
+    </Fact>
+
+    <Fact path="/medicaidFpl">
+      <Name>Medicaid FPL</Name>
+      <Description>Federal Poverty Level for Medicaid: baseline + additional × (household_size − 1 + total children due).</Description>
+      <Derived>
+        <Add>
+          <Dependency path="/fplLimitBaseline" />
+          <Multiply>
+            <Dependency path="/fplLimitAdditional" />
+            <Add>
+              <Subtract>
+                <Minuend><Dependency path="/householdSize" /></Minuend>
+                <Subtrahends><Int>1</Int></Subtrahends>
+              </Subtract>
+              <Dependency path="/householdPregnant" />
+            </Add>
+          </Multiply>
+        </Add>
+      </Derived>
+    </Fact>
+
+    <Fact path="/medicaidFplPercent">
+      <Name>Medicaid FPL Percent</Name>
+      <Description>Total household income as a percentage of the Medicaid FPL.</Description>
+      <Derived>
+        <RoundToInt>
+          <Multiply>
+            <Divide>
+              <Dividend><Dependency path="/totalIncome" /></Dividend>
+              <Divisors><Dependency path="/medicaidFpl" /></Divisors>
+            </Divide>
+            <Int>100</Int>
+          </Multiply>
+        </RoundToInt>
+      </Derived>
+    </Fact>
+
+
+    <!-- ============================================================ -->
+    <!-- HOUSEHOLD-LEVEL FINANCIAL GATES                              -->
+    <!-- (income/% test only — paired with each member's age test)    -->
+    <!-- ============================================================ -->
+
+    <Fact path="/medicaidInfantFinancial">
+      <Name>Medicaid Infant Financial</Name>
+      <Description>Passes if Medicaid % FPL ≤ infant max FPL %.</Description>
+      <Derived>
+        <LessThanOrEqual>
+          <Left><Dependency path="/medicaidFplPercent" /></Left>
+          <Right><Dependency path="/infantMaxFplPercent" /></Right>
+        </LessThanOrEqual>
+      </Derived>
+    </Fact>
+
+    <Fact path="/medicaidYoungChildFinancial">
+      <Name>Medicaid Young Child Financial</Name>
+      <Description>Passes if Medicaid % FPL ≤ young-child max FPL %.</Description>
+      <Derived>
+        <LessThanOrEqual>
+          <Left><Dependency path="/medicaidFplPercent" /></Left>
+          <Right><Dependency path="/youngChildMaxFplPercent" /></Right>
+        </LessThanOrEqual>
+      </Derived>
+    </Fact>
+
+    <Fact path="/medicaidOlderChildFinancial">
+      <Name>Medicaid Older Child Financial</Name>
+      <Description>Passes if Medicaid % FPL ≤ older-child max FPL %.</Description>
+      <Derived>
+        <LessThanOrEqual>
+          <Left><Dependency path="/medicaidFplPercent" /></Left>
+          <Right><Dependency path="/olderChildMaxFplPercent" /></Right>
+        </LessThanOrEqual>
+      </Derived>
+    </Fact>
+
+    <Fact path="/medicaidAdultFinancial">
+      <Name>Medicaid Adult Financial</Name>
+      <Description>Passes if Medicaid % FPL ≤ adult max FPL %.</Description>
+      <Derived>
+        <LessThanOrEqual>
+          <Left><Dependency path="/medicaidFplPercent" /></Left>
+          <Right><Dependency path="/adultMaxFplPercent" /></Right>
+        </LessThanOrEqual>
+      </Derived>
+    </Fact>
+
+    <Fact path="/medicaidPregnantFinancial">
+      <Name>Medicaid Pregnant Financial</Name>
+      <Description>Passes if Medicaid % FPL ≤ pregnant max FPL %.</Description>
+      <Derived>
+        <LessThanOrEqual>
+          <Left><Dependency path="/medicaidFplPercent" /></Left>
+          <Right><Dependency path="/pregnantMaxFplPercent" /></Right>
+        </LessThanOrEqual>
+      </Derived>
+    </Fact>
+
+    <Fact path="/chpPlanLevel">
+      <Name>CHP+ Plan Level</Name>
+      <Description>Determines CHP+ plan level for the household based on Medicaid % FPL.</Description>
+      <Derived>
+        <Switch>
+          <Case>
+            <When><LessThanOrEqual><Left><Dependency path="/medicaidFplPercent" /></Left><Right><Dependency path="/chpPlanFMinusMax" /></Right></LessThanOrEqual></When>
+            <Then><Enum optionsPath="/chpPlanLevelOptions">FMinus</Enum></Then>
+          </Case>
+          <Case>
+            <When><LessThanOrEqual><Left><Dependency path="/medicaidFplPercent" /></Left><Right><Dependency path="/chpPlanFPlusMax" /></Right></LessThanOrEqual></When>
+            <Then><Enum optionsPath="/chpPlanLevelOptions">FPlus</Enum></Then>
+          </Case>
+          <Case>
+            <When><LessThanOrEqual><Left><Dependency path="/medicaidFplPercent" /></Left><Right><Dependency path="/chpPlanGMinusMax" /></Right></LessThanOrEqual></When>
+            <Then><Enum optionsPath="/chpPlanLevelOptions">GMinus</Enum></Then>
+          </Case>
+          <Case>
+            <When><LessThanOrEqual><Left><Dependency path="/medicaidFplPercent" /></Left><Right><Dependency path="/chpPlanGPlusMax" /></Right></LessThanOrEqual></When>
+            <Then><Enum optionsPath="/chpPlanLevelOptions">GPlus</Enum></Then>
+          </Case>
+          <Case>
+            <When><LessThanOrEqual><Left><Dependency path="/medicaidFplPercent" /></Left><Right><Dependency path="/chpPlanJMax" /></Right></LessThanOrEqual></When>
+            <Then><Enum optionsPath="/chpPlanLevelOptions">J</Enum></Then>
+          </Case>
+          <Case>
+            <When><LessThanOrEqual><Left><Dependency path="/medicaidFplPercent" /></Left><Right><Dependency path="/chpPlanKMax" /></Right></LessThanOrEqual></When>
+            <Then><Enum optionsPath="/chpPlanLevelOptions">K</Enum></Then>
+          </Case>
+          <Case>
+            <When><LessThanOrEqual><Left><Dependency path="/medicaidFplPercent" /></Left><Right><Dependency path="/chpPlanLMax" /></Right></LessThanOrEqual></When>
+            <Then><Enum optionsPath="/chpPlanLevelOptions">L</Enum></Then>
+          </Case>
+          <Case>
+            <When><LessThanOrEqual><Left><Dependency path="/medicaidFplPercent" /></Left><Right><Dependency path="/chpPlanMMax" /></Right></LessThanOrEqual></When>
+            <Then><Enum optionsPath="/chpPlanLevelOptions">M</Enum></Then>
+          </Case>
+          <Case>
+            <When><LessThanOrEqual><Left><Dependency path="/medicaidFplPercent" /></Left><Right><Dependency path="/chpPlanOMax" /></Right></LessThanOrEqual></When>
+            <Then><Enum optionsPath="/chpPlanLevelOptions">O</Enum></Then>
+          </Case>
+          <Case>
+            <When><True /></When>
+            <Then><Enum optionsPath="/chpPlanLevelOptions">NotEligible</Enum></Then>
+          </Case>
+        </Switch>
+      </Derived>
+    </Fact>
+
+
+    <!-- ============================================================ -->
+    <!-- HOUSEHOLD-LEVEL WAWD INCOME (SSA-style)                      -->
+    <!-- ============================================================ -->
+
+    <Fact path="/wawdApplicableUnearned">
+      <Name>WAWD Applicable Unearned Income</Name>
+      <Derived>
+        <GreaterOf>
+          <Dollar>0</Dollar>
+          <Subtract>
+            <Minuend><Dependency path="/unearnedIncome" /></Minuend>
+            <Subtrahends><Dependency path="/wawdUnearnedIncomeExclusion" /></Subtrahends>
+          </Subtract>
+        </GreaterOf>
+      </Derived>
+    </Fact>
+
+    <Fact path="/wawdRemainingUnearnedExclusion">
+      <Name>WAWD Remaining Unearned Exclusion</Name>
+      <Derived>
+        <GreaterOf>
+          <Dollar>0</Dollar>
+          <Subtract>
+            <Minuend><Dependency path="/wawdUnearnedIncomeExclusion" /></Minuend>
+            <Subtrahends><Dependency path="/wawdApplicableUnearned" /></Subtrahends>
+          </Subtract>
+        </GreaterOf>
+      </Derived>
+    </Fact>
+
+    <Fact path="/wawdApplicableEarned">
+      <Name>WAWD Applicable Earned Income</Name>
+      <Derived>
+        <Multiply>
+          <GreaterOf>
+            <Dollar>0</Dollar>
+            <Subtract>
+              <Minuend><Dependency path="/earnedIncome" /></Minuend>
+              <Subtrahends>
+                <Dependency path="/wawdEarnedIncomeExclusion" />
+                <Dependency path="/wawdRemainingUnearnedExclusion" />
+              </Subtrahends>
+            </Subtract>
+          </GreaterOf>
+          <Dependency path="/wawdEarnedIncomePercent" />
+        </Multiply>
+      </Derived>
+    </Fact>
+
+    <Fact path="/wawdIncome">
+      <Name>WAWD Countable Income</Name>
+      <Description>SSA-based countable income: (unearned − exclusion) + ((earned − earned exclusion − remaining unearned exclusion) × earnedIncomePercent).</Description>
+      <Derived>
+        <Add>
+          <Dependency path="/wawdApplicableUnearned" />
+          <Dependency path="/wawdApplicableEarned" />
+        </Add>
+      </Derived>
+    </Fact>
+
+    <Fact path="/wawdFplPercent">
+      <Name>WAWD % FPL</Name>
+      <Description>WAWD income as a percentage of FPL.</Description>
+      <Derived>
+        <RoundToInt>
+          <Multiply>
+            <Divide>
+              <Dividend><Dependency path="/wawdIncome" /></Dividend>
+              <Divisors><Dependency path="/fpl" /></Divisors>
+            </Divide>
+            <Int>100</Int>
+          </Multiply>
+        </RoundToInt>
+      </Derived>
+    </Fact>
+
+    <Fact path="/wawdIncomeEligible">
+      <Name>WAWD Income Eligible</Name>
+      <Description>Passes if WAWD % FPL ≤ wawdFplPercentMax.</Description>
+      <Derived>
+        <LessThanOrEqual>
+          <Left><Dependency path="/wawdFplPercent" /></Left>
+          <Right><Dependency path="/wawdFplPercentMax" /></Right>
+        </LessThanOrEqual>
+      </Derived>
+    </Fact>
+
+
+    <!-- ============================================================ -->
+    <!-- HOUSEHOLD-LEVEL CWD INCOME                                   -->
+    <!-- ============================================================ -->
+
+    <Fact path="/cwdEarnedDisregard">
+      <Name>CWD Earned Income Disregard Applied</Name>
+      <Derived>
+        <LesserOf>
+          <Dependency path="/cwdEarnedIncomeDisregard" />
+          <Dependency path="/earnedIncome" />
+        </LesserOf>
+      </Derived>
+    </Fact>
+
+    <Fact path="/cwdAfterEarnedDisregard">
+      <Name>CWD Income After Earned Disregard</Name>
+      <Derived>
+        <Subtract>
+          <Minuend><Dependency path="/totalIncome" /></Minuend>
+          <Subtrahends><Dependency path="/cwdEarnedDisregard" /></Subtrahends>
+        </Subtract>
+      </Derived>
+    </Fact>
+
+    <Fact path="/cwdGrossDisregard">
+      <Name>CWD Gross Income Disregard Amount</Name>
+      <Derived>
+        <Multiply>
+          <Dependency path="/cwdAfterEarnedDisregard" />
+          <Dependency path="/cwdGrossIncomeDisregardPercent" />
+        </Multiply>
+      </Derived>
+    </Fact>
+
+    <Fact path="/cwdIncome">
+      <Name>CWD Countable Income</Name>
+      <Description>CWD countable income: (gross − earned disregard) × (1 − gross disregard %), floored at 0.</Description>
+      <Derived>
+        <GreaterOf>
+          <Dollar>0</Dollar>
+          <Subtract>
+            <Minuend><Dependency path="/cwdAfterEarnedDisregard" /></Minuend>
+            <Subtrahends><Dependency path="/cwdGrossDisregard" /></Subtrahends>
+          </Subtract>
+        </GreaterOf>
+      </Derived>
+    </Fact>
+
+    <Fact path="/cwdFplPercent">
+      <Name>CWD % FPL</Name>
+      <Description>CWD income as a percentage of FPL.</Description>
+      <Derived>
+        <RoundToInt>
+          <Multiply>
+            <Divide>
+              <Dividend><Dependency path="/cwdIncome" /></Dividend>
+              <Divisors><Dependency path="/fpl" /></Divisors>
+            </Divide>
+            <Int>100</Int>
+          </Multiply>
+        </RoundToInt>
+      </Derived>
+    </Fact>
+
+    <Fact path="/cwdIncomeEligible">
+      <Name>CWD Income Eligible</Name>
+      <Description>Passes if CWD % FPL ≤ cwdFplPercentMax.</Description>
+      <Derived>
+        <LessThanOrEqual>
+          <Left><Dependency path="/cwdFplPercent" /></Left>
+          <Right><Dependency path="/cwdFplPercentMax" /></Right>
+        </LessThanOrEqual>
+      </Derived>
+    </Fact>
+
+
+    <!-- ============================================================ -->
+    <!-- PER-MEMBER WORK REQUIREMENTS + LEGAL STATUS                  -->
+    <!-- ============================================================ -->
+
+    <Fact path="/members/*/medicaidWorkRequirements">
+      <Name>Meets Work Requirements</Name>
+      <Description>Passes if monthly hours worked ≥ minimum, OR if exempt due to: full-time student, pregnant, disabled, veteran, has-disabled-child, or age outside the work range.</Description>
+      <Derived>
+        <Any>
+          <Dependency path="../isFullTimeStudent" />
+          <GreaterThan>
+            <Left><Dependency path="../pregnant" /></Left>
+            <Right><Int>0</Int></Right>
+          </GreaterThan>
+          <Dependency path="../disabled" />
+          <Dependency path="../veteran" />
+          <Dependency path="../hasDisabledChild" />
+          <LessThan>
+            <Left><Dependency path="../age" /></Left>
+            <Right><Dependency path="/workMinAge" /></Right>
+          </LessThan>
+          <GreaterThanOrEqual>
+            <Left><Dependency path="../age" /></Left>
+            <Right><Dependency path="/workMaxAge" /></Right>
+          </GreaterThanOrEqual>
+          <GreaterThanOrEqual>
+            <Left><Dependency path="../monthlyHoursWorked" /></Left>
+            <Right><Dependency path="/minimumMonthlyHoursWorked" /></Right>
+          </GreaterThanOrEqual>
+        </Any>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/medicaidLegalStatusEligible">
+      <Name>Medicaid Legal Status Eligible</Name>
+      <Description>Passes if immigrant status is Citizen, Legal Permanent Resident, or Cuban/Haitian Entrant.</Description>
+      <Derived>
+        <Any>
+          <Equal><Left><Dependency path="../immigrantStatus" /></Left><Right><Enum optionsPath="/immigrantStatusOptions">Citizen</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../immigrantStatus" /></Left><Right><Enum optionsPath="/immigrantStatusOptions">LegalPermanentResident</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../immigrantStatus" /></Left><Right><Enum optionsPath="/immigrantStatusOptions">CubanHaitianEntrant</Enum></Right></Equal>
+        </Any>
+      </Derived>
+    </Fact>
+
+
+    <!-- ============================================================ -->
+    <!-- PER-MEMBER MEDICAID CATEGORICAL ELIGIBILITY                  -->
+    <!-- ============================================================ -->
+
+    <Fact path="/members/*/medicaidInfantNonFinancial">
+      <Name>Medicaid Infant Non-Financial</Name>
+      <Description>Passes if age &lt; infant max age.</Description>
+      <Derived>
+        <LessThan>
+          <Left><Dependency path="../age" /></Left>
+          <Right><Dependency path="/infantMaxAge" /></Right>
+        </LessThan>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/medicaidInfant">
+      <Name>Medicaid Infant</Name>
+      <Description>Eligible as Infant if both household financial and member non-financial pass.</Description>
+      <Derived>
+        <All>
+          <Dependency path="/medicaidInfantFinancial" />
+          <Dependency path="../medicaidInfantNonFinancial" />
+        </All>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/medicaidYoungChildNonFinancial">
+      <Name>Medicaid Young Child Non-Financial</Name>
+      <Description>Passes if age is between infant_max_age (inclusive) and young_child_max_age (exclusive).</Description>
+      <Derived>
+        <All>
+          <LessThan>
+            <Left><Dependency path="../age" /></Left>
+            <Right><Dependency path="/youngChildMaxAge" /></Right>
+          </LessThan>
+          <GreaterThanOrEqual>
+            <Left><Dependency path="../age" /></Left>
+            <Right><Dependency path="/infantMaxAge" /></Right>
+          </GreaterThanOrEqual>
+        </All>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/medicaidYoungChild">
+      <Name>Medicaid Young Child</Name>
+      <Derived>
+        <All>
+          <Dependency path="/medicaidYoungChildFinancial" />
+          <Dependency path="../medicaidYoungChildNonFinancial" />
+        </All>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/medicaidOlderChildNonFinancial">
+      <Name>Medicaid Older Child Non-Financial</Name>
+      <Description>Passes if age is between young_child_max_age (inclusive) and older_child_max_age (exclusive).</Description>
+      <Derived>
+        <All>
+          <LessThan>
+            <Left><Dependency path="../age" /></Left>
+            <Right><Dependency path="/olderChildMaxAge" /></Right>
+          </LessThan>
+          <GreaterThanOrEqual>
+            <Left><Dependency path="../age" /></Left>
+            <Right><Dependency path="/youngChildMaxAge" /></Right>
+          </GreaterThanOrEqual>
+        </All>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/medicaidOlderChild">
+      <Name>Medicaid Older Child</Name>
+      <Derived>
+        <All>
+          <Dependency path="/medicaidOlderChildFinancial" />
+          <Dependency path="../medicaidOlderChildNonFinancial" />
+        </All>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/medicaidAdultNonFinancial">
+      <Name>Medicaid Adult Non-Financial</Name>
+      <Description>Passes if age is between older_child_max_age (inclusive) and adult_max_age (exclusive).</Description>
+      <Derived>
+        <All>
+          <LessThan>
+            <Left><Dependency path="../age" /></Left>
+            <Right><Dependency path="/adultMaxAge" /></Right>
+          </LessThan>
+          <GreaterThanOrEqual>
+            <Left><Dependency path="../age" /></Left>
+            <Right><Dependency path="/olderChildMaxAge" /></Right>
+          </GreaterThanOrEqual>
+        </All>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/medicaidAdult">
+      <Name>Medicaid Adult</Name>
+      <Derived>
+        <All>
+          <Dependency path="/medicaidAdultFinancial" />
+          <Dependency path="../medicaidAdultNonFinancial" />
+        </All>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/medicaidPregnantNonFinancial">
+      <Name>Medicaid Pregnant Non-Financial</Name>
+      <Description>Passes if currently pregnant OR within the postpartum coverage window.</Description>
+      <Derived>
+        <Any>
+          <GreaterThan>
+            <Left><Dependency path="../pregnant" /></Left>
+            <Right><Int>0</Int></Right>
+          </GreaterThan>
+          <LessThanOrEqual>
+            <Left><Dependency path="../daysSincePregnancy" /></Left>
+            <Right><Dependency path="/pregnantMaxDaysAfterBirth" /></Right>
+          </LessThanOrEqual>
+        </Any>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/medicaidPregnant">
+      <Name>Medicaid Pregnant</Name>
+      <Derived>
+        <All>
+          <Dependency path="/medicaidPregnantFinancial" />
+          <Dependency path="../medicaidPregnantNonFinancial" />
+        </All>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/medicaidSsi">
+      <Name>Medicaid SSI</Name>
+      <Description>SSI recipients automatically qualify for Medicaid.</Description>
+      <Derived>
+        <Dependency path="../receivesSsi" />
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/medicaidCategory">
+      <Name>Medicaid Category</Name>
+      <Description>This member's Medicaid eligibility category. Categories checked in order: Infant, Young Child, Older Child, Pregnant, SSI recipient, Adult.</Description>
+      <Derived>
+        <Switch>
+          <Case>
+            <When><Dependency path="../medicaidInfant" /></When>
+            <Then><Enum optionsPath="/medicaidCategoryOptions">Infant</Enum></Then>
+          </Case>
+          <Case>
+            <When><Dependency path="../medicaidYoungChild" /></When>
+            <Then><Enum optionsPath="/medicaidCategoryOptions">YoungChild</Enum></Then>
+          </Case>
+          <Case>
+            <When><Dependency path="../medicaidOlderChild" /></When>
+            <Then><Enum optionsPath="/medicaidCategoryOptions">OlderChild</Enum></Then>
+          </Case>
+          <Case>
+            <When><Dependency path="../medicaidPregnant" /></When>
+            <Then><Enum optionsPath="/medicaidCategoryOptions">Pregnant</Enum></Then>
+          </Case>
+          <Case>
+            <When><Dependency path="../medicaidSsi" /></When>
+            <Then><Enum optionsPath="/medicaidCategoryOptions">SsiRecipient</Enum></Then>
+          </Case>
+          <Case>
+            <When><Dependency path="../medicaidAdult" /></When>
+            <Then><Enum optionsPath="/medicaidCategoryOptions">Adult</Enum></Then>
+          </Case>
+          <Case>
+            <When><True /></When>
+            <Then><Enum optionsPath="/medicaidCategoryOptions">Ineligible</Enum></Then>
+          </Case>
+        </Switch>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/medicaid">
+      <Name>Medicaid Eligible</Name>
+      <Description>This member is eligible for Medicaid if work requirements are met, legal status is eligible, and Medicaid Category is not 'Ineligible'.</Description>
+      <Derived>
+        <All>
+          <Dependency path="../medicaidWorkRequirements" />
+          <Dependency path="../medicaidLegalStatusEligible" />
+          <Not>
+            <Equal>
+              <Left><Dependency path="../medicaidCategory" /></Left>
+              <Right><Enum optionsPath="/medicaidCategoryOptions">Ineligible</Enum></Right>
+            </Equal>
+          </Not>
+        </All>
+      </Derived>
+    </Fact>
+
+
+    <!-- ============================================================ -->
+    <!-- PER-MEMBER CHP+                                              -->
+    <!-- ============================================================ -->
+
+    <Fact path="/members/*/chpAgeOrPregnant">
+      <Name>CHP+ Age or Pregnant</Name>
+      <Description>Passes if age &lt; CHP+ max age, OR currently pregnant.</Description>
+      <Derived>
+        <Any>
+          <LessThan>
+            <Left><Dependency path="../age" /></Left>
+            <Right><Dependency path="/chpMaxAge" /></Right>
+          </LessThan>
+          <GreaterThan>
+            <Left><Dependency path="../pregnant" /></Left>
+            <Right><Int>0</Int></Right>
+          </GreaterThan>
+        </Any>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/chpNotOtherProgramEligible">
+      <Name>CHP+ Not Other Program Eligible</Name>
+      <Description>Passes if NOT eligible for Medicaid OR WAWD.</Description>
+      <Derived>
+        <All>
+          <Not><Dependency path="../medicaid" /></Not>
+          <Not><Dependency path="../workingAdultsWithDisabilities" /></Not>
+        </All>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/chp">
+      <Name>CHP+</Name>
+      <Description>Eligible for CHP+ if not other-program eligible, age/pregnant requirements met, and household plan level is not 'Not Eligible'.</Description>
+      <Derived>
+        <All>
+          <Dependency path="../chpNotOtherProgramEligible" />
+          <Dependency path="../chpAgeOrPregnant" />
+          <Not>
+            <Equal>
+              <Left><Dependency path="/chpPlanLevel" /></Left>
+              <Right><Enum optionsPath="/chpPlanLevelOptions">NotEligible</Enum></Right>
+            </Equal>
+          </Not>
+        </All>
+      </Derived>
+    </Fact>
+
+
+    <!-- ============================================================ -->
+    <!-- PER-MEMBER WAWD                                              -->
+    <!-- ============================================================ -->
+
+    <Fact path="/members/*/wawdNotOtherProgramEligible">
+      <Name>WAWD Not Medicaid Eligible</Name>
+      <Description>Passes if NOT eligible for regular Medicaid.</Description>
+      <Derived>
+        <Not><Dependency path="../medicaid" /></Not>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/wawdImmigrationEligible">
+      <Name>WAWD Immigration Eligible</Name>
+      <Description>Passes if immigrant status is a citizen or lawfully present non-citizen (LPR, Refugee, Asylee, Cuban/Haitian Entrant, Deportation Withheld, Paroled 1+ year, TPS, or Conditional Entrant).</Description>
+      <Derived>
+        <Any>
+          <Equal><Left><Dependency path="../immigrantStatus" /></Left><Right><Enum optionsPath="/immigrantStatusOptions">Citizen</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../immigrantStatus" /></Left><Right><Enum optionsPath="/immigrantStatusOptions">LegalPermanentResident</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../immigrantStatus" /></Left><Right><Enum optionsPath="/immigrantStatusOptions">Refugee</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../immigrantStatus" /></Left><Right><Enum optionsPath="/immigrantStatusOptions">Asylee</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../immigrantStatus" /></Left><Right><Enum optionsPath="/immigrantStatusOptions">CubanHaitianEntrant</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../immigrantStatus" /></Left><Right><Enum optionsPath="/immigrantStatusOptions">DeportationWithheld</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../immigrantStatus" /></Left><Right><Enum optionsPath="/immigrantStatusOptions">ParoledForAtLeastOneYear</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../immigrantStatus" /></Left><Right><Enum optionsPath="/immigrantStatusOptions">TemporaryProtectedStatus</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../immigrantStatus" /></Left><Right><Enum optionsPath="/immigrantStatusOptions">ConditionalEntrant</Enum></Right></Equal>
+        </Any>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/wawdDisabled">
+      <Name>WAWD Has Disability</Name>
+      <Derived><Dependency path="../disabled" /></Derived>
+    </Fact>
+
+    <Fact path="/members/*/wawdAgeEligible">
+      <Name>WAWD Age Eligible</Name>
+      <Derived>
+        <GreaterThanOrEqual>
+          <Left><Dependency path="../age" /></Left>
+          <Right><Dependency path="/wawdMinAge" /></Right>
+        </GreaterThanOrEqual>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/wawdWorking">
+      <Name>WAWD Currently Working</Name>
+      <Derived>
+        <GreaterThan>
+          <Left><Dependency path="../monthlyHoursWorked" /></Left>
+          <Right><Int>0</Int></Right>
+        </GreaterThan>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/workingAdultsWithDisabilities">
+      <Name>Working Adults with Disabilities Buy-In</Name>
+      <Description>Eligible for WAWD if all are met: not Medicaid eligible, immigration eligible, disabled, age eligible, working, and household income eligible.</Description>
+      <Derived>
+        <All>
+          <Dependency path="../wawdNotOtherProgramEligible" />
+          <Dependency path="../wawdImmigrationEligible" />
+          <Dependency path="../wawdDisabled" />
+          <Dependency path="../wawdAgeEligible" />
+          <Dependency path="../wawdWorking" />
+          <Dependency path="/wawdIncomeEligible" />
+        </All>
+      </Derived>
+    </Fact>
+
+
+    <!-- ============================================================ -->
+    <!-- PER-MEMBER CWD                                               -->
+    <!-- ============================================================ -->
+
+    <Fact path="/members/*/cwdNotOtherProgramEligible">
+      <Name>CWD Not Other Program Eligible</Name>
+      <Description>Passes if NOT eligible for Medicaid, CHP+, or WAWD.</Description>
+      <Derived>
+        <All>
+          <Not><Dependency path="../medicaid" /></Not>
+          <Not><Dependency path="../chp" /></Not>
+          <Not><Dependency path="../workingAdultsWithDisabilities" /></Not>
+        </All>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/cwdDisabled">
+      <Name>CWD Has Disability</Name>
+      <Derived><Dependency path="../disabled" /></Derived>
+    </Fact>
+
+    <Fact path="/members/*/cwdAgeEligible">
+      <Name>CWD Age Eligible</Name>
+      <Derived>
+        <LessThan>
+          <Left><Dependency path="../age" /></Left>
+          <Right><Dependency path="/cwdMaxAge" /></Right>
+        </LessThan>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/childrenWithDisabilities">
+      <Name>Children with Disabilities Buy-In</Name>
+      <Description>Eligible for CWD if all are met: not other-program eligible, disabled, age eligible, and household income eligible.</Description>
+      <Derived>
+        <All>
+          <Dependency path="../cwdNotOtherProgramEligible" />
+          <Dependency path="../cwdDisabled" />
+          <Dependency path="../cwdAgeEligible" />
+          <Dependency path="/cwdIncomeEligible" />
+        </All>
+      </Derived>
+    </Fact>
+
+  </Facts>
+</FactDictionaryModule>
