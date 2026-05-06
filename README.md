@@ -114,12 +114,26 @@ Both backends implement the same API contract. The frontend is format-agnostic.
 
 ### API
 
-| Endpoint                    | Method    | Description                                           |
-| --------------------------- | --------- | ----------------------------------------------------- |
-| `/api/rulesets`             | GET       | List rulesets: `{ rulesets: [{ id, name, format }] }` |
-| `/api/rulesets/:id`         | GET       | Full model with nodes and dependencies                |
-| `/api/rulesets/:id/execute` | POST      | Execute rules with `{ inputs: { path: value } }`      |
-| `/ws`                       | WebSocket | Live reload + AI chat messages                        |
+| Endpoint                                            | Method                | Description                                                                                       |
+| --------------------------------------------------- | --------------------- | ------------------------------------------------------------------------------------------------- |
+| `/api/rulesets`                                     | GET                   | List rulesets: `{ rulesets: [{ id, name, format }] }`                                             |
+| `/api/rulesets/:id`                                 | GET                   | Full model with nodes and dependencies                                                            |
+| `/api/rulesets/:id/execute`                         | POST                  | Execute rules with `{ inputs, entities, overrides, asOf }`                                        |
+| `/api/rulesets/:id/tests`                           | GET / POST            | List or create test cases. POST returns `403` unless `ALLOW_WRITES=1`                             |
+| `/api/rulesets/:id/tests/:testId`                   | PUT / DELETE          | Update or delete a test case. Both `403` unless `ALLOW_WRITES=1`                                  |
+| `/api/rulesets/:id/tests/run`                       | POST                  | Run all tests (or a subset via `{ testIds }`). Always available                                   |
+| `/api/rulesets/:id/references`                      | GET / PUT             | Read or write the policy-references manifest. PUT `403` unless `ALLOW_WRITES=1`                   |
+| `/api/rulesets/:id/references/files/:filename`      | GET                   | Stream a referenced policy PDF (or other doc) from the ruleset's `references/` dir                |
+| `/api/rulesets/:id/profiles`                        | GET / POST            | List or create file-backed profiles (saved input/override/entity snapshots). POST `403` unless `ALLOW_WRITES=1` |
+| `/api/rulesets/:id/profiles/:profileId`             | PUT / DELETE          | Update or delete a profile. Both `403` unless `ALLOW_WRITES=1`                                    |
+| `/api/rulesets/:id/tasks`                           | GET / POST¹           | List active threads or spawn a new Claude-CLI agent thread (the Builder panel)                    |
+| `/api/rulesets/:id/tasks/:threadId`                 | GET¹                  | Single thread state, including iterations, summaries, and modified paths                          |
+| `/api/rulesets/:id/tasks/:threadId/follow`          | POST¹                 | Send a follow-up prompt (or queue one if the agent is still running)                              |
+| `/api/rulesets/:id/tasks/:threadId/status`          | POST¹                 | Mark a thread complete / archived / re-opened                                                     |
+| `/api/rulesets/:id/tasks/:threadId/cancel`          | POST¹                 | Stop a running agent and finalize the iteration                                                   |
+| `/ws`                                               | WebSocket             | Live reload broadcasts + AI chat (`{ type: 'ai-chat' }` messages, streamed back over the socket)  |
+
+¹ The `/tasks` routes are mounted only when `ALLOW_WRITES=1`. Without it, every path under `/tasks` returns `404` (the routes aren't registered) — separate from the `403`-on-write pattern used elsewhere.
 
 ### Node Model
 
@@ -169,16 +183,25 @@ Both backends required workarounds to get execution working. These are documente
 
 ## Environment Variables
 
-| Variable          | Required    | Description                                         |
-| ----------------- | ----------- | --------------------------------------------------- |
-| `OPEN_ROUTER_KEY` | For AI chat | API key from [openrouter.ai](https://openrouter.ai) |
-| `AI_MODEL`        | No          | Model ID (default: `google/gemini-2.5-flash`)       |
+| Variable             | Required          | Description                                                                                                          |
+| -------------------- | ----------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `OPEN_ROUTER_KEY`    | For AI chat       | API key from [openrouter.ai](https://openrouter.ai)                                                                  |
+| `AI_MODEL`           | No                | Model ID (default: `google/gemini-2.5-flash`)                                                                        |
+| `ALLOW_WRITES`       | For write features | Set to `1` to enable backend write surfaces (Tasks routes mount; Tests/References PUT/POST/DELETE return `200` instead of `403`) |
+| `VITE_ALLOW_WRITES`  | For write features | Must mirror `ALLOW_WRITES`. Vite inlines this at build time, so it has to be present in the build environment too   |
+
+`ALLOW_WRITES` and `VITE_ALLOW_WRITES` must be set together. Without them, the UI runs read-only: the Builder (Tasks) panel is hidden, the Policy panel can't add/edit/remove section links or comments, and the Tests panel hides its CRUD controls (run + load-into-execution stay because they don't mutate). Leave both unset on anything that exposes the server to untrusted users — the Builder spawns the Claude CLI as a child process with `--permission-mode bypassPermissions`.
 
 Create a `.env` file in the project root (gitignored):
 
 ```
 OPEN_ROUTER_KEY=sk-or-v1-your-key-here
+# Uncomment for full write access (local dev only)
+# ALLOW_WRITES=1
+# VITE_ALLOW_WRITES=1
 ```
+
+Restart the backend after editing `.env` — `tsx watch` only watches `src/**`, not `.env`. Vite usually picks up `VITE_*` changes via its own `.env` watcher, but a frontend restart never hurts.
 
 ## Usage
 
