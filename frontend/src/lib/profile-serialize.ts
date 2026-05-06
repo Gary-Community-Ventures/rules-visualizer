@@ -69,9 +69,7 @@ export type ExecutionSnapshot = {
 
 /** Build a path → nodeId index once. The earlier per-call O(N×M) lookup
  *  in applySnapshot/loadProfile/useApplyAiInputs is now O(N+M). */
-function buildPathIndex(
-  nodes: Record<string, ModelNode>
-): Map<string, string> {
+function buildPathIndex(nodes: Record<string, ModelNode>): Map<string, string> {
   const map = new Map<string, string>()
   for (const [nodeId, node] of Object.entries(nodes)) {
     const path = getNodePath(node.content)

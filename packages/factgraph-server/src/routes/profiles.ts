@@ -1,10 +1,6 @@
 import { Router } from 'express'
 import { getRuleset } from '../store.js'
-import {
-  readProfiles,
-  writeProfiles,
-  type Profile,
-} from '../profileStore.js'
+import { readProfiles, writeProfiles, type Profile } from '../profileStore.js'
 
 const router = Router()
 

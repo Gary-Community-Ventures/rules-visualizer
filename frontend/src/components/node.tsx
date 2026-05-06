@@ -848,8 +848,7 @@ export function NodeLink({
 
 function PolicyReferencesList({ node }: { node: ModelNode }) {
   const { openPolicyAtPage, openPolicyForLinking } = usePolicyNavigation()
-  const { model, refreshModel } =
-    useMainContext()
+  const { model, refreshModel } = useMainContext()
   const references = node.references ?? []
   // Collapsed = preview hidden, only the label row shown. Toggled per ref.
   // Default expanded (PdfBoxPreview is the whole point of the list); user

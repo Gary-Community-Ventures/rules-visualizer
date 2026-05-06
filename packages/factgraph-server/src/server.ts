@@ -8,6 +8,7 @@ import type { Server } from 'node:http'
 import rulesetRoutes from './routes/rulesets.js'
 import testRoutes from './routes/tests.js'
 import referenceRoutes from './routes/references.js'
+import simulationRoutes from './routes/simulations.js'
 import profileRoutes from './routes/profiles.js'
 import taskRoutes from './routes/tasks.js'
 import { handleAiChat } from './routes/ai.js'
@@ -58,6 +59,7 @@ app.use(express.json())
 app.use('/api', rulesetRoutes)
 app.use('/api', testRoutes)
 app.use('/api', referenceRoutes)
+app.use('/api', simulationRoutes)
 app.use('/api', profileRoutes)
 // Tasks routes spawn the Claude CLI as a child process with bypassPermissions
 // — only mount them when writes are explicitly enabled. The same flag also

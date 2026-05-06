@@ -7,10 +7,7 @@ import {
   deleteProfile,
   type Profile,
 } from '@/lib/api/profiles-api'
-import {
-  readLocalProfiles,
-  deleteLocalProfile,
-} from '@/lib/profile-store'
+import { readLocalProfiles, deleteLocalProfile } from '@/lib/profile-store'
 import { applySnapshot } from '@/lib/profile-serialize'
 import { useInputActions } from '@/lib/use-input-actions'
 import { useExecutionRunner } from '@/lib/use-execution-runner'
@@ -135,59 +132,58 @@ export function ProfilesPanel() {
                 editingProfile?.id === p.id &&
                 editingProfile.source === p.__source
               return (
-              <li
-                key={`${p.__source}:${p.id}`}
-                className="group relative"
-              >
-                <button
-                  type="button"
-                  onClick={() => editProfile(p)}
-                  className={
-                    isActive
-                      ? 'w-full text-left px-4 py-3 bg-amber-50 hover:bg-amber-100 border-l-2 border-amber-400 transition-colors flex items-center gap-3'
-                      : 'w-full text-left px-4 py-3 hover:bg-accent/50 transition-colors flex items-center gap-3'
-                  }
-                >
-                  <ArrowRight className="size-4 text-muted-foreground/60 group-hover:text-foreground shrink-0" />
-                  <div className="flex-1 min-w-0 space-y-0.5">
-                    <div className="text-sm font-medium truncate">{p.name}</div>
-                    {p.description && (
-                      <div className="text-[11px] text-muted-foreground truncate">
-                        {p.description}
+                <li key={`${p.__source}:${p.id}`} className="group relative">
+                  <button
+                    type="button"
+                    onClick={() => editProfile(p)}
+                    className={
+                      isActive
+                        ? 'w-full text-left px-4 py-3 bg-amber-50 hover:bg-amber-100 border-l-2 border-amber-400 transition-colors flex items-center gap-3'
+                        : 'w-full text-left px-4 py-3 hover:bg-accent/50 transition-colors flex items-center gap-3'
+                    }
+                  >
+                    <ArrowRight className="size-4 text-muted-foreground/60 group-hover:text-foreground shrink-0" />
+                    <div className="flex-1 min-w-0 space-y-0.5">
+                      <div className="text-sm font-medium truncate">
+                        {p.name}
                       </div>
-                    )}
-                    <div className="flex items-center gap-1 text-[10px] text-muted-foreground/70">
-                      {p.__source === 'file' ? (
-                        <>
-                          <FileText className="size-2.5" />
-                          file
-                        </>
-                      ) : (
-                        <>
-                          <HardDrive className="size-2.5" />
-                          local
-                        </>
+                      {p.description && (
+                        <div className="text-[11px] text-muted-foreground truncate">
+                          {p.description}
+                        </div>
                       )}
+                      <div className="flex items-center gap-1 text-[10px] text-muted-foreground/70">
+                        {p.__source === 'file' ? (
+                          <>
+                            <FileText className="size-2.5" />
+                            file
+                          </>
+                        ) : (
+                          <>
+                            <HardDrive className="size-2.5" />
+                            local
+                          </>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                </button>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    removeProfile(p)
-                  }}
-                  className="absolute top-2 right-2 p-1 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
-                  title="Delete"
-                >
-                  <Trash2 className="size-3" />
-                </button>
-                {isActive && (
-                  <span className="absolute top-2 right-9 text-[9px] uppercase tracking-wide text-amber-700 font-medium pointer-events-none">
-                    Active
-                  </span>
-                )}
-              </li>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      removeProfile(p)
+                    }}
+                    className="absolute top-2 right-2 p-1 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                    title="Delete"
+                  >
+                    <Trash2 className="size-3" />
+                  </button>
+                  {isActive && (
+                    <span className="absolute top-2 right-9 text-[9px] uppercase tracking-wide text-amber-700 font-medium pointer-events-none">
+                      Active
+                    </span>
+                  )}
+                </li>
               )
             })}
           </ul>

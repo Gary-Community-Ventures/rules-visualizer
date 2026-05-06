@@ -13,6 +13,7 @@ import type { Model, ModelNode, NodeContent } from '@/lib/model'
 import { getRuleset, type ExecutionResults } from '@/lib/api/rules-api'
 import { onReload } from '@/lib/api/live-reload'
 import { useLocalStorage } from '@/lib/use-local-storage'
+import { consumePendingScenario } from '@/lib/simulation-bridge'
 import { useAppContext } from './app-context'
 
 export type RightBarOptions =
@@ -423,6 +424,70 @@ export function ModelProvider({
   useEffect(() => {
     loadModel()
   }, [loadModel])
+
+  // Pick up pending scenario from simulation bridge (if any)
+  useEffect(() => {
+    if (model.id === '' || Object.keys(model.nodes).length === 0) return
+    const scenario = consumePendingScenario(rulesetId)
+    if (!scenario) return
+
+    // Map input paths to node IDs and set overrides
+    const overrides: Record<string, string> = {}
+    for (const [inputPath, value] of Object.entries(scenario.inputs)) {
+      // Node IDs are paths in FG rulesets
+      if (model.nodes[inputPath]) {
+        overrides[inputPath] =
+          typeof value === 'string' ? value : JSON.stringify(value)
+      }
+    }
+    setInputOverrides(overrides)
+
+    // Set entity data
+    if (scenario.entities) {
+      const ed: Record<string, Record<string, string>[]> = {}
+      for (const [coll, rows] of Object.entries(scenario.entities)) {
+        ed[coll] = rows.map((row) => {
+          const stringRow: Record<string, string> = {}
+          for (const [k, v] of Object.entries(row)) {
+            stringRow[k] = typeof v === 'string' ? v : JSON.stringify(v)
+          }
+          return stringRow
+        })
+      }
+      setEntityData(ed)
+    }
+
+    // Focus a specific node if requested (from simulation node link)
+    if (scenario.focusNode && model.nodes[scenario.focusNode]) {
+      setSelectedNodes([scenario.focusNode])
+      setPanelOpen(true)
+      setNodeHistory([scenario.focusNode])
+      setNodeHistoryIndex(0)
+    }
+
+    // Open execution panel and trigger a run after a tick
+    setRightBar('execution')
+    requestAnimationFrame(() => {
+      window.dispatchEvent(new CustomEvent('simulation-scenario-loaded'))
+    })
+  }, [
+    model,
+    rulesetId,
+    setInputOverrides,
+    setEntityData,
+    setRightBar,
+    setSelectedNodes,
+    setPanelOpen,
+    setNodeHistory,
+    setNodeHistoryIndex,
+  ])
+
+  // Set browser tab title
+  useEffect(() => {
+    if (model.name) {
+      document.title = `${model.name} — Rules Visualizer`
+    }
+  }, [model.name])
 
   // Set favicon based on format
   useEffect(() => {

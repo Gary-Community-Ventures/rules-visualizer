@@ -240,7 +240,7 @@ export const executeGraph = tool(
   {
     name: 'execute_graph',
     description:
-      'Execute the fact graph with specific input values and return computed results. Use node paths (like /income) or node names as input keys. Use outputNodes to filter which results to return. Set applyToUi=true to also write the inputs into the user\'s graph view (replaces any existing inputs); use this when the user asks for a profile/scenario they want to see, not for sandbox computations.',
+      "Execute the fact graph with specific input values and return computed results. Use node paths (like /income) or node names as input keys. Use outputNodes to filter which results to return. Set applyToUi=true to also write the inputs into the user's graph view (replaces any existing inputs); use this when the user asks for a profile/scenario they want to see, not for sandbox computations.",
     responseFormat: 'content_and_artifact',
     schema: z.object({
       rulesetId: z.string().describe('The ruleset ID'),
@@ -271,7 +271,7 @@ export const executeGraph = tool(
         .boolean()
         .optional()
         .describe(
-          'When true, write the resolved inputs/entities into the user\'s graph view (replaces existing inputs). Use this when the user asks for a profile/scenario; omit for sandbox computations.'
+          "When true, write the resolved inputs/entities into the user's graph view (replaces existing inputs). Use this when the user asks for a profile/scenario; omit for sandbox computations."
         ),
     }),
   }

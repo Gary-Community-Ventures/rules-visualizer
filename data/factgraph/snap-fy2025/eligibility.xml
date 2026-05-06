@@ -1,0 +1,1503 @@
+<FactDictionaryModule>
+  <Facts>
+    <!-- ============================================================ -->
+    <!-- INPUTS — facts about the household                           -->
+    <!-- ============================================================ -->
+
+    <Fact path="/grossEarnedIncome">
+      <Name>Gross earned income</Name>
+      <Description>Monthly earned income before taxes (wages, salary, self-employment)</Description>
+      <Writable><Dollar /></Writable>
+    </Fact>
+
+    <Fact path="/unearnedIncome">
+      <Name>Unearned income</Name>
+      <Description>Monthly unearned income (Social Security, unemployment, child support, etc.)</Description>
+      <Writable><Dollar /></Writable>
+    </Fact>
+
+
+    <Fact path="/dependentCareExpenses">
+      <Name>Dependent care expenses</Name>
+      <Description>Monthly out-of-pocket dependent care costs</Description>
+      <Writable><Dollar /></Writable>
+    </Fact>
+
+    <!-- Housing cost components -->
+    <Fact path="/rent">
+      <Name>Rent</Name>
+      <Description>Monthly rent paid</Description>
+      <Writable><Dollar /></Writable>
+    </Fact>
+
+    <Fact path="/realEstateTaxes">
+      <Name>Real estate taxes</Name>
+      <Description>Monthly property taxes</Description>
+      <Writable><Dollar /></Writable>
+    </Fact>
+
+    <Fact path="/homeownersAssociationFees">
+      <Name>HOA fees</Name>
+      <Description>Monthly homeowners association fees</Description>
+      <Writable><Dollar /></Writable>
+    </Fact>
+
+    <Fact path="/mortgagePayments">
+      <Name>Mortgage payments</Name>
+      <Description>Monthly mortgage payments</Description>
+      <Writable><Dollar /></Writable>
+    </Fact>
+
+    <Fact path="/homeownersInsurance">
+      <Name>Homeowners insurance</Name>
+      <Description>Monthly homeowners insurance</Description>
+      <Writable><Dollar /></Writable>
+    </Fact>
+
+    <!-- Per-member inputs (collection): medical expenses only count when the
+         member is elderly or disabled. -->
+    <Fact path="/members">
+      <Name>Household members</Name>
+      <Description>List of household members</Description>
+      <Writable><Collection /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/isElderly">
+      <Name>Is elderly</Name>
+      <Description>Whether this member is age 60+</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/isDisabled">
+      <Name>Is disabled</Name>
+      <Description>Whether this member is disabled</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/medicalExpenses">
+      <Name>Medical expenses</Name>
+      <Description>This member's monthly out-of-pocket medical expenses</Description>
+      <Writable><Dollar /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/age">
+      <Name>Age</Name>
+      <Description>Age of this member in years</Description>
+      <Writable><Int /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/isHigherEdStudent">
+      <Name>Higher-ed student</Name>
+      <Description>Whether this member is enrolled at least half-time in higher education (the base criterion for the SNAP student exclusion)</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/weeklyWorkHours">
+      <Name>Weekly work hours</Name>
+      <Description>Hours this member works per week</Description>
+      <Writable><Int /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/isWorkStudy">
+      <Name>Work-study</Name>
+      <Description>Whether this member participates in a federal or state work-study program</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/isParent">
+      <Name>Is parent</Name>
+      <Description>Whether this member is a parent (tax-unit head or spouse) in the household</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/isFullTimeCollegeStudent">
+      <Name>Full-time college student</Name>
+      <Description>Whether this member is enrolled full-time in higher education (required for the single-parent student exception)</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/receivesTanf">
+      <Name>Receives TANF</Name>
+      <Description>Whether this member receives Temporary Assistance for Needy Families benefits</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/isImmigrationEligible">
+      <Name>Immigration eligible</Name>
+      <Description>Whether this member has an immigration status that qualifies for SNAP</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/isPregnant">
+      <Name>Is pregnant</Name>
+      <Description>Whether this member is pregnant (exempt from ABAWD work requirements, 7 USC § 2015(o)(3)(E))</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/isIncapableOfSelfCare">
+      <Name>Incapable of self-care</Name>
+      <Description>Whether this member is incapable of caring for themselves (household member caring for them is exempt from general work requirements)</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/abawdCountableMonthsUsed">
+      <Name>ABAWD countable months used</Name>
+      <Description>Number of months in the last 36-month window where this member received SNAP without meeting the ABAWD work requirement (7 CFR § 273.24(b)(1)(i))</Description>
+      <Writable><Int /></Writable>
+    </Fact>
+
+    <!-- Per-member countable assets (7 CFR § 273.8(c)(1)). Excluded per
+         7 USC § 2014(g)(2–5): home, retirement accounts, 529/Coverdell,
+         vehicles (subject to state fair-market-value exemptions). -->
+    <Fact path="/members/*/cashOnHand">
+      <Name>Cash on hand</Name>
+      <Description>Currency and cash this member holds</Description>
+      <Writable><Dollar /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/bankAccountAssets">
+      <Name>Bank account assets</Name>
+      <Description>Balances in checking and savings accounts</Description>
+      <Writable><Dollar /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/stockAssets">
+      <Name>Stock assets</Name>
+      <Description>Value of countable stock holdings</Description>
+      <Writable><Dollar /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/bondAssets">
+      <Name>Bond assets</Name>
+      <Description>Value of countable bond holdings</Description>
+      <Writable><Dollar /></Writable>
+    </Fact>
+
+    <!-- TODO: derive from the household's benefit inputs instead of taking
+         it as a boolean. Mirror PolicyEngine-US meets_snap_categorical_eligibility:
+         pure-SSI household, pure-TANF household, or state BBCE (broad-based
+         categorical eligibility via TANF-funded non-cash benefits, with
+         state-specific gross-income and asset limits). Colorado's BBCE uses
+         a 200% FPL gross-income limit and no asset test. -->
+    <Fact path="/meetsCategoricalEligibility">
+      <Name>Meets categorical eligibility</Name>
+      <Description>Whether the household qualifies via SSI/TANF or broad-based categorical eligibility (BBCE), which overrides the income and asset tests</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/childSupportPaid">
+      <Name>Child support paid</Name>
+      <Description>Monthly legally-obligated child support payments (Colorado treats this as an income exclusion, not a deduction)</Description>
+      <Writable><Dollar /></Writable>
+    </Fact>
+
+    <Fact path="/isHomeless">
+      <Name>Homeless household</Name>
+      <Description>Whether the household is homeless (eligible to elect the flat homeless shelter deduction)</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <!-- ============================================================ -->
+    <!-- CONSTANTS — federal SNAP parameters (FY2025, effective 2024-10-01) -->
+    <!-- ============================================================ -->
+
+    <Fact path="/earnedIncomeDeductionRate">
+      <Name>Earned income deduction rate</Name>
+      <Description>20% earned income deduction per 7 USC 2014(e)(1)</Description>
+      <Derived><Rational>1/5</Rational></Derived>
+    </Fact>
+
+    <Fact path="/standardDeductionHh1to3">
+      <Name>Standard deduction (1-3 persons)</Name>
+      <Derived><Dollar>198</Dollar></Derived>
+    </Fact>
+
+    <Fact path="/standardDeductionHh4">
+      <Name>Standard deduction (4 persons)</Name>
+      <Derived><Dollar>225</Dollar></Derived>
+    </Fact>
+
+    <Fact path="/standardDeductionHh5">
+      <Name>Standard deduction (5 persons)</Name>
+      <Derived><Dollar>258</Dollar></Derived>
+    </Fact>
+
+    <Fact path="/standardDeductionHh6Plus">
+      <Name>Standard deduction (6+ persons)</Name>
+      <Derived><Dollar>300</Dollar></Derived>
+    </Fact>
+
+    <Fact path="/excessShelterDeductionCap">
+      <Name>Excess shelter deduction cap</Name>
+      <Description>Cap on excess shelter deduction for non-elderly/disabled households</Description>
+      <Derived><Dollar>672</Dollar></Derived>
+    </Fact>
+
+    <Fact path="/homelessShelterDeduction">
+      <Name>Homeless shelter deduction</Name>
+      <Description>Flat shelter deduction homeless households may elect instead of the calculated excess shelter deduction (FY2026)</Description>
+      <Derived><Dollar>179.58</Dollar></Derived>
+    </Fact>
+
+    <!-- Colorado Standard Utility Allowance (FY2025, effective 2024-10-01). Source: PolicyEngine-US gov/usda/snap/income/deductions/utility/standard/main.yaml -->
+    <Fact path="/suaAmount">
+      <Name>SUA amount</Name>
+      <Description>Standard Utility Allowance — Colorado uses SUA for any household with a utility expense</Description>
+      <Derived><Dollar>533</Dollar></Derived>
+    </Fact>
+
+    <!-- SNAP student eligibility thresholds (7 USC § 2015(e)) -->
+    <Fact path="/studentAgeThresholdLower">
+      <Name>Student age lower threshold</Name>
+      <Description>Higher-ed students under this age are exempt from the SNAP student exclusion</Description>
+      <Derived><Int>18</Int></Derived>
+    </Fact>
+
+    <Fact path="/studentAgeThresholdUpper">
+      <Name>Student age upper threshold</Name>
+      <Description>Higher-ed students at or above this age are exempt from the SNAP student exclusion</Description>
+      <Derived><Int>50</Int></Derived>
+    </Fact>
+
+    <Fact path="/studentWorkHoursThreshold">
+      <Name>Student weekly work hours threshold</Name>
+      <Description>Higher-ed students working at least this many hours per week are exempt from the student exclusion</Description>
+      <Derived><Int>20</Int></Derived>
+    </Fact>
+
+    <Fact path="/studentChildAgeLimitTwoParent">
+      <Name>Two-parent child age limit</Name>
+      <Description>Upper age threshold for a dependent child that qualifies the parent exception in a two-parent household (7 USC § 2015(e)(5)(A))</Description>
+      <Derived><Int>6</Int></Derived>
+    </Fact>
+
+    <Fact path="/studentChildAgeLimitSingleParent">
+      <Name>Single-parent child age limit</Name>
+      <Description>Upper age threshold for a dependent child that qualifies the parent exception for a single-parent full-time student (7 USC § 2015(e)(8))</Description>
+      <Derived><Int>12</Int></Derived>
+    </Fact>
+
+    <!-- SNAP general work requirements (7 CFR § 273.7) -->
+    <Fact path="/generalWorkAgeExemptUpper">
+      <Name>General work exempt age (upper)</Name>
+      <Description>Members under this age are exempt from general work requirements</Description>
+      <Derived><Int>16</Int></Derived>
+    </Fact>
+
+    <Fact path="/generalWorkAgeExemptLower">
+      <Name>General work exempt age (lower)</Name>
+      <Description>Members at or above this age are exempt from general work requirements</Description>
+      <Derived><Int>60</Int></Derived>
+    </Fact>
+
+    <Fact path="/generalWorkHoursThreshold">
+      <Name>General work weekly hours threshold</Name>
+      <Description>Weekly hours needed to satisfy general work requirements</Description>
+      <Derived><Int>30</Int></Derived>
+    </Fact>
+
+    <Fact path="/generalCaringDependentChildAgeLimit">
+      <Name>General caring-dependent-child age limit</Name>
+      <Description>Caring for a dependent child under this age exempts a member from general work requirements</Description>
+      <Derived><Int>6</Int></Derived>
+    </Fact>
+
+    <!-- SNAP ABAWD work requirements (7 CFR § 273.24, post-HR1 values
+         effective 2025-07-04) -->
+    <Fact path="/abawdAgeExemptUpper">
+      <Name>ABAWD exempt age (upper)</Name>
+      <Description>Members under this age are exempt from ABAWD work requirements</Description>
+      <Derived><Int>18</Int></Derived>
+    </Fact>
+
+    <Fact path="/abawdAgeExemptLower">
+      <Name>ABAWD exempt age (lower)</Name>
+      <Description>Members at or above this age are exempt from ABAWD work requirements (post-HR1)</Description>
+      <Derived><Int>65</Int></Derived>
+    </Fact>
+
+    <Fact path="/abawdWorkHoursThreshold">
+      <Name>ABAWD work weekly hours threshold</Name>
+      <Description>Weekly hours needed to satisfy ABAWD work requirements</Description>
+      <Derived><Int>20</Int></Derived>
+    </Fact>
+
+    <Fact path="/abawdDependentChildAgeLimit">
+      <Name>ABAWD dependent-child age limit</Name>
+      <Description>A parent with a dependent under this age is exempt from ABAWD work requirements (post-HR1)</Description>
+      <Derived><Int>14</Int></Derived>
+    </Fact>
+
+    <Fact path="/abawdCountableMonthsLimit">
+      <Name>ABAWD countable months limit</Name>
+      <Description>Maximum countable months a member may receive SNAP without meeting ABAWD work requirements in a 36-month period (7 CFR § 273.24(b)(1))</Description>
+      <Derived><Int>3</Int></Derived>
+    </Fact>
+
+    <!-- SNAP asset test limits (7 USC § 2014(g)(1)(A); FY2025 amounts effective 2024-10-01) -->
+    <Fact path="/assetLimitStandard">
+      <Name>Asset limit (standard)</Name>
+      <Description>Maximum countable assets for households without an elderly or disabled member</Description>
+      <Derived><Dollar>3000</Dollar></Derived>
+    </Fact>
+
+    <Fact path="/assetLimitElderlyDisabled">
+      <Name>Asset limit (elderly/disabled)</Name>
+      <Description>Maximum countable assets for households with an elderly or disabled member</Description>
+      <Derived><Dollar>4500</Dollar></Derived>
+    </Fact>
+
+    <Fact path="/medicalDeductionThreshold">
+      <Name>Medical deduction threshold</Name>
+      <Description>Only medical expenses above this threshold are deductible</Description>
+      <Derived><Dollar>35</Dollar></Derived>
+    </Fact>
+
+    <Fact path="/benefitReductionRate">
+      <Name>Benefit reduction rate</Name>
+      <Description>Households expected to spend 30% of net income on food</Description>
+      <Derived><Rational>3/10</Rational></Derived>
+    </Fact>
+
+    <Fact path="/shelterIncomeShareRate">
+      <Name>Shelter income share rate</Name>
+      <Description>Shelter costs exceeding this share of adjusted income are deductible per 7 USC 2014(e)(6)</Description>
+      <Derived><Rational>1/2</Rational></Derived>
+    </Fact>
+
+    <Fact path="/minimumBenefitRate">
+      <Name>Minimum benefit rate</Name>
+      <Description>Minimum benefit as a share of the 1-person max allotment (8%)</Description>
+      <Derived><Rational>8/100</Rational></Derived>
+    </Fact>
+
+    <Fact path="/minimumBenefit">
+      <Name>Minimum benefit</Name>
+      <Description>Minimum monthly benefit for 1-2 person households: 8% of the 1-person max allotment, rounded to the nearest whole dollar</Description>
+      <Derived>
+        <Round>
+          <Multiply>
+            <Dependency path="/maxAllotmentHh1" />
+            <Dependency path="/minimumBenefitRate" />
+          </Multiply>
+        </Round>
+      </Derived>
+    </Fact>
+
+    <Fact path="/grossIncomeLimitRate">
+      <Name>Gross income limit rate</Name>
+      <Description>Gross income must be at or below 130% of FPL</Description>
+      <Derived><Rational>13/10</Rational></Derived>
+    </Fact>
+
+    <Fact path="/netIncomeLimitRate">
+      <Name>Net income limit rate</Name>
+      <Description>Net income must be at or below 100% of FPL</Description>
+      <Derived><Rational>1/1</Rational></Derived>
+    </Fact>
+
+    <!-- FPL annual amounts (2025 HHS poverty guidelines, 48 states + DC).
+         Monthly values are derived by rounding annual / 12 to the nearest
+         whole dollar (half-up), matching HHS's published monthly table. -->
+    <Fact path="/fplAnnualHh1">
+      <Name>FPL annual (1 person)</Name>
+      <Derived><Dollar>15060</Dollar></Derived>
+    </Fact>
+
+    <Fact path="/fplAnnualHhPerAdditional">
+      <Name>FPL annual per additional person</Name>
+      <Description>Additional annual FPL amount for each person beyond the first</Description>
+      <Derived><Dollar>5380</Dollar></Derived>
+    </Fact>
+
+    <!-- Max allotment by household size (FY2026, 48 states + DC, effective 2025-10-01) -->
+
+    <Fact path="/maxAllotmentHh1">
+      <Name>Max allotment (1 person)</Name>
+      <Derived><Dollar>292</Dollar></Derived>
+    </Fact>
+
+    <Fact path="/maxAllotmentHh2">
+      <Name>Max allotment (2 persons)</Name>
+      <Derived><Dollar>536</Dollar></Derived>
+    </Fact>
+
+    <Fact path="/maxAllotmentHh3">
+      <Name>Max allotment (3 persons)</Name>
+      <Derived><Dollar>768</Dollar></Derived>
+    </Fact>
+
+    <Fact path="/maxAllotmentHh4">
+      <Name>Max allotment (4 persons)</Name>
+      <Derived><Dollar>975</Dollar></Derived>
+    </Fact>
+
+    <Fact path="/maxAllotmentHh5">
+      <Name>Max allotment (5 persons)</Name>
+      <Derived><Dollar>1158</Dollar></Derived>
+    </Fact>
+
+    <Fact path="/maxAllotmentHh6">
+      <Name>Max allotment (6 persons)</Name>
+      <Derived><Dollar>1390</Dollar></Derived>
+    </Fact>
+
+    <Fact path="/maxAllotmentHh7">
+      <Name>Max allotment (7 persons)</Name>
+      <Derived><Dollar>1536</Dollar></Derived>
+    </Fact>
+
+    <Fact path="/maxAllotmentHh8">
+      <Name>Max allotment (8 persons)</Name>
+      <Derived><Dollar>1756</Dollar></Derived>
+    </Fact>
+
+    <Fact path="/maxAllotmentHhPerAdditional">
+      <Name>Max allotment per additional person</Name>
+      <Description>Additional max allotment per person beyond 8</Description>
+      <Derived><Dollar>220</Dollar></Derived>
+    </Fact>
+
+    <!-- ============================================================ -->
+    <!-- COMPUTED — per-member                                          -->
+    <!-- ============================================================ -->
+
+    <Fact path="/members/*/isElderlyOrDisabled">
+      <Name>Is elderly or disabled</Name>
+      <Description>Whether this member is age 60+ or disabled</Description>
+      <Derived>
+        <Any>
+          <Dependency path="../isElderly" />
+          <Dependency path="../isDisabled" />
+        </Any>
+      </Derived>
+    </Fact>
+
+    <!-- SNAP student exclusion (7 USC § 2015(e)). A higher-ed student is
+         INELIGIBLE unless they meet one of the statutory exceptions. -->
+    <Fact path="/members/*/meetsStudentAgeException">
+      <Name>Meets student age exception</Name>
+      <Description>Under 18 or age 50 or older (exception 1)</Description>
+      <Derived>
+        <Any>
+          <LessThan>
+            <Left><Dependency path="../age" /></Left>
+            <Right><Dependency path="/studentAgeThresholdLower" /></Right>
+          </LessThan>
+          <GreaterThanOrEqual>
+            <Left><Dependency path="../age" /></Left>
+            <Right><Dependency path="/studentAgeThresholdUpper" /></Right>
+          </GreaterThanOrEqual>
+        </Any>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/meetsStudentWorkException">
+      <Name>Meets student work exception</Name>
+      <Description>Employed at least 20 hours per week, or participates in work-study (exception 4)</Description>
+      <Derived>
+        <Any>
+          <GreaterThanOrEqual>
+            <Left><Dependency path="../weeklyWorkHours" /></Left>
+            <Right><Dependency path="/studentWorkHoursThreshold" /></Right>
+          </GreaterThanOrEqual>
+          <Dependency path="../isWorkStudy" />
+        </Any>
+      </Derived>
+    </Fact>
+
+    <!-- Per-member child-age flags used to detect whether the household has
+         a dependent child young enough to trigger the parent exception. -->
+    <Fact path="/members/*/isChildUnderTwoParentLimit">
+      <Name>Is child under two-parent age limit</Name>
+      <Description>Whether this member is younger than the two-parent child age threshold (6)</Description>
+      <Derived>
+        <LessThan>
+          <Left><Dependency path="../age" /></Left>
+          <Right><Dependency path="/studentChildAgeLimitTwoParent" /></Right>
+        </LessThan>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/isChildUnderSingleParentLimit">
+      <Name>Is child under single-parent age limit</Name>
+      <Description>Whether this member is younger than the single-parent child age threshold (12)</Description>
+      <Derived>
+        <LessThan>
+          <Left><Dependency path="../age" /></Left>
+          <Right><Dependency path="/studentChildAgeLimitSingleParent" /></Right>
+        </LessThan>
+      </Derived>
+    </Fact>
+
+    <!-- Student parent exception. The statute provides two independent
+         exceptions (a parent qualifies under either):
+           Exception 5 (7 USC § 2015(e)(5)): any parent with a child under 6
+             — no full-time-enrollment requirement, applies to single- and
+             two-parent households alike.
+           Exception 8 (7 USC § 2015(e)(8)): single parent enrolled full-time
+             with a child under 12.
+         PolicyEngine-US previously treated these as mutually exclusive based
+         on parent count (denying Exception 5 to half-time single parents);
+         see PolicyEngine/policyengine-us#8134. -->
+    <Fact path="/members/*/meetsSingleParentStudentException">
+      <Name>Meets single-parent student exception</Name>
+      <Description>Single parent enrolled full-time with a dependent child under 12 — 7 USC § 2015(e)(8)</Description>
+      <Derived>
+        <All>
+          <Equal>
+            <Left><Dependency path="/parentCount" /></Left>
+            <Right><Int>1</Int></Right>
+          </Equal>
+          <Dependency path="../isFullTimeCollegeStudent" />
+          <Dependency path="/hasChildUnderSingleParentLimit" />
+        </All>
+      </Derived>
+    </Fact>
+
+    <!-- Parent-of-young-child rule (7 USC § 2015(e)(5), any parent with a
+         child under 6) is just /hasChildUnderTwoParentLimit — referenced
+         inline below. -->
+    <Fact path="/members/*/meetsParentException">
+      <Name>Meets parent exception</Name>
+      <Description>Whether this member qualifies for the SNAP student parent exception: is a parent AND either the household has a child under 6, or this member is a single full-time-student parent with a child under 12</Description>
+      <Derived>
+        <All>
+          <Dependency path="../isParent" />
+          <Any>
+            <Dependency path="/hasChildUnderTwoParentLimit" />
+            <Dependency path="../meetsSingleParentStudentException" />
+          </Any>
+        </All>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/meetsAnyStudentException">
+      <Name>Meets any student exception</Name>
+      <Description>At least one of the statutory student-exclusion exceptions applies: age, disability, work, parent, or TANF</Description>
+      <Derived>
+        <Any>
+          <Dependency path="../meetsStudentAgeException" />
+          <Dependency path="../isDisabled" />
+          <Dependency path="../meetsStudentWorkException" />
+          <Dependency path="../meetsParentException" />
+          <Dependency path="../receivesTanf" />
+        </Any>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/isSnapIneligibleStudent">
+      <Name>SNAP-ineligible student</Name>
+      <Description>Higher-ed student who fails every statutory exception</Description>
+      <Derived>
+        <All>
+          <Dependency path="../isHigherEdStudent" />
+          <Not><Dependency path="../meetsAnyStudentException" /></Not>
+        </All>
+      </Derived>
+    </Fact>
+
+    <!-- SNAP work requirements (7 CFR § 273.7 general, § 273.24 ABAWD). Each
+         person must meet general work requirements, plus ABAWD requirements
+         when the household has no dependent child under the ABAWD threshold.
+         Mirrors PolicyEngine-US meets_snap_work_requirements. -->
+    <Fact path="/members/*/isChildUnderAbawdDependentLimit">
+      <Name>Is child under ABAWD dependent age limit</Name>
+      <Description>Whether this member is younger than the ABAWD dependent-child threshold</Description>
+      <Derived>
+        <LessThan>
+          <Left><Dependency path="../age" /></Left>
+          <Right><Dependency path="/abawdDependentChildAgeLimit" /></Right>
+        </LessThan>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/isChildUnderGeneralCaringLimit">
+      <Name>Is child under general caring age limit</Name>
+      <Description>Whether this member is younger than the general work caring-dependent-child threshold</Description>
+      <Derived>
+        <LessThan>
+          <Left><Dependency path="../age" /></Left>
+          <Right><Dependency path="/generalCaringDependentChildAgeLimit" /></Right>
+        </LessThan>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/meetsGeneralWorkAgeExemption">
+      <Name>Meets general work age exemption</Name>
+      <Description>Under 16 or age 60 or older — exempt from general work requirements</Description>
+      <Derived>
+        <Any>
+          <LessThan>
+            <Left><Dependency path="../age" /></Left>
+            <Right><Dependency path="/generalWorkAgeExemptUpper" /></Right>
+          </LessThan>
+          <GreaterThanOrEqual>
+            <Left><Dependency path="../age" /></Left>
+            <Right><Dependency path="/generalWorkAgeExemptLower" /></Right>
+          </GreaterThanOrEqual>
+        </Any>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/meetsAbawdAgeExemption">
+      <Name>Meets ABAWD age exemption</Name>
+      <Description>Under 18 or age 65 or older — exempt from ABAWD work requirements (post-HR1)</Description>
+      <Derived>
+        <Any>
+          <LessThan>
+            <Left><Dependency path="../age" /></Left>
+            <Right><Dependency path="/abawdAgeExemptUpper" /></Right>
+          </LessThan>
+          <GreaterThanOrEqual>
+            <Left><Dependency path="../age" /></Left>
+            <Right><Dependency path="/abawdAgeExemptLower" /></Right>
+          </GreaterThanOrEqual>
+        </Any>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/meetsGeneralWorkHoursThreshold">
+      <Name>Meets general work hours threshold</Name>
+      <Description>Works at least 30 hours per week</Description>
+      <Derived>
+        <GreaterThanOrEqual>
+          <Left><Dependency path="../weeklyWorkHours" /></Left>
+          <Right><Dependency path="/generalWorkHoursThreshold" /></Right>
+        </GreaterThanOrEqual>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/meetsAbawdWorkHoursThreshold">
+      <Name>Meets ABAWD work hours threshold</Name>
+      <Description>Works at least 20 hours per week</Description>
+      <Derived>
+        <GreaterThanOrEqual>
+          <Left><Dependency path="../weeklyWorkHours" /></Left>
+          <Right><Dependency path="/abawdWorkHoursThreshold" /></Right>
+        </GreaterThanOrEqual>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/meetsGeneralWorkRequirements">
+      <Name>Meets general work requirements</Name>
+      <Description>Age-exempt, disabled, caring for a dependent child under 6 or an incapable member, or working ≥30 hours/week</Description>
+      <Derived>
+        <Any>
+          <Dependency path="../meetsGeneralWorkAgeExemption" />
+          <Dependency path="../isDisabled" />
+          <Dependency path="../meetsGeneralWorkHoursThreshold" />
+          <Dependency path="/hasChildUnderGeneralCaringLimit" />
+          <Dependency path="/hasIncapableMember" />
+        </Any>
+      </Derived>
+    </Fact>
+
+    <!-- 3-in-36 time limit: a non-exempt, non-working ABAWD retains eligibility
+         as long as they haven't yet used all three countable months in the
+         36-month window (7 CFR § 273.24(b)(1)). -->
+    <Fact path="/members/*/hasAbawdMonthsRemaining">
+      <Name>Has ABAWD months remaining</Name>
+      <Description>Whether this member still has countable SNAP months available in the 36-month window</Description>
+      <Derived>
+        <LessThan>
+          <Left><Dependency path="../abawdCountableMonthsUsed" /></Left>
+          <Right><Dependency path="/abawdCountableMonthsLimit" /></Right>
+        </LessThan>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/meetsAbawdWorkRequirements">
+      <Name>Meets ABAWD work requirements</Name>
+      <Description>Age-exempt, working ≥20 hours/week, disabled, pregnant, a parent of a child under the ABAWD dependent threshold, or still within the 3-month countable allowance in the 36-month window</Description>
+      <Derived>
+        <Any>
+          <Dependency path="../meetsAbawdAgeExemption" />
+          <Dependency path="../meetsAbawdWorkHoursThreshold" />
+          <Dependency path="../isDisabled" />
+          <Dependency path="../isPregnant" />
+          <All>
+            <Dependency path="../isParent" />
+            <Dependency path="/hasChildUnderAbawdDependentLimit" />
+          </All>
+          <Dependency path="../hasAbawdMonthsRemaining" />
+        </Any>
+      </Derived>
+    </Fact>
+
+    <!-- Overall ABAWD status: the member personally meets ABAWD work
+         requirements OR the household is exempt from ABAWD (has a dependent
+         child under the ABAWD age threshold). Extracted as its own node so
+         downstream consumers (e.g. the 3-in-36 countable-months input UI)
+         can key off a single boolean. -->
+    <Fact path="/members/*/satisfiesAbawd">
+      <Name>Satisfies ABAWD</Name>
+      <Description>Whether this member is OK under ABAWD rules this month: household has a dependent child under the ABAWD age threshold, OR the member personally meets ABAWD work requirements</Description>
+      <Derived>
+        <Any>
+          <Dependency path="/hasChildUnderAbawdDependentLimit" />
+          <Dependency path="../meetsAbawdWorkRequirements" />
+        </Any>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/meetsWorkRequirements">
+      <Name>Meets work requirements</Name>
+      <Description>Meets general work requirements and satisfies ABAWD rules</Description>
+      <Derived>
+        <All>
+          <Dependency path="../meetsGeneralWorkRequirements" />
+          <Dependency path="../satisfiesAbawd" />
+        </All>
+      </Derived>
+    </Fact>
+
+    <!-- A member is eligible to count toward the household's SNAP participation
+         only if they are NOT a SNAP-ineligible student, they have a qualifying
+         immigration status, AND they personally meet work requirements. Work-
+         requirement failures are individual disqualifications under 7 CFR
+         273.7(f)(1) and 273.24(b) — they exclude the non-compliant person
+         from the SNAP unit, they do NOT deny the whole household. Colorado is
+         among the 45 jurisdictions that apply the default individual rule;
+         see PolicyEngine/policyengine-us #8134 for the PE household-wide
+         disqualification bug. -->
+    <Fact path="/members/*/isEligibleMember">
+      <Name>Is eligible member</Name>
+      <Description>Whether this member personally qualifies for SNAP: not a SNAP-ineligible student, has a qualifying immigration status, and meets work requirements</Description>
+      <Derived>
+        <All>
+          <Not><Dependency path="../isSnapIneligibleStudent" /></Not>
+          <Dependency path="../isImmigrationEligible" />
+          <Dependency path="../meetsWorkRequirements" />
+        </All>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/snapAssets">
+      <Name>SNAP assets</Name>
+      <Description>Countable liquid resources held by this member (cash, bank, stock, bond) per 7 CFR § 273.8(c)(1)</Description>
+      <Derived>
+        <Add>
+          <Dependency path="../cashOnHand" />
+          <Dependency path="../bankAccountAssets" />
+          <Dependency path="../stockAssets" />
+          <Dependency path="../bondAssets" />
+        </Add>
+      </Derived>
+    </Fact>
+
+    <!-- Only count medical expenses for elderly/disabled members -->
+    <Fact path="/members/*/countableMedicalExpenses">
+      <Name>Countable medical expenses</Name>
+      <Description>Medical expenses if the member is elderly or disabled; $0 otherwise</Description>
+      <Derived>
+        <Switch>
+          <Case>
+            <When><Dependency path="../isElderlyOrDisabled" /></When>
+            <Then><Dependency path="../medicalExpenses" /></Then>
+          </Case>
+          <Case>
+            <When><True /></When>
+            <Then><Dollar>0</Dollar></Then>
+          </Case>
+        </Switch>
+      </Derived>
+    </Fact>
+
+    <!-- ============================================================ -->
+    <!-- COMPUTED — eligibility and benefit calculation                -->
+    <!-- ============================================================ -->
+
+    <!-- SNAP unit size: count of members who personally qualify (not an
+         ineligible student, and immigration-eligible). Matches PolicyEngine-US
+         snap_unit_size (7 USC § 2014(b), § 2015(f)). -->
+    <Fact path="/householdSize">
+      <Name>Household size</Name>
+      <Description>Number of eligible members in the SNAP household</Description>
+      <Derived>
+        <Count>
+          <Dependency path="/members/*/isEligibleMember" />
+        </Count>
+      </Derived>
+    </Fact>
+
+    <Fact path="/hasElderlyOrDisabledMember">
+      <Name>Elderly or disabled member</Name>
+      <Description>Whether the household has any member who is age 60+ or disabled</Description>
+      <Derived>
+        <GreaterThan>
+          <Left>
+            <Count>
+              <Dependency path="/members/*/isElderlyOrDisabled" />
+            </Count>
+          </Left>
+          <Right><Int>0</Int></Right>
+        </GreaterThan>
+      </Derived>
+    </Fact>
+
+    <!-- Aggregates used by the student parent exception. -->
+    <Fact path="/parentCount">
+      <Name>Parent count</Name>
+      <Description>Number of members flagged as parents (tax-unit head or spouse)</Description>
+      <Derived>
+        <Count>
+          <Dependency path="/members/*/isParent" />
+        </Count>
+      </Derived>
+    </Fact>
+
+    <Fact path="/hasChildUnderTwoParentLimit">
+      <Name>Has child under two-parent limit</Name>
+      <Description>Whether the household has any member under age 6 (two-parent parent exception threshold)</Description>
+      <Derived>
+        <GreaterThan>
+          <Left>
+            <Count>
+              <Dependency path="/members/*/isChildUnderTwoParentLimit" />
+            </Count>
+          </Left>
+          <Right><Int>0</Int></Right>
+        </GreaterThan>
+      </Derived>
+    </Fact>
+
+    <Fact path="/hasChildUnderSingleParentLimit">
+      <Name>Has child under single-parent limit</Name>
+      <Description>Whether the household has any member under age 12 (single-parent parent exception threshold)</Description>
+      <Derived>
+        <GreaterThan>
+          <Left>
+            <Count>
+              <Dependency path="/members/*/isChildUnderSingleParentLimit" />
+            </Count>
+          </Left>
+          <Right><Int>0</Int></Right>
+        </GreaterThan>
+      </Derived>
+    </Fact>
+
+    <!-- Aggregates used by the work-requirements logic. -->
+    <Fact path="/hasChildUnderAbawdDependentLimit">
+      <Name>Has dependent child under ABAWD limit</Name>
+      <Description>Whether the household has any member under the ABAWD dependent-child age threshold (14 post-HR1)</Description>
+      <Derived>
+        <GreaterThan>
+          <Left>
+            <Count>
+              <Dependency path="/members/*/isChildUnderAbawdDependentLimit" />
+            </Count>
+          </Left>
+          <Right><Int>0</Int></Right>
+        </GreaterThan>
+      </Derived>
+    </Fact>
+
+    <Fact path="/hasChildUnderGeneralCaringLimit">
+      <Name>Has caring-dependent child</Name>
+      <Description>Whether the household has any member under the general work caring-dependent-child threshold (6)</Description>
+      <Derived>
+        <GreaterThan>
+          <Left>
+            <Count>
+              <Dependency path="/members/*/isChildUnderGeneralCaringLimit" />
+            </Count>
+          </Left>
+          <Right><Int>0</Int></Right>
+        </GreaterThan>
+      </Derived>
+    </Fact>
+
+    <Fact path="/hasIncapableMember">
+      <Name>Has incapable member</Name>
+      <Description>Whether the household has any member incapable of self-care</Description>
+      <Derived>
+        <GreaterThan>
+          <Left>
+            <Count>
+              <Dependency path="/members/*/isIncapableOfSelfCare" />
+            </Count>
+          </Left>
+          <Right><Int>0</Int></Right>
+        </GreaterThan>
+      </Derived>
+    </Fact>
+
+
+    <Fact path="/medicalExpensesElderlyDisabled">
+      <Name>Medical expenses (elderly/disabled)</Name>
+      <Description>Sum of monthly out-of-pocket medical expenses across elderly/disabled members</Description>
+      <Derived>
+        <CollectionSum>
+          <Dependency path="/members/*/countableMedicalExpenses" />
+        </CollectionSum>
+      </Derived>
+    </Fact>
+
+    <!-- SNAP asset test (7 USC § 2014(g), 7 CFR § 273.8). Mirrors
+         PolicyEngine-US meets_snap_asset_test. -->
+    <Fact path="/snapAssets">
+      <Name>SNAP assets</Name>
+      <Description>Total countable liquid resources across all household members</Description>
+      <Derived>
+        <CollectionSum>
+          <Dependency path="/members/*/snapAssets" />
+        </CollectionSum>
+      </Derived>
+    </Fact>
+
+    <Fact path="/assetLimit">
+      <Name>Asset limit</Name>
+      <Description>Applicable asset limit for this household: elderly/disabled amount if any member is age 60+ or disabled, otherwise the standard amount</Description>
+      <Derived>
+        <Switch>
+          <Case>
+            <When><Dependency path="/hasElderlyOrDisabledMember" /></When>
+            <Then><Dependency path="/assetLimitElderlyDisabled" /></Then>
+          </Case>
+          <Case>
+            <When><True /></When>
+            <Then><Dependency path="/assetLimitStandard" /></Then>
+          </Case>
+        </Switch>
+      </Derived>
+    </Fact>
+
+    <Fact path="/meetsAssetTest">
+      <Name>Meets asset test</Name>
+      <Description>Whether the household's countable resources are at or below the applicable SNAP asset limit</Description>
+      <Derived>
+        <LessThanOrEqual>
+          <Left><Dependency path="/snapAssets" /></Left>
+          <Right><Dependency path="/assetLimit" /></Right>
+        </LessThanOrEqual>
+      </Derived>
+    </Fact>
+
+    <!-- Colorado applies the full SUA to every household, regardless of utility expenses -->
+    <Fact path="/utilityAllowance">
+      <Name>Utility allowance</Name>
+      <Description>Colorado always applies the full SUA</Description>
+      <Derived>
+        <Dependency path="/suaAmount" />
+      </Derived>
+    </Fact>
+
+    <Fact path="/shelterCosts">
+      <Name>Shelter costs</Name>
+      <Description>Total monthly shelter costs: housing expenses + utility allowance</Description>
+      <Derived>
+        <Add>
+          <Dependency path="/rent" />
+          <Dependency path="/realEstateTaxes" />
+          <Dependency path="/homeownersAssociationFees" />
+          <Dependency path="/mortgagePayments" />
+          <Dependency path="/homeownersInsurance" />
+          <Dependency path="/utilityAllowance" />
+        </Add>
+      </Derived>
+    </Fact>
+
+    <Fact path="/grossMonthlyIncome">
+      <Name>Gross monthly income</Name>
+      <Description>Earned + unearned income, minus child support paid (Colorado treats child support as an income exclusion).</Description>
+      <Derived>
+        <Subtract>
+          <Minuend>
+            <Add>
+              <Dependency path="/grossEarnedIncome" />
+              <Dependency path="/unearnedIncome" />
+            </Add>
+          </Minuend>
+          <Subtrahends><Dependency path="/childSupportPaid" /></Subtrahends>
+        </Subtract>
+      </Derived>
+    </Fact>
+
+    <Fact path="/federalPovertyLevelAnnual">
+      <Name>Federal poverty level (annual)</Name>
+      <Description>Annual FPL for this household size: 1-person amount + (householdSize − 1) × per-additional</Description>
+      <Derived>
+        <Add>
+          <Dependency path="/fplAnnualHh1" />
+          <Multiply>
+            <Dependency path="/fplAnnualHhPerAdditional" />
+            <Subtract>
+              <Minuend><Dependency path="/householdSize" /></Minuend>
+              <Subtrahends><Int>1</Int></Subtrahends>
+            </Subtract>
+          </Multiply>
+        </Add>
+      </Derived>
+    </Fact>
+
+    <Fact path="/federalPovertyLevelMonthly">
+      <Name>Federal poverty level (monthly)</Name>
+      <Description>Monthly FPL = annual FPL / 12, rounded to the nearest whole dollar</Description>
+      <Derived>
+        <Round>
+          <Divide>
+            <Dividend><Dependency path="/federalPovertyLevelAnnual" /></Dividend>
+            <Divisors><Int>12</Int></Divisors>
+          </Divide>
+        </Round>
+      </Derived>
+    </Fact>
+
+    <!-- Gross income test: 130% FPL -->
+    <Fact path="/grossIncomeLimit">
+      <Name>Gross income limit</Name>
+      <Description>130% of FPL — maximum gross monthly income for eligibility</Description>
+      <Derived>
+        <Multiply>
+          <Dependency path="/federalPovertyLevelMonthly" />
+          <Dependency path="/grossIncomeLimitRate" />
+        </Multiply>
+      </Derived>
+    </Fact>
+
+    <Fact path="/grossIncomeEligible">
+      <Name>Passes gross income test</Name>
+      <Description>Whether gross monthly income is at or below 130% of FPL. Elderly/disabled households are exempt from the gross income test.</Description>
+      <Derived>
+        <Any>
+          <Dependency path="/hasElderlyOrDisabledMember" />
+          <LessThanOrEqual>
+            <Left><Dependency path="/grossMonthlyIncome" /></Left>
+            <Right><Dependency path="/grossIncomeLimit" /></Right>
+          </LessThanOrEqual>
+        </Any>
+      </Derived>
+    </Fact>
+
+    <!-- Deductions -->
+    <Fact path="/earnedIncomeDeduction">
+      <Name>Earned income deduction</Name>
+      <Description>20% of gross earned income</Description>
+      <Derived>
+        <Multiply>
+          <Dependency path="/grossEarnedIncome" />
+          <Dependency path="/earnedIncomeDeductionRate" />
+        </Multiply>
+      </Derived>
+    </Fact>
+
+    <Fact path="/standardDeduction">
+      <Name>Standard deduction</Name>
+      <Description>Standard deduction based on household size</Description>
+      <Derived>
+        <Switch>
+          <Case>
+            <When>
+              <LessThanOrEqual>
+                <Left><Dependency path="/householdSize" /></Left>
+                <Right><Int>3</Int></Right>
+              </LessThanOrEqual>
+            </When>
+            <Then><Dependency path="/standardDeductionHh1to3" /></Then>
+          </Case>
+          <Case>
+            <When>
+              <Equal>
+                <Left><Dependency path="/householdSize" /></Left>
+                <Right><Int>4</Int></Right>
+              </Equal>
+            </When>
+            <Then><Dependency path="/standardDeductionHh4" /></Then>
+          </Case>
+          <Case>
+            <When>
+              <Equal>
+                <Left><Dependency path="/householdSize" /></Left>
+                <Right><Int>5</Int></Right>
+              </Equal>
+            </When>
+            <Then><Dependency path="/standardDeductionHh5" /></Then>
+          </Case>
+          <Case>
+            <When><True /></When>
+            <Then><Dependency path="/standardDeductionHh6Plus" /></Then>
+          </Case>
+        </Switch>
+      </Derived>
+    </Fact>
+
+    <Fact path="/medicalDeduction">
+      <Name>Medical deduction</Name>
+      <Description>Medical expenses over $35/month for elderly/disabled members</Description>
+      <Derived>
+        <Switch>
+          <Case>
+            <When><Dependency path="/hasElderlyOrDisabledMember" /></When>
+            <Then>
+              <GreaterOf>
+                <Subtract>
+                  <Minuend><Dependency path="/medicalExpensesElderlyDisabled" /></Minuend>
+                  <Subtrahends><Dependency path="/medicalDeductionThreshold" /></Subtrahends>
+                </Subtract>
+                <Dollar>0</Dollar>
+              </GreaterOf>
+            </Then>
+          </Case>
+          <Case>
+            <When><True /></When>
+            <Then><Dollar>0</Dollar></Then>
+          </Case>
+        </Switch>
+      </Derived>
+    </Fact>
+
+    <!-- Sum of non-shelter deductions; used to compute the shelter threshold -->
+    <Fact path="/preliminaryDeductions">
+      <Name>Preliminary deductions</Name>
+      <Description>Sum of standard, earned income, dependent care, and medical deductions (all deductions except shelter)</Description>
+      <Derived>
+        <Add>
+          <Dependency path="/standardDeduction" />
+          <Dependency path="/earnedIncomeDeduction" />
+          <Dependency path="/dependentCareExpenses" />
+          <Dependency path="/medicalDeduction" />
+        </Add>
+      </Derived>
+    </Fact>
+
+    <!-- Excess shelter deduction -->
+    <Fact path="/shelterIncomeShare">
+      <Name>Shelter income share</Name>
+      <Description>50% of income after non-shelter deductions per 7 USC 2014(e)(6)</Description>
+      <Derived>
+        <Multiply>
+          <GreaterOf>
+            <Subtract>
+              <Minuend><Dependency path="/grossMonthlyIncome" /></Minuend>
+              <Subtrahends><Dependency path="/preliminaryDeductions" /></Subtrahends>
+            </Subtract>
+            <Dollar>0</Dollar>
+          </GreaterOf>
+          <Dependency path="/shelterIncomeShareRate" />
+        </Multiply>
+      </Derived>
+    </Fact>
+
+    <Fact path="/excessShelterCost">
+      <Name>Excess shelter cost</Name>
+      <Description>Shelter costs exceeding 50% of income after other deductions</Description>
+      <Derived>
+        <GreaterOf>
+          <Subtract>
+            <Minuend><Dependency path="/shelterCosts" /></Minuend>
+            <Subtrahends><Dependency path="/shelterIncomeShare" /></Subtrahends>
+          </Subtract>
+          <Dollar>0</Dollar>
+        </GreaterOf>
+      </Derived>
+    </Fact>
+
+    <Fact path="/regularShelterDeduction">
+      <Name>Regular shelter deduction</Name>
+      <Description>Excess shelter deduction, capped unless elderly/disabled member present</Description>
+      <Derived>
+        <Switch>
+          <Case>
+            <When><Dependency path="/hasElderlyOrDisabledMember" /></When>
+            <Then><Dependency path="/excessShelterCost" /></Then>
+          </Case>
+          <Case>
+            <When><True /></When>
+            <Then>
+              <LesserOf>
+                <Dependency path="/excessShelterCost" />
+                <Dependency path="/excessShelterDeductionCap" />
+              </LesserOf>
+            </Then>
+          </Case>
+        </Switch>
+      </Derived>
+    </Fact>
+
+    <Fact path="/eligibleForHomelessShelterDeduction">
+      <Name>Eligible for homeless shelter deduction</Name>
+      <Description>Household is homeless AND has some shelter costs</Description>
+      <Derived>
+        <All>
+          <Dependency path="/isHomeless" />
+          <GreaterThan>
+            <Left><Dependency path="/shelterCosts" /></Left>
+            <Right><Dollar>0</Dollar></Right>
+          </GreaterThan>
+        </All>
+      </Derived>
+    </Fact>
+
+    <Fact path="/shelterDeduction">
+      <Name>Shelter deduction</Name>
+      <Description>Regular shelter deduction, or the flat homeless shelter deduction when eligible and greater</Description>
+      <Derived>
+        <Switch>
+          <Case>
+            <When><Dependency path="/eligibleForHomelessShelterDeduction" /></When>
+            <Then>
+              <GreaterOf>
+                <Dependency path="/regularShelterDeduction" />
+                <Dependency path="/homelessShelterDeduction" />
+              </GreaterOf>
+            </Then>
+          </Case>
+          <Case>
+            <When><True /></When>
+            <Then><Dependency path="/regularShelterDeduction" /></Then>
+          </Case>
+        </Switch>
+      </Derived>
+    </Fact>
+
+    <!-- Total deductions: sum of every deduction the household qualifies for -->
+    <Fact path="/totalDeductions">
+      <Name>Total deductions</Name>
+      <Description>Sum of standard, earned income, dependent care, medical, and shelter deductions</Description>
+      <Derived>
+        <Add>
+          <Dependency path="/standardDeduction" />
+          <Dependency path="/earnedIncomeDeduction" />
+          <Dependency path="/dependentCareExpenses" />
+          <Dependency path="/medicalDeduction" />
+          <Dependency path="/shelterDeduction" />
+        </Add>
+      </Derived>
+    </Fact>
+
+    <!-- Net income = gross income minus total deductions -->
+    <Fact path="/netMonthlyIncome">
+      <Name>Net monthly income</Name>
+      <Description>Gross monthly income minus total deductions</Description>
+      <Derived>
+        <GreaterOf>
+          <Subtract>
+            <Minuend><Dependency path="/grossMonthlyIncome" /></Minuend>
+            <Subtrahends><Dependency path="/totalDeductions" /></Subtrahends>
+          </Subtract>
+          <Dollar>0</Dollar>
+        </GreaterOf>
+      </Derived>
+    </Fact>
+
+    <!-- Net income test: 100% FPL -->
+    <Fact path="/netIncomeLimit">
+      <Name>Net income limit</Name>
+      <Description>Maximum net monthly income for eligibility: netIncomeLimitRate × monthly FPL</Description>
+      <Derived>
+        <Multiply>
+          <Dependency path="/federalPovertyLevelMonthly" />
+          <Dependency path="/netIncomeLimitRate" />
+        </Multiply>
+      </Derived>
+    </Fact>
+
+    <Fact path="/netIncomeEligible">
+      <Name>Passes net income test</Name>
+      <Description>Whether net monthly income is at or below 100% of FPL</Description>
+      <Derived>
+        <LessThanOrEqual>
+          <Left><Dependency path="/netMonthlyIncome" /></Left>
+          <Right><Dependency path="/netIncomeLimit" /></Right>
+        </LessThanOrEqual>
+      </Derived>
+    </Fact>
+
+    <!-- Overall eligibility — matches PolicyEngine-US is_snap_eligible:
+         (normal_eligibility OR categorical_eligibility)
+           AND at least one member isn't an ineligible student
+           AND the household meets ABAWD work requirements
+           AND at least one member has eligible immigration status -->
+    <Fact path="/normalEligibility">
+      <Name>Normal eligibility</Name>
+      <Description>Passes gross income, net income, and asset tests (before categorical eligibility override)</Description>
+      <Derived>
+        <All>
+          <Dependency path="/grossIncomeEligible" />
+          <Dependency path="/netIncomeEligible" />
+          <Dependency path="/meetsAssetTest" />
+        </All>
+      </Derived>
+    </Fact>
+
+    <Fact path="/hasEligiblePerson">
+      <Name>Has eligible person</Name>
+      <Description>Whether the household contains at least one member who personally qualifies for SNAP (not an ineligible student, immigration-eligible, and meets work requirements)</Description>
+      <Derived>
+        <GreaterThan>
+          <Left><Dependency path="/householdSize" /></Left>
+          <Right><Int>0</Int></Right>
+        </GreaterThan>
+      </Derived>
+    </Fact>
+
+    <Fact path="/eligible">
+      <Name>Eligible for SNAP</Name>
+      <Description>Whether the household is eligible for SNAP benefits. Work-requirement failures, student status, and immigration status are applied as per-member exclusions (/members/*/isEligibleMember); the household is eligible as long as at least one member personally qualifies.</Description>
+      <Derived>
+        <All>
+          <Any>
+            <Dependency path="/normalEligibility" />
+            <Dependency path="/meetsCategoricalEligibility" />
+          </Any>
+          <Dependency path="/hasEligiblePerson" />
+        </All>
+      </Derived>
+    </Fact>
+
+    <!-- Benefit calculation -->
+    <Fact path="/maxAllotment">
+      <Name>Maximum allotment</Name>
+      <Description>Maximum monthly SNAP benefit for this household size</Description>
+      <Derived>
+        <Switch>
+          <Case>
+            <When>
+              <LessThanOrEqual>
+                <Left><Dependency path="/householdSize" /></Left>
+                <Right><Int>1</Int></Right>
+              </LessThanOrEqual>
+            </When>
+            <Then><Dependency path="/maxAllotmentHh1" /></Then>
+          </Case>
+          <Case>
+            <When>
+              <Equal>
+                <Left><Dependency path="/householdSize" /></Left>
+                <Right><Int>2</Int></Right>
+              </Equal>
+            </When>
+            <Then><Dependency path="/maxAllotmentHh2" /></Then>
+          </Case>
+          <Case>
+            <When>
+              <Equal>
+                <Left><Dependency path="/householdSize" /></Left>
+                <Right><Int>3</Int></Right>
+              </Equal>
+            </When>
+            <Then><Dependency path="/maxAllotmentHh3" /></Then>
+          </Case>
+          <Case>
+            <When>
+              <LessThanOrEqual>
+                <Left><Dependency path="/householdSize" /></Left>
+                <Right><Int>4</Int></Right>
+              </LessThanOrEqual>
+            </When>
+            <Then><Dependency path="/maxAllotmentHh4" /></Then>
+          </Case>
+          <Case>
+            <When>
+              <Equal>
+                <Left><Dependency path="/householdSize" /></Left>
+                <Right><Int>5</Int></Right>
+              </Equal>
+            </When>
+            <Then><Dependency path="/maxAllotmentHh5" /></Then>
+          </Case>
+          <Case>
+            <When>
+              <Equal>
+                <Left><Dependency path="/householdSize" /></Left>
+                <Right><Int>6</Int></Right>
+              </Equal>
+            </When>
+            <Then><Dependency path="/maxAllotmentHh6" /></Then>
+          </Case>
+          <Case>
+            <When>
+              <Equal>
+                <Left><Dependency path="/householdSize" /></Left>
+                <Right><Int>7</Int></Right>
+              </Equal>
+            </When>
+            <Then><Dependency path="/maxAllotmentHh7" /></Then>
+          </Case>
+          <Case>
+            <When>
+              <LessThanOrEqual>
+                <Left><Dependency path="/householdSize" /></Left>
+                <Right><Int>8</Int></Right>
+              </LessThanOrEqual>
+            </When>
+            <Then><Dependency path="/maxAllotmentHh8" /></Then>
+          </Case>
+          <Case>
+            <When><True /></When>
+            <Then>
+              <Add>
+                <Dependency path="/maxAllotmentHh8" />
+                <Multiply>
+                  <Dependency path="/maxAllotmentHhPerAdditional" />
+                  <Subtract>
+                    <Minuend><Dependency path="/householdSize" /></Minuend>
+                    <Subtrahends><Int>8</Int></Subtrahends>
+                  </Subtract>
+                </Multiply>
+              </Add>
+            </Then>
+          </Case>
+        </Switch>
+      </Derived>
+    </Fact>
+
+    <Fact path="/expectedFoodContribution">
+      <Name>Expected food contribution</Name>
+      <Description>30% of net income — the amount the household is expected to spend on food</Description>
+      <Derived>
+        <Multiply>
+          <Dependency path="/netMonthlyIncome" />
+          <Dependency path="/benefitReductionRate" />
+        </Multiply>
+      </Derived>
+    </Fact>
+
+    <Fact path="/calculatedBenefit">
+      <Name>Calculated benefit</Name>
+      <Description>Max allotment minus 30% of net income</Description>
+      <Derived>
+        <GreaterOf>
+          <Subtract>
+            <Minuend><Dependency path="/maxAllotment" /></Minuend>
+            <Subtrahends><Dependency path="/expectedFoodContribution" /></Subtrahends>
+          </Subtract>
+          <Dollar>0</Dollar>
+        </GreaterOf>
+      </Derived>
+    </Fact>
+
+    <Fact path="/snap">
+      <Name>Monthly SNAP benefit</Name>
+      <Description>Final monthly benefit amount, zero if not eligible, with minimum benefit floor for small households</Description>
+      <Derived>
+        <Switch>
+          <Case>
+            <When><Not><Dependency path="/eligible" /></Not></When>
+            <Then><Dollar>0</Dollar></Then>
+          </Case>
+          <Case>
+            <When>
+              <LessThanOrEqual>
+                <Left><Dependency path="/householdSize" /></Left>
+                <Right><Int>2</Int></Right>
+              </LessThanOrEqual>
+            </When>
+            <Then>
+              <GreaterOf>
+                <Dependency path="/minimumBenefit" />
+                <Dependency path="/calculatedBenefit" />
+              </GreaterOf>
+            </Then>
+          </Case>
+          <Case>
+            <When><True /></When>
+            <Then><Dependency path="/calculatedBenefit" /></Then>
+          </Case>
+        </Switch>
+      </Derived>
+    </Fact>
+
+  </Facts>
+</FactDictionaryModule>
