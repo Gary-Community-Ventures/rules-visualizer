@@ -113,6 +113,12 @@ export type FactGraphDerived = {
   path: string
   label?: string
   dataType?: string // inferred return type (Dollar, Int, Boolean, Day, etc.)
+  /** When dataType is 'Enum', the path to the EnumOptions fact —
+   *  set so the FE can show an enum dropdown when overriding. */
+  enumOptionsPath?: string
+  /** Static Enum option values resolved from the EnumOptions target,
+   *  same shape as FactGraphWritable.enumOptions. */
+  enumOptions?: string[]
   logic?: string // inner <Writable> or <Derived> XML
 }
 

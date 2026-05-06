@@ -139,21 +139,23 @@ export function parseFactGraphModules(
     nodes[id] = node
   }
 
-  // Resolve static Enum options: for each writable Enum with an
-  // enumOptionsPath, look up the target fact's <EnumOptions> derivation and
-  // collect its simple <String value="..."/> children. Conditional options
-  // (EnumOption with When/Then) are skipped — they stay unresolved and the
-  // frontend falls back to a text input.
+  // Resolve static Enum options: for each Enum node (writable OR derived
+  // that returns an Enum) with an enumOptionsPath, look up the target
+  // fact's <EnumOptions> derivation and collect its simple
+  // <String value="..."/> children. Conditional options (EnumOption with
+  // When/Then) stay unresolved and the frontend falls back to a text input.
   for (const node of Object.values(nodes)) {
     const content = node.content
-    if (
-      content.format !== 'factGraph' ||
-      content.type !== 'writable' ||
-      content.typeName !== 'Enum' ||
-      !content.enumOptionsPath
-    ) {
-      continue
-    }
+    if (content.format !== 'factGraph') continue
+    const isWritableEnum =
+      content.type === 'writable' &&
+      content.typeName === 'Enum' &&
+      !!content.enumOptionsPath
+    const isDerivedEnum =
+      content.type === 'derived' &&
+      content.dataType === 'Enum' &&
+      !!content.enumOptionsPath
+    if (!isWritableEnum && !isDerivedEnum) continue
     const target = allFacts.find((f) => f.path === content.enumOptionsPath)
     if (!target) continue
     const derived = target.raw.Derived as Record<string, unknown> | undefined
@@ -467,6 +469,8 @@ function parseDerivedContent(
 ): FactGraphDerived {
   const hasDeps = collectDependencyPaths(derived).length > 0
   const dataType = inferType(derived)
+  const enumOptionsPath =
+    dataType === 'Enum' ? findEnumOptionsPath(derived) : undefined
 
   return {
     format: 'factGraph',
@@ -474,7 +478,42 @@ function parseDerivedContent(
     role: hasDeps ? 'computed' : 'constant',
     path,
     dataType,
+    enumOptionsPath,
   }
+}
+
+/** Recursively look for an `<Enum optionsPath="…">` literal within a derived
+ *  expression tree. Returns the first one found (by document order). Used
+ *  for nodes whose dataType inferred to 'Enum' (e.g. a Switch whose Then
+ *  branches return Enum literals) so we know which EnumOptions fact to
+ *  resolve dropdown options from. */
+function findEnumOptionsPath(node: unknown): string | undefined {
+  if (node === null || node === undefined || typeof node !== 'object')
+    return undefined
+  if (Array.isArray(node)) {
+    for (const item of node) {
+      const p = findEnumOptionsPath(item)
+      if (p) return p
+    }
+    return undefined
+  }
+  const obj = node as Record<string, unknown>
+  // Direct match on this element
+  if (typeof obj['@_optionsPath'] === 'string') {
+    return obj['@_optionsPath'] as string
+  }
+  // Recurse into Enum child first (most direct), then any other children.
+  const enumChild = obj['Enum']
+  if (enumChild) {
+    const p = findEnumOptionsPath(enumChild)
+    if (p) return p
+  }
+  for (const [key, value] of Object.entries(obj)) {
+    if (key.startsWith('@_') || key === '#text' || key === 'Enum') continue
+    const p = findEnumOptionsPath(value)
+    if (p) return p
+  }
+  return undefined
 }
 
 /**

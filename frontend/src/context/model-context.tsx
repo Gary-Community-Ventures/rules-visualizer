@@ -41,13 +41,15 @@ export function isOverridable(node: ModelNode): boolean {
   return node.overridable
 }
 
-/** Static enum options for this node, if it's a writable Enum whose
- *  target EnumOptions fact was resolvable. */
+/** Static enum options for this node, if it's an Enum (writable OR derived)
+ *  whose target EnumOptions fact was resolvable. Used to render an enum
+ *  dropdown both for inputs and for overrides on derived enum nodes. */
 export function getNodeEnumOptions(node: ModelNode): string[] | undefined {
   const c = node.content
   if (c.type === 'entity') return undefined
-  if (c.format === 'factGraph' && c.type === 'writable') {
-    return c.enumOptions
+  if (c.format === 'factGraph') {
+    if (c.type === 'writable') return c.enumOptions
+    if (c.type === 'derived') return c.enumOptions
   }
   return undefined
 }
