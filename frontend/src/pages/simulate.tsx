@@ -1003,10 +1003,18 @@ function DetailView({
         <table className="w-full text-xs table-fixed">
           <thead className="bg-muted/50">
             <tr>
-              <th className="text-left px-3 py-2 font-medium w-[30%] truncate">Path</th>
-              <th className="text-left px-3 py-2 font-medium w-[25%] truncate">{rulesetId}</th>
-              <th className="text-left px-3 py-2 font-medium w-[25%] truncate">{comparedRulesetId}</th>
-              <th className="text-right px-3 py-2 font-medium w-[20%]">Change</th>
+              <th className="text-left px-3 py-2 font-medium w-[30%] truncate">
+                Path
+              </th>
+              <th className="text-left px-3 py-2 font-medium w-[25%] truncate">
+                {rulesetId}
+              </th>
+              <th className="text-left px-3 py-2 font-medium w-[25%] truncate">
+                {comparedRulesetId}
+              </th>
+              <th className="text-right px-3 py-2 font-medium w-[20%]">
+                Change
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -1021,10 +1029,7 @@ function DetailView({
                   key={path}
                   className={cn('border-t', isDiff && 'bg-amber-50/50')}
                 >
-                  <td
-                    className="px-3 py-1.5 font-mono truncate"
-                    title={path}
-                  >
+                  <td className="px-3 py-1.5 font-mono truncate" title={path}>
                     {path}
                   </td>
                   <td className="px-3 py-1.5 font-mono">
@@ -1118,7 +1123,8 @@ function OutcomeNodeEditor({
   const outcomeSet = new Set(config.outcomeNodes)
   const filtered = search
     ? allPaths.filter(
-        (p) => p.toLowerCase().includes(search.toLowerCase()) && !outcomeSet.has(p)
+        (p) =>
+          p.toLowerCase().includes(search.toLowerCase()) && !outcomeSet.has(p)
       )
     : []
 
@@ -1171,7 +1177,9 @@ function OutcomeNodeEditor({
         </div>
       )}
       {search && filtered.length === 0 && (
-        <p className="text-[10px] text-muted-foreground px-1">No matching nodes</p>
+        <p className="text-[10px] text-muted-foreground px-1">
+          No matching nodes
+        </p>
       )}
     </div>
   )
