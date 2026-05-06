@@ -828,10 +828,7 @@ function DetailView({
   }
 
   const openBothInVisualizer = () => {
-    openInVisualizer(
-      rulesetId,
-      `Sim case #${caseResult.scenarioId} (base)`
-    )
+    openInVisualizer(rulesetId, `Sim case #${caseResult.scenarioId} (base)`)
     openInVisualizer(
       comparedRulesetId,
       `Sim case #${caseResult.scenarioId} (compared)`

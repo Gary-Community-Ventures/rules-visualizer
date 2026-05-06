@@ -468,7 +468,17 @@ export function ModelProvider({
     requestAnimationFrame(() => {
       window.dispatchEvent(new CustomEvent('simulation-scenario-loaded'))
     })
-  }, [model, rulesetId, setInputOverrides, setEntityData, setRightBar, setSelectedNodes, setPanelOpen, setNodeHistory, setNodeHistoryIndex])
+  }, [
+    model,
+    rulesetId,
+    setInputOverrides,
+    setEntityData,
+    setRightBar,
+    setSelectedNodes,
+    setPanelOpen,
+    setNodeHistory,
+    setNodeHistoryIndex,
+  ])
 
   // Set browser tab title
   useEffect(() => {

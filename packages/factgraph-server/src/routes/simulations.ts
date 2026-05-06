@@ -55,11 +55,9 @@ router.post('/rulesets/:id/simulations/run', (req, res) => {
   }
 
   if (!getRuleset(comparedRulesetId)) {
-    res
-      .status(404)
-      .json({
-        error: `Compared ruleset "${comparedRulesetId}" not found`,
-      })
+    res.status(404).json({
+      error: `Compared ruleset "${comparedRulesetId}" not found`,
+    })
     return
   }
 
