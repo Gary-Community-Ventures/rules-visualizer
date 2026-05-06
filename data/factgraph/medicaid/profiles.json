@@ -1,0 +1,28 @@
+[
+  {
+    "id": "36e546eb-17ae-453c-bc23-4ae3a014c0d1",
+    "name": "CHP+ Eligible",
+    "inputs": {
+      "/earnedIncome": 31000,
+      "/unearnedIncome": 0
+    },
+    "entities": {
+      "/members": [
+        {
+          "/members/*/age": 0,
+          "/members/*/pregnant": 0,
+          "/members/*/disabled": false,
+          "/members/*/veteran": false,
+          "/members/*/hasDisabledChild": false,
+          "/members/*/isFullTimeStudent": false,
+          "/members/*/monthlyHoursWorked": 0,
+          "/members/*/immigrantStatus": "Citizen",
+          "/members/*/receivesSsi": false,
+          "/members/*/daysSincePregnancy": 0
+        }
+      ]
+    },
+    "createdAt": "2026-05-06T17:50:45.097Z",
+    "updatedAt": "2026-05-06T17:50:45.097Z"
+  }
+]
