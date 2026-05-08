@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useParams, useNavigate } from '@tanstack/react-router'
 import { setPendingScenario } from '@/lib/simulation-bridge'
 import {
@@ -27,6 +27,7 @@ import {
   getRuleset,
   type RulesetSummary,
 } from '@/lib/api/rules-api'
+import type { Model } from '@/lib/model'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
@@ -64,6 +65,16 @@ export function SimulatePage() {
   const [caseSource, setCaseSource] = useState<CaseSource>('generate')
   const [selectedPopulationId, setSelectedPopulationId] = useState('')
   const [populations, setPopulations] = useState<Population[]>([])
+
+  // Per-side overrides (path → value). Merged into every scenario's inputs
+  // before execution on that side. Lets you compare A vs A+overrides for
+  // what-if analysis, or A vs B with overrides on both for controlled diffs.
+  const [baseOverrides, setBaseOverrides] = useState<Record<string, unknown>>(
+    {}
+  )
+  const [comparedOverrides, setComparedOverrides] = useState<
+    Record<string, unknown>
+  >({})
 
   const loadPopulations = useCallback(() => {
     listPopulations()
@@ -114,9 +125,7 @@ export function SimulatePage() {
       .catch((e) => setError(e.message))
     listRulesets()
       .then((rs) =>
-        setAvailableRulesets(
-          rs.filter((r) => r.format === 'factGraph' && r.id !== rulesetId)
-        )
+        setAvailableRulesets(rs.filter((r) => r.format === 'factGraph'))
       )
       .catch(() => {})
     loadPopulations()
@@ -168,7 +177,16 @@ export function SimulatePage() {
         rulesetId,
         config,
         comparedRulesetId,
-        caseSource === 'population' ? selectedPopulationId : undefined
+        {
+          populationId:
+            caseSource === 'population' ? selectedPopulationId : undefined,
+          baseOverrides:
+            Object.keys(baseOverrides).length > 0 ? baseOverrides : undefined,
+          comparedOverrides:
+            Object.keys(comparedOverrides).length > 0
+              ? comparedOverrides
+              : undefined,
+        }
       )
 
       // Poll for progress until complete (max 10 minutes)
@@ -326,6 +344,11 @@ export function SimulatePage() {
                 setError((e as Error).message)
               }
             }}
+            baseRulesetId={rulesetId}
+            baseOverrides={baseOverrides}
+            setBaseOverrides={setBaseOverrides}
+            comparedOverrides={comparedOverrides}
+            setComparedOverrides={setComparedOverrides}
           />
         )}
         {view === 'dashboard' && activeRun && (
@@ -374,6 +397,8 @@ export function SimulatePage() {
             caseResult={detailCase}
             rulesetId={rulesetId}
             comparedRulesetId={activeRun.comparedRulesetId}
+            baseOverrides={activeRun.baseOverrides}
+            comparedOverrides={activeRun.comparedOverrides}
             populations={populations}
             onSaveToPopulation={async (name, existingId) => {
               const cases: PopulationCase[] = [
@@ -429,6 +454,11 @@ function ConfigView({
   onDeletePopulation,
   onOpenPopulation,
   onImportCsv,
+  baseRulesetId,
+  baseOverrides,
+  setBaseOverrides,
+  comparedOverrides,
+  setComparedOverrides,
 }: {
   config: SimulationConfig | null
   setConfig: (c: SimulationConfig) => void
@@ -449,6 +479,11 @@ function ConfigView({
   onDeletePopulation: (id: string) => Promise<void>
   onOpenPopulation: (id: string) => void
   onImportCsv: (name: string, cases: PopulationCase[]) => Promise<void>
+  baseRulesetId: string
+  baseOverrides: Record<string, unknown>
+  setBaseOverrides: (o: Record<string, unknown>) => void
+  comparedOverrides: Record<string, unknown>
+  setComparedOverrides: (o: Record<string, unknown>) => void
 }) {
   if (!config) {
     return (
@@ -463,20 +498,22 @@ function ConfigView({
       <div className="space-y-4">
         <h2 className="text-sm font-semibold">Run Configuration</h2>
 
-        <div className="space-y-2">
-          <label className="text-xs font-medium">Compare against</label>
-          <select
-            className="w-full h-9 text-sm border rounded px-3 bg-background"
-            value={comparedRulesetId}
-            onChange={(e) => setComparedRulesetId(e.target.value)}
-          >
-            <option value="">Select a ruleset to compare...</option>
-            {availableRulesets.map((r) => (
-              <option key={r.id} value={r.id}>
-                {r.name}
-              </option>
-            ))}
-          </select>
+        <div className="grid grid-cols-2 gap-3">
+          <SidePanel
+            label="Base"
+            rulesetId={baseRulesetId}
+            availableRulesets={null}
+            overrides={baseOverrides}
+            setOverrides={setBaseOverrides}
+          />
+          <SidePanel
+            label="Compared"
+            rulesetId={comparedRulesetId}
+            setRulesetId={setComparedRulesetId}
+            availableRulesets={availableRulesets}
+            overrides={comparedOverrides}
+            setOverrides={setComparedOverrides}
+          />
         </div>
 
         <div className="space-y-2">
@@ -771,6 +808,12 @@ function ConfigView({
               const sourceLabel = run.populationId
                 ? `pop: ${run.populationName ?? run.populationId}`
                 : 'random'
+              const baseOvCount = run.baseOverrides
+                ? Object.keys(run.baseOverrides).length
+                : 0
+              const compOvCount = run.comparedOverrides
+                ? Object.keys(run.comparedOverrides).length
+                : 0
               return (
                 <div
                   key={run.id}
@@ -792,6 +835,16 @@ function ConfigView({
                       >
                         {sourceLabel}
                       </span>
+                      {(baseOvCount > 0 || compOvCount > 0) && (
+                        <span
+                          className="text-[10px] px-1.5 py-0.5 rounded shrink-0 bg-blue-100 text-blue-800"
+                          title={`${baseOvCount} base override${baseOvCount !== 1 ? 's' : ''}, ${compOvCount} compared override${compOvCount !== 1 ? 's' : ''}`}
+                        >
+                          {baseOvCount > 0 && `+${baseOvCount}b`}
+                          {baseOvCount > 0 && compOvCount > 0 && ' '}
+                          {compOvCount > 0 && `+${compOvCount}c`}
+                        </span>
+                      )}
                     </div>
                     <div className="text-[10px] text-muted-foreground">
                       {new Date(run.startedAt).toLocaleString()} —{' '}
@@ -1211,22 +1264,46 @@ function DetailView({
   caseResult,
   rulesetId,
   comparedRulesetId,
+  baseOverrides,
+  comparedOverrides,
   populations,
   onSaveToPopulation,
 }: {
   caseResult: CaseResult
   rulesetId: string
   comparedRulesetId: string
+  baseOverrides?: Record<string, unknown>
+  comparedOverrides?: Record<string, unknown>
   populations: Population[]
   onSaveToPopulation: (name: string, existingId?: string) => Promise<void>
 }) {
   const [showAddPop, setShowAddPop] = useState(false)
   const [addPopName, setAddPopName] = useState('')
   const [savingPop, setSavingPop] = useState(false)
-  const openInVisualizer = (targetRulesetId: string, label: string) => {
+
+  // Pick the right side's overrides based on which ruleset we're opening.
+  // Same ruleset on both sides + only one has overrides → still picks the
+  // correct side because the caller passes whether it's base or compared.
+  const overridesFor = (
+    targetRulesetId: string,
+    side: 'base' | 'compared'
+  ): Record<string, unknown> | undefined => {
+    void targetRulesetId
+    return side === 'base' ? baseOverrides : comparedOverrides
+  }
+
+  const openInVisualizer = (
+    targetRulesetId: string,
+    side: 'base' | 'compared',
+    label: string
+  ) => {
+    const ov = overridesFor(targetRulesetId, side)
     setPendingScenario({
       rulesetId: targetRulesetId,
-      inputs: caseResult.inputs,
+      inputs:
+        ov && Object.keys(ov).length > 0
+          ? { ...caseResult.inputs, ...ov }
+          : caseResult.inputs,
       entities: caseResult.entities,
       label,
     })
@@ -1234,16 +1311,29 @@ function DetailView({
   }
 
   const openBothInVisualizer = () => {
-    openInVisualizer(rulesetId, `Sim case #${caseResult.scenarioId} (base)`)
+    openInVisualizer(
+      rulesetId,
+      'base',
+      `Sim case #${caseResult.scenarioId} (base)`
+    )
     openInVisualizer(
       comparedRulesetId,
+      'compared',
       `Sim case #${caseResult.scenarioId} (compared)`
     )
   }
-  const openNodeInGraph = (targetRulesetId: string, nodePath: string) => {
+  const openNodeInGraph = (
+    targetRulesetId: string,
+    side: 'base' | 'compared',
+    nodePath: string
+  ) => {
+    const ov = overridesFor(targetRulesetId, side)
     setPendingScenario({
       rulesetId: targetRulesetId,
-      inputs: caseResult.inputs,
+      inputs:
+        ov && Object.keys(ov).length > 0
+          ? { ...caseResult.inputs, ...ov }
+          : caseResult.inputs,
       entities: caseResult.entities,
       label: `Sim case #${caseResult.scenarioId}`,
       focusNode: nodePath,
@@ -1278,6 +1368,11 @@ function DetailView({
     ? allPaths
     : [...outcomeDiffPaths, ...otherDiffPaths]
 
+  const baseOvCount = baseOverrides ? Object.keys(baseOverrides).length : 0
+  const compOvCount = comparedOverrides
+    ? Object.keys(comparedOverrides).length
+    : 0
+
   return (
     <div className="max-w-5xl mx-auto p-6 space-y-6">
       <div className="flex items-center gap-3">
@@ -1285,6 +1380,29 @@ function DetailView({
         {caseResult.changed && (
           <span className="text-xs px-2 py-0.5 bg-amber-100 text-amber-800 rounded">
             Changed
+          </span>
+        )}
+        {(baseOvCount > 0 || compOvCount > 0) && (
+          <span
+            className="text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-800"
+            title={[
+              baseOvCount > 0
+                ? `Base: ${Object.entries(baseOverrides ?? {})
+                    .map(([k, v]) => `${k}=${JSON.stringify(v)}`)
+                    .join(', ')}`
+                : null,
+              compOvCount > 0
+                ? `Compared: ${Object.entries(comparedOverrides ?? {})
+                    .map(([k, v]) => `${k}=${JSON.stringify(v)}`)
+                    .join(', ')}`
+                : null,
+            ]
+              .filter(Boolean)
+              .join('\n')}
+          >
+            {baseOvCount > 0 && `+${baseOvCount}b`}
+            {baseOvCount > 0 && compOvCount > 0 && ' '}
+            {compOvCount > 0 && `+${compOvCount}c`}
           </span>
         )}
         <div className="relative">
@@ -1370,6 +1488,7 @@ function DetailView({
             onClick={() =>
               openInVisualizer(
                 rulesetId,
+                'base',
                 `Sim case #${caseResult.scenarioId} (base)`
               )
             }
@@ -1384,6 +1503,7 @@ function DetailView({
             onClick={() =>
               openInVisualizer(
                 comparedRulesetId,
+                'compared',
                 `Sim case #${caseResult.scenarioId} (compared)`
               )
             }
@@ -1415,7 +1535,7 @@ function DetailView({
                 {formatValue(d.baseValue)}
                 <button
                   className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground"
-                  onClick={() => openNodeInGraph(rulesetId, d.path)}
+                  onClick={() => openNodeInGraph(rulesetId, 'base', d.path)}
                   title={`Open in ${rulesetId}`}
                 >
                   <ExternalLink className="size-2.5" />
@@ -1426,7 +1546,9 @@ function DetailView({
                 {formatValue(d.editedValue)}
                 <button
                   className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground"
-                  onClick={() => openNodeInGraph(comparedRulesetId, d.path)}
+                  onClick={() =>
+                    openNodeInGraph(comparedRulesetId, 'compared', d.path)
+                  }
                   title={`Open in ${comparedRulesetId}`}
                 >
                   <ExternalLink className="size-2.5" />
@@ -1528,7 +1650,7 @@ function DetailView({
                         className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground shrink-0"
                         onClick={(e) => {
                           e.stopPropagation()
-                          openNodeInGraph(rulesetId, path)
+                          openNodeInGraph(rulesetId, 'base', path)
                         }}
                         title={`Open in ${rulesetId}`}
                       >
@@ -1543,7 +1665,7 @@ function DetailView({
                         className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground shrink-0"
                         onClick={(e) => {
                           e.stopPropagation()
-                          openNodeInGraph(comparedRulesetId, path)
+                          openNodeInGraph(comparedRulesetId, 'compared', path)
                         }}
                         title={`Open in ${comparedRulesetId}`}
                       >
@@ -1898,6 +2020,304 @@ function NodeChangesPanel({
         </div>
       )}
     </div>
+  )
+}
+
+type OverridablePath = {
+  path: string
+  type: string
+  enumOptions?: string[]
+}
+
+/**
+ * Per-side block in the run config: ruleset (fixed for Base, dropdown for
+ * Compared) + an editable overrides map applied to every scenario on that
+ * side before execution.
+ */
+function SidePanel({
+  label,
+  rulesetId,
+  setRulesetId,
+  availableRulesets,
+  overrides,
+  setOverrides,
+}: {
+  label: string
+  rulesetId: string
+  setRulesetId?: (id: string) => void
+  availableRulesets: RulesetSummary[] | null
+  overrides: Record<string, unknown>
+  setOverrides: (o: Record<string, unknown>) => void
+}) {
+  const overrideCount = Object.keys(overrides).length
+  const [expanded, setExpanded] = useState(overrideCount > 0)
+
+  return (
+    <div className="border rounded-lg p-3 space-y-2">
+      <div className="text-[10px] font-semibold text-muted-foreground uppercase">
+        {label}
+      </div>
+      {availableRulesets ? (
+        <select
+          className="w-full h-8 text-xs border rounded px-2 bg-background"
+          value={rulesetId}
+          onChange={(e) => setRulesetId?.(e.target.value)}
+        >
+          <option value="">Select a ruleset...</option>
+          {availableRulesets.map((r) => (
+            <option key={r.id} value={r.id}>
+              {r.name}
+            </option>
+          ))}
+        </select>
+      ) : (
+        <div className="px-2 py-1.5 text-xs font-mono bg-muted/50 rounded">
+          {rulesetId}
+        </div>
+      )}
+      <button
+        className="text-[11px] text-muted-foreground hover:text-foreground flex items-center gap-1"
+        onClick={() => setExpanded(!expanded)}
+        disabled={!rulesetId}
+      >
+        <ChevronRight
+          className={cn('size-3 transition-transform', expanded && 'rotate-90')}
+        />
+        Overrides ({overrideCount})
+      </button>
+      {expanded && rulesetId && (
+        <OverridesEditor
+          rulesetId={rulesetId}
+          overrides={overrides}
+          setOverrides={setOverrides}
+        />
+      )}
+    </div>
+  )
+}
+
+/**
+ * Edit a path → value override map for one side of a comparison. Loads the
+ * ruleset's model to expose typed inputs and a searchable path picker.
+ * Skips collection-scoped paths (those with /*) for v1 — entity-level
+ * override merging is a separate problem.
+ */
+function OverridesEditor({
+  rulesetId,
+  overrides,
+  setOverrides,
+}: {
+  rulesetId: string
+  overrides: Record<string, unknown>
+  setOverrides: (o: Record<string, unknown>) => void
+}) {
+  const [search, setSearch] = useState('')
+  const [model, setModel] = useState<Model | null>(null)
+
+  useEffect(() => {
+    if (!rulesetId) return
+    let cancelled = false
+    getRuleset(rulesetId)
+      .then((m) => {
+        if (!cancelled) setModel(m)
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
+  }, [rulesetId])
+
+  const overridablePaths = useMemo<OverridablePath[]>(() => {
+    if (!model) return []
+    const out: OverridablePath[] = []
+    for (const node of Object.values(model.nodes)) {
+      const c = node.content
+      if (c.format !== 'factGraph') continue
+      // Skip collection structural nodes and collection-scoped paths
+      if (c.type === 'writable') {
+        if (c.typeName === 'Collection' || c.typeName === 'CollectionItem')
+          continue
+      }
+      if (c.path.includes('/*')) continue
+      const type = c.type === 'writable' ? c.typeName : (c.dataType ?? 'String')
+      out.push({ path: c.path, type, enumOptions: c.enumOptions })
+    }
+    return out.sort((a, b) => a.path.localeCompare(b.path))
+  }, [model])
+
+  const overrideKeys = Object.keys(overrides)
+  const overrideSet = new Set(overrideKeys)
+  const filtered = search
+    ? overridablePaths
+        .filter(
+          (p) =>
+            p.path.toLowerCase().includes(search.toLowerCase()) &&
+            !overrideSet.has(p.path)
+        )
+        .slice(0, 15)
+    : []
+
+  const lookup = useMemo(() => {
+    const m = new Map<string, OverridablePath>()
+    for (const p of overridablePaths) m.set(p.path, p)
+    return m
+  }, [overridablePaths])
+
+  return (
+    <div className="space-y-1.5">
+      {overrideKeys.length > 0 && (
+        <div className="space-y-1">
+          {overrideKeys.map((path) => {
+            const meta = lookup.get(path)
+            return (
+              <div key={path} className="flex items-center gap-1.5 text-xs">
+                <span className="font-mono flex-1 truncate" title={path}>
+                  {path}
+                </span>
+                <span className="text-[10px] text-muted-foreground shrink-0">
+                  ({meta?.type ?? '?'})
+                </span>
+                <OverrideValueInput
+                  type={meta?.type ?? 'String'}
+                  enumOptions={meta?.enumOptions}
+                  value={overrides[path]}
+                  onChange={(v) => setOverrides({ ...overrides, [path]: v })}
+                />
+                <button
+                  className="text-muted-foreground hover:text-red-600 shrink-0"
+                  onClick={() => {
+                    const next = { ...overrides }
+                    delete next[path]
+                    setOverrides(next)
+                  }}
+                  title="Remove override"
+                >
+                  <X className="size-3" />
+                </button>
+              </div>
+            )
+          })}
+        </div>
+      )}
+      <Input
+        className="h-7 text-xs font-mono"
+        placeholder={model ? 'Search paths to override...' : 'Loading model...'}
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        disabled={!model}
+      />
+      {search && filtered.length > 0 && (
+        <div className="border rounded max-h-32 overflow-y-auto bg-background">
+          {filtered.map((p) => (
+            <button
+              key={p.path}
+              className="w-full text-left px-2 py-1 text-xs font-mono hover:bg-muted flex items-center gap-2"
+              onClick={() => {
+                setOverrides({
+                  ...overrides,
+                  [p.path]: defaultOverrideValue(p.type),
+                })
+                setSearch('')
+              }}
+            >
+              <span className="flex-1 truncate">{p.path}</span>
+              <span className="text-[10px] text-muted-foreground">
+                {p.type}
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
+      {search && filtered.length === 0 && model && (
+        <p className="text-[10px] text-muted-foreground px-1">
+          No matching paths
+        </p>
+      )}
+    </div>
+  )
+}
+
+function defaultOverrideValue(type: string): unknown {
+  if (type === 'Boolean') return false
+  if (
+    type === 'Dollar' ||
+    type === 'Int' ||
+    type === 'Short' ||
+    type === 'Byte' ||
+    type === 'Rational'
+  )
+    return 0
+  return ''
+}
+
+function OverrideValueInput({
+  type,
+  enumOptions,
+  value,
+  onChange,
+}: {
+  type: string
+  enumOptions?: string[]
+  value: unknown
+  onChange: (v: unknown) => void
+}) {
+  const isNumeric =
+    type === 'Dollar' || type === 'Int' || type === 'Short' || type === 'Byte'
+
+  if (type === 'Boolean') {
+    return (
+      <select
+        className="h-6 text-xs border rounded px-1 bg-background"
+        value={value === true ? 'true' : 'false'}
+        onChange={(e) => onChange(e.target.value === 'true')}
+      >
+        <option value="false">false</option>
+        <option value="true">true</option>
+      </select>
+    )
+  }
+
+  if (type === 'Enum' && enumOptions && enumOptions.length > 0) {
+    return (
+      <select
+        className="h-6 text-xs border rounded px-1 bg-background"
+        value={value === undefined || value === null ? '' : String(value)}
+        onChange={(e) => onChange(e.target.value)}
+      >
+        <option value="">—</option>
+        {enumOptions.map((o) => (
+          <option key={o} value={o}>
+            {o}
+          </option>
+        ))}
+      </select>
+    )
+  }
+
+  if (isNumeric) {
+    return (
+      <Input
+        className="h-6 w-24 text-xs font-mono"
+        type="number"
+        value={value === undefined || value === null ? '' : String(value)}
+        onChange={(e) => {
+          const raw = e.target.value
+          if (raw === '') onChange(null)
+          else {
+            const n = Number(raw)
+            onChange(isNaN(n) ? null : n)
+          }
+        }}
+      />
+    )
+  }
+
+  return (
+    <Input
+      className="h-6 w-32 text-xs font-mono"
+      value={value === undefined || value === null ? '' : String(value)}
+      onChange={(e) => onChange(e.target.value)}
+    />
   )
 }
 

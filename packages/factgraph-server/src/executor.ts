@@ -249,15 +249,68 @@ type ParsedFact = {
   raw: Record<string, unknown>
 }
 
-let cachedGraph: {
-  rulesetId: string
-  graph: unknown
-  dictionary: unknown
-} | null = null
+type ModelNodeForLookup = {
+  content: { dataType?: string; enumOptionsPath?: string; path?: string }
+}
+type FactLookup = Map<string, ParsedFact>
+type ModelLookup = Map<string, ModelNodeForLookup>
 
-function createGraph(rulesetId: string, facts: ParsedFact[]): unknown {
-  // Convert parsed XML to digest format
-  const digestFacts: DigestFact[] = facts.map((fact) => {
+type DictionaryCacheEntry = {
+  dictionary: unknown
+  effectiveFacts: ParsedFact[]
+  effectiveLookup: FactLookup
+  collectionPrefixes: Set<string>
+}
+
+// Per-facts caches. WeakMap keys give us free invalidation on file-watcher
+// reloads — a new ParsedFact[] array misses the cache, the old one's
+// WeakMap entry is GC'd once nothing references it.
+const factsLookupCache = new WeakMap<ParsedFact[], FactLookup>()
+const modelLookupCache = new WeakMap<object, ModelLookup>()
+const dictionaryCache = new WeakMap<
+  ParsedFact[],
+  Map<string, DictionaryCacheEntry>
+>()
+
+export const cacheStats = { hits: 0, misses: 0 }
+export const timings = {
+  dict: 0,
+  graphInit: 0,
+  collections: 0,
+  scalarInputs: 0,
+  read: 0,
+  total: 0,
+  count: 0,
+}
+
+function getFactsLookup(facts: ParsedFact[]): FactLookup {
+  let m = factsLookupCache.get(facts)
+  if (!m) {
+    m = new Map()
+    for (const f of facts) m.set(f.path, f)
+    factsLookupCache.set(facts, m)
+  }
+  return m
+}
+
+function getModelLookup(
+  modelNodes: Record<string, ModelNodeForLookup> | undefined
+): ModelLookup | undefined {
+  if (!modelNodes) return undefined
+  let m = modelLookupCache.get(modelNodes)
+  if (!m) {
+    m = new Map()
+    for (const node of Object.values(modelNodes)) {
+      const path = node.content?.path
+      if (typeof path === 'string') m.set(path, node)
+    }
+    modelLookupCache.set(modelNodes, m)
+  }
+  return m
+}
+
+function buildDictionary(effectiveFacts: ParsedFact[]): unknown {
+  const digestFacts: DigestFact[] = effectiveFacts.map((fact) => {
     const raw = fact.raw
     const writable = raw['Writable']
       ? processWritable(raw['Writable'] as Record<string, unknown>)
@@ -287,7 +340,6 @@ function createGraph(rulesetId: string, facts: ParsedFact[]): unknown {
     }
   })
 
-  // Create the Scala.js graph
   const meta = new sfg.DigestMetaWrapper('2024').toNative()
   const nativeFacts = digestFacts.map((fact) =>
     sfg.DigestNodeWrapperFactory.toNative(
@@ -302,12 +354,86 @@ function createGraph(rulesetId: string, facts: ParsedFact[]): unknown {
     )
   )
   const config = sfg.FactDictionaryConfig.create(meta, nativeFacts)
-  const dictionary = sfg.FactDictionaryFactory.fromConfig(config)
-  const persister = sfg.JSPersister.create()
-  const graph = sfg.GraphFactory.apply(dictionary, persister)
+  return sfg.FactDictionaryFactory.fromConfig(config)
+}
 
-  cachedGraph = { rulesetId, graph, dictionary }
-  return graph
+function promoteFacts(
+  facts: ParsedFact[],
+  pathsToPromote: Set<string>,
+  modelLookup?: ModelLookup
+): ParsedFact[] {
+  return facts.map((f) => {
+    if (!pathsToPromote.has(f.path)) return f
+    const modelNode = modelLookup?.get(f.path)
+    const typeName = inferWritableType(f.raw, modelNode?.content)
+    // Enum writables need the optionsPath attribute so EnumFactory can
+    // resolve the option set when we stamp the user's value. The model
+    // node carries it; fall back to scanning the raw expression.
+    const enumOptionsPath =
+      typeName === 'Enum'
+        ? (modelNode?.content?.enumOptionsPath ??
+          findEnumOptionsPathInRaw(f.raw['Derived']))
+        : undefined
+    const writableInner =
+      typeName === 'Enum' && enumOptionsPath
+        ? { '@_optionsPath': enumOptionsPath }
+        : {}
+    return {
+      ...f,
+      raw: {
+        ...f.raw,
+        Writable: { [typeName]: writableInner },
+        Derived: undefined,
+      },
+    }
+  })
+}
+
+function getOrBuildDictionary(
+  facts: ParsedFact[],
+  factsLookup: FactLookup,
+  pathsToPromote: Set<string>,
+  modelLookup?: ModelLookup
+): DictionaryCacheEntry {
+  let inner = dictionaryCache.get(facts)
+  if (!inner) {
+    inner = new Map()
+    dictionaryCache.set(facts, inner)
+  }
+  const sig =
+    pathsToPromote.size === 0 ? '' : [...pathsToPromote].sort().join('|')
+  const hit = inner.get(sig)
+  if (hit) {
+    cacheStats.hits++
+    return hit
+  }
+  cacheStats.misses++
+
+  const effectiveFacts =
+    pathsToPromote.size === 0
+      ? facts
+      : promoteFacts(facts, pathsToPromote, modelLookup)
+  const dictionary = buildDictionary(effectiveFacts)
+
+  const effectiveLookup: FactLookup =
+    pathsToPromote.size === 0
+      ? factsLookup
+      : new Map(effectiveFacts.map((f) => [f.path, f]))
+
+  const collectionPrefixes = new Set<string>()
+  for (const fact of effectiveFacts) {
+    const match = fact.path.match(/^(\/[^*]+)\/\*\//)
+    if (match) collectionPrefixes.add(match[1])
+  }
+
+  const entry: DictionaryCacheEntry = {
+    dictionary,
+    effectiveFacts,
+    effectiveLookup,
+    collectionPrefixes,
+  }
+  inner.set(sig, entry)
+  return entry
 }
 
 /**
@@ -463,12 +589,19 @@ export function executeFactGraph(
   modelNodes?: Record<string, { content: { dataType?: string } }>,
   entities?: Record<string, Record<string, unknown>[]>
 ): Record<string, unknown> {
+  void rulesetId
+
+  const factsLookup = getFactsLookup(facts)
+  const modelLookup = getModelLookup(
+    modelNodes as Record<string, ModelNodeForLookup> | undefined
+  )
+
   // Separate inputs into writable values and derived overrides
   const writableInputs: Record<string, unknown> = {}
   const derivedOverrides: Record<string, unknown> = {}
 
   for (const [path, value] of Object.entries(inputs)) {
-    const fact = facts.find((f) => f.path === path)
+    const fact = factsLookup.get(path)
     if (!fact) continue
     if (fact.raw['Writable']) {
       writableInputs[path] = value
@@ -486,7 +619,7 @@ export function executeFactGraph(
       for (const row of rows) {
         for (const fieldPath of Object.keys(row)) {
           if (fieldPath === 'id') continue
-          const fact = facts.find((f) => f.path === fieldPath)
+          const fact = factsLookup.get(fieldPath)
           if (fact && !fact.raw['Writable']) {
             perMemberDerivedOverrides.add(fieldPath)
           }
@@ -500,52 +633,18 @@ export function executeFactGraph(
     ...perMemberDerivedOverrides,
   ])
 
-  // Rebuild the graph with the promoted facts reshaped as writables.
-  const effectiveFacts =
-    pathsToPromote.size > 0
-      ? facts.map((f) => {
-          if (pathsToPromote.has(f.path)) {
-            const modelNode = modelNodes
-              ? Object.values(modelNodes).find(
-                  (n) =>
-                    n.content &&
-                    'path' in n.content &&
-                    (n.content as { path: string }).path === f.path
-                )
-              : undefined
-            const typeName = inferWritableType(
-              f.raw,
-              modelNode?.content as { dataType?: string } | undefined
-            )
-            // Enum writables need the optionsPath attribute so EnumFactory
-            // can resolve the option set when we stamp the user's value.
-            // The model node carries it (parser pulls it from the inner
-            // <Enum optionsPath="..."> literal); fall back to scanning the
-            // raw expression directly if the model node didn't carry it.
-            const enumOptionsPath =
-              typeName === 'Enum'
-                ? ((modelNode?.content as { enumOptionsPath?: string })
-                    ?.enumOptionsPath ??
-                  findEnumOptionsPathInRaw(f.raw['Derived']))
-                : undefined
-            const writableInner =
-              typeName === 'Enum' && enumOptionsPath
-                ? { '@_optionsPath': enumOptionsPath }
-                : {}
-            return {
-              ...f,
-              raw: {
-                ...f.raw,
-                Writable: { [typeName]: writableInner },
-                Derived: undefined,
-              },
-            }
-          }
-          return f
-        })
-      : facts
+  const t0 = Date.now()
+  // Cached: dictionary build is the bulk of the cost. We key the cache
+  // by (facts identity, sorted promotion paths), so a typical 10k-case
+  // run hits the cache 9999 times per side instead of rebuilding.
+  const { dictionary, effectiveFacts, effectiveLookup, collectionPrefixes } =
+    getOrBuildDictionary(facts, factsLookup, pathsToPromote, modelLookup)
 
-  const graph = createGraph(rulesetId, effectiveFacts) as {
+  const t1a = Date.now()
+  // Fresh persister + graph per execution — the persister is the stateful
+  // part; the dictionary is config-only and reusable.
+  const persister = sfg.JSPersister.create()
+  const graph = sfg.GraphFactory.apply(dictionary, persister) as {
     set: (path: string, value: unknown) => void
     get: (path: string) => {
       complete: boolean
@@ -556,13 +655,7 @@ export function executeFactGraph(
     save: () => { valid: boolean }
   }
 
-  // Detect collections: find facts with /* in path, group by collection prefix
-  const collectionPrefixes = new Set<string>()
-  for (const fact of effectiveFacts) {
-    const match = fact.path.match(/^(\/[^*]+)\/\*\//)
-    if (match) collectionPrefixes.add(match[1])
-  }
-
+  const t1b = Date.now()
   // Generate UUIDs for each collection instance and set up collections
   const collectionUuids: Record<string, string[]> = {}
   for (const prefix of collectionPrefixes) {
@@ -595,7 +688,7 @@ export function executeFactGraph(
         if (fieldPath === 'id') continue
         const itemPath = fieldPath.replace('/*/', `/#${uuid}/`)
         try {
-          const typedValue = createTypedValue(fieldPath, value, effectiveFacts)
+          const typedValue = createTypedValue(fieldPath, value, effectiveLookup)
           if (typedValue !== undefined) {
             graph.set(itemPath, typedValue)
           }
@@ -606,12 +699,13 @@ export function executeFactGraph(
     }
   }
 
+  const t1c = Date.now()
   // Set scalar writable input values
   for (const [path, value] of Object.entries(writableInputs)) {
     // Skip collection items — already handled above
     if (path.includes('/*')) continue
     try {
-      const typedValue = createTypedValue(path, value, effectiveFacts)
+      const typedValue = createTypedValue(path, value, effectiveLookup)
       if (typedValue !== undefined) {
         graph.set(path, typedValue)
       }
@@ -623,7 +717,7 @@ export function executeFactGraph(
   // Set derived-turned-writable overrides
   for (const [path, value] of Object.entries(derivedOverrides)) {
     try {
-      const typedValue = createTypedValue(path, value, effectiveFacts)
+      const typedValue = createTypedValue(path, value, effectiveLookup)
       if (typedValue !== undefined) {
         graph.set(path, typedValue)
       }
@@ -632,6 +726,7 @@ export function executeFactGraph(
     }
   }
 
+  const t2 = Date.now()
   // Read all fact values
   // In factgraph 3.1, graph.get()/getVect()/save() were removed.
   // Instead, use getFact(path) and read via the Scala-mangled get method.
@@ -675,6 +770,15 @@ export function executeFactGraph(
       // Skip facts that can't be read
     }
   }
+
+  const t3 = Date.now()
+  timings.dict += t1a - t0
+  timings.graphInit += t1b - t1a
+  timings.collections += t1c - t1b
+  timings.scalarInputs += t2 - t1c
+  timings.read += t3 - t2
+  timings.total += t3 - t0
+  timings.count++
 
   return results
 }
@@ -754,10 +858,9 @@ function readFactValue(graph: unknown, path: string): unknown {
 function createTypedValue(
   path: string,
   value: unknown,
-  facts: ParsedFact[]
+  lookup: FactLookup
 ): unknown {
-  // Find the fact to determine its type
-  const fact = facts.find((f) => f.path === path)
+  const fact = lookup.get(path)
   if (!fact?.raw['Writable']) return undefined
 
   const writable = fact.raw['Writable'] as Record<string, unknown>

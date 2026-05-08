@@ -152,13 +152,19 @@ function yieldEventLoop(): Promise<void> {
  *
  * @param prebuiltScenarios - If provided, uses these instead of generating
  *   random scenarios. Used for saved population cases.
+ * @param baseOverrides / comparedOverrides - Path → value pairs merged into
+ *   every scenario's inputs before execution on that side. Lets you compare
+ *   "ruleset A" against "ruleset A with /standardDeduction set to X" without
+ *   needing a second ruleset.
  */
 export async function runSimulation(
   baseRulesetId: string,
   comparedRulesetId: string,
   config: SimulationConfig,
   onProgress?: (completed: number, total: number) => void,
-  prebuiltScenarios?: GeneratedScenario[]
+  prebuiltScenarios?: GeneratedScenario[],
+  baseOverrides?: Record<string, unknown>,
+  comparedOverrides?: Record<string, unknown>
 ): Promise<{ run: SimulationRun; results: CaseResult[] }> {
   const startTime = Date.now()
 
@@ -178,15 +184,27 @@ export async function runSimulation(
   const scenarios = prebuiltScenarios ?? generateScenarios(config)
   const outcomeSet = new Set(config.outcomeNodes)
 
+  const hasBaseOverrides =
+    baseOverrides && Object.keys(baseOverrides).length > 0
+  const hasComparedOverrides =
+    comparedOverrides && Object.keys(comparedOverrides).length > 0
+
   // Execute and compare
   const results: CaseResult[] = []
   for (let i = 0; i < scenarios.length; i++) {
     const scenario = scenarios[i]
     try {
+      const baseInputs = hasBaseOverrides
+        ? { ...scenario.inputs, ...baseOverrides }
+        : scenario.inputs
+      const comparedInputs = hasComparedOverrides
+        ? { ...scenario.inputs, ...comparedOverrides }
+        : scenario.inputs
+
       const baseResults = executeFactGraph(
         baseRulesetId,
         baseFacts,
-        scenario.inputs,
+        baseInputs,
         baseModel.nodes as Record<string, { content: { dataType?: string } }>,
         scenario.entities
       )
@@ -194,7 +212,7 @@ export async function runSimulation(
       const editedResults = executeFactGraph(
         comparedRulesetId,
         editedFacts,
-        scenario.inputs,
+        comparedInputs,
         editedModel.nodes as Record<string, { content: { dataType?: string } }>,
         scenario.entities
       )

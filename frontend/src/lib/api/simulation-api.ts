@@ -72,6 +72,8 @@ export type SimulationRun = {
   summary?: SimulationSummary
   populationId?: string
   populationName?: string
+  baseOverrides?: Record<string, unknown>
+  comparedOverrides?: Record<string, unknown>
   startedAt: string
   completedAt?: string
   error?: string
@@ -112,12 +114,18 @@ export async function runSimulation(
   rulesetId: string,
   config: SimulationConfig,
   comparedRulesetId: string,
-  populationId?: string
+  opts: {
+    populationId?: string
+    baseOverrides?: Record<string, unknown>
+    comparedOverrides?: Record<string, unknown>
+  } = {}
 ): Promise<SimulationRun> {
   return post(`/api/rulesets/${rulesetId}/simulations/run`, {
     config,
     comparedRulesetId,
-    populationId,
+    populationId: opts.populationId,
+    baseOverrides: opts.baseOverrides,
+    comparedOverrides: opts.comparedOverrides,
   })
 }
 

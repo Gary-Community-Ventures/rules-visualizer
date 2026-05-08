@@ -86,6 +86,10 @@ export type SimulationRun = {
   populationId?: string
   /** Snapshot of the population's name (so deleted pops still display). */
   populationName?: string
+  /** Path → value overrides merged into every scenario's inputs on the base side. */
+  baseOverrides?: Record<string, unknown>
+  /** Path → value overrides merged into every scenario's inputs on the compared side. */
+  comparedOverrides?: Record<string, unknown>
   startedAt: string
   completedAt?: string
   error?: string

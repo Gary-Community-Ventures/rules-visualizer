@@ -1,5 +1,6 @@
 import { Router } from 'express'
 import { getRuleset } from '../store.js'
+import { cacheStats, timings } from '../executor.js'
 import { autoConfigFromModel } from '../simulation/generator.js'
 import { runSimulation } from '../simulation/runner.js'
 import {
@@ -55,10 +56,18 @@ router.post('/rulesets/:id/simulations/run', (req, res) => {
     return
   }
 
-  const { config, comparedRulesetId, populationId } = req.body as {
+  const {
+    config,
+    comparedRulesetId,
+    populationId,
+    baseOverrides,
+    comparedOverrides,
+  } = req.body as {
     config: SimulationConfig
     comparedRulesetId: string
     populationId?: string
+    baseOverrides?: Record<string, unknown>
+    comparedOverrides?: Record<string, unknown>
   }
 
   if (!config || !comparedRulesetId) {
@@ -100,6 +109,8 @@ router.post('/rulesets/:id/simulations/run', (req, res) => {
     progress: { completed: 0, total: totalCases },
     populationId,
     populationName,
+    baseOverrides,
+    comparedOverrides,
     startedAt: new Date().toISOString(),
   }
   setActiveRun(pendingRun)
@@ -115,11 +126,15 @@ router.post('/rulesets/:id/simulations/run', (req, res) => {
       const active = getActiveRun(config.id)
       if (active) active.progress = { completed, total }
     },
-    prebuiltScenarios
+    prebuiltScenarios,
+    baseOverrides,
+    comparedOverrides
   )
     .then(({ run, results }) => {
       run.populationId = populationId
       run.populationName = populationName
+      run.baseOverrides = baseOverrides
+      run.comparedOverrides = comparedOverrides
       saveSimulationRun(run, results)
       clearActiveRun(config.id)
     })
@@ -206,6 +221,40 @@ router.delete('/rulesets/:id/simulations/:runId', (req, res) => {
     return
   }
   res.json({ success: true })
+})
+
+/** GET /api/simulations/cache-stats — debug: dictionary cache hit/miss counts. */
+router.get('/simulations/cache-stats', (_req, res) => {
+  const avg = (n: number) =>
+    timings.count === 0 ? 0 : Math.round((n / timings.count) * 1000) / 1000
+  res.json({
+    cache: cacheStats,
+    timings: {
+      raw: timings,
+      avgMs: {
+        dict: avg(timings.dict),
+        graphInit: avg(timings.graphInit),
+        collections: avg(timings.collections),
+        scalarInputs: avg(timings.scalarInputs),
+        read: avg(timings.read),
+        total: avg(timings.total),
+      },
+    },
+  })
+})
+
+/** POST /api/simulations/cache-stats/reset — debug: zero counters. */
+router.post('/simulations/cache-stats/reset', (_req, res) => {
+  cacheStats.hits = 0
+  cacheStats.misses = 0
+  timings.dict = 0
+  timings.graphInit = 0
+  timings.collections = 0
+  timings.scalarInputs = 0
+  timings.read = 0
+  timings.total = 0
+  timings.count = 0
+  res.json({ ok: true })
 })
 
 // --- Population endpoints (shared across rulesets) ---
