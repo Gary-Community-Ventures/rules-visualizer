@@ -9,6 +9,7 @@ import {
   getSimulationRun,
   loadCaseResults,
   loadCasesFromRun,
+  updateSimulationRunMetadata,
   deleteSimulationRun,
   setActiveRun,
   getActiveRun,
@@ -208,6 +209,22 @@ router.get('/rulesets/:id/simulations/:runId/results', (req, res) => {
       filter as 'all' | 'changed' | 'unchanged'
     )
   )
+})
+
+/**
+ * PATCH /api/rulesets/:id/simulations/:runId
+ * Update run metadata (currently just `name`).
+ */
+router.patch('/rulesets/:id/simulations/:runId', (req, res) => {
+  const { name } = req.body as { name?: string | null }
+  const updated = updateSimulationRunMetadata(req.params.id, req.params.runId, {
+    name: name ?? undefined,
+  })
+  if (!updated) {
+    res.status(404).json({ error: 'Simulation run not found' })
+    return
+  }
+  res.json(updated)
 })
 
 /**

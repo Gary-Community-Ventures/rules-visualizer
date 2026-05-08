@@ -203,6 +203,33 @@ export function loadCasesFromRun(
   return cases
 }
 
+/**
+ * Patch a persisted run's metadata in place. Currently only used for
+ * renaming. Rewrites summary.json with the merged fields.
+ */
+export function updateSimulationRunMetadata(
+  rulesetId: string,
+  runId: string,
+  patch: Partial<Pick<SimulationRun, 'name'>>
+): SimulationRun | null {
+  const dir = getRunDir(rulesetId, runId)
+  if (!dir) return null
+  const summaryPath = path.join(dir, 'summary.json')
+  if (!fs.existsSync(summaryPath)) return null
+
+  const meta = JSON.parse(fs.readFileSync(summaryPath, 'utf-8'))
+  if ('name' in patch) {
+    if (patch.name && patch.name.trim() !== '') {
+      meta.name = patch.name.trim()
+    } else {
+      delete meta.name
+    }
+  }
+
+  fs.writeFileSync(summaryPath, JSON.stringify(meta, null, 2) + '\n')
+  return getSimulationRun(rulesetId, runId)
+}
+
 /** Delete a simulation run and its data. */
 export function deleteSimulationRun(rulesetId: string, runId: string): boolean {
   const dir = getRunDir(rulesetId, runId)

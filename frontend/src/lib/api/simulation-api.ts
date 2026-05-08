@@ -64,6 +64,7 @@ export type SimulationSummary = {
 
 export type SimulationRun = {
   id: string
+  name?: string
   rulesetId: string
   comparedRulesetId: string
   config: SimulationConfig
@@ -256,4 +257,24 @@ export async function deleteSimulation(
     { method: 'DELETE' }
   )
   if (!res.ok) throw new Error(`API error: ${res.status}`)
+}
+
+export async function updateSimulationRun(
+  rulesetId: string,
+  runId: string,
+  patch: { name?: string | null }
+): Promise<SimulationRun> {
+  const res = await fetch(
+    `${API_BASE}/api/rulesets/${rulesetId}/simulations/${runId}`,
+    {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(patch),
+    }
+  )
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    throw new Error(data.error ?? `API error: ${res.status}`)
+  }
+  return res.json()
 }

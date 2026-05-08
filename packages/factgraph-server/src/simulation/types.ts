@@ -76,6 +76,9 @@ export type SimulationSummary = {
 /** A simulation run (persisted metadata) */
 export type SimulationRun = {
   id: string
+  /** Optional user-set label. Falls back to auto-formatted ruleset+overrides
+   *  summary in the UI when blank. */
+  name?: string
   rulesetId: string
   comparedRulesetId: string
   config: SimulationConfig

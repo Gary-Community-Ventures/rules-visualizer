@@ -7,6 +7,7 @@ import {
   listSimulations,
   getSimulationRun,
   getSimulationResults,
+  updateSimulationRun,
   deleteSimulation,
   listPopulations,
   createPopulation,
@@ -43,6 +44,7 @@ import {
   X,
   Users,
   Check,
+  Pencil,
 } from 'lucide-react'
 
 type View = 'config' | 'dashboard' | 'detail'
@@ -243,6 +245,16 @@ export function SimulatePage() {
     }
   }
 
+  const handleRenameRun = async (runId: string, name: string | null) => {
+    try {
+      const updated = await updateSimulationRun(rulesetId, runId, { name })
+      loadRuns()
+      if (activeRun?.id === runId) setActiveRun(updated)
+    } catch (e) {
+      setError((e as Error).message)
+    }
+  }
+
   const handleDrillInto = (caseResult: CaseResult) => {
     setDetailCase(caseResult)
     setView('detail')
@@ -263,14 +275,23 @@ export function SimulatePage() {
           <ArrowLeft className="size-4" />
         </button>
         <FlaskConical className="size-4 text-muted-foreground" />
-        <div className="flex items-center gap-2">
-          <h1 className="text-sm font-semibold">Simulation — {rulesetId}</h1>
-          {view === 'dashboard' && (
-            <span className="text-xs text-muted-foreground">/ Results</span>
+        <div className="flex items-center gap-2 min-w-0">
+          <h1 className="text-sm font-semibold shrink-0">
+            Simulation — {rulesetId}
+          </h1>
+          {view !== 'config' && activeRun && (
+            <>
+              <span className="text-xs text-muted-foreground shrink-0">
+                /
+              </span>
+              <span className="text-xs font-medium truncate" title={activeRun.name}>
+                {activeRun.name ?? autoRunLabel(activeRun)}
+              </span>
+            </>
           )}
           {view === 'detail' && detailCase && (
-            <span className="text-xs text-muted-foreground">
-              / Results / Case #{detailCase.scenarioId}
+            <span className="text-xs text-muted-foreground shrink-0">
+              / Case #{detailCase.scenarioId}
             </span>
           )}
         </div>
@@ -317,6 +338,7 @@ export function SimulatePage() {
             runs={runs}
             onLoadRun={handleLoadRun}
             onDeleteRun={handleDeleteRun}
+            onRenameRun={handleRenameRun}
             caseSource={caseSource}
             setCaseSource={setCaseSource}
             populations={populations}
@@ -446,6 +468,7 @@ function ConfigView({
   runs,
   onLoadRun,
   onDeleteRun,
+  onRenameRun,
   caseSource,
   setCaseSource,
   populations,
@@ -471,6 +494,7 @@ function ConfigView({
   runs: SimulationRun[]
   onLoadRun: (r: SimulationRun) => void
   onDeleteRun: (id: string) => void
+  onRenameRun: (id: string, name: string | null) => Promise<void>
   caseSource: 'generate' | 'population'
   setCaseSource: (s: 'generate' | 'population') => void
   populations: Population[]
@@ -802,70 +826,15 @@ function ConfigView({
         <div className="space-y-2">
           <h2 className="text-sm font-semibold">Past Runs</h2>
           <div className="space-y-1">
-            {runs.map((run) => {
-              const actualCount =
-                run.summary?.totalCases ?? run.config.caseCount
-              const sourceLabel = run.populationId
-                ? `pop: ${run.populationName ?? run.populationId}`
-                : 'random'
-              const baseOvCount = run.baseOverrides
-                ? Object.keys(run.baseOverrides).length
-                : 0
-              const compOvCount = run.comparedOverrides
-                ? Object.keys(run.comparedOverrides).length
-                : 0
-              return (
-                <div
-                  key={run.id}
-                  className="flex items-center gap-3 px-3 py-2 border rounded hover:bg-muted/50 cursor-pointer"
-                  onClick={() => onLoadRun(run)}
-                >
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-mono truncate">
-                        vs. {run.comparedRulesetId}
-                      </span>
-                      <span
-                        className={cn(
-                          'text-[10px] px-1.5 py-0.5 rounded shrink-0',
-                          run.populationId
-                            ? 'bg-violet-100 text-violet-800'
-                            : 'bg-muted text-muted-foreground'
-                        )}
-                      >
-                        {sourceLabel}
-                      </span>
-                      {(baseOvCount > 0 || compOvCount > 0) && (
-                        <span
-                          className="text-[10px] px-1.5 py-0.5 rounded shrink-0 bg-blue-100 text-blue-800"
-                          title={`${baseOvCount} base override${baseOvCount !== 1 ? 's' : ''}, ${compOvCount} compared override${compOvCount !== 1 ? 's' : ''}`}
-                        >
-                          {baseOvCount > 0 && `+${baseOvCount}b`}
-                          {baseOvCount > 0 && compOvCount > 0 && ' '}
-                          {compOvCount > 0 && `+${compOvCount}c`}
-                        </span>
-                      )}
-                    </div>
-                    <div className="text-[10px] text-muted-foreground">
-                      {new Date(run.startedAt).toLocaleString()} —{' '}
-                      {actualCount.toLocaleString()} case
-                      {actualCount !== 1 ? 's' : ''}
-                      {run.summary &&
-                        ` — ${run.summary.changedCases} changed (${Math.round((run.summary.changedCases / Math.max(1, run.summary.totalCases)) * 100)}%)`}
-                    </div>
-                  </div>
-                  <button
-                    className="p-1 text-muted-foreground hover:text-red-600"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      onDeleteRun(run.id)
-                    }}
-                  >
-                    <Trash2 className="size-3" />
-                  </button>
-                </div>
-              )
-            })}
+            {runs.map((run) => (
+              <PastRunRow
+                key={run.id}
+                run={run}
+                onLoad={() => onLoadRun(run)}
+                onDelete={() => onDeleteRun(run.id)}
+                onRename={(name) => onRenameRun(run.id, name)}
+              />
+            ))}
           </div>
         </div>
       )}
@@ -1926,6 +1895,178 @@ function SaveToPopulationBar({
   )
 }
 
+/** Inline override count next to a ruleset id. Tooltip shows the overrides. */
+function RulesetWithOverrides({
+  rulesetId,
+  overrides,
+}: {
+  rulesetId: string
+  overrides?: Record<string, unknown>
+}) {
+  const count = overrides ? Object.keys(overrides).length : 0
+  return (
+    <span className="inline-flex items-center gap-1 min-w-0">
+      <span className="font-mono truncate">{rulesetId}</span>
+      {count > 0 && (
+        <span
+          className="text-[10px] px-1 py-0.5 rounded shrink-0 bg-blue-100 text-blue-800"
+          title={Object.entries(overrides ?? {})
+            .map(([k, v]) => `${k} = ${JSON.stringify(v)}`)
+            .join('\n')}
+        >
+          +{count}
+        </span>
+      )}
+    </span>
+  )
+}
+
+/** Past-runs row: editable name, auto-format subtitle, delete button. */
+function PastRunRow({
+  run,
+  onLoad,
+  onDelete,
+  onRename,
+}: {
+  run: SimulationRun
+  onLoad: () => void
+  onDelete: () => void
+  onRename: (name: string | null) => Promise<void>
+}) {
+  const [editing, setEditing] = useState(false)
+  const [draft, setDraft] = useState('')
+
+  const actualCount = run.summary?.totalCases ?? run.config.caseCount
+  const baseOvCount = run.baseOverrides
+    ? Object.keys(run.baseOverrides).length
+    : 0
+  const compOvCount = run.comparedOverrides
+    ? Object.keys(run.comparedOverrides).length
+    : 0
+  const sourceLabel = run.populationId
+    ? `pop: ${run.populationName ?? run.populationId}`
+    : 'random'
+
+  const startEdit = () => {
+    setDraft(run.name ?? '')
+    setEditing(true)
+  }
+  const commit = async () => {
+    const next = draft.trim()
+    if (next === (run.name ?? '')) {
+      setEditing(false)
+      return
+    }
+    await onRename(next === '' ? null : next)
+    setEditing(false)
+  }
+
+  return (
+    <div
+      className="flex items-center gap-3 px-3 py-2 border rounded hover:bg-muted/50 group cursor-pointer"
+      onClick={() => {
+        if (!editing) onLoad()
+      }}
+    >
+      <div className="flex-1 min-w-0">
+        {/* Primary line: name (editable) OR auto-format with per-side badges */}
+        <div className="flex items-center gap-2">
+          {editing ? (
+            <Input
+              autoFocus
+              className="h-6 text-xs flex-1"
+              value={draft}
+              placeholder="Run name (leave blank for auto)"
+              onClick={(e) => e.stopPropagation()}
+              onChange={(e) => setDraft(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') commit()
+                if (e.key === 'Escape') setEditing(false)
+              }}
+              onBlur={commit}
+            />
+          ) : run.name ? (
+            <span className="text-xs font-medium truncate flex-1">
+              {run.name}
+            </span>
+          ) : (
+            <div className="flex items-center gap-1.5 text-xs min-w-0 flex-1">
+              <RulesetWithOverrides
+                rulesetId={run.rulesetId}
+                overrides={run.baseOverrides}
+              />
+              <span className="text-muted-foreground shrink-0">vs</span>
+              <RulesetWithOverrides
+                rulesetId={run.comparedRulesetId}
+                overrides={run.comparedOverrides}
+              />
+            </div>
+          )}
+          {!editing && (
+            <button
+              className="p-0.5 text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100"
+              onClick={(e) => {
+                e.stopPropagation()
+                startEdit()
+              }}
+              title={run.name ? 'Rename' : 'Set a name'}
+            >
+              <Pencil className="size-3" />
+            </button>
+          )}
+        </div>
+
+        {/* Subtitle: date + counts. If named, also surface auto-format. */}
+        <div className="text-[10px] text-muted-foreground flex items-center gap-1.5 flex-wrap mt-0.5">
+          <span>
+            {new Date(run.startedAt).toLocaleString()} —{' '}
+            {actualCount.toLocaleString()} case
+            {actualCount !== 1 ? 's' : ''}
+          </span>
+          {run.summary && (
+            <span>
+              · {run.summary.changedCases} changed (
+              {Math.round(
+                (run.summary.changedCases /
+                  Math.max(1, run.summary.totalCases)) *
+                  100
+              )}
+              %)
+            </span>
+          )}
+          <span
+            className={cn(
+              'text-[10px] px-1.5 py-0.5 rounded',
+              run.populationId
+                ? 'bg-violet-100 text-violet-800'
+                : 'bg-muted text-muted-foreground'
+            )}
+          >
+            {sourceLabel}
+          </span>
+          {run.name && (
+            <span className="font-mono">
+              {run.rulesetId}
+              {baseOvCount > 0 && ` +${baseOvCount}`} vs{' '}
+              {run.comparedRulesetId}
+              {compOvCount > 0 && ` +${compOvCount}`}
+            </span>
+          )}
+        </div>
+      </div>
+      <button
+        className="p-1 text-muted-foreground hover:text-red-600 shrink-0"
+        onClick={(e) => {
+          e.stopPropagation()
+          onDelete()
+        }}
+      >
+        <Trash2 className="size-3" />
+      </button>
+    </div>
+  )
+}
+
 function NodeChangesPanel({
   nodeChanges,
   outcomeNodes,
@@ -2408,6 +2549,21 @@ function OutcomeNodeEditor({
       )}
     </div>
   )
+}
+
+function autoRunLabel(run: SimulationRun): string {
+  const baseN = run.baseOverrides
+    ? Object.keys(run.baseOverrides).length
+    : 0
+  const compN = run.comparedOverrides
+    ? Object.keys(run.comparedOverrides).length
+    : 0
+  const left = baseN > 0 ? `${run.rulesetId} +${baseN}` : run.rulesetId
+  const right =
+    compN > 0
+      ? `${run.comparedRulesetId} +${compN}`
+      : run.comparedRulesetId
+  return `${left} vs ${right}`
 }
 
 function formatValue(v: unknown): string {
