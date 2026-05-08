@@ -49,9 +49,7 @@ export function listPopulations(): Population[] {
 
   for (const file of files) {
     try {
-      const data = JSON.parse(
-        fs.readFileSync(path.join(dir, file), 'utf-8')
-      )
+      const data = JSON.parse(fs.readFileSync(path.join(dir, file), 'utf-8'))
       populations.push(data)
     } catch {
       // Skip malformed files
@@ -59,8 +57,7 @@ export function listPopulations(): Population[] {
   }
 
   return populations.sort(
-    (a, b) =>
-      new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+    (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
   )
 }
 
@@ -112,10 +109,7 @@ export function addCasesToPopulation(
   if (!population) return null
 
   // Auto-increment IDs
-  const maxId = population.cases.reduce(
-    (max, c) => Math.max(max, c.id),
-    -1
-  )
+  const maxId = population.cases.reduce((max, c) => Math.max(max, c.id), -1)
   const numbered = newCases.map((c, i) => ({
     ...c,
     id: maxId + 1 + i,
@@ -126,10 +120,7 @@ export function addCasesToPopulation(
 
   const filePath = getPopulationPath(populationId)
   if (!filePath) return null
-  fs.writeFileSync(
-    filePath,
-    JSON.stringify(population, null, 2) + '\n'
-  )
+  fs.writeFileSync(filePath, JSON.stringify(population, null, 2) + '\n')
 
   return population
 }
@@ -147,10 +138,7 @@ export function removeCaseFromPopulation(
 
   const filePath = getPopulationPath(populationId)
   if (!filePath) return null
-  fs.writeFileSync(
-    filePath,
-    JSON.stringify(population, null, 2) + '\n'
-  )
+  fs.writeFileSync(filePath, JSON.stringify(population, null, 2) + '\n')
 
   return population
 }

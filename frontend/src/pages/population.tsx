@@ -20,10 +20,7 @@ import {
   type PopulationCase,
   type SimulationConfig,
 } from '@/lib/api/simulation-api'
-import {
-  listRulesets,
-  type RulesetSummary,
-} from '@/lib/api/rules-api'
+import { listRulesets, type RulesetSummary } from '@/lib/api/rules-api'
 import { setPendingScenario } from '@/lib/simulation-bridge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -69,10 +66,7 @@ export function PopulationPage() {
     }
   }, [population])
 
-  const openCaseInVisualizer = (
-    rulesetId: string,
-    caseRow: PopulationCase
-  ) => {
+  const openCaseInVisualizer = (rulesetId: string, caseRow: PopulationCase) => {
     setPendingScenario({
       rulesetId,
       inputs: caseRow.inputs,
@@ -176,9 +170,7 @@ export function PopulationPage() {
           {/* Open-in-ruleset selector — applies to all "open" buttons */}
           {rulesets.length > 0 && (
             <div className="flex items-center gap-2 text-xs">
-              <label className="text-muted-foreground">
-                Open cases in:
-              </label>
+              <label className="text-muted-foreground">Open cases in:</label>
               <select
                 className="h-7 text-xs border rounded px-2 bg-background"
                 value={previewRulesetId}
@@ -378,9 +370,7 @@ function ManualCaseForm({
   onCancel: () => void
   onSubmit: (c: PopulationCase) => Promise<void>
 }) {
-  const [schemaRulesetId, setSchemaRulesetId] = useState(
-    rulesets[0]?.id ?? ''
-  )
+  const [schemaRulesetId, setSchemaRulesetId] = useState(rulesets[0]?.id ?? '')
   const [config, setConfig] = useState<SimulationConfig | null>(null)
   const [loadingSchema, setLoadingSchema] = useState(false)
   const [name, setName] = useState('')
@@ -494,9 +484,7 @@ function ManualCaseForm({
 
           {/* Optional name */}
           <div className="space-y-1">
-            <label className="text-xs font-medium">
-              Case name (optional)
-            </label>
+            <label className="text-xs font-medium">Case name (optional)</label>
             <Input
               className="h-8 text-xs"
               placeholder="e.g. Single parent + 2 kids in poverty"
@@ -595,8 +583,7 @@ function CollectionEditor({
   onChange: (rows: Record<string, unknown>[]) => void
 }) {
   const addRow = () => onChange([...rows, emptyMember(config)])
-  const removeRow = (idx: number) =>
-    onChange(rows.filter((_, i) => i !== idx))
+  const removeRow = (idx: number) => onChange(rows.filter((_, i) => i !== idx))
   const updateRow = (idx: number, path: string, value: unknown) => {
     const next = [...rows]
     next[idx] = { ...next[idx], [path]: value }
@@ -627,10 +614,7 @@ function CollectionEditor({
       ) : (
         <div className="space-y-2">
           {rows.map((row, idx) => (
-            <div
-              key={idx}
-              className="border rounded overflow-hidden"
-            >
+            <div key={idx} className="border rounded overflow-hidden">
               <div className="bg-muted/30 px-3 py-1 flex items-center gap-2">
                 <span className="text-[10px] font-mono text-muted-foreground">
                   member {idx}
@@ -728,9 +712,7 @@ function FieldInput({
                 ? `${field.min}–${field.max}`
                 : ''
             }
-            value={
-              value === undefined || value === null ? '' : String(value)
-            }
+            value={value === undefined || value === null ? '' : String(value)}
             onChange={(e) => {
               const raw = e.target.value
               if (raw === '') onChange(null)
@@ -743,9 +725,7 @@ function FieldInput({
         ) : (
           <Input
             className="h-6 w-48 text-xs font-mono"
-            value={
-              value === undefined || value === null ? '' : String(value)
-            }
+            value={value === undefined || value === null ? '' : String(value)}
             onChange={(e) =>
               onChange(e.target.value === '' ? null : e.target.value)
             }

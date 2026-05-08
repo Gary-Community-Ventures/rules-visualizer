@@ -319,7 +319,9 @@ export function SimulatePage() {
               try {
                 const created = await createPopulation(name, cases)
                 loadPopulations()
-                setToast(`Imported ${cases.length} cases into "${created.name}"`)
+                setToast(
+                  `Imported ${cases.length} cases into "${created.name}"`
+                )
               } catch (e) {
                 setError((e as Error).message)
               }
@@ -342,7 +344,12 @@ export function SimulatePage() {
             onDrillInto={handleDrillInto}
             loading={resultsLoading}
             populations={populations}
-            onSavePopulationFromRun={async (name, fromRun, count, existingId) => {
+            onSavePopulationFromRun={async (
+              name,
+              fromRun,
+              count,
+              existingId
+            ) => {
               const label = `${count.toLocaleString()} case${count !== 1 ? 's' : ''}`
               try {
                 if (existingId) {
@@ -369,15 +376,19 @@ export function SimulatePage() {
             comparedRulesetId={activeRun.comparedRulesetId}
             populations={populations}
             onSaveToPopulation={async (name, existingId) => {
-              const cases: PopulationCase[] = [{
-                id: detailCase.scenarioId,
-                inputs: detailCase.inputs,
-                entities: detailCase.entities,
-              }]
+              const cases: PopulationCase[] = [
+                {
+                  id: detailCase.scenarioId,
+                  inputs: detailCase.inputs,
+                  entities: detailCase.entities,
+                },
+              ]
               try {
                 if (existingId) {
                   const pop = await addCasesToPopulation(existingId, cases)
-                  setToast(`Added case #${detailCase.scenarioId} to "${pop.name}"`)
+                  setToast(
+                    `Added case #${detailCase.scenarioId} to "${pop.name}"`
+                  )
                 } else {
                   const pop = await createPopulation(name, cases)
                   setToast(
@@ -521,137 +532,50 @@ function ConfigView({
         </div>
 
         {caseSource === 'generate' && (
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-1">
-            <label className="text-xs font-medium">Seed</label>
-            <Input
-              className="text-xs font-mono"
-              type="number"
-              value={config.seed}
-              onChange={(e) =>
-                setConfig({ ...config, seed: parseInt(e.target.value) || 0 })
-              }
-            />
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <label className="text-xs font-medium">Seed</label>
+              <Input
+                className="text-xs font-mono"
+                type="number"
+                value={config.seed}
+                onChange={(e) =>
+                  setConfig({ ...config, seed: parseInt(e.target.value) || 0 })
+                }
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-medium">Case count</label>
+              <Input
+                className="text-xs font-mono"
+                type="number"
+                value={config.caseCount}
+                onChange={(e) =>
+                  setConfig({
+                    ...config,
+                    caseCount: parseInt(e.target.value) || 100,
+                  })
+                }
+              />
+            </div>
           </div>
-          <div className="space-y-1">
-            <label className="text-xs font-medium">Case count</label>
-            <Input
-              className="text-xs font-mono"
-              type="number"
-              value={config.caseCount}
-              onChange={(e) =>
-                setConfig({
-                  ...config,
-                  caseCount: parseInt(e.target.value) || 100,
-                })
-              }
-            />
-          </div>
-        </div>
         )}
 
         <OutcomeNodeEditor config={config} setConfig={setConfig} />
 
         {caseSource === 'generate' && (
-        <>
-        <details className="text-xs">
-          <summary className="cursor-pointer text-muted-foreground hover:text-foreground">
-            Scalar fields ({config.scalarFields.length})
-          </summary>
-          <div className="mt-2 space-y-1.5 pl-4">
-            {config.scalarFields.map((f, idx) => (
-              <div key={f.path} className="flex items-center gap-2 font-mono">
-                <span className="w-48 truncate shrink-0" title={f.path}>
-                  {f.path}
-                </span>
-                <span className="text-muted-foreground shrink-0">
-                  ({f.type})
-                </span>
-                {(f.type === 'Dollar' ||
-                  f.type === 'Int' ||
-                  f.type === 'Short' ||
-                  f.type === 'Byte') && (
-                  <>
-                    <Input
-                      className="h-6 w-20 text-[11px] font-mono"
-                      type="number"
-                      value={f.min ?? 0}
-                      onChange={(e) => {
-                        const fields = [...config.scalarFields]
-                        fields[idx] = {
-                          ...f,
-                          min: parseFloat(e.target.value) || 0,
-                        }
-                        setConfig({ ...config, scalarFields: fields })
-                      }}
-                    />
-                    <span className="text-muted-foreground">–</span>
-                    <Input
-                      className="h-6 w-20 text-[11px] font-mono"
-                      type="number"
-                      value={f.max ?? 100}
-                      onChange={(e) => {
-                        const fields = [...config.scalarFields]
-                        fields[idx] = {
-                          ...f,
-                          max: parseFloat(e.target.value) || 100,
-                        }
-                        setConfig({ ...config, scalarFields: fields })
-                      }}
-                    />
-                  </>
-                )}
-              </div>
-            ))}
-          </div>
-        </details>
-
-        <details className="text-xs">
-          <summary className="cursor-pointer text-muted-foreground hover:text-foreground">
-            Collections ({config.collections.length})
-          </summary>
-          <div className="mt-2 space-y-3 pl-4">
-            {config.collections.map((coll, collIdx) => (
-              <div key={coll.collectionPath} className="space-y-1.5">
-                <div className="flex items-center gap-2">
-                  <span className="font-mono font-medium">
-                    {coll.collectionPath}
-                  </span>
-                  <Input
-                    className="h-6 w-12 text-[11px] font-mono"
-                    type="number"
-                    value={coll.minMembers}
-                    onChange={(e) => {
-                      const colls = [...config.collections]
-                      colls[collIdx] = {
-                        ...coll,
-                        minMembers: parseInt(e.target.value) || 1,
-                      }
-                      setConfig({ ...config, collections: colls })
-                    }}
-                  />
-                  <span className="text-muted-foreground">–</span>
-                  <Input
-                    className="h-6 w-12 text-[11px] font-mono"
-                    type="number"
-                    value={coll.maxMembers}
-                    onChange={(e) => {
-                      const colls = [...config.collections]
-                      colls[collIdx] = {
-                        ...coll,
-                        maxMembers: parseInt(e.target.value) || 5,
-                      }
-                      setConfig({ ...config, collections: colls })
-                    }}
-                  />
-                  <span className="text-muted-foreground">members</span>
-                </div>
-                {coll.fields.map((f, fIdx) => (
+          <>
+            <details className="text-xs">
+              <summary className="cursor-pointer text-muted-foreground hover:text-foreground">
+                Scalar fields ({config.scalarFields.length})
+              </summary>
+              <div className="mt-2 space-y-1.5 pl-4">
+                {config.scalarFields.map((f, idx) => (
                   <div
                     key={f.path}
-                    className="flex items-center gap-2 font-mono pl-4"
+                    className="flex items-center gap-2 font-mono"
                   >
-                    <span className="w-44 truncate shrink-0" title={f.path}>
+                    <span className="w-48 truncate shrink-0" title={f.path}>
                       {f.path}
                     </span>
                     <span className="text-muted-foreground shrink-0">
@@ -667,14 +591,12 @@ function ConfigView({
                           type="number"
                           value={f.min ?? 0}
                           onChange={(e) => {
-                            const colls = [...config.collections]
-                            const fields = [...coll.fields]
-                            fields[fIdx] = {
+                            const fields = [...config.scalarFields]
+                            fields[idx] = {
                               ...f,
                               min: parseFloat(e.target.value) || 0,
                             }
-                            colls[collIdx] = { ...coll, fields }
-                            setConfig({ ...config, collections: colls })
+                            setConfig({ ...config, scalarFields: fields })
                           }}
                         />
                         <span className="text-muted-foreground">–</span>
@@ -683,14 +605,12 @@ function ConfigView({
                           type="number"
                           value={f.max ?? 100}
                           onChange={(e) => {
-                            const colls = [...config.collections]
-                            const fields = [...coll.fields]
-                            fields[fIdx] = {
+                            const fields = [...config.scalarFields]
+                            fields[idx] = {
                               ...f,
                               max: parseFloat(e.target.value) || 100,
                             }
-                            colls[collIdx] = { ...coll, fields }
-                            setConfig({ ...config, collections: colls })
+                            setConfig({ ...config, scalarFields: fields })
                           }}
                         />
                       </>
@@ -698,10 +618,104 @@ function ConfigView({
                   </div>
                 ))}
               </div>
-            ))}
-          </div>
-        </details>
-        </>
+            </details>
+
+            <details className="text-xs">
+              <summary className="cursor-pointer text-muted-foreground hover:text-foreground">
+                Collections ({config.collections.length})
+              </summary>
+              <div className="mt-2 space-y-3 pl-4">
+                {config.collections.map((coll, collIdx) => (
+                  <div key={coll.collectionPath} className="space-y-1.5">
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono font-medium">
+                        {coll.collectionPath}
+                      </span>
+                      <Input
+                        className="h-6 w-12 text-[11px] font-mono"
+                        type="number"
+                        value={coll.minMembers}
+                        onChange={(e) => {
+                          const colls = [...config.collections]
+                          colls[collIdx] = {
+                            ...coll,
+                            minMembers: parseInt(e.target.value) || 1,
+                          }
+                          setConfig({ ...config, collections: colls })
+                        }}
+                      />
+                      <span className="text-muted-foreground">–</span>
+                      <Input
+                        className="h-6 w-12 text-[11px] font-mono"
+                        type="number"
+                        value={coll.maxMembers}
+                        onChange={(e) => {
+                          const colls = [...config.collections]
+                          colls[collIdx] = {
+                            ...coll,
+                            maxMembers: parseInt(e.target.value) || 5,
+                          }
+                          setConfig({ ...config, collections: colls })
+                        }}
+                      />
+                      <span className="text-muted-foreground">members</span>
+                    </div>
+                    {coll.fields.map((f, fIdx) => (
+                      <div
+                        key={f.path}
+                        className="flex items-center gap-2 font-mono pl-4"
+                      >
+                        <span className="w-44 truncate shrink-0" title={f.path}>
+                          {f.path}
+                        </span>
+                        <span className="text-muted-foreground shrink-0">
+                          ({f.type})
+                        </span>
+                        {(f.type === 'Dollar' ||
+                          f.type === 'Int' ||
+                          f.type === 'Short' ||
+                          f.type === 'Byte') && (
+                          <>
+                            <Input
+                              className="h-6 w-20 text-[11px] font-mono"
+                              type="number"
+                              value={f.min ?? 0}
+                              onChange={(e) => {
+                                const colls = [...config.collections]
+                                const fields = [...coll.fields]
+                                fields[fIdx] = {
+                                  ...f,
+                                  min: parseFloat(e.target.value) || 0,
+                                }
+                                colls[collIdx] = { ...coll, fields }
+                                setConfig({ ...config, collections: colls })
+                              }}
+                            />
+                            <span className="text-muted-foreground">–</span>
+                            <Input
+                              className="h-6 w-20 text-[11px] font-mono"
+                              type="number"
+                              value={f.max ?? 100}
+                              onChange={(e) => {
+                                const colls = [...config.collections]
+                                const fields = [...coll.fields]
+                                fields[fIdx] = {
+                                  ...f,
+                                  max: parseFloat(e.target.value) || 100,
+                                }
+                                colls[collIdx] = { ...coll, fields }
+                                setConfig({ ...config, collections: colls })
+                              }}
+                            />
+                          </>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            </details>
+          </>
         )}
 
         <Button
@@ -811,8 +825,8 @@ function ConfigView({
         </div>
         {populations.length === 0 ? (
           <p className="text-xs text-muted-foreground">
-            No populations yet. Run a simulation and save cases, or import
-            a CSV.
+            No populations yet. Run a simulation and save cases, or import a
+            CSV.
           </p>
         ) : (
           <div className="space-y-1">
@@ -873,7 +887,8 @@ function CsvImporter({
     try {
       const text = await file.text()
       const lines = text.split('\n').filter((l) => l.trim())
-      if (lines.length < 2) throw new Error('CSV must have a header row and at least one data row')
+      if (lines.length < 2)
+        throw new Error('CSV must have a header row and at least one data row')
 
       const headers = lines[0].split(',').map((h) => h.trim())
       const cases: PopulationCase[] = []
@@ -1289,59 +1304,59 @@ function DetailView({
                 onClick={() => setShowAddPop(false)}
               />
               <div className="absolute top-full right-0 mt-1 z-20 bg-popover border rounded-lg shadow-lg p-3 w-64 space-y-2">
-              {populations.length > 0 && (
-                <div className="space-y-1">
-                  <label className="text-[10px] font-semibold text-muted-foreground uppercase">
-                    Add to existing
-                  </label>
-                  <div className="max-h-40 overflow-y-auto space-y-0.5">
-                    {populations.map((p) => (
-                      <button
-                        key={p.id}
-                        disabled={savingPop}
-                        className="block w-full text-left text-xs px-2 py-1 rounded hover:bg-muted disabled:opacity-50"
-                        onClick={async () => {
-                          setSavingPop(true)
-                          try {
-                            await onSaveToPopulation('', p.id)
-                          } finally {
-                            setSavingPop(false)
-                          }
-                          setShowAddPop(false)
-                        }}
-                      >
-                        {p.name} ({p.cases.length})
-                      </button>
-                    ))}
+                {populations.length > 0 && (
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-semibold text-muted-foreground uppercase">
+                      Add to existing
+                    </label>
+                    <div className="max-h-40 overflow-y-auto space-y-0.5">
+                      {populations.map((p) => (
+                        <button
+                          key={p.id}
+                          disabled={savingPop}
+                          className="block w-full text-left text-xs px-2 py-1 rounded hover:bg-muted disabled:opacity-50"
+                          onClick={async () => {
+                            setSavingPop(true)
+                            try {
+                              await onSaveToPopulation('', p.id)
+                            } finally {
+                              setSavingPop(false)
+                            }
+                            setShowAddPop(false)
+                          }}
+                        >
+                          {p.name} ({p.cases.length})
+                        </button>
+                      ))}
+                    </div>
+                    <div className="border-t my-1" />
                   </div>
-                  <div className="border-t my-1" />
+                )}
+                <div className="flex gap-1">
+                  <Input
+                    className="h-6 text-xs flex-1"
+                    placeholder="New population name..."
+                    value={addPopName}
+                    onChange={(e) => setAddPopName(e.target.value)}
+                  />
+                  <Button
+                    size="sm"
+                    className="h-6 text-[10px]"
+                    disabled={!addPopName.trim() || savingPop}
+                    onClick={async () => {
+                      setSavingPop(true)
+                      try {
+                        await onSaveToPopulation(addPopName.trim())
+                      } finally {
+                        setSavingPop(false)
+                      }
+                      setAddPopName('')
+                      setShowAddPop(false)
+                    }}
+                  >
+                    Create
+                  </Button>
                 </div>
-              )}
-              <div className="flex gap-1">
-                <Input
-                  className="h-6 text-xs flex-1"
-                  placeholder="New population name..."
-                  value={addPopName}
-                  onChange={(e) => setAddPopName(e.target.value)}
-                />
-                <Button
-                  size="sm"
-                  className="h-6 text-[10px]"
-                  disabled={!addPopName.trim() || savingPop}
-                  onClick={async () => {
-                    setSavingPop(true)
-                    try {
-                      await onSaveToPopulation(addPopName.trim())
-                    } finally {
-                      setSavingPop(false)
-                    }
-                    setAddPopName('')
-                    setShowAddPop(false)
-                  }}
-                >
-                  Create
-                </Button>
-              </div>
               </div>
             </>
           )}
@@ -1621,9 +1636,7 @@ function SaveToPopulationBar({
   return (
     <div className="flex items-center gap-2 text-xs">
       {selectedCount > 0 && (
-        <span className="text-muted-foreground">
-          {selectedCount} selected
-        </span>
+        <span className="text-muted-foreground">{selectedCount} selected</span>
       )}
       <div className="relative">
         <Button
@@ -1642,147 +1655,147 @@ function SaveToPopulationBar({
               onClick={() => setOpen(false)}
             />
             <div className="absolute top-full left-0 mt-1 z-20 bg-popover border rounded-lg shadow-lg p-3 w-72 space-y-2">
-            {/* Source */}
-            <div className="space-y-1">
-              <label className="text-[10px] font-semibold text-muted-foreground uppercase">
-                Cases to save
-              </label>
-              <div className="flex gap-1">
-                {selectedCount > 0 && (
-                  <button
-                    className={cn(
-                      'px-2 py-0.5 text-[10px] rounded border',
-                      source === 'selected'
-                        ? 'bg-foreground text-background'
-                        : 'text-muted-foreground'
-                    )}
-                    onClick={() => setSource('selected')}
-                  >
-                    Selected ({selectedCount})
-                  </button>
-                )}
-                {changedCount > 0 && (
-                  <button
-                    className={cn(
-                      'px-2 py-0.5 text-[10px] rounded border',
-                      source === 'changed'
-                        ? 'bg-foreground text-background'
-                        : 'text-muted-foreground'
-                    )}
-                    onClick={() => setSource('changed')}
-                  >
-                    Changed ({changedCount})
-                  </button>
-                )}
-                {unchangedCount > 0 && (
-                  <button
-                    className={cn(
-                      'px-2 py-0.5 text-[10px] rounded border',
-                      source === 'unchanged'
-                        ? 'bg-foreground text-background'
-                        : 'text-muted-foreground'
-                    )}
-                    onClick={() => setSource('unchanged')}
-                  >
-                    Unchanged ({unchangedCount})
-                  </button>
-                )}
-                <button
-                  className={cn(
-                    'px-2 py-0.5 text-[10px] rounded border',
-                    source === 'all'
-                      ? 'bg-foreground text-background'
-                      : 'text-muted-foreground'
+              {/* Source */}
+              <div className="space-y-1">
+                <label className="text-[10px] font-semibold text-muted-foreground uppercase">
+                  Cases to save
+                </label>
+                <div className="flex gap-1">
+                  {selectedCount > 0 && (
+                    <button
+                      className={cn(
+                        'px-2 py-0.5 text-[10px] rounded border',
+                        source === 'selected'
+                          ? 'bg-foreground text-background'
+                          : 'text-muted-foreground'
+                      )}
+                      onClick={() => setSource('selected')}
+                    >
+                      Selected ({selectedCount})
+                    </button>
                   )}
-                  onClick={() => setSource('all')}
-                >
-                  All ({totalCount})
-                </button>
-              </div>
-            </div>
-
-            {/* Destination */}
-            <div className="space-y-1">
-              <label className="text-[10px] font-semibold text-muted-foreground uppercase">
-                Destination
-              </label>
-              <div className="flex gap-1">
-                <button
-                  className={cn(
-                    'px-2 py-0.5 text-[10px] rounded border',
-                    mode === 'new'
-                      ? 'bg-foreground text-background'
-                      : 'text-muted-foreground'
+                  {changedCount > 0 && (
+                    <button
+                      className={cn(
+                        'px-2 py-0.5 text-[10px] rounded border',
+                        source === 'changed'
+                          ? 'bg-foreground text-background'
+                          : 'text-muted-foreground'
+                      )}
+                      onClick={() => setSource('changed')}
+                    >
+                      Changed ({changedCount})
+                    </button>
                   )}
-                  onClick={() => setMode('new')}
-                >
-                  New population
-                </button>
-                {populations.length > 0 && (
+                  {unchangedCount > 0 && (
+                    <button
+                      className={cn(
+                        'px-2 py-0.5 text-[10px] rounded border',
+                        source === 'unchanged'
+                          ? 'bg-foreground text-background'
+                          : 'text-muted-foreground'
+                      )}
+                      onClick={() => setSource('unchanged')}
+                    >
+                      Unchanged ({unchangedCount})
+                    </button>
+                  )}
                   <button
                     className={cn(
                       'px-2 py-0.5 text-[10px] rounded border',
-                      mode === 'existing'
+                      source === 'all'
                         ? 'bg-foreground text-background'
                         : 'text-muted-foreground'
                     )}
-                    onClick={() => setMode('existing')}
+                    onClick={() => setSource('all')}
                   >
-                    Existing
+                    All ({totalCount})
                   </button>
+                </div>
+              </div>
+
+              {/* Destination */}
+              <div className="space-y-1">
+                <label className="text-[10px] font-semibold text-muted-foreground uppercase">
+                  Destination
+                </label>
+                <div className="flex gap-1">
+                  <button
+                    className={cn(
+                      'px-2 py-0.5 text-[10px] rounded border',
+                      mode === 'new'
+                        ? 'bg-foreground text-background'
+                        : 'text-muted-foreground'
+                    )}
+                    onClick={() => setMode('new')}
+                  >
+                    New population
+                  </button>
+                  {populations.length > 0 && (
+                    <button
+                      className={cn(
+                        'px-2 py-0.5 text-[10px] rounded border',
+                        mode === 'existing'
+                          ? 'bg-foreground text-background'
+                          : 'text-muted-foreground'
+                      )}
+                      onClick={() => setMode('existing')}
+                    >
+                      Existing
+                    </button>
+                  )}
+                </div>
+                {mode === 'new' ? (
+                  <Input
+                    className="h-7 text-xs"
+                    placeholder="Population name..."
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                  />
+                ) : (
+                  <select
+                    className="w-full h-7 text-xs border rounded px-2 bg-background"
+                    value={existingId}
+                    onChange={(e) => setExistingId(e.target.value)}
+                  >
+                    <option value="">Select...</option>
+                    {populations.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.name} ({p.cases.length})
+                      </option>
+                    ))}
+                  </select>
                 )}
               </div>
-              {mode === 'new' ? (
-                <Input
-                  className="h-7 text-xs"
-                  placeholder="Population name..."
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                />
-              ) : (
-                <select
-                  className="w-full h-7 text-xs border rounded px-2 bg-background"
-                  value={existingId}
-                  onChange={(e) => setExistingId(e.target.value)}
-                >
-                  <option value="">Select...</option>
-                  {populations.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.name} ({p.cases.length})
-                    </option>
-                  ))}
-                </select>
-              )}
-            </div>
 
-            <div className="flex gap-1.5 justify-end pt-1">
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-6 text-[10px]"
-                onClick={() => setOpen(false)}
-              >
-                Cancel
-              </Button>
-              <Button
-                size="sm"
-                className="h-6 text-[10px]"
-                disabled={!canSave}
-                onClick={async () => {
-                  await onSave(
-                    mode === 'new' ? name.trim() : '',
-                    source,
-                    mode === 'existing' ? existingId : undefined
-                  )
-                  setOpen(false)
-                  setName('')
-                }}
-              >
-                {saving
-                  ? 'Saving...'
-                  : `Save ${sourceCount} case${sourceCount !== 1 ? 's' : ''}`}
-              </Button>
-            </div>
+              <div className="flex gap-1.5 justify-end pt-1">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-6 text-[10px]"
+                  onClick={() => setOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  size="sm"
+                  className="h-6 text-[10px]"
+                  disabled={!canSave}
+                  onClick={async () => {
+                    await onSave(
+                      mode === 'new' ? name.trim() : '',
+                      source,
+                      mode === 'existing' ? existingId : undefined
+                    )
+                    setOpen(false)
+                    setName('')
+                  }}
+                >
+                  {saving
+                    ? 'Saving...'
+                    : `Save ${sourceCount} case${sourceCount !== 1 ? 's' : ''}`}
+                </Button>
+              </div>
             </div>
           </>
         )}
@@ -1831,7 +1844,8 @@ function NodeChangesPanel({
             )}
             onClick={() => setScope('outcomes')}
           >
-            Outcomes ({nodeChanges.filter((nc) => outcomeSet.has(nc.path)).length})
+            Outcomes (
+            {nodeChanges.filter((nc) => outcomeSet.has(nc.path)).length})
           </button>
           <button
             className={cn(
@@ -1858,10 +1872,7 @@ function NodeChangesPanel({
               (nc.timesChanged / Math.max(1, totalCases)) * 100
             )
             return (
-              <div
-                key={nc.path}
-                className="flex items-center gap-3 text-xs"
-              >
+              <div key={nc.path} className="flex items-center gap-3 text-xs">
                 <span className="font-mono flex-1 truncate">{nc.path}</span>
                 <span className="text-muted-foreground">
                   {nc.timesChanged.toLocaleString()} ({pct}%)

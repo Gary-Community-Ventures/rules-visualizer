@@ -74,7 +74,9 @@ router.post('/rulesets/:id/simulations/run', (req, res) => {
   }
 
   // If a population is specified, load its cases as prebuilt scenarios
-  let prebuiltScenarios: ReturnType<typeof populationCasesToScenarios> | undefined
+  let prebuiltScenarios:
+    | ReturnType<typeof populationCasesToScenarios>
+    | undefined
   let populationName: string | undefined
   if (populationId) {
     const population = getPopulation(populationId)
