@@ -281,10 +281,11 @@ export function SimulatePage() {
           </h1>
           {view !== 'config' && activeRun && (
             <>
-              <span className="text-xs text-muted-foreground shrink-0">
-                /
-              </span>
-              <span className="text-xs font-medium truncate" title={activeRun.name}>
+              <span className="text-xs text-muted-foreground shrink-0">/</span>
+              <span
+                className="text-xs font-medium truncate"
+                title={activeRun.name}
+              >
                 {activeRun.name ?? autoRunLabel(activeRun)}
               </span>
             </>
@@ -1986,11 +1987,9 @@ function PastRunRow({
               onBlur={commit}
             />
           ) : run.name ? (
-            <span className="text-xs font-medium truncate flex-1">
-              {run.name}
-            </span>
+            <span className="text-xs font-medium truncate">{run.name}</span>
           ) : (
-            <div className="flex items-center gap-1.5 text-xs min-w-0 flex-1">
+            <div className="flex items-center gap-1.5 text-xs min-w-0">
               <RulesetWithOverrides
                 rulesetId={run.rulesetId}
                 overrides={run.baseOverrides}
@@ -2001,18 +2000,6 @@ function PastRunRow({
                 overrides={run.comparedOverrides}
               />
             </div>
-          )}
-          {!editing && (
-            <button
-              className="p-0.5 text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100"
-              onClick={(e) => {
-                e.stopPropagation()
-                startEdit()
-              }}
-              title={run.name ? 'Rename' : 'Set a name'}
-            >
-              <Pencil className="size-3" />
-            </button>
           )}
         </div>
 
@@ -2047,22 +2034,36 @@ function PastRunRow({
           {run.name && (
             <span className="font-mono">
               {run.rulesetId}
-              {baseOvCount > 0 && ` +${baseOvCount}`} vs{' '}
-              {run.comparedRulesetId}
+              {baseOvCount > 0 && ` +${baseOvCount}`} vs {run.comparedRulesetId}
               {compOvCount > 0 && ` +${compOvCount}`}
             </span>
           )}
         </div>
       </div>
-      <button
-        className="p-1 text-muted-foreground hover:text-red-600 shrink-0"
-        onClick={(e) => {
-          e.stopPropagation()
-          onDelete()
-        }}
-      >
-        <Trash2 className="size-3" />
-      </button>
+      <div className="flex items-center gap-0.5 shrink-0">
+        {!editing && (
+          <button
+            className="p-1 text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100"
+            onClick={(e) => {
+              e.stopPropagation()
+              startEdit()
+            }}
+            title={run.name ? 'Rename' : 'Set a name'}
+          >
+            <Pencil className="size-3" />
+          </button>
+        )}
+        <button
+          className="p-1 text-muted-foreground hover:text-red-600"
+          onClick={(e) => {
+            e.stopPropagation()
+            onDelete()
+          }}
+          title="Delete run"
+        >
+          <Trash2 className="size-3" />
+        </button>
+      </div>
     </div>
   )
 }
@@ -2552,17 +2553,13 @@ function OutcomeNodeEditor({
 }
 
 function autoRunLabel(run: SimulationRun): string {
-  const baseN = run.baseOverrides
-    ? Object.keys(run.baseOverrides).length
-    : 0
+  const baseN = run.baseOverrides ? Object.keys(run.baseOverrides).length : 0
   const compN = run.comparedOverrides
     ? Object.keys(run.comparedOverrides).length
     : 0
   const left = baseN > 0 ? `${run.rulesetId} +${baseN}` : run.rulesetId
   const right =
-    compN > 0
-      ? `${run.comparedRulesetId} +${compN}`
-      : run.comparedRulesetId
+    compN > 0 ? `${run.comparedRulesetId} +${compN}` : run.comparedRulesetId
   return `${left} vs ${right}`
 }
 
