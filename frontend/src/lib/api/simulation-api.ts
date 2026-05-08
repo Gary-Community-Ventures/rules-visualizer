@@ -70,6 +70,8 @@ export type SimulationRun = {
   status: 'running' | 'completed' | 'failed'
   progress?: { completed: number; total: number }
   summary?: SimulationSummary
+  populationId?: string
+  populationName?: string
   startedAt: string
   completedAt?: string
   error?: string
@@ -109,11 +111,13 @@ export async function configureSimulation(
 export async function runSimulation(
   rulesetId: string,
   config: SimulationConfig,
-  comparedRulesetId: string
+  comparedRulesetId: string,
+  populationId?: string
 ): Promise<SimulationRun> {
   return post(`/api/rulesets/${rulesetId}/simulations/run`, {
     config,
     comparedRulesetId,
+    populationId,
   })
 }
 
@@ -147,6 +151,92 @@ export async function getSimulationResults(
   return get(
     `/api/rulesets/${rulesetId}/simulations/${runId}/results?${params}`
   )
+}
+
+// --- Populations ---
+
+export type PopulationCase = {
+  id: number
+  name?: string
+  tags?: string[]
+  inputs: Record<string, unknown>
+  entities?: Record<string, Record<string, unknown>[]>
+}
+
+export type Population = {
+  id: string
+  name: string
+  description?: string
+  createdAt: string
+  updatedAt: string
+  cases: PopulationCase[]
+}
+
+export async function listPopulations(): Promise<Population[]> {
+  return get('/api/populations')
+}
+
+export async function getPopulationById(id: string): Promise<Population> {
+  return get(`/api/populations/${id}`)
+}
+
+export type FromRunSpec = {
+  rulesetId: string
+  runId: string
+  filter?: 'all' | 'changed' | 'unchanged'
+  scenarioIds?: number[]
+}
+
+export async function createPopulation(
+  name: string,
+  cases: PopulationCase[],
+  description?: string
+): Promise<Population> {
+  return post('/api/populations', { name, cases, description })
+}
+
+export async function createPopulationFromRun(
+  name: string,
+  fromRun: FromRunSpec,
+  description?: string
+): Promise<Population> {
+  return post('/api/populations', { name, fromRun, description })
+}
+
+export async function addCasesToPopulation(
+  populationId: string,
+  cases: PopulationCase[]
+): Promise<Population> {
+  return post(`/api/populations/${populationId}/cases`, { cases })
+}
+
+export async function addCasesToPopulationFromRun(
+  populationId: string,
+  fromRun: FromRunSpec
+): Promise<Population> {
+  return post(`/api/populations/${populationId}/cases`, { fromRun })
+}
+
+export async function removeCaseFromPopulation(
+  populationId: string,
+  caseId: number
+): Promise<Population> {
+  const res = await fetch(
+    `${API_BASE}/api/populations/${populationId}/cases/${caseId}`,
+    { method: 'DELETE' }
+  )
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    throw new Error(data.error ?? `API error: ${res.status}`)
+  }
+  return res.json()
+}
+
+export async function deletePopulationApi(id: string): Promise<void> {
+  const res = await fetch(`${API_BASE}/api/populations/${id}`, {
+    method: 'DELETE',
+  })
+  if (!res.ok) throw new Error(`API error: ${res.status}`)
 }
 
 export async function deleteSimulation(

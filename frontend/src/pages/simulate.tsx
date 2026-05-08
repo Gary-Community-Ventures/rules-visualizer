@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useParams } from '@tanstack/react-router'
+import { useParams, useNavigate } from '@tanstack/react-router'
 import { setPendingScenario } from '@/lib/simulation-bridge'
 import {
   configureSimulation,
@@ -8,9 +8,19 @@ import {
   getSimulationRun,
   getSimulationResults,
   deleteSimulation,
+  listPopulations,
+  createPopulation,
+  createPopulationFromRun,
+  addCasesToPopulation,
+  addCasesToPopulationFromRun,
+  deletePopulationApi,
   type SimulationConfig,
   type SimulationRun,
   type CaseResult,
+  type FromRunSpec,
+  type NodeChangeStats,
+  type Population,
+  type PopulationCase,
 } from '@/lib/api/simulation-api'
 import {
   listRulesets,
@@ -30,12 +40,15 @@ import {
   FlaskConical,
   ExternalLink,
   X,
+  Users,
+  Check,
 } from 'lucide-react'
 
 type View = 'config' | 'dashboard' | 'detail'
 
 export function SimulatePage() {
   const { rulesetId } = useParams({ from: '/simulate/$rulesetId' })
+  const navigate = useNavigate()
   const [view, setView] = useState<View>('config')
   const [config, setConfig] = useState<SimulationConfig | null>(null)
   const [comparedRulesetId, setComparedRulesetId] = useState('')
@@ -44,6 +57,19 @@ export function SimulatePage() {
   )
   const [isRunning, setIsRunning] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [toast, setToast] = useState<string | null>(null)
+
+  // Population state
+  type CaseSource = 'generate' | 'population'
+  const [caseSource, setCaseSource] = useState<CaseSource>('generate')
+  const [selectedPopulationId, setSelectedPopulationId] = useState('')
+  const [populations, setPopulations] = useState<Population[]>([])
+
+  const loadPopulations = useCallback(() => {
+    listPopulations()
+      .then(setPopulations)
+      .catch(() => setPopulations([]))
+  }, [])
 
   // Dashboard state
   const [runs, setRuns] = useState<SimulationRun[]>([])
@@ -64,7 +90,24 @@ export function SimulatePage() {
     document.title = `Simulate ${rulesetId} — Rules Visualizer`
   }, [rulesetId])
 
-  // Load config and available rulesets on mount
+  // Auto-dismiss toasts
+  useEffect(() => {
+    if (!toast) return
+    const t = setTimeout(() => setToast(null), 2500)
+    return () => clearTimeout(t)
+  }, [toast])
+
+  const goToPopulation = useCallback(
+    (id: string) => {
+      navigate({
+        to: '/populations/$populationId',
+        params: { populationId: id },
+      })
+    },
+    [navigate]
+  )
+
+  // Load config, rulesets, and populations on mount
   useEffect(() => {
     configureSimulation(rulesetId)
       .then(setConfig)
@@ -76,7 +119,8 @@ export function SimulatePage() {
         )
       )
       .catch(() => {})
-  }, [rulesetId])
+    loadPopulations()
+  }, [rulesetId, loadPopulations])
 
   // Load past runs
   const loadRuns = useCallback(() => {
@@ -123,7 +167,8 @@ export function SimulatePage() {
       const pendingRun = await runSimulation(
         rulesetId,
         config,
-        comparedRulesetId
+        comparedRulesetId,
+        caseSource === 'population' ? selectedPopulationId : undefined
       )
 
       // Poll for progress until complete (max 10 minutes)
@@ -225,8 +270,17 @@ export function SimulatePage() {
       </div>
 
       {error && (
-        <div className="px-6 py-2 bg-red-50 text-red-700 text-xs border-b">
-          {error}
+        <div className="px-6 py-2 bg-red-50 text-red-700 text-xs border-b flex items-center gap-2">
+          <span className="flex-1">{error}</span>
+          <button onClick={() => setError(null)}>
+            <X className="size-3" />
+          </button>
+        </div>
+      )}
+      {toast && (
+        <div className="px-6 py-2 bg-emerald-50 text-emerald-800 text-xs border-b flex items-center gap-2">
+          <Check className="size-3" />
+          <span className="flex-1">{toast}</span>
         </div>
       )}
 
@@ -245,6 +299,31 @@ export function SimulatePage() {
             runs={runs}
             onLoadRun={handleLoadRun}
             onDeleteRun={handleDeleteRun}
+            caseSource={caseSource}
+            setCaseSource={setCaseSource}
+            populations={populations}
+            selectedPopulationId={selectedPopulationId}
+            setSelectedPopulationId={setSelectedPopulationId}
+            onDeletePopulation={async (id) => {
+              try {
+                await deletePopulationApi(id)
+                loadPopulations()
+                if (selectedPopulationId === id) setSelectedPopulationId('')
+                setToast('Population deleted')
+              } catch (e) {
+                setError((e as Error).message)
+              }
+            }}
+            onOpenPopulation={goToPopulation}
+            onImportCsv={async (name, cases) => {
+              try {
+                const created = await createPopulation(name, cases)
+                loadPopulations()
+                setToast(`Imported ${cases.length} cases into "${created.name}"`)
+              } catch (e) {
+                setError((e as Error).message)
+              }
+            }}
           />
         )}
         {view === 'dashboard' && activeRun && (
@@ -262,6 +341,25 @@ export function SimulatePage() {
             onPageChange={setResultsOffset}
             onDrillInto={handleDrillInto}
             loading={resultsLoading}
+            populations={populations}
+            onSavePopulationFromRun={async (name, fromRun, count, existingId) => {
+              const label = `${count.toLocaleString()} case${count !== 1 ? 's' : ''}`
+              try {
+                if (existingId) {
+                  const pop = await addCasesToPopulationFromRun(
+                    existingId,
+                    fromRun
+                  )
+                  setToast(`Added ${label} to "${pop.name}"`)
+                } else {
+                  const pop = await createPopulationFromRun(name, fromRun)
+                  setToast(`Created "${pop.name}" with ${label}`)
+                }
+                loadPopulations()
+              } catch (e) {
+                setError((e as Error).message)
+              }
+            }}
           />
         )}
         {view === 'detail' && detailCase && activeRun && (
@@ -269,6 +367,28 @@ export function SimulatePage() {
             caseResult={detailCase}
             rulesetId={rulesetId}
             comparedRulesetId={activeRun.comparedRulesetId}
+            populations={populations}
+            onSaveToPopulation={async (name, existingId) => {
+              const cases: PopulationCase[] = [{
+                id: detailCase.scenarioId,
+                inputs: detailCase.inputs,
+                entities: detailCase.entities,
+              }]
+              try {
+                if (existingId) {
+                  const pop = await addCasesToPopulation(existingId, cases)
+                  setToast(`Added case #${detailCase.scenarioId} to "${pop.name}"`)
+                } else {
+                  const pop = await createPopulation(name, cases)
+                  setToast(
+                    `Created "${pop.name}" with case #${detailCase.scenarioId}`
+                  )
+                }
+                loadPopulations()
+              } catch (e) {
+                setError((e as Error).message)
+              }
+            }}
           />
         )}
       </div>
@@ -290,6 +410,14 @@ function ConfigView({
   runs,
   onLoadRun,
   onDeleteRun,
+  caseSource,
+  setCaseSource,
+  populations,
+  selectedPopulationId,
+  setSelectedPopulationId,
+  onDeletePopulation,
+  onOpenPopulation,
+  onImportCsv,
 }: {
   config: SimulationConfig | null
   setConfig: (c: SimulationConfig) => void
@@ -302,6 +430,14 @@ function ConfigView({
   runs: SimulationRun[]
   onLoadRun: (r: SimulationRun) => void
   onDeleteRun: (id: string) => void
+  caseSource: 'generate' | 'population'
+  setCaseSource: (s: 'generate' | 'population') => void
+  populations: Population[]
+  selectedPopulationId: string
+  setSelectedPopulationId: (id: string) => void
+  onDeletePopulation: (id: string) => Promise<void>
+  onOpenPopulation: (id: string) => void
+  onImportCsv: (name: string, cases: PopulationCase[]) => Promise<void>
 }) {
   if (!config) {
     return (
@@ -332,6 +468,59 @@ function ConfigView({
           </select>
         </div>
 
+        <div className="space-y-2">
+          <label className="text-xs font-medium">Case source</label>
+          <div className="flex gap-2">
+            <button
+              className={cn(
+                'px-3 py-1.5 text-xs rounded border',
+                caseSource === 'generate'
+                  ? 'bg-foreground text-background border-foreground'
+                  : 'text-muted-foreground hover:text-foreground'
+              )}
+              onClick={() => setCaseSource('generate')}
+            >
+              Generate random
+            </button>
+            <button
+              className={cn(
+                'px-3 py-1.5 text-xs rounded border',
+                caseSource === 'population'
+                  ? 'bg-foreground text-background border-foreground'
+                  : 'text-muted-foreground hover:text-foreground'
+              )}
+              onClick={() => setCaseSource('population')}
+            >
+              Saved population
+            </button>
+          </div>
+          {caseSource === 'population' && (
+            <select
+              className="w-full h-9 text-sm border rounded px-3 bg-background"
+              value={selectedPopulationId}
+              onChange={(e) => setSelectedPopulationId(e.target.value)}
+            >
+              <option value="">Select a population...</option>
+              {populations.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name} ({p.cases.length} cases)
+                </option>
+              ))}
+            </select>
+          )}
+          {caseSource === 'population' && (
+            <div className="flex items-center gap-2">
+              {populations.length === 0 && (
+                <p className="text-[10px] text-muted-foreground">
+                  No populations yet.
+                </p>
+              )}
+              <CsvImporter onImport={onImportCsv} />
+            </div>
+          )}
+        </div>
+
+        {caseSource === 'generate' && (
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1">
             <label className="text-xs font-medium">Seed</label>
@@ -359,9 +548,12 @@ function ConfigView({
             />
           </div>
         </div>
+        )}
 
         <OutcomeNodeEditor config={config} setConfig={setConfig} />
 
+        {caseSource === 'generate' && (
+        <>
         <details className="text-xs">
           <summary className="cursor-pointer text-muted-foreground hover:text-foreground">
             Scalar fields ({config.scalarFields.length})
@@ -509,10 +701,16 @@ function ConfigView({
             ))}
           </div>
         </details>
+        </>
+        )}
 
         <Button
           onClick={onRun}
-          disabled={isRunning || !comparedRulesetId}
+          disabled={
+            isRunning ||
+            !comparedRulesetId ||
+            (caseSource === 'population' && !selectedPopulationId)
+          }
           className="w-full"
         >
           {isRunning ? (
@@ -553,28 +751,98 @@ function ConfigView({
         <div className="space-y-2">
           <h2 className="text-sm font-semibold">Past Runs</h2>
           <div className="space-y-1">
-            {runs.map((run) => (
+            {runs.map((run) => {
+              const actualCount =
+                run.summary?.totalCases ?? run.config.caseCount
+              const sourceLabel = run.populationId
+                ? `pop: ${run.populationName ?? run.populationId}`
+                : 'random'
+              return (
+                <div
+                  key={run.id}
+                  className="flex items-center gap-3 px-3 py-2 border rounded hover:bg-muted/50 cursor-pointer"
+                  onClick={() => onLoadRun(run)}
+                >
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-mono truncate">
+                        vs. {run.comparedRulesetId}
+                      </span>
+                      <span
+                        className={cn(
+                          'text-[10px] px-1.5 py-0.5 rounded shrink-0',
+                          run.populationId
+                            ? 'bg-violet-100 text-violet-800'
+                            : 'bg-muted text-muted-foreground'
+                        )}
+                      >
+                        {sourceLabel}
+                      </span>
+                    </div>
+                    <div className="text-[10px] text-muted-foreground">
+                      {new Date(run.startedAt).toLocaleString()} —{' '}
+                      {actualCount.toLocaleString()} case
+                      {actualCount !== 1 ? 's' : ''}
+                      {run.summary &&
+                        ` — ${run.summary.changedCases} changed (${Math.round((run.summary.changedCases / Math.max(1, run.summary.totalCases)) * 100)}%)`}
+                    </div>
+                  </div>
+                  <button
+                    className="p-1 text-muted-foreground hover:text-red-600"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onDeleteRun(run.id)
+                    }}
+                  >
+                    <Trash2 className="size-3" />
+                  </button>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Population management */}
+      <div className="space-y-2">
+        <div className="flex items-center gap-2">
+          <Users className="size-3.5 text-muted-foreground" />
+          <h2 className="text-sm font-semibold">Populations</h2>
+        </div>
+        {populations.length === 0 ? (
+          <p className="text-xs text-muted-foreground">
+            No populations yet. Run a simulation and save cases, or import
+            a CSV.
+          </p>
+        ) : (
+          <div className="space-y-1">
+            {populations.map((pop) => (
               <div
-                key={run.id}
-                className="flex items-center gap-3 px-3 py-2 border rounded hover:bg-muted/50 cursor-pointer"
-                onClick={() => onLoadRun(run)}
+                key={pop.id}
+                className="flex items-center gap-3 px-3 py-2 border rounded hover:bg-muted/50 cursor-pointer group"
+                onClick={() => onOpenPopulation(pop.id)}
               >
                 <div className="flex-1 min-w-0">
-                  <div className="text-xs font-mono truncate">
-                    vs. {run.comparedRulesetId}
-                  </div>
+                  <div className="text-xs font-medium">{pop.name}</div>
                   <div className="text-[10px] text-muted-foreground">
-                    {new Date(run.startedAt).toLocaleString()} —{' '}
-                    {run.config.caseCount} cases
-                    {run.summary &&
-                      ` — ${run.summary.changedCases} changed (${Math.round((run.summary.changedCases / run.summary.totalCases) * 100)}%)`}
+                    {pop.cases.length} cases
+                    {pop.description && ` — ${pop.description}`}
                   </div>
                 </div>
+                <span className="text-[10px] text-muted-foreground opacity-0 group-hover:opacity-100">
+                  Manage →
+                </span>
                 <button
                   className="p-1 text-muted-foreground hover:text-red-600"
                   onClick={(e) => {
                     e.stopPropagation()
-                    onDeleteRun(run.id)
+                    if (
+                      confirm(
+                        `Delete population "${pop.name}" and all ${pop.cases.length} cases?`
+                      )
+                    ) {
+                      onDeletePopulation(pop.id)
+                    }
                   }}
                 >
                   <Trash2 className="size-3" />
@@ -582,9 +850,82 @@ function ConfigView({
               </div>
             ))}
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
+  )
+}
+
+// --- CSV Importer ---
+
+function CsvImporter({
+  onImport,
+}: {
+  onImport: (name: string, cases: PopulationCase[]) => Promise<void>
+}) {
+  const [importing, setImporting] = useState(false)
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setImporting(true)
+    try {
+      const text = await file.text()
+      const lines = text.split('\n').filter((l) => l.trim())
+      if (lines.length < 2) throw new Error('CSV must have a header row and at least one data row')
+
+      const headers = lines[0].split(',').map((h) => h.trim())
+      const cases: PopulationCase[] = []
+
+      for (let i = 1; i < lines.length; i++) {
+        const values = lines[i].split(',').map((v) => v.trim())
+        const inputs: Record<string, unknown> = {}
+
+        for (let j = 0; j < headers.length; j++) {
+          const header = headers[j]
+          const raw = values[j] ?? ''
+          if (!raw) continue
+
+          // Auto-detect types
+          if (raw === 'true' || raw === 'false') {
+            inputs[header] = raw === 'true'
+          } else if (!isNaN(Number(raw))) {
+            inputs[header] = Number(raw)
+          } else {
+            inputs[header] = raw
+          }
+        }
+
+        cases.push({ id: i - 1, inputs })
+      }
+
+      const name = file.name.replace(/\.csv$/i, '')
+      await onImport(name, cases)
+    } catch (err) {
+      alert((err as Error).message)
+    } finally {
+      setImporting(false)
+      e.target.value = ''
+    }
+  }
+
+  return (
+    <label className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs border rounded cursor-pointer hover:bg-muted/50">
+      {importing ? (
+        <Loader2 className="size-3 animate-spin" />
+      ) : (
+        <ArrowLeft className="size-3 rotate-90" />
+      )}
+      {importing ? 'Importing...' : 'Import CSV'}
+      <input
+        type="file"
+        accept=".csv"
+        className="hidden"
+        onChange={handleFileChange}
+        disabled={importing}
+      />
+    </label>
   )
 }
 
@@ -601,6 +942,8 @@ function DashboardView({
   onPageChange,
   onDrillInto,
   loading,
+  populations,
+  onSavePopulationFromRun,
 }: {
   run: SimulationRun
   results: CaseResult[]
@@ -612,7 +955,17 @@ function DashboardView({
   onPageChange: (offset: number) => void
   onDrillInto: (c: CaseResult) => void
   loading: boolean
+  populations: Population[]
+  onSavePopulationFromRun: (
+    name: string,
+    fromRun: FromRunSpec,
+    count: number,
+    existingId?: string
+  ) => Promise<void>
 }) {
+  const [selectedCases, setSelectedCases] = useState<Set<number>>(new Set())
+  const [savingPop, setSavingPop] = useState(false)
+
   const summary = run.summary
   if (!summary) return <div className="p-6 text-sm">Run has no summary.</div>
 
@@ -642,38 +995,11 @@ function DashboardView({
       </div>
 
       {/* Top changed nodes */}
-      {summary.nodeChanges.length > 0 && (
-        <div className="space-y-2">
-          <h3 className="text-xs font-semibold text-muted-foreground uppercase">
-            Most changed nodes
-          </h3>
-          <div className="space-y-1">
-            {summary.nodeChanges.slice(0, 10).map((nc) => (
-              <div key={nc.path} className="flex items-center gap-3 text-xs">
-                <span className="font-mono flex-1 truncate">{nc.path}</span>
-                <span className="text-muted-foreground">
-                  {nc.timesChanged}x
-                </span>
-                {nc.avgDelta !== undefined && (
-                  <span
-                    className={cn(
-                      'font-mono',
-                      nc.avgDelta > 0
-                        ? 'text-emerald-700'
-                        : nc.avgDelta < 0
-                          ? 'text-red-700'
-                          : 'text-muted-foreground'
-                    )}
-                  >
-                    {nc.avgDelta > 0 ? '+' : ''}
-                    {nc.avgDelta}
-                  </span>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      <NodeChangesPanel
+        nodeChanges={summary.nodeChanges}
+        outcomeNodes={run.config.outcomeNodes}
+        totalCases={summary.totalCases}
+      />
 
       {/* Filter tabs */}
       <div className="flex items-center gap-2 border-b pb-2">
@@ -697,6 +1023,42 @@ function DashboardView({
         ))}
       </div>
 
+      {/* Save to population bar */}
+      <SaveToPopulationBar
+        selectedCount={selectedCases.size}
+        totalCount={summary.totalCases}
+        changedCount={summary.changedCases}
+        unchangedCount={summary.unchangedCases}
+        populations={populations}
+        saving={savingPop}
+        onSave={async (name, source, existingId) => {
+          setSavingPop(true)
+          try {
+            const baseSpec = { rulesetId: run.rulesetId, runId: run.id }
+            let fromRun: FromRunSpec
+            let count: number
+            if (source === 'selected') {
+              const ids = Array.from(selectedCases)
+              fromRun = { ...baseSpec, scenarioIds: ids }
+              count = ids.length
+            } else {
+              fromRun = { ...baseSpec, filter: source }
+              count =
+                source === 'changed'
+                  ? summary.changedCases
+                  : source === 'unchanged'
+                    ? summary.unchangedCases
+                    : summary.totalCases
+            }
+            await onSavePopulationFromRun(name, fromRun, count, existingId)
+            setSelectedCases(new Set())
+          } catch {
+            // error handled by parent
+          }
+          setSavingPop(false)
+        }}
+      />
+
       {/* Results table */}
       <div className="border rounded-lg overflow-hidden relative">
         {loading && (
@@ -707,11 +1069,29 @@ function DashboardView({
         <table className="w-full text-xs">
           <thead className="bg-muted/50">
             <tr>
+              <th className="px-3 py-2 w-8">
+                <input
+                  type="checkbox"
+                  className="rounded"
+                  checked={
+                    results.length > 0 &&
+                    results.every((r) => selectedCases.has(r.scenarioId))
+                  }
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setSelectedCases(
+                        new Set(results.map((r) => r.scenarioId))
+                      )
+                    } else {
+                      setSelectedCases(new Set())
+                    }
+                  }}
+                />
+              </th>
               <th className="text-left px-3 py-2 font-medium">#</th>
               <th className="text-left px-3 py-2 font-medium">Status</th>
               <th className="text-left px-3 py-2 font-medium">Outcome diffs</th>
               <th className="text-left px-3 py-2 font-medium">All diffs</th>
-              <th className="text-right px-3 py-2 font-medium">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -721,6 +1101,19 @@ function DashboardView({
                 className="border-t hover:bg-muted/30 cursor-pointer"
                 onClick={() => onDrillInto(r)}
               >
+                <td className="px-3 py-2" onClick={(e) => e.stopPropagation()}>
+                  <input
+                    type="checkbox"
+                    className="rounded"
+                    checked={selectedCases.has(r.scenarioId)}
+                    onChange={(e) => {
+                      const next = new Set(selectedCases)
+                      if (e.target.checked) next.add(r.scenarioId)
+                      else next.delete(r.scenarioId)
+                      setSelectedCases(next)
+                    }}
+                  />
+                </td>
                 <td className="px-3 py-2 font-mono">{r.scenarioId}</td>
                 <td className="px-3 py-2">
                   {r.error ? (
@@ -803,11 +1196,18 @@ function DetailView({
   caseResult,
   rulesetId,
   comparedRulesetId,
+  populations,
+  onSaveToPopulation,
 }: {
   caseResult: CaseResult
   rulesetId: string
   comparedRulesetId: string
+  populations: Population[]
+  onSaveToPopulation: (name: string, existingId?: string) => Promise<void>
 }) {
+  const [showAddPop, setShowAddPop] = useState(false)
+  const [addPopName, setAddPopName] = useState('')
+  const [savingPop, setSavingPop] = useState(false)
   const openInVisualizer = (targetRulesetId: string, label: string) => {
     setPendingScenario({
       rulesetId: targetRulesetId,
@@ -872,6 +1272,80 @@ function DetailView({
             Changed
           </span>
         )}
+        <div className="relative">
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-xs h-7 gap-1"
+            onClick={() => setShowAddPop(!showAddPop)}
+          >
+            <Users className="size-3" />
+            Save to population
+          </Button>
+          {showAddPop && (
+            <>
+              <div
+                className="fixed inset-0 z-10"
+                onClick={() => setShowAddPop(false)}
+              />
+              <div className="absolute top-full right-0 mt-1 z-20 bg-popover border rounded-lg shadow-lg p-3 w-64 space-y-2">
+              {populations.length > 0 && (
+                <div className="space-y-1">
+                  <label className="text-[10px] font-semibold text-muted-foreground uppercase">
+                    Add to existing
+                  </label>
+                  <div className="max-h-40 overflow-y-auto space-y-0.5">
+                    {populations.map((p) => (
+                      <button
+                        key={p.id}
+                        disabled={savingPop}
+                        className="block w-full text-left text-xs px-2 py-1 rounded hover:bg-muted disabled:opacity-50"
+                        onClick={async () => {
+                          setSavingPop(true)
+                          try {
+                            await onSaveToPopulation('', p.id)
+                          } finally {
+                            setSavingPop(false)
+                          }
+                          setShowAddPop(false)
+                        }}
+                      >
+                        {p.name} ({p.cases.length})
+                      </button>
+                    ))}
+                  </div>
+                  <div className="border-t my-1" />
+                </div>
+              )}
+              <div className="flex gap-1">
+                <Input
+                  className="h-6 text-xs flex-1"
+                  placeholder="New population name..."
+                  value={addPopName}
+                  onChange={(e) => setAddPopName(e.target.value)}
+                />
+                <Button
+                  size="sm"
+                  className="h-6 text-[10px]"
+                  disabled={!addPopName.trim() || savingPop}
+                  onClick={async () => {
+                    setSavingPop(true)
+                    try {
+                      await onSaveToPopulation(addPopName.trim())
+                    } finally {
+                      setSavingPop(false)
+                    }
+                    setAddPopName('')
+                    setShowAddPop(false)
+                  }}
+                >
+                  Create
+                </Button>
+              </div>
+              </div>
+            </>
+          )}
+        </div>
         <div className="flex-1" />
         <div className="flex items-center gap-1.5">
           <Button
@@ -1096,6 +1570,326 @@ function DetailView({
 }
 
 /** Clickable node path that opens the graph in a new browser tab. */
+function SaveToPopulationBar({
+  selectedCount,
+  totalCount,
+  changedCount,
+  unchangedCount,
+  populations,
+  saving,
+  onSave,
+}: {
+  selectedCount: number
+  totalCount: number
+  changedCount: number
+  unchangedCount: number
+  populations: Population[]
+  saving: boolean
+  onSave: (
+    name: string,
+    source: 'selected' | 'changed' | 'unchanged' | 'all',
+    existingId?: string
+  ) => Promise<void>
+}) {
+  const [open, setOpen] = useState(false)
+  const [mode, setMode] = useState<'new' | 'existing'>('new')
+  const [name, setName] = useState('')
+  const [existingId, setExistingId] = useState('')
+  const [source, setSource] = useState<
+    'selected' | 'changed' | 'unchanged' | 'all'
+  >(selectedCount > 0 ? 'selected' : 'all')
+
+  // Update source when selection changes
+  useEffect(() => {
+    if (selectedCount > 0) setSource('selected')
+  }, [selectedCount])
+
+  const sourceCount =
+    source === 'selected'
+      ? selectedCount
+      : source === 'changed'
+        ? changedCount
+        : source === 'unchanged'
+          ? unchangedCount
+          : totalCount
+
+  const canSave =
+    sourceCount > 0 &&
+    !saving &&
+    (mode === 'new' ? name.trim() !== '' : existingId !== '')
+
+  return (
+    <div className="flex items-center gap-2 text-xs">
+      {selectedCount > 0 && (
+        <span className="text-muted-foreground">
+          {selectedCount} selected
+        </span>
+      )}
+      <div className="relative">
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-7 text-xs gap-1"
+          onClick={() => setOpen(!open)}
+        >
+          <Users className="size-3" />
+          Save to population
+        </Button>
+        {open && (
+          <>
+            <div
+              className="fixed inset-0 z-10"
+              onClick={() => setOpen(false)}
+            />
+            <div className="absolute top-full left-0 mt-1 z-20 bg-popover border rounded-lg shadow-lg p-3 w-72 space-y-2">
+            {/* Source */}
+            <div className="space-y-1">
+              <label className="text-[10px] font-semibold text-muted-foreground uppercase">
+                Cases to save
+              </label>
+              <div className="flex gap-1">
+                {selectedCount > 0 && (
+                  <button
+                    className={cn(
+                      'px-2 py-0.5 text-[10px] rounded border',
+                      source === 'selected'
+                        ? 'bg-foreground text-background'
+                        : 'text-muted-foreground'
+                    )}
+                    onClick={() => setSource('selected')}
+                  >
+                    Selected ({selectedCount})
+                  </button>
+                )}
+                {changedCount > 0 && (
+                  <button
+                    className={cn(
+                      'px-2 py-0.5 text-[10px] rounded border',
+                      source === 'changed'
+                        ? 'bg-foreground text-background'
+                        : 'text-muted-foreground'
+                    )}
+                    onClick={() => setSource('changed')}
+                  >
+                    Changed ({changedCount})
+                  </button>
+                )}
+                {unchangedCount > 0 && (
+                  <button
+                    className={cn(
+                      'px-2 py-0.5 text-[10px] rounded border',
+                      source === 'unchanged'
+                        ? 'bg-foreground text-background'
+                        : 'text-muted-foreground'
+                    )}
+                    onClick={() => setSource('unchanged')}
+                  >
+                    Unchanged ({unchangedCount})
+                  </button>
+                )}
+                <button
+                  className={cn(
+                    'px-2 py-0.5 text-[10px] rounded border',
+                    source === 'all'
+                      ? 'bg-foreground text-background'
+                      : 'text-muted-foreground'
+                  )}
+                  onClick={() => setSource('all')}
+                >
+                  All ({totalCount})
+                </button>
+              </div>
+            </div>
+
+            {/* Destination */}
+            <div className="space-y-1">
+              <label className="text-[10px] font-semibold text-muted-foreground uppercase">
+                Destination
+              </label>
+              <div className="flex gap-1">
+                <button
+                  className={cn(
+                    'px-2 py-0.5 text-[10px] rounded border',
+                    mode === 'new'
+                      ? 'bg-foreground text-background'
+                      : 'text-muted-foreground'
+                  )}
+                  onClick={() => setMode('new')}
+                >
+                  New population
+                </button>
+                {populations.length > 0 && (
+                  <button
+                    className={cn(
+                      'px-2 py-0.5 text-[10px] rounded border',
+                      mode === 'existing'
+                        ? 'bg-foreground text-background'
+                        : 'text-muted-foreground'
+                    )}
+                    onClick={() => setMode('existing')}
+                  >
+                    Existing
+                  </button>
+                )}
+              </div>
+              {mode === 'new' ? (
+                <Input
+                  className="h-7 text-xs"
+                  placeholder="Population name..."
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                />
+              ) : (
+                <select
+                  className="w-full h-7 text-xs border rounded px-2 bg-background"
+                  value={existingId}
+                  onChange={(e) => setExistingId(e.target.value)}
+                >
+                  <option value="">Select...</option>
+                  {populations.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name} ({p.cases.length})
+                    </option>
+                  ))}
+                </select>
+              )}
+            </div>
+
+            <div className="flex gap-1.5 justify-end pt-1">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-6 text-[10px]"
+                onClick={() => setOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                size="sm"
+                className="h-6 text-[10px]"
+                disabled={!canSave}
+                onClick={async () => {
+                  await onSave(
+                    mode === 'new' ? name.trim() : '',
+                    source,
+                    mode === 'existing' ? existingId : undefined
+                  )
+                  setOpen(false)
+                  setName('')
+                }}
+              >
+                {saving
+                  ? 'Saving...'
+                  : `Save ${sourceCount} case${sourceCount !== 1 ? 's' : ''}`}
+              </Button>
+            </div>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function NodeChangesPanel({
+  nodeChanges,
+  outcomeNodes,
+  totalCases,
+}: {
+  nodeChanges: NodeChangeStats[]
+  outcomeNodes: string[]
+  totalCases: number
+}) {
+  const [scope, setScope] = useState<'outcomes' | 'all'>('outcomes')
+  const outcomeSet = new Set(outcomeNodes)
+
+  const filtered =
+    scope === 'outcomes'
+      ? nodeChanges.filter((nc) => outcomeSet.has(nc.path))
+      : nodeChanges
+
+  if (nodeChanges.length === 0) return null
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center gap-2">
+        <h3 className="text-xs font-semibold text-muted-foreground uppercase">
+          Most changed {scope === 'outcomes' ? 'outcomes' : 'nodes'}
+        </h3>
+        <span className="text-[10px] text-muted-foreground">
+          across {totalCases.toLocaleString()} case
+          {totalCases !== 1 ? 's' : ''}
+        </span>
+        <div className="flex-1" />
+        <div className="flex gap-1">
+          <button
+            className={cn(
+              'px-2 py-0.5 text-[10px] rounded border',
+              scope === 'outcomes'
+                ? 'bg-foreground text-background'
+                : 'text-muted-foreground hover:text-foreground'
+            )}
+            onClick={() => setScope('outcomes')}
+          >
+            Outcomes ({nodeChanges.filter((nc) => outcomeSet.has(nc.path)).length})
+          </button>
+          <button
+            className={cn(
+              'px-2 py-0.5 text-[10px] rounded border',
+              scope === 'all'
+                ? 'bg-foreground text-background'
+                : 'text-muted-foreground hover:text-foreground'
+            )}
+            onClick={() => setScope('all')}
+          >
+            All nodes ({nodeChanges.length})
+          </button>
+        </div>
+      </div>
+      {filtered.length === 0 ? (
+        <p className="text-[11px] text-muted-foreground">
+          No outcome-node changes — try "All nodes" to see intermediate-node
+          diffs, or edit outcome nodes on the run config.
+        </p>
+      ) : (
+        <div className="space-y-1">
+          {filtered.slice(0, 10).map((nc) => {
+            const pct = Math.round(
+              (nc.timesChanged / Math.max(1, totalCases)) * 100
+            )
+            return (
+              <div
+                key={nc.path}
+                className="flex items-center gap-3 text-xs"
+              >
+                <span className="font-mono flex-1 truncate">{nc.path}</span>
+                <span className="text-muted-foreground">
+                  {nc.timesChanged.toLocaleString()} ({pct}%)
+                </span>
+                {nc.avgDelta !== undefined && (
+                  <span
+                    className={cn(
+                      'font-mono',
+                      nc.avgDelta > 0
+                        ? 'text-emerald-700'
+                        : nc.avgDelta < 0
+                          ? 'text-red-700'
+                          : 'text-muted-foreground'
+                    )}
+                  >
+                    {nc.avgDelta > 0 ? '+' : ''}
+                    {nc.avgDelta}
+                  </span>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
+
 function OutcomeNodeEditor({
   config,
   setConfig,

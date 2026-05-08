@@ -147,13 +147,18 @@ function yieldEventLoop(): Promise<void> {
 }
 
 /**
- * Run a full simulation: generate scenarios, execute both versions, diff, summarize.
+ * Run a full simulation: generate or use provided scenarios, execute both
+ * versions, diff, summarize.
+ *
+ * @param prebuiltScenarios - If provided, uses these instead of generating
+ *   random scenarios. Used for saved population cases.
  */
 export async function runSimulation(
   baseRulesetId: string,
   comparedRulesetId: string,
   config: SimulationConfig,
-  onProgress?: (completed: number, total: number) => void
+  onProgress?: (completed: number, total: number) => void,
+  prebuiltScenarios?: GeneratedScenario[]
 ): Promise<{ run: SimulationRun; results: CaseResult[] }> {
   const startTime = Date.now()
 
@@ -169,8 +174,8 @@ export async function runSimulation(
     throw new Error(`Compared ruleset "${comparedRulesetId}" not found`)
   }
 
-  // Generate scenarios
-  const scenarios = generateScenarios(config)
+  // Use prebuilt scenarios (saved population) or generate random ones
+  const scenarios = prebuiltScenarios ?? generateScenarios(config)
   const outcomeSet = new Set(config.outcomeNodes)
 
   // Execute and compare

@@ -82,6 +82,10 @@ export type SimulationRun = {
   status: 'running' | 'completed' | 'failed'
   progress?: { completed: number; total: number }
   summary?: SimulationSummary
+  /** If the run used a saved population, its ID at run time. */
+  populationId?: string
+  /** Snapshot of the population's name (so deleted pops still display). */
+  populationName?: string
   startedAt: string
   completedAt?: string
   error?: string

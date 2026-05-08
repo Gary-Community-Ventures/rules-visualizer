@@ -7,11 +7,22 @@ import {
   listSimulationRuns,
   getSimulationRun,
   loadCaseResults,
+  loadCasesFromRun,
   deleteSimulationRun,
   setActiveRun,
   getActiveRun,
   clearActiveRun,
 } from '../simulation/store.js'
+import {
+  listPopulations,
+  getPopulation,
+  createPopulation,
+  addCasesToPopulation,
+  removeCaseFromPopulation,
+  deletePopulation,
+  populationCasesToScenarios,
+  type PopulationCase,
+} from '../simulation/populations.js'
 import type { SimulationConfig, SimulationRun } from '../simulation/types.js'
 
 const router = Router()
@@ -44,9 +55,10 @@ router.post('/rulesets/:id/simulations/run', (req, res) => {
     return
   }
 
-  const { config, comparedRulesetId } = req.body as {
+  const { config, comparedRulesetId, populationId } = req.body as {
     config: SimulationConfig
     comparedRulesetId: string
+    populationId?: string
   }
 
   if (!config || !comparedRulesetId) {
@@ -61,6 +73,21 @@ router.post('/rulesets/:id/simulations/run', (req, res) => {
     return
   }
 
+  // If a population is specified, load its cases as prebuilt scenarios
+  let prebuiltScenarios: ReturnType<typeof populationCasesToScenarios> | undefined
+  let populationName: string | undefined
+  if (populationId) {
+    const population = getPopulation(populationId)
+    if (!population) {
+      res.status(404).json({ error: `Population "${populationId}" not found` })
+      return
+    }
+    prebuiltScenarios = populationCasesToScenarios(population.cases)
+    populationName = population.name
+  }
+
+  const totalCases = prebuiltScenarios?.length ?? config.caseCount
+
   // Create a placeholder run and return immediately
   const pendingRun: SimulationRun = {
     id: config.id,
@@ -68,7 +95,9 @@ router.post('/rulesets/:id/simulations/run', (req, res) => {
     comparedRulesetId,
     config,
     status: 'running',
-    progress: { completed: 0, total: config.caseCount },
+    progress: { completed: 0, total: totalCases },
+    populationId,
+    populationName,
     startedAt: new Date().toISOString(),
   }
   setActiveRun(pendingRun)
@@ -76,11 +105,19 @@ router.post('/rulesets/:id/simulations/run', (req, res) => {
 
   // Run in the background — the async runner yields the event loop
   // periodically so Express can handle poll requests for progress.
-  runSimulation(rulesetId, comparedRulesetId, config, (completed, total) => {
-    const active = getActiveRun(config.id)
-    if (active) active.progress = { completed, total }
-  })
+  runSimulation(
+    rulesetId,
+    comparedRulesetId,
+    config,
+    (completed, total) => {
+      const active = getActiveRun(config.id)
+      if (active) active.progress = { completed, total }
+    },
+    prebuiltScenarios
+  )
     .then(({ run, results }) => {
+      run.populationId = populationId
+      run.populationName = populationName
       saveSimulationRun(run, results)
       clearActiveRun(config.id)
     })
@@ -164,6 +201,109 @@ router.delete('/rulesets/:id/simulations/:runId', (req, res) => {
   const deleted = deleteSimulationRun(req.params.id, req.params.runId)
   if (!deleted) {
     res.status(404).json({ error: 'Simulation run not found' })
+    return
+  }
+  res.json({ success: true })
+})
+
+// --- Population endpoints (shared across rulesets) ---
+
+/** GET /api/populations — list all populations. */
+router.get('/populations', (_req, res) => {
+  res.json(listPopulations())
+})
+
+/** GET /api/populations/:id — get a single population. */
+router.get('/populations/:id', (req, res) => {
+  const pop = getPopulation(req.params.id)
+  if (!pop) {
+    res.status(404).json({ error: 'Population not found' })
+    return
+  }
+  res.json(pop)
+})
+
+type FromRunSpec = {
+  rulesetId: string
+  runId: string
+  filter?: 'all' | 'changed' | 'unchanged'
+  scenarioIds?: number[]
+}
+
+function resolveCasesFromBody(body: {
+  cases?: PopulationCase[]
+  fromRun?: FromRunSpec
+}): { cases?: PopulationCase[]; error?: string } {
+  if (Array.isArray(body.cases)) return { cases: body.cases }
+  if (body.fromRun) {
+    const { rulesetId, runId, filter, scenarioIds } = body.fromRun
+    if (!rulesetId || !runId)
+      return { error: 'fromRun.rulesetId and fromRun.runId are required' }
+    if (!getSimulationRun(rulesetId, runId))
+      return { error: `Simulation run "${runId}" not found` }
+    const cases = loadCasesFromRun(rulesetId, runId, { filter, scenarioIds })
+    return { cases }
+  }
+  return { error: 'cases[] or fromRun is required' }
+}
+
+/** POST /api/populations — create a new population. */
+router.post('/populations', (req, res) => {
+  const { name, description } = req.body as {
+    name: string
+    description?: string
+  }
+  if (!name) {
+    res.status(400).json({ error: 'name is required' })
+    return
+  }
+  const { cases, error } = resolveCasesFromBody(req.body)
+  if (error) {
+    res.status(400).json({ error })
+    return
+  }
+  try {
+    const pop = createPopulation(name, cases ?? [], description)
+    res.json(pop)
+  } catch (e) {
+    res.status(500).json({ error: (e as Error).message })
+  }
+})
+
+/** POST /api/populations/:id/cases — add cases to a population. */
+router.post('/populations/:id/cases', (req, res) => {
+  const { cases, error } = resolveCasesFromBody(req.body)
+  if (error) {
+    res.status(400).json({ error })
+    return
+  }
+  const pop = addCasesToPopulation(req.params.id, cases ?? [])
+  if (!pop) {
+    res.status(404).json({ error: 'Population not found' })
+    return
+  }
+  res.json(pop)
+})
+
+/** DELETE /api/populations/:id/cases/:caseId — remove a case. */
+router.delete('/populations/:id/cases/:caseId', (req, res) => {
+  const caseId = parseInt(req.params.caseId)
+  if (isNaN(caseId)) {
+    res.status(400).json({ error: 'Invalid case ID' })
+    return
+  }
+  const pop = removeCaseFromPopulation(req.params.id, caseId)
+  if (!pop) {
+    res.status(404).json({ error: 'Population not found' })
+    return
+  }
+  res.json(pop)
+})
+
+/** DELETE /api/populations/:id — delete a population. */
+router.delete('/populations/:id', (req, res) => {
+  if (!deletePopulation(req.params.id)) {
+    res.status(404).json({ error: 'Population not found' })
     return
   }
   res.json({ success: true })
