@@ -156,6 +156,80 @@ export function loadCaseResults(
   }
 }
 
+/**
+ * Read cases from a run's results.jsonl and project them to PopulationCase
+ * shape (id + inputs + entities). Used for server-side "save from run"
+ * imports so the frontend doesn't need to round-trip the data.
+ */
+export function loadCasesFromRun(
+  rulesetId: string,
+  runId: string,
+  opts: {
+    filter?: 'all' | 'changed' | 'unchanged'
+    scenarioIds?: number[]
+  } = {}
+): {
+  id: number
+  inputs: Record<string, unknown>
+  entities?: Record<string, Record<string, unknown>[]>
+}[] {
+  const dir = getRunDir(rulesetId, runId)
+  if (!dir) return []
+  const filePath = path.join(dir, 'results.jsonl')
+  if (!fs.existsSync(filePath)) return []
+
+  const idSet = opts.scenarioIds ? new Set(opts.scenarioIds) : null
+  const filter = opts.filter ?? 'all'
+
+  const cases: ReturnType<typeof loadCasesFromRun> = []
+  const lines = fs.readFileSync(filePath, 'utf-8').split('\n')
+  for (const line of lines) {
+    if (!line) continue
+    let r: CaseResult
+    try {
+      r = JSON.parse(line)
+    } catch {
+      continue
+    }
+    if (idSet && !idSet.has(r.scenarioId)) continue
+    if (filter === 'changed' && !r.changed) continue
+    if (filter === 'unchanged' && r.changed) continue
+    cases.push({
+      id: r.scenarioId,
+      inputs: r.inputs,
+      entities: r.entities,
+    })
+  }
+  return cases
+}
+
+/**
+ * Patch a persisted run's metadata in place. Currently only used for
+ * renaming. Rewrites summary.json with the merged fields.
+ */
+export function updateSimulationRunMetadata(
+  rulesetId: string,
+  runId: string,
+  patch: Partial<Pick<SimulationRun, 'name'>>
+): SimulationRun | null {
+  const dir = getRunDir(rulesetId, runId)
+  if (!dir) return null
+  const summaryPath = path.join(dir, 'summary.json')
+  if (!fs.existsSync(summaryPath)) return null
+
+  const meta = JSON.parse(fs.readFileSync(summaryPath, 'utf-8'))
+  if ('name' in patch) {
+    if (patch.name && patch.name.trim() !== '') {
+      meta.name = patch.name.trim()
+    } else {
+      delete meta.name
+    }
+  }
+
+  fs.writeFileSync(summaryPath, JSON.stringify(meta, null, 2) + '\n')
+  return getSimulationRun(rulesetId, runId)
+}
+
 /** Delete a simulation run and its data. */
 export function deleteSimulationRun(rulesetId: string, runId: string): boolean {
   const dir = getRunDir(rulesetId, runId)

@@ -76,12 +76,23 @@ export type SimulationSummary = {
 /** A simulation run (persisted metadata) */
 export type SimulationRun = {
   id: string
+  /** Optional user-set label. Falls back to auto-formatted ruleset+overrides
+   *  summary in the UI when blank. */
+  name?: string
   rulesetId: string
   comparedRulesetId: string
   config: SimulationConfig
   status: 'running' | 'completed' | 'failed'
   progress?: { completed: number; total: number }
   summary?: SimulationSummary
+  /** If the run used a saved population, its ID at run time. */
+  populationId?: string
+  /** Snapshot of the population's name (so deleted pops still display). */
+  populationName?: string
+  /** Path → value overrides merged into every scenario's inputs on the base side. */
+  baseOverrides?: Record<string, unknown>
+  /** Path → value overrides merged into every scenario's inputs on the compared side. */
+  comparedOverrides?: Record<string, unknown>
   startedAt: string
   completedAt?: string
   error?: string

@@ -18,6 +18,7 @@ import {
 import { HomePage } from './pages/home'
 import { RulesetListPage } from './pages/ruleset-list'
 import { SimulatePage } from './pages/simulate'
+import { PopulationPage } from './pages/population'
 import { TabBar } from './components/tab-bar'
 
 function RootLayout() {
@@ -31,8 +32,13 @@ function RootLayout() {
     from: '/simulate/$rulesetId',
     shouldThrow: false,
   })
+  const matchPopulation = useMatch({
+    from: '/populations/$populationId',
+    shouldThrow: false,
+  })
   const activeRulesetId = matchRuleset?.params.rulesetId ?? null
   const isSimulatePage = matchSimulate !== undefined
+  const isPopulationPage = matchPopulation !== undefined
   // Hide the tab bar when opened from a simulation preview (new browser tab)
   const isSimulationPreview =
     typeof window !== 'undefined' &&
@@ -77,9 +83,10 @@ function RootLayout() {
 
   return (
     <main className="flex flex-col h-screen">
-      {tabs.length > 0 && !isSimulatePage && !isSimulationPreview && (
-        <TabBar activeRulesetId={activeRulesetId} />
-      )}
+      {tabs.length > 0 &&
+        !isSimulatePage &&
+        !isPopulationPage &&
+        !isSimulationPreview && <TabBar activeRulesetId={activeRulesetId} />}
       {isSimulationPreview && activeRulesetId ? (
         // Simulation preview: standalone ModelProvider, no tab system
         <div className="flex-1 flex-col min-h-0" style={{ display: 'flex' }}>
@@ -174,10 +181,17 @@ const simulateRoute = createRoute({
   component: SimulatePage,
 })
 
+const populationRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/populations/$populationId',
+  component: PopulationPage,
+})
+
 export const routeTree = rootRoute.addChildren([
   rulesetListRoute,
   rulesetRoute,
   simulateRoute,
+  populationRoute,
 ])
 
 export const router = new Router({ routeTree })

@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from 'react'
-import { useParams } from '@tanstack/react-router'
+import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useParams, useNavigate } from '@tanstack/react-router'
 import { setPendingScenario } from '@/lib/simulation-bridge'
 import {
   configureSimulation,
@@ -7,16 +7,28 @@ import {
   listSimulations,
   getSimulationRun,
   getSimulationResults,
+  updateSimulationRun,
   deleteSimulation,
+  listPopulations,
+  createPopulation,
+  createPopulationFromRun,
+  addCasesToPopulation,
+  addCasesToPopulationFromRun,
+  deletePopulationApi,
   type SimulationConfig,
   type SimulationRun,
   type CaseResult,
+  type FromRunSpec,
+  type NodeChangeStats,
+  type Population,
+  type PopulationCase,
 } from '@/lib/api/simulation-api'
 import {
   listRulesets,
   getRuleset,
   type RulesetSummary,
 } from '@/lib/api/rules-api'
+import type { Model } from '@/lib/model'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
@@ -30,12 +42,16 @@ import {
   FlaskConical,
   ExternalLink,
   X,
+  Users,
+  Check,
+  Pencil,
 } from 'lucide-react'
 
 type View = 'config' | 'dashboard' | 'detail'
 
 export function SimulatePage() {
   const { rulesetId } = useParams({ from: '/simulate/$rulesetId' })
+  const navigate = useNavigate()
   const [view, setView] = useState<View>('config')
   const [config, setConfig] = useState<SimulationConfig | null>(null)
   const [comparedRulesetId, setComparedRulesetId] = useState('')
@@ -44,6 +60,29 @@ export function SimulatePage() {
   )
   const [isRunning, setIsRunning] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [toast, setToast] = useState<string | null>(null)
+
+  // Population state
+  type CaseSource = 'generate' | 'population'
+  const [caseSource, setCaseSource] = useState<CaseSource>('generate')
+  const [selectedPopulationId, setSelectedPopulationId] = useState('')
+  const [populations, setPopulations] = useState<Population[]>([])
+
+  // Per-side overrides (path → value). Merged into every scenario's inputs
+  // before execution on that side. Lets you compare A vs A+overrides for
+  // what-if analysis, or A vs B with overrides on both for controlled diffs.
+  const [baseOverrides, setBaseOverrides] = useState<Record<string, unknown>>(
+    {}
+  )
+  const [comparedOverrides, setComparedOverrides] = useState<
+    Record<string, unknown>
+  >({})
+
+  const loadPopulations = useCallback(() => {
+    listPopulations()
+      .then(setPopulations)
+      .catch(() => setPopulations([]))
+  }, [])
 
   // Dashboard state
   const [runs, setRuns] = useState<SimulationRun[]>([])
@@ -64,19 +103,35 @@ export function SimulatePage() {
     document.title = `Simulate ${rulesetId} — Rules Visualizer`
   }, [rulesetId])
 
-  // Load config and available rulesets on mount
+  // Auto-dismiss toasts
+  useEffect(() => {
+    if (!toast) return
+    const t = setTimeout(() => setToast(null), 2500)
+    return () => clearTimeout(t)
+  }, [toast])
+
+  const goToPopulation = useCallback(
+    (id: string) => {
+      navigate({
+        to: '/populations/$populationId',
+        params: { populationId: id },
+      })
+    },
+    [navigate]
+  )
+
+  // Load config, rulesets, and populations on mount
   useEffect(() => {
     configureSimulation(rulesetId)
       .then(setConfig)
       .catch((e) => setError(e.message))
     listRulesets()
       .then((rs) =>
-        setAvailableRulesets(
-          rs.filter((r) => r.format === 'factGraph' && r.id !== rulesetId)
-        )
+        setAvailableRulesets(rs.filter((r) => r.format === 'factGraph'))
       )
       .catch(() => {})
-  }, [rulesetId])
+    loadPopulations()
+  }, [rulesetId, loadPopulations])
 
   // Load past runs
   const loadRuns = useCallback(() => {
@@ -123,7 +178,17 @@ export function SimulatePage() {
       const pendingRun = await runSimulation(
         rulesetId,
         config,
-        comparedRulesetId
+        comparedRulesetId,
+        {
+          populationId:
+            caseSource === 'population' ? selectedPopulationId : undefined,
+          baseOverrides:
+            Object.keys(baseOverrides).length > 0 ? baseOverrides : undefined,
+          comparedOverrides:
+            Object.keys(comparedOverrides).length > 0
+              ? comparedOverrides
+              : undefined,
+        }
       )
 
       // Poll for progress until complete (max 10 minutes)
@@ -180,6 +245,16 @@ export function SimulatePage() {
     }
   }
 
+  const handleRenameRun = async (runId: string, name: string | null) => {
+    try {
+      const updated = await updateSimulationRun(rulesetId, runId, { name })
+      loadRuns()
+      if (activeRun?.id === runId) setActiveRun(updated)
+    } catch (e) {
+      setError((e as Error).message)
+    }
+  }
+
   const handleDrillInto = (caseResult: CaseResult) => {
     setDetailCase(caseResult)
     setView('detail')
@@ -200,14 +275,24 @@ export function SimulatePage() {
           <ArrowLeft className="size-4" />
         </button>
         <FlaskConical className="size-4 text-muted-foreground" />
-        <div className="flex items-center gap-2">
-          <h1 className="text-sm font-semibold">Simulation — {rulesetId}</h1>
-          {view === 'dashboard' && (
-            <span className="text-xs text-muted-foreground">/ Results</span>
+        <div className="flex items-center gap-2 min-w-0">
+          <h1 className="text-sm font-semibold shrink-0">
+            Simulation — {rulesetId}
+          </h1>
+          {view !== 'config' && activeRun && (
+            <>
+              <span className="text-xs text-muted-foreground shrink-0">/</span>
+              <span
+                className="text-xs font-medium truncate"
+                title={activeRun.name}
+              >
+                {activeRun.name ?? autoRunLabel(activeRun)}
+              </span>
+            </>
           )}
           {view === 'detail' && detailCase && (
-            <span className="text-xs text-muted-foreground">
-              / Results / Case #{detailCase.scenarioId}
+            <span className="text-xs text-muted-foreground shrink-0">
+              / Case #{detailCase.scenarioId}
             </span>
           )}
         </div>
@@ -225,8 +310,17 @@ export function SimulatePage() {
       </div>
 
       {error && (
-        <div className="px-6 py-2 bg-red-50 text-red-700 text-xs border-b">
-          {error}
+        <div className="px-6 py-2 bg-red-50 text-red-700 text-xs border-b flex items-center gap-2">
+          <span className="flex-1">{error}</span>
+          <button onClick={() => setError(null)}>
+            <X className="size-3" />
+          </button>
+        </div>
+      )}
+      {toast && (
+        <div className="px-6 py-2 bg-emerald-50 text-emerald-800 text-xs border-b flex items-center gap-2">
+          <Check className="size-3" />
+          <span className="flex-1">{toast}</span>
         </div>
       )}
 
@@ -245,6 +339,39 @@ export function SimulatePage() {
             runs={runs}
             onLoadRun={handleLoadRun}
             onDeleteRun={handleDeleteRun}
+            onRenameRun={handleRenameRun}
+            caseSource={caseSource}
+            setCaseSource={setCaseSource}
+            populations={populations}
+            selectedPopulationId={selectedPopulationId}
+            setSelectedPopulationId={setSelectedPopulationId}
+            onDeletePopulation={async (id) => {
+              try {
+                await deletePopulationApi(id)
+                loadPopulations()
+                if (selectedPopulationId === id) setSelectedPopulationId('')
+                setToast('Population deleted')
+              } catch (e) {
+                setError((e as Error).message)
+              }
+            }}
+            onOpenPopulation={goToPopulation}
+            onImportCsv={async (name, cases) => {
+              try {
+                const created = await createPopulation(name, cases)
+                loadPopulations()
+                setToast(
+                  `Imported ${cases.length} cases into "${created.name}"`
+                )
+              } catch (e) {
+                setError((e as Error).message)
+              }
+            }}
+            baseRulesetId={rulesetId}
+            baseOverrides={baseOverrides}
+            setBaseOverrides={setBaseOverrides}
+            comparedOverrides={comparedOverrides}
+            setComparedOverrides={setComparedOverrides}
           />
         )}
         {view === 'dashboard' && activeRun && (
@@ -262,6 +389,30 @@ export function SimulatePage() {
             onPageChange={setResultsOffset}
             onDrillInto={handleDrillInto}
             loading={resultsLoading}
+            populations={populations}
+            onSavePopulationFromRun={async (
+              name,
+              fromRun,
+              count,
+              existingId
+            ) => {
+              const label = `${count.toLocaleString()} case${count !== 1 ? 's' : ''}`
+              try {
+                if (existingId) {
+                  const pop = await addCasesToPopulationFromRun(
+                    existingId,
+                    fromRun
+                  )
+                  setToast(`Added ${label} to "${pop.name}"`)
+                } else {
+                  const pop = await createPopulationFromRun(name, fromRun)
+                  setToast(`Created "${pop.name}" with ${label}`)
+                }
+                loadPopulations()
+              } catch (e) {
+                setError((e as Error).message)
+              }
+            }}
           />
         )}
         {view === 'detail' && detailCase && activeRun && (
@@ -269,6 +420,34 @@ export function SimulatePage() {
             caseResult={detailCase}
             rulesetId={rulesetId}
             comparedRulesetId={activeRun.comparedRulesetId}
+            baseOverrides={activeRun.baseOverrides}
+            comparedOverrides={activeRun.comparedOverrides}
+            populations={populations}
+            onSaveToPopulation={async (name, existingId) => {
+              const cases: PopulationCase[] = [
+                {
+                  id: detailCase.scenarioId,
+                  inputs: detailCase.inputs,
+                  entities: detailCase.entities,
+                },
+              ]
+              try {
+                if (existingId) {
+                  const pop = await addCasesToPopulation(existingId, cases)
+                  setToast(
+                    `Added case #${detailCase.scenarioId} to "${pop.name}"`
+                  )
+                } else {
+                  const pop = await createPopulation(name, cases)
+                  setToast(
+                    `Created "${pop.name}" with case #${detailCase.scenarioId}`
+                  )
+                }
+                loadPopulations()
+              } catch (e) {
+                setError((e as Error).message)
+              }
+            }}
           />
         )}
       </div>
@@ -290,6 +469,20 @@ function ConfigView({
   runs,
   onLoadRun,
   onDeleteRun,
+  onRenameRun,
+  caseSource,
+  setCaseSource,
+  populations,
+  selectedPopulationId,
+  setSelectedPopulationId,
+  onDeletePopulation,
+  onOpenPopulation,
+  onImportCsv,
+  baseRulesetId,
+  baseOverrides,
+  setBaseOverrides,
+  comparedOverrides,
+  setComparedOverrides,
 }: {
   config: SimulationConfig | null
   setConfig: (c: SimulationConfig) => void
@@ -302,6 +495,20 @@ function ConfigView({
   runs: SimulationRun[]
   onLoadRun: (r: SimulationRun) => void
   onDeleteRun: (id: string) => void
+  onRenameRun: (id: string, name: string | null) => Promise<void>
+  caseSource: 'generate' | 'population'
+  setCaseSource: (s: 'generate' | 'population') => void
+  populations: Population[]
+  selectedPopulationId: string
+  setSelectedPopulationId: (id: string) => void
+  onDeletePopulation: (id: string) => Promise<void>
+  onOpenPopulation: (id: string) => void
+  onImportCsv: (name: string, cases: PopulationCase[]) => Promise<void>
+  baseRulesetId: string
+  baseOverrides: Record<string, unknown>
+  setBaseOverrides: (o: Record<string, unknown>) => void
+  comparedOverrides: Record<string, unknown>
+  setComparedOverrides: (o: Record<string, unknown>) => void
 }) {
   if (!config) {
     return (
@@ -316,150 +523,121 @@ function ConfigView({
       <div className="space-y-4">
         <h2 className="text-sm font-semibold">Run Configuration</h2>
 
-        <div className="space-y-2">
-          <label className="text-xs font-medium">Compare against</label>
-          <select
-            className="w-full h-9 text-sm border rounded px-3 bg-background"
-            value={comparedRulesetId}
-            onChange={(e) => setComparedRulesetId(e.target.value)}
-          >
-            <option value="">Select a ruleset to compare...</option>
-            {availableRulesets.map((r) => (
-              <option key={r.id} value={r.id}>
-                {r.name}
-              </option>
-            ))}
-          </select>
+        <div className="grid grid-cols-2 gap-3">
+          <SidePanel
+            label="Base"
+            rulesetId={baseRulesetId}
+            availableRulesets={null}
+            overrides={baseOverrides}
+            setOverrides={setBaseOverrides}
+          />
+          <SidePanel
+            label="Compared"
+            rulesetId={comparedRulesetId}
+            setRulesetId={setComparedRulesetId}
+            availableRulesets={availableRulesets}
+            overrides={comparedOverrides}
+            setOverrides={setComparedOverrides}
+          />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-1">
-            <label className="text-xs font-medium">Seed</label>
-            <Input
-              className="text-xs font-mono"
-              type="number"
-              value={config.seed}
-              onChange={(e) =>
-                setConfig({ ...config, seed: parseInt(e.target.value) || 0 })
-              }
-            />
+        <div className="space-y-2">
+          <label className="text-xs font-medium">Case source</label>
+          <div className="flex gap-2">
+            <button
+              className={cn(
+                'px-3 py-1.5 text-xs rounded border',
+                caseSource === 'generate'
+                  ? 'bg-foreground text-background border-foreground'
+                  : 'text-muted-foreground hover:text-foreground'
+              )}
+              onClick={() => setCaseSource('generate')}
+            >
+              Generate random
+            </button>
+            <button
+              className={cn(
+                'px-3 py-1.5 text-xs rounded border',
+                caseSource === 'population'
+                  ? 'bg-foreground text-background border-foreground'
+                  : 'text-muted-foreground hover:text-foreground'
+              )}
+              onClick={() => setCaseSource('population')}
+            >
+              Saved population
+            </button>
           </div>
-          <div className="space-y-1">
-            <label className="text-xs font-medium">Case count</label>
-            <Input
-              className="text-xs font-mono"
-              type="number"
-              value={config.caseCount}
-              onChange={(e) =>
-                setConfig({
-                  ...config,
-                  caseCount: parseInt(e.target.value) || 100,
-                })
-              }
-            />
-          </div>
+          {caseSource === 'population' && (
+            <select
+              className="w-full h-9 text-sm border rounded px-3 bg-background"
+              value={selectedPopulationId}
+              onChange={(e) => setSelectedPopulationId(e.target.value)}
+            >
+              <option value="">Select a population...</option>
+              {populations.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name} ({p.cases.length} cases)
+                </option>
+              ))}
+            </select>
+          )}
+          {caseSource === 'population' && (
+            <div className="flex items-center gap-2">
+              {populations.length === 0 && (
+                <p className="text-[10px] text-muted-foreground">
+                  No populations yet.
+                </p>
+              )}
+              <CsvImporter onImport={onImportCsv} />
+            </div>
+          )}
         </div>
+
+        {caseSource === 'generate' && (
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <label className="text-xs font-medium">Seed</label>
+              <Input
+                className="text-xs font-mono"
+                type="number"
+                value={config.seed}
+                onChange={(e) =>
+                  setConfig({ ...config, seed: parseInt(e.target.value) || 0 })
+                }
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-medium">Case count</label>
+              <Input
+                className="text-xs font-mono"
+                type="number"
+                value={config.caseCount}
+                onChange={(e) =>
+                  setConfig({
+                    ...config,
+                    caseCount: parseInt(e.target.value) || 100,
+                  })
+                }
+              />
+            </div>
+          </div>
+        )}
 
         <OutcomeNodeEditor config={config} setConfig={setConfig} />
 
-        <details className="text-xs">
-          <summary className="cursor-pointer text-muted-foreground hover:text-foreground">
-            Scalar fields ({config.scalarFields.length})
-          </summary>
-          <div className="mt-2 space-y-1.5 pl-4">
-            {config.scalarFields.map((f, idx) => (
-              <div key={f.path} className="flex items-center gap-2 font-mono">
-                <span className="w-48 truncate shrink-0" title={f.path}>
-                  {f.path}
-                </span>
-                <span className="text-muted-foreground shrink-0">
-                  ({f.type})
-                </span>
-                {(f.type === 'Dollar' ||
-                  f.type === 'Int' ||
-                  f.type === 'Short' ||
-                  f.type === 'Byte') && (
-                  <>
-                    <Input
-                      className="h-6 w-20 text-[11px] font-mono"
-                      type="number"
-                      value={f.min ?? 0}
-                      onChange={(e) => {
-                        const fields = [...config.scalarFields]
-                        fields[idx] = {
-                          ...f,
-                          min: parseFloat(e.target.value) || 0,
-                        }
-                        setConfig({ ...config, scalarFields: fields })
-                      }}
-                    />
-                    <span className="text-muted-foreground">–</span>
-                    <Input
-                      className="h-6 w-20 text-[11px] font-mono"
-                      type="number"
-                      value={f.max ?? 100}
-                      onChange={(e) => {
-                        const fields = [...config.scalarFields]
-                        fields[idx] = {
-                          ...f,
-                          max: parseFloat(e.target.value) || 100,
-                        }
-                        setConfig({ ...config, scalarFields: fields })
-                      }}
-                    />
-                  </>
-                )}
-              </div>
-            ))}
-          </div>
-        </details>
-
-        <details className="text-xs">
-          <summary className="cursor-pointer text-muted-foreground hover:text-foreground">
-            Collections ({config.collections.length})
-          </summary>
-          <div className="mt-2 space-y-3 pl-4">
-            {config.collections.map((coll, collIdx) => (
-              <div key={coll.collectionPath} className="space-y-1.5">
-                <div className="flex items-center gap-2">
-                  <span className="font-mono font-medium">
-                    {coll.collectionPath}
-                  </span>
-                  <Input
-                    className="h-6 w-12 text-[11px] font-mono"
-                    type="number"
-                    value={coll.minMembers}
-                    onChange={(e) => {
-                      const colls = [...config.collections]
-                      colls[collIdx] = {
-                        ...coll,
-                        minMembers: parseInt(e.target.value) || 1,
-                      }
-                      setConfig({ ...config, collections: colls })
-                    }}
-                  />
-                  <span className="text-muted-foreground">–</span>
-                  <Input
-                    className="h-6 w-12 text-[11px] font-mono"
-                    type="number"
-                    value={coll.maxMembers}
-                    onChange={(e) => {
-                      const colls = [...config.collections]
-                      colls[collIdx] = {
-                        ...coll,
-                        maxMembers: parseInt(e.target.value) || 5,
-                      }
-                      setConfig({ ...config, collections: colls })
-                    }}
-                  />
-                  <span className="text-muted-foreground">members</span>
-                </div>
-                {coll.fields.map((f, fIdx) => (
+        {caseSource === 'generate' && (
+          <>
+            <details className="text-xs">
+              <summary className="cursor-pointer text-muted-foreground hover:text-foreground">
+                Scalar fields ({config.scalarFields.length})
+              </summary>
+              <div className="mt-2 space-y-1.5 pl-4">
+                {config.scalarFields.map((f, idx) => (
                   <div
                     key={f.path}
-                    className="flex items-center gap-2 font-mono pl-4"
+                    className="flex items-center gap-2 font-mono"
                   >
-                    <span className="w-44 truncate shrink-0" title={f.path}>
+                    <span className="w-48 truncate shrink-0" title={f.path}>
                       {f.path}
                     </span>
                     <span className="text-muted-foreground shrink-0">
@@ -475,14 +653,12 @@ function ConfigView({
                           type="number"
                           value={f.min ?? 0}
                           onChange={(e) => {
-                            const colls = [...config.collections]
-                            const fields = [...coll.fields]
-                            fields[fIdx] = {
+                            const fields = [...config.scalarFields]
+                            fields[idx] = {
                               ...f,
                               min: parseFloat(e.target.value) || 0,
                             }
-                            colls[collIdx] = { ...coll, fields }
-                            setConfig({ ...config, collections: colls })
+                            setConfig({ ...config, scalarFields: fields })
                           }}
                         />
                         <span className="text-muted-foreground">–</span>
@@ -491,14 +667,12 @@ function ConfigView({
                           type="number"
                           value={f.max ?? 100}
                           onChange={(e) => {
-                            const colls = [...config.collections]
-                            const fields = [...coll.fields]
-                            fields[fIdx] = {
+                            const fields = [...config.scalarFields]
+                            fields[idx] = {
                               ...f,
                               max: parseFloat(e.target.value) || 100,
                             }
-                            colls[collIdx] = { ...coll, fields }
-                            setConfig({ ...config, collections: colls })
+                            setConfig({ ...config, scalarFields: fields })
                           }}
                         />
                       </>
@@ -506,13 +680,113 @@ function ConfigView({
                   </div>
                 ))}
               </div>
-            ))}
-          </div>
-        </details>
+            </details>
+
+            <details className="text-xs">
+              <summary className="cursor-pointer text-muted-foreground hover:text-foreground">
+                Collections ({config.collections.length})
+              </summary>
+              <div className="mt-2 space-y-3 pl-4">
+                {config.collections.map((coll, collIdx) => (
+                  <div key={coll.collectionPath} className="space-y-1.5">
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono font-medium">
+                        {coll.collectionPath}
+                      </span>
+                      <Input
+                        className="h-6 w-12 text-[11px] font-mono"
+                        type="number"
+                        value={coll.minMembers}
+                        onChange={(e) => {
+                          const colls = [...config.collections]
+                          colls[collIdx] = {
+                            ...coll,
+                            minMembers: parseInt(e.target.value) || 1,
+                          }
+                          setConfig({ ...config, collections: colls })
+                        }}
+                      />
+                      <span className="text-muted-foreground">–</span>
+                      <Input
+                        className="h-6 w-12 text-[11px] font-mono"
+                        type="number"
+                        value={coll.maxMembers}
+                        onChange={(e) => {
+                          const colls = [...config.collections]
+                          colls[collIdx] = {
+                            ...coll,
+                            maxMembers: parseInt(e.target.value) || 5,
+                          }
+                          setConfig({ ...config, collections: colls })
+                        }}
+                      />
+                      <span className="text-muted-foreground">members</span>
+                    </div>
+                    {coll.fields.map((f, fIdx) => (
+                      <div
+                        key={f.path}
+                        className="flex items-center gap-2 font-mono pl-4"
+                      >
+                        <span className="w-44 truncate shrink-0" title={f.path}>
+                          {f.path}
+                        </span>
+                        <span className="text-muted-foreground shrink-0">
+                          ({f.type})
+                        </span>
+                        {(f.type === 'Dollar' ||
+                          f.type === 'Int' ||
+                          f.type === 'Short' ||
+                          f.type === 'Byte') && (
+                          <>
+                            <Input
+                              className="h-6 w-20 text-[11px] font-mono"
+                              type="number"
+                              value={f.min ?? 0}
+                              onChange={(e) => {
+                                const colls = [...config.collections]
+                                const fields = [...coll.fields]
+                                fields[fIdx] = {
+                                  ...f,
+                                  min: parseFloat(e.target.value) || 0,
+                                }
+                                colls[collIdx] = { ...coll, fields }
+                                setConfig({ ...config, collections: colls })
+                              }}
+                            />
+                            <span className="text-muted-foreground">–</span>
+                            <Input
+                              className="h-6 w-20 text-[11px] font-mono"
+                              type="number"
+                              value={f.max ?? 100}
+                              onChange={(e) => {
+                                const colls = [...config.collections]
+                                const fields = [...coll.fields]
+                                fields[fIdx] = {
+                                  ...f,
+                                  max: parseFloat(e.target.value) || 100,
+                                }
+                                colls[collIdx] = { ...coll, fields }
+                                setConfig({ ...config, collections: colls })
+                              }}
+                            />
+                          </>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            </details>
+          </>
+        )}
 
         <Button
           onClick={onRun}
-          disabled={isRunning || !comparedRulesetId}
+          disabled={
+            isRunning ||
+            !comparedRulesetId ||
+            (caseSource === 'population' && !selectedPopulationId)
+          }
           className="w-full"
         >
           {isRunning ? (
@@ -554,27 +828,58 @@ function ConfigView({
           <h2 className="text-sm font-semibold">Past Runs</h2>
           <div className="space-y-1">
             {runs.map((run) => (
-              <div
+              <PastRunRow
                 key={run.id}
-                className="flex items-center gap-3 px-3 py-2 border rounded hover:bg-muted/50 cursor-pointer"
-                onClick={() => onLoadRun(run)}
+                run={run}
+                onLoad={() => onLoadRun(run)}
+                onDelete={() => onDeleteRun(run.id)}
+                onRename={(name) => onRenameRun(run.id, name)}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Population management */}
+      <div className="space-y-2">
+        <div className="flex items-center gap-2">
+          <Users className="size-3.5 text-muted-foreground" />
+          <h2 className="text-sm font-semibold">Populations</h2>
+        </div>
+        {populations.length === 0 ? (
+          <p className="text-xs text-muted-foreground">
+            No populations yet. Run a simulation and save cases, or import a
+            CSV.
+          </p>
+        ) : (
+          <div className="space-y-1">
+            {populations.map((pop) => (
+              <div
+                key={pop.id}
+                className="flex items-center gap-3 px-3 py-2 border rounded hover:bg-muted/50 cursor-pointer group"
+                onClick={() => onOpenPopulation(pop.id)}
               >
                 <div className="flex-1 min-w-0">
-                  <div className="text-xs font-mono truncate">
-                    vs. {run.comparedRulesetId}
-                  </div>
+                  <div className="text-xs font-medium">{pop.name}</div>
                   <div className="text-[10px] text-muted-foreground">
-                    {new Date(run.startedAt).toLocaleString()} —{' '}
-                    {run.config.caseCount} cases
-                    {run.summary &&
-                      ` — ${run.summary.changedCases} changed (${Math.round((run.summary.changedCases / run.summary.totalCases) * 100)}%)`}
+                    {pop.cases.length} cases
+                    {pop.description && ` — ${pop.description}`}
                   </div>
                 </div>
+                <span className="text-[10px] text-muted-foreground opacity-0 group-hover:opacity-100">
+                  Manage →
+                </span>
                 <button
                   className="p-1 text-muted-foreground hover:text-red-600"
                   onClick={(e) => {
                     e.stopPropagation()
-                    onDeleteRun(run.id)
+                    if (
+                      confirm(
+                        `Delete population "${pop.name}" and all ${pop.cases.length} cases?`
+                      )
+                    ) {
+                      onDeletePopulation(pop.id)
+                    }
                   }}
                 >
                   <Trash2 className="size-3" />
@@ -582,9 +887,83 @@ function ConfigView({
               </div>
             ))}
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
+  )
+}
+
+// --- CSV Importer ---
+
+function CsvImporter({
+  onImport,
+}: {
+  onImport: (name: string, cases: PopulationCase[]) => Promise<void>
+}) {
+  const [importing, setImporting] = useState(false)
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setImporting(true)
+    try {
+      const text = await file.text()
+      const lines = text.split('\n').filter((l) => l.trim())
+      if (lines.length < 2)
+        throw new Error('CSV must have a header row and at least one data row')
+
+      const headers = lines[0].split(',').map((h) => h.trim())
+      const cases: PopulationCase[] = []
+
+      for (let i = 1; i < lines.length; i++) {
+        const values = lines[i].split(',').map((v) => v.trim())
+        const inputs: Record<string, unknown> = {}
+
+        for (let j = 0; j < headers.length; j++) {
+          const header = headers[j]
+          const raw = values[j] ?? ''
+          if (!raw) continue
+
+          // Auto-detect types
+          if (raw === 'true' || raw === 'false') {
+            inputs[header] = raw === 'true'
+          } else if (!isNaN(Number(raw))) {
+            inputs[header] = Number(raw)
+          } else {
+            inputs[header] = raw
+          }
+        }
+
+        cases.push({ id: i - 1, inputs })
+      }
+
+      const name = file.name.replace(/\.csv$/i, '')
+      await onImport(name, cases)
+    } catch (err) {
+      alert((err as Error).message)
+    } finally {
+      setImporting(false)
+      e.target.value = ''
+    }
+  }
+
+  return (
+    <label className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs border rounded cursor-pointer hover:bg-muted/50">
+      {importing ? (
+        <Loader2 className="size-3 animate-spin" />
+      ) : (
+        <ArrowLeft className="size-3 rotate-90" />
+      )}
+      {importing ? 'Importing...' : 'Import CSV'}
+      <input
+        type="file"
+        accept=".csv"
+        className="hidden"
+        onChange={handleFileChange}
+        disabled={importing}
+      />
+    </label>
   )
 }
 
@@ -601,6 +980,8 @@ function DashboardView({
   onPageChange,
   onDrillInto,
   loading,
+  populations,
+  onSavePopulationFromRun,
 }: {
   run: SimulationRun
   results: CaseResult[]
@@ -612,7 +993,17 @@ function DashboardView({
   onPageChange: (offset: number) => void
   onDrillInto: (c: CaseResult) => void
   loading: boolean
+  populations: Population[]
+  onSavePopulationFromRun: (
+    name: string,
+    fromRun: FromRunSpec,
+    count: number,
+    existingId?: string
+  ) => Promise<void>
 }) {
+  const [selectedCases, setSelectedCases] = useState<Set<number>>(new Set())
+  const [savingPop, setSavingPop] = useState(false)
+
   const summary = run.summary
   if (!summary) return <div className="p-6 text-sm">Run has no summary.</div>
 
@@ -642,38 +1033,11 @@ function DashboardView({
       </div>
 
       {/* Top changed nodes */}
-      {summary.nodeChanges.length > 0 && (
-        <div className="space-y-2">
-          <h3 className="text-xs font-semibold text-muted-foreground uppercase">
-            Most changed nodes
-          </h3>
-          <div className="space-y-1">
-            {summary.nodeChanges.slice(0, 10).map((nc) => (
-              <div key={nc.path} className="flex items-center gap-3 text-xs">
-                <span className="font-mono flex-1 truncate">{nc.path}</span>
-                <span className="text-muted-foreground">
-                  {nc.timesChanged}x
-                </span>
-                {nc.avgDelta !== undefined && (
-                  <span
-                    className={cn(
-                      'font-mono',
-                      nc.avgDelta > 0
-                        ? 'text-emerald-700'
-                        : nc.avgDelta < 0
-                          ? 'text-red-700'
-                          : 'text-muted-foreground'
-                    )}
-                  >
-                    {nc.avgDelta > 0 ? '+' : ''}
-                    {nc.avgDelta}
-                  </span>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      <NodeChangesPanel
+        nodeChanges={summary.nodeChanges}
+        outcomeNodes={run.config.outcomeNodes}
+        totalCases={summary.totalCases}
+      />
 
       {/* Filter tabs */}
       <div className="flex items-center gap-2 border-b pb-2">
@@ -697,6 +1061,42 @@ function DashboardView({
         ))}
       </div>
 
+      {/* Save to population bar */}
+      <SaveToPopulationBar
+        selectedCount={selectedCases.size}
+        totalCount={summary.totalCases}
+        changedCount={summary.changedCases}
+        unchangedCount={summary.unchangedCases}
+        populations={populations}
+        saving={savingPop}
+        onSave={async (name, source, existingId) => {
+          setSavingPop(true)
+          try {
+            const baseSpec = { rulesetId: run.rulesetId, runId: run.id }
+            let fromRun: FromRunSpec
+            let count: number
+            if (source === 'selected') {
+              const ids = Array.from(selectedCases)
+              fromRun = { ...baseSpec, scenarioIds: ids }
+              count = ids.length
+            } else {
+              fromRun = { ...baseSpec, filter: source }
+              count =
+                source === 'changed'
+                  ? summary.changedCases
+                  : source === 'unchanged'
+                    ? summary.unchangedCases
+                    : summary.totalCases
+            }
+            await onSavePopulationFromRun(name, fromRun, count, existingId)
+            setSelectedCases(new Set())
+          } catch {
+            // error handled by parent
+          }
+          setSavingPop(false)
+        }}
+      />
+
       {/* Results table */}
       <div className="border rounded-lg overflow-hidden relative">
         {loading && (
@@ -707,11 +1107,29 @@ function DashboardView({
         <table className="w-full text-xs">
           <thead className="bg-muted/50">
             <tr>
+              <th className="px-3 py-2 w-8">
+                <input
+                  type="checkbox"
+                  className="rounded"
+                  checked={
+                    results.length > 0 &&
+                    results.every((r) => selectedCases.has(r.scenarioId))
+                  }
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setSelectedCases(
+                        new Set(results.map((r) => r.scenarioId))
+                      )
+                    } else {
+                      setSelectedCases(new Set())
+                    }
+                  }}
+                />
+              </th>
               <th className="text-left px-3 py-2 font-medium">#</th>
               <th className="text-left px-3 py-2 font-medium">Status</th>
               <th className="text-left px-3 py-2 font-medium">Outcome diffs</th>
               <th className="text-left px-3 py-2 font-medium">All diffs</th>
-              <th className="text-right px-3 py-2 font-medium">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -721,6 +1139,19 @@ function DashboardView({
                 className="border-t hover:bg-muted/30 cursor-pointer"
                 onClick={() => onDrillInto(r)}
               >
+                <td className="px-3 py-2" onClick={(e) => e.stopPropagation()}>
+                  <input
+                    type="checkbox"
+                    className="rounded"
+                    checked={selectedCases.has(r.scenarioId)}
+                    onChange={(e) => {
+                      const next = new Set(selectedCases)
+                      if (e.target.checked) next.add(r.scenarioId)
+                      else next.delete(r.scenarioId)
+                      setSelectedCases(next)
+                    }}
+                  />
+                </td>
                 <td className="px-3 py-2 font-mono">{r.scenarioId}</td>
                 <td className="px-3 py-2">
                   {r.error ? (
@@ -803,15 +1234,46 @@ function DetailView({
   caseResult,
   rulesetId,
   comparedRulesetId,
+  baseOverrides,
+  comparedOverrides,
+  populations,
+  onSaveToPopulation,
 }: {
   caseResult: CaseResult
   rulesetId: string
   comparedRulesetId: string
+  baseOverrides?: Record<string, unknown>
+  comparedOverrides?: Record<string, unknown>
+  populations: Population[]
+  onSaveToPopulation: (name: string, existingId?: string) => Promise<void>
 }) {
-  const openInVisualizer = (targetRulesetId: string, label: string) => {
+  const [showAddPop, setShowAddPop] = useState(false)
+  const [addPopName, setAddPopName] = useState('')
+  const [savingPop, setSavingPop] = useState(false)
+
+  // Pick the right side's overrides based on which ruleset we're opening.
+  // Same ruleset on both sides + only one has overrides → still picks the
+  // correct side because the caller passes whether it's base or compared.
+  const overridesFor = (
+    targetRulesetId: string,
+    side: 'base' | 'compared'
+  ): Record<string, unknown> | undefined => {
+    void targetRulesetId
+    return side === 'base' ? baseOverrides : comparedOverrides
+  }
+
+  const openInVisualizer = (
+    targetRulesetId: string,
+    side: 'base' | 'compared',
+    label: string
+  ) => {
+    const ov = overridesFor(targetRulesetId, side)
     setPendingScenario({
       rulesetId: targetRulesetId,
-      inputs: caseResult.inputs,
+      inputs:
+        ov && Object.keys(ov).length > 0
+          ? { ...caseResult.inputs, ...ov }
+          : caseResult.inputs,
       entities: caseResult.entities,
       label,
     })
@@ -819,16 +1281,29 @@ function DetailView({
   }
 
   const openBothInVisualizer = () => {
-    openInVisualizer(rulesetId, `Sim case #${caseResult.scenarioId} (base)`)
+    openInVisualizer(
+      rulesetId,
+      'base',
+      `Sim case #${caseResult.scenarioId} (base)`
+    )
     openInVisualizer(
       comparedRulesetId,
+      'compared',
       `Sim case #${caseResult.scenarioId} (compared)`
     )
   }
-  const openNodeInGraph = (targetRulesetId: string, nodePath: string) => {
+  const openNodeInGraph = (
+    targetRulesetId: string,
+    side: 'base' | 'compared',
+    nodePath: string
+  ) => {
+    const ov = overridesFor(targetRulesetId, side)
     setPendingScenario({
       rulesetId: targetRulesetId,
-      inputs: caseResult.inputs,
+      inputs:
+        ov && Object.keys(ov).length > 0
+          ? { ...caseResult.inputs, ...ov }
+          : caseResult.inputs,
       entities: caseResult.entities,
       label: `Sim case #${caseResult.scenarioId}`,
       focusNode: nodePath,
@@ -863,6 +1338,11 @@ function DetailView({
     ? allPaths
     : [...outcomeDiffPaths, ...otherDiffPaths]
 
+  const baseOvCount = baseOverrides ? Object.keys(baseOverrides).length : 0
+  const compOvCount = comparedOverrides
+    ? Object.keys(comparedOverrides).length
+    : 0
+
   return (
     <div className="max-w-5xl mx-auto p-6 space-y-6">
       <div className="flex items-center gap-3">
@@ -872,6 +1352,103 @@ function DetailView({
             Changed
           </span>
         )}
+        {(baseOvCount > 0 || compOvCount > 0) && (
+          <span
+            className="text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-800"
+            title={[
+              baseOvCount > 0
+                ? `Base: ${Object.entries(baseOverrides ?? {})
+                    .map(([k, v]) => `${k}=${JSON.stringify(v)}`)
+                    .join(', ')}`
+                : null,
+              compOvCount > 0
+                ? `Compared: ${Object.entries(comparedOverrides ?? {})
+                    .map(([k, v]) => `${k}=${JSON.stringify(v)}`)
+                    .join(', ')}`
+                : null,
+            ]
+              .filter(Boolean)
+              .join('\n')}
+          >
+            {baseOvCount > 0 && `+${baseOvCount}b`}
+            {baseOvCount > 0 && compOvCount > 0 && ' '}
+            {compOvCount > 0 && `+${compOvCount}c`}
+          </span>
+        )}
+        <div className="relative">
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-xs h-7 gap-1"
+            onClick={() => setShowAddPop(!showAddPop)}
+          >
+            <Users className="size-3" />
+            Save to population
+          </Button>
+          {showAddPop && (
+            <>
+              <div
+                className="fixed inset-0 z-10"
+                onClick={() => setShowAddPop(false)}
+              />
+              <div className="absolute top-full right-0 mt-1 z-20 bg-popover border rounded-lg shadow-lg p-3 w-64 space-y-2">
+                {populations.length > 0 && (
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-semibold text-muted-foreground uppercase">
+                      Add to existing
+                    </label>
+                    <div className="max-h-40 overflow-y-auto space-y-0.5">
+                      {populations.map((p) => (
+                        <button
+                          key={p.id}
+                          disabled={savingPop}
+                          className="block w-full text-left text-xs px-2 py-1 rounded hover:bg-muted disabled:opacity-50"
+                          onClick={async () => {
+                            setSavingPop(true)
+                            try {
+                              await onSaveToPopulation('', p.id)
+                            } finally {
+                              setSavingPop(false)
+                            }
+                            setShowAddPop(false)
+                          }}
+                        >
+                          {p.name} ({p.cases.length})
+                        </button>
+                      ))}
+                    </div>
+                    <div className="border-t my-1" />
+                  </div>
+                )}
+                <div className="flex gap-1">
+                  <Input
+                    className="h-6 text-xs flex-1"
+                    placeholder="New population name..."
+                    value={addPopName}
+                    onChange={(e) => setAddPopName(e.target.value)}
+                  />
+                  <Button
+                    size="sm"
+                    className="h-6 text-[10px]"
+                    disabled={!addPopName.trim() || savingPop}
+                    onClick={async () => {
+                      setSavingPop(true)
+                      try {
+                        await onSaveToPopulation(addPopName.trim())
+                      } finally {
+                        setSavingPop(false)
+                      }
+                      setAddPopName('')
+                      setShowAddPop(false)
+                    }}
+                  >
+                    Create
+                  </Button>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
         <div className="flex-1" />
         <div className="flex items-center gap-1.5">
           <Button
@@ -881,6 +1458,7 @@ function DetailView({
             onClick={() =>
               openInVisualizer(
                 rulesetId,
+                'base',
                 `Sim case #${caseResult.scenarioId} (base)`
               )
             }
@@ -895,6 +1473,7 @@ function DetailView({
             onClick={() =>
               openInVisualizer(
                 comparedRulesetId,
+                'compared',
                 `Sim case #${caseResult.scenarioId} (compared)`
               )
             }
@@ -926,7 +1505,7 @@ function DetailView({
                 {formatValue(d.baseValue)}
                 <button
                   className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground"
-                  onClick={() => openNodeInGraph(rulesetId, d.path)}
+                  onClick={() => openNodeInGraph(rulesetId, 'base', d.path)}
                   title={`Open in ${rulesetId}`}
                 >
                   <ExternalLink className="size-2.5" />
@@ -937,7 +1516,9 @@ function DetailView({
                 {formatValue(d.editedValue)}
                 <button
                   className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground"
-                  onClick={() => openNodeInGraph(comparedRulesetId, d.path)}
+                  onClick={() =>
+                    openNodeInGraph(comparedRulesetId, 'compared', d.path)
+                  }
                   title={`Open in ${comparedRulesetId}`}
                 >
                   <ExternalLink className="size-2.5" />
@@ -1039,7 +1620,7 @@ function DetailView({
                         className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground shrink-0"
                         onClick={(e) => {
                           e.stopPropagation()
-                          openNodeInGraph(rulesetId, path)
+                          openNodeInGraph(rulesetId, 'base', path)
                         }}
                         title={`Open in ${rulesetId}`}
                       >
@@ -1054,7 +1635,7 @@ function DetailView({
                         className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground shrink-0"
                         onClick={(e) => {
                           e.stopPropagation()
-                          openNodeInGraph(comparedRulesetId, path)
+                          openNodeInGraph(comparedRulesetId, 'compared', path)
                         }}
                         title={`Open in ${comparedRulesetId}`}
                       >
@@ -1096,6 +1677,792 @@ function DetailView({
 }
 
 /** Clickable node path that opens the graph in a new browser tab. */
+function SaveToPopulationBar({
+  selectedCount,
+  totalCount,
+  changedCount,
+  unchangedCount,
+  populations,
+  saving,
+  onSave,
+}: {
+  selectedCount: number
+  totalCount: number
+  changedCount: number
+  unchangedCount: number
+  populations: Population[]
+  saving: boolean
+  onSave: (
+    name: string,
+    source: 'selected' | 'changed' | 'unchanged' | 'all',
+    existingId?: string
+  ) => Promise<void>
+}) {
+  const [open, setOpen] = useState(false)
+  const [mode, setMode] = useState<'new' | 'existing'>('new')
+  const [name, setName] = useState('')
+  const [existingId, setExistingId] = useState('')
+  const [source, setSource] = useState<
+    'selected' | 'changed' | 'unchanged' | 'all'
+  >(selectedCount > 0 ? 'selected' : 'all')
+
+  // Update source when selection changes
+  useEffect(() => {
+    if (selectedCount > 0) setSource('selected')
+  }, [selectedCount])
+
+  const sourceCount =
+    source === 'selected'
+      ? selectedCount
+      : source === 'changed'
+        ? changedCount
+        : source === 'unchanged'
+          ? unchangedCount
+          : totalCount
+
+  const canSave =
+    sourceCount > 0 &&
+    !saving &&
+    (mode === 'new' ? name.trim() !== '' : existingId !== '')
+
+  return (
+    <div className="flex items-center gap-2 text-xs">
+      {selectedCount > 0 && (
+        <span className="text-muted-foreground">{selectedCount} selected</span>
+      )}
+      <div className="relative">
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-7 text-xs gap-1"
+          onClick={() => setOpen(!open)}
+        >
+          <Users className="size-3" />
+          Save to population
+        </Button>
+        {open && (
+          <>
+            <div
+              className="fixed inset-0 z-10"
+              onClick={() => setOpen(false)}
+            />
+            <div className="absolute top-full left-0 mt-1 z-20 bg-popover border rounded-lg shadow-lg p-3 w-72 space-y-2">
+              {/* Source */}
+              <div className="space-y-1">
+                <label className="text-[10px] font-semibold text-muted-foreground uppercase">
+                  Cases to save
+                </label>
+                <div className="flex gap-1">
+                  {selectedCount > 0 && (
+                    <button
+                      className={cn(
+                        'px-2 py-0.5 text-[10px] rounded border',
+                        source === 'selected'
+                          ? 'bg-foreground text-background'
+                          : 'text-muted-foreground'
+                      )}
+                      onClick={() => setSource('selected')}
+                    >
+                      Selected ({selectedCount})
+                    </button>
+                  )}
+                  {changedCount > 0 && (
+                    <button
+                      className={cn(
+                        'px-2 py-0.5 text-[10px] rounded border',
+                        source === 'changed'
+                          ? 'bg-foreground text-background'
+                          : 'text-muted-foreground'
+                      )}
+                      onClick={() => setSource('changed')}
+                    >
+                      Changed ({changedCount})
+                    </button>
+                  )}
+                  {unchangedCount > 0 && (
+                    <button
+                      className={cn(
+                        'px-2 py-0.5 text-[10px] rounded border',
+                        source === 'unchanged'
+                          ? 'bg-foreground text-background'
+                          : 'text-muted-foreground'
+                      )}
+                      onClick={() => setSource('unchanged')}
+                    >
+                      Unchanged ({unchangedCount})
+                    </button>
+                  )}
+                  <button
+                    className={cn(
+                      'px-2 py-0.5 text-[10px] rounded border',
+                      source === 'all'
+                        ? 'bg-foreground text-background'
+                        : 'text-muted-foreground'
+                    )}
+                    onClick={() => setSource('all')}
+                  >
+                    All ({totalCount})
+                  </button>
+                </div>
+              </div>
+
+              {/* Destination */}
+              <div className="space-y-1">
+                <label className="text-[10px] font-semibold text-muted-foreground uppercase">
+                  Destination
+                </label>
+                <div className="flex gap-1">
+                  <button
+                    className={cn(
+                      'px-2 py-0.5 text-[10px] rounded border',
+                      mode === 'new'
+                        ? 'bg-foreground text-background'
+                        : 'text-muted-foreground'
+                    )}
+                    onClick={() => setMode('new')}
+                  >
+                    New population
+                  </button>
+                  {populations.length > 0 && (
+                    <button
+                      className={cn(
+                        'px-2 py-0.5 text-[10px] rounded border',
+                        mode === 'existing'
+                          ? 'bg-foreground text-background'
+                          : 'text-muted-foreground'
+                      )}
+                      onClick={() => setMode('existing')}
+                    >
+                      Existing
+                    </button>
+                  )}
+                </div>
+                {mode === 'new' ? (
+                  <Input
+                    className="h-7 text-xs"
+                    placeholder="Population name..."
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                  />
+                ) : (
+                  <select
+                    className="w-full h-7 text-xs border rounded px-2 bg-background"
+                    value={existingId}
+                    onChange={(e) => setExistingId(e.target.value)}
+                  >
+                    <option value="">Select...</option>
+                    {populations.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.name} ({p.cases.length})
+                      </option>
+                    ))}
+                  </select>
+                )}
+              </div>
+
+              <div className="flex gap-1.5 justify-end pt-1">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-6 text-[10px]"
+                  onClick={() => setOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  size="sm"
+                  className="h-6 text-[10px]"
+                  disabled={!canSave}
+                  onClick={async () => {
+                    await onSave(
+                      mode === 'new' ? name.trim() : '',
+                      source,
+                      mode === 'existing' ? existingId : undefined
+                    )
+                    setOpen(false)
+                    setName('')
+                  }}
+                >
+                  {saving
+                    ? 'Saving...'
+                    : `Save ${sourceCount} case${sourceCount !== 1 ? 's' : ''}`}
+                </Button>
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  )
+}
+
+/** Inline override count next to a ruleset id. Tooltip shows the overrides. */
+function RulesetWithOverrides({
+  rulesetId,
+  overrides,
+}: {
+  rulesetId: string
+  overrides?: Record<string, unknown>
+}) {
+  const count = overrides ? Object.keys(overrides).length : 0
+  return (
+    <span className="inline-flex items-center gap-1 min-w-0">
+      <span className="font-mono truncate">{rulesetId}</span>
+      {count > 0 && (
+        <span
+          className="text-[10px] px-1 py-0.5 rounded shrink-0 bg-blue-100 text-blue-800"
+          title={Object.entries(overrides ?? {})
+            .map(([k, v]) => `${k} = ${JSON.stringify(v)}`)
+            .join('\n')}
+        >
+          +{count}
+        </span>
+      )}
+    </span>
+  )
+}
+
+/** Past-runs row: editable name, auto-format subtitle, delete button. */
+function PastRunRow({
+  run,
+  onLoad,
+  onDelete,
+  onRename,
+}: {
+  run: SimulationRun
+  onLoad: () => void
+  onDelete: () => void
+  onRename: (name: string | null) => Promise<void>
+}) {
+  const [editing, setEditing] = useState(false)
+  const [draft, setDraft] = useState('')
+
+  const actualCount = run.summary?.totalCases ?? run.config.caseCount
+  const baseOvCount = run.baseOverrides
+    ? Object.keys(run.baseOverrides).length
+    : 0
+  const compOvCount = run.comparedOverrides
+    ? Object.keys(run.comparedOverrides).length
+    : 0
+  const sourceLabel = run.populationId
+    ? `pop: ${run.populationName ?? run.populationId}`
+    : 'random'
+
+  const startEdit = () => {
+    setDraft(run.name ?? '')
+    setEditing(true)
+  }
+  const commit = async () => {
+    const next = draft.trim()
+    if (next === (run.name ?? '')) {
+      setEditing(false)
+      return
+    }
+    await onRename(next === '' ? null : next)
+    setEditing(false)
+  }
+
+  return (
+    <div
+      className="flex items-center gap-3 px-3 py-2 border rounded hover:bg-muted/50 group cursor-pointer"
+      onClick={() => {
+        if (!editing) onLoad()
+      }}
+    >
+      <div className="flex-1 min-w-0">
+        {/* Primary line: name (editable) OR auto-format with per-side badges */}
+        <div className="flex items-center gap-2">
+          {editing ? (
+            <Input
+              autoFocus
+              className="h-6 text-xs flex-1"
+              value={draft}
+              placeholder="Run name (leave blank for auto)"
+              onClick={(e) => e.stopPropagation()}
+              onChange={(e) => setDraft(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') commit()
+                if (e.key === 'Escape') setEditing(false)
+              }}
+              onBlur={commit}
+            />
+          ) : run.name ? (
+            <span className="text-xs font-medium truncate">{run.name}</span>
+          ) : (
+            <div className="flex items-center gap-1.5 text-xs min-w-0">
+              <RulesetWithOverrides
+                rulesetId={run.rulesetId}
+                overrides={run.baseOverrides}
+              />
+              <span className="text-muted-foreground shrink-0">vs</span>
+              <RulesetWithOverrides
+                rulesetId={run.comparedRulesetId}
+                overrides={run.comparedOverrides}
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Subtitle: date + counts. If named, also surface auto-format. */}
+        <div className="text-[10px] text-muted-foreground flex items-center gap-1.5 flex-wrap mt-0.5">
+          <span>
+            {new Date(run.startedAt).toLocaleString()} —{' '}
+            {actualCount.toLocaleString()} case
+            {actualCount !== 1 ? 's' : ''}
+          </span>
+          {run.summary && (
+            <span>
+              · {run.summary.changedCases} changed (
+              {Math.round(
+                (run.summary.changedCases /
+                  Math.max(1, run.summary.totalCases)) *
+                  100
+              )}
+              %)
+            </span>
+          )}
+          <span
+            className={cn(
+              'text-[10px] px-1.5 py-0.5 rounded',
+              run.populationId
+                ? 'bg-violet-100 text-violet-800'
+                : 'bg-muted text-muted-foreground'
+            )}
+          >
+            {sourceLabel}
+          </span>
+          {run.name && (
+            <span className="font-mono">
+              {run.rulesetId}
+              {baseOvCount > 0 && ` +${baseOvCount}`} vs {run.comparedRulesetId}
+              {compOvCount > 0 && ` +${compOvCount}`}
+            </span>
+          )}
+        </div>
+      </div>
+      <div className="flex items-center gap-0.5 shrink-0">
+        {!editing && (
+          <button
+            className="p-1 text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100"
+            onClick={(e) => {
+              e.stopPropagation()
+              startEdit()
+            }}
+            title={run.name ? 'Rename' : 'Set a name'}
+          >
+            <Pencil className="size-3" />
+          </button>
+        )}
+        <button
+          className="p-1 text-muted-foreground hover:text-red-600"
+          onClick={(e) => {
+            e.stopPropagation()
+            onDelete()
+          }}
+          title="Delete run"
+        >
+          <Trash2 className="size-3" />
+        </button>
+      </div>
+    </div>
+  )
+}
+
+function NodeChangesPanel({
+  nodeChanges,
+  outcomeNodes,
+  totalCases,
+}: {
+  nodeChanges: NodeChangeStats[]
+  outcomeNodes: string[]
+  totalCases: number
+}) {
+  const [scope, setScope] = useState<'outcomes' | 'all'>('outcomes')
+  const outcomeSet = new Set(outcomeNodes)
+
+  const filtered =
+    scope === 'outcomes'
+      ? nodeChanges.filter((nc) => outcomeSet.has(nc.path))
+      : nodeChanges
+
+  if (nodeChanges.length === 0) return null
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center gap-2">
+        <h3 className="text-xs font-semibold text-muted-foreground uppercase">
+          Most changed {scope === 'outcomes' ? 'outcomes' : 'nodes'}
+        </h3>
+        <span className="text-[10px] text-muted-foreground">
+          across {totalCases.toLocaleString()} case
+          {totalCases !== 1 ? 's' : ''}
+        </span>
+        <div className="flex-1" />
+        <div className="flex gap-1">
+          <button
+            className={cn(
+              'px-2 py-0.5 text-[10px] rounded border',
+              scope === 'outcomes'
+                ? 'bg-foreground text-background'
+                : 'text-muted-foreground hover:text-foreground'
+            )}
+            onClick={() => setScope('outcomes')}
+          >
+            Outcomes (
+            {nodeChanges.filter((nc) => outcomeSet.has(nc.path)).length})
+          </button>
+          <button
+            className={cn(
+              'px-2 py-0.5 text-[10px] rounded border',
+              scope === 'all'
+                ? 'bg-foreground text-background'
+                : 'text-muted-foreground hover:text-foreground'
+            )}
+            onClick={() => setScope('all')}
+          >
+            All nodes ({nodeChanges.length})
+          </button>
+        </div>
+      </div>
+      {filtered.length === 0 ? (
+        <p className="text-[11px] text-muted-foreground">
+          No outcome-node changes — try "All nodes" to see intermediate-node
+          diffs, or edit outcome nodes on the run config.
+        </p>
+      ) : (
+        <div className="space-y-1">
+          {filtered.slice(0, 10).map((nc) => {
+            const pct = Math.round(
+              (nc.timesChanged / Math.max(1, totalCases)) * 100
+            )
+            return (
+              <div key={nc.path} className="flex items-center gap-3 text-xs">
+                <span className="font-mono flex-1 truncate">{nc.path}</span>
+                <span className="text-muted-foreground">
+                  {nc.timesChanged.toLocaleString()} ({pct}%)
+                </span>
+                {nc.avgDelta !== undefined && (
+                  <span
+                    className={cn(
+                      'font-mono',
+                      nc.avgDelta > 0
+                        ? 'text-emerald-700'
+                        : nc.avgDelta < 0
+                          ? 'text-red-700'
+                          : 'text-muted-foreground'
+                    )}
+                  >
+                    {nc.avgDelta > 0 ? '+' : ''}
+                    {nc.avgDelta}
+                  </span>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
+
+type OverridablePath = {
+  path: string
+  type: string
+  enumOptions?: string[]
+}
+
+/**
+ * Per-side block in the run config: ruleset (fixed for Base, dropdown for
+ * Compared) + an editable overrides map applied to every scenario on that
+ * side before execution.
+ */
+function SidePanel({
+  label,
+  rulesetId,
+  setRulesetId,
+  availableRulesets,
+  overrides,
+  setOverrides,
+}: {
+  label: string
+  rulesetId: string
+  setRulesetId?: (id: string) => void
+  availableRulesets: RulesetSummary[] | null
+  overrides: Record<string, unknown>
+  setOverrides: (o: Record<string, unknown>) => void
+}) {
+  const overrideCount = Object.keys(overrides).length
+  const [expanded, setExpanded] = useState(overrideCount > 0)
+
+  return (
+    <div className="border rounded-lg p-3 space-y-2">
+      <div className="text-[10px] font-semibold text-muted-foreground uppercase">
+        {label}
+      </div>
+      {availableRulesets ? (
+        <select
+          className="w-full h-8 text-xs border rounded px-2 bg-background"
+          value={rulesetId}
+          onChange={(e) => setRulesetId?.(e.target.value)}
+        >
+          <option value="">Select a ruleset...</option>
+          {availableRulesets.map((r) => (
+            <option key={r.id} value={r.id}>
+              {r.name}
+            </option>
+          ))}
+        </select>
+      ) : (
+        <div className="px-2 py-1.5 text-xs font-mono bg-muted/50 rounded">
+          {rulesetId}
+        </div>
+      )}
+      <button
+        className="text-[11px] text-muted-foreground hover:text-foreground flex items-center gap-1"
+        onClick={() => setExpanded(!expanded)}
+        disabled={!rulesetId}
+      >
+        <ChevronRight
+          className={cn('size-3 transition-transform', expanded && 'rotate-90')}
+        />
+        Overrides ({overrideCount})
+      </button>
+      {expanded && rulesetId && (
+        <OverridesEditor
+          rulesetId={rulesetId}
+          overrides={overrides}
+          setOverrides={setOverrides}
+        />
+      )}
+    </div>
+  )
+}
+
+/**
+ * Edit a path → value override map for one side of a comparison. Loads the
+ * ruleset's model to expose typed inputs and a searchable path picker.
+ * Skips collection-scoped paths (those with /*) for v1 — entity-level
+ * override merging is a separate problem.
+ */
+function OverridesEditor({
+  rulesetId,
+  overrides,
+  setOverrides,
+}: {
+  rulesetId: string
+  overrides: Record<string, unknown>
+  setOverrides: (o: Record<string, unknown>) => void
+}) {
+  const [search, setSearch] = useState('')
+  const [model, setModel] = useState<Model | null>(null)
+
+  useEffect(() => {
+    if (!rulesetId) return
+    let cancelled = false
+    getRuleset(rulesetId)
+      .then((m) => {
+        if (!cancelled) setModel(m)
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
+  }, [rulesetId])
+
+  const overridablePaths = useMemo<OverridablePath[]>(() => {
+    if (!model) return []
+    const out: OverridablePath[] = []
+    for (const node of Object.values(model.nodes)) {
+      const c = node.content
+      if (c.format !== 'factGraph') continue
+      // Skip collection structural nodes and collection-scoped paths
+      if (c.type === 'writable') {
+        if (c.typeName === 'Collection' || c.typeName === 'CollectionItem')
+          continue
+      }
+      if (c.path.includes('/*')) continue
+      const type = c.type === 'writable' ? c.typeName : (c.dataType ?? 'String')
+      out.push({ path: c.path, type, enumOptions: c.enumOptions })
+    }
+    return out.sort((a, b) => a.path.localeCompare(b.path))
+  }, [model])
+
+  const overrideKeys = Object.keys(overrides)
+  const overrideSet = new Set(overrideKeys)
+  const filtered = search
+    ? overridablePaths
+        .filter(
+          (p) =>
+            p.path.toLowerCase().includes(search.toLowerCase()) &&
+            !overrideSet.has(p.path)
+        )
+        .slice(0, 15)
+    : []
+
+  const lookup = useMemo(() => {
+    const m = new Map<string, OverridablePath>()
+    for (const p of overridablePaths) m.set(p.path, p)
+    return m
+  }, [overridablePaths])
+
+  return (
+    <div className="space-y-1.5">
+      {overrideKeys.length > 0 && (
+        <div className="space-y-1">
+          {overrideKeys.map((path) => {
+            const meta = lookup.get(path)
+            return (
+              <div key={path} className="flex items-center gap-1.5 text-xs">
+                <span className="font-mono flex-1 truncate" title={path}>
+                  {path}
+                </span>
+                <span className="text-[10px] text-muted-foreground shrink-0">
+                  ({meta?.type ?? '?'})
+                </span>
+                <OverrideValueInput
+                  type={meta?.type ?? 'String'}
+                  enumOptions={meta?.enumOptions}
+                  value={overrides[path]}
+                  onChange={(v) => setOverrides({ ...overrides, [path]: v })}
+                />
+                <button
+                  className="text-muted-foreground hover:text-red-600 shrink-0"
+                  onClick={() => {
+                    const next = { ...overrides }
+                    delete next[path]
+                    setOverrides(next)
+                  }}
+                  title="Remove override"
+                >
+                  <X className="size-3" />
+                </button>
+              </div>
+            )
+          })}
+        </div>
+      )}
+      <Input
+        className="h-7 text-xs font-mono"
+        placeholder={model ? 'Search paths to override...' : 'Loading model...'}
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        disabled={!model}
+      />
+      {search && filtered.length > 0 && (
+        <div className="border rounded max-h-32 overflow-y-auto bg-background">
+          {filtered.map((p) => (
+            <button
+              key={p.path}
+              className="w-full text-left px-2 py-1 text-xs font-mono hover:bg-muted flex items-center gap-2"
+              onClick={() => {
+                setOverrides({
+                  ...overrides,
+                  [p.path]: defaultOverrideValue(p.type),
+                })
+                setSearch('')
+              }}
+            >
+              <span className="flex-1 truncate">{p.path}</span>
+              <span className="text-[10px] text-muted-foreground">
+                {p.type}
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
+      {search && filtered.length === 0 && model && (
+        <p className="text-[10px] text-muted-foreground px-1">
+          No matching paths
+        </p>
+      )}
+    </div>
+  )
+}
+
+function defaultOverrideValue(type: string): unknown {
+  if (type === 'Boolean') return false
+  if (
+    type === 'Dollar' ||
+    type === 'Int' ||
+    type === 'Short' ||
+    type === 'Byte' ||
+    type === 'Rational'
+  )
+    return 0
+  return ''
+}
+
+function OverrideValueInput({
+  type,
+  enumOptions,
+  value,
+  onChange,
+}: {
+  type: string
+  enumOptions?: string[]
+  value: unknown
+  onChange: (v: unknown) => void
+}) {
+  const isNumeric =
+    type === 'Dollar' || type === 'Int' || type === 'Short' || type === 'Byte'
+
+  if (type === 'Boolean') {
+    return (
+      <select
+        className="h-6 text-xs border rounded px-1 bg-background"
+        value={value === true ? 'true' : 'false'}
+        onChange={(e) => onChange(e.target.value === 'true')}
+      >
+        <option value="false">false</option>
+        <option value="true">true</option>
+      </select>
+    )
+  }
+
+  if (type === 'Enum' && enumOptions && enumOptions.length > 0) {
+    return (
+      <select
+        className="h-6 text-xs border rounded px-1 bg-background"
+        value={value === undefined || value === null ? '' : String(value)}
+        onChange={(e) => onChange(e.target.value)}
+      >
+        <option value="">—</option>
+        {enumOptions.map((o) => (
+          <option key={o} value={o}>
+            {o}
+          </option>
+        ))}
+      </select>
+    )
+  }
+
+  if (isNumeric) {
+    return (
+      <Input
+        className="h-6 w-24 text-xs font-mono"
+        type="number"
+        value={value === undefined || value === null ? '' : String(value)}
+        onChange={(e) => {
+          const raw = e.target.value
+          if (raw === '') onChange(null)
+          else {
+            const n = Number(raw)
+            onChange(isNaN(n) ? null : n)
+          }
+        }}
+      />
+    )
+  }
+
+  return (
+    <Input
+      className="h-6 w-32 text-xs font-mono"
+      value={value === undefined || value === null ? '' : String(value)}
+      onChange={(e) => onChange(e.target.value)}
+    />
+  )
+}
+
 function OutcomeNodeEditor({
   config,
   setConfig,
@@ -1183,6 +2550,17 @@ function OutcomeNodeEditor({
       )}
     </div>
   )
+}
+
+function autoRunLabel(run: SimulationRun): string {
+  const baseN = run.baseOverrides ? Object.keys(run.baseOverrides).length : 0
+  const compN = run.comparedOverrides
+    ? Object.keys(run.comparedOverrides).length
+    : 0
+  const left = baseN > 0 ? `${run.rulesetId} +${baseN}` : run.rulesetId
+  const right =
+    compN > 0 ? `${run.comparedRulesetId} +${compN}` : run.comparedRulesetId
+  return `${left} vs ${right}`
 }
 
 function formatValue(v: unknown): string {
