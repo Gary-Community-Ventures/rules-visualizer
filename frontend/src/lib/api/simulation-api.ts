@@ -177,6 +177,7 @@ export type Population = {
   id: string
   name: string
   description?: string
+  defaultRulesetId?: string
   createdAt: string
   updatedAt: string
   cases: PopulationCase[]
@@ -229,7 +230,11 @@ export async function addCasesToPopulationFromRun(
 
 export async function updatePopulation(
   populationId: string,
-  patch: { name?: string; description?: string | null }
+  patch: {
+    name?: string
+    description?: string | null
+    defaultRulesetId?: string | null
+  }
 ): Promise<Population> {
   const res = await fetch(`${API_BASE}/api/populations/${populationId}`, {
     method: 'PATCH',

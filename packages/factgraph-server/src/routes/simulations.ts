@@ -355,15 +355,17 @@ router.post('/populations/:id/cases', (req, res) => {
   res.json(pop)
 })
 
-/** PATCH /api/populations/:id — update name and/or description. */
+/** PATCH /api/populations/:id — update name, description, or default ruleset. */
 router.patch('/populations/:id', (req, res) => {
-  const { name, description } = req.body as {
+  const { name, description, defaultRulesetId } = req.body as {
     name?: string
     description?: string | null
+    defaultRulesetId?: string | null
   }
   const updated = updatePopulation(req.params.id, {
     name,
     description: description === null ? '' : description,
+    defaultRulesetId: defaultRulesetId === null ? '' : defaultRulesetId,
   })
   if (!updated) {
     res.status(404).json({ error: 'Population not found' })

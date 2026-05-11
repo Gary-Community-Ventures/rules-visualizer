@@ -64,10 +64,41 @@ export function PopulationPage() {
       .then((rs) => {
         const fg = rs.filter((r) => r.format === 'factGraph')
         setRulesets(fg)
-        if (fg.length > 0) setPreviewRulesetId(fg[0].id)
       })
       .catch(() => {})
   }, [reload])
+
+  // Seed the preview-ruleset selector once population + rulesets are both
+  // loaded. Prefer the population's saved default (if it still exists in
+  // the ruleset list); otherwise fall back to the first available. Only
+  // runs once per (populationId, ruleset list) to avoid clobbering the
+  // user's current selection.
+  const [previewSeeded, setPreviewSeeded] = useState(false)
+  useEffect(() => {
+    if (previewSeeded) return
+    if (!population || rulesets.length === 0) return
+    const saved = population.defaultRulesetId
+    const exists = saved && rulesets.some((r) => r.id === saved)
+    setPreviewRulesetId(exists ? (saved as string) : rulesets[0].id)
+    setPreviewSeeded(true)
+  }, [population, rulesets, previewSeeded])
+
+  // Persist the selector as the population's default (silent — it's a
+  // preference, not a contract). Skip until seeding has happened so the
+  // initial fallback doesn't trigger a save.
+  const handlePreviewRulesetChange = async (next: string) => {
+    setPreviewRulesetId(next)
+    if (!previewSeeded || !population) return
+    if (next === (population.defaultRulesetId ?? '')) return
+    try {
+      const updated = await updatePopulation(populationId, {
+        defaultRulesetId: next || null,
+      })
+      setPopulation(updated)
+    } catch {
+      // Silent — don't disrupt the visible selector for a preference save.
+    }
+  }
 
   useEffect(() => {
     if (population) {
@@ -292,14 +323,18 @@ export function PopulationPage() {
             </div>
           </div>
 
-          {/* Open-in-ruleset selector — applies to all "open" buttons */}
+          {/* Open-in-ruleset selector — applies to all "open" buttons and
+              seeds the manual-case form's schema. Saved as a preference on
+              the population (not a binding constraint). */}
           {rulesets.length > 0 && (
             <div className="flex items-center gap-2 text-xs">
-              <label className="text-muted-foreground">Open cases in:</label>
+              <label className="text-muted-foreground">
+                Preferred ruleset:
+              </label>
               <select
                 className="h-7 text-xs border rounded px-2 bg-background"
                 value={previewRulesetId}
-                onChange={(e) => setPreviewRulesetId(e.target.value)}
+                onChange={(e) => handlePreviewRulesetChange(e.target.value)}
               >
                 {rulesets.map((r) => (
                   <option key={r.id} value={r.id}>
@@ -307,6 +342,12 @@ export function PopulationPage() {
                   </option>
                 ))}
               </select>
+              {population.defaultRulesetId === previewRulesetId &&
+                previewSeeded && (
+                  <span className="text-[10px] text-muted-foreground">
+                    saved
+                  </span>
+                )}
             </div>
           )}
 

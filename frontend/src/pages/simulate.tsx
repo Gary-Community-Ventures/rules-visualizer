@@ -598,27 +598,20 @@ function ConfigView({
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
               <label className="text-xs font-medium">Seed</label>
-              <Input
+              <NumberInput
                 className="text-xs font-mono"
-                type="number"
+                parser={parseInt}
                 value={config.seed}
-                onChange={(e) =>
-                  setConfig({ ...config, seed: parseInt(e.target.value) || 0 })
-                }
+                onChange={(v) => setConfig({ ...config, seed: v })}
               />
             </div>
             <div className="space-y-1">
               <label className="text-xs font-medium">Case count</label>
-              <Input
+              <NumberInput
                 className="text-xs font-mono"
-                type="number"
+                parser={parseInt}
                 value={config.caseCount}
-                onChange={(e) =>
-                  setConfig({
-                    ...config,
-                    caseCount: parseInt(e.target.value) || 100,
-                  })
-                }
+                onChange={(v) => setConfig({ ...config, caseCount: v })}
               />
             </div>
           </div>
@@ -649,30 +642,22 @@ function ConfigView({
                       f.type === 'Short' ||
                       f.type === 'Byte') && (
                       <>
-                        <Input
+                        <NumberInput
                           className="h-6 w-20 text-[11px] font-mono"
-                          type="number"
                           value={f.min ?? 0}
-                          onChange={(e) => {
+                          onChange={(v) => {
                             const fields = [...config.scalarFields]
-                            fields[idx] = {
-                              ...f,
-                              min: parseFloat(e.target.value) || 0,
-                            }
+                            fields[idx] = { ...f, min: v }
                             setConfig({ ...config, scalarFields: fields })
                           }}
                         />
                         <span className="text-muted-foreground">–</span>
-                        <Input
+                        <NumberInput
                           className="h-6 w-20 text-[11px] font-mono"
-                          type="number"
-                          value={f.max ?? 100}
-                          onChange={(e) => {
+                          value={f.max ?? 0}
+                          onChange={(v) => {
                             const fields = [...config.scalarFields]
-                            fields[idx] = {
-                              ...f,
-                              max: parseFloat(e.target.value) || 100,
-                            }
+                            fields[idx] = { ...f, max: v }
                             setConfig({ ...config, scalarFields: fields })
                           }}
                         />
@@ -704,30 +689,24 @@ function ConfigView({
                       <span className="font-mono font-medium">
                         {coll.collectionPath}
                       </span>
-                      <Input
+                      <NumberInput
                         className="h-6 w-12 text-[11px] font-mono"
-                        type="number"
+                        parser={parseInt}
                         value={coll.minMembers}
-                        onChange={(e) => {
+                        onChange={(v) => {
                           const colls = [...config.collections]
-                          colls[collIdx] = {
-                            ...coll,
-                            minMembers: parseInt(e.target.value) || 1,
-                          }
+                          colls[collIdx] = { ...coll, minMembers: v }
                           setConfig({ ...config, collections: colls })
                         }}
                       />
                       <span className="text-muted-foreground">–</span>
-                      <Input
+                      <NumberInput
                         className="h-6 w-12 text-[11px] font-mono"
-                        type="number"
+                        parser={parseInt}
                         value={coll.maxMembers}
-                        onChange={(e) => {
+                        onChange={(v) => {
                           const colls = [...config.collections]
-                          colls[collIdx] = {
-                            ...coll,
-                            maxMembers: parseInt(e.target.value) || 5,
-                          }
+                          colls[collIdx] = { ...coll, maxMembers: v }
                           setConfig({ ...config, collections: colls })
                         }}
                       />
@@ -749,33 +728,25 @@ function ConfigView({
                           f.type === 'Short' ||
                           f.type === 'Byte') && (
                           <>
-                            <Input
+                            <NumberInput
                               className="h-6 w-20 text-[11px] font-mono"
-                              type="number"
                               value={f.min ?? 0}
-                              onChange={(e) => {
+                              onChange={(v) => {
                                 const colls = [...config.collections]
                                 const fields = [...coll.fields]
-                                fields[fIdx] = {
-                                  ...f,
-                                  min: parseFloat(e.target.value) || 0,
-                                }
+                                fields[fIdx] = { ...f, min: v }
                                 colls[collIdx] = { ...coll, fields }
                                 setConfig({ ...config, collections: colls })
                               }}
                             />
                             <span className="text-muted-foreground">–</span>
-                            <Input
+                            <NumberInput
                               className="h-6 w-20 text-[11px] font-mono"
-                              type="number"
-                              value={f.max ?? 100}
-                              onChange={(e) => {
+                              value={f.max ?? 0}
+                              onChange={(v) => {
                                 const colls = [...config.collections]
                                 const fields = [...coll.fields]
-                                fields[fIdx] = {
-                                  ...f,
-                                  max: parseFloat(e.target.value) || 100,
-                                }
+                                fields[fIdx] = { ...f, max: v }
                                 colls[collIdx] = { ...coll, fields }
                                 setConfig({ ...config, collections: colls })
                               }}
@@ -2381,8 +2352,7 @@ function OverridesEditor({
                   // Pre-seed with the current default value so the user can
                   // tweak from a known baseline instead of starting at 0/blank.
                   const seed =
-                    current !== undefined &&
-                    isOverrideSeedSafe(p.type, current)
+                    current !== undefined && isOverrideSeedSafe(p.type, current)
                       ? current
                       : defaultOverrideValue(p.type)
                   setOverrides({ ...overrides, [p.path]: seed })
@@ -2423,6 +2393,56 @@ function defaultOverrideValue(type: string): unknown {
   )
     return 0
   return ''
+}
+
+/**
+ * Numeric input that keeps a local string draft so the user can backspace
+ * to empty without the controlled `value` immediately re-rendering `0`.
+ * Parent state still gets `0` when the field is empty; the input stays
+ * visually empty until the user types again.
+ */
+function NumberInput({
+  value,
+  onChange,
+  className,
+  parser = parseFloat,
+}: {
+  value: number
+  onChange: (v: number) => void
+  className?: string
+  parser?: (s: string) => number
+}) {
+  const [draft, setDraft] = useState<string>(String(value))
+
+  // Resync draft from external value when it's changed elsewhere
+  // (sibling input, config reload, etc.). Avoid trampling the user's
+  // own typing — `parser(draft) === value` means we're already in sync;
+  // `draft === '' && value === 0` is the "user just cleared the field"
+  // intermediate state.
+  useEffect(() => {
+    const parsed = parser(draft)
+    const sameValue = !isNaN(parsed) && parsed === value
+    const editingToZero = draft === '' && value === 0
+    if (!sameValue && !editingToZero) setDraft(String(value))
+  }, [value, draft, parser])
+
+  return (
+    <Input
+      className={className}
+      type="number"
+      value={draft}
+      onChange={(e) => {
+        const raw = e.target.value
+        setDraft(raw)
+        if (raw === '') {
+          onChange(0)
+          return
+        }
+        const parsed = parser(raw)
+        if (!isNaN(parsed)) onChange(parsed)
+      }}
+    />
+  )
 }
 
 /**
