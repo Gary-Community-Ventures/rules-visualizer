@@ -4,6 +4,7 @@ import {
   ArrowLeft,
   ExternalLink,
   Loader2,
+  Pencil,
   Plus,
   Trash2,
   Users,
@@ -14,6 +15,8 @@ import {
   configureSimulation,
   getPopulationById,
   removeCaseFromPopulation,
+  updateCaseInPopulation,
+  updatePopulation,
   type CollectionConfig,
   type FieldConfig,
   type Population,
@@ -33,10 +36,16 @@ export function PopulationPage() {
   const [population, setPopulation] = useState<Population | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [showManualForm, setShowManualForm] = useState(false)
+  const [manualForm, setManualForm] = useState<
+    { mode: 'create' } | { mode: 'edit'; caseRow: PopulationCase } | null
+  >(null)
   const [rulesets, setRulesets] = useState<RulesetSummary[]>([])
   const [previewRulesetId, setPreviewRulesetId] = useState('')
   const [expandedCaseId, setExpandedCaseId] = useState<number | null>(null)
+  const [editingName, setEditingName] = useState(false)
+  const [nameDraft, setNameDraft] = useState('')
+  const [editingDesc, setEditingDesc] = useState(false)
+  const [descDraft, setDescDraft] = useState('')
 
   const reload = useCallback(() => {
     return getPopulationById(populationId)
@@ -86,11 +95,47 @@ export function PopulationPage() {
     }
   }
 
-  const handleAddCase = async (newCase: PopulationCase) => {
+  const handleSubmitCase = async (caseRow: PopulationCase) => {
+    if (!manualForm) return
     try {
-      const updated = await addCasesToPopulation(populationId, [newCase])
+      const updated =
+        manualForm.mode === 'edit'
+          ? await updateCaseInPopulation(populationId, manualForm.caseRow.id, {
+              name: caseRow.name,
+              inputs: caseRow.inputs,
+              entities: caseRow.entities,
+            })
+          : await addCasesToPopulation(populationId, [caseRow])
       setPopulation(updated)
-      setShowManualForm(false)
+      setManualForm(null)
+    } catch (e) {
+      setError((e as Error).message)
+    }
+  }
+
+  const commitName = async () => {
+    if (!population) return
+    const next = nameDraft.trim()
+    setEditingName(false)
+    if (next === '' || next === population.name) return
+    try {
+      const updated = await updatePopulation(populationId, { name: next })
+      setPopulation(updated)
+    } catch (e) {
+      setError((e as Error).message)
+    }
+  }
+
+  const commitDescription = async () => {
+    if (!population) return
+    const next = descDraft.trim()
+    setEditingDesc(false)
+    if (next === (population.description ?? '')) return
+    try {
+      const updated = await updatePopulation(populationId, {
+        description: next === '' ? null : next,
+      })
+      setPopulation(updated)
     } catch (e) {
       setError((e as Error).message)
     }
@@ -124,10 +169,45 @@ export function PopulationPage() {
           <ArrowLeft className="size-4" />
         </button>
         <Users className="size-4 text-muted-foreground" />
-        <div className="flex items-center gap-2 min-w-0">
-          <h1 className="text-sm font-semibold truncate">{population.name}</h1>
+        <div className="flex items-center gap-2 min-w-0 group">
+          {editingName ? (
+            <Input
+              autoFocus
+              className="h-7 text-sm font-semibold"
+              value={nameDraft}
+              onChange={(e) => setNameDraft(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') commitName()
+                if (e.key === 'Escape') setEditingName(false)
+              }}
+              onBlur={commitName}
+            />
+          ) : (
+            <h1
+              className="text-sm font-semibold truncate cursor-text"
+              onClick={() => {
+                setNameDraft(population.name)
+                setEditingName(true)
+              }}
+              title="Click to rename"
+            >
+              {population.name}
+            </h1>
+          )}
+          {!editingName && (
+            <button
+              className="p-0.5 text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100"
+              onClick={() => {
+                setNameDraft(population.name)
+                setEditingName(true)
+              }}
+              title="Rename"
+            >
+              <Pencil className="size-3" />
+            </button>
+          )}
           <span className="text-xs text-muted-foreground shrink-0">
-            {population.cases.length} case
+            · {population.cases.length} case
             {population.cases.length !== 1 ? 's' : ''}
           </span>
         </div>
@@ -135,7 +215,7 @@ export function PopulationPage() {
         <Button
           size="sm"
           className="text-xs gap-1"
-          onClick={() => setShowManualForm(true)}
+          onClick={() => setManualForm({ mode: 'create' })}
         >
           <Plus className="size-3" />
           Add case
@@ -154,12 +234,57 @@ export function PopulationPage() {
       {/* Content */}
       <div className="flex-1 overflow-auto">
         <div className="max-w-5xl mx-auto p-6 space-y-6">
-          {/* Description */}
-          <div className="space-y-1">
-            {population.description && (
-              <p className="text-xs text-muted-foreground">
-                {population.description}
-              </p>
+          {/* Description (click to edit) */}
+          <div className="space-y-1 group">
+            {editingDesc ? (
+              <Input
+                autoFocus
+                className="h-7 text-xs"
+                placeholder="Add a description..."
+                value={descDraft}
+                onChange={(e) => setDescDraft(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') commitDescription()
+                  if (e.key === 'Escape') setEditingDesc(false)
+                }}
+                onBlur={commitDescription}
+              />
+            ) : (
+              <div className="flex items-center gap-1.5">
+                {population.description ? (
+                  <p
+                    className="text-xs text-muted-foreground cursor-text"
+                    onClick={() => {
+                      setDescDraft(population.description ?? '')
+                      setEditingDesc(true)
+                    }}
+                  >
+                    {population.description}
+                  </p>
+                ) : (
+                  <button
+                    className="text-[11px] text-muted-foreground/60 hover:text-foreground italic opacity-0 group-hover:opacity-100"
+                    onClick={() => {
+                      setDescDraft('')
+                      setEditingDesc(true)
+                    }}
+                  >
+                    + Add description
+                  </button>
+                )}
+                {population.description && (
+                  <button
+                    className="p-0.5 text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100"
+                    onClick={() => {
+                      setDescDraft(population.description ?? '')
+                      setEditingDesc(true)
+                    }}
+                    title="Edit description"
+                  >
+                    <Pencil className="size-2.5" />
+                  </button>
+                )}
+              </div>
             )}
             <div className="text-[10px] text-muted-foreground">
               Created {new Date(population.createdAt).toLocaleString()} ·
@@ -194,7 +319,7 @@ export function PopulationPage() {
               <Button
                 size="sm"
                 className="text-xs gap-1"
-                onClick={() => setShowManualForm(true)}
+                onClick={() => setManualForm({ mode: 'create' })}
               >
                 <Plus className="size-3" />
                 Add the first case
@@ -262,6 +387,15 @@ export function PopulationPage() {
                                 </button>
                               )}
                               <button
+                                className="p-1 text-muted-foreground hover:text-foreground"
+                                onClick={() =>
+                                  setManualForm({ mode: 'edit', caseRow: c })
+                                }
+                                title="Edit case"
+                              >
+                                <Pencil className="size-3" />
+                              </button>
+                              <button
                                 className="p-1 text-muted-foreground hover:text-red-600"
                                 onClick={() => handleRemoveCase(c.id)}
                                 title="Remove case"
@@ -288,13 +422,17 @@ export function PopulationPage() {
         </div>
       </div>
 
-      {/* Manual case form modal */}
-      {showManualForm && (
+      {/* Manual case form modal — handles both create + edit */}
+      {manualForm && (
         <ManualCaseForm
           rulesets={rulesets}
           existingIds={population.cases.map((c) => c.id)}
-          onCancel={() => setShowManualForm(false)}
-          onSubmit={handleAddCase}
+          initialCase={
+            manualForm.mode === 'edit' ? manualForm.caseRow : undefined
+          }
+          defaultSchemaRulesetId={previewRulesetId}
+          onCancel={() => setManualForm(null)}
+          onSubmit={handleSubmitCase}
         />
       )}
     </div>
@@ -362,26 +500,41 @@ function CaseInputs({ caseRow }: { caseRow: PopulationCase }) {
 function ManualCaseForm({
   rulesets,
   existingIds,
+  initialCase,
+  defaultSchemaRulesetId,
   onCancel,
   onSubmit,
 }: {
   rulesets: RulesetSummary[]
   existingIds: number[]
+  initialCase?: PopulationCase
+  /** Pre-select this ruleset as the schema source. Falls back to the first
+   *  available ruleset. Lets the page-level "Open cases in" selection seed
+   *  the form so the user isn't surprised by a different schema. */
+  defaultSchemaRulesetId?: string
   onCancel: () => void
   onSubmit: (c: PopulationCase) => Promise<void>
 }) {
-  const [schemaRulesetId, setSchemaRulesetId] = useState(rulesets[0]?.id ?? '')
+  const isEdit = initialCase !== undefined
+  const [schemaRulesetId, setSchemaRulesetId] = useState(
+    defaultSchemaRulesetId || rulesets[0]?.id || ''
+  )
   const [config, setConfig] = useState<SimulationConfig | null>(null)
   const [loadingSchema, setLoadingSchema] = useState(false)
-  const [name, setName] = useState('')
-  const [scalars, setScalars] = useState<Record<string, unknown>>({})
+  const [name, setName] = useState(initialCase?.name ?? '')
+  const [scalars, setScalars] = useState<Record<string, unknown>>(
+    initialCase?.inputs ?? {}
+  )
   const [collections, setCollections] = useState<
     Record<string, Record<string, unknown>[]>
-  >({})
+  >(initialCase?.entities ?? {})
   const [submitting, setSubmitting] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
 
-  // Load schema when ruleset changes
+  // Load schema when ruleset changes. For edit-mode, the existing case
+  // values take priority — schema only fills gaps for fields the case
+  // doesn't have (e.g. a new field added to the ruleset since the case
+  // was saved).
   useEffect(() => {
     if (!schemaRulesetId) return
     setLoadingSchema(true)
@@ -389,21 +542,39 @@ function ManualCaseForm({
     configureSimulation(schemaRulesetId)
       .then((c) => {
         setConfig(c)
-        // Seed defaults
-        const seedScalars: Record<string, unknown> = {}
-        for (const f of c.scalarFields) {
-          seedScalars[f.path] = defaultValue(f)
+        if (isEdit) {
+          // Keep what the case already has; only fill missing scalar/coll
+          // entries with schema defaults.
+          setScalars((prev) => {
+            const next = { ...prev }
+            for (const f of c.scalarFields) {
+              if (!(f.path in next)) next[f.path] = defaultValue(f)
+            }
+            return next
+          })
+          setCollections((prev) => {
+            const next = { ...prev }
+            for (const coll of c.collections) {
+              if (!(coll.collectionPath in next)) {
+                next[coll.collectionPath] = [emptyMember(coll)]
+              }
+            }
+            return next
+          })
+        } else {
+          const seedScalars: Record<string, unknown> = {}
+          for (const f of c.scalarFields) seedScalars[f.path] = defaultValue(f)
+          setScalars(seedScalars)
+          const seedCollections: Record<string, Record<string, unknown>[]> = {}
+          for (const coll of c.collections) {
+            seedCollections[coll.collectionPath] = [emptyMember(coll)]
+          }
+          setCollections(seedCollections)
         }
-        setScalars(seedScalars)
-        const seedCollections: Record<string, Record<string, unknown>[]> = {}
-        for (const coll of c.collections) {
-          seedCollections[coll.collectionPath] = [emptyMember(coll)]
-        }
-        setCollections(seedCollections)
       })
       .catch((e: Error) => setFormError(e.message))
       .finally(() => setLoadingSchema(false))
-  }, [schemaRulesetId])
+  }, [schemaRulesetId, isEdit])
 
   const nextId = useMemo(() => {
     return existingIds.length === 0 ? 0 : Math.max(...existingIds) + 1
@@ -426,8 +597,8 @@ function ManualCaseForm({
         )
       }
 
-      const newCase: PopulationCase = {
-        id: nextId,
+      const caseToSubmit: PopulationCase = {
+        id: initialCase?.id ?? nextId,
         name: name.trim() || undefined,
         inputs: filteredScalars,
         entities:
@@ -436,7 +607,7 @@ function ManualCaseForm({
             : undefined,
       }
 
-      await onSubmit(newCase)
+      await onSubmit(caseToSubmit)
     } catch (e) {
       setFormError((e as Error).message)
     } finally {
@@ -449,7 +620,9 @@ function ManualCaseForm({
       <div className="bg-background border rounded-lg shadow-lg w-full max-w-3xl max-h-[90vh] flex flex-col">
         {/* Header */}
         <div className="px-5 py-3 border-b flex items-center gap-3 shrink-0">
-          <h2 className="text-sm font-semibold">Add manual case</h2>
+          <h2 className="text-sm font-semibold">
+            {isEdit ? `Edit case #${initialCase!.id}` : 'Add manual case'}
+          </h2>
           <div className="flex-1" />
           <button
             className="text-muted-foreground hover:text-foreground"
@@ -563,7 +736,13 @@ function ManualCaseForm({
             disabled={!config || submitting}
             onClick={submit}
           >
-            {submitting ? 'Adding...' : 'Add case'}
+            {submitting
+              ? isEdit
+                ? 'Saving...'
+                : 'Adding...'
+              : isEdit
+                ? 'Save changes'
+                : 'Add case'}
           </Button>
         </div>
       </div>
@@ -707,11 +886,6 @@ function FieldInput({
           <Input
             className="h-6 w-32 text-xs font-mono"
             type="number"
-            placeholder={
-              field.min !== undefined && field.max !== undefined
-                ? `${field.min}–${field.max}`
-                : ''
-            }
             value={value === undefined || value === null ? '' : String(value)}
             onChange={(e) => {
               const raw = e.target.value

@@ -21,6 +21,8 @@ import {
   createPopulation,
   addCasesToPopulation,
   removeCaseFromPopulation,
+  updatePopulation,
+  updateCaseInPopulation,
   deletePopulation,
   populationCasesToScenarios,
   type PopulationCase,
@@ -351,6 +353,47 @@ router.post('/populations/:id/cases', (req, res) => {
     return
   }
   res.json(pop)
+})
+
+/** PATCH /api/populations/:id — update name and/or description. */
+router.patch('/populations/:id', (req, res) => {
+  const { name, description } = req.body as {
+    name?: string
+    description?: string | null
+  }
+  const updated = updatePopulation(req.params.id, {
+    name,
+    description: description === null ? '' : description,
+  })
+  if (!updated) {
+    res.status(404).json({ error: 'Population not found' })
+    return
+  }
+  res.json(updated)
+})
+
+/** PATCH /api/populations/:id/cases/:caseId — update a case in place. */
+router.patch('/populations/:id/cases/:caseId', (req, res) => {
+  const caseId = parseInt(req.params.caseId)
+  if (isNaN(caseId)) {
+    res.status(400).json({ error: 'Invalid case ID' })
+    return
+  }
+  const { name, inputs, entities } = req.body as {
+    name?: string
+    inputs?: Record<string, unknown>
+    entities?: Record<string, Record<string, unknown>[]>
+  }
+  const updated = updateCaseInPopulation(req.params.id, caseId, {
+    name,
+    inputs,
+    entities,
+  })
+  if (!updated) {
+    res.status(404).json({ error: 'Population or case not found' })
+    return
+  }
+  res.json(updated)
 })
 
 /** DELETE /api/populations/:id/cases/:caseId — remove a case. */

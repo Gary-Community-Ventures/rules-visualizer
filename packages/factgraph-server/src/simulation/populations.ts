@@ -125,6 +125,60 @@ export function addCasesToPopulation(
   return population
 }
 
+/** Update a population's name and/or description. */
+export function updatePopulation(
+  populationId: string,
+  patch: Partial<Pick<Population, 'name' | 'description'>>
+): Population | null {
+  const population = getPopulation(populationId)
+  if (!population) return null
+
+  if ('name' in patch && patch.name !== undefined) {
+    const trimmed = patch.name.trim()
+    if (trimmed === '') return null // ignore empty rename
+    population.name = trimmed
+  }
+  if ('description' in patch) {
+    const trimmed = patch.description?.trim()
+    if (trimmed) population.description = trimmed
+    else delete population.description
+  }
+  population.updatedAt = new Date().toISOString()
+
+  const filePath = getPopulationPath(populationId)
+  if (!filePath) return null
+  fs.writeFileSync(filePath, JSON.stringify(population, null, 2) + '\n')
+  return population
+}
+
+/** Update a single case's fields (name, inputs, entities). */
+export function updateCaseInPopulation(
+  populationId: string,
+  caseId: number,
+  patch: Partial<Pick<PopulationCase, 'name' | 'inputs' | 'entities'>>
+): Population | null {
+  const population = getPopulation(populationId)
+  if (!population) return null
+
+  const idx = population.cases.findIndex((c) => c.id === caseId)
+  if (idx === -1) return null
+
+  const existing = population.cases[idx]
+  const updated: PopulationCase = {
+    ...existing,
+    ...('name' in patch ? { name: patch.name?.trim() || undefined } : {}),
+    ...('inputs' in patch ? { inputs: patch.inputs ?? {} } : {}),
+    ...('entities' in patch ? { entities: patch.entities } : {}),
+  }
+  population.cases[idx] = updated
+  population.updatedAt = new Date().toISOString()
+
+  const filePath = getPopulationPath(populationId)
+  if (!filePath) return null
+  fs.writeFileSync(filePath, JSON.stringify(population, null, 2) + '\n')
+  return population
+}
+
 /** Remove a case from a population. */
 export function removeCaseFromPopulation(
   populationId: string,

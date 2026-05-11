@@ -1338,43 +1338,26 @@ function DetailView({
     ? allPaths
     : [...outcomeDiffPaths, ...otherDiffPaths]
 
-  const baseOvCount = baseOverrides ? Object.keys(baseOverrides).length : 0
-  const compOvCount = comparedOverrides
-    ? Object.keys(comparedOverrides).length
-    : 0
-
   return (
     <div className="max-w-5xl mx-auto p-6 space-y-6">
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 flex-wrap">
         <h2 className="text-sm font-semibold">Case #{caseResult.scenarioId}</h2>
         {caseResult.changed && (
           <span className="text-xs px-2 py-0.5 bg-amber-100 text-amber-800 rounded">
             Changed
           </span>
         )}
-        {(baseOvCount > 0 || compOvCount > 0) && (
-          <span
-            className="text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-800"
-            title={[
-              baseOvCount > 0
-                ? `Base: ${Object.entries(baseOverrides ?? {})
-                    .map(([k, v]) => `${k}=${JSON.stringify(v)}`)
-                    .join(', ')}`
-                : null,
-              compOvCount > 0
-                ? `Compared: ${Object.entries(comparedOverrides ?? {})
-                    .map(([k, v]) => `${k}=${JSON.stringify(v)}`)
-                    .join(', ')}`
-                : null,
-            ]
-              .filter(Boolean)
-              .join('\n')}
-          >
-            {baseOvCount > 0 && `+${baseOvCount}b`}
-            {baseOvCount > 0 && compOvCount > 0 && ' '}
-            {compOvCount > 0 && `+${compOvCount}c`}
-          </span>
-        )}
+        <div className="flex items-center gap-1.5 text-xs min-w-0">
+          <RulesetWithOverrides
+            rulesetId={rulesetId}
+            overrides={baseOverrides}
+          />
+          <span className="text-muted-foreground shrink-0">vs</span>
+          <RulesetWithOverrides
+            rulesetId={comparedRulesetId}
+            overrides={comparedOverrides}
+          />
+        </div>
         <div className="relative">
           <Button
             variant="outline"

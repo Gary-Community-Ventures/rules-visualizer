@@ -226,6 +226,46 @@ export async function addCasesToPopulationFromRun(
   return post(`/api/populations/${populationId}/cases`, { fromRun })
 }
 
+export async function updatePopulation(
+  populationId: string,
+  patch: { name?: string; description?: string | null }
+): Promise<Population> {
+  const res = await fetch(`${API_BASE}/api/populations/${populationId}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(patch),
+  })
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    throw new Error(data.error ?? `API error: ${res.status}`)
+  }
+  return res.json()
+}
+
+export async function updateCaseInPopulation(
+  populationId: string,
+  caseId: number,
+  patch: {
+    name?: string
+    inputs?: Record<string, unknown>
+    entities?: Record<string, Record<string, unknown>[]>
+  }
+): Promise<Population> {
+  const res = await fetch(
+    `${API_BASE}/api/populations/${populationId}/cases/${caseId}`,
+    {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(patch),
+    }
+  )
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    throw new Error(data.error ?? `API error: ${res.status}`)
+  }
+  return res.json()
+}
+
 export async function removeCaseFromPopulation(
   populationId: string,
   caseId: number
