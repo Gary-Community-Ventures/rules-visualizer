@@ -26,6 +26,7 @@ import {
 import {
   listRulesets,
   getRuleset,
+  getRulesetDefaultValues,
   type RulesetSummary,
 } from '@/lib/api/rules-api'
 import type { Model } from '@/lib/model'
@@ -677,6 +678,16 @@ function ConfigView({
                         />
                       </>
                     )}
+                    {f.type === 'Boolean' && (
+                      <BooleanProbabilitySlider
+                        value={f.trueProbability}
+                        onChange={(v) => {
+                          const fields = [...config.scalarFields]
+                          fields[idx] = { ...f, trueProbability: v }
+                          setConfig({ ...config, scalarFields: fields })
+                        }}
+                      />
+                    )}
                   </div>
                 ))}
               </div>
@@ -770,6 +781,18 @@ function ConfigView({
                               }}
                             />
                           </>
+                        )}
+                        {f.type === 'Boolean' && (
+                          <BooleanProbabilitySlider
+                            value={f.trueProbability}
+                            onChange={(v) => {
+                              const colls = [...config.collections]
+                              const fields = [...coll.fields]
+                              fields[fIdx] = { ...f, trueProbability: v }
+                              colls[collIdx] = { ...coll, fields }
+                              setConfig({ ...config, collections: colls })
+                            }}
+                          />
                         )}
                       </div>
                     ))}
@@ -2238,6 +2261,7 @@ function OverridesEditor({
 }) {
   const [search, setSearch] = useState('')
   const [model, setModel] = useState<Model | null>(null)
+  const [defaults, setDefaults] = useState<Record<string, unknown>>({})
 
   useEffect(() => {
     if (!rulesetId) return
@@ -2245,6 +2269,11 @@ function OverridesEditor({
     getRuleset(rulesetId)
       .then((m) => {
         if (!cancelled) setModel(m)
+      })
+      .catch(() => {})
+    getRulesetDefaultValues(rulesetId)
+      .then((v) => {
+        if (!cancelled) setDefaults(v)
       })
       .catch(() => {})
     return () => {
@@ -2294,6 +2323,7 @@ function OverridesEditor({
         <div className="space-y-1">
           {overrideKeys.map((path) => {
             const meta = lookup.get(path)
+            const current = defaults[path]
             return (
               <div key={path} className="flex items-center gap-1.5 text-xs">
                 <span className="font-mono flex-1 truncate" title={path}>
@@ -2302,6 +2332,14 @@ function OverridesEditor({
                 <span className="text-[10px] text-muted-foreground shrink-0">
                   ({meta?.type ?? '?'})
                 </span>
+                {current !== undefined && (
+                  <span
+                    className="text-[10px] text-muted-foreground font-mono shrink-0"
+                    title="Default value (empty-inputs execution)"
+                  >
+                    was {formatDefaultValue(current)} →
+                  </span>
+                )}
                 <OverrideValueInput
                   type={meta?.type ?? 'String'}
                   enumOptions={meta?.enumOptions}
@@ -2333,24 +2371,36 @@ function OverridesEditor({
       />
       {search && filtered.length > 0 && (
         <div className="border rounded max-h-32 overflow-y-auto bg-background">
-          {filtered.map((p) => (
-            <button
-              key={p.path}
-              className="w-full text-left px-2 py-1 text-xs font-mono hover:bg-muted flex items-center gap-2"
-              onClick={() => {
-                setOverrides({
-                  ...overrides,
-                  [p.path]: defaultOverrideValue(p.type),
-                })
-                setSearch('')
-              }}
-            >
-              <span className="flex-1 truncate">{p.path}</span>
-              <span className="text-[10px] text-muted-foreground">
-                {p.type}
-              </span>
-            </button>
-          ))}
+          {filtered.map((p) => {
+            const current = defaults[p.path]
+            return (
+              <button
+                key={p.path}
+                className="w-full text-left px-2 py-1 text-xs font-mono hover:bg-muted flex items-center gap-2"
+                onClick={() => {
+                  // Pre-seed with the current default value so the user can
+                  // tweak from a known baseline instead of starting at 0/blank.
+                  const seed =
+                    current !== undefined &&
+                    isOverrideSeedSafe(p.type, current)
+                      ? current
+                      : defaultOverrideValue(p.type)
+                  setOverrides({ ...overrides, [p.path]: seed })
+                  setSearch('')
+                }}
+              >
+                <span className="flex-1 truncate">{p.path}</span>
+                {current !== undefined && (
+                  <span className="text-[10px] text-muted-foreground font-mono">
+                    = {formatDefaultValue(current)}
+                  </span>
+                )}
+                <span className="text-[10px] text-muted-foreground">
+                  {p.type}
+                </span>
+              </button>
+            )
+          })}
         </div>
       )}
       {search && filtered.length === 0 && model && (
@@ -2373,6 +2423,51 @@ function defaultOverrideValue(type: string): unknown {
   )
     return 0
   return ''
+}
+
+/**
+ * Slider + numeric input for a Boolean scenario-gen field's `true`
+ * probability. Range 0–100, displayed as a %. Slider for fast exploration,
+ * number input for precise values.
+ */
+function BooleanProbabilitySlider({
+  value,
+  onChange,
+}: {
+  value: number | undefined // 0–1
+  onChange: (v: number | undefined) => void
+}) {
+  const pct = Math.round(((value ?? 0.5) * 100 + Number.EPSILON) * 10) / 10
+  const setPct = (next: number) => {
+    const clamped = Math.max(0, Math.min(100, next))
+    // Treat 50% as "default" — clear the field so it's not persisted as 0.5.
+    if (Math.abs(clamped - 50) < 0.05) onChange(undefined)
+    else onChange(clamped / 100)
+  }
+  return (
+    <div className="inline-flex items-center gap-1.5">
+      <input
+        type="range"
+        min={0}
+        max={100}
+        step={1}
+        value={pct}
+        onChange={(e) => setPct(Number(e.target.value))}
+        className="w-24 accent-foreground"
+        title="% true"
+      />
+      <input
+        type="number"
+        min={0}
+        max={100}
+        step={1}
+        value={pct}
+        onChange={(e) => setPct(Number(e.target.value))}
+        className="h-6 w-12 text-[11px] font-mono border rounded px-1 bg-background"
+      />
+      <span className="text-[10px] text-muted-foreground">% true</span>
+    </div>
+  )
 }
 
 function OverrideValueInput({
@@ -2544,6 +2639,44 @@ function autoRunLabel(run: SimulationRun): string {
   const right =
     compN > 0 ? `${run.comparedRulesetId} +${compN}` : run.comparedRulesetId
   return `${left} vs ${right}`
+}
+
+/** Short rendering of a default value for the override hints. Stays
+ *  one-line; arrays/objects collapse to a brief summary. */
+function formatDefaultValue(v: unknown): string {
+  if (v === undefined) return '—'
+  if (v === null) return 'null'
+  if (typeof v === 'boolean') return v ? 'true' : 'false'
+  if (typeof v === 'number') return String(v)
+  if (typeof v === 'string') {
+    return v.length > 24 ? `${v.slice(0, 24)}…` : v
+  }
+  if (Array.isArray(v)) return `[${v.length}]`
+  return typeof v
+}
+
+/** Whether the executor-returned default value can be safely fed back into
+ *  the override input. Numbers/booleans/enums-as-strings are fine; arrays
+ *  (collection aggregates) and Rational strings like "1/5" are not — the
+ *  input would silently coerce or reject them. */
+function isOverrideSeedSafe(type: string, value: unknown): boolean {
+  if (value === null || value === undefined) return false
+  if (Array.isArray(value)) return false
+  switch (type) {
+    case 'Boolean':
+      return typeof value === 'boolean'
+    case 'Dollar':
+    case 'Int':
+    case 'Short':
+    case 'Byte':
+      return typeof value === 'number'
+    case 'Enum':
+      return typeof value === 'string'
+    case 'String':
+      return typeof value === 'string'
+    default:
+      return false
+  }
 }
 
 function formatValue(v: unknown): string {

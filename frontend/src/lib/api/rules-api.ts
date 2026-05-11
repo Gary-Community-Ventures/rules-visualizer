@@ -148,6 +148,20 @@ export async function runTests(
   return data.results
 }
 
+/**
+ * Empty-inputs execution result for the ruleset. Lets the FE show the
+ * "current" value of constants (and derived-from-constants) when the user
+ * is building an override.
+ */
+export async function getRulesetDefaultValues(
+  rulesetId: string
+): Promise<Record<string, unknown>> {
+  const data = await get<{ values: Record<string, unknown> }>(
+    `/api/rulesets/${rulesetId}/default-values`
+  )
+  return data.values
+}
+
 export async function executeRuleset(
   rulesetId: string,
   inputs: Record<string, unknown>,

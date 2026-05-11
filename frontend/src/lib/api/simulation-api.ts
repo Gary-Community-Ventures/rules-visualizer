@@ -8,6 +8,7 @@ export type FieldConfig = {
   min?: number
   max?: number
   enumOptions?: string[]
+  trueProbability?: number
 }
 
 export type CollectionConfig = {

@@ -129,8 +129,10 @@ export function autoConfigFromModel(
 
 function generateValue(field: FieldConfig, rng: () => number): unknown {
   switch (field.type) {
-    case 'Boolean':
-      return rng() < 0.5
+    case 'Boolean': {
+      const p = field.trueProbability ?? 0.5
+      return rng() < p
+    }
 
     case 'Dollar': {
       const min = field.min ?? 0
