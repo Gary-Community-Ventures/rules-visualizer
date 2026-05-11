@@ -1,9 +1,46 @@
 <FactDictionaryModule>
   <Facts>
+    <Fact path="/incomeSourceOptions">
+      <Name>Income source options</Name>
+      <Description>Options describing the source of a member's income.</Description>
+      <Derived>
+        <EnumOptions>
+          <String>Tanf</String>
+          <String>AdultFinancial</String>
+          <String>Ssi</String>
+          <String>SelfEmployment</String>
+        </EnumOptions>
+      </Derived>
+    </Fact>
+
     <Fact path="/members">
       <Name>Household members</Name>
       <Description>List of household members</Description>
       <Writable><Collection /></Writable>
+    </Fact>
+
+    <Fact path="/incomes">
+      <Name>Incomes</Name>
+      <Description>List of incomes received by household members</Description>
+      <Writable><Collection /></Writable>
+    </Fact>
+
+    <Fact path="/incomes/*/memberId">
+      <Name>Member</Name>
+      <Description>The household member to whom this income belongs</Description>
+      <Writable><CollectionItem collection="/members" /></Writable>
+    </Fact>
+
+    <Fact path="/incomes/*/type">
+      <Name>Income type</Name>
+      <Description>The source/type of this income.</Description>
+      <Writable><Enum optionsPath="/incomeSourceOptions" /></Writable>
+    </Fact>
+
+    <Fact path="/incomes/*/monthlyAmount">
+      <Name>Monthly amount</Name>
+      <Description>The monthly amount of this income.</Description>
+      <Writable><Dollar /></Writable>
     </Fact>
 
     <Fact path="/members/*/age">
@@ -24,9 +61,100 @@
       <Writable><Boolean /></Writable>
     </Fact>
 
+    <Fact path="/members/*/receivesSsiOrDisabilityBenefits">
+      <Name>Receives SSI or disability/blindness payments</Name>
+      <Description>Whether this member receives Supplemental Security Income (SSI) benefits under Title XVI of the Social Security Act, or the Colorado Supplement, or Aid to the Needy and Disabled-Supplemental Security Income-Colorado Supplement (AND-SSI-CS), or Aid to the Blind-Supplemental Security Income-Colorado Supplement (AB-SSI-CS); or Disability or Blindness Payments under Title I, II, X, or IXV of the Social Security Act (10 CCR 2506-1, 4.000.1)</Description>
+      <Derived>
+        <GreaterThan>
+          <Left>
+            <Count>
+              <Filter path="/incomes">
+                <All>
+                  <Equal>
+                    <Left><Dependency path="memberId" /></Left>
+                    <Right><Dependency path=".." /></Right>
+                  </Equal>
+                  <Equal>
+                    <Left><Dependency path="type" /></Left>
+                    <Right><Enum optionsPath="/incomeSourceOptions">Ssi</Enum></Right>
+                  </Equal>
+                </All>
+              </Filter>
+            </Count>
+          </Left>
+          <Right><Int>0</Int></Right>
+        </GreaterThan>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/isVeteranWithDisability">
+      <Name>Is veteran with service-connected or non-service-connected disability</Name>
+      <Description>Whether this member is a veteran with a service-connected disability rated or paid as a total disability under Title 38 of the United States Code, or is a veteran receiving a pension for a non-service-connected disability (10 CCR 2506-1, 4.000.1)</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/isVeteranNeedingAidAndAttendance">
+      <Name>Is veteran needing aid and attendance or permanently housebound</Name>
+      <Description>Whether this member is a veteran considered by the Veterans Affairs (VA) to be in need of regular aid and attendance or permanently housebound under Title 38 of the United States Code (10 CCR 2506-1, 4.000.1)</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/isVeteranSurvivorNeedingAidAndAttendance">
+      <Name>Is veteran's surviving spouse or child needing aid and attendance</Name>
+      <Description>Whether this member is a surviving spouse of a veteran and considered in need of aid and attendance or permanently housebound, or a surviving child of a veteran and considered by the VA to be permanently incapable of self-support under Title 38 of the United States Code (10 CCR 2506-1, 4.000.1)</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/isVeteranSurvivorWithDisability">
+      <Name>Is veteran's surviving spouse or child with permanent disability</Name>
+      <Description>Whether this member is a surviving spouse or child of a veteran considered by the VA to be entitled to compensation for a service-connected death or pension benefits for a non-service-connected death under Title 38 of the United States Code, and has a disability considered permanent under Section 221(i) of the Social Security Act. "Entitled" refers to those veterans' surviving spouses and children who are receiving the compensation or benefits or have been approved for such benefits but are not yet receiving them (10 CCR 2506-1, 4.000.1)</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/receivesPublicDisabilityRetirementPension">
+      <Name>Receives public disability retirement pension</Name>
+      <Description>Whether this member has a disability considered permanent under Section 221(i) of the Social Security Act and receives a federal, state, or local public disability retirement pension (10 CCR 2506-1, 4.000.1)</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/receivesRailroadRetirementDisability">
+      <Name>Receives railroad retirement disability annuity</Name>
+      <Description>Whether this member receives an annuity for disability from the railroad retirement board and is considered as a person with disabilities by the SSA, or qualifies for Medicare as determined by the railroad retirement board (10 CCR 2506-1, 4.000.1)</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/receivesInterimAssistanceForDisability">
+      <Name>Receives interim assistance pending SSI/disability benefits</Name>
+      <Description>Whether this member is a recipient of interim assistance benefits pending the receipt of Supplemental Security Income (SSI), disability-related medical assistance under Title XIX of the Social Security Act, or disability-based state assistance benefits, provided that eligibility for those benefits is based on disability or blindness criteria at least as stringent as those used under Title XVI of the Social Security Act (10 CCR 2506-1, 4.000.1)</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/isPersonWithDisability">
+      <Name>Is person with disabilities</Name>
+      <Description>Whether this member meets any of the criteria defining a "person with disabilities" under SNAP: receipt of SSI or other disability/blindness payments; veteran status with a service-connected or non-service-connected disability; veteran needing aid and attendance or permanently housebound; surviving spouse or child of a veteran needing aid and attendance or permanently incapable of self-support; surviving spouse or child of a veteran with a permanent disability; permanent disability with a public disability retirement pension; railroad retirement disability annuity; or interim assistance pending SSI or disability-based benefits (10 CCR 2506-1, 4.000.1)</Description>
+      <Derived>
+        <Any>
+          <Dependency path="../receivesSsiOrDisabilityBenefits" />
+          <Dependency path="../isVeteranWithDisability" />
+          <Dependency path="../isVeteranNeedingAidAndAttendance" />
+          <Dependency path="../isVeteranSurvivorNeedingAidAndAttendance" />
+          <Dependency path="../isVeteranSurvivorWithDisability" />
+          <Dependency path="../receivesPublicDisabilityRetirementPension" />
+          <Dependency path="../receivesRailroadRetirementDisability" />
+          <Dependency path="../receivesInterimAssistanceForDisability" />
+        </Any>
+      </Derived>
+    </Fact>
+
     <Fact path="/members/*/isBoarder">
       <Name>Is boarder</Name>
       <Description>Whether this member resides with others and pays reasonable compensation to others for lodging and meals (10 CCR 2506-1, 4.000.1)</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/isRoomer">
+      <Name>Is roomer</Name>
+      <Description>Whether this member is an individual to whom a household furnishes lodging, but not meals, for compensation (10 CCR 2506-1, 4.000.1)</Description>
       <Writable><Boolean /></Writable>
     </Fact>
 
@@ -36,9 +164,27 @@
       <Writable><Boolean /></Writable>
     </Fact>
 
-    <Fact path="/members/*/hasDisability">
-      <Name>Has disability</Name>
-      <Description>Whether this member has a physical or mental disability</Description>
+    <Fact path="/members/*/preparesFoodWithHousehold">
+      <Name>Prepares food with household</Name>
+      <Description>Whether this member customarily purchases and prepares food together with the rest of the household for home consumption (10 CCR 2506-1, 4.000.1)</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/livesInGroupLivingArrangement">
+      <Name>Lives in group living arrangement</Name>
+      <Description>Whether this member lives in a public or private non-profit facility certified under Section 1616(e) of the Social Security Act which serves no more than sixteen (16) people (10 CCR 2506-1, 4.000.1)</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/isLiveInAttendant">
+      <Name>Is live-in attendant</Name>
+      <Description>Whether this member resides with the household to provide child-care or other personal services (10 CCR 2506-1, 4.000.1)</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/hasAbawdDisability">
+      <Name>Has ABAWD disability</Name>
+      <Description>Whether this member has a physical or mental disability that disqualifies them from ABAWD status (10 CCR 2506-1, 4.000.1)</Description>
       <Derived>
         <Any>
           <Dependency path="../hasPhysicalDisability" />
@@ -105,7 +251,7 @@
             <Right><Dependency path="/abawdAgeMax" /></Right>
           </LessThanOrEqual>
           <Not>
-            <Dependency path="../hasDisability" />
+            <Dependency path="../hasAbawdDisability" />
           </Not>
           <Not>
             <Dependency path="/hasMemberUnderAbawdDependentAgeLimit" />
@@ -126,9 +272,21 @@
       <Writable><Boolean /></Writable>
     </Fact>
 
+    <Fact path="/isInitialMonth">
+      <Name>Is initial month</Name>
+      <Description>Whether this is the first month the household participates in the program after not having received SNAP benefits in the state previously or following any break after the end of the certification period where the household was not certified for participation. If the household applies for recertification prior to the expiration of its certification period and is found eligible for the first month following the end of the certification period, that month shall not be an initial month (10 CCR 2506-1, 4.000.1).</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
     <Fact path="/allotment">
       <Name>Allotment</Name>
       <Description>The total amount of SNAP benefits the household is authorized to receive in a particular month (10 CCR 2506-1, 4.000.1). Placeholder.</Description>
+      <Writable><Dollar /></Writable>
+    </Fact>
+
+    <Fact path="/minimumBenefit">
+      <Name>Minimum benefit</Name>
+      <Description>The minimum amount of benefits issued to one- and two-person households that are eligible for assistance, but whose issuance calculates to less than the federally prescribed minimum allotment (10 CCR 2506-1, 4.000.1). Placeholder.</Description>
       <Writable><Dollar /></Writable>
     </Fact>
 
@@ -138,9 +296,46 @@
       <Writable><Dollar /></Writable>
     </Fact>
 
+    <Fact path="/heatingCoolingUtilityAllowance">
+      <Name>Heating/Cooling Utility Allowance</Name>
+      <Description>A fixed deduction applied to any household that incurs a heating or cooling expense (10 CCR 2506-1, 4.000.1). Placeholder.</Description>
+      <Writable><Dollar /></Writable>
+    </Fact>
+
+    <Fact path="/oneUtilityAllowance">
+      <Name>One Utility Allowance</Name>
+      <Description>A fixed deduction given to any household that is not eligible to receive the HCUA or BUA and incurs only one non-heating or non-cooling utility expense, such as electricity, water, sewer, trash, or cooking fuel. The OUA is not allowed if the household's only utility expense is a telephone (10 CCR 2506-1, 4.000.1). Placeholder.</Description>
+      <Writable><Dollar /></Writable>
+    </Fact>
+
+    <!-- TODO: get the actual fixed deduction amount from policy and make this a constant. -->
+    <Fact path="/nonTelephoneUtilityAllowance">
+      <Name>Non-telephone utility allowance</Name>
+      <Description>The fixed deduction amount applied to a household whose only utility expense is something other than the expense for a telephone (10 CCR 2506-1, 4.000.1). Placeholder.</Description>
+      <Writable><Dollar /></Writable>
+    </Fact>
+
+    <Fact path="/receivesLeap">
+      <Name>Receives LEAP</Name>
+      <Description>Whether the household receives benefits from the Low-Income Home Energy Assistance Program (LEAP), the Colorado program designed to help low-income clients pay a portion of their winter heating costs (10 CCR 2506-1, 4.000.1)</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
     <Fact path="/hasBasicCategoricalEligibility">
       <Name>Has Basic Categorical Eligibility</Name>
       <Description>Whether the household qualifies for Basic Categorical Eligibility (BCE): not eligible for Expanded Categorical Eligibility and contains only members who receive, or are eligible to receive, benefits from Colorado Works, SSI, Old Age Pension, Aid to the Needy and Disabled, Aid to the Blind, or a combination of these (10 CCR 2506-1, 4.000.1). Placeholder.</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/hasExpandedCategoricalEligibility">
+      <Name>Has Expanded Categorical Eligibility</Name>
+      <Description>Whether the household qualifies for Expanded Categorical Eligibility (ECE), exempting it from having resources considered when determining eligibility for SNAP (10 CCR 2506-1, 4.000.1). Placeholder.</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/hasStandardEligibility">
+      <Name>Has Standard Eligibility</Name>
+      <Description>Whether the household qualifies for Standard Eligibility (SE), the set of rules applicable to households that do not fall under Expanded Categorical Eligibility or Basic Categorical Eligibility. Households considered under Standard Eligibility rules are subject to resource limits as a condition of eligibility (10 CCR 2506-1, 4.000.1). Placeholder.</Description>
       <Writable><Boolean /></Writable>
     </Fact>
 
@@ -148,6 +343,468 @@
       <Name>Certification period</Name>
       <Description>The period of time for which a household has been certified to receive benefits (10 CCR 2506-1, 4.000.1). Placeholder.</Description>
       <Writable><Int /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/countableMonths">
+      <Name>Countable months</Name>
+      <Description>The number of countable months accrued by this member within the past 36 months. A countable month is a month in which an ABAWD received a full SNAP allotment but did not meet work requirements or have an exemption from those requirements. ABAWDs who accrue three countable months within a 36-month period become disqualified from SNAP unless they meet an exemption or ABAWD work requirements (10 CCR 2506-1, 4.000.1).</Description>
+      <Writable><Int /></Writable>
+    </Fact>
+
+    <Fact path="/dSnapActive">
+      <Name>D-SNAP active</Name>
+      <Description>Whether the Disaster Supplemental Nutrition Assistance Program (D-SNAP) is active for the affected county, following a Presidential disaster declaration for individual assistance and at the county's discretion in coordination with the state SNAP office and FNS (10 CCR 2506-1, 4.000.1).</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/temporaryEmergencyActive">
+      <Name>Temporary emergency active</Name>
+      <Description>Whether a temporary emergency is active — an emergency caused by any natural or human-caused disaster, other than a major disaster declared by the President of the United States under the Disaster Relief Act of 1974, which is determined by FNS to have disrupted commercial channels of food distribution (10 CCR 2506-1, 4.000.1).</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/disqualifiedForIPV">
+      <Name>Disqualified for IPV/fraud</Name>
+      <Description>Whether this member has been disqualified for an Intentional Program Violation/fraud (10 CCR 2506-1, 4.000.1)</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/failedToProvideOrObtainSSN">
+      <Name>Failed to provide or obtain SSN</Name>
+      <Description>Whether this member has failed to provide or obtain a Social Security Number (10 CCR 2506-1, 4.000.1)</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/isIneligibleNonCitizen">
+      <Name>Is ineligible non-citizen</Name>
+      <Description>Whether this member is an ineligible non-citizen (10 CCR 2506-1, 4.000.1)</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/disqualifiedForWorkRequirementsCooperation">
+      <Name>Disqualified for failure to cooperate with work requirements</Name>
+      <Description>Whether this member has been disqualified for failure to cooperate with work requirements (10 CCR 2506-1, 4.000.1)</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/disqualifiedForQualityAssuranceCooperation">
+      <Name>Disqualified for failure to cooperate with QA division</Name>
+      <Description>Whether this member has been disqualified for failure to cooperate with the state quality assurance division (10 CCR 2506-1, 4.000.1)</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/isEnrolledInEmploymentTrainingProgram">
+      <Name>Enrolled in Employment and Training Program</Name>
+      <Description>Whether this member is enrolled in the Employment and Training Program (Employment First/EF), a program operated by the Department of Human Services consisting of work, training, education, work experience, and/or job search activities designed to help clients obtain gainful employment (10 CCR 2506-1, 4.000.1)</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <!-- TODO: we may need more details about OJT in the future as we
+         implement more of this (eligibility impacts, wages treated as
+         earned income, interaction with work requirements, etc.). -->
+    <Fact path="/members/*/isInOnTheJobTraining">
+      <Name>In on-the-job training</Name>
+      <Description>Whether this member is receiving on-the-job training (OJT), training provided to an employee after he or she is hired, designed for individuals who do not have the necessary work experience required for the job (10 CCR 2506-1, 4.000.1)</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/isParticipatingInAnotherHousehold">
+      <Name>Is already participating in another household</Name>
+      <Description>Whether this member is already receiving SNAP benefits as part of another SNAP household or in another state in the same calendar month (10 CCR 2506-1, 4.000.1)</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/abawdCountableMonthsLimit">
+      <Name>ABAWD countable months limit</Name>
+      <Description>The number of countable months an ABAWD may accrue within a thirty-six (36) month window before being disqualified (10 CCR 2506-1, 4.000.1)</Description>
+      <Derived><Int>3</Int></Derived>
+    </Fact>
+
+    <Fact path="/members/*/exceededAbawdCountableMonthsLimit">
+      <Name>Exceeded ABAWD countable months limit</Name>
+      <Description>Whether this member is an ABAWD who has accrued at least the limit of countable months without meeting an exemption or ABAWD work requirements (10 CCR 2506-1, 4.000.1)</Description>
+      <Derived>
+        <All>
+          <Dependency path="../isAbawd" />
+          <GreaterThanOrEqual>
+            <Left><Dependency path="../countableMonths" /></Left>
+            <Right><Dependency path="/abawdCountableMonthsLimit" /></Right>
+          </GreaterThanOrEqual>
+        </All>
+      </Derived>
+    </Fact>
+
+    <Fact path="/eebtMinimumPayment">
+      <Name>E-EBT minimum payment</Name>
+      <Description>The minimum Energy Electronic Benefit Transfer (E-EBT) fuel assistance payment that qualifies a SNAP household for the heating and cooling standard utility allowance (10 CCR 2506-1, 4.000.1)</Description>
+      <Derived><Dollar>20.01</Dollar></Derived>
+    </Fact>
+
+    <Fact path="/excessMedicalDeduction">
+      <Name>Excess medical deduction</Name>
+      <Description>A deduction from a household's total gross income applied when a person with a disability or a person aged sixty (60) and older has medical expenses over a specified monthly amount (10 CCR 2506-1, 4.000.1). Placeholder.</Description>
+      <Derived><Dollar>0</Dollar></Derived>
+    </Fact>
+
+    <!-- TODO: derive from the resource limit applicable to households
+         containing a person aged sixty (60) or older or a person with
+         disabilities (10 CCR 2506-1, 4.000.1). -->
+    <Fact path="/substantialLotteryOrGamblingWinningsThreshold">
+      <Name>Substantial lottery or gambling winnings threshold</Name>
+      <Description>A cash prize won in a single game, before taxes or other amounts are withheld, that is equal to or greater than this threshold counts as substantial lottery or gambling winnings. The threshold equals the resource limit for persons aged sixty (60) and older and persons with disabilities (10 CCR 2506-1, 4.000.1). Placeholder.</Description>
+      <Writable><Dollar /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/exemptIncome">
+      <Name>Exempt income</Name>
+      <Description>Income that is exempt from consideration when determining eligibility for SNAP (10 CCR 2506-1, 4.000.1). Placeholder.</Description>
+      <Derived><Dollar>0</Dollar></Derived>
+    </Fact>
+
+    <Fact path="/members/*/nonExemptEarnedIncome">
+      <Name>Non-exempt earned income</Name>
+      <Description>This member's earned income that is not exempt from consideration when determining eligibility for SNAP (10 CCR 2506-1, 4.000.1)</Description>
+      <Writable><Dollar /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/unearnedIncome">
+      <Name>Unearned income</Name>
+      <Description>This member's unearned income (10 CCR 2506-1, 4.000.1)</Description>
+      <Writable><Dollar /></Writable>
+    </Fact>
+    <Fact path="/totalSelfEmploymentIncome">
+      <Name>Total self-employment income</Name>
+      <Description>The household's total income received from self-operated businesses or enterprises in which the individual retains control over work or services offered and assumes the necessary business risks and expenses connected with the operation of the business (10 CCR 2506-1, 4.000.1)</Description>
+      <Writable><Dollar /></Writable>
+    </Fact>
+
+    <!-- TODO: break out the components of liquid resources (cash on hand,
+         checking accounts, savings accounts, saving certificates, stocks,
+         bonds) as separate facts and derive liquidResources from their sum
+         (10 CCR 2506-1, 4.000.1). -->
+    <Fact path="/members/*/liquidResources">
+      <Name>Liquid resources</Name>
+      <Description>Assets such as cash on hand or assets that can be easily converted to cash such as money in checking or savings accounts, saving certificates, or stocks and bonds (10 CCR 2506-1, 4.000.1)</Description>
+      <Writable><Dollar /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/nonLiquidResources">
+      <Name>Non-liquid resources</Name>
+      <Description>The value of this member's non-liquid resources, such as personal effects, household goods, vehicles, buildings, land, and other real property (10 CCR 2506-1, 4.000.1)</Description>
+      <Writable><Dollar /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/grossIncome">
+      <Name>Gross income</Name>
+      <Description>The total of all non-exempt earned and unearned income added together before any deduction or disregard is considered (10 CCR 2506-1, 4.000.1)</Description>
+      <Derived>
+        <Add>
+          <Dependency path="../nonExemptEarnedIncome" />
+          <Dependency path="../unearnedIncome" />
+        </Add>
+      </Derived>
+    </Fact>
+
+    <Fact path="/netIncomeTestRate">
+      <Name>Net income test rate</Name>
+      <Description>The percentage of the federal poverty level used as the net income test threshold (10 CCR 2506-1, 4.000.1)</Description>
+      <Derived><Rational>1/1</Rational></Derived>
+    </Fact>
+
+    <Fact path="/netIncomeThreshold">
+      <Name>Net income threshold</Name>
+      <Description>One hundred percent (100%) of the federal poverty level for the household's size, under which a household's income must fall after all allowable deductions are considered (10 CCR 2506-1, 4.000.1)</Description>
+      <Derived>
+        <Multiply>
+          <Dependency path="/fpl" />
+          <Dependency path="/netIncomeTestRate" />
+        </Multiply>
+      </Derived>
+    </Fact>
+
+    <!-- TODO: derive net income from total gross income minus all allowable
+         deductions (earned income deduction, standard deduction, dependent
+         care, child support, medical, shelter, etc.) once those facts exist
+         (10 CCR 2506-1, 4.000.1). -->
+    <Fact path="/netIncome">
+      <Name>Net income</Name>
+      <Description>The household's income after all allowable deductions are considered, used for the net income test (10 CCR 2506-1, 4.000.1). Placeholder.</Description>
+      <Writable><Dollar /></Writable>
+    </Fact>
+
+    <Fact path="/meetsNetIncomeTest">
+      <Name>Meets net income test</Name>
+      <Description>Whether the household's net income falls at or below one hundred percent (100%) of the federal poverty level for the household's size (10 CCR 2506-1, 4.000.1)</Description>
+      <Derived>
+        <LessThanOrEqual>
+          <Left><Dependency path="/netIncome" /></Left>
+          <Right><Dependency path="/netIncomeThreshold" /></Right>
+        </LessThanOrEqual>
+      </Derived>
+    </Fact>
+
+    <Fact path="/meetsFinancialCriteria">
+      <Name>Meets financial criteria</Name>
+      <Description>Whether the household meets the set of rules governing gross and net income and resource standards and the proper methods for computing a household's income and resources (10 CCR 2506-1, 4.000.1). Placeholder.</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/meetsNonFinancialCriteria">
+      <Name>Meets non-financial criteria</Name>
+      <Description>Whether the household meets the set of rules other than those governing the household's gross and net income and resource standards (10 CCR 2506-1, 4.000.1). Placeholder.</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/isExperiencingHomelessness">
+      <Name>Is experiencing homelessness</Name>
+      <Description>Whether this member lacks a fixed and regular nighttime residence or whose primary residence is a supervised shelter designed for temporary accommodations; a halfway house or similar facility that provides temporary residence; a place not designed for or ordinarily used as regular sleeping accommodations for human beings; or a temporary accommodation in the residence of another individual for ninety (90) days or less (10 CCR 2506-1, 4.000.1)</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/isFleeingFelon">
+      <Name>Is fleeing felon</Name>
+      <Description>Whether this member is fleeing to avoid prosecution or custody for a crime, or an attempt to commit a crime, that would be classified as a felony under a state or federal law (10 CCR 2506-1, 4.000.1)</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/isMigrantFarmWorker">
+      <Name>Is migrant farm worker</Name>
+      <Description>Whether this member travels away from home on a regular basis to follow the flow of seasonal agricultural work (10 CCR 2506-1, 4.000.1)</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/isStriker">
+      <Name>Is striker</Name>
+      <Description>Whether this member is involved in a strike or other concerted stoppage of work by employees, including a stoppage by reason of the expiration of a collective bargaining agreement and any concerted slowdown or other concerted interruption of operations by employees (10 CCR 2506-1, 4.000.1)</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/isFullTimeStudent">
+      <Name>Is full-time student</Name>
+      <Description>Whether this member has a school schedule equivalent to a full-time curriculum as defined by the institution of higher education the person is attending (10 CCR 2506-1, 4.000.1)</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/isEnrolledInInstitutionOfHigherEducation">
+      <Name>Enrolled in institution of higher education</Name>
+      <Description>Whether this member is enrolled in an institution that normally requires a high school diploma or equivalency certificate for a student to enroll, such as a college, university, or vocational or technical school (10 CCR 2506-1, 4.000.1)</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/isEnrolledInPostHighSchoolEducation">
+      <Name>Enrolled in post high school education</Name>
+      <Description>Whether this member is enrolled in a college, university, or post-high school level technical or vocational school (10 CCR 2506-1, 4.000.1)</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/isLawfulPermanentResident">
+      <Name>Is lawful permanent resident</Name>
+      <Description>Whether this member is a non-citizen legally admitted into the United States to reside on a permanent basis (10 CCR 2506-1, 4.000.1)</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/isParolee">
+      <Name>Is parolee</Name>
+      <Description>Whether this member is a non-citizen granted parole into the United States, as described in 8 U.S.C. 1182(d)(5) and 8 C.F.R. 212.5 (2019). Parole does not constitute a formal admission to the United States and confers temporary status only, requiring parolees to leave when the conditions supporting their parole cease to exist (10 CCR 2506-1, 4.000.1)</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/isAsylee">
+      <Name>Is asylee</Name>
+      <Description>Whether this member is a non-citizen granted asylum, included as a qualified non-citizen for SNAP under 7 C.F.R. 273.4(a)(5), (6)(1) (2019) (10 CCR 2506-1, 4.000.1)</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/isRefugee">
+      <Name>Is refugee</Name>
+      <Description>Whether this member is a non-citizen admitted as a refugee, included as a qualified non-citizen for SNAP under 7 C.F.R. 273.4(a)(5), (6)(1) (2019) (10 CCR 2506-1, 4.000.1)</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/hasWithholdingOfDeportationOrRemoval">
+      <Name>Has withholding of deportation or removal</Name>
+      <Description>Whether this member is a non-citizen granted withholding of deportation or removal, included as a qualified non-citizen for SNAP under 7 C.F.R. 273.4(a)(5), (6)(1) (2019) (10 CCR 2506-1, 4.000.1)</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/isConditionalEntrant">
+      <Name>Is conditional entrant</Name>
+      <Description>Whether this member is a non-citizen admitted as a conditional entrant, included as a qualified non-citizen for SNAP under 7 C.F.R. 273.4(a)(5), (6)(1) (2019) (10 CCR 2506-1, 4.000.1)</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/isCubanOrHaitianEntrant">
+      <Name>Is Cuban or Haitian entrant</Name>
+      <Description>Whether this member is a Cuban or Haitian entrant, included as a qualified non-citizen for SNAP under 7 C.F.R. 273.4(a)(5), (6)(1) (2019) (10 CCR 2506-1, 4.000.1)</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/isBatteredImmigrant">
+      <Name>Is battered immigrant</Name>
+      <Description>Whether this member is a battered immigrant, included as a qualified non-citizen for SNAP under 7 C.F.R. 273.4(a)(5), (6)(1) (2019) (10 CCR 2506-1, 4.000.1)</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/isVictimOfTrafficking">
+      <Name>Is victim of severe trafficking</Name>
+      <Description>Whether this member is a non-citizen victim of a severe form of trafficking, included as a qualified non-citizen for SNAP under 7 C.F.R. 273.4(a)(5), (6)(1) (2019) (10 CCR 2506-1, 4.000.1)</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/isQualifiedNonCitizen">
+      <Name>Is qualified non-citizen</Name>
+      <Description>Whether this member meets the definition of "qualified alien" under 7 C.F.R. 273.4(a)(5), (6)(1) (2019) for SNAP purposes: lawful permanent residents, asylees, refugees, parolees, individuals granted withholding of deportation or removal, conditional entrants, Cuban or Haitian entrants, battered immigrants, and non-citizen victims of a severe form of trafficking. This term is not itself an immigration status; qualified non-citizens are not automatically eligible for SNAP and must meet all other eligibility requirements (10 CCR 2506-1, 4.000.1)</Description>
+      <Derived>
+        <Any>
+          <Dependency path="../isLawfulPermanentResident" />
+          <Dependency path="../isAsylee" />
+          <Dependency path="../isRefugee" />
+          <Dependency path="../isParolee" />
+          <Dependency path="../hasWithholdingOfDeportationOrRemoval" />
+          <Dependency path="../isConditionalEntrant" />
+          <Dependency path="../isCubanOrHaitianEntrant" />
+          <Dependency path="../isBatteredImmigrant" />
+          <Dependency path="../isVictimOfTrafficking" />
+        </Any>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/isSponsoredNonCitizen">
+      <Name>Is sponsored non-citizen</Name>
+      <Description>Whether this member is a non-citizen lawfully admitted for permanent residence into the United States who has been sponsored by an individual for entry into the country (10 CCR 2506-1, 4.000.1)</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/sponsorIncome">
+      <Name>Sponsor income</Name>
+      <Description>Income and contributions provided by the sponsor and other sources to this sponsored non-citizen (10 CCR 2506-1, 4.000.1)</Description>
+      <Writable><Dollar /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/sponsorId">
+      <Name>Sponsor</Name>
+      <Description>The household member who executed an affidavit of support (USCIS form I-864A) or another form deemed legally binding by the Department of Homeland Security on behalf of this non-citizen as a condition of the non-citizen's entry or admission into the United States as a permanent resident (10 CCR 2506-1, 4.000.1)</Description>
+      <Writable><CollectionItem collection="/members" /></Writable>
+    </Fact>
+
+    <!-- TODO: FPL is published per household size; this placeholder ignores
+         household size. Replace with a lookup keyed off household size once
+         that fact exists. -->
+    <Fact path="/fpl">
+      <Name>Federal poverty level</Name>
+      <Description>The federal poverty level for the household's size (10 CCR 2506-1, 4.401.1). Placeholder.</Description>
+      <Writable><Dollar /></Writable>
+    </Fact>
+
+    <Fact path="/indigentNonCitizenFplRate">
+      <Name>Indigent non-citizen FPL rate</Name>
+      <Description>The percentage of the federal poverty level used as the food-and-shelter threshold for determining indigent non-citizen status (10 CCR 2506-1, 4.000.1)</Description>
+      <Derived><Rational>13/10</Rational></Derived>
+    </Fact>
+
+    <Fact path="/indigentNonCitizenFplThreshold">
+      <Name>Indigent non-citizen FPL threshold</Name>
+      <Description>One hundred thirty percent (130%) of the federal poverty level for the non-citizen's household size, used to determine indigent non-citizen status (10 CCR 2506-1, 4.000.1)</Description>
+      <Derived>
+        <Multiply>
+          <Dependency path="/fpl" />
+          <Dependency path="/indigentNonCitizenFplRate" />
+        </Multiply>
+      </Derived>
+    </Fact>
+
+    <!-- TODO: per 10 CCR 2506-1, 4.000.1, indigence is determined using sponsor
+         income plus the non-citizen's own income vs. 130% FPL. We currently
+         compare only sponsor income to avoid a circular dependency, since
+         isIndigentNonCitizen will eventually feed back into gross income via
+         sponsor-income deeming. Revisit once deeming logic lands. -->
+    <Fact path="/members/*/isIndigentNonCitizen">
+      <Name>Is indigent non-citizen</Name>
+      <Description>A sponsored non-citizen who, after considering all income and contributions provided by the sponsor and other sources in conjunction with the non-citizen's own income, is unable to obtain food and shelter amounting to one hundred thirty percent (130%) of the federal poverty level for the non-citizen's household size (10 CCR 2506-1, 4.000.1)</Description>
+      <Derived>
+        <All>
+          <Dependency path="../isSponsoredNonCitizen" />
+          <LessThan>
+            <Left><Dependency path="../sponsorIncome" /></Left>
+            <Right><Dependency path="/indigentNonCitizenFplThreshold" /></Right>
+          </LessThan>
+        </All>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/receivesTanf">
+      <Name>Receives TANF/Colorado Works</Name>
+      <Description>Whether this member receives a TANF/Colorado Works cash grant (10 CCR 2506-1, 4.000.1)</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/isEligibleForTanf">
+      <Name>Is eligible for TANF/Colorado Works</Name>
+      <Description>Whether this member is eligible for the Temporary Assistance for Needy Families (TANF) or Colorado Works (CW) cash program, also known as Title IV-A of the Social Security Act (10 CCR 2506-1, 4.000.1)</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/receivesAdultFinancial">
+      <Name>Receives Adult Financial cash grant</Name>
+      <Description>Whether this member receives an Adult Financial cash grant (10 CCR 2506-1, 4.000.1)</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/publicAssistanceAmount">
+      <Name>Public assistance amount</Name>
+      <Description>The amount of public assistance (PA) this member receives, as defined in section 26-2-103(7), C.R.S. (10 CCR 2506-1, 4.000.1)</Description>
+      <Writable><Dollar /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/isPaMember">
+      <Name>Is PA member</Name>
+      <Description>Whether this member receives TANF/Colorado Works or Adult Financial cash grants (10 CCR 2506-1, 4.000.1)</Description>
+      <Derived>
+        <Any>
+          <Dependency path="../receivesTanf" />
+          <Dependency path="../receivesAdultFinancial" />
+        </Any>
+      </Derived>
+    </Fact>
+
+    <Fact path="/isPaHousehold">
+      <Name>Is PA household</Name>
+      <Description>A household that contains only persons who receive TANF/Colorado Works or Adult Financial cash grants (10 CCR 2506-1, 4.000.1)</Description>
+      <Derived>
+        <Equal>
+          <Left>
+            <Count>
+              <Dependency path="/members/*/isPaMember" />
+            </Count>
+          </Left>
+          <Right>
+            <CollectionSize>
+              <Dependency path="/members" />
+            </CollectionSize>
+          </Right>
+        </Equal>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/hasLevelSanctionImposed">
+      <Name>Has level sanction imposed</Name>
+      <Description>Whether a specified period of ineligibility has been imposed against this member for failing to take a required action as part of his or her eligibility for SNAP (10 CCR 2506-1, 4.000.1)</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/isDisqualified">
+      <Name>Is disqualified individual</Name>
+      <Description>Whether this member is ineligible to receive SNAP benefits due to disqualification for an Intentional Program Violation/fraud, failure to provide or obtain a SSN, status as an ineligible non-citizen, failure to cooperate with work requirements, failure to cooperate with the state quality assurance division, or as an ABAWD who has received three countable months of SNAP within thirty-six (36) months without meeting an exemption or ABAWD work requirements (10 CCR 2506-1, 4.000.1)</Description>
+      <Derived>
+        <Any>
+          <Dependency path="../disqualifiedForIPV" />
+          <Dependency path="../failedToProvideOrObtainSSN" />
+          <Dependency path="../isIneligibleNonCitizen" />
+          <Dependency path="../disqualifiedForWorkRequirementsCooperation" />
+          <Dependency path="../disqualifiedForQualityAssuranceCooperation" />
+          <Dependency path="../exceededAbawdCountableMonthsLimit" />
+        </Any>
+      </Derived>
     </Fact>
   </Facts>
 </FactDictionaryModule>
