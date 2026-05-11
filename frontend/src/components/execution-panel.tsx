@@ -549,6 +549,7 @@ export function ExecutionPanel() {
                       }
                       onBlur={runOnBlur}
                       results={executionResults}
+                      allEntityData={entityData}
                     />
                   )
                 })}
@@ -685,6 +686,7 @@ export function ExecutionPanel() {
                       }
                       onBlur={runOnBlur}
                       results={executionResults}
+                      allEntityData={entityData}
                     />
                   )
                 })}
@@ -847,6 +849,10 @@ type EntityField = {
   typeName?: string
   enumOptions?: string[]
   isOverride?: boolean
+  /** For CollectionItem-typed fields, the path of the referenced collection
+   *  (e.g. "/members"). Lets the EntityEditor build a dropdown of available
+   *  rows in that collection rather than asking the user to paste a UUID. */
+  collectionItemPath?: string
 }
 
 type EntityEditorProps = {
@@ -861,10 +867,50 @@ type EntityEditorProps = {
    *  their currently-computed values so promoting the fact to writable
    *  doesn't leave unset members Incomplete. */
   results?: Record<string, { value: unknown }> | null
+  /** All collections' rows, keyed by collection path. Used to build the
+   *  dropdown options for CollectionItem-typed fields that reference some
+   *  other collection (e.g. /incomes/x/memberId pointing at /members rows). */
+  allEntityData?: Record<string, Record<string, string>[]>
   /** When provided, renders a "Done" button below "Add member" that
    *  closes whatever surfaced the editor (e.g. the CollectionEditorDialog).
    *  Inline usages (the execution panel) don't pass this. */
   onDone?: () => void
+}
+
+// Build dropdown options for a CollectionItem-typed field that references
+// `target` (e.g. "/members"). Each pickable option corresponds to a row in
+// the target collection; the option `value` is the "#index" sentinel the
+// executor maps to the generated UUID once collections are materialized.
+// Labels prefer the row's first non-empty short string field (often a name
+// or label-like value) so users see something more meaningful than a raw
+// index — falling back to the bare index when nothing usable is present.
+function buildCollectionItemOptions(
+  target: string,
+  allEntityData: Record<string, Record<string, string>[]> | undefined
+): { value: string; label: string }[] {
+  const rows = allEntityData?.[target] ?? []
+  return rows.map((row, idx) => {
+    const labelExtras: string[] = []
+    for (const v of Object.values(row)) {
+      if (typeof v !== 'string') continue
+      const trimmed = v.trim()
+      if (!trimmed || trimmed.length > 30) continue
+      // skip obvious non-label values (booleans, numbers) — those are
+      // typically the structural fields, not the descriptive ones
+      if (
+        trimmed === 'true' ||
+        trimmed === 'false' ||
+        /^-?\d+(\.\d+)?$/.test(trimmed)
+      )
+        continue
+      labelExtras.push(trimmed)
+      if (labelExtras.length >= 1) break
+    }
+    const base = `${getCollectionDisplayName(target)} ${idx + 1}`
+    const label =
+      labelExtras.length > 0 ? `${base} — ${labelExtras[0]}` : base
+    return { value: `#${idx}`, label }
+  })
 }
 
 export function EntityEditor({
@@ -874,6 +920,7 @@ export function EntityEditor({
   onChange,
   onBlur,
   results,
+  allEntityData,
   onDone,
 }: EntityEditorProps) {
   const addRow = () => {
@@ -985,6 +1032,14 @@ export function EntityEditor({
                   <TypedValueInput
                     typeName={field.typeName}
                     enumOptions={field.enumOptions}
+                    collectionItems={
+                      field.collectionItemPath
+                        ? buildCollectionItemOptions(
+                            field.collectionItemPath,
+                            allEntityData
+                          )
+                        : undefined
+                    }
                     className="h-6 text-xs flex-1"
                     isOverride={isOverride}
                     placeholder={

@@ -155,6 +155,11 @@ type CollectionField = {
   /** True when the field backs a derived/constant node — writing to it acts
    *  as a per-member override rather than a primary input. */
   isOverride?: boolean
+  /** For CollectionItem-typed writable fields (e.g. <CollectionItem
+   *  collection="/members"/>), the path of the collection this field
+   *  references. The input component renders a dropdown of rows from that
+   *  collection so users don't have to type UUIDs. */
+  collectionItemPath?: string
 }
 
 function collectCollectionFields(
@@ -176,6 +181,10 @@ function collectCollectionFields(
         ? c.default
         : undefined
 
+    const collectionItemPath =
+      c.format === 'factGraph' && c.type === 'writable'
+        ? c.collectionItemPath
+        : undefined
     result[info.collection].push({
       nodeId,
       path: fieldPath,
@@ -185,6 +194,7 @@ function collectCollectionFields(
       typeName: getNodeTypeName(node),
       enumOptions: getNodeEnumOptions(node),
       isOverride: !isInputNode(node),
+      collectionItemPath,
     })
   }
   return result

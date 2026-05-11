@@ -257,6 +257,67 @@ export function EnumInput({
   )
 }
 
+// One pickable target row in the referenced collection. `value` is whatever
+// the dropdown stores in the field (we use a "#index" form so the executor
+// can map it to the actual UUID after collections are materialized); `label`
+// is the human-readable display text (e.g. "Member 1 — Jane").
+export type CollectionItemOption = { value: string; label: string }
+
+// Dropdown for CollectionItem-typed fields (e.g. /incomes/x/memberId pointing
+// at /members). Falls back to a free-text input when no options are available
+// — e.g. when the referenced collection is empty so there is nothing to pick.
+export function CollectionItemInput({
+  value,
+  onChange,
+  onBlur,
+  placeholder,
+  className,
+  isOverride,
+  options,
+}: BaseInputProps & { options: CollectionItemOption[] }) {
+  const [focused, setFocused] = useState(false)
+  if (options.length === 0) {
+    return (
+      <TextInput
+        value={value}
+        onChange={onChange}
+        onBlur={onBlur}
+        placeholder={placeholder ?? 'no rows to reference yet'}
+        className={className}
+        isOverride={isOverride}
+      />
+    )
+  }
+  const emptyLabel =
+    focused || value !== '' ? '(empty)' : (placeholder ?? '(empty)')
+  return (
+    <select
+      className={cn(
+        'flex w-full rounded-md border border-input bg-transparent px-2 py-1 font-mono shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring',
+        value === '' && 'text-muted-foreground',
+        filledRing(value !== '', isOverride),
+        className
+      )}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      onFocus={() => setFocused(true)}
+      onBlur={() => {
+        setFocused(false)
+        onBlur?.()
+      }}
+    >
+      <option value="" className="text-muted-foreground">
+        {emptyLabel}
+      </option>
+      {options.map((opt) => (
+        <option key={opt.value} value={opt.value}>
+          {opt.label}
+        </option>
+      ))}
+    </select>
+  )
+}
+
 /** Plain text fallback for String, Rational, Enum (without options), and
  *  every structured value type we don't yet render specially. */
 export function TextInput({
@@ -287,6 +348,11 @@ type TypedValueInputProps = BaseInputProps & {
   /** Option values for Enum fields. When provided, the Enum case renders a
    *  dropdown; otherwise it falls back to TextInput. */
   enumOptions?: string[]
+  // Pickable rows for CollectionItem-typed fields. Caller is responsible for
+  // shaping each option's value into whatever the field is expected to store
+  // (we currently use the "#index" sentinel which the executor maps to the
+  // generated UUID at run time).
+  collectionItems?: CollectionItemOption[]
 }
 
 /**
@@ -297,6 +363,7 @@ type TypedValueInputProps = BaseInputProps & {
 export function TypedValueInput({
   typeName,
   enumOptions,
+  collectionItems,
   ...rest
 }: TypedValueInputProps) {
   switch (typeName) {
@@ -317,6 +384,10 @@ export function TypedValueInput({
         return <EnumInput {...rest} options={enumOptions} />
       }
       return <TextInput {...rest} />
+    case 'CollectionItem':
+      return (
+        <CollectionItemInput {...rest} options={collectionItems ?? []} />
+      )
     default:
       return <TextInput {...rest} />
   }

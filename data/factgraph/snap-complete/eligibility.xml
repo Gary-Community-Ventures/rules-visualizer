@@ -67,12 +67,12 @@
       <Derived>
         <GreaterThan>
           <Left>
-            <Count>
+            <CollectionSize>
               <Filter path="/incomes">
                 <All>
                   <Equal>
                     <Left><Dependency path="memberId" /></Left>
-                    <Right><Dependency path=".." /></Right>
+                    <Right><Dependency path="^" /></Right>
                   </Equal>
                   <Equal>
                     <Left><Dependency path="type" /></Left>
@@ -80,7 +80,7 @@
                   </Equal>
                 </All>
               </Filter>
-            </Count>
+            </CollectionSize>
           </Left>
           <Right><Int>0</Int></Right>
         </GreaterThan>

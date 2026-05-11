@@ -15,10 +15,11 @@ export function FactGraphDerivedViewer({ content }: Props) {
 
   const navigateToPath = useCallback(
     (rawPath: string) => {
-      // Resolve relative paths (e.g. ../meetsAbawdWorkRequirements)
-      // against the current node's path. In fact graph, ../ means
-      // "sibling in the same collection" — pop the field name, strip
-      // ../ prefixes, append the remainder.
+      // Resolve relative paths against the current node's path.
+      //  - `../field`  → sibling in the same collection (pop field name, strip ../).
+      //  - `^/field`   → outside the surrounding Filter scope (= parent of host),
+      //                  same target as `../field` for a single Filter level.
+      //  - `^^/field`  → one more level out, etc.
       let path = rawPath
       if (path.startsWith('..') && content.path) {
         const segments = content.path.split('/').filter(Boolean)
@@ -28,6 +29,15 @@ export function FactGraphDerivedViewer({ content }: Props) {
           remaining = remaining.slice(3)
         }
         path = '/' + segments.join('/') + '/' + remaining
+      } else if (/^\^+(\/|$)/.test(path) && content.path) {
+        const slashIdx = path.indexOf('/')
+        const head = slashIdx === -1 ? path : path.slice(0, slashIdx)
+        const tail = slashIdx === -1 ? '' : path.slice(slashIdx + 1)
+        const segments = content.path.split('/').filter(Boolean)
+        for (let i = 0; i < head.length; i++) segments.pop()
+        const base =
+          segments.length === 0 ? '/' : '/' + segments.join('/')
+        path = tail.length === 0 ? base : base === '/' ? '/' + tail : base + '/' + tail
       }
 
       for (const [nodeId, node] of Object.entries(model.nodes)) {
