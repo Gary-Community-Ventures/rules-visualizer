@@ -26,6 +26,7 @@ import {
 import {
   listRulesets,
   getRuleset,
+  getRulesetDefaultValues,
   type RulesetSummary,
 } from '@/lib/api/rules-api'
 import type { Model } from '@/lib/model'
@@ -597,27 +598,20 @@ function ConfigView({
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
               <label className="text-xs font-medium">Seed</label>
-              <Input
+              <NumberInput
                 className="text-xs font-mono"
-                type="number"
+                parser={parseInt}
                 value={config.seed}
-                onChange={(e) =>
-                  setConfig({ ...config, seed: parseInt(e.target.value) || 0 })
-                }
+                onChange={(v) => setConfig({ ...config, seed: v })}
               />
             </div>
             <div className="space-y-1">
               <label className="text-xs font-medium">Case count</label>
-              <Input
+              <NumberInput
                 className="text-xs font-mono"
-                type="number"
+                parser={parseInt}
                 value={config.caseCount}
-                onChange={(e) =>
-                  setConfig({
-                    ...config,
-                    caseCount: parseInt(e.target.value) || 100,
-                  })
-                }
+                onChange={(v) => setConfig({ ...config, caseCount: v })}
               />
             </div>
           </div>
@@ -648,34 +642,36 @@ function ConfigView({
                       f.type === 'Short' ||
                       f.type === 'Byte') && (
                       <>
-                        <Input
+                        <NumberInput
                           className="h-6 w-20 text-[11px] font-mono"
-                          type="number"
                           value={f.min ?? 0}
-                          onChange={(e) => {
+                          onChange={(v) => {
                             const fields = [...config.scalarFields]
-                            fields[idx] = {
-                              ...f,
-                              min: parseFloat(e.target.value) || 0,
-                            }
+                            fields[idx] = { ...f, min: v }
                             setConfig({ ...config, scalarFields: fields })
                           }}
                         />
                         <span className="text-muted-foreground">–</span>
-                        <Input
+                        <NumberInput
                           className="h-6 w-20 text-[11px] font-mono"
-                          type="number"
-                          value={f.max ?? 100}
-                          onChange={(e) => {
+                          value={f.max ?? 0}
+                          onChange={(v) => {
                             const fields = [...config.scalarFields]
-                            fields[idx] = {
-                              ...f,
-                              max: parseFloat(e.target.value) || 100,
-                            }
+                            fields[idx] = { ...f, max: v }
                             setConfig({ ...config, scalarFields: fields })
                           }}
                         />
                       </>
+                    )}
+                    {f.type === 'Boolean' && (
+                      <BooleanProbabilitySlider
+                        value={f.trueProbability}
+                        onChange={(v) => {
+                          const fields = [...config.scalarFields]
+                          fields[idx] = { ...f, trueProbability: v }
+                          setConfig({ ...config, scalarFields: fields })
+                        }}
+                      />
                     )}
                   </div>
                 ))}
@@ -693,30 +689,24 @@ function ConfigView({
                       <span className="font-mono font-medium">
                         {coll.collectionPath}
                       </span>
-                      <Input
+                      <NumberInput
                         className="h-6 w-12 text-[11px] font-mono"
-                        type="number"
+                        parser={parseInt}
                         value={coll.minMembers}
-                        onChange={(e) => {
+                        onChange={(v) => {
                           const colls = [...config.collections]
-                          colls[collIdx] = {
-                            ...coll,
-                            minMembers: parseInt(e.target.value) || 1,
-                          }
+                          colls[collIdx] = { ...coll, minMembers: v }
                           setConfig({ ...config, collections: colls })
                         }}
                       />
                       <span className="text-muted-foreground">–</span>
-                      <Input
+                      <NumberInput
                         className="h-6 w-12 text-[11px] font-mono"
-                        type="number"
+                        parser={parseInt}
                         value={coll.maxMembers}
-                        onChange={(e) => {
+                        onChange={(v) => {
                           const colls = [...config.collections]
-                          colls[collIdx] = {
-                            ...coll,
-                            maxMembers: parseInt(e.target.value) || 5,
-                          }
+                          colls[collIdx] = { ...coll, maxMembers: v }
                           setConfig({ ...config, collections: colls })
                         }}
                       />
@@ -738,38 +728,42 @@ function ConfigView({
                           f.type === 'Short' ||
                           f.type === 'Byte') && (
                           <>
-                            <Input
+                            <NumberInput
                               className="h-6 w-20 text-[11px] font-mono"
-                              type="number"
                               value={f.min ?? 0}
-                              onChange={(e) => {
+                              onChange={(v) => {
                                 const colls = [...config.collections]
                                 const fields = [...coll.fields]
-                                fields[fIdx] = {
-                                  ...f,
-                                  min: parseFloat(e.target.value) || 0,
-                                }
+                                fields[fIdx] = { ...f, min: v }
                                 colls[collIdx] = { ...coll, fields }
                                 setConfig({ ...config, collections: colls })
                               }}
                             />
                             <span className="text-muted-foreground">–</span>
-                            <Input
+                            <NumberInput
                               className="h-6 w-20 text-[11px] font-mono"
-                              type="number"
-                              value={f.max ?? 100}
-                              onChange={(e) => {
+                              value={f.max ?? 0}
+                              onChange={(v) => {
                                 const colls = [...config.collections]
                                 const fields = [...coll.fields]
-                                fields[fIdx] = {
-                                  ...f,
-                                  max: parseFloat(e.target.value) || 100,
-                                }
+                                fields[fIdx] = { ...f, max: v }
                                 colls[collIdx] = { ...coll, fields }
                                 setConfig({ ...config, collections: colls })
                               }}
                             />
                           </>
+                        )}
+                        {f.type === 'Boolean' && (
+                          <BooleanProbabilitySlider
+                            value={f.trueProbability}
+                            onChange={(v) => {
+                              const colls = [...config.collections]
+                              const fields = [...coll.fields]
+                              fields[fIdx] = { ...f, trueProbability: v }
+                              colls[collIdx] = { ...coll, fields }
+                              setConfig({ ...config, collections: colls })
+                            }}
+                          />
                         )}
                       </div>
                     ))}
@@ -1338,43 +1332,26 @@ function DetailView({
     ? allPaths
     : [...outcomeDiffPaths, ...otherDiffPaths]
 
-  const baseOvCount = baseOverrides ? Object.keys(baseOverrides).length : 0
-  const compOvCount = comparedOverrides
-    ? Object.keys(comparedOverrides).length
-    : 0
-
   return (
     <div className="max-w-5xl mx-auto p-6 space-y-6">
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 flex-wrap">
         <h2 className="text-sm font-semibold">Case #{caseResult.scenarioId}</h2>
         {caseResult.changed && (
           <span className="text-xs px-2 py-0.5 bg-amber-100 text-amber-800 rounded">
             Changed
           </span>
         )}
-        {(baseOvCount > 0 || compOvCount > 0) && (
-          <span
-            className="text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-800"
-            title={[
-              baseOvCount > 0
-                ? `Base: ${Object.entries(baseOverrides ?? {})
-                    .map(([k, v]) => `${k}=${JSON.stringify(v)}`)
-                    .join(', ')}`
-                : null,
-              compOvCount > 0
-                ? `Compared: ${Object.entries(comparedOverrides ?? {})
-                    .map(([k, v]) => `${k}=${JSON.stringify(v)}`)
-                    .join(', ')}`
-                : null,
-            ]
-              .filter(Boolean)
-              .join('\n')}
-          >
-            {baseOvCount > 0 && `+${baseOvCount}b`}
-            {baseOvCount > 0 && compOvCount > 0 && ' '}
-            {compOvCount > 0 && `+${compOvCount}c`}
-          </span>
-        )}
+        <div className="flex items-center gap-1.5 text-xs min-w-0">
+          <RulesetWithOverrides
+            rulesetId={rulesetId}
+            overrides={baseOverrides}
+          />
+          <span className="text-muted-foreground shrink-0">vs</span>
+          <RulesetWithOverrides
+            rulesetId={comparedRulesetId}
+            overrides={comparedOverrides}
+          />
+        </div>
         <div className="relative">
           <Button
             variant="outline"
@@ -2255,6 +2232,7 @@ function OverridesEditor({
 }) {
   const [search, setSearch] = useState('')
   const [model, setModel] = useState<Model | null>(null)
+  const [defaults, setDefaults] = useState<Record<string, unknown>>({})
 
   useEffect(() => {
     if (!rulesetId) return
@@ -2262,6 +2240,11 @@ function OverridesEditor({
     getRuleset(rulesetId)
       .then((m) => {
         if (!cancelled) setModel(m)
+      })
+      .catch(() => {})
+    getRulesetDefaultValues(rulesetId)
+      .then((v) => {
+        if (!cancelled) setDefaults(v)
       })
       .catch(() => {})
     return () => {
@@ -2311,6 +2294,7 @@ function OverridesEditor({
         <div className="space-y-1">
           {overrideKeys.map((path) => {
             const meta = lookup.get(path)
+            const current = defaults[path]
             return (
               <div key={path} className="flex items-center gap-1.5 text-xs">
                 <span className="font-mono flex-1 truncate" title={path}>
@@ -2319,6 +2303,14 @@ function OverridesEditor({
                 <span className="text-[10px] text-muted-foreground shrink-0">
                   ({meta?.type ?? '?'})
                 </span>
+                {current !== undefined && (
+                  <span
+                    className="text-[10px] text-muted-foreground font-mono shrink-0"
+                    title="Default value (empty-inputs execution)"
+                  >
+                    was {formatDefaultValue(current)} →
+                  </span>
+                )}
                 <OverrideValueInput
                   type={meta?.type ?? 'String'}
                   enumOptions={meta?.enumOptions}
@@ -2350,24 +2342,35 @@ function OverridesEditor({
       />
       {search && filtered.length > 0 && (
         <div className="border rounded max-h-32 overflow-y-auto bg-background">
-          {filtered.map((p) => (
-            <button
-              key={p.path}
-              className="w-full text-left px-2 py-1 text-xs font-mono hover:bg-muted flex items-center gap-2"
-              onClick={() => {
-                setOverrides({
-                  ...overrides,
-                  [p.path]: defaultOverrideValue(p.type),
-                })
-                setSearch('')
-              }}
-            >
-              <span className="flex-1 truncate">{p.path}</span>
-              <span className="text-[10px] text-muted-foreground">
-                {p.type}
-              </span>
-            </button>
-          ))}
+          {filtered.map((p) => {
+            const current = defaults[p.path]
+            return (
+              <button
+                key={p.path}
+                className="w-full text-left px-2 py-1 text-xs font-mono hover:bg-muted flex items-center gap-2"
+                onClick={() => {
+                  // Pre-seed with the current default value so the user can
+                  // tweak from a known baseline instead of starting at 0/blank.
+                  const seed =
+                    current !== undefined && isOverrideSeedSafe(p.type, current)
+                      ? current
+                      : defaultOverrideValue(p.type)
+                  setOverrides({ ...overrides, [p.path]: seed })
+                  setSearch('')
+                }}
+              >
+                <span className="flex-1 truncate">{p.path}</span>
+                {current !== undefined && (
+                  <span className="text-[10px] text-muted-foreground font-mono">
+                    = {formatDefaultValue(current)}
+                  </span>
+                )}
+                <span className="text-[10px] text-muted-foreground">
+                  {p.type}
+                </span>
+              </button>
+            )
+          })}
         </div>
       )}
       {search && filtered.length === 0 && model && (
@@ -2390,6 +2393,101 @@ function defaultOverrideValue(type: string): unknown {
   )
     return 0
   return ''
+}
+
+/**
+ * Numeric input that keeps a local string draft so the user can backspace
+ * to empty without the controlled `value` immediately re-rendering `0`.
+ * Parent state still gets `0` when the field is empty; the input stays
+ * visually empty until the user types again.
+ */
+function NumberInput({
+  value,
+  onChange,
+  className,
+  parser = parseFloat,
+}: {
+  value: number
+  onChange: (v: number) => void
+  className?: string
+  parser?: (s: string) => number
+}) {
+  const [draft, setDraft] = useState<string>(String(value))
+
+  // Resync draft from external value when it's changed elsewhere
+  // (sibling input, config reload, etc.). Avoid trampling the user's
+  // own typing — `parser(draft) === value` means we're already in sync;
+  // `draft === '' && value === 0` is the "user just cleared the field"
+  // intermediate state.
+  useEffect(() => {
+    const parsed = parser(draft)
+    const sameValue = !isNaN(parsed) && parsed === value
+    const editingToZero = draft === '' && value === 0
+    if (!sameValue && !editingToZero) setDraft(String(value))
+  }, [value, draft, parser])
+
+  return (
+    <Input
+      className={className}
+      type="number"
+      value={draft}
+      onChange={(e) => {
+        const raw = e.target.value
+        setDraft(raw)
+        if (raw === '') {
+          onChange(0)
+          return
+        }
+        const parsed = parser(raw)
+        if (!isNaN(parsed)) onChange(parsed)
+      }}
+    />
+  )
+}
+
+/**
+ * Slider + numeric input for a Boolean scenario-gen field's `true`
+ * probability. Range 0–100, displayed as a %. Slider for fast exploration,
+ * number input for precise values.
+ */
+function BooleanProbabilitySlider({
+  value,
+  onChange,
+}: {
+  value: number | undefined // 0–1
+  onChange: (v: number | undefined) => void
+}) {
+  const pct = Math.round(((value ?? 0.5) * 100 + Number.EPSILON) * 10) / 10
+  const setPct = (next: number) => {
+    const clamped = Math.max(0, Math.min(100, next))
+    // Treat 50% as "default" — clear the field so it's not persisted as 0.5.
+    if (Math.abs(clamped - 50) < 0.05) onChange(undefined)
+    else onChange(clamped / 100)
+  }
+  return (
+    <div className="inline-flex items-center gap-1.5">
+      <input
+        type="range"
+        min={0}
+        max={100}
+        step={1}
+        value={pct}
+        onChange={(e) => setPct(Number(e.target.value))}
+        className="w-24 accent-foreground"
+        title="% true"
+      />
+      <input
+        type="number"
+        min={0}
+        max={100}
+        step={1}
+        value={pct}
+        onChange={(e) => setPct(Number(e.target.value))}
+        className="h-6 w-12 text-[11px] font-mono border rounded px-1 bg-background"
+      />
+      <span className="text-[10px] text-muted-foreground">% true</span>
+    </div>
+  )
 }
 
 function OverrideValueInput({
@@ -2561,6 +2659,44 @@ function autoRunLabel(run: SimulationRun): string {
   const right =
     compN > 0 ? `${run.comparedRulesetId} +${compN}` : run.comparedRulesetId
   return `${left} vs ${right}`
+}
+
+/** Short rendering of a default value for the override hints. Stays
+ *  one-line; arrays/objects collapse to a brief summary. */
+function formatDefaultValue(v: unknown): string {
+  if (v === undefined) return '—'
+  if (v === null) return 'null'
+  if (typeof v === 'boolean') return v ? 'true' : 'false'
+  if (typeof v === 'number') return String(v)
+  if (typeof v === 'string') {
+    return v.length > 24 ? `${v.slice(0, 24)}…` : v
+  }
+  if (Array.isArray(v)) return `[${v.length}]`
+  return typeof v
+}
+
+/** Whether the executor-returned default value can be safely fed back into
+ *  the override input. Numbers/booleans/enums-as-strings are fine; arrays
+ *  (collection aggregates) and Rational strings like "1/5" are not — the
+ *  input would silently coerce or reject them. */
+function isOverrideSeedSafe(type: string, value: unknown): boolean {
+  if (value === null || value === undefined) return false
+  if (Array.isArray(value)) return false
+  switch (type) {
+    case 'Boolean':
+      return typeof value === 'boolean'
+    case 'Dollar':
+    case 'Int':
+    case 'Short':
+    case 'Byte':
+      return typeof value === 'number'
+    case 'Enum':
+      return typeof value === 'string'
+    case 'String':
+      return typeof value === 'string'
+    default:
+      return false
+  }
 }
 
 function formatValue(v: unknown): string {

@@ -5,6 +5,8 @@ export type FieldConfig = {
   min?: number
   max?: number
   enumOptions?: string[]
+  /** Probability a Boolean field generates `true` (0–1). Default 0.5. */
+  trueProbability?: number
 }
 
 /** Configuration for a collection (e.g., /members) */

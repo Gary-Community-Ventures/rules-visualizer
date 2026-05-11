@@ -21,6 +21,10 @@ export type Population = {
   id: string
   name: string
   description?: string
+  /** Soft UI preference: which ruleset the management page's "Open cases in"
+   *  selector defaults to, and which the manual-case form seeds its schema
+   *  from. Not a binding constraint — populations remain ruleset-agnostic. */
+  defaultRulesetId?: string
   createdAt: string
   updatedAt: string
   cases: PopulationCase[]
@@ -122,6 +126,65 @@ export function addCasesToPopulation(
   if (!filePath) return null
   fs.writeFileSync(filePath, JSON.stringify(population, null, 2) + '\n')
 
+  return population
+}
+
+/** Update a population's name, description, or default-ruleset preference. */
+export function updatePopulation(
+  populationId: string,
+  patch: Partial<Pick<Population, 'name' | 'description' | 'defaultRulesetId'>>
+): Population | null {
+  const population = getPopulation(populationId)
+  if (!population) return null
+
+  if ('name' in patch && patch.name !== undefined) {
+    const trimmed = patch.name.trim()
+    if (trimmed === '') return null // ignore empty rename
+    population.name = trimmed
+  }
+  if ('description' in patch) {
+    const trimmed = patch.description?.trim()
+    if (trimmed) population.description = trimmed
+    else delete population.description
+  }
+  if ('defaultRulesetId' in patch) {
+    const trimmed = patch.defaultRulesetId?.trim()
+    if (trimmed) population.defaultRulesetId = trimmed
+    else delete population.defaultRulesetId
+  }
+  population.updatedAt = new Date().toISOString()
+
+  const filePath = getPopulationPath(populationId)
+  if (!filePath) return null
+  fs.writeFileSync(filePath, JSON.stringify(population, null, 2) + '\n')
+  return population
+}
+
+/** Update a single case's fields (name, inputs, entities). */
+export function updateCaseInPopulation(
+  populationId: string,
+  caseId: number,
+  patch: Partial<Pick<PopulationCase, 'name' | 'inputs' | 'entities'>>
+): Population | null {
+  const population = getPopulation(populationId)
+  if (!population) return null
+
+  const idx = population.cases.findIndex((c) => c.id === caseId)
+  if (idx === -1) return null
+
+  const existing = population.cases[idx]
+  const updated: PopulationCase = {
+    ...existing,
+    ...('name' in patch ? { name: patch.name?.trim() || undefined } : {}),
+    ...('inputs' in patch ? { inputs: patch.inputs ?? {} } : {}),
+    ...('entities' in patch ? { entities: patch.entities } : {}),
+  }
+  population.cases[idx] = updated
+  population.updatedAt = new Date().toISOString()
+
+  const filePath = getPopulationPath(populationId)
+  if (!filePath) return null
+  fs.writeFileSync(filePath, JSON.stringify(population, null, 2) + '\n')
   return population
 }
 

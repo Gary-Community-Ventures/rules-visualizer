@@ -8,6 +8,7 @@ export type FieldConfig = {
   min?: number
   max?: number
   enumOptions?: string[]
+  trueProbability?: number
 }
 
 export type CollectionConfig = {
@@ -176,6 +177,7 @@ export type Population = {
   id: string
   name: string
   description?: string
+  defaultRulesetId?: string
   createdAt: string
   updatedAt: string
   cases: PopulationCase[]
@@ -224,6 +226,50 @@ export async function addCasesToPopulationFromRun(
   fromRun: FromRunSpec
 ): Promise<Population> {
   return post(`/api/populations/${populationId}/cases`, { fromRun })
+}
+
+export async function updatePopulation(
+  populationId: string,
+  patch: {
+    name?: string
+    description?: string | null
+    defaultRulesetId?: string | null
+  }
+): Promise<Population> {
+  const res = await fetch(`${API_BASE}/api/populations/${populationId}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(patch),
+  })
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    throw new Error(data.error ?? `API error: ${res.status}`)
+  }
+  return res.json()
+}
+
+export async function updateCaseInPopulation(
+  populationId: string,
+  caseId: number,
+  patch: {
+    name?: string
+    inputs?: Record<string, unknown>
+    entities?: Record<string, Record<string, unknown>[]>
+  }
+): Promise<Population> {
+  const res = await fetch(
+    `${API_BASE}/api/populations/${populationId}/cases/${caseId}`,
+    {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(patch),
+    }
+  )
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    throw new Error(data.error ?? `API error: ${res.status}`)
+  }
+  return res.json()
 }
 
 export async function removeCaseFromPopulation(
