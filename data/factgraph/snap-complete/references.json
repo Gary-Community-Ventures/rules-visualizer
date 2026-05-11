@@ -404,16 +404,2206 @@
       ]
     },
     {
-      "id": "10-ccr-2506-1__molnzt8w-0kpp",
+      "id": "10-ccr-2506-1__skip-1778175663919",
       "documentId": "10-ccr-2506-1",
-      "text": "",
+      "text": "these individuals as spouses.",
       "page": 2,
       "rects": [
         {
-          "x": 0.49874060046698904,
-          "y": 0.4866170369949423,
-          "w": 0.16678650879741136,
-          "h": 0.01773114735466275
+          "x": 0.11091064904605115,
+          "y": 0.6774305979122737,
+          "w": 0.7548599521897974,
+          "h": 0.03122876113134554
+        }
+      ],
+      "status": "skipped",
+      "comment": "There are no references to this in the document."
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778175712838",
+      "documentId": "10-ccr-2506-1",
+      "text": "repay.",
+      "page": 2,
+      "rects": [
+        {
+          "x": 0.10802399530918767,
+          "y": 0.7220431138141958,
+          "w": 0.7664065671372513,
+          "h": 0.03569001272153771
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778175726400",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Clear and convincing evidence” means evidence which is stronger than a preponderance of evidence and which is unmistakable and free from serious or substantial doubt.",
+      "page": 2,
+      "rects": [
+        {
+          "x": 0.10802399530918767,
+          "y": 0.7655403168185699,
+          "w": 0.7548599521897974,
+          "h": 0.03234407402889361
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778175733263",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Client” means a current or past applicant or a current or past recipient of SNAP.",
+      "page": 2,
+      "rects": [
+        {
+          "x": 0.10802399530918767,
+          "y": 0.8056915811302999,
+          "w": 0.6076406116097605,
+          "h": 0.025652196643605185
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778175747236",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Collateral contact” means a verbal or written confirmation of a household's circumstances by a person outside the household who has first-hand knowledge of the information, made either in person, electronically submitted, or by telephone.",
+      "page": 2,
+      "rects": [
+        {
+          "x": 0.11091064904605115,
+          "y": 0.8380356551591935,
+          "w": 0.7519732984529339,
+          "h": 0.05018908038966241
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778175762839",
+      "documentId": "10-ccr-2506-1",
+      "text": "Supplemental Nutrition Assistance Program (SNAP)",
+      "page": 3,
+      "rects": [
+        {
+          "x": 0.10658066844075595,
+          "y": 0.04213791541048743,
+          "w": 0.7967164313743178,
+          "h": 0.03345938692644163
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778175766404",
+      "documentId": "10-ccr-2506-1",
+      "text": "2",
+      "page": 2,
+      "rects": [
+        {
+          "x": 0.10225068783546074,
+          "y": 0.9484516320164509,
+          "w": 0.801046411979613,
+          "h": 0.03569001272153771
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778175773474",
+      "documentId": "10-ccr-2506-1",
+      "text": "C.R.S., which is incorporated by reference. No later editions or amendments are incorporated. This regulation is available for public inspection and copying at The Food and Energy Assistance Division Director, Colorado Department of Human Services, 1575 Sherman Street, 3rd Floor, Denver, Colorado 80203.",
+      "page": 3,
+      "rects": [
+        {
+          "x": 0.100807360967029,
+          "y": 0.09121168290260181,
+          "w": 0.7620765865319561,
+          "h": 0.07472596413571964
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778175796864",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Colorado Electronic Benefit Transfer System (CO/EBTS)” means the electronic system that enables SNAP participants or their authorized representatives to redeem their SNAP benefits at point-of-sale terminals.",
+      "page": 3,
+      "rects": [
+        {
+          "x": 0.10225068783546074,
+          "y": 0.17151421152606172,
+          "w": 0.7461999909792071,
+          "h": 0.05241970618475855
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778175804709",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Colorado Unemployment Benefits System (CUBS)” means the electronic system by which Unemployment Insurance Benefits (UIB) are determined by the Colorado Department of Labor and Employment.",
+      "page": 3,
+      "rects": [
+        {
+          "x": 0.10946732217761941,
+          "y": 0.23508704668630082,
+          "w": 0.7274367416895945,
+          "h": 0.048497203004374094
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778175881344",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Combined appeal” means an appeal that involves both a SNAP appeal and an appeal concerning any other benefit program area (ex. A SNAP appeal plus a Colorado Works appeal that are filed as one appeal). Combined appeals will be bifurcated to allow the SNAP portion of the appeal to move on a faster track to comply with federal SNAP timeliness requirements.",
+      "page": 3,
+      "rects": [
+        {
+          "x": 0.10513734157232421,
+          "y": 0.28862206576860744,
+          "w": 0.7837264895584322,
+          "h": 0.06691877385288325
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778176034465",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Communal dining facility” means an establishment approved by FNS that prepares and serves meals for persons aged sixty (60) and older, or for Supplemental Security Income (SSI) recipients, and their spouses. This also includes federally subsidized housing for persons aged sixty (60) and older at which meals are prepared for and served to the residents. It also includes private establishments that contract with an appropriate state or local agency to offer meals at concessional prices to persons aged sixty (60) and older or SSI recipients, and their spouses.",
+      "page": 3,
+      "rects": [
+        {
+          "x": 0.10513734157232421,
+          "y": 0.36669396859697123,
+          "w": 0.7808398358215687,
+          "h": 0.09591690918913265
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778176052710",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Compromise” means a local office’s decision to reduce the amount of a claim that is owed by a household.",
+      "page": 3,
+      "rects": [
+        {
+          "x": 0.10513734157232421,
+          "y": 0.4693027551713922,
+          "w": 0.7101168192684136,
+          "h": 0.03792063851663385
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__movs56tz-sg71",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Countable month” means a month in which an ABAWD received a full SNAP allotment but did not meet work requirements or have an exemption from those requirements.",
+      "page": 3,
+      "rects": [
+        {
+          "x": 0.10658066844075595,
+          "y": 0.5116846452782183,
+          "w": 0.767849894005683,
+          "h": 0.042381890106826026
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778176141576",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Demand letter”, see “notice of overpayment.”",
+      "page": 3,
+      "rects": [
+        {
+          "x": 0.11091064904605115,
+          "y": 0.5585277869752365,
+          "w": 0.34639844842361645,
+          "h": 0.021190945053413124
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__movsej8u-s0m9",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Disaster Supplemental Nutrition Assistance Program (D-SNAP)” means the assistance provided to the affected areas when a Presidential disaster declaration for individual assistance is declared and the decision to implement this program after a Presidential declaration shall be at the affected county’s discretion in coordination with the state SNAP office and FNS.",
+      "page": 3,
+      "rects": [
+        {
+          "x": 0.10802399530918767,
+          "y": 0.5875259223114859,
+          "w": 0.7664065671372513,
+          "h": 0.06245752226269108
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778176588011",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Dispute Resolution Conference (DRC)” means an informal meeting between a household and the local office to review an action taken on a case and the relevant facts pertaining to such action.",
+      "page": 3,
+      "rects": [
+        {
+          "x": 0.10658066844075595,
+          "y": 0.6566753219594653,
+          "w": 0.7750665283478417,
+          "h": 0.04238189010682614
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778176618836",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Disqualification Consent Agreement (DCA)” means the form that allows the individual(s) suspected of Intentional Program Violation/fraud to consent to his/her disqualification in cases of deferred adjudication, as described in 7 C.F.R. 273.169(h), which is herein incorporated by reference. No later editions or amendments are incorporated. The regulation is available at no cost at the FNS, 3101 Park Center Dr., #906, Alexandria, VA 22302, or at https://www.ecfr.gov. This regulation is also available for public inspection and copying at the Food and Energy Assistance Division Director, Colorado Department of Human Services, 1575 Sherman Street, 3rd Floor, Denver, Colorado 80203.",
+      "page": 3,
+      "rects": [
+        {
+          "x": 0.10802399530918767,
+          "y": 0.7035184636564836,
+          "w": 0.7692932208741148,
+          "h": 0.11041597685725735
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778176664800",
+      "documentId": "10-ccr-2506-1",
+      "text": "3",
+      "page": 3,
+      "rects": [
+        {
+          "x": 0.08781741915114338,
+          "y": 0.9377341721415751,
+          "w": 0.80681971945334,
+          "h": 0.03569001272153771
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778176667919",
+      "documentId": "10-ccr-2506-1",
+      "text": "CODE OF COLORADO REGULATIONS 10 CCR 2506-1 Supplemental Nutrition Assistance Program (SNAP)",
+      "page": 4,
+      "rects": [
+        {
+          "x": 0.11091064904605115,
+          "y": 0.034766394228255754,
+          "w": 0.7851698164268639,
+          "h": 0.043497203004374124
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__movskv9b-gjhh",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Disqualified individuals” means any individual who is ineligible to receive SNAP benefits due to having been disqualified for an Intentional Program Violation/fraud, failure to provide or obtain a SSN, ineligible non-citizens, individuals disqualified for failure to cooperate with work requirements, individuals disqualified for failure to cooperate with the state quality assurance division, and ABAWDs who already received three countable months of SNAP within thirty-six (36) months without meeting an exemption or ABAWD work requirements.",
+      "page": 4,
+      "rects": [
+        {
+          "x": 0.10868299673100175,
+          "y": 0.08721905981279306,
+          "w": 0.7709462182616094,
+          "h": 0.09744450404000206
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778176884025",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Documentary evidence” means written information used to verify the income, expenses, and other circumstances of a household.",
+      "page": 4,
+      "rects": [
+        {
+          "x": 0.10868299673100175,
+          "y": 0.19241483121961347,
+          "w": 0.7351215798665531,
+          "h": 0.03321971728636433
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778176889959",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Documentation” means the collection of documentary evidence, verification, case notes, and other information related to a household’s case upon which eligibility determinations and other decisions are based.",
+      "page": 4,
+      "rects": [
+        {
+          "x": 0.10581702565939725,
+          "y": 0.2356004636918871,
+          "w": 0.7580493484393892,
+          "h": 0.053151547658182946
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778177071836",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Drug and Alcohol Treatment Center (DAA)” means any residential facility run by a private, nonprofit organization or institution, or a publicly operated community mental health center, under Part B of Title XIX of the Public Health Service Act (42 U.S.C 300x-1 through 300x-13) that provides rehabilitative treatment to persons participating in a drug or alcohol treatment program.",
+      "page": 4,
+      "rects": [
+        {
+          "x": 0.104384040123595,
+          "y": 0.2920739830787065,
+          "w": 0.7609153195109937,
+          "h": 0.07086873021091056
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__movt33ka-4sp3",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Dual participation” means the receipt of SNAP benefits in more than one SNAP household or state in the same calendar month.",
+      "page": 4,
+      "rects": [
+        {
+          "x": 0.10209558388255258,
+          "y": 0.3647744080020737,
+          "w": 0.779194127629346,
+          "h": 0.0409862311879603
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778177812274",
+      "documentId": "10-ccr-2506-1",
+      "text": "“EBT account” means the account linked to the EBT card where the state department deposits SNAP benefits.",
+      "page": 4,
+      "rects": [
+        {
+          "x": 0.11346146256758356,
+          "y": 0.41063995242669593,
+          "w": 0.7450964915742531,
+          "h": 0.039034505893295546
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778177816809",
+      "documentId": "10-ccr-2506-1",
+      "text": "“EBT card” means the card issued to persons authorized to receive SNAP to which the household’s allotment is credited. Used for SNAP purposes to purchase eligible foods at approved retailers.",
+      "page": 4,
+      "rects": [
+        {
+          "x": 0.1109357117486878,
+          "y": 0.45162618361465623,
+          "w": 0.7450964915742532,
+          "h": 0.03708278059863074
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778177882439",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Eligibility has been determined” means a required interview was completed and all required were received for a valid SNAP application and a determination of eligibility or ineligibility was made a resulting notice of action.",
+      "page": 4,
+      "rects": [
+        {
+          "x": 0.1109357117486878,
+          "y": 0.4926124148026165,
+          "w": 0.7589881210781799,
+          "h": 0.05660003354527854
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__movths36-6bol",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Employment and Training Program” means a program operated by the Department of Human Services consisting of work, training, education, work experience, and/or job search activities designed to help clients obtain gainful employment. “Employment First (EF)” means Colorado’s Employment and Training Program.",
+      "page": 4,
+      "rects": [
+        {
+          "x": 0.10588421011089624,
+          "y": 0.5560434868792218,
+          "w": 0.7653024981254194,
+          "h": 0.0849000503179177
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__movtppnp-7caj",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Energy Electronic Benefit Transfer (E-EBT)” means the fuel assistance payment to eligible SNAP households of at least $20.01 that qualifies those households for the heating and cooling standard utility allowance.",
+      "page": 4,
+      "rects": [
+        {
+          "x": 0.1109357117486878,
+          "y": 0.6458228504338014,
+          "w": 0.7640396227159715,
+          "h": 0.04879313236661942
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778178763525",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Evidence” includes but is not limited to an item, document, photograph, video recording, testimony, or other tangible object presented to an administrative adjudicator, administrative law judge, and/or during a dispute resolution conference to make the existence of a fact more or less valid.”",
+      "page": 4,
+      "rects": [
+        {
+          "x": 0.10840996092979202,
+          "y": 0.7043746092737447,
+          "w": 0.779194127629346,
+          "h": 0.05367244560328133
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__movtqcv2-2z1w",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Excess medical deduction” means a deduction from a household's total gross income applied when a person with a disability or a person aged sixty (60) and older has medical expenses over a specified monthly amount.",
+      "page": 4,
+      "rects": [
+        {
+          "x": 0.11725008879592722,
+          "y": 0.7619505054663556,
+          "w": 0.7400449899364616,
+          "h": 0.05464830825061373
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__movtrqa2-fxaj",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Exempt income” means income that is exempt from consideration when determining eligibility for SNAP.",
+      "page": 4,
+      "rects": [
+        {
+          "x": 0.1109357117486878,
+          "y": 0.8224539896009637,
+          "w": 0.7653024981254193,
+          "h": 0.021468978241312442
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__movts74o-he42",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Expanded Categorical Eligibility (ECE)” means households that are exempt from having resources considered when determining eligibility for SNAP.",
+      "page": 4,
+      "rects": [
+        {
+          "x": 0.10967283633923991,
+          "y": 0.8517298690209353,
+          "w": 0.7261533604325348,
+          "h": 0.03415519265663358
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778179421669",
+      "documentId": "10-ccr-2506-1",
+      "text": "4",
+      "page": 4,
+      "rects": [
+        {
+          "x": 0.09451833142586527,
+          "y": 0.9405333699281826,
+          "w": 0.8006630095899601,
+          "h": 0.04976899501395171
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778179428746",
+      "documentId": "10-ccr-2506-1",
+      "text": "CODE OF COLORADO REGULATIONS 10 CCR 2506-1 Supplemental Nutrition Assistance Program (SNAP)",
+      "page": 5,
+      "rects": [
+        {
+          "x": 0.1008327084731047,
+          "y": 0.0303127334827623,
+          "w": 0.7905600063143771,
+          "h": 0.050744857661284185
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778179531844",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Expedited service” means the method by which an application for SNAP is processed to ensure that the neediest households have access to benefits no later than the seventh (7th) calendar day following the date of application.",
+      "page": 5,
+      "rects": [
+        {
+          "x": 0.11346146256758356,
+          "y": 0.08788862967537318,
+          "w": 0.7653024981254194,
+          "h": 0.04976899501395178
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778179541714",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Fair hearing” or “State-level fair hearing” means a hearing conducted in person or on the telephone by an administrative adjudicator to provide an impartial decision on a household’s appeal of a local office’s decision or action.",
+      "page": 5,
+      "rects": [
+        {
+          "x": 0.10335845929200048,
+          "y": 0.14448866322065168,
+          "w": 0.7817198784482419,
+          "h": 0.055624170897946135
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778179552743",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Final agency decision” means a decision issued by the Office of Appeals after reviewing the initial decision issued by an administrative adjudicator.",
+      "page": 5,
+      "rects": [
+        {
+          "x": 0.10967283633923991,
+          "y": 0.20694387264992453,
+          "w": 0.7223647342041912,
+          "h": 0.03317933000930118
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__movu81rq-9lqe",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Financial criteria” means the set of rules governing gross and net income and resource standards and the proper methods for computing a household’s income and resources.",
+      "page": 5,
+      "rects": [
+        {
+          "x": 0.11346146256758356,
+          "y": 0.24402665324855527,
+          "w": 0.7488851178025967,
+          "h": 0.04586554442462221
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__movu9igu-c8j5",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Fleeing felon” means an individual who is fleeing to avoid prosecution or custody for a crime, or an attempt to commit a crime, that would be classified as a felony under a state or federal law.",
+      "page": 5,
+      "rects": [
+        {
+          "x": 0.11219858715813567,
+          "y": 0.2928197856151747,
+          "w": 0.7274162358419827,
+          "h": 0.036106917951298334
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778179724314",
+      "documentId": "10-ccr-2506-1",
+      "text": "“FNS” means the Food and Nutrition Service of the U.S. Department of Agriculture.",
+      "page": 5,
+      "rects": [
+        {
+          "x": 0.11219858715813567,
+          "y": 0.33478187945046733,
+          "w": 0.6087059473538814,
+          "h": 0.027324154125306865
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__movub8hb-s78w",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Full-time student” means a person who has a school schedule equivalent to a full-time curriculum as defined by the institution of higher education the person is attending.",
+      "page": 5,
+      "rects": [
+        {
+          "x": 0.1109357117486878,
+          "y": 0.3972370888797402,
+          "w": 0.7375192391175658,
+          "h": 0.03708278059863074
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__movued2h-59ru",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Fraud” means the same as described in section 26-2-305(1)(a), C.R.S.",
+      "page": 5,
+      "rects": [
+        {
+          "x": 0.10840996092979202,
+          "y": 0.36600948416510376,
+          "w": 0.534196298196456,
+          "h": 0.023420703535977305
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778179963166",
+      "documentId": "10-ccr-2506-1",
+      "text": "“G-845” means the U.S. Citizenship and Immigration Services (USCIS) form submitted by SNAP to the USCIS to request immigration status verification for a SNAP client. Form G-845 was last modified on April 8, 2021 and is incorporated by reference. No later editions or amendments are incorporated. The form is available at no cost at https://www.uscis.gov/g-845. The form is also available for public inspection and copying at the Food and Energy Assistance Division Director, Colorado Department of Human Services, 1575 Sherman Street, 3rd Floor, Denver, Colorado 80203.",
+      "page": 5,
+      "rects": [
+        {
+          "x": 0.10840996092979202,
+          "y": 0.43919918271503283,
+          "w": 0.7779312522198981,
+          "h": 0.09953799002790359
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__movulpek-5uhz",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Gross income” means the total of all non-exempt earned and unearned income added together before any deduction or disregard is considered.",
+      "page": 5,
+      "rects": [
+        {
+          "x": 0.10714708552034413,
+          "y": 0.6158303218821951,
+          "w": 0.7615138718970756,
+          "h": 0.040010368540627894
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__movvi1jv-299w",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Group Living Arrangement (GLA)” means a public or private non-profit facility certified under Section 1616(e) of the Social Security Act which serves no more than sixteen (16) people.",
+      "page": 5,
+      "rects": [
+        {
+          "x": 0.1109357117486878,
+          "y": 0.6597441410121525,
+          "w": 0.7413078653459095,
+          "h": 0.0380586432459632
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778181854735",
+      "documentId": "10-ccr-2506-1",
+      "text": "knowledge of the household’s circumstances. The head of household is the person to whom the local office addresses correspondence and notices about the household’s case. This person is generally the individual who completes the application process and is responsible for obtaining and using the household’s EBT card.",
+      "page": 5,
+      "rects": [
+        {
+          "x": 0.10714708552034413,
+          "y": 0.7085372733787719,
+          "w": 0.7539366194403884,
+          "h": 0.07806901178659109
+        }
+      ],
+      "status": "skipped",
+      "comment": "Surprisingly is only used for communication/administrative purposes"
+    },
+    {
+      "id": "10-ccr-2506-1__movvl48h-oepe",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Heating/Cooling Utility Allowance (HCUA)” means a fixed deduction applied to any household that incurs a heating or cooling expense.",
+      "page": 5,
+      "rects": [
+        {
+          "x": 0.10840996092979202,
+          "y": 0.7914855984020249,
+          "w": 0.7741426259915545,
+          "h": 0.03903450589329549
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778182020341",
+      "documentId": "10-ccr-2506-1",
+      "text": "1. A public or private nonprofit establishment that feeds persons experiencing homelessness; or,",
+      "page": 5,
+      "rects": [
+        {
+          "x": 0.10840996092979202,
+          "y": 0.8412545934159767,
+          "w": 0.6781640948735151,
+          "h": 0.07318969854992907
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778182023271",
+      "documentId": "10-ccr-2506-1",
+      "text": "5",
+      "page": 5,
+      "rects": [
+        {
+          "x": 0.09956983306365681,
+          "y": 0.9427443087385451,
+          "w": 0.7905600063143771,
+          "h": 0.035131055303965875
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778182026022",
+      "documentId": "10-ccr-2506-1",
+      "text": "CODE OF COLORADO REGULATIONS 10 CCR 2506-1 Supplemental Nutrition Assistance Program (SNAP)",
+      "page": 6,
+      "rects": [
+        {
+          "x": 0.10967283633923991,
+          "y": 0.03252367229312474,
+          "w": 0.7842456292671376,
+          "h": 0.04488968177728985
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778182029533",
+      "documentId": "10-ccr-2506-1",
+      "text": "2. A restaurant which contracts with an appropriate state agency to offer meals at concessional (low or reduced) prices to persons experiencing homelessness.",
+      "page": 6,
+      "rects": [
+        {
+          "x": 0.16271360353605116,
+          "y": 0.08619611789640608,
+          "w": 0.6478550850467659,
+          "h": 0.03903450589329552
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__movvsmzi-5832",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Household” means a group of individuals who live together and customarily purchase and prepare food together for home consumption.",
+      "page": 6,
+      "rects": [
+        {
+          "x": 0.11472433797703145,
+          "y": 0.1320616623210283,
+          "w": 0.7615138718970756,
+          "h": 0.04001036854062792
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__movw1p03-49jn",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Household income” means all earned and unearned income received or anticipated to be received by the household from all sources, unless specifically exempted for SNAP eligibility purposes.",
+      "page": 6,
+      "rects": [
+        {
+          "x": 0.11219858715813569,
+          "y": 0.1730478935089886,
+          "w": 0.7754055014010024,
+          "h": 0.04293795648262508
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778183063492",
+      "documentId": "10-ccr-2506-1",
+      "text": "repay due to an over-issuance of benefits that was issued to a household based on a or unintentional error on the part of the household.",
+      "page": 6,
+      "rects": [
+        {
+          "x": 0.11219858715813567,
+          "y": 0.2228168885229404,
+          "w": 0.7526737440309405,
+          "h": 0.047817269719287014
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778183072772",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Income and Eligibility Verification System (IEVS)” means a system used to match client’s Social Security Numbers with the Social Security Administration, Internal Revenue Service, and the Department of Labor and Employment to obtain information about household income.",
+      "page": 6,
+      "rects": [
+        {
+          "x": 0.10588421011089624,
+          "y": 0.2803927847155513,
+          "w": 0.7754055014010024,
+          "h": 0.04879313236661942
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__movy0vgv-f14h",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Indigent non-citizen” means a sponsored non-citizen who, after considering all income and contributions provided by the sponsor and other sources in conjunction with the non-citizen’s own income, is unable to obtain food and shelter amounting to one hundred thirty percent (130%) of the federal poverty level (FPL), as defined in section 4.401.1, for the non-citizen’s household size. When a non-citizen is declared indigent, only the amount provided by the sponsor shall be deemed for the non-citizen. A declaration of indigence may last up to twelve (12) months but may be renewed at the end of such a period, if necessary. The local office must notify the U.S. Attorney General of each indigence determination, including the name of the sponsor and the sponsored non-citizen.",
+      "page": 6,
+      "rects": [
+        {
+          "x": 0.10714708552034413,
+          "y": 0.3360169556134974,
+          "w": 0.7754055014010024,
+          "h": 0.12393455621121324
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778186225209",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Initial decision” means a decision issued by an administrative adjudicator after a state-level fair hearing.",
+      "page": 6,
+      "rects": [
+        {
+          "x": 0.11346146256758356,
+          "y": 0.46971013829803454,
+          "w": 0.757725245668732,
+          "h": 0.019517252946647745
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778186242867",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Initial application” means a household’s first application for assistance or an application for that is received after the household has been off the program for any period following the end of a certification period.",
+      "page": 6,
+      "rects": [
+        {
+          "x": 0.10840996092979202,
+          "y": 0.49898601771800616,
+          "w": 0.7400449899364615,
+          "h": 0.04988968177728991
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__movyfoqg-c440",
+      "documentId": "10-ccr-2506-1",
+      "text": "the program for those who have not received SNAP benefits in the state previously or following any break after the end of the certification period where the household was not certified for participation. If the household applies for recertification prior to the expiration of its certification period and is found eligible for the first month following the end of the certification period, that month shall not be an initial month.",
+      "page": 6,
+      "rects": [
+        {
+          "x": 0.11346146256758356,
+          "y": 0.5614412271472791,
+          "w": 0.7728797505821066,
+          "h": 0.08002073708125579
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__movyhwbe-3hew",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Sponsored non-citizen” means those non-citizens lawfully admitted for permanent residence into the United States who have been sponsored by an individual for entry into the country.",
+      "page": 11,
+      "rects": [
+        {
+          "x": 0.11106875684947824,
+          "y": 0.6440840221653565,
+          "w": 0.7547529422976128,
+          "h": 0.031812073123584694
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__movyv2cv-wutv",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Institution of higher education” means institutions that normally require a high school diploma or equivalency certificate for a student to enroll, such as colleges, universities, and vocational or technical schools.",
+      "page": 6,
+      "rects": [
+        {
+          "x": 0.11106875684947826,
+          "y": 0.6448756420405383,
+          "w": 0.7547529422976127,
+          "h": 0.051841896942138144
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778187538847",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Intentional” means a false representation of a material fact with knowledge of that falsity or omission of a material fact with knowledge of that omission.",
+      "page": 6,
+      "rects": [
+        {
+          "x": 0.11259351026826131,
+          "y": 0.7026086636351921,
+          "w": 0.7715252299042263,
+          "h": 0.0365249728455973
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__movyyizk-0ed8",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Intentional Program Violation (IPV)” means when an individual has intentionally made a false or misleading statement or misrepresented, concealed, or withheld facts, or committed or intended to commit any act that constitutes a violation of the federal SNAP program operated under the Food and Nutrition Act of 2008, the federal SNAP regulations, or any state statute relating to the use, presentation, transfer, acquisition, receipt, or possession of SNAP benefits or EBT cards.",
+      "page": 6,
+      "rects": [
+        {
+          "x": 0.11411826368704436,
+          "y": 0.7462029860638082,
+          "w": 0.7654262162290942,
+          "h": 0.08247574513521982
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778187579103",
+      "documentId": "10-ccr-2506-1",
+      "text": "“IPV hearing”, see “Administrative disqualification hearing.”",
+      "page": 6,
+      "rects": [
+        {
+          "x": 0.11259351026826131,
+          "y": 0.8333916309210405,
+          "w": 0.43912898460952016,
+          "h": 0.024742723540565947
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778187582909",
+      "documentId": "10-ccr-2506-1",
+      "text": "“IPV hearing waiver”, see “Waiver of administrative disqualification hearing.”",
+      "page": 6,
+      "rects": [
+        {
+          "x": 0.11106875684947824,
+          "y": 0.8640254791141221,
+          "w": 0.5595845046933816,
+          "h": 0.023564498610062823
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778187585770",
+      "documentId": "10-ccr-2506-1",
+      "text": "6",
+      "page": 6,
+      "rects": [
+        {
+          "x": 0.10649449659312908,
+          "y": 0.939431874666323,
+          "w": 0.7943965311859723,
+          "h": 0.044772547359119286
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778187589403",
+      "documentId": "10-ccr-2506-1",
+      "text": "CODE OF COLORADO REGULATIONS 10 CCR 2506-1 Supplemental Nutrition Assistance Program (SNAP)",
+      "page": 7,
+      "rects": [
+        {
+          "x": 0.1019202363367799,
+          "y": 0.037224543898083544,
+          "w": 0.7913470243484061,
+          "h": 0.03770319777610045
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__movz2dc7-d32r",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Lawful Permanent Resident” means a non-citizen legally admitted into the United States to reside on a permanent basis.",
+      "page": 7,
+      "rects": [
+        {
+          "x": 0.11106875684947824,
+          "y": 0.11616561424179385,
+          "w": 0.7578024491351789,
+          "h": 0.038881422706603594
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__movz5kfs-n5vp",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Level sanction” means a specified period of ineligibility imposed against an individual who failed to take a required action as part of his or her eligibility for SNAP.",
+      "page": 7,
+      "rects": [
+        {
+          "x": 0.11411826368704436,
+          "y": 0.16211638653141627,
+          "w": 0.7745747367417926,
+          "h": 0.03181207312358475
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__movz6kgd-pvsb",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Liquid resources” means assets such as cash on hand or assets that can be easily converted to cash such as money in checking or savings accounts, saving certificates, or stocks and bonds.",
+      "page": 7,
+      "rects": [
+        {
+          "x": 0.11411826368704436,
+          "y": 0.20335425909902613,
+          "w": 0.7440796683661314,
+          "h": 0.03534674791509415
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__movz7q73-kjqm",
+      "documentId": "10-ccr-2506-1",
+      "text": "child-care, or other personal services.",
+      "page": 7,
+      "rects": [
+        {
+          "x": 0.11259351026826131,
+          "y": 0.2540179311106611,
+          "w": 0.7501786820412637,
+          "h": 0.02827739833207532
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778188040770",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Local office” means the county Department of Social/Human Services that is responsible for administering SNAP. In those counties that have more than one office that administers SNAP, “local office” shall be inclusive of all local offices within the county that administer the program.",
+      "page": 7,
+      "rects": [
+        {
+          "x": 0.11106875684947824,
+          "y": 0.2940775787477678,
+          "w": 0.7379806546909992,
+          "h": 0.05537657173364752
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778188048486",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Local-level dispute resolution conference”, see “Dispute resolution conference.”",
+      "page": 7,
+      "rects": [
+        {
+          "x": 0.10801925001191214,
+          "y": 0.3541670502034279,
+          "w": 0.5931290799066088,
+          "h": 0.02002982381855334
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__movzighm-j34e",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Low-Income Home Energy Assistance Program (LEAP)” means the Colorado program designed to help low-income clients pay a portion of their winter heating costs.",
+      "page": 7,
+      "rects": [
+        {
+          "x": 0.10954400343069519,
+          "y": 0.38126622360500007,
+          "w": 0.7654262162290942,
+          "h": 0.03534674791509418
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778188553221",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Management Evaluation (ME) reviews” means state or federal reviews of each county’s administration of SNAP to determine each county’s adherence to federal- and state-mandated requirements. Such reviews are mandated by the Food and Nutrition Service of the USDA.",
+      "page": 7,
+      "rects": [
+        {
+          "x": 0.11564301710582742,
+          "y": 0.4248605460336162,
+          "w": 0.7745747367417926,
+          "h": 0.05655479666415064
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778188568544",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Mass update” means a change in data or policy that affects the entire state-wide caseload or a portion of the caseload.",
+      "page": 7,
+      "rects": [
+        {
+          "x": 0.11411826368704436,
+          "y": 0.4837717925587732,
+          "w": 0.7730499833230094,
+          "h": 0.03534674791509412
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778188646440",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Material fact” means information to which a reasonable person would attach importance when determining a course of action.",
+      "page": 7,
+      "rects": [
+        {
+          "x": 0.11106875684947824,
+          "y": 0.5273661149873893,
+          "w": 0.6983370658026398,
+          "h": 0.0365249728455973
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__movzm2uu-trtg",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Migrant farm worker” means a person who travels away from home on a regular basis to follow the flow of seasonal agricultural work.",
+      "page": 7,
+      "rects": [
+        {
+          "x": 0.11259351026826131,
+          "y": 0.5721386623465086,
+          "w": 0.7578024491351789,
+          "h": 0.034168522984591054
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__movzmx6b-sv0b",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Minimum benefit” means the minimum amount of benefits issued to one- and two-person households that are eligible for assistance, but whose issuance calculates to less than the federally prescribed minimum allotment.",
+      "page": 7,
+      "rects": [
+        {
+          "x": 0.11106875684947824,
+          "y": 0.6157329847751247,
+          "w": 0.7440796683661314,
+          "h": 0.05655479666415064
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__movznlk3-0c9b",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Net income test” means the one hundred percent (100%) federal poverty level (FPL), as defined in section 4.401.2, under which a household’s income must fall after all allowable deductions are considered in order to be considered eligible. This level is specific to the household size as defined by FNS.",
+      "page": 7,
+      "rects": [
+        {
+          "x": 0.11259351026826131,
+          "y": 0.6781789060917911,
+          "w": 0.7745747367417926,
+          "h": 0.05302012187264127
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778189940615",
+      "documentId": "10-ccr-2506-1",
+      "text": "7",
+      "page": 7,
+      "rects": [
+        {
+          "x": 0.1105775889930283,
+          "y": 0.9459488387027721,
+          "w": 0.7815688628283854,
+          "h": 0.028541867351671524
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778189945783",
+      "documentId": "10-ccr-2506-1",
+      "text": "CODE OF COLORADO REGULATIONS 10 CCR 2506-1 Supplemental Nutrition Assistance Program (SNAP)",
+      "page": 8,
+      "rects": [
+        {
+          "x": 0.10910014312756822,
+          "y": 0.03499946483998716,
+          "w": 0.7815688628283854,
+          "h": 0.04110028898640694
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__mow0elue-wjqy",
+      "documentId": "10-ccr-2506-1",
+      "text": "household’s gross and net income and resource standards.",
+      "page": 7,
+      "rects": [
+        {
+          "x": 0.11500992658940856,
+          "y": 0.7381640443826037,
+          "w": 0.7136063530172215,
+          "h": 0.03310856612793889
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mow0f83o-4cbf",
+      "documentId": "10-ccr-2506-1",
+      "text": "real property.",
+      "page": 7,
+      "rects": [
+        {
+          "x": 0.10910014312756822,
+          "y": 0.7826893574512113,
+          "w": 0.7490650537882635,
+          "h": 0.03196689143387199
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778190032118",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Notice of Action (NOA)” means the state-prescribed form sent to a household every time a local office increases or takes an adverse action impacting a household’s SNAP benefits. This form describes the action taken upon a household’s case and the resulting effect.",
+      "page": 7,
+      "rects": [
+        {
+          "x": 0.1105775889930283,
+          "y": 0.824931321131685,
+          "w": 0.7520199455191837,
+          "h": 0.054800385315209255
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778190045247",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Notice of Overpayment” means a notice sent to a household upon the establishment of a claim against the household for an overpayment of benefits.",
+      "page": 8,
+      "rects": [
+        {
+          "x": 0.1105775889930283,
+          "y": 0.08751650076706269,
+          "w": 0.7638395124428644,
+          "h": 0.03767526490420636
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778190054269",
+      "documentId": "10-ccr-2506-1",
+      "text": "and Administration that The Colorado Department of Human Services may designate to hear state-level fair hearings as needed and as agreed to by The Office of Administrative Courts.",
+      "page": 8,
+      "rects": [
+        {
+          "x": 0.10910014312756822,
+          "y": 0.13546683791787079,
+          "w": 0.7712267417701648,
+          "h": 0.04566698776267436
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778190057622",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Office of Appeals (OOA)” is an office within The Colorado Department of Human Services that issues final agency decisions on behalf of The Colorado Department of Human Services.",
+      "page": 8,
+      "rects": [
+        {
+          "x": 0.10910014312756822,
+          "y": 0.1879838738449463,
+          "w": 0.7549748372501038,
+          "h": 0.03767526490420636
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__mow0li62-x2m6",
+      "documentId": "10-ccr-2506-1",
+      "text": "“On-the-job training (OJT)” means training provided to an employee after he or she is hired. Such training is designed for individuals who do not have the necessary work experience required for the job.",
+      "page": 8,
+      "rects": [
+        {
+          "x": 0.10614525139664804,
+          "y": 0.2359342109957544,
+          "w": 0.775659079366545,
+          "h": 0.03767526490420636
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mow0o0xz-u8xi",
+      "documentId": "10-ccr-2506-1",
+      "text": "“One Utility Allowance (OUA)” means a fixed deduction given to any household that is not eligible to receive the HCUA or BUA and incurs only one (1) non-heating or non-cooling utility expense, such as electricity, water, sewer, trash, or cooking fuel. The OUA is not allowed if the household’s only utility expense is a telephone.",
+      "page": 8,
+      "rects": [
+        {
+          "x": 0.1105775889930283,
+          "y": 0.2781761746762282,
+          "w": 0.7461101620573434,
+          "h": 0.06507545756181099
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778255604844",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Outdated” means information that is older than sixty (60) days from the point of eligibility determination or is no longer representative of a household’s circumstances.",
+      "page": 8,
+      "rects": [
+        {
+          "x": 0.11077274457556148,
+          "y": 0.3524749562858497,
+          "w": 0.7728291671953643,
+          "h": 0.03555962283267694
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778255617406",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Over-issuance” means the amount of SNAP benefits issued to a household that exceeds the household’s correct allotment.",
+      "page": 8,
+      "rects": [
+        {
+          "x": 0.11077274457556148,
+          "y": 0.39744742045658815,
+          "w": 0.6956815970900477,
+          "h": 0.03346788031310771
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__mox3m3am-6fkv",
+      "documentId": "10-ccr-2506-1",
+      "text": "“PA households” means households that contain only persons who receive TANF/Colorado Works or Adult Financial cash grants.",
+      "page": 8,
+      "rects": [
+        {
+          "x": 0.11077274457556148,
+          "y": 0.44032814210775745,
+          "w": 0.7403459797825994,
+          "h": 0.0397431078718154
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mox3pdzk-1j6z",
+      "documentId": "10-ccr-2506-1",
+      "text": "the non-citizens entry is determined to be for significant public benefit as described in 8 U.S.C 1182(d)(5) and in 8 C.F.R. 212.5 (2019), herein incorporated by reference. No later editions or amendments are incorporated. The regulation is available at no cost at the U.S. Department of Homeland Security, 3801 Nebraska Avenue NW, Washington D.C., 20016 or at https://www.ecfr.gov. This regulation is also available for public inspection and copying at the Food and Energy Assistance Division Director, Colorado Department of Human Services, 1575 Sherman Street, 3rd Floor, Denver, Colorado 80203. Parole does not constitute a formal admission to the United States and confers temporary status only, requiring parolees to leave when the conditions supporting their parole cease to exist.",
+      "page": 8,
+      "rects": [
+        {
+          "x": 0.11347967685995855,
+          "y": 0.4894840913176344,
+          "w": 0.7728291671953644,
+          "h": 0.13596326377200008
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778256067004",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Payment Error Rate (PER)” means the sum of the overpayment error rate and the underpayment error rate, which is the value of all over and underpaid allotments expressed as a percentage of all allotments issued to the cases reviewed, excluding those cases processed by Social Security Administration (SSA) personnel or participating in certain demonstration projects designated by FNS.",
+      "page": 8,
+      "rects": [
+        {
+          "x": 0.11212621071776001,
+          "y": 0.6306767113885575,
+          "w": 0.7660618364843718,
+          "h": 0.06902750314578465
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__mox3rane-ur25",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Period of ineligibility” means the period of time a person is ineligible to receive SNAP benefits as a result of a failure to cooperate with either a state or federal QA review.",
+      "page": 8,
+      "rects": [
+        {
+          "x": 0.11077274457556148,
+          "y": 0.7038876995734806,
+          "w": 0.7701222349109672,
+          "h": 0.03451375157289227
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778256571658",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Periodic Report Form (PRF)” means the report that must be submitted by the household during the twelfth (12th) month of a twenty-four (24) month certification period. The purpose of this form is to allow the household to report any changes that occurred during the first half of the twenty-four (24) month certification period and for the local office to determine the household’s continued eligibility for the remaining twelve (12) months of the household’s certification period.",
+      "page": 8,
+      "rects": [
+        {
+          "x": 0.10535888000676732,
+          "y": 0.7478142924844345,
+          "w": 0.7606479719155775,
+          "h": 0.08471557204255387
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778256575692",
+      "documentId": "10-ccr-2506-1",
+      "text": "8",
+      "page": 8,
+      "rects": [
+        {
+          "x": 0.09723808315357611,
+          "y": 0.9371169905054499,
+          "w": 0.7971915577549381,
+          "h": 0.04915594920987698
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778256578852",
+      "documentId": "10-ccr-2506-1",
+      "text": "CODE OF COLORADO REGULATIONS 10 CCR 2506-1 Supplemental Nutrition Assistance Program (SNAP)",
+      "page": 9,
+      "rects": [
+        {
+          "x": 0.11077274457556148,
+          "y": 0.03856650270455771,
+          "w": 0.7809499640485555,
+          "h": 0.03869723661203079
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__mox42o33-u5ue",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Person experiencing homelessness” means an individual who lacks a fixed and regular nighttime residence or whose primary residence is: a supervised shelter designed for temporary accommodations; a halfway house or similar facility that provides temporary residence; a place not designed for or ordinarily used as regular sleeping accommodations for human beings; or a temporary accommodation in the residence of another individual for ninety (90) days or less.",
+      "page": 9,
+      "rects": [
+        {
+          "x": 0.11077274457556148,
+          "y": 0.08772245191443466,
+          "w": 0.7755360994797614,
+          "h": 0.08053208700341542
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mox483zj-qkpp",
+      "documentId": "10-ccr-2506-1",
+      "text": "Security Act, or the Colorado Supplement, or Aid to the Needy and Disabled- Supplemental Security Income- Colorado Supplement (AND-SSI-CS), or Aid to the Blind- Supplemental Security Income- Colorado Supplement (AB-SSI-CS); or Disability or Blindness Payments under Title I, II, X, or IXV of the Social Security Act;",
+      "page": 9,
+      "rects": [
+        {
+          "x": 0.16897178869009855,
+          "y": 0.20799764678966548,
+          "w": 0.7146301230808273,
+          "h": 0.07425685944470772
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mox48c70-o9sj",
+      "documentId": "10-ccr-2506-1",
+      "text": "2. Is a veteran with a service-connected disability rated or paid as a total disability under Title 38 of the United States Code or is a veteran receiving a pension for a non-service connected disability;",
+      "page": 9,
+      "rects": [
+        {
+          "x": 0.17032525483229707,
+          "y": 0.2885297337930809,
+          "w": 0.6983885293744448,
+          "h": 0.057522919288153895
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mox48qqj-wq5i",
+      "documentId": "10-ccr-2506-1",
+      "text": "3. Is a veteran considered by the Veterans Affairs (VA) to be in need of regular aid and attendance or permanently housebound under Title 38 of the United States Code;",
+      "page": 9,
+      "rects": [
+        {
+          "x": 0.16761832254790002,
+          "y": 0.3470985243410194,
+          "w": 0.683500401810261,
+          "h": 0.03765136535224617
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mox48xs1-71b1",
+      "documentId": "10-ccr-2506-1",
+      "text": "4. Is a surviving spouse of a veteran and considered in need of aid and attendance or permanently housebound or a surviving child of a veteran and considered by the VA to be permanently incapable of self-support under Title 38 of the United States Code;",
+      "page": 9,
+      "rects": [
+        {
+          "x": 0.17167872097449563,
+          "y": 0.3952086022911117,
+          "w": 0.6929746648056507,
+          "h": 0.050201820469661596
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mox495i0-5v27",
+      "documentId": "10-ccr-2506-1",
+      "text": "5. Is a surviving spouse or child of a veteran and considered by the VA to be entitled to compensation for a service-connected death or pension benefits for a non-service- connected death under Title 38 of the United States Code and has a disability considered permanent under Section 221(i) of the Social Security Act. “Entitled”, as used in this definition, refers to those veterans’ surviving spouses and children who are receiving the compensation or benefits or have been approved for such benefits but are not yet receiving them;",
+      "page": 9,
+      "rects": [
+        {
+          "x": 0.16897178869009855,
+          "y": 0.45586913535861945,
+          "w": 0.7200439876496214,
+          "h": 0.10772473975781544
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mox49bn8-pzrk",
+      "documentId": "10-ccr-2506-1",
+      "text": "6. Has a disability considered permanent under Section 221(i) of the Social Security Act and receives a federal, state, or local public disability retirement pension;",
+      "page": 9,
+      "rects": [
+        {
+          "x": 0.16897178869009855,
+          "y": 0.5698691026751426,
+          "w": 0.7227509199340185,
+          "h": 0.035559622832676996
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mox49pjk-ka66",
+      "documentId": "10-ccr-2506-1",
+      "text": "7. Receives an annuity for disability from the railroad retirement board who is considered as a disabled person with disabilities by the SSA or who qualifies for Medicare as determined by the railroad retirement board; or",
+      "page": 9,
+      "rects": [
+        {
+          "x": 0.17167872097449563,
+          "y": 0.6148415668458811,
+          "w": 0.7173370553652243,
+          "h": 0.05229356298923071
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mox49xlg-m0sk",
+      "documentId": "10-ccr-2506-1",
+      "text": "8. Is a recipient of interim assistance benefits pending the receipt of the Supplemental Security Income (SSI), disability-related medical assistance under Title XIX of the Social Security Act, or disability-based state assistance benefits provided that the eligibility to receive these benefits is based on disability or blindness criteria which are at least as stringent as those used under Title XVI of the Social Security Act.",
+      "page": 9,
+      "rects": [
+        {
+          "x": 0.17032525483229707,
+          "y": 0.6734103573938196,
+          "w": 0.7065093262276361,
+          "h": 0.08157795826320002
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mox4aggc-gh9f",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Person with disabilities” means a person who: 1. Receives Supplemental Security Income (SSI) benefits under Title XVI of the Social Security Act, or the Colorado Supplement, or Aid to the Needy and Disabled- Supplemental Security Income- Colorado Supplement (AND-SSI-CS), or Aid to the Blind- Supplemental Security Income- Colorado Supplement (AB-SSI-CS); or Disability or Blindness Payments under Title I, II, X, or IXV of the Social Security Act; 2. Is a veteran with a service-connected disability rated or paid as a total disability under Title 38 of the United States Code or is a veteran receiving a pension for a non-service connected disability; 3. Is a veteran considered by the Veterans Affairs (VA) to be in need of regular aid and attendance or permanently housebound under Title 38 of the United States Code; 4. Is a surviving spouse of a veteran and considered in need of aid and attendance or permanently housebound or a surviving child of a veteran and considered by the VA to be permanently incapable of self-support under Title 38 of the United States Code; 5. Is a surviving spouse or child of a veteran and considered by the VA to be entitled to compensation for a service-connected death or pension benefits for a non-service- connected death under Title 38 of the United States Code and has a disability considered permanent under Section 221(i) of the Social Security Act. “Entitled”, as used in this definition, refers to those veterans’ surviving spouses and children who are receiving the compensation or benefits or have been approved for such benefits but are not yet receiving them; 6. Has a disability considered permanent under Section 221(i) of the Social Security Act and receives a federal, state, or local public disability retirement pension; 7. Receives an annuity for disability from the railroad retirement board who is considered as a disabled person with disabilities by the SSA or who qualifies for Medicare as determined by the railroad retirement board; or 8. Is a recipient of interim assistance benefits pending the receipt of the Supplemental Security Income (SSI), disability-related medical assistance under Title XIX of the Social Security Act, or disability-based state assistance benefits provided that the eligibility to receive these benefits is based on disability or blindness criteria which are at least as stringent as those used under Title XVI of the Social Security Act.",
+      "page": 9,
+      "rects": [
+        {
+          "x": 0.10806581229116441,
+          "y": 0.17139215269720393,
+          "w": 0.7985450238971366,
+          "h": 0.5877796479989541
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mox4ctqu-nlvi",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Post high school education” means colleges, universities, and post-high school level technical and vocational schools.",
+      "page": 9,
+      "rects": [
+        {
+          "x": 0.11077274457556148,
+          "y": 0.7633552857352965,
+          "w": 0.7268113183606141,
+          "h": 0.0366054940924615
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778257817433",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Preliminary determination” means an administrative adjudicator has determined in writing and at a hearing that the sole issue is one of federal law or regulation and that the household’s claim that the local office improperly calculated benefits, and/or misinterpreted or misapplied such law or regulation is invalid.",
+      "page": 9,
+      "rects": [
+        {
+          "x": 0.10806581229116441,
+          "y": 0.8030983936071119,
+          "w": 0.77688956562196,
+          "h": 0.05333943424901544
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778257820648",
+      "documentId": "10-ccr-2506-1",
+      "text": "9",
+      "page": 9,
+      "rects": [
+        {
+          "x": 0.10941927843336294,
+          "y": 0.944291013678035,
+          "w": 0.7823034301907541,
+          "h": 0.03137613779353854
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778257825508",
+      "documentId": "10-ccr-2506-1",
+      "text": "CODE OF COLORADO REGULATIONS 10 CCR 2506-1 Supplemental Nutrition Assistance Program (SNAP)",
+      "page": 10,
+      "rects": [
+        {
+          "x": 0.10806581229116441,
+          "y": 0.037373555798865886,
+          "w": 0.7809499640485555,
+          "h": 0.037651365352246176
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778257855697",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Preponderance of evidence” means the legal burden of proof to show that the evidence is more likely to be true than not. Preponderance of evidence is a lesser burden of proof than that of clear and convincing evidence.",
+      "page": 10,
+      "rects": [
+        {
+          "x": 0.11212621071776001,
+          "y": 0.08548363374895822,
+          "w": 0.7660618364843718,
+          "h": 0.05124769172944617
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778258181573",
+      "documentId": "10-ccr-2506-1",
+      "text": "current circumstances and reasonably anticipated income for the month in which the allotment will be issued.",
+      "page": 10,
+      "rects": [
+        {
+          "x": 0.11483314300215709,
+          "y": 0.1503276518556044,
+          "w": 0.7403459797825995,
+          "h": 0.04811007795009234
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778258290054",
+      "documentId": "10-ccr-2506-1",
+      "text": "determining the proper course of action in specific situations in order to make an eligibility determination.",
+      "page": 10,
+      "rects": [
+        {
+          "x": 0.10941927843336294,
+          "y": 0.20785057114375827,
+          "w": 0.7647083703421731,
+          "h": 0.03137613779353848
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__mox55b5n-5y57",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Public assistance (PA)” means the same as section 26-2-103(7), C.R.S.",
+      "page": 10,
+      "rects": [
+        {
+          "x": 0.11212621071776001,
+          "y": 0.24550193649600444,
+          "w": 0.534619126168422,
+          "h": 0.026146781494615412
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778258552875",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Quality assurance (QA)” means the division of the Colorado Department of Human Services (CDHS) responsible for reviewing SNAP cases to determine if the proper eligibility determination was made and if the correct allotment was issued to a household in a given month.",
+      "page": 10,
+      "rects": [
+        {
+          "x": 0.10671234614896587,
+          "y": 0.2768780742895429,
+          "w": 0.7755360994797614,
+          "h": 0.052293562989230824
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778269001598",
+      "documentId": "10-ccr-2506-1",
+      "text": "“QA active case” means cases where a household was certified prior to or during the sample month and issued SNAP benefits for the sample month.",
+      "page": 10,
+      "rects": [
+        {
+          "x": 0.10671234614896587,
+          "y": 0.33649273609726604,
+          "w": 0.7633549041999746,
+          "h": 0.03869723661203078
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778269009357",
+      "documentId": "10-ccr-2506-1",
+      "text": "“QA negative case” means cases where a household was denied certification to receive SNAP benefits in the sample month or which had its participation in the program terminated during a certification period effective for the sample month.",
+      "page": 10,
+      "rects": [
+        {
+          "x": 0.11212621071776001,
+          "y": 0.3793734577484353,
+          "w": 0.7687687687687688,
+          "h": 0.051247691729446154
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__moxbhp3l-ntpf",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Qualified non-citizen” means an individual who meets the specific definition of “qualified alien” as defined by the Food and Nutrition Service, United States Department of Agriculture, in 7 C.F.R. 273.4(a)(5), (6)(1) (2019), and is herein incorporated by reference. No later editions or amendments are incorporated. The regulation is available at no cost at the FNS, 3101 Park Center Dr., #906, Alexandria, VA 22302, or at https://www.ecfr.gov. This regulation is also available for public inspection and copying at the Food and Energy Assistance Division Director, Colorado Department of Human Services, 1575 Sherman Street, 3rd Floor, Denver, Colorado 80203. Qualified non-citizen for purposes of SNAP includes lawful permanent residents, asylees, refugees, parolees, individuals granted withholding of deportation or removal, conditional entrants, Cuban or Haitian entrants, battered immigrants and non-citizen victims of a severe form of trafficking. This term is not itself an immigration status, but rather includes a collection of immigration statuses. It is a term used solely for federal SNAP purposes. Qualified non-citizens are not automatically eligible for assistance, but rather must meet all other eligibility requirements.",
+      "page": 10,
+      "rects": [
+        {
+          "x": 0.10806581229116441,
+          "y": 0.44107986207572764,
+          "w": 0.7795964979063571,
+          "h": 0.17884398542316932
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778269173481",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Quality control review” means a review conducted by CDHS of a statistically valid sample of active and negative cases to determine the extent to which households are receiving snap allotments to which they are entitled, and to determine the extent to which decisions to deny, suspend, or terminate cases are correct.",
+      "page": 10,
+      "rects": [
+        {
+          "x": 0.11077274457556148,
+          "y": 0.6314284313565277,
+          "w": 0.7647083703421731,
+          "h": 0.06379814684686158
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778269179531",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Quest card” means Colorado’s specific version of the EBT card.",
+      "page": 10,
+      "rects": [
+        {
+          "x": 0.11077274457556148,
+          "y": 0.7025476770218816,
+          "w": 0.4764200820538849,
+          "h": 0.01987155393590767
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778269186771",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Questionable” means inconsistent or contradictory information, statements, documents, or case documentation that requires verification from the household to determine eligibility.",
+      "page": 10,
+      "rects": [
+        {
+          "x": 0.11212621071776001,
+          "y": 0.7318320722958508,
+          "w": 0.7038023939432391,
+          "h": 0.035559622832676996
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778269197107",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Recoupment” means the withholding of a portion of a household’s monthly allotment to pay back an over-issuance.",
+      "page": 10,
+      "rects": [
+        {
+          "x": 0.10941927843336294,
+          "y": 0.7768045364665893,
+          "w": 0.7376390474982024,
+          "h": 0.035559622832676996
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778269204892",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Repayment agreement” means the state department form sent to a household upon the establishment of a claim that outlines the household’s responsibility and options for repayment.",
+      "page": 10,
+      "rects": [
+        {
+          "x": 0.10671234614896587,
+          "y": 0.8207311293775432,
+          "w": 0.7795964979063571,
+          "h": 0.03765136535224611
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778269209779",
+      "documentId": "10-ccr-2506-1",
+      "text": "10",
+      "page": 10,
+      "rects": [
+        {
+          "x": 0.10535888000676732,
+          "y": 0.9420521955125586,
+          "w": 0.7877172947595483,
+          "h": 0.03137613779353854
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778269225295",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Restoration” means a payment of benefits made to a household who was eligible to receive the amount in a past month but did not receive the payment.",
+      "page": 10,
+      "rects": [
+        {
+          "x": 0.10941927843336294,
+          "y": 0.864657722288497,
+          "w": 0.7633549041999746,
+          "h": 0.03869723661203084
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778269232865",
+      "documentId": "10-ccr-2506-1",
+      "text": "CODE OF COLORADO REGULATIONS 10 CCR 2506-1 Supplemental Nutrition Assistance Program (SNAP)",
+      "page": 11,
+      "rects": [
+        {
+          "x": 0.10806581229116441,
+          "y": 0.03513473763338944,
+          "w": 0.7809499640485555,
+          "h": 0.03974310787181541
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__moxbo7fw-7ene",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Roomer” means an individual to whom a household furnishes lodging, but not meals, for compensation.",
+      "page": 11,
+      "rects": [
+        {
+          "x": 0.11618660914435562,
+          "y": 0.08324481558348178,
+          "w": 0.7552341073467834,
+          "h": 0.027192652754400012
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__moxbusih-79vo",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Sanction” means a specified period of ineligibility imposed against an individual who failed to take a required action as part of his or her eligibility for either SNAP or Colorado Works.",
+      "page": 11,
+      "rects": [
+        {
+          "x": 0.11212621071776001,
+          "y": 0.11566682463680486,
+          "w": 0.7322251829294083,
+          "h": 0.036605494092461555
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__moxbw0lx-vpak",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Self-employment” means a situation where some or all income is received from a self-operated business or enterprise in which the individual retains control over work or services offered and assumes the necessary business risks and expenses connected with the operation of the business.",
+      "page": 11,
+      "rects": [
+        {
+          "x": 0.11077274457556148,
+          "y": 0.16168516006732797,
+          "w": 0.7714757010531658,
+          "h": 0.0470642066903077
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778269864047",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Simplified reporting” means SNAP households are required to report mid-certification changes that cause the household’s combined gross income to rise above one hundred thirty percent (130%) of the federal poverty level (FPL) as defined in section 4.401.1 for the applicable household size, when a member of the household wins substantial lottery or gambling winnings, and if an ABAWD’s work/volunteer hours fall below twenty (20) hours per week.",
+      "page": 11,
+      "rects": [
+        {
+          "x": 0.11347967685995855,
+          "y": 0.27986861242298955,
+          "w": 0.7457598443513936,
+          "h": 0.0794862157436308
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778269943163",
+      "documentId": "10-ccr-2506-1",
+      "text": "Human Services that may be designated by the Colorado Department of Human Services to hear SNAP appeals, the SNAP portion of a bifurcated appeal, combined appeals, and administrative disqualification hearings. The SNAP fair hearings unit generally operates under the supervision of the chief adjudicator of the Office of Appeals but acts independently and in a fair and impartial manner concerning the fair hearings process and the issuance of initial decisions.",
+      "page": 11,
+      "rects": [
+        {
+          "x": 0.11077274457556148,
+          "y": 0.4137401336754204,
+          "w": 0.7836568963329527,
+          "h": 0.09099079960126155
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__moxc1no4-3ypt",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Sponsor” means any person(s) who executed an affidavit of support (USCIS form I-864A (March 6, 2018)) or another form deemed legally binding by the Department of Homeland Security on behalf of a non-citizen as a condition of the non-citizen’s date of entry or admission into the United States as a permanent resident. These forms are herein incorporated by reference. This rule does not contain any later amendments or editions. These forms are available at no cost from https://www.uscis.gov/forms. These forms are also available for public inspection and copying at the Colorado Department of Human Services, Director of the Employment and Benefits Division, 1575 Sherman Street, Denver, Colorado, 80203, or at any state publications library during regular business hours.",
+      "page": 11,
+      "rects": [
+        {
+          "x": 0.11077274457556148,
+          "y": 0.509960289575605,
+          "w": 0.7606479719155775,
+          "h": 0.12550455117415393
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__moxcbnyw-eu69",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Standard Eligibility (SE)” means the set of rules applicable to households that do not fall under “Expanded Categorical Eligibility” or “Basic Categorical Eligibility.” Households considered under Standard Eligibility rules are subject to resource limits as a condition of eligibility.",
+      "page": 11,
+      "rects": [
+        {
+          "x": 0.10941927843336294,
+          "y": 0.6888042749987744,
+          "w": 0.7065093262276361,
+          "h": 0.05333943424901544
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778270494411",
+      "documentId": "10-ccr-2506-1",
+      "text": "“State department” means the office/division within the Colorado Department of Human Services that administers SNAP. Currently, this is the Food and Energy Assistance Division within the Office of Economic Security.",
+      "page": 11,
+      "rects": [
+        {
+          "x": 0.11077274457556148,
+          "y": 0.7494648080662821,
+          "w": 0.7403459797825994,
+          "h": 0.04601833543052303
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778270498095",
+      "documentId": "10-ccr-2506-1",
+      "text": "11",
+      "page": 11,
+      "rects": [
+        {
+          "x": 0.10535888000676732,
+          "y": 0.942950991126436,
+          "w": 0.7863638286173498,
+          "h": 0.03137613779353854
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778270502745",
+      "documentId": "10-ccr-2506-1",
+      "text": "“State-level fair hearing” or “Fair hearing” means a review (hearing) requested by a client which is before an administrative adjudicator to establish whether an adverse action or eligibility determination taken was correct.",
+      "page": 11,
+      "rects": [
+        {
+          "x": 0.1040054138645688,
+          "y": 0.8048959848348667,
+          "w": 0.7484667766357906,
+          "h": 0.05124769172944621
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778270507228",
+      "documentId": "10-ccr-2506-1",
+      "text": "CODE OF COLORADO REGULATIONS 10 CCR 2506-1 Supplemental Nutrition Assistance Program (SNAP)",
+      "page": 12,
+      "rects": [
+        {
+          "x": 0.11077274457556148,
+          "y": 0.036033533247266845,
+          "w": 0.7809499640485555,
+          "h": 0.04392659291095386
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__moxccqjc-cbta",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Striker” or “striking member” means an individual who is involved in a strike or other concerted stoppage of work by employees, including a stoppage by reason of the expiration of a collective bargaining agreement and any concerted slowdown or other concerted interruption of operations by employees.",
+      "page": 12,
+      "rects": [
+        {
+          "x": 0.11212621071776001,
+          "y": 0.08937296749628225,
+          "w": 0.7674153026265703,
+          "h": 0.048110077950092325
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__moxcdmw0-zxp3",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Substantial lottery or gambling winnings” is a cash prize won in a single game, before taxes or other amounts are withheld, that is equal to or greater than the resource limit for persons aged sixty (60) and older and persons with disabilities.",
+      "page": 12,
+      "rects": [
+        {
+          "x": 0.11618660914435562,
+          "y": 0.14794175804422074,
+          "w": 0.7525271750623863,
+          "h": 0.05124769172944618
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__moxd5lw8-laxp",
+      "documentId": "10-ccr-2506-1",
+      "text": "Title XVI of the Social Security Act, as amended, to the aged, blind and disabled; (2) Section 1616(a) of the Social Security Act; or (3) Section 212(a) of Pub. L. 93-66.",
+      "page": 12,
+      "rects": [
+        {
+          "x": 0.10941927843336294,
+          "y": 0.2525288840226823,
+          "w": 0.7579410396311804,
+          "h": 0.04601833543052314
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778271903917",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Systematic Alien Verification for Entitlements (SAVE)” means the system allowing for the validation of immigration statuses of non-citizen clients through access to centralized U.S. Citizenship and Immigration Service (USCIS) data.",
+      "page": 12,
+      "rects": [
+        {
+          "x": 0.11212621071776001,
+          "y": 0.30586831827169775,
+          "w": 0.7701222349109673,
+          "h": 0.05333943424901538
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__moxd6p2p-w3lf",
+      "documentId": "10-ccr-2506-1",
+      "text": "other than the expense for a telephone.",
+      "page": 12,
+      "rects": [
+        {
+          "x": 0.11483314300215709,
+          "y": 0.36966646511855933,
+          "w": 0.7403459797825995,
+          "h": 0.03346788031310771
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__moxd77zh-804n",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Temporary Assistance for Needy Families (TANF) or Colorado Works (CW)” means the cash program also known as Title IV-a of the Social Security Act.",
+      "page": 12,
+      "rects": [
+        {
+          "x": 0.11077274457556148,
+          "y": 0.4094095729903747,
+          "w": 0.7633549041999745,
+          "h": 0.036605494092461555
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778272002447",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Supplement” means a payment of additional allowable SNAP benefits made for the current issuance month.",
+      "page": 12,
+      "rects": [
+        {
+          "x": 0.11212621071776001,
+          "y": 0.20651054859215923,
+          "w": 0.7416994459247981,
+          "h": 0.03346788031310771
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__moxdkrlc-lkk2",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Temporary emergency” means an emergency caused by any natural or human-caused disaster, other than a major disaster declared by the President of the United States under the Disaster Relief Act of 1974, which is determined by FNS to have disrupted commercial channels of food distribution.",
+      "page": 12,
+      "rects": [
+        {
+          "x": 0.10941927843336294,
+          "y": 0.45751965094046704,
+          "w": 0.7579410396311804,
+          "h": 0.04601833543052308
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__moxepyrj-8trh",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Trafficking” means the same as defined in section 26-2-306, C.R.S. and 7 C.F.R. 271.2 (2019), which is incorporated by reference. No later editions or amendments are incorporated. The regulation is available at no cost at the FNS, 3101 Park Center Dr., #906, Alexandria, VA 22302, or at https://www.ecfr.gov. This regulation is also available for public inspection and copying at the Food and Energy Assistance Division Director, Colorado Department of Human Services, 1575 Sherman Street, 3rd Floor, Denver, Colorado 80203.",
+      "page": 12,
+      "rects": [
+        {
+          "x": 0.10806581229116441,
+          "y": 0.5955746572320364,
+          "w": 0.7755360994797614,
+          "h": 0.09935776967953847
         }
       ]
     }
@@ -444,8 +2634,44 @@
       "sectionId": "10-ccr-2506-1__mokg9qpe-ps5v"
     },
     {
-      "nodePath": "/members/*/hasDisability",
+      "nodePath": "/members/*/hasAbawdDisability",
       "sectionId": "10-ccr-2506-1__mokg9qpe-ps5v"
+    },
+    {
+      "nodePath": "/members/*/receivesSsiOrDisabilityBenefits",
+      "sectionId": "10-ccr-2506-1__mox483zj-qkpp"
+    },
+    {
+      "nodePath": "/members/*/isVeteranWithDisability",
+      "sectionId": "10-ccr-2506-1__mox48c70-o9sj"
+    },
+    {
+      "nodePath": "/members/*/isVeteranNeedingAidAndAttendance",
+      "sectionId": "10-ccr-2506-1__mox48qqj-wq5i"
+    },
+    {
+      "nodePath": "/members/*/isVeteranSurvivorNeedingAidAndAttendance",
+      "sectionId": "10-ccr-2506-1__mox48xs1-71b1"
+    },
+    {
+      "nodePath": "/members/*/isVeteranSurvivorWithDisability",
+      "sectionId": "10-ccr-2506-1__mox495i0-5v27"
+    },
+    {
+      "nodePath": "/members/*/receivesPublicDisabilityRetirementPension",
+      "sectionId": "10-ccr-2506-1__mox49bn8-pzrk"
+    },
+    {
+      "nodePath": "/members/*/receivesRailroadRetirementDisability",
+      "sectionId": "10-ccr-2506-1__mox49pjk-ka66"
+    },
+    {
+      "nodePath": "/members/*/receivesInterimAssistanceForDisability",
+      "sectionId": "10-ccr-2506-1__mox49xlg-m0sk"
+    },
+    {
+      "nodePath": "/members/*/isPersonWithDisability",
+      "sectionId": "10-ccr-2506-1__mox4aggc-gh9f"
     },
     {
       "nodePath": "/members/*/isAbawd",
@@ -464,6 +2690,10 @@
       "sectionId": "10-ccr-2506-1__moki2xhz-tyyo"
     },
     {
+      "nodePath": "/heatingCoolingUtilityAllowance",
+      "sectionId": "10-ccr-2506-1__movvl48h-oepe"
+    },
+    {
       "nodePath": "/hasBasicCategoricalEligibility",
       "sectionId": "10-ccr-2506-1__mokgtqxq-1opy"
     },
@@ -478,6 +2708,362 @@
     {
       "nodePath": "/members/*/livesInBoardingHouse",
       "sectionId": "10-ccr-2506-1__mokkqwmq-qofn"
+    },
+    {
+      "nodePath": "/members/*/livesInGroupLivingArrangement",
+      "sectionId": "10-ccr-2506-1__movvi1jv-299w"
+    },
+    {
+      "nodePath": "/members/*/countableMonths",
+      "sectionId": "10-ccr-2506-1__movs56tz-sg71"
+    },
+    {
+      "nodePath": "/members/*/countableMonths",
+      "sectionId": "10-ccr-2506-1__movskv9b-gjhh"
+    },
+    {
+      "nodePath": "/dSnapActive",
+      "sectionId": "10-ccr-2506-1__movsej8u-s0m9"
+    },
+    {
+      "nodePath": "/temporaryEmergencyActive",
+      "sectionId": "10-ccr-2506-1__moxdkrlc-lkk2"
+    },
+    {
+      "nodePath": "/members/*/disqualifiedForIPV",
+      "sectionId": "10-ccr-2506-1__movskv9b-gjhh"
+    },
+    {
+      "nodePath": "/members/*/disqualifiedForIPV",
+      "sectionId": "10-ccr-2506-1__movued2h-59ru"
+    },
+    {
+      "nodePath": "/members/*/disqualifiedForIPV",
+      "sectionId": "10-ccr-2506-1__movyyizk-0ed8"
+    },
+    {
+      "nodePath": "/members/*/failedToProvideOrObtainSSN",
+      "sectionId": "10-ccr-2506-1__movskv9b-gjhh"
+    },
+    {
+      "nodePath": "/members/*/isIneligibleNonCitizen",
+      "sectionId": "10-ccr-2506-1__movskv9b-gjhh"
+    },
+    {
+      "nodePath": "/members/*/disqualifiedForWorkRequirementsCooperation",
+      "sectionId": "10-ccr-2506-1__movskv9b-gjhh"
+    },
+    {
+      "nodePath": "/members/*/disqualifiedForQualityAssuranceCooperation",
+      "sectionId": "10-ccr-2506-1__movskv9b-gjhh"
+    },
+    {
+      "nodePath": "/abawdCountableMonthsLimit",
+      "sectionId": "10-ccr-2506-1__movskv9b-gjhh"
+    },
+    {
+      "nodePath": "/members/*/exceededAbawdCountableMonthsLimit",
+      "sectionId": "10-ccr-2506-1__movskv9b-gjhh"
+    },
+    {
+      "nodePath": "/members/*/isDisqualified",
+      "sectionId": "10-ccr-2506-1__movskv9b-gjhh"
+    },
+    {
+      "nodePath": "/members/*/isParticipatingInAnotherHousehold",
+      "sectionId": "10-ccr-2506-1__movt33ka-4sp3"
+    },
+    {
+      "nodePath": "/members/*/isEnrolledInEmploymentTrainingProgram",
+      "sectionId": "10-ccr-2506-1__movths36-6bol"
+    },
+    {
+      "nodePath": "/eebtMinimumPayment",
+      "sectionId": "10-ccr-2506-1__movtppnp-7caj"
+    },
+    {
+      "nodePath": "/members/*/exemptIncome",
+      "sectionId": "10-ccr-2506-1__movtrqa2-fxaj"
+    },
+    {
+      "nodePath": "/members/*/nonExemptEarnedIncome",
+      "sectionId": "10-ccr-2506-1__movulpek-5uhz"
+    },
+    {
+      "nodePath": "/members/*/unearnedIncome",
+      "sectionId": "10-ccr-2506-1__movulpek-5uhz"
+    },
+    {
+      "nodePath": "/members/*/grossIncome",
+      "sectionId": "10-ccr-2506-1__movulpek-5uhz"
+    },
+    {
+      "nodePath": "/members/*/grossIncome",
+      "sectionId": "10-ccr-2506-1__movw1p03-49jn"
+    },
+    {
+      "nodePath": "/hasExpandedCategoricalEligibility",
+      "sectionId": "10-ccr-2506-1__movts74o-he42"
+    },
+    {
+      "nodePath": "/hasStandardEligibility",
+      "sectionId": "10-ccr-2506-1__moxcbnyw-eu69"
+    },
+    {
+      "nodePath": "/excessMedicalDeduction",
+      "sectionId": "10-ccr-2506-1__movtqcv2-2z1w"
+    },
+    {
+      "nodePath": "/meetsFinancialCriteria",
+      "sectionId": "10-ccr-2506-1__movu81rq-9lqe"
+    },
+    {
+      "nodePath": "/members/*/isFleeingFelon",
+      "sectionId": "10-ccr-2506-1__movu9igu-c8j5"
+    },
+    {
+      "nodePath": "/members/*/isFullTimeStudent",
+      "sectionId": "10-ccr-2506-1__movub8hb-s78w"
+    },
+    {
+      "nodePath": "/members/*/preparesFoodWithHousehold",
+      "sectionId": "10-ccr-2506-1__movvsmzi-5832"
+    },
+    {
+      "nodePath": "/members/*/isSponsoredNonCitizen",
+      "sectionId": "10-ccr-2506-1__movy0vgv-f14h"
+    },
+    {
+      "nodePath": "/members/*/isSponsoredNonCitizen",
+      "sectionId": "10-ccr-2506-1__movyhwbe-3hew"
+    },
+    {
+      "nodePath": "/members/*/sponsorIncome",
+      "sectionId": "10-ccr-2506-1__movy0vgv-f14h"
+    },
+    {
+      "nodePath": "/indigentNonCitizenFplRate",
+      "sectionId": "10-ccr-2506-1__movy0vgv-f14h"
+    },
+    {
+      "nodePath": "/indigentNonCitizenFplThreshold",
+      "sectionId": "10-ccr-2506-1__movy0vgv-f14h"
+    },
+    {
+      "nodePath": "/members/*/isIndigentNonCitizen",
+      "sectionId": "10-ccr-2506-1__movy0vgv-f14h"
+    },
+    {
+      "nodePath": "/isInitialMonth",
+      "sectionId": "10-ccr-2506-1__movyfoqg-c440"
+    },
+    {
+      "nodePath": "/members/*/isEnrolledInInstitutionOfHigherEducation",
+      "sectionId": "10-ccr-2506-1__movyv2cv-wutv"
+    },
+    {
+      "nodePath": "/members/*/isLawfulPermanentResident",
+      "sectionId": "10-ccr-2506-1__movz2dc7-d32r"
+    },
+    {
+      "nodePath": "/members/*/hasLevelSanctionImposed",
+      "sectionId": "10-ccr-2506-1__movz5kfs-n5vp"
+    },
+    {
+      "nodePath": "/members/*/hasLevelSanctionImposed",
+      "sectionId": "10-ccr-2506-1__moxbusih-79vo"
+    },
+    {
+      "nodePath": "/members/*/liquidResources",
+      "sectionId": "10-ccr-2506-1__movz6kgd-pvsb"
+    },
+    {
+      "nodePath": "/members/*/isLiveInAttendant",
+      "sectionId": "10-ccr-2506-1__movz7q73-kjqm"
+    },
+    {
+      "nodePath": "/receivesLeap",
+      "sectionId": "10-ccr-2506-1__movzighm-j34e"
+    },
+    {
+      "nodePath": "/members/*/isMigrantFarmWorker",
+      "sectionId": "10-ccr-2506-1__movzm2uu-trtg"
+    },
+    {
+      "nodePath": "/minimumBenefit",
+      "sectionId": "10-ccr-2506-1__movzmx6b-sv0b"
+    },
+    {
+      "nodePath": "/netIncomeTestRate",
+      "sectionId": "10-ccr-2506-1__movznlk3-0c9b"
+    },
+    {
+      "nodePath": "/netIncomeThreshold",
+      "sectionId": "10-ccr-2506-1__movznlk3-0c9b"
+    },
+    {
+      "nodePath": "/netIncome",
+      "sectionId": "10-ccr-2506-1__movznlk3-0c9b"
+    },
+    {
+      "nodePath": "/meetsNetIncomeTest",
+      "sectionId": "10-ccr-2506-1__movznlk3-0c9b"
+    },
+    {
+      "nodePath": "/meetsNonFinancialCriteria",
+      "sectionId": "10-ccr-2506-1__mow0elue-wjqy"
+    },
+    {
+      "nodePath": "/members/*/nonLiquidResources",
+      "sectionId": "10-ccr-2506-1__mow0f83o-4cbf"
+    },
+    {
+      "nodePath": "/members/*/isInOnTheJobTraining",
+      "sectionId": "10-ccr-2506-1__mow0li62-x2m6"
+    },
+    {
+      "nodePath": "/oneUtilityAllowance",
+      "sectionId": "10-ccr-2506-1__mow0o0xz-u8xi"
+    },
+    {
+      "nodePath": "/members/*/isParolee",
+      "sectionId": "10-ccr-2506-1__mox3pdzk-1j6z"
+    },
+    {
+      "nodePath": "/members/*/disqualifiedForQualityAssuranceCooperation",
+      "sectionId": "10-ccr-2506-1__mox3rane-ur25"
+    },
+    {
+      "nodePath": "/members/*/isExperiencingHomelessness",
+      "sectionId": "10-ccr-2506-1__mox42o33-u5ue"
+    },
+    {
+      "nodePath": "/members/*/isEnrolledInPostHighSchoolEducation",
+      "sectionId": "10-ccr-2506-1__mox4ctqu-nlvi"
+    },
+    {
+      "nodePath": "/members/*/isAsylee",
+      "sectionId": "10-ccr-2506-1__moxbhp3l-ntpf"
+    },
+    {
+      "nodePath": "/members/*/isRefugee",
+      "sectionId": "10-ccr-2506-1__moxbhp3l-ntpf"
+    },
+    {
+      "nodePath": "/members/*/hasWithholdingOfDeportationOrRemoval",
+      "sectionId": "10-ccr-2506-1__moxbhp3l-ntpf"
+    },
+    {
+      "nodePath": "/members/*/isConditionalEntrant",
+      "sectionId": "10-ccr-2506-1__moxbhp3l-ntpf"
+    },
+    {
+      "nodePath": "/members/*/isCubanOrHaitianEntrant",
+      "sectionId": "10-ccr-2506-1__moxbhp3l-ntpf"
+    },
+    {
+      "nodePath": "/members/*/isBatteredImmigrant",
+      "sectionId": "10-ccr-2506-1__moxbhp3l-ntpf"
+    },
+    {
+      "nodePath": "/members/*/isVictimOfTrafficking",
+      "sectionId": "10-ccr-2506-1__moxbhp3l-ntpf"
+    },
+    {
+      "nodePath": "/members/*/isVictimOfTrafficking",
+      "sectionId": "10-ccr-2506-1__moxepyrj-8trh"
+    },
+    {
+      "nodePath": "/members/*/isQualifiedNonCitizen",
+      "sectionId": "10-ccr-2506-1__moxbhp3l-ntpf"
+    },
+    {
+      "nodePath": "/members/*/isRoomer",
+      "sectionId": "10-ccr-2506-1__moxbo7fw-7ene"
+    },
+    {
+      "nodePath": "/totalSelfEmploymentIncome",
+      "sectionId": "10-ccr-2506-1__moxbw0lx-vpak"
+    },
+    {
+      "nodePath": "/members/*/sponsorId",
+      "sectionId": "10-ccr-2506-1__moxc1no4-3ypt"
+    },
+    {
+      "nodePath": "/members/*/sponsorId",
+      "sectionId": "10-ccr-2506-1__movyhwbe-3hew"
+    },
+    {
+      "nodePath": "/substantialLotteryOrGamblingWinningsThreshold",
+      "sectionId": "10-ccr-2506-1__moxcdmw0-zxp3"
+    },
+    {
+      "nodePath": "/members/*/isStriker",
+      "sectionId": "10-ccr-2506-1__moxccqjc-cbta"
+    },
+    {
+      "nodePath": "/nonTelephoneUtilityAllowance",
+      "sectionId": "10-ccr-2506-1__moxd6p2p-w3lf"
+    },
+    {
+      "nodePath": "/members/*/receivesSsiOrDisabilityBenefits",
+      "sectionId": "10-ccr-2506-1__moxd5lw8-laxp"
+    },
+    {
+      "nodePath": "/members/*/isEligibleForTanf",
+      "sectionId": "10-ccr-2506-1__moxd77zh-804n"
+    },
+    {
+      "nodePath": "/incomeSourceOptions",
+      "sectionId": "10-ccr-2506-1__moxd77zh-804n"
+    },
+    {
+      "nodePath": "/incomes/*/type",
+      "sectionId": "10-ccr-2506-1__moxd77zh-804n"
+    },
+    {
+      "nodePath": "/incomes/*/type",
+      "sectionId": "10-ccr-2506-1__moxd5lw8-laxp"
+    },
+    {
+      "nodePath": "/incomes/*/type",
+      "sectionId": "10-ccr-2506-1__moxbw0lx-vpak"
+    },
+    {
+      "nodePath": "/incomeSourceOptions",
+      "sectionId": "10-ccr-2506-1__moxd5lw8-laxp"
+    },
+    {
+      "nodePath": "/incomeSourceOptions",
+      "sectionId": "10-ccr-2506-1__moxbw0lx-vpak"
+    },
+    {
+      "nodePath": "/members/*/publicAssistanceAmount",
+      "sectionId": "10-ccr-2506-1__mox55b5n-5y57"
+    },
+    {
+      "nodePath": "/members/*/isPaMember",
+      "sectionId": "10-ccr-2506-1__mox3m3am-6fkv"
+    },
+    {
+      "nodePath": "/isPaHousehold",
+      "sectionId": "10-ccr-2506-1__mox3m3am-6fkv"
+    },
+    {
+      "nodePath": "/members/*/receivesTanf",
+      "sectionId": "10-ccr-2506-1__mox3m3am-6fkv"
+    },
+    {
+      "nodePath": "/members/*/receivesAdultFinancial",
+      "sectionId": "10-ccr-2506-1__mox3m3am-6fkv"
+    },
+    {
+      "nodePath": "/incomes/*/type",
+      "sectionId": "10-ccr-2506-1__mox3m3am-6fkv"
+    },
+    {
+      "nodePath": "/incomeSourceOptions",
+      "sectionId": "10-ccr-2506-1__mox3m3am-6fkv"
     }
   ]
 }

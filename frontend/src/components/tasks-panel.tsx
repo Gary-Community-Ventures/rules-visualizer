@@ -270,7 +270,11 @@ export function TasksPanel() {
       const sa = STATUS_ORDER[a.status] ?? 99
       const sb = STATUS_ORDER[b.status] ?? 99
       if (sa !== sb) return sa - sb
-      // Newer first within the same status group.
+      // Within the same status group: ready (review queue) sorts
+      // oldest-first so the position of an in-progress review stays
+      // stable as new tasks finish — newly-ready tasks join the
+      // bottom, not the top. Everything else stays newer-first.
+      if (a.status === 'ready') return a.updatedAt.localeCompare(b.updatedAt)
       return b.updatedAt.localeCompare(a.updatedAt)
     })
   }, [tasks])
@@ -587,24 +591,21 @@ function IterationView({
               className="h-5 px-1.5 text-[10px] gap-1"
               onClick={() => {
                 const ids = iteration.modifiedPaths
-                // Add to workspace (de-duped, preserving prior order; new
-                // entries appended) so the user keeps whatever else they
-                // were already reviewing.
-                setWorkspaceItems((prev) => {
-                  const seen = new Set(prev)
-                  const additions = ids.filter((id) => !seen.has(id))
-                  return additions.length === 0 ? prev : [...prev, ...additions]
-                })
-                // Selection is intentionally an override — review focus is
-                // exactly the paths the agent reported it touched.
+                // Clear the workspace and replace it with exactly the
+                // paths the agent reported it touched — review focus is
+                // a clean slate, not a layer on top of prior work.
+                setWorkspaceItems(ids)
                 setSelectedNodes(ids)
                 setShowChildren((prev) => {
                   const next = { ...prev }
                   for (const id of ids) next[id] = true
                   return next
                 })
+                // Drop the user straight into the first modified node so
+                // they can start reviewing without an extra click.
+                if (ids[0]) onOpenNode(ids[0])
               }}
-              title="Add modified nodes to the workspace, select them, and expand their children"
+              title="Replace the workspace with modified nodes, select them, expand their children, and open the first one"
             >
               Review
             </Button>

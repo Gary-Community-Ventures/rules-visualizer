@@ -1166,11 +1166,18 @@ export function PolicyPanel() {
   const currentSectionIndex = clickedSectionId
     ? orderedSections.findIndex((s) => s.id === clickedSectionId)
     : -1
+  // Wrap around at the ends so the user can keep tapping prev/next without
+  // bumping into a disabled state on the first/last section.
   const prevSection =
-    currentSectionIndex > 0 ? orderedSections[currentSectionIndex - 1] : null
+    currentSectionIndex >= 0 && orderedSections.length > 0
+      ? orderedSections[
+          (currentSectionIndex - 1 + orderedSections.length) %
+            orderedSections.length
+        ]
+      : null
   const nextSection =
-    currentSectionIndex >= 0 && currentSectionIndex < orderedSections.length - 1
-      ? orderedSections[currentSectionIndex + 1]
+    currentSectionIndex >= 0 && orderedSections.length > 0
+      ? orderedSections[(currentSectionIndex + 1) % orderedSections.length]
       : null
 
   return (
@@ -1246,7 +1253,6 @@ export function PolicyPanel() {
                 variant="ghost"
                 size="icon"
                 className="h-6 w-6 shrink-0"
-                disabled={currentSectionIndex === 0}
                 onClick={() => {
                   const target =
                     currentSectionIndex < 0
@@ -1267,7 +1273,6 @@ export function PolicyPanel() {
                 variant="ghost"
                 size="icon"
                 className="h-6 w-6 shrink-0"
-                disabled={currentSectionIndex === orderedSections.length - 1}
                 onClick={() => {
                   const target =
                     currentSectionIndex < 0 ? orderedSections[0] : nextSection
