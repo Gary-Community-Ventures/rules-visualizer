@@ -51,6 +51,13 @@ export type Limit = {
 // RAC content types (mirrors RAC AST/IR)
 // ---------------------------------------------------------------------------
 
+export type RacCitation = {
+  source: string
+  type: string // usually 'restates'
+  authority?: string // 'federal', 'state', etc.
+  fromModule?: string // jurisdiction-prefixed module id, e.g. 'us-co:regulations/10-ccr-2506-1/4.207.3'
+}
+
 export type RacVariable = {
   format: 'rac'
   type: 'variable'
@@ -64,6 +71,23 @@ export type RacVariable = {
   source?: string
   logic?: string // the calculation/logic portion of the source
   temporalValues?: { from: string; to?: string; expression: string }[]
+  // RuleSpec-only fields. None are populated by the old .rac parser, so
+  // factgraph/rendering of legacy content is unaffected.
+  /** The RuleSpec value type — Money, Judgment, Integer, Rate, etc. */
+  dtype?: string
+  /** Temporal grain — usually Month / Day / Year. */
+  period?: string
+  /** Which variable indexes a parameter-table value lookup, e.g. household_size. */
+  indexedBy?: string
+  /** Parameter-table data (e.g. {"1": 298, "2": 546, ...}). When set, this
+   *  variable's "value" is a lookup table; `expression` is typically empty. */
+  valueTable?: Record<string, unknown>
+  /** Free-text summary of the regulation module this rule belongs to —
+   *  RuleSpec's closest analogue to per-rule documentation. */
+  moduleSummary?: string
+  /** Cross-rule provenance: other regulations that restate or refine this
+   *  one (populated from `source_relation` rules in imported modules). */
+  citations?: RacCitation[]
 }
 
 export type RacEntityField = {

@@ -14,10 +14,13 @@ from typing import Any
 
 from aiohttp import web
 
-# In-memory store: model dicts and compiled IRs
+# In-memory store: model dicts only. Old .rac path used to also keep a
+# compiled IR per ruleset for execution; that's gone — the new
+# axiom-rules-engine integration will reintroduce execution via its own
+# subprocess-based client.
 _rulesets: dict[str, dict] = {}
-_compiled_irs: dict[str, Any] = {}
-_ruleset_dirs: dict[str, str] = {}  # ruleset_id → directory path for recompilation
+_ruleset_dirs: dict[str, str] = {}  # ruleset_id → entry directory (for references.json)
+_ruleset_compositions: dict[str, str] = {}  # ruleset_id → entry composition YAML path (for re-compile)
 
 # WebSocket clients
 _ws_clients: set[web.WebSocketResponse] = set()
@@ -33,17 +36,15 @@ def set_rulesets(rulesets: dict[str, dict]) -> None:
     _rulesets = rulesets
 
 
-def set_compiled_ir(ruleset_id: str, ir: Any) -> None:
-    """Store a compiled IR for a ruleset."""
-    if ir is not None:
-        _compiled_irs[ruleset_id] = ir
-    else:
-        _compiled_irs.pop(ruleset_id, None)
-
-
 def set_ruleset_dir(ruleset_id: str, directory: str) -> None:
-    """Store the data directory for a ruleset (used for recompilation)."""
+    """Store the data directory for a ruleset (used for references.json lookup)."""
     _ruleset_dirs[ruleset_id] = directory
+
+
+def set_ruleset_composition(ruleset_id: str, composition_path: str) -> None:
+    """Store the RuleSpec composition entrypoint for a ruleset (used by
+    the axiom-rules-engine subprocess wrapper to compile on demand)."""
+    _ruleset_compositions[ruleset_id] = composition_path
 
 
 def get_rulesets() -> dict[str, dict]:
@@ -162,272 +163,90 @@ async def handle_ruleset_get(request: web.Request) -> web.Response:
 
 
 async def handle_ruleset_inputs(request: web.Request) -> web.Response:
-    """GET /api/rulesets/:id/inputs — describe what inputs a ruleset accepts."""
+    """GET /api/rulesets/:id/inputs — describe what inputs a ruleset accepts.
+
+    Always returns `executable: false` since the old `.rac` execution path
+    is removed and the new axiom-rules-engine isn't wired up yet.
+    """
     ruleset_id = request.match_info["id"]
-
-    ir = _compiled_irs.get(ruleset_id)
-    if ir is None:
-        if ruleset_id not in _rulesets:
-            return _json_response({"error": "Ruleset not found"}, status=404)
-        return _json_response(
-            {"executable": False, "scalars": [], "entities": {}}, status=200
-        )
-
-    scalars: list[dict[str, Any]] = []
-    entities: dict[str, list[str]] = {}
-
-    for var_path in ir.order:
-        var = ir.variables[var_path]
-        vd = var.model_dump()
-        entity = vd.get("entity")
-        expr = vd.get("expr")
-        is_literal = expr is not None and expr.get("type") == "literal"
-        is_leaf = is_literal or expr is None
-
-        if entity:
-            entities.setdefault(entity, []).append(var_path)
-        elif is_leaf:
-            info: dict[str, Any] = {"path": var_path}
-            if vd.get("label"):
-                info["label"] = vd["label"]
-            if vd.get("unit"):
-                info["unit"] = vd["unit"]
-            if is_literal:
-                info["default"] = _serialize_value(expr.get("value"))
-            scalars.append(info)
-
+    if ruleset_id not in _rulesets:
+        return _json_response({"error": "Ruleset not found"}, status=404)
     return _json_response(
-        {"executable": True, "scalars": scalars, "entities": entities}
+        {"executable": False, "scalars": [], "entities": {}}, status=200
     )
 
 
 async def handle_ruleset_execute(request: web.Request) -> web.Response:
     """POST /api/rulesets/:id/execute — execute rules with input data.
 
-    Input format:
+    Body:
       {
-        "inputs": {
-          "scalar_path": value,         // override scalar constants
-          ...
-        },
-        "entities": {                   // optional entity tables
-          "TaxUnit": [{"id": 1, ...}],
-          "Person":  [{"id": 1, "tax_unit_id": 1, ...}],
-        }
+        "inputs": {"varName": value, ...},     # bare-name overrides
+        "entities": {"members": [...]},        # optional, currently unused
+        "as_of": "YYYY-MM-DD"                  # optional, defaults to 2026-01
       }
+
+    Returns: {results: {nodeId: {value}}}. Inputs not provided are defaulted
+    to zero values (false for Judgment, 0 for Money/Integer/Rate, etc.).
     """
-    from rac import execute as rac_execute
+    from .axiom_engine import execute as axiom_execute
 
     ruleset_id = request.match_info["id"]
-
-    # Check ruleset exists
     if ruleset_id not in _rulesets:
         return _json_response({"error": "Ruleset not found"}, status=404)
 
-    # Check we have a compiled IR
-    ir = _compiled_irs.get(ruleset_id)
-    if ir is None:
+    composition_path = _ruleset_compositions.get(ruleset_id)
+    if not composition_path:
         return _json_response(
-            {"error": "Ruleset could not be compiled; execution unavailable"},
+            {"error": "No RuleSpec composition recorded for this ruleset"},
             status=400,
         )
 
-    # Parse request body
     try:
         body = await request.json()
-    except (json.JSONDecodeError, Exception):
-        return _json_response({"error": "Invalid JSON body"}, status=400)
+    except Exception:
+        body = {}
 
-    scalar_overrides: dict[str, Any] = body.get("inputs", {})
-    entity_tables: dict[str, list[dict[str, Any]]] = body.get("entities", {})
-    as_of_str: str | None = body.get("as_of")
+    user_inputs = body.get("inputs") or {}
+    entities = body.get("entities") or {}
+    as_of = body.get("as_of") or "2026-01-15"
+    # Derive a month-aligned period from as_of.
+    period_start = f"{as_of[:7]}-01"
+    period_end = _last_day_of_month(period_start)
 
-    # If a custom as_of date is provided, recompile the IR for that date
-    import copy
-    from rac.executor import Executor, Context, evaluate, Data
-
-    effective_ir = ir
-    if as_of_str:
-        try:
-            from datetime import date as date_cls
-
-            as_of = date_cls.fromisoformat(as_of_str)
-            rac_dir = _ruleset_dirs.get(ruleset_id)
-            if rac_dir:
-                from .parser import parse_rac_directory
-
-                _, recompiled_ir = parse_rac_directory(
-                    rac_dir, ruleset_id, as_of=as_of
-                )
-                if recompiled_ir:
-                    effective_ir = recompiled_ir
-        except Exception as e:
-            print(f"  Warning: recompile for as_of={as_of_str} failed: {e}")
-
-    # Execute using a custom approach that handles input variables
-    # the compiler drops. We pre-populate the executor context with
-    # user-provided input values and constant overrides.
     try:
-        patched_ir = copy.deepcopy(effective_ir) if scalar_overrides else effective_ir
-
-        # Patch constant overrides into the IR's literal expressions
-        for var_path, value in scalar_overrides.items():
-            if var_path in patched_ir.variables:
-                var = patched_ir.variables[var_path]
-                vd = var.model_dump()
-                expr = vd.get("expr")
-                if expr and expr.get("type") == "literal":
-                    var.expr.value = value
-
-        # Build executor and context manually so we can inject inputs
-        executor = Executor(patched_ir)
-        data = Data(tables=entity_tables) if entity_tables else Data(tables={})
-        ctx = Context(data=data)
-
-        # Pre-populate context with default values for SCALAR input variables
-        # the compiler dropped (no temporal expression).  Skip entity-scoped
-        # inputs — those come from entity data rows, not ctx.computed.
-        model = _rulesets.get(ruleset_id, {})
-        for node in model.get("nodes", {}).values():
-            c = node.get("content", {})
-            if c.get("role") != "input":
-                continue
-            if c.get("entity"):
-                continue  # entity-scoped inputs come from row data
-            var_path = c.get("path")
-            if not var_path or var_path in patched_ir.variables:
-                continue
-            # Parse the stored default into an appropriate Python value
-            raw = c.get("default")
-            ctx.computed[var_path] = _parse_default(raw)
-
-        # Overlay user-provided values (inputs, constant overrides, and pinned nodes)
-        for var_path, value in scalar_overrides.items():
-            ctx.computed[var_path] = value
-
-        # Run the executor's logic (replicated from Executor.execute).
-        # Skip any variable already in ctx.computed (pinned by user).
-        #
-        # Two-pass approach:
-        # Pass 1: Evaluate scalars that don't need entity data, and all entity vars.
-        #         Entity result lists are NOT put into ctx.computed during this pass
-        #         because [False] is truthy in Python and would break conditions.
-        # Pass 2: Inject entity result lists, then evaluate remaining scalars
-        #         that aggregate over entity data (sum, max, etc.).
-        entities: dict[str, dict[str, list]] = {}
-        deferred_scalars: list[str] = []
-
-        for path in patched_ir.order:
-            var = patched_ir.variables[path]
-            if var.entity is None:
-                if path not in ctx.computed:
-                    try:
-                        ctx.computed[path] = evaluate(var.expr, ctx)
-                    except Exception:
-                        # May fail if it references entity results not yet available
-                        deferred_scalars.append(path)
-            else:
-                entity_name = var.entity
-                rows = data.get_rows(entity_name)
-                if entity_name not in entities:
-                    entities[entity_name] = {}
-                entities[entity_name][path] = []
-                for i, row in enumerate(rows):
-                    augmented = dict(row)
-                    for prev_path, prev_vals in entities.get(entity_name, {}).items():
-                        if len(prev_vals) > i:
-                            augmented[prev_path] = prev_vals[i]
-                    ctx.current_row = augmented
-                    ctx.current_entity = entity_name
-                    val = evaluate(var.expr, ctx)
-                    entities[entity_name][path].append(val)
-                    ctx.current_row = None
-                    ctx.current_entity = None
-
-        # Pass 2: Inject entity result lists for aggregation, then eval deferred scalars
-        for entity_name, fields in entities.items():
-            for path, values in fields.items():
-                ctx.computed[path] = values
-
-        for path in deferred_scalars:
-            if path not in ctx.computed:
-                ctx.computed[path] = evaluate(
-                    patched_ir.variables[path].expr, ctx
-                )
-
-        # Build result
-        from rac.executor import Result
-        result = Result(scalars=ctx.computed, entities=entities)
-
+        results = axiom_execute(
+            ruleset_id,
+            composition_path,
+            _rulesets[ruleset_id],
+            user_inputs=user_inputs,
+            entities=entities,
+            period_start=period_start,
+            period_end=period_end,
+        )
+    except FileNotFoundError as e:
+        return _json_response({"error": str(e)}, status=503)
+    except RuntimeError as e:
+        return _json_response({"error": str(e)}, status=400)
     except Exception as e:
-        return _json_response({"error": f"Execution failed: {e}"}, status=500)
-
-    # Build path->node_id map from the stored model
-    model = _rulesets[ruleset_id]
-    path_to_node_id: dict[str, str] = {}
-    for node_id, node in model.get("nodes", {}).items():
-        content = node.get("content", {})
-        var_path = content.get("path")
-        if var_path:
-            path_to_node_id[var_path] = node_id
-
-    # Map results back to node IDs
-    results: dict[str, dict[str, Any]] = {}
-
-    # Scalar results
-    for var_path, value in result.scalars.items():
-        node_id = path_to_node_id.get(var_path)
-        if node_id:
-            results[node_id] = {"value": _serialize_value(value)}
-
-    # Entity results
-    for entity_name, fields in result.entities.items():
-        for var_path, values in fields.items():
-            node_id = path_to_node_id.get(var_path)
-            if node_id:
-                results[node_id] = {
-                    "value": [_serialize_value(v) for v in values],
-                    "entity": entity_name,
-                }
+        return _json_response(
+            {"error": f"Execution failed: {e}"}, status=500
+        )
 
     return _json_response({"results": results})
 
 
+def _last_day_of_month(date_str: str) -> str:
+    """`2026-01-01` → `2026-01-31`. Cheap month-end calc."""
+    from calendar import monthrange
+    from datetime import date as date_cls
+
+    d = date_cls.fromisoformat(date_str)
+    last = monthrange(d.year, d.month)[1]
+    return d.replace(day=last).isoformat()
+
+
 # --- Helpers ---
-
-
-def _parse_default(raw: Any) -> Any:
-    """Convert a stored default string to a Python value for execution."""
-    if raw is None:
-        return 0
-    if isinstance(raw, (int, float, bool)):
-        return raw
-    s = str(raw).strip().lower()
-    if s in ("false", "no"):
-        return False
-    if s in ("true", "yes"):
-        return True
-    try:
-        return int(raw)
-    except (ValueError, TypeError):
-        pass
-    try:
-        return float(raw)
-    except (ValueError, TypeError):
-        pass
-    return 0
-
-
-def _serialize_value(value: Any) -> Any:
-    """Make a value JSON-serializable."""
-    if value is None or isinstance(value, (bool, int, float, str)):
-        return value
-    if isinstance(value, list):
-        return [_serialize_value(v) for v in value]
-    if isinstance(value, dict):
-        return {k: _serialize_value(v) for k, v in value.items()}
-    # Fallback: convert to string
-    return str(value)
 
 
 def _json_response(data: Any, status: int = 200) -> web.Response:
@@ -516,22 +335,6 @@ def _write_tests(ruleset_id: str, tests: list[dict]) -> None:
         p.write_text(json.dumps(tests, indent=2))
 
 
-def _compare_values(expected: Any, actual: Any, tolerance: float = 0.01) -> bool:
-    if expected == actual:
-        return True
-    if expected is None or actual is None:
-        return False
-    if isinstance(expected, bool) or isinstance(actual, bool):
-        return expected == actual
-    if isinstance(expected, (int, float)) and isinstance(actual, (int, float)):
-        return abs(float(expected) - float(actual)) <= tolerance
-    if isinstance(expected, list) and isinstance(actual, list):
-        if len(expected) != len(actual):
-            return False
-        return all(_compare_values(e, a, tolerance) for e, a in zip(expected, actual))
-    return str(expected) == str(actual)
-
-
 async def handle_tests_list(request: web.Request) -> web.Response:
     ruleset_id = request.match_info["id"]
     if ruleset_id not in _rulesets:
@@ -588,151 +391,24 @@ async def handle_tests_delete(request: web.Request) -> web.Response:
 
 
 async def handle_tests_run(request: web.Request) -> web.Response:
-    """Run tests for a ruleset and compare expectations."""
+    """POST /api/rulesets/:id/tests/run — run tests.
+
+    Same status as `handle_ruleset_execute` — gated on the axiom-rules-engine
+    integration. Test CRUD (list/create/update/delete) still works; only
+    actually executing them is blocked.
+    """
     ruleset_id = request.match_info["id"]
     if ruleset_id not in _rulesets:
         return _json_response({"error": "Ruleset not found"}, status=404)
-
-    ir = _compiled_irs.get(ruleset_id)
-    if ir is None:
-        return _json_response({"error": "Ruleset not compilable"}, status=400)
-
-    body = await request.json() if request.can_read_body else {}
-    test_ids = body.get("testIds")
-    tests = _read_tests(ruleset_id)
-    if test_ids:
-        tests = [t for t in tests if t["id"] in test_ids]
-
-    results = []
-    for test in tests:
-        try:
-            # Build a fake request-like execute call
-            as_of_str = test.get("asOf")
-            scalar_inputs = {**(test.get("inputs") or {}), **(test.get("overrides") or {})}
-            entity_tables = test.get("entities") or {}
-
-            # Recompile if as_of is specified
-            effective_ir = ir
-            if as_of_str:
-                try:
-                    from datetime import date as date_cls
-                    as_of = date_cls.fromisoformat(as_of_str)
-                    rac_dir = _ruleset_dirs.get(ruleset_id)
-                    if rac_dir:
-                        from .parser import parse_rac_directory
-                        _, recompiled = parse_rac_directory(rac_dir, ruleset_id, as_of=as_of)
-                        if recompiled:
-                            effective_ir = recompiled
-                except Exception:
-                    pass
-
-            # Execute (reuse the same logic as handle_ruleset_execute)
-            import copy
-            from rac.executor import Context, evaluate, Data
-            from rac.schema import Data as SchemaData
-
-            patched_ir = copy.deepcopy(effective_ir) if scalar_inputs else effective_ir
-            for var_path, value in scalar_inputs.items():
-                if var_path in patched_ir.variables:
-                    var = patched_ir.variables[var_path]
-                    vd = var.model_dump()
-                    expr = vd.get("expr")
-                    if expr and expr.get("type") == "literal":
-                        var.expr.value = value
-
-            data = SchemaData(tables=entity_tables) if entity_tables else SchemaData(tables={})
-            ctx = Context(data=data)
-
-            model = _rulesets.get(ruleset_id, {})
-            for node in model.get("nodes", {}).values():
-                c = node.get("content", {})
-                if c.get("role") != "input":
-                    continue
-                if c.get("entity"):
-                    continue
-                var_path = c.get("path")
-                if not var_path or var_path in patched_ir.variables:
-                    continue
-                raw = c.get("default")
-                ctx.computed[var_path] = _parse_default(raw)
-
-            for var_path, value in scalar_inputs.items():
-                ctx.computed[var_path] = value
-
-            entities: dict[str, dict[str, list]] = {}
-            deferred_scalars: list[str] = []
-            for path in patched_ir.order:
-                var = patched_ir.variables[path]
-                if var.entity is None:
-                    if path not in ctx.computed:
-                        try:
-                            ctx.computed[path] = evaluate(var.expr, ctx)
-                        except Exception:
-                            deferred_scalars.append(path)
-                else:
-                    entity_name = var.entity
-                    rows = data.get_rows(entity_name)
-                    if entity_name not in entities:
-                        entities[entity_name] = {}
-                    entities[entity_name][path] = []
-                    for i, row in enumerate(rows):
-                        augmented = dict(row)
-                        for prev_path, prev_vals in entities.get(entity_name, {}).items():
-                            if len(prev_vals) > i:
-                                augmented[prev_path] = prev_vals[i]
-                        ctx.current_row = augmented
-                        ctx.current_entity = entity_name
-                        val = evaluate(var.expr, ctx)
-                        entities[entity_name][path].append(val)
-                        ctx.current_row = None
-                        ctx.current_entity = None
-
-            for entity_name, fields in entities.items():
-                for path, values in fields.items():
-                    ctx.computed[path] = values
-            for path in deferred_scalars:
-                if path not in ctx.computed:
-                    ctx.computed[path] = evaluate(patched_ir.variables[path].expr, ctx)
-
-            # Build path results (scalars + entity arrays)
-            path_results: dict[str, Any] = {}
-            for path, value in ctx.computed.items():
-                path_results[path] = _serialize_value(value)
-            for entity_name, fields in entities.items():
-                for path, values in fields.items():
-                    path_results[path] = [_serialize_value(v) for v in values]
-
-            # Compare expectations
-            expectations: dict[str, dict[str, Any]] = {}
-            all_passed = True
-            for expect_path, expected_value in test.get("expect", {}).items():
-                actual = path_results.get(expect_path)
-                passed = _compare_values(expected_value, actual)
-                expectations[expect_path] = {
-                    "expected": expected_value,
-                    "actual": actual,
-                    "passed": passed,
-                }
-                if not passed:
-                    all_passed = False
-
-            results.append({
-                "testId": test["id"],
-                "name": test["name"],
-                "passed": all_passed,
-                "expectations": expectations,
-                "computedValues": path_results,
-            })
-        except Exception as e:
-            results.append({
-                "testId": test["id"],
-                "name": test["name"],
-                "passed": False,
-                "error": str(e),
-                "expectations": {},
-            })
-
-    return _json_response({"results": results})
+    return _json_response(
+        {
+            "error": (
+                "Test execution not implemented. The legacy .rac executor "
+                "was removed; axiom-rules-engine wiring will restore this."
+            )
+        },
+        status=501,
+    )
 
 
 # --- Policy references CRUD ---
@@ -778,19 +454,20 @@ async def handle_refs_put(request: web.Request) -> web.Response:
     ) or not isinstance(body.get("mappings"), list):
         return _json_response({"error": "Invalid references format"}, status=400)
     _write_refs(ruleset_id, body)
-    # Reload model so nodes get updated references
+    # Re-resolve references against the in-memory model. Cheap — just walks
+    # the existing nodes attaching the new {section, document} entries.
     rac_dir = _ruleset_dirs.get(ruleset_id)
     if rac_dir:
         try:
-            from .parser import parse_rac_directory, resolve_references
+            from .references import resolve_references
 
-            model, ir = parse_rac_directory(rac_dir, ruleset_id)
+            # Clear stale `references` lists, then re-attach from the new file.
+            model = _rulesets.get(ruleset_id) or {}
+            for node in model.get("nodes", {}).values():
+                node.pop("references", None)
             resolve_references(model, rac_dir)
-            _rulesets[ruleset_id] = model
-            if ir:
-                _compiled_irs[ruleset_id] = ir
         except Exception as e:
-            print(f"  Warning: failed to reload model after reference save: {e}")
+            print(f"  Warning: failed to refresh references in-place: {e}")
     return _json_response(body)
 
 
@@ -819,6 +496,116 @@ async def handle_refs_file(request: web.Request) -> web.Response:
     return web.FileResponse(file_path, headers={"Content-Type": ct})
 
 
+# --- Profiles CRUD (saved input/override/entity snapshots) ---
+
+
+def _profiles_path(ruleset_id: str) -> Path | None:
+    rac_dir = _ruleset_dirs.get(ruleset_id)
+    if not rac_dir:
+        return None
+    return Path(rac_dir) / "profiles.json"
+
+
+def _read_profiles(ruleset_id: str) -> list[dict]:
+    p = _profiles_path(ruleset_id)
+    if not p or not p.exists():
+        return []
+    try:
+        return json.loads(p.read_text())
+    except Exception:
+        return []
+
+
+def _write_profiles(ruleset_id: str, profiles: list[dict]) -> None:
+    p = _profiles_path(ruleset_id)
+    if p:
+        p.write_text(json.dumps(profiles, indent=2) + "\n")
+
+
+def _writes_blocked() -> bool:
+    return os.environ.get("ALLOW_WRITES") != "1"
+
+
+_PROFILES_READ_ONLY_MSG = "Profiles are read-only (ALLOW_WRITES is not set)"
+
+
+async def handle_profiles_list(request: web.Request) -> web.Response:
+    ruleset_id = request.match_info["id"]
+    if ruleset_id not in _rulesets:
+        return _json_response({"error": "Ruleset not found"}, status=404)
+    return _json_response({"profiles": _read_profiles(ruleset_id)})
+
+
+async def handle_profiles_create(request: web.Request) -> web.Response:
+    if _writes_blocked():
+        return _json_response({"error": _PROFILES_READ_ONLY_MSG}, status=403)
+    ruleset_id = request.match_info["id"]
+    if ruleset_id not in _rulesets:
+        return _json_response({"error": "Ruleset not found"}, status=404)
+    body = await request.json()
+    import uuid as _uuid
+    now = _now_iso()
+    new_profile = {
+        "id": str(_uuid.uuid4()),
+        "name": body.get("name") or "Untitled profile",
+        "description": body.get("description"),
+        "asOf": body.get("asOf"),
+        "inputs": body.get("inputs"),
+        "overrides": body.get("overrides"),
+        "entities": body.get("entities"),
+        "createdAt": now,
+        "updatedAt": now,
+    }
+    profiles = _read_profiles(ruleset_id)
+    profiles.append(new_profile)
+    _write_profiles(ruleset_id, profiles)
+    return _json_response(new_profile)
+
+
+async def handle_profiles_update(request: web.Request) -> web.Response:
+    if _writes_blocked():
+        return _json_response({"error": _PROFILES_READ_ONLY_MSG}, status=403)
+    profile_id = request.match_info["profileId"]
+    ruleset_id = request.match_info["id"]
+    profiles = _read_profiles(ruleset_id)
+    idx = next(
+        (i for i, p in enumerate(profiles) if p.get("id") == profile_id),
+        -1,
+    )
+    if idx == -1:
+        return _json_response({"error": "Profile not found"}, status=404)
+    body = await request.json()
+    existing = profiles[idx]
+    profiles[idx] = {
+        **existing,
+        **body,
+        "id": profile_id,
+        "createdAt": existing.get("createdAt"),
+        "updatedAt": _now_iso(),
+    }
+    _write_profiles(ruleset_id, profiles)
+    return _json_response(profiles[idx])
+
+
+async def handle_profiles_delete(request: web.Request) -> web.Response:
+    if _writes_blocked():
+        return _json_response({"error": _PROFILES_READ_ONLY_MSG}, status=403)
+    profile_id = request.match_info["profileId"]
+    ruleset_id = request.match_info["id"]
+    profiles = _read_profiles(ruleset_id)
+    before = len(profiles)
+    profiles = [p for p in profiles if p.get("id") != profile_id]
+    if len(profiles) == before:
+        return _json_response({"error": "Profile not found"}, status=404)
+    _write_profiles(ruleset_id, profiles)
+    return _json_response({"success": True})
+
+
+def _now_iso() -> str:
+    from datetime import datetime, timezone
+    return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+
+
 def _create_app() -> web.Application:
     """Create the aiohttp application with all routes."""
     app = web.Application(middlewares=[basic_auth_middleware, cors_middleware])
@@ -843,6 +630,16 @@ def _create_app() -> web.Application:
     app.router.add_put("/api/rulesets/{id}/references", handle_refs_put)
     app.router.add_get(
         "/api/rulesets/{id}/references/files/{filename}", handle_refs_file
+    )
+
+    # Profiles
+    app.router.add_get("/api/rulesets/{id}/profiles", handle_profiles_list)
+    app.router.add_post("/api/rulesets/{id}/profiles", handle_profiles_create)
+    app.router.add_put(
+        "/api/rulesets/{id}/profiles/{profileId}", handle_profiles_update
+    )
+    app.router.add_delete(
+        "/api/rulesets/{id}/profiles/{profileId}", handle_profiles_delete
     )
 
     # WebSocket

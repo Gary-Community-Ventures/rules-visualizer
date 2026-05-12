@@ -12,6 +12,9 @@ node_modules/
 bower_components/
 jspm_packages/
 
+# Vendored upstream — built per-machine, never committed
+vendor/
+
 # Vite-specific
 .vite/
 dist/

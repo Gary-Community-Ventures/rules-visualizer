@@ -1,0 +1,55 @@
+{
+  "id": "463db270-fb16-4904-a490-c341f1dca66b",
+  "rulesetId": "snap-fy2025",
+  "comparedRulesetId": "snap-fy2025",
+  "status": "completed",
+  "summary": {
+    "totalCases": 1000,
+    "changedCases": 181,
+    "unchangedCases": 819,
+    "errorCases": 0,
+    "nodeChanges": [
+      {
+        "path": "/minimumBenefit",
+        "timesChanged": 1000,
+        "timesIncreased": 1000,
+        "timesDecreased": 0,
+        "avgDelta": 1
+      },
+      {
+        "path": "/maxAllotmentHh1",
+        "timesChanged": 1000,
+        "timesIncreased": 1000,
+        "timesDecreased": 0,
+        "avgDelta": 8
+      },
+      {
+        "path": "/maxAllotment",
+        "timesChanged": 549,
+        "timesIncreased": 549,
+        "timesDecreased": 0,
+        "avgDelta": 8
+      },
+      {
+        "path": "/calculatedBenefit",
+        "timesChanged": 527,
+        "timesIncreased": 527,
+        "timesDecreased": 0,
+        "avgDelta": 8
+      },
+      {
+        "path": "/snap",
+        "timesChanged": 181,
+        "timesIncreased": 181,
+        "timesDecreased": 0,
+        "avgDelta": 7.85
+      }
+    ],
+    "executionTimeMs": 15735
+  },
+  "startedAt": "2026-05-12T20:26:19.686Z",
+  "completedAt": "2026-05-12T20:26:35.422Z",
+  "comparedOverrides": {
+    "/maxAllotmentHh1": 300
+  }
+}

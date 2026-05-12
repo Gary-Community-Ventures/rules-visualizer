@@ -23,10 +23,12 @@ paper over it in the render layer.
 
 ## Node/field identifiers: always use the path
 
-Every fact/variable in both the Fact Graph and RAC rulesets is identified by its
-full `path`. Node IDs are paths (see `packages/factgraph-server/src/parsers/factgraph.ts`
-and `packages/rac-server/rules_visualizer_rac/parser.py`). Entity data rows use
-the full path as the field key (e.g. `"/members/*/age"`, not `"age"`).
+Every fact/variable in both the Fact Graph and RuleSpec rulesets is identified
+by its full `path`. Node IDs are paths (see
+`packages/factgraph-server/src/parsers/factgraph.ts` and
+`packages/rac-server/rules_visualizer_rac/rulespec_parser.py`). Entity data
+rows use the full path as the field key (e.g. `"/members/*/age"`, not
+`"age"`).
 
 Do **not** split a path to reconstruct a shorter field name (no `segments[segments.length - 1]`,
 no `.slice(1)`, no `.replace('/*/', '')`). If you catch yourself writing that

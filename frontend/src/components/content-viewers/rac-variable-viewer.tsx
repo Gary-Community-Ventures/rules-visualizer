@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { Fragment, useState, useCallback } from 'react'
 import type { NodeContent } from '@/lib/model'
 import { useMainContext } from '@/context'
 import { getNodePath } from '@/context/model-context'
@@ -83,11 +83,38 @@ export function RacVariableViewer({ content }: Props) {
     ? resolveCitationUrl(content.source)
     : undefined
 
-  const hasAdvanced = !!(content.entity || content.unit)
+  const hasAdvanced = !!(
+    content.entity ||
+    content.unit ||
+    content.dtype ||
+    content.period ||
+    content.indexedBy
+  )
+
+  const citations = content.citations ?? []
 
   return (
     <div className="flex flex-col gap-3 text-sm">
+      {/* Module summary (regulation context) — shown above formula since
+          it explains "what is this rule about" before getting into how. */}
+      {content.moduleSummary && (
+        <div className="text-xs text-muted-foreground leading-relaxed border-l-2 border-muted pl-3 italic">
+          {content.moduleSummary}
+        </div>
+      )}
+
+      {/* Parameter table — render when `valueTable` is present. This is the
+          actual data for nodes like snap_maximum_allotment_table where the
+          "formula" is just a lookup. */}
+      {content.valueTable && (
+        <ValueTableDisplay
+          values={content.valueTable}
+          indexedBy={content.indexedBy}
+        />
+      )}
+
       {logicDisplay}
+
       {content.source && (
         <div className="flex items-center gap-1.5 text-xs">
           <span className="text-muted-foreground font-medium">Source</span>
@@ -106,12 +133,75 @@ export function RacVariableViewer({ content }: Props) {
           )}
         </div>
       )}
+
+      {/* source_relation citations from other regulations (e.g. Colorado
+          restatements of federal rules). */}
+      {citations.length > 0 && (
+        <div className="flex flex-col gap-1 text-xs">
+          <span className="text-muted-foreground font-medium">
+            Also {citations[0].type} by
+          </span>
+          {citations.map((c, i) => (
+            <span key={i} className="ml-1">
+              · {c.source}
+              {c.authority && (
+                <span className="text-muted-foreground"> ({c.authority})</span>
+              )}
+            </span>
+          ))}
+        </div>
+      )}
+
       {hasAdvanced && (
         <AdvancedSection>
           {content.entity && <Field label="Entity" value={content.entity} />}
+          {content.dtype && <Field label="Type" value={content.dtype} />}
           {content.unit && <Field label="Unit" value={content.unit} />}
+          {content.period && <Field label="Period" value={content.period} />}
+          {content.indexedBy && (
+            <Field label="Indexed by" value={content.indexedBy} />
+          )}
         </AdvancedSection>
       )}
+    </div>
+  )
+}
+
+/** Render a `valueTable` (e.g. {"1": 298, "2": 546, ...}) as a small
+ *  two-column table. Limits to a reasonable display height. */
+function ValueTableDisplay({
+  values,
+  indexedBy,
+}: {
+  values: Record<string, unknown>
+  indexedBy?: string
+}) {
+  const entries = Object.entries(values)
+  // Sort numerically when keys parse as numbers, alphabetically otherwise.
+  entries.sort(([a], [b]) => {
+    const na = Number(a)
+    const nb = Number(b)
+    if (!isNaN(na) && !isNaN(nb)) return na - nb
+    return a.localeCompare(b)
+  })
+  return (
+    <div className="text-xs">
+      <div className="text-muted-foreground font-medium mb-1">
+        Values
+        {indexedBy && (
+          <span className="ml-1 text-muted-foreground/70 font-normal">
+            (by {indexedBy})
+          </span>
+        )}
+      </div>
+      <div className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 max-h-48 overflow-y-auto font-mono">
+        {entries.map(([k, v]) => (
+          <Fragment key={k}>
+            <span className="text-muted-foreground text-right">{k}</span>
+            <span>{typeof v === 'object' ? JSON.stringify(v) : String(v)}</span>
+          </Fragment>
+        ))}
+      </div>
     </div>
   )
 }

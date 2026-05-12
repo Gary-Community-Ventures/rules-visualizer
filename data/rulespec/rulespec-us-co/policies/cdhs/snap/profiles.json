@@ -1,0 +1,57 @@
+[
+  {
+    "id": "single-working-adult",
+    "name": "Single working adult, $1,500/mo",
+    "description": "1-person household, employed at minimum wage, modest rent. Useful starting point for tweaking individual inputs to see how SNAP eligibility and allotment respond.",
+    "inputs": {
+      "household_size": 1,
+      "employee_wages_received": 1500,
+      "rent_amount": 800,
+      "snap_basic_categorical_eligible": false,
+      "snap_expanded_categorical_eligible": false,
+      "household_lives_in_application_state": true,
+      "anticipated_income_reasonably_certain": true,
+      "income_pay_frequency": "monthly",
+      "average_income_per_pay_period": 1500
+    },
+    "createdAt": "2026-05-12T00:00:00Z",
+    "updatedAt": "2026-05-12T00:00:00Z"
+  },
+  {
+    "id": "family-of-four-low-income",
+    "name": "Family of 4, $2,500/mo, BCE",
+    "description": "4-person household with Basic Categorical Eligibility (BCE) — typically receives TANF or SSI so gross income test is auto-passed. Tests the categorical-eligibility fast path.",
+    "inputs": {
+      "household_size": 4,
+      "employee_wages_received": 2500,
+      "rent_amount": 1200,
+      "snap_basic_categorical_eligible": true,
+      "snap_expanded_categorical_eligible": false,
+      "household_lives_in_application_state": true,
+      "anticipated_income_reasonably_certain": true,
+      "income_pay_frequency": "monthly",
+      "average_income_per_pay_period": 2500
+    },
+    "createdAt": "2026-05-12T00:00:00Z",
+    "updatedAt": "2026-05-12T00:00:00Z"
+  },
+  {
+    "id": "elderly-couple",
+    "name": "Elderly couple, fixed income",
+    "description": "2-person household, both elderly, on Social Security. Tests the elderly/disabled deduction path and the higher gross-income limit (165% FPL).",
+    "inputs": {
+      "household_size": 2,
+      "employee_wages_received": 0,
+      "retirement_disability_payments": 1800,
+      "rent_amount": 950,
+      "snap_basic_categorical_eligible": false,
+      "snap_expanded_categorical_eligible": false,
+      "household_lives_in_application_state": true,
+      "anticipated_income_reasonably_certain": true,
+      "income_pay_frequency": "monthly",
+      "average_income_per_pay_period": 1800
+    },
+    "createdAt": "2026-05-12T00:00:00Z",
+    "updatedAt": "2026-05-12T00:00:00Z"
+  }
+]

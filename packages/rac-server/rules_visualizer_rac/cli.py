@@ -1,4 +1,10 @@
-"""CLI entry point for the RAC rules visualizer server."""
+"""CLI entry point for the RAC rules visualizer server.
+
+Loads RuleSpec compositions (`format: rulespec/v1` YAML) from a content
+root and serves them via the HTTP API. The old `.rac` parser path was
+removed in favor of the new format; execution against axiom-rules-engine
+is a pending follow-up.
+"""
 
 from __future__ import annotations
 
@@ -7,9 +13,14 @@ import os
 import webbrowser
 from pathlib import Path
 
-from .parser import parse_rac_directory, resolve_references
-from .server import set_rulesets, set_compiled_ir, set_ruleset_dir, run_server
-from .watcher import start_watcher
+from .references import resolve_references
+from .rulespec_parser import parse_rulespec_composition
+from .server import (
+    set_rulesets,
+    set_ruleset_dir,
+    set_ruleset_composition,
+    run_server,
+)
 
 
 def _load_env() -> None:
@@ -35,16 +46,82 @@ def _load_env() -> None:
         d = parent
 
 
+def _find_rulespec_root(data_dir: Path) -> Path | None:
+    """Locate the RuleSpec content root.
+
+    The "root" is the directory that contains `rulespec-<jurisdiction>/`
+    subdirectories (e.g. `rulespec-us-co/`, `rulespec-us/`). This is the
+    same shape the upstream axiom-rules-engine expects when resolving
+    `us-co:foo/bar` imports — so we use it natively and avoid symlinks.
+
+    Accepts either:
+    - the data_dir itself (it contains `rulespec-X/` subdirs)
+    - `<data_dir>/../rulespec` or `<data_dir>/rulespec` (sibling/nested layout)
+    """
+    def has_jurisdiction_dirs(p: Path) -> bool:
+        if not p.is_dir():
+            return False
+        return any(c.is_dir() and c.name.startswith("rulespec-") for c in p.iterdir())
+
+    if has_jurisdiction_dirs(data_dir):
+        return data_dir
+    for c in (data_dir.parent / "rulespec", data_dir / "rulespec"):
+        if has_jurisdiction_dirs(c):
+            return c
+    return None
+
+
+def _find_rulespec_compositions(rulespec_root: Path) -> list[tuple[Path, str]]:
+    """Find every YAML under `<rulespec_root>/rulespec-<juris>/policies/**`
+    whose top-level `module.kind` is `composition`. Returns
+    (path, ruleset_id) pairs."""
+    import yaml
+
+    out: list[tuple[Path, str]] = []
+    for juris_dir in sorted(rulespec_root.iterdir()):
+        if not juris_dir.is_dir() or not juris_dir.name.startswith("rulespec-"):
+            continue
+        policies = juris_dir / "policies"
+        if not policies.is_dir():
+            continue
+        # Strip the `rulespec-` prefix from the dir name for the ruleset id.
+        juris_short = juris_dir.name.removeprefix("rulespec-")
+        for yaml_path in sorted(policies.rglob("*.yaml")):
+            # Skip test fixtures
+            if yaml_path.name.endswith(".test.yaml"):
+                continue
+            try:
+                with yaml_path.open("r", encoding="utf-8") as f:
+                    data = yaml.safe_load(f) or {}
+            except Exception:
+                continue
+            module = data.get("module") or {}
+            if module.get("kind") != "composition":
+                continue
+            # Ruleset ID: juris + parent-of-file + filename.
+            # `rulespec-us-co/policies/cdhs/snap/fy-2026-benefit-calculation.yaml`
+            # → `us-co-snap-fy-2026-benefit-calculation`.
+            parent = yaml_path.parent.name
+            stem = yaml_path.stem
+            ruleset_id = f"{juris_short}-{parent}-{stem}".replace("_", "-")
+            out.append((yaml_path, ruleset_id))
+    return out
+
+
 def main() -> None:
     _load_env()
     parser = argparse.ArgumentParser(
-        description="Serve RAC rules for visualization",
+        description="Serve RuleSpec rules for visualization",
     )
     parser.add_argument(
         "directory",
         nargs="?",
         default=".",
-        help="Directory containing .rac files (subdirectories become rulesets)",
+        help=(
+            "Data directory. Either a RuleSpec content root with "
+            "`rulespec-<jurisdiction>/` subdirs, or a directory that has "
+            "`rulespec/` as a sibling or child."
+        ),
     )
     parser.add_argument(
         "--port",
@@ -64,60 +141,40 @@ def main() -> None:
         print(f"Error: {data_dir} is not a directory")
         raise SystemExit(1)
 
-    # Load all rulesets
-    rulesets: dict = {}
-    subdirs = [d for d in sorted(data_dir.iterdir()) if d.is_dir()]
+    rulespec_root = _find_rulespec_root(data_dir)
+    if rulespec_root is None:
+        print(
+            f"No RuleSpec content found under {data_dir} "
+            f"(expected `rulespec-<jurisdiction>/` subdirs)"
+        )
+        raise SystemExit(1)
 
-    if subdirs:
-        # Each subdirectory is a ruleset
-        for subdir in subdirs:
-            rac_files = list(subdir.rglob("*.rac"))
-            if not rac_files:
-                continue
-            ruleset_id = subdir.name
-            try:
-                model, ir = parse_rac_directory(str(subdir), ruleset_id)
-                resolve_references(model, str(subdir))
-                rulesets[ruleset_id] = model
-                set_compiled_ir(ruleset_id, ir)
-                set_ruleset_dir(ruleset_id, str(subdir))
-                print(
-                    f'Loaded ruleset "{model["name"]}" '
-                    f'({len(model["nodes"])} nodes from {len(rac_files)} files)'
-                    f'{" [executable]" if ir else ""}'
-                )
-            except Exception as e:
-                print(f'Failed to parse ruleset "{ruleset_id}": {e}')
-    else:
-        # Flat directory — treat as single ruleset
-        rac_files = list(data_dir.rglob("*.rac"))
-        if rac_files:
-            ruleset_id = data_dir.name
-            try:
-                model, ir = parse_rac_directory(str(data_dir), ruleset_id)
-                resolve_references(model, str(data_dir))
-                rulesets[ruleset_id] = model
-                set_compiled_ir(ruleset_id, ir)
-                set_ruleset_dir(ruleset_id, str(data_dir))
-                print(
-                    f'Loaded ruleset "{model["name"]}" '
-                    f'({len(model["nodes"])} nodes from {len(rac_files)} files)'
-                    f'{" [executable]" if ir else ""}'
-                )
-            except Exception as e:
-                print(f"Failed to parse: {e}")
+    rulesets: dict = {}
+    for comp_path, ruleset_id in _find_rulespec_compositions(rulespec_root):
+        try:
+            model = parse_rulespec_composition(
+                comp_path, str(rulespec_root), ruleset_id
+            )
+            # Allow per-ruleset references.json (sibling of the composition
+            # file) to attach policy-doc citations onto nodes.
+            resolve_references(model, str(comp_path.parent))
+            rulesets[ruleset_id] = model
+            set_ruleset_dir(ruleset_id, str(comp_path.parent))
+            set_ruleset_composition(ruleset_id, str(comp_path))
+            print(
+                f'Loaded RuleSpec ruleset "{model["name"]}" '
+                f'({len(model["nodes"])} nodes, root={rulespec_root})'
+            )
+        except Exception as e:
+            print(f'Failed to parse RuleSpec composition {comp_path}: {e}')
 
     if not rulesets:
-        print(f"No .rac files found in {data_dir}")
+        print(f"No RuleSpec compositions found under {rulespec_root}")
         raise SystemExit(1)
 
     set_rulesets(rulesets)
 
-    # Start file watcher (skip in production — filesystem is read-only/ephemeral)
-    if os.environ.get("NODE_ENV") != "production":
-        start_watcher(str(data_dir))
-
-    # Open browser
+    # Browser open
     if not args.no_open:
         webbrowser.open(f"http://localhost:{args.port}")
 

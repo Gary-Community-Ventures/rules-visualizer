@@ -2,15 +2,15 @@
 #
 # Unified launcher for rules-visualizer.
 #
-# Detects whether the given directory contains Fact Graph XML or RAC files
-# and starts the appropriate backend server.
+# Detects whether the given directory contains Fact Graph XML or RuleSpec
+# YAML and starts the appropriate backend server.
 #
 # Usage:
 #   rules-visualizer <directory> [--port PORT]
 #
 # Examples:
 #   rules-visualizer ./data/factgraph
-#   rules-visualizer ./data/rac --port 8080
+#   rules-visualizer ./data/rulespec --port 8080
 #
 
 set -euo pipefail
@@ -24,8 +24,8 @@ Usage: rules-visualizer <directory> [--port PORT] [--no-open]
 
 Starts the rules visualizer for a directory of rule files.
 Auto-detects the format based on file types:
-  .xml  →  Fact Graph server (Node.js)
-  .rac  →  RAC server (Python)
+  .xml                                →  Fact Graph server (Node.js)
+  .yaml with 'format: rulespec/v1'    →  RuleSpec server (Python)
 
 Options:
   --port PORT   Server port (default: 5000)
@@ -33,7 +33,7 @@ Options:
 
 Examples:
   rules-visualizer ./data/factgraph
-  rules-visualizer ./data/rac --port 8080
+  rules-visualizer ./data/rulespec --port 8080
 EOF
   exit 1
 }
@@ -87,26 +87,35 @@ DIRECTORY="$(cd "$DIRECTORY" 2>/dev/null && pwd)" || {
 }
 
 # --- Detect format ---
+#
+# RuleSpec content is detected via either a `rulespec/` subdir (sibling
+# layout, e.g. pointing at `data/`) or any YAML file with a
+# `format: rulespec/v1` header anywhere in the tree.
 
 has_xml=false
-has_rac=false
+has_rulespec=false
 
-# Check the directory and one level of subdirectories
 while IFS= read -r -d '' file; do
   case "$file" in
     *.xml) has_xml=true ;;
-    *.rac) has_rac=true ;;
+    *.yaml|*.yml)
+      # Only inspect a few lines — the header is at the top.
+      if head -3 "$file" 2>/dev/null | grep -q "^format: rulespec/v1"; then
+        has_rulespec=true
+      fi
+      ;;
   esac
-done < <(find "$DIRECTORY" -maxdepth 3 -type f \( -name '*.xml' -o -name '*.rac' \) -print0 2>/dev/null)
+done < <(find "$DIRECTORY" -maxdepth 4 -type f \( -name '*.xml' -o -name '*.yaml' -o -name '*.yml' \) -print0 2>/dev/null)
 
-if $has_xml && $has_rac; then
-  echo "Error: Directory contains both .xml and .rac files."
+if $has_xml && $has_rulespec; then
+  echo "Error: Directory contains both Fact Graph XML and RuleSpec YAML files."
   echo "Please point to a directory with only one format."
   exit 1
 fi
 
-if ! $has_xml && ! $has_rac; then
-  echo "Error: No .xml or .rac files found in $DIRECTORY (searched up to 3 levels deep)."
+if ! $has_xml && ! $has_rulespec; then
+  echo "Error: No Fact Graph .xml or RuleSpec YAML files found in $DIRECTORY."
+  echo "(Searched up to 4 levels deep for *.xml and *.yaml with 'format: rulespec/v1'.)"
   exit 1
 fi
 
@@ -120,8 +129,8 @@ if $has_xml; then
   fi
   exec node --import tsx "$ROOT_DIR/packages/factgraph-server/src/index.ts" "$DIRECTORY"
 
-elif $has_rac; then
-  echo "Detected RAC files → starting Python backend"
+elif $has_rulespec; then
+  echo "Detected RuleSpec YAML → starting Python backend"
 
   # Use the project venv if it exists, otherwise look for system Python
   if [[ -x "$ROOT_DIR/.venv/bin/python3" ]]; then
@@ -131,16 +140,27 @@ elif $has_rac; then
   elif command -v python &>/dev/null; then
     PYTHON="python"
   else
-    echo "Error: Python 3 is required for RAC but no Python found."
+    echo "Error: Python 3 is required for the RuleSpec backend but no Python found."
     echo "Create a venv: python3 -m venv .venv && .venv/bin/pip install -e packages/rac-server"
     exit 1
   fi
 
-  # Verify the rac module is importable
   if ! "$PYTHON" -c "import rules_visualizer_rac" 2>/dev/null; then
     echo "Error: rules-visualizer-rac is not installed."
     echo "Install it: $PYTHON -m pip install -e $ROOT_DIR/packages/rac-server"
     exit 1
+  fi
+
+  # Warn (don't fail) if the axiom-rules-engine binary isn't built — the
+  # visualizer still works in view-only mode; execution requests will 503.
+  ENGINE_BIN="$ROOT_DIR/vendor/axiom-rules-engine/target/release/axiom-rules-engine"
+  if [[ ! -x "$ENGINE_BIN" && -z "${AXIOM_RULES_ENGINE_BIN:-}" ]]; then
+    echo ""
+    echo "Note: axiom-rules-engine binary not found. Visualization will work,"
+    echo "      but rule execution will fail until you run:"
+    echo ""
+    echo "        npm run setup:axiom-engine"
+    echo ""
   fi
 
   RAC_ARGS=("$DIRECTORY" "--port" "$PORT")
