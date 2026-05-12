@@ -324,7 +324,7 @@ export function Node({ node }: NodeProps) {
               onClick={() => setCollectionEditorOpen(true)}
             >
               <Plus className="size-3" />
-              Edit members
+              Edit {getCollectionDisplayName(collectionInfo.collection)}
             </button>
             {hasOverride && collectionFieldPath && (
               <button
@@ -442,7 +442,7 @@ export function Node({ node }: NodeProps) {
                     badgeClasses,
                     'hover:bg-emerald-200 hover:border-emerald-400'
                   )}
-                  title="Edit members"
+                  title={`Edit ${getCollectionDisplayName(collectionInfo.collection)}`}
                   onClick={(e) => {
                     e.stopPropagation()
                     setCollectionEditorOpen(true)
@@ -554,6 +554,7 @@ function CollectionEditorDialog({
               }
               onBlur={onBlur}
               results={results}
+              allEntityData={entityData}
               onDone={() => onOpenChange(false)}
             />
           )}

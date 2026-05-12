@@ -656,16 +656,18 @@ export function executeFactGraph(
   }
 
   const t1b = Date.now()
-  // Generate UUIDs for each collection instance and set up collections
+  // Two-pass collection setup: (1) generate UUIDs and create every
+  // collection up front, (2) set per-item field values. The first pass
+  // has to complete before the second so CollectionItem-typed fields
+  // (e.g. /incomes/x/memberId pointing at /members) can resolve their
+  // "#index" references — the target collection's UUIDs must already
+  // exist no matter which order the prefixes happen to be in.
   const collectionUuids: Record<string, string[]> = {}
   for (const prefix of collectionPrefixes) {
     const entityRows = entities?.[prefix] ?? []
     if (entityRows.length === 0) continue
-
     const uuids = entityRows.map(() => crypto.randomUUID())
     collectionUuids[prefix] = uuids
-
-    // Create the collection
     try {
       const collection = sfg.CollectionFactory(uuids)
       graph.set(prefix, collection)
@@ -674,10 +676,14 @@ export function executeFactGraph(
         `Failed to create collection ${prefix}:`,
         (e as Error).message
       )
-      continue
+      delete collectionUuids[prefix]
     }
+  }
 
-    // (In factgraph 3.1 the graph evaluates eagerly — no save() needed)
+  for (const prefix of collectionPrefixes) {
+    const entityRows = entities?.[prefix] ?? []
+    const uuids = collectionUuids[prefix]
+    if (!uuids || entityRows.length === 0) continue
 
     // Set per-item values. Row keys are full fact paths like "/members/*/age";
     // swap `/*/` for `/#${uuid}/` to produce the per-instance path.
@@ -688,7 +694,12 @@ export function executeFactGraph(
         if (fieldPath === 'id') continue
         const itemPath = fieldPath.replace('/*/', `/#${uuid}/`)
         try {
-          const typedValue = createTypedValue(fieldPath, value, effectiveLookup)
+          const typedValue = createTypedValue(
+            fieldPath,
+            value,
+            effectiveLookup,
+            collectionUuids
+          )
           if (typedValue !== undefined) {
             graph.set(itemPath, typedValue)
           }
@@ -705,7 +716,12 @@ export function executeFactGraph(
     // Skip collection items — already handled above
     if (path.includes('/*')) continue
     try {
-      const typedValue = createTypedValue(path, value, effectiveLookup)
+      const typedValue = createTypedValue(
+        path,
+        value,
+        effectiveLookup,
+        collectionUuids
+      )
       if (typedValue !== undefined) {
         graph.set(path, typedValue)
       }
@@ -717,7 +733,12 @@ export function executeFactGraph(
   // Set derived-turned-writable overrides
   for (const [path, value] of Object.entries(derivedOverrides)) {
     try {
-      const typedValue = createTypedValue(path, value, effectiveLookup)
+      const typedValue = createTypedValue(
+        path,
+        value,
+        effectiveLookup,
+        collectionUuids
+      )
       if (typedValue !== undefined) {
         graph.set(path, typedValue)
       }
@@ -858,7 +879,8 @@ function readFactValue(graph: unknown, path: string): unknown {
 function createTypedValue(
   path: string,
   value: unknown,
-  lookup: FactLookup
+  lookup: FactLookup,
+  collectionUuids?: Record<string, string[]>
 ): unknown {
   const fact = lookup.get(path)
   if (!fact?.raw['Writable']) return undefined
@@ -869,6 +891,36 @@ function createTypedValue(
   )
 
   switch (typeName) {
+    case 'CollectionItem': {
+      // The frontend dropdown stores a "#index" sentinel — look up the
+      // referenced collection's UUID for that row. Already-UUID-shaped
+      // values pass through (allows JSON imports of saved profiles to
+      // keep working with raw UUIDs in the field).
+      const typeObj = writable[typeName] as Record<string, unknown> | undefined
+      const target = String(typeObj?.['@_collection'] ?? '')
+      const raw = String(value)
+      const indexMatch = raw.match(/^#(\d+)$/)
+      let uuid: string | undefined
+      if (indexMatch && target && collectionUuids?.[target]) {
+        const idx = Number(indexMatch[1])
+        uuid = collectionUuids[target][idx]
+      } else if (
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+          raw
+        )
+      ) {
+        uuid = raw
+      }
+      if (!uuid) return undefined
+      try {
+        // The bundle's CollectionItemFactory export is a plain function —
+        // `.apply(uuid)` would call Function.prototype.apply, not the Scala
+        // factory.
+        return sfg.CollectionItemFactory(uuid)
+      } catch {
+        return undefined
+      }
+    }
     case 'String': {
       const result = sfg.StringFactory(String(value))
       return result.isRight ? result.right : undefined

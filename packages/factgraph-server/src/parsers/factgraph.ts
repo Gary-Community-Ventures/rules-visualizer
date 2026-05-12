@@ -181,12 +181,12 @@ export function parseFactGraphModules(
     const id = fact.path
 
     // Collect all <Dependency> elements from the entire fact tree
-    const depPaths = collectDependencyPaths(fact.raw)
+    const depRefs = collectDependencyPaths(fact.raw)
     const resolved = new Set<string>()
 
-    for (const depPath of depPaths) {
+    for (const ref of depRefs) {
       // Resolve relative paths (e.g. "../lastName") against the fact's own path
-      const absolutePath = resolvePath(depPath, fact.path)
+      const absolutePath = resolvePath(ref.path, fact.path, ref.scope)
       let depId = pathToId[absolutePath]
 
       // Fuzzy match: /primaryFiler/X or /secondaryFiler/X -> /filers/*/X
@@ -343,22 +343,35 @@ function parseModuleXml(xml: string, moduleName: string): ParsedFact[] {
   return facts
 }
 
+// One <Dependency> path discovered while walking a fact's XML tree, along with
+// the most-recent enclosing collection scope (the path attribute on a Filter /
+// Find / IndexOf, if any). The scope lets resolvePath() resolve bare-name
+// paths like `memberId` inside <Filter path="/incomes"> against the iterated
+// collection (so they map to /incomes/*/memberId) instead of leaving them
+// unresolved.
+type DepRef = { path: string; scope?: string }
+
+const SCOPE_ELEMENTS = new Set(['Filter', 'Find', 'IndexOf'])
+
 /**
  * Recursively collect all dependency paths from a fact's XML tree.
  * Dependencies can be nested deep inside expression trees (Switch/Case/When/Then/All/Any/etc).
  */
-function collectDependencyPaths(obj: unknown): string[] {
-  const paths: string[] = []
+function collectDependencyPaths(
+  obj: unknown,
+  scope?: string
+): DepRef[] {
+  const refs: DepRef[] = []
 
   if (obj === null || obj === undefined || typeof obj !== 'object') {
-    return paths
+    return refs
   }
 
   if (Array.isArray(obj)) {
     for (const item of obj) {
-      paths.push(...collectDependencyPaths(item))
+      refs.push(...collectDependencyPaths(item, scope))
     }
-    return paths
+    return refs
   }
 
   const record = obj as Record<string, unknown>
@@ -372,27 +385,19 @@ function collectDependencyPaths(obj: unknown): string[] {
       const d = dep as Record<string, unknown>
       const path = d['@_path'] as string
       if (path) {
-        paths.push(path)
+        refs.push({ path, scope })
       }
     }
   }
 
   // optionsPath="..." on Enum elements — references the fact providing enum options
   if (typeof record['@_optionsPath'] === 'string') {
-    paths.push(record['@_optionsPath'] as string)
-  }
-
-  // <Find path="..."> — references a collection fact
-  if (typeof record['@_path'] === 'string' && record['@_path'] !== undefined) {
-    // Only for Find elements (not Fact definitions). We detect Find by checking
-    // if this is NOT a top-level fact (top-level facts have Writable/Derived children).
-    // Find elements have Dependency children but are keyed by 'Find' in the parent.
-    // We handle this via the parent recursion below.
+    refs.push({ path: record['@_optionsPath'] as string, scope })
   }
 
   // collection="..." on CollectionItem — references the parent collection
   if (typeof record['@_collection'] === 'string') {
-    paths.push(record['@_collection'] as string)
+    refs.push({ path: record['@_collection'] as string, scope })
   }
 
   // Recurse into all child elements
@@ -400,18 +405,25 @@ function collectDependencyPaths(obj: unknown): string[] {
     if (key.startsWith('@_') || key === '#text') continue
     if (key === 'Dependency') continue // already handled above
 
-    // <Find path="/filers"> — the path attribute is a dependency
-    if (key === 'Find' && typeof value === 'object' && value !== null) {
-      const findObj = value as Record<string, unknown>
-      if (typeof findObj['@_path'] === 'string') {
-        paths.push(findObj['@_path'] as string)
+    // Scope-introducing elements (Filter / Find / IndexOf) attach a path
+    // attribute pointing at the collection they iterate. Capture it as
+    // both a dependency edge and as the new scope for everything inside.
+    if (SCOPE_ELEMENTS.has(key) && typeof value === 'object' && value !== null) {
+      const elements = Array.isArray(value) ? value : [value]
+      for (const el of elements) {
+        const elObj = el as Record<string, unknown>
+        const elPath =
+          typeof elObj['@_path'] === 'string' ? elObj['@_path'] : undefined
+        if (elPath) refs.push({ path: elPath, scope })
+        refs.push(...collectDependencyPaths(elObj, elPath ?? scope))
       }
+      continue
     }
 
-    paths.push(...collectDependencyPaths(value))
+    refs.push(...collectDependencyPaths(value, scope))
   }
 
-  return paths
+  return refs
 }
 
 /**
@@ -611,15 +623,51 @@ function inferType(node: unknown): string | undefined {
   return undefined
 }
 
-/**
- * Resolve a dependency path relative to the owning fact's path.
- * Absolute paths (starting with /) are returned as-is.
- * Relative paths (starting with ../) are resolved against the parent of the fact path.
- *
- * "../lastName" relative to "/filers/x/fullName" becomes "/filers/x/lastName"
- */
-function resolvePath(depPath: string, factPath: string): string {
-  if (!depPath.startsWith('../')) return depPath
+// Resolve a dependency path relative to the owning fact's path.
+//   - Absolute paths (starting with /) are returned as-is.
+//   - Relative paths starting with ../ are resolved against the parent of the
+//     fact path: "../lastName" relative to "/filers/x/fullName" becomes
+//     "/filers/x/lastName".
+//   - Escape paths starting with ^ (the SelfStack escape — see Path.popEscapes
+//     in the Scala engine) pop one path segment per ^ char, mirroring the
+//     engine's choice of pushing fact.parent onto the SelfStack at each
+//     Filter scope. "^/active" relative to "/members/*/match" becomes
+//     "/members/*/active"; bare "^" becomes "/members/*".
+//   - Bare field names ("memberId") are resolved against `scope` when given —
+//     the most-recent enclosing Filter/Find/IndexOf collection path. Inside
+//     <Filter path="/incomes">, "memberId" becomes "/incomes/*/memberId".
+function resolvePath(
+  depPath: string,
+  factPath: string,
+  scope?: string
+): string {
+  if (/^\^+(\/|$)/.test(depPath)) {
+    const slashIdx = depPath.indexOf('/')
+    const head = slashIdx === -1 ? depPath : depPath.slice(0, slashIdx)
+    const tail = slashIdx === -1 ? '' : depPath.slice(slashIdx + 1)
+    const factSegments = factPath.split('/').filter(Boolean)
+    // ^/X means "outside the surrounding Filter scope" — the parent of the
+    // host fact. Pop the host's own leaf for each ^; bare ^ lands at the
+    // parent, ^^ pops one further level, etc.
+    for (let i = 0; i < head.length; i++) factSegments.pop()
+    const base = factSegments.length === 0 ? '' : '/' + factSegments.join('/')
+    if (tail.length === 0) return base === '' ? '/' : base
+    return (base === '' ? '' : base) + '/' + tail
+  }
+
+  if (!depPath.startsWith('../')) {
+    // Bare relative names ("memberId", "foo/bar") resolve against the scope
+    // path of the enclosing Filter/Find/IndexOf when one is in effect, since
+    // those operators rebind the active Factual to a collection item.
+    // Anything starting with "/" is already absolute and falls through.
+    if (depPath.length > 0 && !depPath.startsWith('/') && scope) {
+      const scopeBase = scope.endsWith('/')
+        ? `${scope}*/`
+        : `${scope}/*/`
+      return `${scopeBase}${depPath}`
+    }
+    return depPath
+  }
 
   // ../foo relative to /filers/*/fullName means /filers/*/foo (sibling in the collection).
   // Each ../ pops one segment from the fact path.
