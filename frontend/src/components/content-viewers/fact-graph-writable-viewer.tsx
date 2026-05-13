@@ -30,9 +30,13 @@ export function FactGraphWritableViewer({ content }: Props) {
         const tail = slashIdx === -1 ? '' : path.slice(slashIdx + 1)
         const segments = content.path.split('/').filter(Boolean)
         for (let i = 0; i < head.length; i++) segments.pop()
-        const base =
-          segments.length === 0 ? '/' : '/' + segments.join('/')
-        path = tail.length === 0 ? base : base === '/' ? '/' + tail : base + '/' + tail
+        const base = segments.length === 0 ? '/' : '/' + segments.join('/')
+        path =
+          tail.length === 0
+            ? base
+            : base === '/'
+              ? '/' + tail
+              : base + '/' + tail
       }
 
       for (const [nodeId, node] of Object.entries(model.nodes)) {

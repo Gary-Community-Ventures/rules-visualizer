@@ -2,7 +2,7 @@
   {
     "id": "single-working-adult",
     "name": "Single working adult, $1,500/mo",
-    "description": "1-person household, employed at minimum wage, modest rent. Useful starting point for tweaking individual inputs to see how SNAP eligibility and allotment respond.",
+    "description": "1-person household, employed at minimum wage, modest rent. The single member is a working-age citizen who isn't elderly/disabled and meets the work requirement via 40 hrs/week.",
     "inputs": {
       "household_size": 1,
       "employee_wages_received": 1500,
@@ -14,13 +14,26 @@
       "income_pay_frequency": "monthly",
       "average_income_per_pay_period": 1500
     },
+    "entities": {
+      "Person": [
+        {
+          "id": "applicant",
+          "member_age": 32,
+          "member_is_us_citizen": true,
+          "snap_member_is_elderly_or_disabled": false,
+          "member_weekly_work_hours": 40,
+          "member_weekly_wages": 375,
+          "enrolled_at_least_half_time": false
+        }
+      ]
+    },
     "createdAt": "2026-05-12T00:00:00Z",
-    "updatedAt": "2026-05-12T00:00:00Z"
+    "updatedAt": "2026-05-13T00:00:00Z"
   },
   {
     "id": "family-of-four-low-income",
     "name": "Family of 4, $2,500/mo, BCE",
-    "description": "4-person household with Basic Categorical Eligibility (BCE) — typically receives TANF or SSI so gross income test is auto-passed. Tests the categorical-eligibility fast path.",
+    "description": "4-person household with Basic Categorical Eligibility (BCE) — typically receives TANF or SSI so gross income test is auto-passed. Two working-age parents plus two minor children.",
     "inputs": {
       "household_size": 4,
       "employee_wages_received": 2500,
@@ -32,13 +45,51 @@
       "income_pay_frequency": "monthly",
       "average_income_per_pay_period": 2500
     },
+    "entities": {
+      "Person": [
+        {
+          "id": "parent-1",
+          "member_age": 35,
+          "member_is_us_citizen": true,
+          "snap_member_is_elderly_or_disabled": false,
+          "member_weekly_work_hours": 40,
+          "member_weekly_wages": 312,
+          "member_is_parent_of_household_member_under_age_eighteen": true,
+          "member_resides_with_household_member_under_age_eighteen": true
+        },
+        {
+          "id": "parent-2",
+          "member_age": 33,
+          "member_is_us_citizen": true,
+          "snap_member_is_elderly_or_disabled": false,
+          "member_weekly_work_hours": 32,
+          "member_weekly_wages": 250,
+          "member_is_parent_of_household_member_under_age_eighteen": true,
+          "member_resides_with_household_member_under_age_eighteen": true
+        },
+        {
+          "id": "child-1",
+          "member_age": 8,
+          "member_is_us_citizen": true,
+          "snap_member_is_elderly_or_disabled": false,
+          "member_is_under_age_eighteen": true
+        },
+        {
+          "id": "child-2",
+          "member_age": 5,
+          "member_is_us_citizen": true,
+          "snap_member_is_elderly_or_disabled": false,
+          "member_is_under_age_eighteen": true
+        }
+      ]
+    },
     "createdAt": "2026-05-12T00:00:00Z",
-    "updatedAt": "2026-05-12T00:00:00Z"
+    "updatedAt": "2026-05-13T00:00:00Z"
   },
   {
     "id": "elderly-couple",
     "name": "Elderly couple, fixed income",
-    "description": "2-person household, both elderly, on Social Security. Tests the elderly/disabled deduction path and the higher gross-income limit (165% FPL).",
+    "description": "2-person household, both elderly, on Social Security / retirement income. Tests the elderly/disabled deduction path and the higher gross-income limit (165% FPL).",
     "inputs": {
       "household_size": 2,
       "employee_wages_received": 0,
@@ -51,7 +102,86 @@
       "income_pay_frequency": "monthly",
       "average_income_per_pay_period": 1800
     },
+    "entities": {
+      "Person": [
+        {
+          "id": "spouse-1",
+          "member_age": 72,
+          "member_is_us_citizen": true,
+          "snap_member_is_elderly_or_disabled": true,
+          "member_weekly_work_hours": 0,
+          "member_weekly_wages": 0,
+          "member_physically_or_mentally_unfit_for_employment": false
+        },
+        {
+          "id": "spouse-2",
+          "member_age": 70,
+          "member_is_us_citizen": true,
+          "snap_member_is_elderly_or_disabled": true,
+          "member_weekly_work_hours": 0,
+          "member_weekly_wages": 0,
+          "member_physically_or_mentally_unfit_for_employment": false
+        }
+      ]
+    },
     "createdAt": "2026-05-12T00:00:00Z",
-    "updatedAt": "2026-05-12T00:00:00Z"
+    "updatedAt": "2026-05-13T00:00:00Z"
+  },
+  {
+    "id": "mixed-household",
+    "name": "Family of 4: elderly grandparent + 2 working + child",
+    "description": "Demonstrates per-member modeling. The grandparent's elderly flag flips the household into the higher-gross-income tier and unlocks the uncapped shelter deduction, even though only one of four members is elderly.",
+    "inputs": {
+      "household_size": 4,
+      "employee_wages_received": 2400,
+      "rent_amount": 1300,
+      "snap_basic_categorical_eligible": false,
+      "snap_expanded_categorical_eligible": false,
+      "household_lives_in_application_state": true,
+      "anticipated_income_reasonably_certain": true,
+      "income_pay_frequency": "monthly",
+      "average_income_per_pay_period": 2400
+    },
+    "entities": {
+      "Person": [
+        {
+          "id": "grandparent",
+          "member_age": 68,
+          "member_is_us_citizen": true,
+          "snap_member_is_elderly_or_disabled": true,
+          "member_weekly_work_hours": 0,
+          "member_weekly_wages": 0
+        },
+        {
+          "id": "parent-1",
+          "member_age": 42,
+          "member_is_us_citizen": true,
+          "snap_member_is_elderly_or_disabled": false,
+          "member_weekly_work_hours": 40,
+          "member_weekly_wages": 300,
+          "member_is_parent_of_household_member_under_age_eighteen": true,
+          "member_resides_with_household_member_under_age_eighteen": true
+        },
+        {
+          "id": "parent-2",
+          "member_age": 40,
+          "member_is_us_citizen": true,
+          "snap_member_is_elderly_or_disabled": false,
+          "member_weekly_work_hours": 35,
+          "member_weekly_wages": 275,
+          "member_is_parent_of_household_member_under_age_eighteen": true,
+          "member_resides_with_household_member_under_age_eighteen": true
+        },
+        {
+          "id": "child",
+          "member_age": 9,
+          "member_is_us_citizen": true,
+          "snap_member_is_elderly_or_disabled": false,
+          "member_is_under_age_eighteen": true
+        }
+      ]
+    },
+    "createdAt": "2026-05-13T00:00:00Z",
+    "updatedAt": "2026-05-13T00:00:00Z"
   }
 ]

@@ -33,6 +33,8 @@ def parse_rulespec_composition(
     composition_path: str | Path,
     rulespec_root: str | Path,
     ruleset_id: str,
+    *,
+    input_entity_overrides: dict[str, str] | None = None,
 ) -> dict:
     """Load a RuleSpec composition + every transitive import, emit Model JSON.
 
@@ -43,6 +45,11 @@ def parse_rulespec_composition(
             (`us-co/`, `us/`, etc.) used to resolve `<jurisdiction>:path`
             import references.
         ruleset_id: Visualizer-side ruleset identifier.
+        input_entity_overrides: Authoritative `{bare_input → entity}` map
+            computed elsewhere (typically by walking the compiled artifact,
+            which understands `count_related`/`sum_related` scope flips
+            that the formula-text heuristic misses). When provided, takes
+            precedence over the local consumer-walk inference.
     """
     root = Path(rulespec_root)
     entry = Path(composition_path)
@@ -65,6 +72,15 @@ def parse_rulespec_composition(
 
     nodes: dict[str, dict] = {}
     input_names: set[str] = set()
+
+    # For each formula identifier, record the entities of rules that
+    # reference it. RuleSpec doesn't declare inputs — the engine
+    # discovers them by walking ASTs (formula.rs:1303-1317). Entity scope
+    # for an input emerges from the consuming rule(s): the engine
+    # evaluates `{kind: input, name: X}` at the consumer's entity_id, so
+    # the input is functionally Person-scoped iff every consumer is
+    # Person-scoped.
+    formula_entities: dict[str, set[str]] = {}
 
     # source_relation rules don't compute a value; they document that this
     # regulation module restates a target rule defined elsewhere. We collect
@@ -89,14 +105,35 @@ def parse_rulespec_composition(
         )
         nodes[name] = node
 
-        # Track all formula identifiers as potential inputs.
+        # Track all formula identifiers as potential inputs, and remember
+        # the consuming rule's entity so we can propagate scope to the
+        # synthesized input nodes below.
+        consumer_entity = rule.get("entity")
         for tv in _collect_formula_strings(rule):
-            input_names |= _extract_identifiers(tv)
+            idents = _extract_identifiers(tv)
+            input_names |= idents
+            if consumer_entity:
+                for ident in idents:
+                    formula_entities.setdefault(ident, set()).add(consumer_entity)
 
     # Pass 2: any identifier referenced but not declared is an input.
+    # Stamp the inferred entity scope when every consumer agrees on one.
+    # Mixed-scope inputs (none observed in SNAP today) get no entity tag —
+    # whoever's writing such content needs to disambiguate at the source.
     declared = set(nodes.keys())
     for ref in sorted(input_names - declared):
-        nodes[ref] = _input_node(ref)
+        # Authoritative artifact-walk wins. It understands `count_where`
+        # scope flips (an input inside `count_where(member_of_household, X)`
+        # is at the related-slot entity, not the consuming rule's entity);
+        # the formula-text walk here can't see that.
+        if input_entity_overrides and ref in input_entity_overrides:
+            inferred_entity: str | None = input_entity_overrides[ref]
+        else:
+            entities_seen = formula_entities.get(ref) or set()
+            inferred_entity = (
+                next(iter(entities_seen)) if len(entities_seen) == 1 else None
+            )
+        nodes[ref] = _input_node(ref, entity=inferred_entity)
 
     # Pass 3: wire up dependencies — each rule's deps are the declared
     # identifiers in its formula(s). Inputs have no deps.
@@ -332,21 +369,28 @@ def _latest_values(versions: list[dict]) -> dict | None:
     return {str(k): v for k, v in values.items()}
 
 
-def _input_node(name: str) -> dict:
+def _input_node(name: str, *, entity: str | None = None) -> dict:
     """Synthesize an input node for an identifier referenced but not declared
-    as a rule in any loaded module."""
+    as a rule in any loaded module. `entity` is inferred from the consuming
+    rule(s) — the frontend buckets nodes by `content.entity` into collection
+    editors (e.g. a "Person" bucket for per-member inputs)."""
+    content: dict[str, Any] = {
+        "format": "rac",
+        "type": "variable",
+        "role": "input",
+        "path": name,
+    }
+    tags = ["input", "kind:input"]
+    if entity:
+        content["entity"] = entity
+        tags.append(f"entity:{entity}")
     return {
         "id": name,
         "name": name,
         "dependencies": [],
-        "content": {
-            "format": "rac",
-            "type": "variable",
-            "role": "input",
-            "path": name,
-        },
+        "content": content,
         "overridable": True,
-        "tags": ["input", "kind:input"],
+        "tags": tags,
     }
 
 

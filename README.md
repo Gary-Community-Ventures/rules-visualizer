@@ -199,7 +199,9 @@ See `packages/rac-server/rules_visualizer_rac/axiom_engine.py`.
 
 **Imports resolve via repo-name directories.** The engine resolves `us-co:regulations/10-ccr-2506-1/4.401` by looking for a directory named `rulespec-us-co/`. Our content is laid out the same way (`data/rulespec/rulespec-us-co/`) so imports work natively, no symlinks required.
 
-**Person vs Household entity scope.** Most SNAP inputs are Household-scoped (`employee_wages_received`, `rent_amount`, ...), but a handful of eligibility flags are Person-scoped and feed `count_where(member_of_household, ...) > 0` gates (citizenship, SSN compliance, work-requirement status). The wrapper walks the compiled artifact to tag each input by the entity of the rule that consumes it, then routes Person-scoped values to a single `person-1` member with a `member_of_household: [person-1, h1]` relation row. Multi-member households (e.g. one elderly + one working adult with different per-member flags) aren't yet expressible — profiles flatten every Person-scoped input onto the same lone member.
+**Person vs Household entity scope.** Most SNAP inputs are Household-scoped (`employee_wages_received`, `rent_amount`, ...), but ~120 are Person-scoped — eligibility flags that feed `count_where(member_of_household, ...) > 0` gates (citizenship, SSN compliance, work-requirement status, elderly/disabled) plus per-member attributes like `member_age` and `member_weekly_wages`. RuleSpec doesn't declare inputs; the engine and our parser both discover them by walking ASTs (`formula.rs:1303-1317`). Entity scope is inferred from the consuming rule, with a context flip when descending through `count_related`/`sum_related` (the `where` and `value` subexpressions evaluate at the related-slot entity). The CLI eagerly compiles each composition and feeds the artifact's authoritative `{bare_input → entity}` map back into the parser so the frontend's Person collection bucket surfaces every per-member input.
+
+**Multi-member dataset assembly.** `axiom_engine.execute` accepts `entities: {Person: [{...row}, ...]}` matching the factgraph wire format. Each row becomes a unique entity_id (`person-1`, `person-2`, ...) with per-row InputRecords for any Person-scoped input the row supplies (falling back to user_inputs > fixture default > typed zero). A `member_of_household` relation row is emitted per member under every name the compiled program references — the artifact has both a bare `member_of_household` and a durable `us:statutes/7/2012/j#relation.member_of_household` and the engine indexes by exact-name match, so we cover both. If `entities` is empty we mint a single default member so flat single-person profiles keep working.
 
 **Query selection.** The auto-query (used when the caller doesn't specify outputs) is filtered to Household-scoped derived rules only. Querying a Person-scoped output against the household entity_id makes the engine evaluate the Person rule against `h1` and error with "missing input X for entity h1". Person-scoped values still come back via the explain-mode trace so the visualizer can render them.
 
@@ -213,13 +215,13 @@ See `packages/rac-server/rules_visualizer_rac/axiom_engine.py`.
 
 ## Environment Variables
 
-| Variable                  | Required           | Description                                                                                                                      |
-| ------------------------- | ------------------ | -------------------------------------------------------------------------------------------------------------------------------- |
-| `OPEN_ROUTER_KEY`         | For AI chat        | API key from [openrouter.ai](https://openrouter.ai)                                                                              |
-| `AI_MODEL`                | No                 | Model ID (default: `google/gemini-2.5-flash`)                                                                                    |
-| `ALLOW_WRITES`            | For write features | Set to `1` to enable backend write surfaces (Tasks routes mount; Tests/References PUT/POST/DELETE return `200` instead of `403`) |
-| `VITE_ALLOW_WRITES`       | For write features | Must mirror `ALLOW_WRITES`. Vite inlines this at build time                                                                      |
-| `AXIOM_RULES_ENGINE_BIN`  | No                 | Override path to the axiom-rules-engine binary (default: `vendor/axiom-rules-engine/target/release/axiom-rules-engine`)          |
+| Variable                 | Required           | Description                                                                                                                      |
+| ------------------------ | ------------------ | -------------------------------------------------------------------------------------------------------------------------------- |
+| `OPEN_ROUTER_KEY`        | For AI chat        | API key from [openrouter.ai](https://openrouter.ai)                                                                              |
+| `AI_MODEL`               | No                 | Model ID (default: `google/gemini-2.5-flash`)                                                                                    |
+| `ALLOW_WRITES`           | For write features | Set to `1` to enable backend write surfaces (Tasks routes mount; Tests/References PUT/POST/DELETE return `200` instead of `403`) |
+| `VITE_ALLOW_WRITES`      | For write features | Must mirror `ALLOW_WRITES`. Vite inlines this at build time                                                                      |
+| `AXIOM_RULES_ENGINE_BIN` | No                 | Override path to the axiom-rules-engine binary (default: `vendor/axiom-rules-engine/target/release/axiom-rules-engine`)          |
 
 `ALLOW_WRITES` and `VITE_ALLOW_WRITES` must be set together. Without them, the UI runs read-only.
 

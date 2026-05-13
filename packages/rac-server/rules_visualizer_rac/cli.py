@@ -71,6 +71,26 @@ def _find_rulespec_root(data_dir: Path) -> Path | None:
     return None
 
 
+def _try_extract_input_entities(
+    ruleset_id: str, composition_path: Path
+) -> dict[str, str] | None:
+    """Compile the composition and return `{bare_input → entity}`. Returns
+    None on any failure so the caller can fall back to the parser's
+    formula-text heuristic."""
+    try:
+        from .axiom_engine import compile_program, _collect_input_references
+    except Exception:
+        return None
+    try:
+        artifact = compile_program(ruleset_id, composition_path)
+    except Exception as e:
+        print(f'  Warning: could not pre-compile {composition_path.name} '
+              f'for entity inference: {e}')
+        return None
+    refs = _collect_input_references(artifact)
+    return {bare: entity for bare, (_durable, entity) in refs.items()}
+
+
 def _find_rulespec_compositions(rulespec_root: Path) -> list[tuple[Path, str]]:
     """Find every YAML under `<rulespec_root>/rulespec-<juris>/policies/**`
     whose top-level `module.kind` is `composition`. Returns
@@ -152,8 +172,20 @@ def main() -> None:
     rulesets: dict = {}
     for comp_path, ruleset_id in _find_rulespec_compositions(rulespec_root):
         try:
+            # Eagerly compile to harvest authoritative input entity scopes.
+            # The artifact's AST is the source of truth (handles
+            # `count_related` slot flips that the parser's formula-text walk
+            # can't see). If compilation fails — engine binary missing,
+            # malformed YAML — we still parse with the heuristic fallback so
+            # the visualizer at least renders.
+            input_entity_overrides = _try_extract_input_entities(
+                ruleset_id, comp_path
+            )
             model = parse_rulespec_composition(
-                comp_path, str(rulespec_root), ruleset_id
+                comp_path,
+                str(rulespec_root),
+                ruleset_id,
+                input_entity_overrides=input_entity_overrides,
             )
             # Allow per-ruleset references.json (sibling of the composition
             # file) to attach policy-doc citations onto nodes.
