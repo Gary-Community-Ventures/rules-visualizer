@@ -83,6 +83,22 @@ export function FactGraphWritableViewer({ content }: Props) {
         {content.collectionItemPath && (
           <Field label="Collection" value={content.collectionItemPath} />
         )}
+        {content.placeholderLogic !== undefined && (
+          <div>
+            <span className="text-muted-foreground font-medium">Placeholder</span>
+            {content.placeholderLogic ? (
+              <LogicHighlighter
+                format="factGraph"
+                logic={content.placeholderLogic}
+                onNavigate={navigateToPath}
+              />
+            ) : (
+              <p className="mt-0.5 text-muted-foreground italic">
+                (empty)
+              </p>
+            )}
+          </div>
+        )}
       </AdvancedSection>
     </div>
   )

@@ -1,4 +1,10 @@
 <FactDictionaryModule>
+  <!-- TODO: Replace `<CollectionSize><Dependency path="/members"/></CollectionSize>`
+       with a calculation that returns the count of *eligible* members rather than
+       the raw size of /members. Related: improve the logic so non-members are not
+       counted toward household totals at all. Both will be resolved once we
+       define who counts as being "in the household" and what that means for
+       inclusion in SNAP totals. -->
   <Facts>
     <Fact path="/incomeSourceOptions">
       <Name>Income source options</Name>
@@ -6,9 +12,13 @@
       <Derived>
         <EnumOptions>
           <String>Tanf</String>
-          <String>AdultFinancial</String>
+          <String>OldAgePension</String>
+          <String>AidToNeedyDisabled</String>
+          <String>AidToBlind</String>
+          <String>ColoradoSupplementSsi</String>
           <String>Ssi</String>
           <String>SelfEmployment</String>
+          <String>VendorPayments</String>
         </EnumOptions>
       </Derived>
     </Fact>
@@ -41,6 +51,24 @@
       <Name>Monthly amount</Name>
       <Description>The monthly amount of this income.</Description>
       <Writable><Dollar /></Writable>
+    </Fact>
+
+    <Fact path="/parentChildRelationships">
+      <Name>Parent-child relationships</Name>
+      <Description>List of natural, adoptive, or stepparent relationships between household members. Each entry links one parent member to one child member; a single child may appear in multiple entries when more than two of their parents live in the same home (10 CCR 2506-1, 4.304.1).</Description>
+      <Writable><Collection /></Writable>
+    </Fact>
+
+    <Fact path="/parentChildRelationships/*/parentId">
+      <Name>Parent</Name>
+      <Description>The household member who is a natural, adoptive, or stepparent in this relationship. Every parent linked to a child aged twenty-one (21) years or younger who lives in the same home must be included in the SNAP household, regardless of marital status or whether the parents purchase and prepare food together (10 CCR 2506-1, 4.304.1).</Description>
+      <Writable><CollectionItem collection="/members" /></Writable>
+    </Fact>
+
+    <Fact path="/parentChildRelationships/*/childId">
+      <Name>Child</Name>
+      <Description>The household member who is the natural, adoptive, or stepchild in this relationship (10 CCR 2506-1, 4.304.1).</Description>
+      <Writable><CollectionItem collection="/members" /></Writable>
     </Fact>
 
     <Fact path="/members/*/age">
@@ -182,6 +210,112 @@
       <Writable><Boolean /></Writable>
     </Fact>
 
+    <Fact path="/members/*/isMandatoryHouseholdMember">
+      <Name>Is mandatory household member</Name>
+      <Description>Whether this member is a mandatory household member who must be considered in the same household as the other mandatory individuals they live with, even if they declare they do not customarily purchase and prepare their food together for home consumption (10 CCR 2506-1, 4.304.1)</Description>
+      <Derived>
+        <Any>
+          <Dependency path="../isMandatoryChild" />
+          <Dependency path="../isSpouse" />
+        </Any>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/isPartOfHousehold">
+      <Name>Is part of household</Name>
+      <Description>Whether this member is part of the SNAP household — a group of individuals who live together and customarily purchase and prepare food together for home consumption. Mandatory household members are always considered part of the household regardless of food preparation (10 CCR 2506-1, 4.304, 4.304.1).</Description>
+      <Derived>
+        <Any>
+          <Dependency path="../isMandatoryHouseholdMember" />
+          <Dependency path="../preparesFoodWithHousehold" />
+        </Any>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/spouseId">
+      <Name>Spouse</Name>
+      <Description>The household member who is this member's spouse — either a person married to this member under state law, or a person living together with this member who is free to marry and is representing themselves as a spouse to relatives, friends, neighbors, or the larger community (10 CCR 2506-1, 4.304.1).</Description>
+      <Writable><CollectionItem collection="/members" /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/isSpouse">
+      <Name>Is spouse of a household member</Name>
+      <Description>Whether this member is in a spouse relationship with another member of the household. True when this member has a spouse set, or when another household member identifies this member as their spouse. Spouses must always be considered part of the same SNAP household regardless of whether they purchase and prepare food together (10 CCR 2506-1, 4.304.1).</Description>
+      <Derived>
+        <Any>
+          <IsComplete><Dependency path="../spouseId" /></IsComplete>
+          <GreaterThan>
+            <Left>
+              <CollectionSize>
+                <Filter path="/members">
+                  <Equal>
+                    <Left><Dependency path="spouseId" /></Left>
+                    <Right><Dependency path="^" /></Right>
+                  </Equal>
+                </Filter>
+              </CollectionSize>
+            </Left>
+            <Right><Int>0</Int></Right>
+          </GreaterThan>
+        </Any>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/isUnderParentalControlOfHouseholdMember">
+      <Name>Is under parental control of a non-parent household member</Name>
+      <Description>Whether this member, being a child under eighteen (18) years of age living with a household member other than their parent, is financially or otherwise dependent on that household member such that the household member exercises parental control over them (10 CCR 2506-1, 4.304.1).</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/isEmancipated">
+      <Name>Is emancipated minor</Name>
+      <Description>Whether this member is a minor who has been emancipated as defined by state law. An emancipated minor is not considered to be under another household member's parental control for purposes of the mandatory-child SNAP household rule (10 CCR 2506-1, 4.304.1).</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/isFosterChild">
+      <Name>Is foster child</Name>
+      <Description>Whether this member is a foster child. Foster children are explicitly excluded from the rule requiring a child under eighteen (18) who lives under the parental control of a non-parent household member to be a mandatory household member (10 CCR 2506-1, 4.304.1).</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/isMandatoryChild">
+      <Name>Is mandatory child household member</Name>
+      <Description>Whether this member must be included in the SNAP household as a child of, or a child under the parental control of, another household member. Captures two cases: (1) a person aged twenty-one (21) years or younger who is linked as a child in at least one /parentChildRelationships entry (i.e., a natural, adoptive, or stepparent lives in the same household); or (2) a non-foster child under eighteen (18) years of age living with and under the parental control of a household member other than their parent, unless emancipated under state law (10 CCR 2506-1, 4.304.1).</Description>
+      <Derived>
+        <Any>
+          <All>
+            <LessThanOrEqual>
+              <Left><Dependency path="../age" /></Left>
+              <Right><Int>21</Int></Right>
+            </LessThanOrEqual>
+            <GreaterThan>
+              <Left>
+                <CollectionSize>
+                  <Filter path="/parentChildRelationships">
+                    <Equal>
+                      <Left><Dependency path="childId" /></Left>
+                      <Right><Dependency path="^" /></Right>
+                    </Equal>
+                  </Filter>
+                </CollectionSize>
+              </Left>
+              <Right><Int>0</Int></Right>
+            </GreaterThan>
+          </All>
+          <All>
+            <LessThan>
+              <Left><Dependency path="../age" /></Left>
+              <Right><Int>18</Int></Right>
+            </LessThan>
+            <Dependency path="../isUnderParentalControlOfHouseholdMember" />
+            <Not><Dependency path="../isFosterChild" /></Not>
+            <Not><Dependency path="../isEmancipated" /></Not>
+          </All>
+        </Any>
+      </Derived>
+    </Fact>
+
     <Fact path="/members/*/hasAbawdDisability">
       <Name>Has ABAWD disability</Name>
       <Description>Whether this member has a physical or mental disability that disqualifies them from ABAWD status (10 CCR 2506-1, 4.000.1)</Description>
@@ -272,22 +406,334 @@
       <Writable><Boolean /></Writable>
     </Fact>
 
-    <Fact path="/isInitialMonth">
-      <Name>Is initial month</Name>
-      <Description>Whether this is the first month the household participates in the program after not having received SNAP benefits in the state previously or following any break after the end of the certification period where the household was not certified for participation. If the household applies for recertification prior to the expiration of its certification period and is found eligible for the first month following the end of the certification period, that month shall not be an initial month (10 CCR 2506-1, 4.000.1).</Description>
+    <Fact path="/allotment">
+      <Name>Allotment</Name>
+      <Description>The total amount of SNAP benefits the household is authorized to receive in a particular month, computed by rounding the unfloored allotment down to the nearest dollar, then raising it up to the federal minimum allotment for one- and two-person households (10 CCR 2506-1, 4.207.3).</Description>
+      <Derived>
+        <Floor>
+          <Switch>
+            <Case>
+              <When>
+                <LessThanOrEqual>
+                  <Left><Dependency path="/householdSize" /></Left>
+                  <Right><Int>2</Int></Right>
+                </LessThanOrEqual>
+              </When>
+              <Then>
+                <GreaterOf>
+                  <Dependency path="/unflooredAllotment" />
+                  <Dependency path="/minimumAllotment" />
+                </GreaterOf>
+              </Then>
+            </Case>
+            <Case>
+              <When><True /></When>
+              <Then><Dependency path="/unflooredAllotment" /></Then>
+            </Case>
+          </Switch>
+        </Floor>
+      </Derived>
+    </Fact>
+
+    <Fact path="/unflooredAllotment">
+      <Name>Unfloored allotment</Name>
+      <Description>The household's SNAP benefit allotment before rounding down to the nearest dollar or applying the minimum-benefit rule, computed as the maximum allotment for the household size minus thirty percent (30%) of net monthly income (10 CCR 2506-1, 4.207.3).</Description>
+      <Derived>
+        <Subtract>
+          <Minuend><Dependency path="/maxAllotment" /></Minuend>
+          <Subtrahends><Dependency path="/expectedContribution" /></Subtrahends>
+        </Subtract>
+      </Derived>
+    </Fact>
+
+    <Fact path="/expectedContributionRate">
+      <Name>Expected contribution rate</Name>
+      <Description>The share of net monthly income the household is expected to contribute toward its food costs, used to compute the SNAP benefit allotment (10 CCR 2506-1, 4.207.3).</Description>
+      <Derived><Rational>3/10</Rational></Derived>
+    </Fact>
+
+    <Fact path="/expectedContribution">
+      <Name>Expected contribution</Name>
+      <Description>The portion of the household's net monthly income that the household is expected to contribute toward its food costs, which is subtracted from the maximum allotment to determine the SNAP benefit (10 CCR 2506-1, 4.207.3).</Description>
+      <Derived>
+        <Multiply>
+          <Dependency path="/netIncome" />
+          <Dependency path="/expectedContributionRate" />
+        </Multiply>
+      </Derived>
+    </Fact>
+
+    <Fact path="/householdSize">
+      <Name>Household size</Name>
+      <Description>The number of members in the household, used to look up the maximum monthly SNAP allotment (10 CCR 2506-1, 4.207.3).</Description>
+      <Derived>
+        <CollectionSize>
+          <Dependency path="/members" />
+        </CollectionSize>
+      </Derived>
+    </Fact>
+
+    <Fact path="/maxAllotmentForSize1">
+      <Name>Maximum allotment for 1-person household</Name>
+      <Description>Maximum monthly SNAP allotment for a 1-person household, effective October 1, 2025 (10 CCR 2506-1, 4.207.3).</Description>
+      <Derived><Dollar>298</Dollar></Derived>
+    </Fact>
+
+    <Fact path="/maxAllotmentForSize2">
+      <Name>Maximum allotment for 2-person household</Name>
+      <Description>Maximum monthly SNAP allotment for a 2-person household, effective October 1, 2025 (10 CCR 2506-1, 4.207.3).</Description>
+      <Derived><Dollar>546</Dollar></Derived>
+    </Fact>
+
+    <Fact path="/maxAllotmentForSize3">
+      <Name>Maximum allotment for 3-person household</Name>
+      <Description>Maximum monthly SNAP allotment for a 3-person household, effective October 1, 2025 (10 CCR 2506-1, 4.207.3).</Description>
+      <Derived><Dollar>785</Dollar></Derived>
+    </Fact>
+
+    <Fact path="/maxAllotmentForSize4">
+      <Name>Maximum allotment for 4-person household</Name>
+      <Description>Maximum monthly SNAP allotment for a 4-person household, effective October 1, 2025 (10 CCR 2506-1, 4.207.3).</Description>
+      <Derived><Dollar>994</Dollar></Derived>
+    </Fact>
+
+    <Fact path="/maxAllotmentForSize5">
+      <Name>Maximum allotment for 5-person household</Name>
+      <Description>Maximum monthly SNAP allotment for a 5-person household, effective October 1, 2025 (10 CCR 2506-1, 4.207.3).</Description>
+      <Derived><Dollar>1183</Dollar></Derived>
+    </Fact>
+
+    <Fact path="/maxAllotmentForSize6">
+      <Name>Maximum allotment for 6-person household</Name>
+      <Description>Maximum monthly SNAP allotment for a 6-person household, effective October 1, 2025 (10 CCR 2506-1, 4.207.3).</Description>
+      <Derived><Dollar>1421</Dollar></Derived>
+    </Fact>
+
+    <Fact path="/maxAllotmentForSize7">
+      <Name>Maximum allotment for 7-person household</Name>
+      <Description>Maximum monthly SNAP allotment for a 7-person household, effective October 1, 2025 (10 CCR 2506-1, 4.207.3).</Description>
+      <Derived><Dollar>1571</Dollar></Derived>
+    </Fact>
+
+    <Fact path="/maxAllotmentForSize8">
+      <Name>Maximum allotment for 8-person household</Name>
+      <Description>Maximum monthly SNAP allotment for an 8-person household, effective October 1, 2025 (10 CCR 2506-1, 4.207.3).</Description>
+      <Derived><Dollar>1789</Dollar></Derived>
+    </Fact>
+
+    <Fact path="/maxAllotmentPerAdditionalPerson">
+      <Name>Maximum allotment per additional person</Name>
+      <Description>The amount added to the 8-person maximum monthly SNAP allotment for each additional household member beyond eight, effective October 1, 2025 (10 CCR 2506-1, 4.207.3).</Description>
+      <Derived><Dollar>218</Dollar></Derived>
+    </Fact>
+
+    <Fact path="/maxAllotment">
+      <Name>Maximum allotment</Name>
+      <Description>The maximum monthly SNAP allotment for the household, derived from the cost of the thrifty food plan as defined by the FNS. The cost of that diet is the basis for uniform allotments for all households regardless of their actual composition (10 CCR 2506-1, 4.000.1). Looked up from the household-size schedule effective October 1, 2025, with /maxAllotmentPerAdditionalPerson added for each member beyond eight.</Description>
+      <Derived>
+        <Switch>
+          <Case>
+            <When>
+              <Equal>
+                <Left><Dependency path="/householdSize" /></Left>
+                <Right><Int>1</Int></Right>
+              </Equal>
+            </When>
+            <Then><Dependency path="/maxAllotmentForSize1" /></Then>
+          </Case>
+          <Case>
+            <When>
+              <Equal>
+                <Left><Dependency path="/householdSize" /></Left>
+                <Right><Int>2</Int></Right>
+              </Equal>
+            </When>
+            <Then><Dependency path="/maxAllotmentForSize2" /></Then>
+          </Case>
+          <Case>
+            <When>
+              <Equal>
+                <Left><Dependency path="/householdSize" /></Left>
+                <Right><Int>3</Int></Right>
+              </Equal>
+            </When>
+            <Then><Dependency path="/maxAllotmentForSize3" /></Then>
+          </Case>
+          <Case>
+            <When>
+              <Equal>
+                <Left><Dependency path="/householdSize" /></Left>
+                <Right><Int>4</Int></Right>
+              </Equal>
+            </When>
+            <Then><Dependency path="/maxAllotmentForSize4" /></Then>
+          </Case>
+          <Case>
+            <When>
+              <Equal>
+                <Left><Dependency path="/householdSize" /></Left>
+                <Right><Int>5</Int></Right>
+              </Equal>
+            </When>
+            <Then><Dependency path="/maxAllotmentForSize5" /></Then>
+          </Case>
+          <Case>
+            <When>
+              <Equal>
+                <Left><Dependency path="/householdSize" /></Left>
+                <Right><Int>6</Int></Right>
+              </Equal>
+            </When>
+            <Then><Dependency path="/maxAllotmentForSize6" /></Then>
+          </Case>
+          <Case>
+            <When>
+              <Equal>
+                <Left><Dependency path="/householdSize" /></Left>
+                <Right><Int>7</Int></Right>
+              </Equal>
+            </When>
+            <Then><Dependency path="/maxAllotmentForSize7" /></Then>
+          </Case>
+          <Case>
+            <When>
+              <Equal>
+                <Left><Dependency path="/householdSize" /></Left>
+                <Right><Int>8</Int></Right>
+              </Equal>
+            </When>
+            <Then><Dependency path="/maxAllotmentForSize8" /></Then>
+          </Case>
+          <Case>
+            <When><True /></When>
+            <Then>
+              <Add>
+                <Dependency path="/maxAllotmentForSize8" />
+                <Multiply>
+                  <Subtract>
+                    <Minuend><Dependency path="/householdSize" /></Minuend>
+                    <Subtrahends><Int>8</Int></Subtrahends>
+                  </Subtract>
+                  <Dependency path="/maxAllotmentPerAdditionalPerson" />
+                </Multiply>
+              </Add>
+            </Then>
+          </Case>
+        </Switch>
+      </Derived>
+    </Fact>
+
+    <Fact path="/daysInApplicationMonth">
+      <Name>Days in application month</Name>
+      <Description>The exact number of days in the calendar month in which the household applied for benefits (10 CCR 2506-1, 4.207.2).</Description>
+      <Writable><Int /></Writable>
+    </Fact>
+
+    <Fact path="/applicationDayOfMonth">
+      <Name>Application day of month</Name>
+      <Description>The day of the month on which the household submitted its application for benefits (10 CCR 2506-1, 4.207.2).</Description>
+      <Writable><Int /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/isMigrantFarmWorker">
+      <Name>Is migrant or seasonal farm worker</Name>
+      <Description>Whether this member is a migrant or seasonal farm worker who is in the job stream and whose break in participation does not exceed thirty (30) days (10 CCR 2506-1, 4.207.2).</Description>
       <Writable><Boolean /></Writable>
     </Fact>
 
-    <Fact path="/allotment">
-      <Name>Allotment</Name>
-      <Description>The total amount of SNAP benefits the household is authorized to receive in a particular month (10 CCR 2506-1, 4.000.1). Placeholder.</Description>
-      <Writable><Dollar /></Writable>
+    <Fact path="/hasMigrantFarmWorker">
+      <Name>Has migrant or seasonal farm worker</Name>
+      <Description>Whether the household contains any migrant or seasonal farm worker who is in the job stream (10 CCR 2506-1, 4.207.2).</Description>
+      <Derived>
+        <GreaterThan>
+          <Left>
+            <Count>
+              <Dependency path="/members/*/isMigrantFarmWorker" />
+            </Count>
+          </Left>
+          <Right><Int>0</Int></Right>
+        </GreaterThan>
+      </Derived>
     </Fact>
 
-    <Fact path="/minimumBenefit">
-      <Name>Minimum benefit</Name>
-      <Description>The minimum amount of benefits issued to one- and two-person households that are eligible for assistance, but whose issuance calculates to less than the federally prescribed minimum allotment (10 CCR 2506-1, 4.000.1). Placeholder.</Description>
-      <Writable><Dollar /></Writable>
+    <Fact path="/receivedSnapInLast30Days">
+      <Name>Received SNAP in the last 30 days</Name>
+      <Description>Whether the household received SNAP benefits within the thirty (30) days preceding the current application. Used to determine whether a migrant or seasonal farm worker household's break in participation does not exceed thirty (30) days, which exempts the household from initial-month allotment proration (10 CCR 2506-1, 4.207.2).</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/proratedAllotment">
+      <Name>Prorated allotment</Name>
+      <Description>The household's SNAP benefit level for the initial month of application, rounded down to the nearest dollar. If the calculation of benefits for the initial month yields an allotment of less than the federal minimum allotment, no benefits are issued to the household for the initial month (10 CCR 2506-1, 4.207.3 B).</Description>
+      <Derived>
+        <Switch>
+          <Case>
+            <When>
+              <LessThan>
+                <Left><Dependency path="/unflooredProratedAllotment" /></Left>
+                <Right><Dependency path="/minimumAllotment" /></Right>
+              </LessThan>
+            </When>
+            <Then><Dollar>0</Dollar></Then>
+          </Case>
+          <Case>
+            <When><True /></When>
+            <Then>
+              <Floor><Dependency path="/unflooredProratedAllotment" /></Floor>
+            </Then>
+          </Case>
+        </Switch>
+      </Derived>
+    </Fact>
+
+    <Fact path="/unflooredProratedAllotment">
+      <Name>Unfloored prorated allotment</Name>
+      <Description>The household's initial-month allotment before rounding down to the nearest dollar or applying the minimum-benefit cutoff, computed using the exact number of days in the calendar month: ((days in month + 1) - date of application) * full month's unfloored allotment / days in the application month. Migrant or seasonal farm worker households in the job stream whose break in participation does not exceed thirty (30) days are exempt from proration and receive the full month unfloored allotment (10 CCR 2506-1, 4.207.2).</Description>
+      <Derived>
+        <Switch>
+          <Case>
+            <When>
+              <All>
+                <Dependency path="/hasMigrantFarmWorker" />
+                <Dependency path="/receivedSnapInLast30Days" />
+              </All>
+            </When>
+            <Then><Dependency path="/unflooredAllotment" /></Then>
+          </Case>
+          <Case>
+            <When><True /></When>
+            <Then>
+              <Divide>
+                <Dividend>
+                  <Multiply>
+                    <Dependency path="/unflooredAllotment" />
+                    <Subtract>
+                      <Minuend>
+                        <Add>
+                          <Dependency path="/daysInApplicationMonth" />
+                          <Int>1</Int>
+                        </Add>
+                      </Minuend>
+                      <Subtrahends>
+                        <Dependency path="/applicationDayOfMonth" />
+                      </Subtrahends>
+                    </Subtract>
+                  </Multiply>
+                </Dividend>
+                <Divisors>
+                  <Dependency path="/daysInApplicationMonth" />
+                </Divisors>
+              </Divide>
+            </Then>
+          </Case>
+        </Switch>
+      </Derived>
+    </Fact>
+
+    <Fact path="/minimumAllotment">
+      <Name>Minimum allotment</Name>
+      <Description>The minimum amount of benefits issued to one- and two-person households that are eligible for assistance, but whose issuance calculates to less than the federally prescribed minimum allotment (10 CCR 2506-1, 4.000.1). Effective October 1, 2025, the minimum monthly allotment for 1-2 person households is $24.</Description>
+      <Derived><Dollar>24</Dollar></Derived>
     </Fact>
 
     <Fact path="/basicUtilityAllowance">
@@ -321,28 +767,440 @@
       <Writable><Boolean /></Writable>
     </Fact>
 
+    <Fact path="/members/*/receivesBceQualifyingBenefits">
+      <Name>Receives BCE-qualifying benefits</Name>
+      <Description>Whether this member receives, or is authorized to receive, SSI, Colorado Works (CW), Old Age Pension (OAP), Aid to the Needy Disabled (AND), or Aid to the Blind (AB). OAP, AND, and AB are captured under the Adult Financial cash grant (10 CCR 2506-1, 4.206).</Description>
+      <Derived>
+        <Any>
+          <Dependency path="../receivesSsiOrDisabilityBenefits" />
+          <Dependency path="../receivesTanf" />
+          <Dependency path="../receivesAdultFinancial" />
+        </Any>
+      </Derived>
+    </Fact>
+
+    <!-- TODO: exclude members not in the SNAP household (e.g., disqualified/ineligible
+         members) from both the Count and CollectionSize so the comparison only considers
+         counted household members. -->
+    <Fact path="/allMembersReceiveBceQualifyingBenefits">
+      <Name>All members receive BCE-qualifying benefits</Name>
+      <Description>Whether every household member receives, or is authorized to receive, SSI, Colorado Works (CW), Old Age Pension (OAP), Aid to the Needy Disabled (AND), Aid to the Blind (AB), or a combination of these benefits. The CW, SSI, OAP, and/or AB program(s) need only to authorize benefits for the household to be considered for BCE. Clients who are authorized to receive a benefit from one or more of these programs, but who are not paid such benefits because the grant is less than a minimum benefit or the benefits are suspended or are being recouped, are still considered eligible. Households entitled to Medicaid only are not considered SSI or Title IV-A participants (10 CCR 2506-1, 4.206).</Description>
+      <Derived>
+        <Equal>
+          <Left>
+            <Count>
+              <Dependency path="/members/*/receivesBceQualifyingBenefits" />
+            </Count>
+          </Left>
+          <Right>
+            <CollectionSize>
+              <Dependency path="/members" />
+            </CollectionSize>
+          </Right>
+        </Equal>
+      </Derived>
+    </Fact>
+
+    <Fact path="/hasMemberReceivingFamilyPreservation">
+      <Name>Has member receiving Family Preservation services</Name>
+      <Description>Whether at least one household member receives services from the Family Preservation Program. This determination must be documented in the case record (10 CCR 2506-1, 4.206). Placeholder.</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/disqualifiedForBCE">
+      <Name>Disqualified for Basic Categorical Eligibility</Name>
+      <Description>Whether the household is disqualified from being considered under Basic Categorical Eligibility (BCE) because any member is disqualified for a SNAP IPV or has been convicted of a drug-related felony where SNAP benefits were used to purchase drugs (10 CCR 2506-1, 4.206).</Description>
+      <Derived>
+        <Any>
+          <GreaterThan>
+            <Left>
+              <Count>
+                <Dependency path="/members/*/disqualifiedForIPV" />
+              </Count>
+            </Left>
+            <Right><Int>0</Int></Right>
+          </GreaterThan>
+          <GreaterThan>
+            <Left>
+              <Count>
+                <Dependency path="/members/*/convictedOfDrugRelatedFelonyWithSnap" />
+              </Count>
+            </Left>
+            <Right><Int>0</Int></Right>
+          </GreaterThan>
+        </Any>
+      </Derived>
+    </Fact>
+
     <Fact path="/hasBasicCategoricalEligibility">
       <Name>Has Basic Categorical Eligibility</Name>
-      <Description>Whether the household qualifies for Basic Categorical Eligibility (BCE): not eligible for Expanded Categorical Eligibility and contains only members who receive, or are eligible to receive, benefits from Colorado Works, SSI, Old Age Pension, Aid to the Needy and Disabled, Aid to the Blind, or a combination of these (10 CCR 2506-1, 4.000.1). Placeholder.</Description>
-      <Writable><Boolean /></Writable>
+      <Description>Whether the household qualifies for Basic Categorical Eligibility (BCE): either all members receive (or are authorized to receive) SSI, Colorado Works, Old Age Pension, Aid to the Needy Disabled, or Aid to the Blind, or at least one member receives services from the Family Preservation Program. A household cannot be considered under BCE if any member is disqualified for a SNAP IPV or has been convicted of a drug-related felony where SNAP benefits were used to purchase drugs; if the household received substantial lottery or gambling winnings during the month; or if the household previously lost eligibility due to substantial lottery or gambling winnings and must be considered under Standard Eligibility (10 CCR 2506-1, 4.206).</Description>
+      <Derived>
+        <All>
+          <Any>
+            <Dependency path="/allMembersReceiveBceQualifyingBenefits" />
+            <Dependency path="/hasMemberReceivingFamilyPreservation" />
+          </Any>
+          <Not>
+            <Dependency path="/disqualifiedForBCE" />
+          </Not>
+          <Not>
+            <Dependency path="/hasSubstantialLotteryOrGamblingWinningsThisMonth" />
+          </Not>
+          <Not>
+            <Dependency path="/hadPreviousSubstantialLotteryOrGamblingWinnings" />
+          </Not>
+        </All>
+      </Derived>
+    </Fact>
+
+    <Fact path="/eceGrossIncomeRate">
+      <Name>ECE gross income rate</Name>
+      <Description>The percentage of the federal poverty level used as the gross income threshold for Expanded Categorical Eligibility (10 CCR 2506-1, 4.000.1)</Description>
+      <Derived><Rational>2/1</Rational></Derived>
+    </Fact>
+
+    <Fact path="/eceGrossIncomeThreshold">
+      <Name>ECE gross income threshold</Name>
+      <Description>Two hundred percent (200%) of the federal poverty level for the household's size, below which a household's combined gross income must fall to qualify for Expanded Categorical Eligibility (10 CCR 2506-1, 4.000.1)</Description>
+      <Derived>
+        <Multiply>
+          <Dependency path="/fpl" />
+          <Dependency path="/eceGrossIncomeRate" />
+        </Multiply>
+      </Derived>
+    </Fact>
+
+    <!-- Households qualify for the non-cash TANF/MOE Purpose Four service
+         when their combined gross income is below 200% FPL, so this flag
+         is derived from the income test rather than collected as input. -->
+    <Fact path="/receivesNonCashTanfOrMoe">
+      <Name>Receives non-cash TANF or MOE service</Name>
+      <Description>Whether the household has been authorized to receive a non-cash Temporary Assistance to Needy Families/Maintenance of Effort (TANF/MOE) funded service designed to further TANF Purpose Four (4) by "encouraging the formation and maintenance of two-parent families." Authorization is granted to households with combined gross income below two hundred percent (200%) of the federal poverty level (10 CCR 2506-1, 4.000.1).</Description>
+      <Derived>
+        <LessThan>
+          <Left><Dependency path="/grossIncome" /></Left>
+          <Right><Dependency path="/eceGrossIncomeThreshold" /></Right>
+        </LessThan>
+      </Derived>
+    </Fact>
+
+    <Fact path="/disqualifiedForECE">
+      <Name>Disqualified for Expanded Categorical Eligibility</Name>
+      <Description>Whether the household is disqualified from being considered under Expanded Categorical Eligibility (ECE) because, at the time of application, any member is disqualified for a SNAP IPV or has been convicted of a drug-related felony where SNAP benefits were used to purchase drugs (10 CCR 2506-1, 4.000.1).</Description>
+      <Derived>
+        <Any>
+          <GreaterThan>
+            <Left>
+              <Count>
+                <Dependency path="/members/*/disqualifiedForIPV" />
+              </Count>
+            </Left>
+            <Right><Int>0</Int></Right>
+          </GreaterThan>
+          <GreaterThan>
+            <Left>
+              <Count>
+                <Dependency path="/members/*/convictedOfDrugRelatedFelonyWithSnap" />
+              </Count>
+            </Left>
+            <Right><Int>0</Int></Right>
+          </GreaterThan>
+        </Any>
+      </Derived>
     </Fact>
 
     <Fact path="/hasExpandedCategoricalEligibility">
       <Name>Has Expanded Categorical Eligibility</Name>
-      <Description>Whether the household qualifies for Expanded Categorical Eligibility (ECE), exempting it from having resources considered when determining eligibility for SNAP (10 CCR 2506-1, 4.000.1). Placeholder.</Description>
-      <Writable><Boolean /></Writable>
+      <Description>Whether the household qualifies for Expanded Categorical Eligibility (ECE): the household has been authorized to receive a non-cash TANF/MOE funded service designed to further TANF Purpose Four (encouraging the formation and maintenance of two-parent families), which is granted to households with combined gross income below two hundred percent (200%) of the federal poverty level. A household cannot be considered under ECE if any member is disqualified for a SNAP IPV or has been convicted of a drug-related felony where SNAP benefits were used to purchase drugs; if the household received substantial lottery or gambling winnings during the month; or if the household previously lost eligibility due to substantial lottery or gambling winnings and must be considered under Standard Eligibility (10 CCR 2506-1, 4.000.1).</Description>
+      <Derived>
+        <All>
+          <Dependency path="/receivesNonCashTanfOrMoe" />
+          <Not>
+            <Dependency path="/disqualifiedForECE" />
+          </Not>
+          <Not>
+            <Dependency path="/hasSubstantialLotteryOrGamblingWinningsThisMonth" />
+          </Not>
+          <Not>
+            <Dependency path="/hadPreviousSubstantialLotteryOrGamblingWinnings" />
+          </Not>
+        </All>
+      </Derived>
+    </Fact>
+
+    <Fact path="/standardEligibilityApplies">
+      <Name>Standard Eligibility applies</Name>
+      <Description>Whether Standard Eligibility (SE) rules shall be applied to the household. SE rules apply to households that include a member serving a disqualification for an IPV or fraud conviction; households that include a member convicted of a drug-related felony where SNAP benefits were used to purchase drugs; households that previously lost SNAP eligibility due to substantial lottery or gambling winnings and are reapplying after losing eligibility; or households that do not meet the criteria to be considered under BCE or ECE rules (10 CCR 2506-1, 4.000.1).</Description>
+      <Derived>
+        <Any>
+          <GreaterThan>
+            <Left>
+              <Count>
+                <Dependency path="/members/*/disqualifiedForIPV" />
+              </Count>
+            </Left>
+            <Right><Int>0</Int></Right>
+          </GreaterThan>
+          <GreaterThan>
+            <Left>
+              <Count>
+                <Dependency path="/members/*/convictedOfDrugRelatedFelonyWithSnap" />
+              </Count>
+            </Left>
+            <Right><Int>0</Int></Right>
+          </GreaterThan>
+          <Dependency path="/hadPreviousSubstantialLotteryOrGamblingWinnings" />
+          <All>
+            <Not>
+              <Dependency path="/hasBasicCategoricalEligibility" />
+            </Not>
+            <Not>
+              <Dependency path="/hasExpandedCategoricalEligibility" />
+            </Not>
+          </All>
+        </Any>
+      </Derived>
+    </Fact>
+
+    <Fact path="/elderlyAgeMin">
+      <Name>Elderly age minimum</Name>
+      <Description>Lower bound (inclusive) of the age range for being considered "aged sixty (60) and older" under SNAP (10 CCR 2506-1, 4.000.1)</Description>
+      <Derived><Int>60</Int></Derived>
+    </Fact>
+
+    <Fact path="/members/*/isElderly">
+      <Name>Is elderly</Name>
+      <Description>Whether this member is aged sixty (60) or older (10 CCR 2506-1, 4.000.1)</Description>
+      <Derived>
+        <GreaterThanOrEqual>
+          <Left><Dependency path="../age" /></Left>
+          <Right><Dependency path="/elderlyAgeMin" /></Right>
+        </GreaterThanOrEqual>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/isElderlyOrPersonWithDisability">
+      <Name>Is elderly or person with disabilities</Name>
+      <Description>Whether this member is aged sixty (60) or older, or is a person with disabilities (10 CCR 2506-1, 4.000.1)</Description>
+      <Derived>
+        <Any>
+          <Dependency path="../isElderly" />
+          <Dependency path="../isPersonWithDisability" />
+        </Any>
+      </Derived>
+    </Fact>
+
+    <Fact path="/hasMemberElderlyOrPersonWithDisability">
+      <Name>Has member elderly or person with disabilities</Name>
+      <Description>Whether the household includes a member aged sixty (60) or older or a person with a disability (10 CCR 2506-1, 4.000.1)</Description>
+      <Derived>
+        <GreaterThan>
+          <Left>
+            <Count>
+              <Dependency path="/members/*/isElderlyOrPersonWithDisability" />
+            </Count>
+          </Left>
+          <Right><Int>0</Int></Right>
+        </GreaterThan>
+      </Derived>
+    </Fact>
+
+    <Fact path="/grossIncomeTestRate">
+      <Name>Gross income test rate</Name>
+      <Description>The percentage of the federal poverty level used as the gross income threshold for Standard Eligibility households that do not include a member aged sixty (60) or older or a person with a disability (10 CCR 2506-1, 4.000.1)</Description>
+      <Derived><Rational>13/10</Rational></Derived>
+    </Fact>
+
+    <Fact path="/grossIncomeThreshold">
+      <Name>Gross income threshold</Name>
+      <Description>One hundred thirty percent (130%) of the federal poverty level for the household's size, at or below which the combined gross income of an SE household without a member aged sixty (60) or older or a person with a disability must fall (10 CCR 2506-1, 4.000.1)</Description>
+      <Derived>
+        <Multiply>
+          <Dependency path="/fpl" />
+          <Dependency path="/grossIncomeTestRate" />
+        </Multiply>
+      </Derived>
+    </Fact>
+
+    <Fact path="/meetsGrossIncomeTest">
+      <Name>Meets gross income test</Name>
+      <Description>Whether the household's combined gross income is at or below one hundred thirty percent (130%) of the federal poverty level for the household's size (10 CCR 2506-1, 4.000.1)</Description>
+      <Derived>
+        <LessThanOrEqual>
+          <Left><Dependency path="/grossIncome" /></Left>
+          <Right><Dependency path="/grossIncomeThreshold" /></Right>
+        </LessThanOrEqual>
+      </Derived>
+    </Fact>
+
+    <Fact path="/nonLiquidResources">
+      <Name>Non-liquid resources</Name>
+      <Description>The sum of non-liquid resources across all household members (10 CCR 2506-1, 4.000.1)</Description>
+      <Derived>
+        <CollectionSum>
+          <Dependency path="/members/*/nonLiquidResources" />
+        </CollectionSum>
+      </Derived>
+    </Fact>
+
+    <!-- TODO: revisit once Section 4.408 (resources) is captured — that
+         section defines which resources are countable, exclusions, vehicle
+         treatment, and the household resource limit. /resources here may
+         need to exclude non-countable items and pull in additional resource
+         categories beyond liquid + non-liquid (10 CCR 2506-1, 4.408). -->
+    <Fact path="/resources">
+      <Name>Resources</Name>
+      <Description>The household's total countable resources, including both liquid and non-liquid resources (10 CCR 2506-1, 4.000.1)</Description>
+      <Derived>
+        <Add>
+          <Dependency path="/liquidResources" />
+          <Dependency path="/nonLiquidResources" />
+        </Add>
+      </Derived>
+    </Fact>
+
+    <!-- TODO: derive from the resource limit prescribed in Section 4.408 once
+         that policy is captured (10 CCR 2506-1, 4.000.1). -->
+    <Fact path="/resourceLimit">
+      <Name>Resource limit</Name>
+      <Description>The maximum allowable countable resources for a household reviewed under Standard Eligibility rules, prescribed in Section 4.408 (10 CCR 2506-1, 4.000.1). Placeholder.</Description>
+      <Writable><Dollar /></Writable>
+    </Fact>
+
+    <Fact path="/meetsResourceTest">
+      <Name>Meets resource test</Name>
+      <Description>Whether the household's countable resources are below the limit prescribed in Section 4.408 (10 CCR 2506-1, 4.000.1)</Description>
+      <Derived>
+        <LessThan>
+          <Left><Dependency path="/resources" /></Left>
+          <Right><Dependency path="/resourceLimit" /></Right>
+        </LessThan>
+      </Derived>
+    </Fact>
+
+    <Fact path="/meetsFinancialCriteria">
+      <Name>Meets financial criteria</Name>
+      <Description>Whether the household meets the financial criteria for Standard Eligibility: net income (after all applicable deductions) at or below one hundred percent (100%) of the federal poverty level and resources below the Section 4.408 limit; households that do not include a member aged sixty (60) or older or a person with a disability must additionally have combined gross income at or below one hundred thirty percent (130%) of the federal poverty level (10 CCR 2506-1, 4.000.1).</Description>
+      <Derived>
+        <All>
+          <Dependency path="/meetsNetIncomeTest" />
+          <Dependency path="/meetsResourceTest" />
+          <Any>
+            <Dependency path="/hasMemberElderlyOrPersonWithDisability" />
+            <Dependency path="/meetsGrossIncomeTest" />
+          </Any>
+        </All>
+      </Derived>
     </Fact>
 
     <Fact path="/hasStandardEligibility">
       <Name>Has Standard Eligibility</Name>
-      <Description>Whether the household qualifies for Standard Eligibility (SE), the set of rules applicable to households that do not fall under Expanded Categorical Eligibility or Basic Categorical Eligibility. Households considered under Standard Eligibility rules are subject to resource limits as a condition of eligibility (10 CCR 2506-1, 4.000.1). Placeholder.</Description>
-      <Writable><Boolean /></Writable>
+      <Description>Whether the household qualifies under Standard Eligibility (SE): SE rules apply to the household, the household meets the SE financial criteria, and the household meets the nonfinancial eligibility criteria set out in Section 4.300. The household is also disqualified for the month if it received substantial lottery or gambling winnings during that month (10 CCR 2506-1, 4.000.1).</Description>
+      <Derived>
+        <All>
+          <Dependency path="/standardEligibilityApplies" />
+          <Dependency path="/meetsFinancialCriteria" />
+          <Dependency path="/meetsNonFinancialCriteria" />
+          <Not>
+            <Dependency path="/hasSubstantialLotteryOrGamblingWinningsThisMonth" />
+          </Not>
+        </All>
+      </Derived>
     </Fact>
 
+    <Fact path="/eligibilityCategoryOptions">
+      <Name>Eligibility category options</Name>
+      <Description>The categories under which a household may be determined eligible for SNAP: Basic Categorical Eligibility (Bce), Expanded Categorical Eligibility (Ece), or Standard Eligibility (Se); Ineligible indicates the household does not qualify under any category (10 CCR 2506-1, 4.206).</Description>
+      <Derived>
+        <EnumOptions>
+          <String>Bce</String>
+          <String>Ece</String>
+          <String>Se</String>
+          <String>Ineligible</String>
+        </EnumOptions>
+      </Derived>
+    </Fact>
+
+    <Fact path="/eligibilityCategory">
+      <Name>Eligibility category</Name>
+      <Description>The category of eligibility under which the household is determined eligible for SNAP: Basic Categorical Eligibility (BCE), Expanded Categorical Eligibility (ECE), or Standard Eligibility (SE); Ineligible if the household does not qualify under any category (10 CCR 2506-1, 4.206)</Description>
+      <Derived>
+        <Switch>
+          <Case>
+            <When><Dependency path="/hasBasicCategoricalEligibility" /></When>
+            <Then><Enum optionsPath="/eligibilityCategoryOptions">Bce</Enum></Then>
+          </Case>
+          <Case>
+            <When><Dependency path="/hasExpandedCategoricalEligibility" /></When>
+            <Then><Enum optionsPath="/eligibilityCategoryOptions">Ece</Enum></Then>
+          </Case>
+          <Case>
+            <When><Dependency path="/hasStandardEligibility" /></When>
+            <Then><Enum optionsPath="/eligibilityCategoryOptions">Se</Enum></Then>
+          </Case>
+          <Case>
+            <When><True /></When>
+            <Then><Enum optionsPath="/eligibilityCategoryOptions">Ineligible</Enum></Then>
+          </Case>
+        </Switch>
+      </Derived>
+    </Fact>
+
+    <Fact path="/extendedCertificationPeriod">
+      <Name>Extended certification period</Name>
+      <Description>The twenty-four (24) month certification period assigned to households that contain only members aged sixty (60) and older and/or with a disability and have no earned income at the time of certification (10 CCR 2506-1, 4.208.1).</Description>
+      <Derived><Int>24</Int></Derived>
+    </Fact>
+
+    <Fact path="/standardCertificationPeriod">
+      <Name>Standard certification period</Name>
+      <Description>The six (6) month certification period assigned to households that are not assigned the twenty-four (24) month certification period (10 CCR 2506-1, 4.208.1).</Description>
+      <Derived><Int>6</Int></Derived>
+    </Fact>
+
+    <!-- TODO: ensure self-employment income flows into /members/*/nonExemptEarnedIncome
+         so the "no earned income" check below covers it; once that's done, the
+         /totalSelfEmploymentIncome household total can stay out of this derivation
+         (10 CCR 2506-1, 4.208.1). -->
     <Fact path="/certificationPeriod">
       <Name>Certification period</Name>
-      <Description>The period of time for which a household has been certified to receive benefits (10 CCR 2506-1, 4.000.1). Placeholder.</Description>
-      <Writable><Int /></Writable>
+      <Description>The length, in months, of the period of time for which a household has been certified to receive benefits. A twenty-four (24) month certification period is assigned to households that contain only members aged sixty (60) and older and/or with a disability and have no earned income at the time of certification; all other households are assigned a six (6) month certification period (10 CCR 2506-1, 4.208.1).</Description>
+      <Derived>
+        <Switch>
+          <Case>
+            <When>
+              <All>
+                <Equal>
+                  <Left>
+                    <Count>
+                      <Dependency path="/members/*/isElderlyOrPersonWithDisability" />
+                    </Count>
+                  </Left>
+                  <Right>
+                    <CollectionSize>
+                      <Dependency path="/members" />
+                    </CollectionSize>
+                  </Right>
+                </Equal>
+                <Equal>
+                  <Left>
+                    <CollectionSum>
+                      <Dependency path="/members/*/nonExemptEarnedIncome" />
+                    </CollectionSum>
+                  </Left>
+                  <Right><Dollar>0</Dollar></Right>
+                </Equal>
+              </All>
+            </When>
+            <Then><Dependency path="/extendedCertificationPeriod" /></Then>
+          </Case>
+          <Case>
+            <When><True /></When>
+            <Then><Dependency path="/standardCertificationPeriod" /></Then>
+          </Case>
+        </Switch>
+      </Derived>
     </Fact>
 
     <Fact path="/members/*/countableMonths">
@@ -369,6 +1227,12 @@
       <Writable><Boolean /></Writable>
     </Fact>
 
+    <Fact path="/members/*/convictedOfDrugRelatedFelonyWithSnap">
+      <Name>Convicted of drug-related felony involving SNAP</Name>
+      <Description>Whether this member has been convicted of a drug-related felony where SNAP benefits were used to purchase drugs. Drug-related felony has the same meaning as in 7 C.F.R. 273.11(m) (10 CCR 2506-1, 4.206).</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
     <Fact path="/members/*/failedToProvideOrObtainSSN">
       <Name>Failed to provide or obtain SSN</Name>
       <Description>Whether this member has failed to provide or obtain a Social Security Number (10 CCR 2506-1, 4.000.1)</Description>
@@ -384,6 +1248,12 @@
     <Fact path="/members/*/disqualifiedForWorkRequirementsCooperation">
       <Name>Disqualified for failure to cooperate with work requirements</Name>
       <Description>Whether this member has been disqualified for failure to cooperate with work requirements (10 CCR 2506-1, 4.000.1)</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/voluntarilyQuitOrReducedWorkEffort">
+      <Name>Voluntarily quit or reduced work effort</Name>
+      <Description>Whether this member has voluntarily quit a job or reduced their work effort to less than 30 hours a week without good cause (10 CCR 2506-1, 4.000.1)</Description>
       <Writable><Boolean /></Writable>
     </Fact>
 
@@ -412,6 +1282,23 @@
       <Name>Is already participating in another household</Name>
       <Description>Whether this member is already receiving SNAP benefits as part of another SNAP household or in another state in the same calendar month (10 CCR 2506-1, 4.000.1)</Description>
       <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/isResidentOfBatteredWomensShelter">
+      <Name>Resident of a shelter for battered women and children</Name>
+      <Description>Whether this member is a resident of a public or private nonprofit residential facility that serves battered women and their children (10 CCR 2506-1)</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/disqualifiedForMultiHouseholdParticipation">
+      <Name>Disqualified for participating in another household</Name>
+      <Description>Whether this member is disqualified because they are already participating in another SNAP household in the same month. Residents of a shelter for battered women and children are exempt from this restriction (10 CCR 2506-1)</Description>
+      <Derived>
+        <All>
+          <Dependency path="../isParticipatingInAnotherHousehold" />
+          <Not><Dependency path="../isResidentOfBatteredWomensShelter" /></Not>
+        </All>
+      </Derived>
     </Fact>
 
     <Fact path="/abawdCountableMonthsLimit">
@@ -453,6 +1340,29 @@
       <Name>Substantial lottery or gambling winnings threshold</Name>
       <Description>A cash prize won in a single game, before taxes or other amounts are withheld, that is equal to or greater than this threshold counts as substantial lottery or gambling winnings. The threshold equals the resource limit for persons aged sixty (60) and older and persons with disabilities (10 CCR 2506-1, 4.000.1). Placeholder.</Description>
       <Writable><Dollar /></Writable>
+    </Fact>
+
+    <Fact path="/largestLotteryOrGamblingWinningsThisMonth">
+      <Name>Largest lottery or gambling winnings this month</Name>
+      <Description>The largest cash prize won by any household member in a single lottery or gambling game during the month, before taxes or other amounts are withheld (10 CCR 2506-1, 4.206).</Description>
+      <Writable><Dollar /></Writable>
+    </Fact>
+
+    <Fact path="/hasSubstantialLotteryOrGamblingWinningsThisMonth">
+      <Name>Has substantial lottery or gambling winnings this month</Name>
+      <Description>Whether the household's largest single-game lottery or gambling cash prize during the month equals or exceeds the substantial lottery or gambling winnings threshold. Such winnings from an individual will disqualify the entire SNAP household from eligibility in the month the winnings are received (10 CCR 2506-1, 4.206).</Description>
+      <Derived>
+        <GreaterThanOrEqual>
+          <Left><Dependency path="/largestLotteryOrGamblingWinningsThisMonth" /></Left>
+          <Right><Dependency path="/substantialLotteryOrGamblingWinningsThreshold" /></Right>
+        </GreaterThanOrEqual>
+      </Derived>
+    </Fact>
+
+    <Fact path="/hadPreviousSubstantialLotteryOrGamblingWinnings">
+      <Name>Had previous substantial lottery or gambling winnings</Name>
+      <Description>Whether the SNAP household previously lost eligibility because a member received substantial lottery or gambling winnings. The next time such a household reapplies and is certified for SNAP after losing eligibility, the household must be considered under Standard Eligibility (SE) guidelines; after receiving SNAP as an SE household, the household will be re-evaluated for categorical eligibility at the next eligible certification period (10 CCR 2506-1, 4.206).</Description>
+      <Writable><Boolean /></Writable>
     </Fact>
 
     <Fact path="/members/*/exemptIncome">
@@ -543,16 +1453,46 @@
       </Derived>
     </Fact>
 
-    <Fact path="/meetsFinancialCriteria">
-      <Name>Meets financial criteria</Name>
-      <Description>Whether the household meets the set of rules governing gross and net income and resource standards and the proper methods for computing a household's income and resources (10 CCR 2506-1, 4.000.1). Placeholder.</Description>
+    <Fact path="/participatesInCommodityFoodDistributionProgram">
+      <Name>Participates in Commodity Food Distribution Program</Name>
+      <Description>Whether the household is on an Indian reservation and participating in the Commodity Food Distribution Program for the current period. Participation must be limited to either the Commodity Food Distribution Program or SNAP, not both (10 CCR 2506-1, 4.304.4).</Description>
       <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/livesInApplicationCounty">
+      <Name>Lives in application county or district</Name>
+      <Description>Whether the household lives in the county or district in which they make application for the Program (10 CCR 2506-1, 4.303).</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/hasNearbyCountyArrangement">
+      <Name>Has nearby county/district filing arrangement</Name>
+      <Description>Whether the local office has made arrangements to allow this household to file an application in a nearby specified county/district office (10 CCR 2506-1, 4.303).</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/meetsResidencyRequirement">
+      <Name>Meets residency requirement</Name>
+      <Description>Whether the household meets the residency requirement: applicants shall live in the county or district in which they make application for the Program, unless the local office has made arrangements to allow particular households to file an application in a nearby specified county/district office (10 CCR 2506-1, 4.303).</Description>
+      <Derived>
+        <Any>
+          <Dependency path="/livesInApplicationCounty" />
+          <Dependency path="/hasNearbyCountyArrangement" />
+        </Any>
+      </Derived>
     </Fact>
 
     <Fact path="/meetsNonFinancialCriteria">
       <Name>Meets non-financial criteria</Name>
-      <Description>Whether the household meets the set of rules other than those governing the household's gross and net income and resource standards (10 CCR 2506-1, 4.000.1). Placeholder.</Description>
-      <Writable><Boolean /></Writable>
+      <Description>Whether the household meets the set of rules other than those governing the household's gross and net income and resource standards (10 CCR 2506-1, 4.000.1).</Description>
+      <Derived>
+        <All>
+          <Not>
+            <Dependency path="/participatesInCommodityFoodDistributionProgram" />
+          </Not>
+          <Dependency path="/meetsResidencyRequirement" />
+        </All>
+      </Derived>
     </Fact>
 
     <Fact path="/members/*/isExperiencingHomelessness">
@@ -734,20 +1674,125 @@
 
     <Fact path="/members/*/receivesTanf">
       <Name>Receives TANF/Colorado Works</Name>
-      <Description>Whether this member receives a TANF/Colorado Works cash grant (10 CCR 2506-1, 4.000.1)</Description>
+      <Description>Whether this member receives a cash grant from the Temporary Assistance for Needy Families (TANF) or Colorado Works (CW) cash program, also known as Title IV-A of the Social Security Act (10 CCR 2506-1, 4.000.1).</Description>
       <Writable><Boolean /></Writable>
     </Fact>
 
-    <Fact path="/members/*/isEligibleForTanf">
-      <Name>Is eligible for TANF/Colorado Works</Name>
-      <Description>Whether this member is eligible for the Temporary Assistance for Needy Families (TANF) or Colorado Works (CW) cash program, also known as Title IV-A of the Social Security Act (10 CCR 2506-1, 4.000.1)</Description>
-      <Writable><Boolean /></Writable>
+    <Fact path="/members/*/receivesOldAgePension">
+      <Name>Receives Old Age Pension (OAP)</Name>
+      <Description>Whether this member receives Old Age Pension (OAP) cash assistance (10 CCR 2506-1, 4.206).</Description>
+      <Derived>
+        <GreaterThan>
+          <Left>
+            <CollectionSize>
+              <Filter path="/incomes">
+                <All>
+                  <Equal>
+                    <Left><Dependency path="memberId" /></Left>
+                    <Right><Dependency path="^" /></Right>
+                  </Equal>
+                  <Equal>
+                    <Left><Dependency path="type" /></Left>
+                    <Right><Enum optionsPath="/incomeSourceOptions">OldAgePension</Enum></Right>
+                  </Equal>
+                </All>
+              </Filter>
+            </CollectionSize>
+          </Left>
+          <Right><Int>0</Int></Right>
+        </GreaterThan>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/receivesAidToNeedyDisabled">
+      <Name>Receives Aid to the Needy Disabled (AND)</Name>
+      <Description>Whether this member receives Aid to the Needy Disabled (AND) cash assistance (10 CCR 2506-1, 4.206).</Description>
+      <Derived>
+        <GreaterThan>
+          <Left>
+            <CollectionSize>
+              <Filter path="/incomes">
+                <All>
+                  <Equal>
+                    <Left><Dependency path="memberId" /></Left>
+                    <Right><Dependency path="^" /></Right>
+                  </Equal>
+                  <Equal>
+                    <Left><Dependency path="type" /></Left>
+                    <Right><Enum optionsPath="/incomeSourceOptions">AidToNeedyDisabled</Enum></Right>
+                  </Equal>
+                </All>
+              </Filter>
+            </CollectionSize>
+          </Left>
+          <Right><Int>0</Int></Right>
+        </GreaterThan>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/receivesAidToBlind">
+      <Name>Receives Aid to the Blind (AB)</Name>
+      <Description>Whether this member receives Aid to the Blind (AB) cash assistance (10 CCR 2506-1, 4.206).</Description>
+      <Derived>
+        <GreaterThan>
+          <Left>
+            <CollectionSize>
+              <Filter path="/incomes">
+                <All>
+                  <Equal>
+                    <Left><Dependency path="memberId" /></Left>
+                    <Right><Dependency path="^" /></Right>
+                  </Equal>
+                  <Equal>
+                    <Left><Dependency path="type" /></Left>
+                    <Right><Enum optionsPath="/incomeSourceOptions">AidToBlind</Enum></Right>
+                  </Equal>
+                </All>
+              </Filter>
+            </CollectionSize>
+          </Left>
+          <Right><Int>0</Int></Right>
+        </GreaterThan>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/receivesColoradoSupplementSsi">
+      <Name>Receives Colorado Supplement to SSI</Name>
+      <Description>Whether this member receives the Colorado Supplement to the SSI Grant (10 CCR 2506-1, 4.208.2).</Description>
+      <Derived>
+        <GreaterThan>
+          <Left>
+            <CollectionSize>
+              <Filter path="/incomes">
+                <All>
+                  <Equal>
+                    <Left><Dependency path="memberId" /></Left>
+                    <Right><Dependency path="^" /></Right>
+                  </Equal>
+                  <Equal>
+                    <Left><Dependency path="type" /></Left>
+                    <Right><Enum optionsPath="/incomeSourceOptions">ColoradoSupplementSsi</Enum></Right>
+                  </Equal>
+                </All>
+              </Filter>
+            </CollectionSize>
+          </Left>
+          <Right><Int>0</Int></Right>
+        </GreaterThan>
+      </Derived>
     </Fact>
 
     <Fact path="/members/*/receivesAdultFinancial">
       <Name>Receives Adult Financial cash grant</Name>
-      <Description>Whether this member receives an Adult Financial cash grant (10 CCR 2506-1, 4.000.1)</Description>
-      <Writable><Boolean /></Writable>
+      <Description>Whether this member receives an Adult Financial cash grant — Old Age Pension (OAP), Aid to the Needy Disabled (AND), or Aid to the Blind (AB) — or the Colorado Supplement to the SSI Grant (10 CCR 2506-1, 4.000.1; 4.208.2).</Description>
+      <Derived>
+        <Any>
+          <Dependency path="../receivesOldAgePension" />
+          <Dependency path="../receivesAidToNeedyDisabled" />
+          <Dependency path="../receivesAidToBlind" />
+          <Dependency path="../receivesColoradoSupplementSsi" />
+        </Any>
+      </Derived>
     </Fact>
 
     <Fact path="/members/*/publicAssistanceAmount">
@@ -786,10 +1831,110 @@
       </Derived>
     </Fact>
 
+    <Fact path="/isNonPaHousehold">
+      <Name>Is Non-PA household</Name>
+      <Description>A household that is not a PA household. County General Assistance (GA), SSI with no Colorado Supplemental payment, and medical-only programs are not considered PA benefits (10 CCR 2506-1, 4.000.1).</Description>
+      <Derived>
+        <Not>
+          <Dependency path="/isPaHousehold" />
+        </Not>
+      </Derived>
+    </Fact>
+
     <Fact path="/members/*/hasLevelSanctionImposed">
       <Name>Has level sanction imposed</Name>
       <Description>Whether a specified period of ineligibility has been imposed against this member for failing to take a required action as part of his or her eligibility for SNAP (10 CCR 2506-1, 4.000.1)</Description>
       <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/liquidResources">
+      <Name>Liquid resources</Name>
+      <Description>The sum of liquid resources across all household members (10 CCR 2506-1, 4.000.1)</Description>
+      <Derived>
+        <CollectionSum>
+          <Dependency path="/members/*/liquidResources" />
+        </CollectionSum>
+      </Derived>
+    </Fact>
+
+    <!-- TODO: exclude members whose income is not applicable to the household
+         (e.g., ineligible non-citizens, disqualified individuals, boarders,
+         live-in attendants, etc.) once those exclusion rules are wired up
+         (10 CCR 2506-1, 4.000.1). -->
+    <Fact path="/grossIncome">
+      <Name>Gross income</Name>
+      <Description>The sum of gross income across all household members (10 CCR 2506-1, 4.000.1)</Description>
+      <Derived>
+        <CollectionSum>
+          <Dependency path="/members/*/grossIncome" />
+        </CollectionSum>
+      </Derived>
+    </Fact>
+
+    <Fact path="/expeditedLiquidResourcesThreshold">
+      <Name>Expedited service liquid resources threshold</Name>
+      <Description>The maximum liquid resources a household may have (one hundred dollars, $100) to qualify for expedited service under criteria 1 and 2 (10 CCR 2506-1, 4.000.1)</Description>
+      <Derived><Dollar>100</Dollar></Derived>
+    </Fact>
+
+    <Fact path="/expeditedGrossIncomeThreshold">
+      <Name>Expedited service gross income threshold</Name>
+      <Description>The gross monthly income limit (one hundred fifty dollars, $150) used to qualify for expedited service under criterion 2 (10 CCR 2506-1, 4.000.1)</Description>
+      <Derived><Dollar>150</Dollar></Derived>
+    </Fact>
+
+    <!-- TODO: capture the Section 4.406 definition of "destitute of income"
+         in references.json and map it to this fact; then derive this from
+         the underlying inputs rather than leaving it as a writable
+         placeholder (10 CCR 2506-1, 4.000.1). -->
+    <Fact path="/isDestituteOfIncome">
+      <Name>Is destitute of income</Name>
+      <Description>Whether the household is destitute of income as defined in Section 4.406 (10 CCR 2506-1, 4.000.1). Placeholder.</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <!-- TODO: derive from rent/mortgage and utility cost facts once housing
+         cost logic is added; should use the appropriate utility standard from
+         Section 4.407.31 (10 CCR 2506-1, 4.000.1). -->
+    <Fact path="/anticipatedHousingCosts">
+      <Name>Anticipated monthly rent/mortgage and utilities</Name>
+      <Description>The household's anticipated monthly rent or mortgage plus utility costs, using the appropriate utility standard as defined in Section 4.407.31 (10 CCR 2506-1, 4.000.1). Placeholder.</Description>
+      <Writable><Dollar /></Writable>
+    </Fact>
+
+    <Fact path="/isExpedited">
+      <Name>Is expedited</Name>
+      <Description>Whether the household qualifies for expedited service: (1) liquid resources do not exceed $100 and the household is destitute of income as defined in Section 4.406; (2) liquid resources do not exceed $100 and the household reasonably expects less than $150 of gross monthly income in the calendar month of application; or (3) combined monthly gross income and liquid resources are less than the household's anticipated monthly rent/mortgage and utilities (10 CCR 2506-1, 4.000.1)</Description>
+      <Derived>
+        <Any>
+          <All>
+            <LessThanOrEqual>
+              <Left><Dependency path="/liquidResources" /></Left>
+              <Right><Dependency path="/expeditedLiquidResourcesThreshold" /></Right>
+            </LessThanOrEqual>
+            <Dependency path="/isDestituteOfIncome" />
+          </All>
+          <All>
+            <LessThanOrEqual>
+              <Left><Dependency path="/liquidResources" /></Left>
+              <Right><Dependency path="/expeditedLiquidResourcesThreshold" /></Right>
+            </LessThanOrEqual>
+            <LessThan>
+              <Left><Dependency path="/grossIncome" /></Left>
+              <Right><Dependency path="/expeditedGrossIncomeThreshold" /></Right>
+            </LessThan>
+          </All>
+          <LessThan>
+            <Left>
+              <Add>
+                <Dependency path="/grossIncome" />
+                <Dependency path="/liquidResources" />
+              </Add>
+            </Left>
+            <Right><Dependency path="/anticipatedHousingCosts" /></Right>
+          </LessThan>
+        </Any>
+      </Derived>
     </Fact>
 
     <Fact path="/members/*/isDisqualified">
@@ -803,6 +1948,7 @@
           <Dependency path="../disqualifiedForWorkRequirementsCooperation" />
           <Dependency path="../disqualifiedForQualityAssuranceCooperation" />
           <Dependency path="../exceededAbawdCountableMonthsLimit" />
+          <Dependency path="../disqualifiedForMultiHouseholdParticipation" />
         </Any>
       </Derived>
     </Fact>

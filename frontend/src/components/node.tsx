@@ -42,6 +42,7 @@ import {
   ChevronDown,
   ChevronRight,
   LocateFixed,
+  Copy,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ALLOW_WRITES } from '@/lib/allow-writes'
@@ -863,6 +864,16 @@ function PolicyReferencesList({ node }: { node: ModelNode }) {
       return next
     })
   }
+  const [copiedId, setCopiedId] = useState<string | null>(null)
+  const copySectionText = (sectionId: string, text: string) => {
+    if (!text) return
+    navigator.clipboard.writeText(text).then(() => {
+      setCopiedId(sectionId)
+      setTimeout(() => {
+        setCopiedId((curr) => (curr === sectionId ? null : curr))
+      }, 1200)
+    })
+  }
   const [adding, setAdding] = useState(false)
   const [manifest, setManifest] = useState<PolicyReferences | null>(null)
   const [addMode, setAddMode] = useState<'pick' | 'new'>('pick')
@@ -1071,6 +1082,25 @@ function PolicyReferencesList({ node }: { node: ModelNode }) {
                         ? `Page ${ref.section.page}`
                         : 'Untitled section'}
                     </span>
+                    {ref.section.text && (
+                      <button
+                        className="p-0.5 text-muted-foreground hover:text-foreground shrink-0"
+                        onClick={() =>
+                          copySectionText(ref.section.id, ref.section.text!)
+                        }
+                        title={
+                          copiedId === ref.section.id
+                            ? 'Copied'
+                            : 'Copy section text'
+                        }
+                      >
+                        {copiedId === ref.section.id ? (
+                          <Check className="size-3 text-emerald-600" />
+                        ) : (
+                          <Copy className="size-3" />
+                        )}
+                      </button>
+                    )}
                     {ref.section.page && (
                       <button
                         className="p-0.5 text-muted-foreground hover:text-blue-600 shrink-0"

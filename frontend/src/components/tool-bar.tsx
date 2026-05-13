@@ -305,7 +305,7 @@ export function ToolBar() {
             title="Inputs & execution"
             className="h-9 px-2"
             onClick={() =>
-              setRightBar(rightBar === 'execution' ? null : 'execution')
+              setRightBar((prev) => (prev === 'execution' ? null : 'execution'))
             }
           >
             <SlidersHorizontal className="size-4" />
@@ -315,7 +315,9 @@ export function ToolBar() {
           variant={rightBar === 'tests' ? 'default' : 'outline'}
           size="icon"
           title="Tests"
-          onClick={() => setRightBar(rightBar === 'tests' ? null : 'tests')}
+          onClick={() =>
+            setRightBar((prev) => (prev === 'tests' ? null : 'tests'))
+          }
         >
           <FlaskConical className="size-4" />
         </Button>
@@ -324,7 +326,7 @@ export function ToolBar() {
           size="icon"
           title="Profiles"
           onClick={() =>
-            setRightBar(rightBar === 'profiles' ? null : 'profiles')
+            setRightBar((prev) => (prev === 'profiles' ? null : 'profiles'))
           }
         >
           <Users className="size-4" />
@@ -333,7 +335,9 @@ export function ToolBar() {
           variant={rightBar === 'policy' ? 'default' : 'outline'}
           size="icon"
           title="Policy Documents"
-          onClick={() => setRightBar(rightBar === 'policy' ? null : 'policy')}
+          onClick={() =>
+            setRightBar((prev) => (prev === 'policy' ? null : 'policy'))
+          }
         >
           <BookOpen className="size-4" />
         </Button>
@@ -342,7 +346,9 @@ export function ToolBar() {
             variant={rightBar === 'tasks' ? 'default' : 'outline'}
             size="icon"
             title="Builder"
-            onClick={() => setRightBar(rightBar === 'tasks' ? null : 'tasks')}
+            onClick={() =>
+              setRightBar((prev) => (prev === 'tasks' ? null : 'tasks'))
+            }
           >
             <Hammer className="size-4" />
           </Button>
@@ -351,7 +357,7 @@ export function ToolBar() {
           variant={rightBar === 'ai' ? 'default' : 'outline'}
           size="icon"
           title="AI Assistant"
-          onClick={() => setRightBar(rightBar === 'ai' ? null : 'ai')}
+          onClick={() => setRightBar((prev) => (prev === 'ai' ? null : 'ai'))}
         >
           <Sparkles className="size-4" />
         </Button>

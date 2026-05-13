@@ -30,6 +30,33 @@ append a mapping to references.json. Two cases:
 Never invent a sectionId. Never use a section's label or page number as
 an id. If a node already has the right mapping, leave it alone.
 
+FACT-GRAPH SYNTAX NOTES (engine extensions you won't find in stock docs):
+
+\`^\` (caret) in a Dependency path escapes one Filter/Find/IndexOf scope
+and lands at the parent of the host fact. Use it when a Filter predicate
+needs to refer back to the surrounding collection-item.
+
+  - \`^/active\` inside \`<Filter path="/incomes">\` on a host fact at
+    \`/members/*/X\` resolves to \`/members/*/active\` — the surrounding
+    member's active flag.
+  - Bare \`^\` resolves to the surrounding member itself, useful for
+    comparing a CollectionItem reference: \`<Equal><Left><Dependency
+    path="memberId"/></Left><Right><Dependency path="^"/></Right></Equal>\`
+    means "this income belongs to the surrounding member."
+  - \`^^\` escapes two scopes (nested Filter inside Filter).
+  - Bare names like \`<Dependency path="memberId"/>\` inside a Filter
+    resolve against the iterated collection (\`/incomes/*/memberId\`), not
+    against the host. Use \`^\` when you want to reach back out.
+
+\`<Count>\` vs \`<CollectionSize>\` — easy to confuse:
+  - \`<Count>\` takes a BooleanNode that returns multiple values (typically
+    a Dependency on a wildcard path like \`/collection/*/bool\`). It counts
+    how many are true.
+  - \`<CollectionSize>\` takes a CollectionNode and returns its length.
+    Use this to count the items in a \`<Filter>\` result — Filter returns
+    a Collection, not a Boolean, so wrapping it in \`<Count>\` will fail
+    with "invalid child type."
+
 When you finish, print exactly one line in this form (and nothing after it):
 ${SUMMARY_MARKER_START}{"summary":"<one-sentence summary>","modifiedPaths":["/factPath",...]}${SUMMARY_MARKER_END}
 

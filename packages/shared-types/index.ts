@@ -128,6 +128,11 @@ export type FactGraphWritable = {
   limits?: Limit[]
   collectionItemPath?: string
   logic?: string // inner <Writable> or <Derived> XML
+  /** Inner content of `<Placeholder>…</Placeholder>` when present. The
+   *  engine uses this as the fallback value when the main expression is
+   *  Incomplete; the FE shows it as a separate "Placeholder" entry in
+   *  the Advanced section so authors can see the fallback at a glance. */
+  placeholderLogic?: string
 }
 
 export type FactGraphDerived = {
@@ -144,6 +149,8 @@ export type FactGraphDerived = {
    *  same shape as FactGraphWritable.enumOptions. */
   enumOptions?: string[]
   logic?: string // inner <Writable> or <Derived> XML
+  /** See FactGraphWritable.placeholderLogic. */
+  placeholderLogic?: string
 }
 
 // ---------------------------------------------------------------------------
