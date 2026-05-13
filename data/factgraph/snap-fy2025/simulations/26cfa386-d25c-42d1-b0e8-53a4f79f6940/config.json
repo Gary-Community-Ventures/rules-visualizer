@@ -1,0 +1,169 @@
+{
+  "id": "26cfa386-d25c-42d1-b0e8-53a4f79f6940",
+  "seed": 74449084,
+  "caseCount": 100,
+  "outcomeNodes": [
+    "/eligible"
+  ],
+  "scalarFields": [
+    {
+      "path": "/grossEarnedIncome",
+      "type": "Dollar",
+      "min": 0,
+      "max": 10000
+    },
+    {
+      "path": "/unearnedIncome",
+      "type": "Dollar",
+      "min": 0,
+      "max": 10000
+    },
+    {
+      "path": "/dependentCareExpenses",
+      "type": "Dollar",
+      "min": 0,
+      "max": 10000
+    },
+    {
+      "path": "/rent",
+      "type": "Dollar",
+      "min": 0,
+      "max": 10000
+    },
+    {
+      "path": "/realEstateTaxes",
+      "type": "Dollar",
+      "min": 0,
+      "max": 10000
+    },
+    {
+      "path": "/homeownersAssociationFees",
+      "type": "Dollar",
+      "min": 0,
+      "max": 10000
+    },
+    {
+      "path": "/mortgagePayments",
+      "type": "Dollar",
+      "min": 0,
+      "max": 10000
+    },
+    {
+      "path": "/homeownersInsurance",
+      "type": "Dollar",
+      "min": 0,
+      "max": 10000
+    },
+    {
+      "path": "/meetsCategoricalEligibility",
+      "type": "Boolean"
+    },
+    {
+      "path": "/childSupportPaid",
+      "type": "Dollar",
+      "min": 0,
+      "max": 10000
+    },
+    {
+      "path": "/isHomeless",
+      "type": "Boolean"
+    }
+  ],
+  "collections": [
+    {
+      "collectionPath": "/members",
+      "minMembers": 1,
+      "maxMembers": 5,
+      "fields": [
+        {
+          "path": "/members/*/isElderly",
+          "type": "Boolean"
+        },
+        {
+          "path": "/members/*/isDisabled",
+          "type": "Boolean"
+        },
+        {
+          "path": "/members/*/medicalExpenses",
+          "type": "Dollar",
+          "min": 0,
+          "max": 10000
+        },
+        {
+          "path": "/members/*/age",
+          "type": "Int",
+          "min": 0,
+          "max": 100
+        },
+        {
+          "path": "/members/*/isHigherEdStudent",
+          "type": "Boolean"
+        },
+        {
+          "path": "/members/*/weeklyWorkHours",
+          "type": "Int",
+          "min": 0,
+          "max": 100
+        },
+        {
+          "path": "/members/*/isWorkStudy",
+          "type": "Boolean"
+        },
+        {
+          "path": "/members/*/isParent",
+          "type": "Boolean"
+        },
+        {
+          "path": "/members/*/isFullTimeCollegeStudent",
+          "type": "Boolean"
+        },
+        {
+          "path": "/members/*/receivesTanf",
+          "type": "Boolean"
+        },
+        {
+          "path": "/members/*/isImmigrationEligible",
+          "type": "Boolean"
+        },
+        {
+          "path": "/members/*/isPregnant",
+          "type": "Boolean"
+        },
+        {
+          "path": "/members/*/isIncapableOfSelfCare",
+          "type": "Boolean"
+        },
+        {
+          "path": "/members/*/abawdCountableMonthsUsed",
+          "type": "Int",
+          "min": 0,
+          "max": 100
+        },
+        {
+          "path": "/members/*/cashOnHand",
+          "type": "Dollar",
+          "min": 0,
+          "max": 10000
+        },
+        {
+          "path": "/members/*/bankAccountAssets",
+          "type": "Dollar",
+          "min": 0,
+          "max": 10000
+        },
+        {
+          "path": "/members/*/stockAssets",
+          "type": "Dollar",
+          "min": 0,
+          "max": 10000
+        },
+        {
+          "path": "/members/*/bondAssets",
+          "type": "Dollar",
+          "min": 0,
+          "max": 10000
+        }
+      ]
+    }
+  ]
+}

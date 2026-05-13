@@ -1,0 +1,276 @@
+{
+  "id": "26cfa386-d25c-42d1-b0e8-53a4f79f6940",
+  "rulesetId": "snap-fy2025",
+  "comparedRulesetId": "snap-fy2026",
+  "status": "completed",
+  "summary": {
+    "totalCases": 100,
+    "changedCases": 0,
+    "unchangedCases": 100,
+    "errorCases": 0,
+    "nodeChanges": [
+      {
+        "path": "/standardDeductionHh1to3",
+        "timesChanged": 100,
+        "timesIncreased": 100,
+        "timesDecreased": 0,
+        "avgDelta": 11
+      },
+      {
+        "path": "/standardDeductionHh4",
+        "timesChanged": 100,
+        "timesIncreased": 0,
+        "timesDecreased": 100,
+        "avgDelta": -2
+      },
+      {
+        "path": "/standardDeductionHh5",
+        "timesChanged": 100,
+        "timesIncreased": 100,
+        "timesDecreased": 0,
+        "avgDelta": 3
+      },
+      {
+        "path": "/standardDeductionHh6Plus",
+        "timesChanged": 100,
+        "timesIncreased": 0,
+        "timesDecreased": 100,
+        "avgDelta": -1
+      },
+      {
+        "path": "/excessShelterDeductionCap",
+        "timesChanged": 100,
+        "timesIncreased": 100,
+        "timesDecreased": 0,
+        "avgDelta": 72
+      },
+      {
+        "path": "/homelessShelterDeduction",
+        "timesChanged": 100,
+        "timesIncreased": 100,
+        "timesDecreased": 0,
+        "avgDelta": 19.41
+      },
+      {
+        "path": "/suaAmount",
+        "timesChanged": 100,
+        "timesIncreased": 100,
+        "timesDecreased": 0,
+        "avgDelta": 61
+      },
+      {
+        "path": "/minimumBenefit",
+        "timesChanged": 100,
+        "timesIncreased": 100,
+        "timesDecreased": 0,
+        "avgDelta": 1
+      },
+      {
+        "path": "/fplAnnualHh1",
+        "timesChanged": 100,
+        "timesIncreased": 100,
+        "timesDecreased": 0,
+        "avgDelta": 590
+      },
+      {
+        "path": "/fplAnnualHhPerAdditional",
+        "timesChanged": 100,
+        "timesIncreased": 100,
+        "timesDecreased": 0,
+        "avgDelta": 120
+      },
+      {
+        "path": "/maxAllotmentHh1",
+        "timesChanged": 100,
+        "timesIncreased": 100,
+        "timesDecreased": 0,
+        "avgDelta": 6
+      },
+      {
+        "path": "/maxAllotmentHh2",
+        "timesChanged": 100,
+        "timesIncreased": 100,
+        "timesDecreased": 0,
+        "avgDelta": 10
+      },
+      {
+        "path": "/maxAllotmentHh3",
+        "timesChanged": 100,
+        "timesIncreased": 100,
+        "timesDecreased": 0,
+        "avgDelta": 17
+      },
+      {
+        "path": "/maxAllotmentHh4",
+        "timesChanged": 100,
+        "timesIncreased": 100,
+        "timesDecreased": 0,
+        "avgDelta": 19
+      },
+      {
+        "path": "/maxAllotmentHh5",
+        "timesChanged": 100,
+        "timesIncreased": 100,
+        "timesDecreased": 0,
+        "avgDelta": 25
+      },
+      {
+        "path": "/maxAllotmentHh6",
+        "timesChanged": 100,
+        "timesIncreased": 100,
+        "timesDecreased": 0,
+        "avgDelta": 31
+      },
+      {
+        "path": "/maxAllotmentHh7",
+        "timesChanged": 100,
+        "timesIncreased": 100,
+        "timesDecreased": 0,
+        "avgDelta": 35
+      },
+      {
+        "path": "/maxAllotmentHh8",
+        "timesChanged": 100,
+        "timesIncreased": 100,
+        "timesDecreased": 0,
+        "avgDelta": 33
+      },
+      {
+        "path": "/maxAllotmentHhPerAdditional",
+        "timesChanged": 100,
+        "timesIncreased": 0,
+        "timesDecreased": 100,
+        "avgDelta": -2
+      },
+      {
+        "path": "/utilityAllowance",
+        "timesChanged": 100,
+        "timesIncreased": 100,
+        "timesDecreased": 0,
+        "avgDelta": 61
+      },
+      {
+        "path": "/shelterCosts",
+        "timesChanged": 100,
+        "timesIncreased": 100,
+        "timesDecreased": 0,
+        "avgDelta": 61
+      },
+      {
+        "path": "/federalPovertyLevelAnnual",
+        "timesChanged": 100,
+        "timesIncreased": 100,
+        "timesDecreased": 0,
+        "avgDelta": 665.6
+      },
+      {
+        "path": "/federalPovertyLevelMonthly",
+        "timesChanged": 100,
+        "timesIncreased": 100,
+        "timesDecreased": 0,
+        "avgDelta": 55.62
+      },
+      {
+        "path": "/grossIncomeLimit",
+        "timesChanged": 100,
+        "timesIncreased": 100,
+        "timesDecreased": 0,
+        "avgDelta": 72.31
+      },
+      {
+        "path": "/standardDeduction",
+        "timesChanged": 100,
+        "timesIncreased": 96,
+        "timesDecreased": 4,
+        "avgDelta": 10.48
+      },
+      {
+        "path": "/preliminaryDeductions",
+        "timesChanged": 100,
+        "timesIncreased": 96,
+        "timesDecreased": 4,
+        "avgDelta": 10.48
+      },
+      {
+        "path": "/excessShelterCost",
+        "timesChanged": 100,
+        "timesIncreased": 100,
+        "timesDecreased": 0,
+        "avgDelta": 61.22
+      },
+      {
+        "path": "/regularShelterDeduction",
+        "timesChanged": 100,
+        "timesIncreased": 100,
+        "timesDecreased": 0,
+        "avgDelta": 61.61
+      },
+      {
+        "path": "/shelterDeduction",
+        "timesChanged": 100,
+        "timesIncreased": 100,
+        "timesDecreased": 0,
+        "avgDelta": 61.61
+      },
+      {
+        "path": "/totalDeductions",
+        "timesChanged": 100,
+        "timesIncreased": 100,
+        "timesDecreased": 0,
+        "avgDelta": 72.08
+      },
+      {
+        "path": "/netIncomeLimit",
+        "timesChanged": 100,
+        "timesIncreased": 100,
+        "timesDecreased": 0,
+        "avgDelta": 55.62
+      },
+      {
+        "path": "/maxAllotment",
+        "timesChanged": 100,
+        "timesIncreased": 100,
+        "timesDecreased": 0,
+        "avgDelta": 9.78
+      },
+      {
+        "path": "/calculatedBenefit",
+        "timesChanged": 99,
+        "timesIncreased": 99,
+        "timesDecreased": 0,
+        "avgDelta": 9.78
+      },
+      {
+        "path": "/snap",
+        "timesChanged": 48,
+        "timesIncreased": 48,
+        "timesDecreased": 0,
+        "avgDelta": 11
+      },
+      {
+        "path": "/shelterIncomeShare",
+        "timesChanged": 4,
+        "timesIncreased": 0,
+        "timesDecreased": 4,
+        "avgDelta": -5.5
+      },
+      {
+        "path": "/netMonthlyIncome",
+        "timesChanged": 1,
+        "timesIncreased": 0,
+        "timesDecreased": 1,
+        "avgDelta": -83
+      },
+      {
+        "path": "/expectedFoodContribution",
+        "timesChanged": 1,
+        "timesIncreased": 0,
+        "timesDecreased": 1,
+        "avgDelta": -24.9
+      }
+    ],
+    "executionTimeMs": 1704
+  },
+  "startedAt": "2026-05-12T20:25:08.553Z",
+  "completedAt": "2026-05-12T20:25:10.258Z"
+}

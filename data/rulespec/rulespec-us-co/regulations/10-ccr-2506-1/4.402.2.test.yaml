@@ -1,0 +1,55 @@
+- name: income_for_specific_period_is_divided_by_months_covered
+  period: 2026-01
+  input:
+    us-co:regulations/10-ccr-2506-1/4.402.2#input.income_intended_to_cover_specific_period: 2400
+    us-co:regulations/10-ccr-2506-1/4.402.2#input.income_intended_cover_months: 6
+  output:
+    us-co:regulations/10-ccr-2506-1/4.402.2#snap_average_monthly_income_for_intended_period: 400
+- name: annual_self_employment_income_is_annualized_over_twelve_months
+  period: 2026-01
+  input:
+    us-co:regulations/10-ccr-2506-1/4.402.2#input.household_derives_annual_income_from_self_employment: true
+    us-co:regulations/10-ccr-2506-1/4.402.2#input.snap_destitute_income_household: false
+    us-co:regulations/10-ccr-2506-1/4.402.2#input.annual_self_employment_income: 24000
+  output:
+    us-co:regulations/10-ccr-2506-1/4.402.2#snap_self_employment_income_annualized_under_4_402_2: 2000
+- name: destitute_migrant_household_does_not_average_self_employment_income
+  period: 2026-01
+  input:
+    us-co:regulations/10-ccr-2506-1/4.402.2#input.household_derives_annual_income_from_self_employment: true
+    us-co:regulations/10-ccr-2506-1/4.402.2#input.snap_destitute_income_household: true
+    us-co:regulations/10-ccr-2506-1/4.402.2#input.annual_self_employment_income: 24000
+  output:
+    us-co:regulations/10-ccr-2506-1/4.402.2#snap_self_employment_income_annualized_under_4_402_2: 0
+- name: non_hourly_contract_income_is_annualized
+  period: 2026-01
+  input:
+    us-co:regulations/10-ccr-2506-1/4.402.2#input.household_derives_annual_income_from_contract: true
+    us-co:regulations/10-ccr-2506-1/4.402.2#input.contract_income_hourly_or_piecework: false
+    us-co:regulations/10-ccr-2506-1/4.402.2#input.snap_destitute_income_household: false
+    us-co:regulations/10-ccr-2506-1/4.402.2#input.annual_contract_income: 36000
+  output:
+    us-co:regulations/10-ccr-2506-1/4.402.2#snap_contract_income_annualized_under_4_402_2: 3000
+- name: educational_income_is_prorated_over_intended_period
+  period: 2026-01
+  input:
+    us-co:regulations/10-ccr-2506-1/4.402.2#input.educational_income: 6000
+    us-co:regulations/10-ccr-2506-1/4.402.2#input.educational_income_intended_cover_months: 10
+  output:
+    us-co:regulations/10-ccr-2506-1/4.402.2#snap_educational_income_prorated_under_4_402_2: 600
+- name: fluctuating_income_is_averaged_when_elected
+  period: 2026-01
+  input:
+    us-co:regulations/10-ccr-2506-1/4.402.2#input.household_elects_to_average_fluctuating_income: true
+    us-co:regulations/10-ccr-2506-1/4.402.2#input.snap_destitute_income_household: false
+    us-co:regulations/10-ccr-2506-1/4.402.2#input.fluctuating_income_intended_to_cover_period: 1800
+    us-co:regulations/10-ccr-2506-1/4.402.2#input.fluctuating_income_intended_cover_months: 3
+  output:
+    us-co:regulations/10-ccr-2506-1/4.402.2#snap_fluctuating_income_averaged_under_4_402_2: 600
+- name: known_previous_months_can_be_projected
+  period: 2026-01
+  input:
+    us-co:regulations/10-ccr-2506-1/4.402.2#input.known_income_from_previous_months: 3000
+    us-co:regulations/10-ccr-2506-1/4.402.2#input.known_previous_month_count: 2
+  output:
+    us-co:regulations/10-ccr-2506-1/4.402.2#snap_projected_monthly_income_from_known_previous_months: 1500

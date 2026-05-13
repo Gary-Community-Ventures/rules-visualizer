@@ -2,29 +2,40 @@
 
 A read-only visualizer for rule systems, supporting two formats:
 
-- **Fact Graph** from IRS Direct File — XML-based decision dictionaries
-- **RAC** (Rules as Code) from The Axiom Foundation — Python-based rule definitions
+- **Fact Graph** from IRS Direct File — XML-based decision dictionaries, executed via a Scala.js bundle.
+- **RuleSpec** from The Axiom Foundation — jurisdiction-scoped YAML rule libraries, executed via the upstream `axiom-rules-engine` Rust binary. (Previously this was a different format called "RAC"; that codebase was rebranded and rewritten upstream and we've migrated.)
 
 Displays rules as an interactive node graph with dependency arrows, pan/zoom, expand/collapse, rule execution with live results, and an AI assistant for exploring rules.
 
 ## Quick Start
 
 ```bash
-# Install dependencies
+# Install Node + Python deps
 npm install
-
-# Set up Python venv (for RAC backend)
 python3 -m venv .venv
 .venv/bin/pip install -e packages/rac-server
 
-# Start Fact Graph backend + frontend
+# (RuleSpec only) Build the upstream Rust engine — required for execution
+npm run setup:axiom-engine
+
+# Start the Fact Graph backend + frontend
 npm run dev
 
-# Or start RAC backend + frontend
-npm run dev:rac
+# Or the RuleSpec backend + frontend
+npm run dev:axiom
 ```
 
-Open http://localhost:5173 (Fact Graph) or http://localhost:5174 (RAC).
+Open http://localhost:5173 (Fact Graph) or http://localhost:5174 (RuleSpec).
+
+### Rust toolchain (RuleSpec only)
+
+`npm run setup:axiom-engine` requires Rust 1.85+ (the engine uses Rust edition 2024).
+
+- **macOS:** `brew install rustup-init && rustup-init -y`
+- **Linux / WSL:** `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh`, plus `sudo apt install build-essential`
+- **Windows:** use WSL.
+
+The script clones `TheAxiomFoundation/rac` into `vendor/axiom-rules-engine/` (gitignored) and runs `cargo build --release`. Re-run any time you want to pull the latest engine version — it's idempotent.
 
 ## Features
 
@@ -36,26 +47,31 @@ Open http://localhost:5173 (Fact Graph) or http://localhost:5174 (RAC).
   - **Input** (blue, pencil icon) — values the user provides
   - **Constant** (gray, book icon) — values from the rules, overridable for simulation
   - **Computed** (purple, branch icon) — calculated from inputs and constants
-- Detail panel with logic source, dependencies, and "used by" links
+- Detail panel showing the formula, dependencies, source citation, regulation `moduleSummary`, value tables for parameter lookups, and cross-jurisdiction restatement citations
 - Node navigation history (back/forward)
 
 ### Rule Execution
 
 - Fill in input values directly on node cards or via the execution panel
-- Override constants to simulate rule changes ("what if the income limit was $30k?")
-- Pin computed nodes to skip their calculation and force a value
+- Override constants and computed nodes to simulate rule changes ("what if the income limit was $30k?")
 - Results displayed as colored badges on every node
 - Auto-runs on blur — results update as you fill in values
-- **RAC**: Executes via the `rac` library's Python runtime
-- **Fact Graph**: Executes via a Scala.js bundle (from IRS Direct File) running in Node.js
+- **Fact Graph:** executes via a Scala.js bundle (from IRS Direct File) running in Node.js
+- **RuleSpec:** compiles each composition to a JSON artifact, then pipes `ExecutionRequest` JSON to the `axiom-rules-engine` Rust binary via stdin/stdout. The wrapper enumerates inputs from the artifact, tags each by entity scope, auto-defaults from upstream `.test.yaml` fixtures (including per-member values from `#relation.member_of_household:` blocks), and falls back to AST type inference for anything fixtures don't cover. Person-scoped inputs route to a single `person-1` member with a `member_of_household: [person-1, h1]` relation tuple.
 
 ### Execution Panel
 
 - **Inputs** section with required/optional indicators and type hints (USD, Boolean, Integer, etc.)
 - **Overrides** section with collapsible Constants and Computed sub-groups
-- **JSON** import/export — Generate JSON from current form state, or paste JSON to bulk-set values
+- **JSON** import/export
 - Blue rings for input values, amber rings for overrides — visible at a glance on the graph
-- Section states persist across panel open/close
+
+### Simulation
+
+- Compare two ruleset versions (e.g. `snap-fy2025` vs `snap-fy2026`) over a generated population or saved test cases
+- Per-side overrides for what-if analysis
+- Save interesting case sets as named populations for regression testing
+- Currently Fact Graph–only; RuleSpec simulation TBD.
 
 ### AI Assistant
 
@@ -64,25 +80,26 @@ Open http://localhost:5173 (Fact Graph) or http://localhost:5174 (RAC).
 - Node name autocomplete in the chat input
 - Clickable node references in AI responses
 
-### Live Reload
+### Live Reload (Fact Graph only)
 
-Edit a rule file on disk and the graph updates automatically:
+Edit a Fact Graph XML file on disk and the graph updates automatically:
 
 ```
 File change → watcher detects → backend re-parses → WebSocket broadcast → frontend re-fetches
 ```
+
+The RuleSpec backend doesn't currently hot-reload — its content comes from upstream snapshots that don't usually change during dev.
 
 ## Project Structure
 
 ```
 rules-visualizer/
 ├── bin/rules-visualizer              # Unified launcher (auto-detects format)
+├── scripts/
+│   └── build-axiom-engine.sh         # Clones + builds the RuleSpec engine binary
+├── vendor/                           # Per-machine build artifacts (gitignored)
+│   └── axiom-rules-engine/           # Vendored upstream Rust crate (built locally)
 ├── frontend/                         # React 19 + Vite + TypeScript
-│   └── src/
-│       ├── components/               # Graph nodes, arrows, panels, content viewers
-│       ├── context/                  # App state, model context, execution state
-│       ├── lib/                      # API client, graph layout, utilities
-│       └── pages/                    # Route-level pages
 ├── packages/
 │   ├── factgraph-server/             # Node.js backend (Express + WebSocket)
 │   │   ├── src/
@@ -94,19 +111,23 @@ rules-visualizer/
 │   │       └── factgraph-scala.cjs   # Scala.js bundle (6MB, from Direct File)
 │   ├── rac-server/                   # Python backend (aiohttp + WebSocket)
 │   │   └── rules_visualizer_rac/
-│   │       ├── parser.py             # RAC → Model parser
-│   │       ├── server.py             # HTTP server + execution engine
+│   │       ├── rulespec_parser.py    # RuleSpec YAML → Model parser (walks imports)
+│   │       ├── axiom_engine.py       # Subprocess wrapper for the Rust binary
+│   │       ├── references.py         # references.json policy-doc citation resolver
+│   │       ├── server.py             # HTTP server
 │   │       └── ai/                   # LangChain agent configuration
-│   └── shared-types/                 # TypeScript type definitions (single source of truth)
-└── data/                             # Example rule files
-    ├── rac/
-    │   ├── child-care-subsidy/       # Simple example (20 nodes)
-    │   ├── child-care-credit/        # Real IRS Section 21 rules (100 nodes)
-    │   └── snap/                     # SNAP benefits eligibility (47 nodes)
-    └── factgraph/
-        ├── child-care-subsidy/       # Same rules as RAC version, in XML
-        └── snap/                     # SNAP benefits in Fact Graph XML
+│   └── shared-types/                 # TypeScript type definitions
+└── data/
+    ├── factgraph/                    # Fact Graph rulesets, one subdir per
+    │   ├── snap-fy2025/
+    │   ├── snap-fy2026/
+    │   └── medicaid/
+    └── rulespec/                     # RuleSpec content libraries
+        ├── rulespec-us/              # rulespec-us snapshot (federal)
+        └── rulespec-us-co/           # rulespec-us-co snapshot (Colorado)
 ```
+
+> The `rulespec-us-co` and `rulespec-us` directories under `data/rulespec/` are clones of [TheAxiomFoundation/rulespec-us](https://github.com/TheAxiomFoundation/rulespec-us) and [rulespec-us-co](https://github.com/TheAxiomFoundation/rulespec-us-co) with `.git` removed. Pull fresh snapshots manually when you want to refresh. The directory names match the upstream repos because the engine resolves `us-co:foo/bar` imports by searching for a directory literally named `rulespec-us-co/`.
 
 ## Architecture
 
@@ -118,12 +139,12 @@ Both backends implement the same API contract. The frontend is format-agnostic.
 | ---------------------------------------------- | ------------ | --------------------------------------------------------------------------------------------------------------- |
 | `/api/rulesets`                                | GET          | List rulesets: `{ rulesets: [{ id, name, format }] }`                                                           |
 | `/api/rulesets/:id`                            | GET          | Full model with nodes and dependencies                                                                          |
-| `/api/rulesets/:id/execute`                    | POST         | Execute rules with `{ inputs, entities, overrides, asOf }`                                                      |
+| `/api/rulesets/:id/execute`                    | POST         | Execute rules with `{ inputs, entities, as_of }`                                                                |
 | `/api/rulesets/:id/tests`                      | GET / POST   | List or create test cases. POST returns `403` unless `ALLOW_WRITES=1`                                           |
 | `/api/rulesets/:id/tests/:testId`              | PUT / DELETE | Update or delete a test case. Both `403` unless `ALLOW_WRITES=1`                                                |
-| `/api/rulesets/:id/tests/run`                  | POST         | Run all tests (or a subset via `{ testIds }`). Always available                                                 |
+| `/api/rulesets/:id/tests/run`                  | POST         | Run all tests (or a subset via `{ testIds }`). RuleSpec backend currently returns 501 for this                  |
 | `/api/rulesets/:id/references`                 | GET / PUT    | Read or write the policy-references manifest. PUT `403` unless `ALLOW_WRITES=1`                                 |
-| `/api/rulesets/:id/references/files/:filename` | GET          | Stream a referenced policy PDF (or other doc) from the ruleset's `references/` dir                              |
+| `/api/rulesets/:id/references/files/:filename` | GET          | Stream a referenced policy PDF (or other doc) from the ruleset's directory                                      |
 | `/api/rulesets/:id/profiles`                   | GET / POST   | List or create file-backed profiles (saved input/override/entity snapshots). POST `403` unless `ALLOW_WRITES=1` |
 | `/api/rulesets/:id/profiles/:profileId`        | PUT / DELETE | Update or delete a profile. Both `403` unless `ALLOW_WRITES=1`                                                  |
 | `/api/rulesets/:id/tasks`                      | GET / POST¹  | List active threads or spawn a new Claude-CLI agent thread (the Builder panel)                                  |
@@ -133,64 +154,74 @@ Both backends implement the same API contract. The frontend is format-agnostic.
 | `/api/rulesets/:id/tasks/:threadId/cancel`     | POST¹        | Stop a running agent and finalize the iteration                                                                 |
 | `/ws`                                          | WebSocket    | Live reload broadcasts + AI chat (`{ type: 'ai-chat' }` messages, streamed back over the socket)                |
 
-¹ The `/tasks` routes are mounted only when `ALLOW_WRITES=1`. Without it, every path under `/tasks` returns `404` (the routes aren't registered) — separate from the `403`-on-write pattern used elsewhere.
+¹ The `/tasks` routes are mounted only when `ALLOW_WRITES=1`. Without it, every path under `/tasks` returns `404`.
 
 ### Node Model
 
 Every node has a universal `role` regardless of format:
 
-| Role       | Description               | RAC                              | Fact Graph                       |
-| ---------- | ------------------------- | -------------------------------- | -------------------------------- |
-| `input`    | User provides this value  | Variable with no expression      | `<Writable>` element             |
-| `constant` | Set by rules, overridable | Variable with literal expression | `<Derived>` with no dependencies |
-| `computed` | Calculated from others    | Variable with expression         | `<Derived>` with dependencies    |
+| Role       | Description               | RuleSpec                                       | Fact Graph                       |
+| ---------- | ------------------------- | ---------------------------------------------- | -------------------------------- |
+| `input`    | User provides this value  | Identifier referenced but not declared as rule | `<Writable>` element             |
+| `constant` | Set by rules, overridable | `kind: parameter` rule                         | `<Derived>` with no dependencies |
+| `computed` | Calculated from others    | `kind: derived` rule with formula              | `<Derived>` with dependencies    |
 
 All nodes have `overridable: boolean` — the execution engine supports overriding any node in both formats.
 
 ### Execution
 
-**RAC:** The Python `rac` library compiles `.rac` files into an IR. Input variables (dropped by the compiler) are injected into the execution context. Overrides pre-populate `ctx.computed` and skip computation for pinned nodes.
+**Fact Graph.** The Scala.js bundle creates a graph from a "digest" representation of the XML. Overriding derived nodes works by converting them to writables in the digest before graph creation.
 
-**Fact Graph:** The Scala.js bundle creates a graph from a "digest" representation of the XML. Overriding derived nodes works by converting them to writables in the digest before graph creation.
+**RuleSpec.** The Python backend compiles each composition once via `axiom-rules-engine compile`, caching the JSON artifact. For each `/execute` request the wrapper:
+
+1. Walks the AST of the compiled artifact to infer each input's dtype from its surrounding expression context (bool for `if`/`and`/`or` children, decimal for arithmetic and most comparisons).
+2. Walks every transitive `.test.yaml` fixture (the composition's own plus every imported module's) and collects authoritative-typed defaults — RuleSpec inputs don't declare dtypes explicitly, so the fixtures are our source of truth.
+3. Builds a `CompiledExecutionRequest`, layers user-supplied overrides on top of fixture defaults and inferred zeros, pipes JSON to the binary via stdin/stdout.
+4. Reads `ExecutionResponse`. Uses the explain-mode trace to backfill values for every computed node, so the visualizer can show the full graph state, not just queried outputs.
+
+See `packages/rac-server/rules_visualizer_rac/axiom_engine.py`.
 
 ## Implementation Notes
 
-Both backends required workarounds to get execution working. These are documented here so future maintainers understand what's non-obvious.
+### Fact Graph
 
-### RAC Workarounds
+**Scala.js bundle.** The `vendor/factgraph-scala.cjs` file is a 6MB Scala.js bundle compiled from the IRS Direct File project. Pinned copy — updating it requires rebuilding from Direct File source.
 
-**Compiler drops input variables.** The `rac` library (v0.2.0) only includes variables with temporal `from YYYY-MM-DD:` expressions in the compiled IR. Input variables (declared with metadata but no expression, e.g. `household_size: dtype: Integer, default: 1`) are silently dropped. Our parser recovers them from the raw modules and adds them to the model as `role: 'input'` nodes. See `_ir_to_model()` in `parser.py`.
+**Digest conversion.** The Scala.js engine doesn't accept raw XML. We convert `fast-xml-parser` output into a "digest" format that mirrors Direct File's `processFactsToDigestWrapper.ts`. See `executor.ts`.
 
-**Manual executor replication.** We replicate the `rac.executor.Executor.execute()` loop in `server.py` rather than calling `rac.execute()` directly. This lets us: (1) inject default values for input variables the compiler dropped, (2) pre-populate `ctx.computed` with user overrides, and (3) skip computation for pinned nodes. **This is the most fragile workaround** — if the `rac` library changes its executor internals, this code may need updating.
+**Derived node overrides.** The Scala.js `graph.set()` only works on writable facts. To override a derived node, we rebuild the graph dictionary with that fact converted from `Derived` to `Writable`. The `inferWritableType()` function guesses the return type from the expression tree.
 
-**Execution order not topologically sorted.** The compiler's `ir.order` is just file-parse order, not dependency order. Our skip-if-already-computed approach handles this since pinned values are checked before computation.
+**Dictionary cache.** Per-scenario dictionary rebuilds were the dominant cost in simulation runs. We now cache the FactDictionary keyed by `(facts identity, paths-to-promote signature)` so the simulation runner reuses a single dictionary across all scenarios with the same input shape.
 
-### Fact Graph Workarounds
+### RuleSpec
 
-**Scala.js bundle.** The `vendor/factgraph-scala.cjs` file is a 6MB Scala.js bundle compiled from the IRS Direct File project's `fact-graph-scala/` directory. It's a pinned copy — updating it requires rebuilding from the Direct File source. The `.cjs` extension is needed because our project uses ESM.
+**Engine is a Rust binary.** Upstream rewrote the engine in Rust; there's no Python interpreter for RuleSpec anymore. Integration is a subprocess pipe: JSON in via stdin, JSON out via stdout. See `axiom_engine.py`.
 
-**Digest conversion.** The Scala.js engine doesn't accept raw XML. We convert `fast-xml-parser` output into a "digest" format (`{typeName, options, children}` trees) that mirrors Direct File's `processFactsToDigestWrapper.ts`. See `executor.ts`.
+**Imports resolve via repo-name directories.** The engine resolves `us-co:regulations/10-ccr-2506-1/4.401` by looking for a directory named `rulespec-us-co/`. Our content is laid out the same way (`data/rulespec/rulespec-us-co/`) so imports work natively, no symlinks required.
 
-**Derived node overrides.** The Scala.js `graph.set()` only works on writable facts. To override a derived (computed) node, we rebuild the entire graph dictionary with that fact converted from `Derived` to `Writable`. The `inferWritableType()` function guesses the return type from the expression tree, with a fallback to the model's `dataType` field.
+**Person vs Household entity scope.** Most SNAP inputs are Household-scoped (`employee_wages_received`, `rent_amount`, ...), but a handful of eligibility flags are Person-scoped and feed `count_where(member_of_household, ...) > 0` gates (citizenship, SSN compliance, work-requirement status). The wrapper walks the compiled artifact to tag each input by the entity of the rule that consumes it, then routes Person-scoped values to a single `person-1` member with a `member_of_household: [person-1, h1]` relation row. Multi-member households (e.g. one elderly + one working adult with different per-member flags) aren't yet expressible — profiles flatten every Person-scoped input onto the same lone member.
 
-**Dependency resolution.** The XML parser needed several fixes to capture all dependency edges:
+**Query selection.** The auto-query (used when the caller doesn't specify outputs) is filtered to Household-scoped derived rules only. Querying a Person-scoped output against the household entity_id makes the engine evaluate the Person rule against `h1` and error with "missing input X for entity h1". Person-scoped values still come back via the explain-mode trace so the visualizer can render them.
 
-- Relative paths (`../foo`) are resolved against the fact's parent path
-- Named collection items (`/primaryFiler/age65OrOlder`) are fuzzy-matched to wildcard paths (`/filers/*/age65OrOlder`)
-- `optionsPath` attributes on `<Enum>` elements, `<Find path=...>`, and `collection=` attributes are captured as dependencies
+**Profiles.** Each ruleset directory can hold a `profiles.json` file with named input snapshots (e.g. "single working adult", "family of 4 with BCE"). The `/api/rulesets/:id/profiles` endpoints CRUD these; writes are gated on `ALLOW_WRITES`. Colorado SNAP ships with three starter profiles under `data/rulespec/rulespec-us-co/policies/cdhs/snap/profiles.json`.
 
-**Type limitations.** The Scala engine's `GreaterOf`/`LesserOf` nodes cannot compare values of different types (e.g. Rational vs Dollar). Our example XML uses integer math to work around this.
+**Input dtype inference.** RuleSpec doesn't declare input dtypes — they're inferred from formula context. Our wrapper walks the compiled artifact's AST and tags each `kind: input` reference with bool / decimal based on its parent expression kind. This avoids "type mismatch: right side of comparison is not numeric" errors when defaulting unknown inputs.
+
+**Module-summary metadata.** Each RuleSpec module has a `module.summary` describing what the regulation does. We propagate this onto every rule node from that module so each detail panel shows the regulation context, not just the formula.
+
+**source_relation citations.** RuleSpec uses `kind: source_relation` to record cross-rule provenance ("this Colorado regulation restates this federal rule"). These rules don't compute values, but our parser attaches them as `content.citations[]` on the target federal rule so the detail panel can show "Also restated by 10 CCR 2506-1 section …".
 
 ## Environment Variables
 
-| Variable            | Required           | Description                                                                                                                      |
-| ------------------- | ------------------ | -------------------------------------------------------------------------------------------------------------------------------- |
-| `OPEN_ROUTER_KEY`   | For AI chat        | API key from [openrouter.ai](https://openrouter.ai)                                                                              |
-| `AI_MODEL`          | No                 | Model ID (default: `google/gemini-2.5-flash`)                                                                                    |
-| `ALLOW_WRITES`      | For write features | Set to `1` to enable backend write surfaces (Tasks routes mount; Tests/References PUT/POST/DELETE return `200` instead of `403`) |
-| `VITE_ALLOW_WRITES` | For write features | Must mirror `ALLOW_WRITES`. Vite inlines this at build time, so it has to be present in the build environment too                |
+| Variable                  | Required           | Description                                                                                                                      |
+| ------------------------- | ------------------ | -------------------------------------------------------------------------------------------------------------------------------- |
+| `OPEN_ROUTER_KEY`         | For AI chat        | API key from [openrouter.ai](https://openrouter.ai)                                                                              |
+| `AI_MODEL`                | No                 | Model ID (default: `google/gemini-2.5-flash`)                                                                                    |
+| `ALLOW_WRITES`            | For write features | Set to `1` to enable backend write surfaces (Tasks routes mount; Tests/References PUT/POST/DELETE return `200` instead of `403`) |
+| `VITE_ALLOW_WRITES`       | For write features | Must mirror `ALLOW_WRITES`. Vite inlines this at build time                                                                      |
+| `AXIOM_RULES_ENGINE_BIN`  | No                 | Override path to the axiom-rules-engine binary (default: `vendor/axiom-rules-engine/target/release/axiom-rules-engine`)          |
 
-`ALLOW_WRITES` and `VITE_ALLOW_WRITES` must be set together. Without them, the UI runs read-only: the Builder (Tasks) panel is hidden, the Policy panel can't add/edit/remove section links or comments, and the Tests panel hides its CRUD controls (run + load-into-execution stay because they don't mutate). Leave both unset on anything that exposes the server to untrusted users — the Builder spawns the Claude CLI as a child process with `--permission-mode bypassPermissions`.
+`ALLOW_WRITES` and `VITE_ALLOW_WRITES` must be set together. Without them, the UI runs read-only.
 
 Create a `.env` file in the project root (gitignored):
 
@@ -201,27 +232,26 @@ OPEN_ROUTER_KEY=sk-or-v1-your-key-here
 # VITE_ALLOW_WRITES=1
 ```
 
-Restart the backend after editing `.env` — `tsx watch` only watches `src/**`, not `.env`. Vite usually picks up `VITE_*` changes via its own `.env` watcher, but a frontend restart never hurts.
-
 ## Usage
 
 ### Unified Launcher
 
 ```bash
-# Auto-detects format from file extensions
+# Auto-detects format from directory contents
 ./bin/rules-visualizer ./data/factgraph
-./bin/rules-visualizer ./data/rac
-./bin/rules-visualizer ./data/rac --port 8080 --no-open
+./bin/rules-visualizer ./data/rulespec
+./bin/rules-visualizer ./data/rulespec --port 8080 --no-open
 ```
 
 ### Development
 
 ```bash
-npm run dev              # Fact Graph backend + Vite frontend
-npm run dev:rac          # RAC backend + Vite frontend
-npm run dev:frontend     # Vite only (proxies to port 5000)
-npm run dev:factgraph    # Fact Graph backend only
-npm run dev:rac-backend  # RAC backend only
+npm run setup:axiom-engine  # One-time: build the RuleSpec Rust binary
+npm run dev                 # Fact Graph backend + Vite frontend
+npm run dev:axiom           # RuleSpec backend + Vite frontend
+npm run dev:frontend        # Vite only (proxies to port 5000)
+npm run dev:factgraph       # Fact Graph backend only
+npm run dev:axiom-backend   # RuleSpec backend only
 ```
 
 ### Production Build
@@ -231,27 +261,38 @@ npm run build:factgraph
 node packages/factgraph-server/dist/index.js ./data/factgraph
 ```
 
-Builds the frontend and bundles it into the Fact Graph backend as static files.
+Builds the frontend and bundles it into the Fact Graph backend as static files. The RuleSpec backend's production story isn't sorted yet — it still relies on a locally-built Rust binary.
 
 ## Data Directory Layout
 
-Each backend expects a directory where **subdirectories are rulesets**:
+**Fact Graph** — each subdirectory is a ruleset:
 
 ```
 data/factgraph/
-  child-care-subsidy/     # ruleset ID = "child-care-subsidy"
-    subsidy.xml
-  snap/
+  snap-fy2026/        # ruleset ID = "snap-fy2026"
     eligibility.xml
-
-data/rac/
-  child-care-subsidy/
-    subsidy.rac
-  snap/
-    eligibility.rac
+  medicaid/
+    medicaid.xml
 ```
 
-Multiple files within a ruleset are merged with cross-file dependency resolution.
+**RuleSpec** — jurisdiction-scoped repos contributing rules to compositions:
+
+```
+data/rulespec/
+  rulespec-us/                            # federal content (snapshot of TheAxiomFoundation/rulespec-us)
+    policies/usda/snap/fy-2026-cola/...yaml
+    statutes/7/2017/a.yaml
+    ...
+  rulespec-us-co/                         # Colorado content (snapshot of TheAxiomFoundation/rulespec-us-co)
+    policies/cdhs/snap/
+      fy-2026-benefit-calculation.yaml    # ← composition (the ruleset entry point)
+      fy-2026-benefit-calculation.test.yaml
+      profiles.json                       # named input snapshots for this ruleset
+    regulations/10-ccr-2506-1/4.401.yaml
+    ...
+```
+
+The RuleSpec loader scans `data/rulespec/rulespec-<jurisdiction>/policies/**/*.yaml` for files whose `module.kind` is `composition`. Each one becomes a ruleset named after its jurisdiction + path (e.g. `us-co-snap-fy-2026-benefit-calculation`).
 
 ## Tech Stack
 
@@ -259,7 +300,7 @@ Multiple files within a ruleset are merged with cross-file dependency resolution
 
 **Fact Graph Backend:** Node.js, Express 5, TypeScript, fast-xml-parser, Scala.js (execution)
 
-**RAC Backend:** Python 3.10+, aiohttp, [rac](https://github.com/TheAxiomFoundation/rac) library, watchdog
+**RuleSpec Backend:** Python 3.10+, aiohttp, [axiom-rules-engine](https://github.com/TheAxiomFoundation/rac) Rust binary (via subprocess), PyYAML
 
 **AI:** LangChain, OpenRouter (configurable model)
 

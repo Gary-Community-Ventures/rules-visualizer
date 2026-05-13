@@ -1,0 +1,33 @@
+{
+  "applied_files": [
+    {
+      "path": "statutes/7/2015/d/2.yaml",
+      "sha256": "65c6b3fcf92c88aa345a2ce7787c543070b4beb50b7cd122685adf4b1b3e635f"
+    },
+    {
+      "path": "statutes/7/2015/d/2.test.yaml",
+      "sha256": "934a9bdc2aeca87ce4706ba38aff6e957ac0923386933a1af9d77e15679f2bac"
+    }
+  ],
+  "axiom_encode_version": "0.2.64",
+  "backend": "openai",
+  "citation": "7 USC 2015(d)(2)",
+  "context_manifest_file": null,
+  "context_manifest_sha256": null,
+  "generated_at": "2026-05-11T02:50:41.548044+00:00",
+  "generated_output_file": null,
+  "generated_output_root": null,
+  "generated_output_sha256": null,
+  "model": "gpt-5.5",
+  "run_id": "5d7bbbe1",
+  "runner": "openai-gpt-5.5",
+  "schema_version": "axiom-encode/applied-rulespec/v1",
+  "signature": {
+    "algorithm": "hmac-sha256",
+    "key_id": "axiom-encode-apply-v1",
+    "value": "1fc22961063885cea928c79476bb3b5dffed28f5176c1b3565653acf87090e9e"
+  },
+  "tool": "axiom-encode deterministic-maintenance",
+  "trace_file": null,
+  "trace_sha256": null
+}

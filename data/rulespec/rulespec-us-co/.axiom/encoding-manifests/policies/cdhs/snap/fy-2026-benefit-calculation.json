@@ -1,0 +1,33 @@
+{
+  "applied_files": [
+    {
+      "path": "policies/cdhs/snap/fy-2026-benefit-calculation.yaml",
+      "sha256": "f2a1c7ed66834fd0e1d4c4febc2795b0e1dd6afbdba3ae2475a5af0835221101"
+    },
+    {
+      "path": "policies/cdhs/snap/fy-2026-benefit-calculation.test.yaml",
+      "sha256": "df145c2b0238c183b7f6426fe78b7b471d00ea2daee462563f6679644d8f481f"
+    }
+  ],
+  "axiom_encode_version": "0.1.0",
+  "backend": "manual-companion-test-repair",
+  "citation": "",
+  "context_manifest_file": null,
+  "context_manifest_sha256": null,
+  "generated_at": "2026-05-10T22:46:20.941518+00:00",
+  "generated_output_file": null,
+  "generated_output_root": null,
+  "generated_output_sha256": null,
+  "model": "",
+  "run_id": null,
+  "runner": "codex",
+  "schema_version": "axiom-encode/applied-rulespec/v1",
+  "signature": {
+    "algorithm": "hmac-sha256",
+    "key_id": "axiom-encode-apply-v1",
+    "value": "c10956e8032c4a4c86fd7170f6ca8065f5d7b9cad6d061ef29e545b12a0a1516"
+  },
+  "tool": "axiom-encode companion-test-coverage",
+  "trace_file": null,
+  "trace_sha256": null
+}
