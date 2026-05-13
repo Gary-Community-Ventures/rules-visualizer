@@ -56,6 +56,7 @@ type ParsedFact = {
   module: string // which module file this came from
   raw: Record<string, unknown>
   logic?: string // raw XML for this <Fact> block
+  placeholderLogic?: string // raw XML inside <Placeholder>…</Placeholder>
 }
 
 // Node IDs are just the fact's path. Paths are already unique within a
@@ -120,6 +121,9 @@ export function parseFactGraphModules(
     // Attach raw XML source
     if (fact.logic) {
       content.logic = fact.logic
+    }
+    if (fact.placeholderLogic !== undefined) {
+      content.placeholderLogic = fact.placeholderLogic
     }
 
     // Store human-readable <Name> as label on content
@@ -307,7 +311,10 @@ function extractLogicBlocks(xml: string): Record<string, string> {
 
     const factBody = xml.slice(factStart, factEnd)
 
-    // Extract inner content of <Derived>...</Derived> or <Writable>...</Writable>
+    // Extract inner content of <Derived>...</Derived> or <Writable>...</Writable>.
+    // <Placeholder>'s inner content is captured separately by
+    // extractPlaceholderBlocks and surfaced in the node panel's Advanced
+    // section rather than mixed into the main logic view.
     for (const tag of ['Derived', 'Writable']) {
       const openTag = `<${tag}>`
       const closeTag = `</${tag}>`
@@ -325,6 +332,51 @@ function extractLogicBlocks(xml: string): Record<string, string> {
     }
   }
 
+  return blocks
+}
+
+// Capture the inner content of `<Placeholder>…</Placeholder>` for each fact,
+// keyed by fact path. Mirrors extractLogicBlocks' regex/depth-walk strategy
+// so the same fact-body bounding logic applies. Self-closing
+// `<Placeholder ... />` is captured as an empty string (engine ignores it
+// anyway, but recording presence lets the FE show "Placeholder: (none)").
+function extractPlaceholderBlocks(xml: string): Record<string, string> {
+  const blocks: Record<string, string> = {}
+  const factRegex = /<Fact\s[^>]*path="([^"]+)"[^>]*>/g
+  let match: RegExpExecArray | null
+  while ((match = factRegex.exec(xml)) !== null) {
+    const path = match[1]
+    const factStart = match.index
+    let depth = 1
+    let searchIdx = factStart + match[0].length
+    let factEnd = xml.length
+    while (depth > 0 && searchIdx < xml.length) {
+      const nextOpen = xml.indexOf('<Fact', searchIdx)
+      const nextClose = xml.indexOf('</Fact>', searchIdx)
+      if (nextClose === -1) break
+      if (nextOpen !== -1 && nextOpen < nextClose) {
+        depth++
+        searchIdx = nextOpen + 5
+      } else {
+        depth--
+        if (depth === 0) factEnd = nextClose + '</Fact>'.length
+        searchIdx = nextClose + '</Fact>'.length
+      }
+    }
+    const factBody = xml.slice(factStart, factEnd)
+    const openIdx = factBody.indexOf('<Placeholder')
+    if (openIdx === -1) continue
+    const tagEnd = factBody.indexOf('>', openIdx)
+    if (tagEnd === -1) continue
+    // Self-closing form: <Placeholder/> — record presence as empty string.
+    if (factBody.charAt(tagEnd - 1) === '/') {
+      blocks[path] = ''
+      continue
+    }
+    const closeIdx = factBody.indexOf('</Placeholder>', tagEnd)
+    if (closeIdx === -1) continue
+    blocks[path] = dedentXml(factBody.slice(tagEnd + 1, closeIdx))
+  }
   return blocks
 }
 
@@ -350,6 +402,7 @@ function parseModuleXml(xml: string, moduleName: string): ParsedFact[] {
 
   // Extract raw XML blocks for source display
   const logicBlocks = extractLogicBlocks(xml)
+  const placeholderBlocks = extractPlaceholderBlocks(xml)
 
   const facts: ParsedFact[] = []
   for (const el of factElements) {
@@ -364,6 +417,7 @@ function parseModuleXml(xml: string, moduleName: string): ParsedFact[] {
       module: moduleName,
       raw: fact,
       logic: logicBlocks[path],
+      placeholderLogic: placeholderBlocks[path],
     })
   }
 

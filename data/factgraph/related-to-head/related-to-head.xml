@@ -22,11 +22,18 @@
       <Name>Is related to head</Name>
       <Description>True when this member either IS the head, OR is directly related to the head, OR is related to someone who is (transitively) related to the head.</Description>
       <Derived>
-        <Any>
-          <Dependency path="../isHeadOfHousehold" />
-          <Dependency path="../relatedTo/isHeadOfHousehold" />
-          <Dependency path="../relatedTo/isRelatedToHead" />
-        </Any>
+        <All>
+          <IsComplete>
+            <Any>
+              <Dependency path="../isHeadOfHousehold" />
+              <Dependency path="../relatedTo/isRelatedToHead" />
+            </Any>
+          </IsComplete>
+          <Any>
+            <Dependency path="../isHeadOfHousehold" />
+            <Dependency path="../relatedTo/isRelatedToHead" />
+          </Any>
+        </All>
       </Derived>
     </Fact>
   </Facts>

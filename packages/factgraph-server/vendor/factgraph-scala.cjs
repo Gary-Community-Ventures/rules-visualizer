@@ -6784,13 +6784,13 @@ function $f_Lgov_irs_factgraph_DefaultFactDictConfig__$init$__V($thiz) {
 }
 function $f_Lgov_irs_factgraph_DefaultFactDictConfig__apply__Lgov_irs_factgraph_FactDictionary($thiz) {
   var dictionary = new $c_Lgov_irs_factgraph_FactDictionary();
-  $m_Lgov_irs_factgraph_FactDefinition$().apply__F1__Lgov_irs_factgraph_Path__F1__s_xml_NodeSeq__Lgov_irs_factgraph_FactDictionary__Lgov_irs_factgraph_FactDefinition(new $c_sjsr_AnonFunction1_$$Lambda$3aa60c34ef08a878abffbf4628007cc68fa3c7ab(((evidence$1) => {
+  $m_Lgov_irs_factgraph_FactDefinition$().apply__F1__Lgov_irs_factgraph_Path__F1__s_xml_NodeSeq__Lgov_irs_factgraph_FactDictionary__s_Option__Lgov_irs_factgraph_FactDefinition(new $c_sjsr_AnonFunction1_$$Lambda$3aa60c34ef08a878abffbf4628007cc68fa3c7ab(((evidence$1) => {
     $as_Lgov_irs_factgraph_Factual(evidence$1);
     return new $c_Lgov_irs_factgraph_compnodes_RootNode();
   })), $m_Lgov_irs_factgraph_Path$().Lgov_irs_factgraph_Path$__f_Root, new $c_sjsr_AnonFunction1_$$Lambda$3aa60c34ef08a878abffbf4628007cc68fa3c7ab(((evidence$2) => {
     $as_Lgov_irs_factgraph_Factual(evidence$2);
     return $as_sci_Seq($m_sci_Seq$().empty__sc_SeqOps());
-  })), $m_s_xml_NodeSeq$().s_xml_NodeSeq$__f_Empty, dictionary);
+  })), $m_s_xml_NodeSeq$().s_xml_NodeSeq$__f_Empty, dictionary, $m_s_None$());
   return dictionary;
 }
 function $f_Lgov_irs_factgraph_DefaultFactDictConfig__fromConfig__Lgov_irs_factgraph_definitions_FactDictionaryConfigTrait__Lgov_irs_factgraph_FactDictionary($thiz, e) {
@@ -6912,39 +6912,51 @@ $c_Lgov_irs_factgraph_Expression$dependencies$.prototype.result__Lgov_irs_factgr
 });
 $c_Lgov_irs_factgraph_Expression$dependencies$.prototype.thunk__Lgov_irs_factgraph_monads_Result__Lgov_irs_factgraph_Path__Lgov_irs_factgraph_Path__Lgov_irs_factgraph_monads_MaybeVector = (function(result, _1, _2) {
   if ((result !== null)) {
-    var x173 = $m_Lgov_irs_factgraph_monads_Result$().unapply__Lgov_irs_factgraph_monads_Result__s_Option(result);
-    if ((!$n(x173).isEmpty__Z())) {
-      var x174 = $as_T2($n(x173).get__O());
-      var fact = $as_Lgov_irs_factgraph_Factual($n(x174)._1__O());
-      var complete = $uZ($n(x174)._2__O());
-      matchResult12: {
-        var thunks;
-        var x171 = $n(fact).size__Lgov_irs_factgraph_Factual$Size();
-        var x = $s_Lgov_irs_factgraph_Factual$Size$__Single__Lgov_irs_factgraph_Factual$Size();
-        if ((x === null)) {
-          var $x_1 = (x171 === null);
-        } else {
-          var this$1 = $n(x);
-          var $x_1 = (this$1 === x171);
+    var x175 = $m_Lgov_irs_factgraph_monads_Result$().unapply__Lgov_irs_factgraph_monads_Result__s_Option(result);
+    if ((!$n(x175).isEmpty__Z())) {
+      var x176 = $as_T2($n(x175).get__O());
+      var fact = $as_Lgov_irs_factgraph_Factual($n(x176)._1__O());
+      var complete = $uZ($n(x176)._2__O());
+      if ((fact instanceof $c_Lgov_irs_factgraph_FactDefinition)) {
+        var fd = $as_Lgov_irs_factgraph_FactDefinition(fact);
+        var sizeInProgress = $n($n($n(fd).Lgov_irs_factgraph_FactDefinition__f_dictionary).Lgov_irs_factgraph_FactDictionary__f_sizeInProgress).contains__O__Z($n(fd).Lgov_irs_factgraph_FactDefinition__f_path);
+      } else {
+        var sizeInProgress = false;
+      }
+      if (sizeInProgress) {
+        var f = new $c_sjsr_AnonFunction0_$$Lambda$92a2e254bbb9c06a0a02fc31abab59c51c18ecc1((() => $as_Lgov_irs_factgraph_monads_Result($n($n(fact).get__Lgov_irs_factgraph_monads_MaybeVector()).apply__I__O(0))));
+        var x = new $c_Lgov_irs_factgraph_monads_Thunk(f);
+        var thunks = new $c_Lgov_irs_factgraph_monads_MaybeVector$Single(x);
+      } else {
+        matchResult13: {
+          var thunks;
+          var x173 = $n(fact).size__Lgov_irs_factgraph_Factual$Size();
+          var x$1 = $s_Lgov_irs_factgraph_Factual$Size$__Single__Lgov_irs_factgraph_Factual$Size();
+          if ((x$1 === null)) {
+            var $x_1 = (x173 === null);
+          } else {
+            var this$4 = $n(x$1);
+            var $x_1 = (this$4 === x173);
+          }
+          if ($x_1) {
+            var f$1 = new $c_sjsr_AnonFunction0_$$Lambda$92a2e254bbb9c06a0a02fc31abab59c51c18ecc1((() => $as_Lgov_irs_factgraph_monads_Result($n($n(fact).get__Lgov_irs_factgraph_monads_MaybeVector()).apply__I__O(0))));
+            var x$2 = new $c_Lgov_irs_factgraph_monads_Thunk(f$1);
+            var thunks = new $c_Lgov_irs_factgraph_monads_MaybeVector$Single(x$2);
+            break matchResult13;
+          }
+          var x$3 = $s_Lgov_irs_factgraph_Factual$Size$__Multiple__Lgov_irs_factgraph_Factual$Size();
+          if ((x$3 === null)) {
+            var $x_2 = (x173 === null);
+          } else {
+            var this$8 = $n(x$3);
+            var $x_2 = (this$8 === x173);
+          }
+          if ($x_2) {
+            var thunks = $n(fact).getThunk__Lgov_irs_factgraph_monads_MaybeVector();
+            break matchResult13;
+          }
+          throw new $c_s_MatchError(x173);
         }
-        if ($x_1) {
-          var f = new $c_sjsr_AnonFunction0_$$Lambda$92a2e254bbb9c06a0a02fc31abab59c51c18ecc1((() => $as_Lgov_irs_factgraph_monads_Result($n($n(fact).get__Lgov_irs_factgraph_monads_MaybeVector()).apply__I__O(0))));
-          var x$1 = new $c_Lgov_irs_factgraph_monads_Thunk(f);
-          var thunks = new $c_Lgov_irs_factgraph_monads_MaybeVector$Single(x$1);
-          break matchResult12;
-        }
-        var x$3 = $s_Lgov_irs_factgraph_Factual$Size$__Multiple__Lgov_irs_factgraph_Factual$Size();
-        if ((x$3 === null)) {
-          var $x_2 = (x171 === null);
-        } else {
-          var this$5 = $n(x$3);
-          var $x_2 = (this$5 === x171);
-        }
-        if ($x_2) {
-          var thunks = $n(fact).getThunk__Lgov_irs_factgraph_monads_MaybeVector();
-          break matchResult12;
-        }
-        throw new $c_s_MatchError(x171);
       }
       return ((!complete) ? $n(thunks).map__F1__Lgov_irs_factgraph_monads_MaybeVector(new $c_sjsr_AnonFunction1_$$Lambda$3aa60c34ef08a878abffbf4628007cc68fa3c7ab(((thunk) => {
         var thunk$1 = $as_Lgov_irs_factgraph_monads_Thunk(thunk);
@@ -6955,17 +6967,17 @@ $c_Lgov_irs_factgraph_Expression$dependencies$.prototype.thunk__Lgov_irs_factgra
       }))) : thunks);
     }
   }
-  var f$1 = new $c_sjsr_AnonFunction0_$$Lambda$92a2e254bbb9c06a0a02fc31abab59c51c18ecc1((() => $s_Lgov_irs_factgraph_monads_Result$__Incomplete__Lgov_irs_factgraph_monads_Result()));
-  var x$2 = new $c_Lgov_irs_factgraph_monads_Thunk(f$1);
-  return new $c_Lgov_irs_factgraph_monads_MaybeVector$Single(x$2);
+  var f$2 = new $c_sjsr_AnonFunction0_$$Lambda$92a2e254bbb9c06a0a02fc31abab59c51c18ecc1((() => $s_Lgov_irs_factgraph_monads_Result$__Incomplete__Lgov_irs_factgraph_monads_Result()));
+  var x$4 = new $c_Lgov_irs_factgraph_monads_Thunk(f$2);
+  return new $c_Lgov_irs_factgraph_monads_MaybeVector$Single(x$4);
 });
 $c_Lgov_irs_factgraph_Expression$dependencies$.prototype.explain__Lgov_irs_factgraph_monads_Result__Lgov_irs_factgraph_Path__Lgov_irs_factgraph_Path__Lgov_irs_factgraph_monads_MaybeVector = (function(result, source, target) {
   if ((result !== null)) {
-    var x178 = $m_Lgov_irs_factgraph_monads_Result$().unapply__Lgov_irs_factgraph_monads_Result__s_Option(result);
-    if ((!$n(x178).isEmpty__Z())) {
-      var x179 = $as_T2($n(x178).get__O());
-      var fact = $as_Lgov_irs_factgraph_Factual($n(x179)._1__O());
-      var complete = $uZ($n(x179)._2__O());
+    var x180 = $m_Lgov_irs_factgraph_monads_Result$().unapply__Lgov_irs_factgraph_monads_Result__s_Option(result);
+    if ((!$n(x180).isEmpty__Z())) {
+      var x181 = $as_T2($n(x180).get__O());
+      var fact = $as_Lgov_irs_factgraph_Factual($n(x181)._1__O());
+      var complete = $uZ($n(x181)._2__O());
       return $n($n(fact).explain__Lgov_irs_factgraph_monads_MaybeVector()).map__F1__Lgov_irs_factgraph_monads_MaybeVector(new $c_sjsr_AnonFunction1_$$Lambda$3aa60c34ef08a878abffbf4628007cc68fa3c7ab(((explanation) => {
         var explanation$1 = $as_Lgov_irs_factgraph_Explanation(explanation);
         var childList = new $c_sci_$colon$colon(new $c_sci_$colon$colon(explanation$1, $m_sci_Nil$()), $m_sci_Nil$());
@@ -6984,29 +6996,29 @@ function $p_Lgov_irs_factgraph_Expression$switches$__resultRecurse__sci_List__Z_
   var accComplete$tailLocal1 = accComplete;
   var cases$tailLocal1 = cases;
   while (true) {
-    var x185 = cases$tailLocal1;
-    if ((x185 instanceof $c_sci_$colon$colon)) {
-      var x186 = $as_sci_$colon$colon(x185);
-      var x187 = $as_T2($n(x186).sci_$colon$colon__f_head);
-      var x188 = $n(x186).sci_$colon$colon__f_next;
-      if ((x187 !== null)) {
-        var bool = $as_Lgov_irs_factgraph_monads_Thunk($n(x187)._1__O());
-        var a = $as_Lgov_irs_factgraph_monads_Thunk($n(x187)._2__O());
+    var x187 = cases$tailLocal1;
+    if ((x187 instanceof $c_sci_$colon$colon)) {
+      var x188 = $as_sci_$colon$colon(x187);
+      var x189 = $as_T2($n(x188).sci_$colon$colon__f_head);
+      var x190 = $n(x188).sci_$colon$colon__f_next;
+      if ((x189 !== null)) {
+        var bool = $as_Lgov_irs_factgraph_monads_Thunk($n(x189)._1__O());
+        var a = $as_Lgov_irs_factgraph_monads_Thunk($n(x189)._2__O());
         var complete = ($n($as_Lgov_irs_factgraph_monads_Result($n(bool).get__O())).complete__Z() && accComplete$tailLocal1);
-        var x182 = $n($as_Lgov_irs_factgraph_monads_Result($n(bool).get__O())).value__s_Option();
-        if (((x182 instanceof $c_s_Some) && ($uZ($n($as_s_Some(x182)).s_Some__f_value) === true))) {
+        var x184 = $n($as_Lgov_irs_factgraph_monads_Result($n(bool).get__O())).value__s_Option();
+        if (((x184 instanceof $c_s_Some) && ($uZ($n($as_s_Some(x184)).s_Some__f_value) === true))) {
           return (complete ? $as_Lgov_irs_factgraph_monads_Result($n(a).get__O()) : $n($as_Lgov_irs_factgraph_monads_Result($n(a).get__O())).asPlaceholder__Lgov_irs_factgraph_monads_Result());
         }
-        cases$tailLocal1 = x188;
+        cases$tailLocal1 = x190;
         accComplete$tailLocal1 = complete;
         continue;
       }
     }
     var x = $m_sci_Nil$();
-    if (x.equals__O__Z(x185)) {
+    if (x.equals__O__Z(x187)) {
       return $s_Lgov_irs_factgraph_monads_Result$__Incomplete__Lgov_irs_factgraph_monads_Result();
     }
-    throw new $c_s_MatchError(x185);
+    throw new $c_s_MatchError(x187);
   }
 }
 /** @constructor */
@@ -7030,32 +7042,32 @@ $c_Lgov_irs_factgraph_Expression$switches$.prototype.explainRecurse__sci_List__L
   var explanation$tailLocal1 = explanation;
   var cases$tailLocal2 = cases;
   while (true) {
-    var x198 = cases$tailLocal2;
-    if ((x198 instanceof $c_sci_$colon$colon)) {
-      var x199 = $as_sci_$colon$colon(x198);
-      var x200 = $as_T3($n(x199).sci_$colon$colon__f_head);
-      var x201 = $n(x199).sci_$colon$colon__f_next;
-      if ((x200 !== null)) {
-        var bool = $as_Lgov_irs_factgraph_monads_Thunk($n(x200).T3__f__1);
-        var boolExp = $as_Lgov_irs_factgraph_Explanation($n(x200).T3__f__2);
-        var aExp = $as_Lgov_irs_factgraph_Explanation($n(x200).T3__f__3);
-        var x191 = $as_Lgov_irs_factgraph_monads_Result($n(bool).get__O());
-        if ((x191 instanceof $c_Lgov_irs_factgraph_monads_Result$Complete)) {
-          var x$1 = $as_Lgov_irs_factgraph_monads_Result$Complete(x191);
+    var x200 = cases$tailLocal2;
+    if ((x200 instanceof $c_sci_$colon$colon)) {
+      var x201 = $as_sci_$colon$colon(x200);
+      var x202 = $as_T3($n(x201).sci_$colon$colon__f_head);
+      var x203 = $n(x201).sci_$colon$colon__f_next;
+      if ((x202 !== null)) {
+        var bool = $as_Lgov_irs_factgraph_monads_Thunk($n(x202).T3__f__1);
+        var boolExp = $as_Lgov_irs_factgraph_Explanation($n(x202).T3__f__2);
+        var aExp = $as_Lgov_irs_factgraph_Explanation($n(x202).T3__f__3);
+        var x193 = $as_Lgov_irs_factgraph_monads_Result($n(bool).get__O());
+        if ((x193 instanceof $c_Lgov_irs_factgraph_monads_Result$Complete)) {
+          var x$1 = $as_Lgov_irs_factgraph_monads_Result$Complete(x193);
           var this$2 = $n(x$1);
-          var x197 = $uZ(this$2.Lgov_irs_factgraph_monads_Result$Complete__f_v);
-          if ((x197 === true)) {
+          var x199 = $uZ(this$2.Lgov_irs_factgraph_monads_Result$Complete__f_v);
+          if ((x199 === true)) {
             var this$3 = $n($n(explanation$tailLocal1).children__sci_List());
             var elem = new $c_sci_$colon$colon(boolExp, new $c_sci_$colon$colon(aExp, $m_sci_Nil$()));
             var childList = $as_sci_List($f_sc_StrictOptimizedSeqOps__appended__O__O(this$3, elem));
             return new $c_Lgov_irs_factgraph_Explanation$Operation(childList);
           }
-          if ((x197 === false)) {
+          if ((x199 === false)) {
             var this$5 = $n($n(explanation$tailLocal1).children__sci_List());
             var elem$1 = new $c_sci_$colon$colon(boolExp, $m_sci_Nil$());
             var childList$1 = $as_sci_List($f_sc_StrictOptimizedSeqOps__appended__O__O(this$5, elem$1));
             var explanation$tailLocal1$tmp1 = new $c_Lgov_irs_factgraph_Explanation$Operation(childList$1);
-            cases$tailLocal2 = x201;
+            cases$tailLocal2 = x203;
             explanation$tailLocal1 = explanation$tailLocal1$tmp1;
             continue;
           }
@@ -7067,10 +7079,10 @@ $c_Lgov_irs_factgraph_Expression$switches$.prototype.explainRecurse__sci_List__L
       }
     }
     var x = $m_sci_Nil$();
-    if (x.equals__O__Z(x198)) {
+    if (x.equals__O__Z(x200)) {
       return explanation$tailLocal1;
     }
-    throw new $c_s_MatchError(x198);
+    throw new $c_s_MatchError(x200);
   }
 });
 var $d_Lgov_irs_factgraph_Expression$switches$ = new $TypeData().initClass($c_Lgov_irs_factgraph_Expression$switches$, "gov.irs.factgraph.Expression$switches$", ({
@@ -7115,9 +7127,9 @@ $c_Lgov_irs_factgraph_FactDefinition$.prototype.constructor = $c_Lgov_irs_factgr
 function $h_Lgov_irs_factgraph_FactDefinition$() {
 }
 $h_Lgov_irs_factgraph_FactDefinition$.prototype = $c_Lgov_irs_factgraph_FactDefinition$.prototype;
-$c_Lgov_irs_factgraph_FactDefinition$.prototype.apply__F1__Lgov_irs_factgraph_Path__F1__s_xml_NodeSeq__Lgov_irs_factgraph_FactDictionary__Lgov_irs_factgraph_FactDefinition = (function(cnBuilder, path, limits, rawXml, dictionary) {
+$c_Lgov_irs_factgraph_FactDefinition$.prototype.apply__F1__Lgov_irs_factgraph_Path__F1__s_xml_NodeSeq__Lgov_irs_factgraph_FactDictionary__s_Option__Lgov_irs_factgraph_FactDefinition = (function(cnBuilder, path, limits, rawXml, dictionary, config) {
   $m_s_Predef$().require__Z__V($n(path).isAbstract__Z());
-  var definition = new $c_Lgov_irs_factgraph_FactDefinition(cnBuilder, path, limits, dictionary);
+  var definition = new $c_Lgov_irs_factgraph_FactDefinition(cnBuilder, path, limits, dictionary, config);
   $n(dictionary).addDefinition__Lgov_irs_factgraph_FactDefinition__V(definition);
   $n(dictionary).addDefinitionAsNodes__Lgov_irs_factgraph_Path__s_xml_NodeSeq__V(path, rawXml);
   return definition;
@@ -7182,7 +7194,7 @@ $c_Lgov_irs_factgraph_FactDefinition$.prototype.fromConfig__Lgov_irs_factgraph_d
       return $as_sci_Seq($m_sci_Seq$().empty__sc_SeqOps());
     }
   }));
-  return this.apply__F1__Lgov_irs_factgraph_Path__F1__s_xml_NodeSeq__Lgov_irs_factgraph_FactDictionary__Lgov_irs_factgraph_FactDefinition(cnBuilder, $m_Lgov_irs_factgraph_Path$().apply__T__Lgov_irs_factgraph_Path($n(e).Lgov_irs_factgraph_definitions_fact_FactConfigElement__f_path), limits, $n(e).Lgov_irs_factgraph_definitions_fact_FactConfigElement__f_node, x$2);
+  return this.apply__F1__Lgov_irs_factgraph_Path__F1__s_xml_NodeSeq__Lgov_irs_factgraph_FactDictionary__s_Option__Lgov_irs_factgraph_FactDefinition(cnBuilder, $m_Lgov_irs_factgraph_Path$().apply__T__Lgov_irs_factgraph_Path($n(e).Lgov_irs_factgraph_definitions_fact_FactConfigElement__f_path), limits, $n(e).Lgov_irs_factgraph_definitions_fact_FactConfigElement__f_node, x$2, new $c_s_Some(e));
 });
 var $d_Lgov_irs_factgraph_FactDefinition$ = new $TypeData().initClass($c_Lgov_irs_factgraph_FactDefinition$, "gov.irs.factgraph.FactDefinition$", ({
   Lgov_irs_factgraph_FactDefinition$: 1
@@ -7244,11 +7256,15 @@ function $c_Lgov_irs_factgraph_FactDictionary() {
   this.Lgov_irs_factgraph_FactDictionary__f_UUID_REGEX = null;
   this.Lgov_irs_factgraph_FactDictionary__f_definitions = null;
   this.Lgov_irs_factgraph_FactDictionary__f_definitionsAsNodes = null;
+  this.Lgov_irs_factgraph_FactDictionary__f_sizeInProgress = null;
+  this.Lgov_irs_factgraph_FactDictionary__f_valueInProgress = null;
   this.Lgov_irs_factgraph_FactDictionary__f_frozen = false;
   this.Lgov_irs_factgraph_FactDictionary__f_meta = null;
   this.Lgov_irs_factgraph_FactDictionary__f_UUID_REGEX = $ct_s_util_matching_Regex__T__sci_Seq__(new $c_s_util_matching_Regex(), "(?i)#[0-9A-F]{8}-[0-9A-F]{4}-[1-5][0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}", $m_sci_Nil$());
   this.Lgov_irs_factgraph_FactDictionary__f_definitions = $as_scm_Map($m_scm_Map$().apply__sci_Seq__O($m_sr_ScalaRunTime$().wrapRefArray__AO__sci_ArraySeq(new ($d_T2.getArrayOf().constr)([]))));
   this.Lgov_irs_factgraph_FactDictionary__f_definitionsAsNodes = $as_scm_Map($m_scm_Map$().apply__sci_Seq__O($m_sr_ScalaRunTime$().wrapRefArray__AO__sci_ArraySeq(new ($d_T2.getArrayOf().constr)([]))));
+  this.Lgov_irs_factgraph_FactDictionary__f_sizeInProgress = $as_scm_Set($m_scm_Set$().apply__sci_Seq__O($m_sr_ScalaRunTime$().wrapRefArray__AO__sci_ArraySeq(new ($d_Lgov_irs_factgraph_Path.getArrayOf().constr)([]))));
+  this.Lgov_irs_factgraph_FactDictionary__f_valueInProgress = $as_scm_Set($m_scm_Set$().apply__sci_Seq__O($m_sr_ScalaRunTime$().wrapRefArray__AO__sci_ArraySeq(new ($d_Lgov_irs_factgraph_Path.getArrayOf().constr)([]))));
   this.Lgov_irs_factgraph_FactDictionary__f_frozen = false;
   this.Lgov_irs_factgraph_FactDictionary__f_meta = $ct_Lgov_irs_factgraph_Meta__T__Z__(new $c_Lgov_irs_factgraph_Meta(), "Invalid", false);
 }
@@ -7331,16 +7347,16 @@ $c_Lgov_irs_factgraph_FactDictionary.prototype.addMeta__Lgov_irs_factgraph_defin
   }
   this.Lgov_irs_factgraph_FactDictionary__f_meta = metaConfigTrait;
 });
+$c_Lgov_irs_factgraph_FactDictionary.prototype.getOptionsPathForEnum = (function(arg) {
+  var prep0 = $as_T(arg);
+  return this.getOptionsPathForEnum__T__s_Option(prep0);
+});
 $c_Lgov_irs_factgraph_FactDictionary.prototype.getMeta = (function() {
   return this.Lgov_irs_factgraph_FactDictionary__f_meta;
 });
 $c_Lgov_irs_factgraph_FactDictionary.prototype.getDefinition = (function(arg) {
   var prep0 = $as_T(arg);
   return this.apply__T__Lgov_irs_factgraph_FactDefinition(prep0);
-});
-$c_Lgov_irs_factgraph_FactDictionary.prototype.getOptionsPathForEnum = (function(arg) {
-  var prep0 = $as_T(arg);
-  return this.getOptionsPathForEnum__T__s_Option(prep0);
 });
 function $as_Lgov_irs_factgraph_FactDictionary(obj) {
   return (((obj instanceof $c_Lgov_irs_factgraph_FactDictionary) || (obj === null)) ? obj : $throwClassCastException(obj, "gov.irs.factgraph.FactDictionary"));
@@ -7390,6 +7406,7 @@ function $ct_Lgov_irs_factgraph_Graph__Lgov_irs_factgraph_FactDictionary__Lgov_i
   var this$2 = $m_scm_HashMap$();
   var elems$1 = $m_sr_ScalaRunTime$().wrapRefArray__AO__sci_ArraySeq(new ($d_T2.getArrayOf().constr)([]));
   $thiz.Lgov_irs_factgraph_Graph__f_resultCache = this$2.from__sc_IterableOnce__scm_HashMap(elems$1);
+  $thiz.Lgov_irs_factgraph_Graph__f_inProgress = $as_scm_Set($m_scm_Set$().apply__sci_Seq__O($m_sr_ScalaRunTime$().wrapRefArray__AO__sci_ArraySeq(new ($d_Lgov_irs_factgraph_Path.getArrayOf().constr)([]))));
   $thiz.Lgov_irs_factgraph_Graph__f_overriddenFacts = $as_scm_Map($m_scm_Map$().apply__sci_Seq__O($m_sr_ScalaRunTime$().wrapRefArray__AO__sci_ArraySeq(new ($d_T2.getArrayOf().constr)([]))));
   return $thiz;
 }
@@ -7509,6 +7526,7 @@ function $c_Lgov_irs_factgraph_Graph() {
   this.Lgov_irs_factgraph_Graph__f_root = null;
   this.Lgov_irs_factgraph_Graph__f_factCache = null;
   this.Lgov_irs_factgraph_Graph__f_resultCache = null;
+  this.Lgov_irs_factgraph_Graph__f_inProgress = null;
   this.Lgov_irs_factgraph_Graph__f_overriddenFacts = null;
 }
 $c_Lgov_irs_factgraph_Graph.prototype = new $h_O();
@@ -7970,62 +7988,62 @@ $c_Lgov_irs_factgraph_Graph.prototype.debugFactRecurse__T__V = (function(origina
   var this$27 = $n(this$26.out__Ljava_io_PrintStream());
   this$27.java$lang$JSConsoleBasedPrintStream$$printString__T__V((x$1 + "\n"));
 });
-$c_Lgov_irs_factgraph_Graph.prototype.removeFromCollection = (function(arg, arg$2) {
-  var prep0 = $as_T(arg);
-  var prep1 = $as_T(arg$2);
-  this.removeFromCollection__T__T__V(prep0, prep1);
-});
-$c_Lgov_irs_factgraph_Graph.prototype.getWithPath = (function(arg) {
+$c_Lgov_irs_factgraph_Graph.prototype.deleteWithPath = (function(arg) {
   var prep0 = $as_Lgov_irs_factgraph_Path(arg);
-  return this.get__Lgov_irs_factgraph_Path__Lgov_irs_factgraph_monads_Result(prep0);
-});
-$c_Lgov_irs_factgraph_Graph.prototype.get = (function(arg) {
-  var prep0 = $as_T(arg);
-  return this.get__T__Lgov_irs_factgraph_monads_Result(prep0);
+  return this.delete__Lgov_irs_factgraph_Path__T2(prep0);
 });
 $c_Lgov_irs_factgraph_Graph.prototype.addToCollection = (function(arg, arg$2) {
   var prep0 = $as_T(arg);
   var prep1 = $as_T(arg$2);
   this.addToCollection__T__T__V(prep0, prep1);
 });
-$c_Lgov_irs_factgraph_Graph.prototype.getVectWithPath = (function(arg) {
-  var prep0 = $as_Lgov_irs_factgraph_Path(arg);
-  return this.getVect__Lgov_irs_factgraph_Path__Lgov_irs_factgraph_monads_MaybeVector(prep0);
-});
-$c_Lgov_irs_factgraph_Graph.prototype.debugFactRecurse = (function(arg) {
-  var prep0 = $as_T(arg);
-  this.debugFactRecurse__T__V(prep0);
-});
-$c_Lgov_irs_factgraph_Graph.prototype.getDictionary = (function() {
-  return this.Lgov_irs_factgraph_JSGraph__f_dictionary;
-});
-$c_Lgov_irs_factgraph_Graph.prototype.deleteWithPath = (function(arg) {
-  var prep0 = $as_Lgov_irs_factgraph_Path(arg);
-  return this.delete__Lgov_irs_factgraph_Path__T2(prep0);
-});
-$c_Lgov_irs_factgraph_Graph.prototype.set = (function(arg, arg$2) {
-  var prep0 = $as_T(arg);
-  return this.set__T__O__T2(prep0, arg$2);
-});
-$c_Lgov_irs_factgraph_Graph.prototype.getVect = (function(arg) {
-  var prep0 = $as_T(arg);
-  return this.getVect__T__Lgov_irs_factgraph_monads_MaybeVector(prep0);
-});
 $c_Lgov_irs_factgraph_Graph.prototype.explainWithPath = (function(arg) {
   var prep0 = $as_Lgov_irs_factgraph_Path(arg);
   return this.explain__Lgov_irs_factgraph_Path__Lgov_irs_factgraph_Explanation(prep0);
-});
-$c_Lgov_irs_factgraph_Graph.prototype.delete = (function(arg) {
-  var prep0 = $as_T(arg);
-  return this.delete__T__T2(prep0);
 });
 $c_Lgov_irs_factgraph_Graph.prototype.explain = (function(arg) {
   var prep0 = $as_T(arg);
   return this.explain__T__Lgov_irs_factgraph_Explanation(prep0);
 });
+$c_Lgov_irs_factgraph_Graph.prototype.getDictionary = (function() {
+  return this.Lgov_irs_factgraph_JSGraph__f_dictionary;
+});
+$c_Lgov_irs_factgraph_Graph.prototype.getWithPath = (function(arg) {
+  var prep0 = $as_Lgov_irs_factgraph_Path(arg);
+  return this.get__Lgov_irs_factgraph_Path__Lgov_irs_factgraph_monads_Result(prep0);
+});
+$c_Lgov_irs_factgraph_Graph.prototype.removeFromCollection = (function(arg, arg$2) {
+  var prep0 = $as_T(arg);
+  var prep1 = $as_T(arg$2);
+  this.removeFromCollection__T__T__V(prep0, prep1);
+});
+$c_Lgov_irs_factgraph_Graph.prototype.debugFactRecurse = (function(arg) {
+  var prep0 = $as_T(arg);
+  this.debugFactRecurse__T__V(prep0);
+});
+$c_Lgov_irs_factgraph_Graph.prototype.get = (function(arg) {
+  var prep0 = $as_T(arg);
+  return this.get__T__Lgov_irs_factgraph_monads_Result(prep0);
+});
+$c_Lgov_irs_factgraph_Graph.prototype.getVect = (function(arg) {
+  var prep0 = $as_T(arg);
+  return this.getVect__T__Lgov_irs_factgraph_monads_MaybeVector(prep0);
+});
 $c_Lgov_irs_factgraph_Graph.prototype.debugFact = (function(arg) {
   var prep0 = $as_T(arg);
   this.debugFact__T__V(prep0);
+});
+$c_Lgov_irs_factgraph_Graph.prototype.delete = (function(arg) {
+  var prep0 = $as_T(arg);
+  return this.delete__T__T2(prep0);
+});
+$c_Lgov_irs_factgraph_Graph.prototype.set = (function(arg, arg$2) {
+  var prep0 = $as_T(arg);
+  return this.set__T__O__T2(prep0, arg$2);
+});
+$c_Lgov_irs_factgraph_Graph.prototype.getVectWithPath = (function(arg) {
+  var prep0 = $as_Lgov_irs_factgraph_Path(arg);
+  return this.getVect__Lgov_irs_factgraph_Path__Lgov_irs_factgraph_monads_MaybeVector(prep0);
 });
 function $as_Lgov_irs_factgraph_Graph(obj) {
   return (((obj instanceof $c_Lgov_irs_factgraph_Graph) || (obj === null)) ? obj : $throwClassCastException(obj, "gov.irs.factgraph.Graph"));
@@ -8047,13 +8065,13 @@ function $h_Lgov_irs_factgraph_JSFactDictionary$() {
 $h_Lgov_irs_factgraph_JSFactDictionary$.prototype = $c_Lgov_irs_factgraph_JSFactDictionary$.prototype;
 $c_Lgov_irs_factgraph_JSFactDictionary$.prototype.apply__Lgov_irs_factgraph_FactDictionary = (function() {
   var dictionary = new $c_Lgov_irs_factgraph_FactDictionary();
-  $m_Lgov_irs_factgraph_FactDefinition$().apply__F1__Lgov_irs_factgraph_Path__F1__s_xml_NodeSeq__Lgov_irs_factgraph_FactDictionary__Lgov_irs_factgraph_FactDefinition(new $c_sjsr_AnonFunction1_$$Lambda$3aa60c34ef08a878abffbf4628007cc68fa3c7ab(((evidence$1) => {
+  $m_Lgov_irs_factgraph_FactDefinition$().apply__F1__Lgov_irs_factgraph_Path__F1__s_xml_NodeSeq__Lgov_irs_factgraph_FactDictionary__s_Option__Lgov_irs_factgraph_FactDefinition(new $c_sjsr_AnonFunction1_$$Lambda$3aa60c34ef08a878abffbf4628007cc68fa3c7ab(((evidence$1) => {
     $as_Lgov_irs_factgraph_Factual(evidence$1);
     return new $c_Lgov_irs_factgraph_compnodes_RootNode();
   })), $m_Lgov_irs_factgraph_Path$().Lgov_irs_factgraph_Path$__f_Root, new $c_sjsr_AnonFunction1_$$Lambda$3aa60c34ef08a878abffbf4628007cc68fa3c7ab(((evidence$2) => {
     $as_Lgov_irs_factgraph_Factual(evidence$2);
     return $as_sci_Seq($m_sci_Seq$().empty__sc_SeqOps());
-  })), $m_s_xml_NodeSeq$().s_xml_NodeSeq$__f_Empty, dictionary);
+  })), $m_s_xml_NodeSeq$().s_xml_NodeSeq$__f_Empty, dictionary, $m_s_None$());
   return dictionary;
 });
 $c_Lgov_irs_factgraph_JSFactDictionary$.prototype.fromConfig__Lgov_irs_factgraph_definitions_FactDictionaryConfigTrait__Lgov_irs_factgraph_FactDictionary = (function(e) {
@@ -8067,14 +8085,14 @@ $c_Lgov_irs_factgraph_JSFactDictionary$.prototype.fromConfig__Lgov_irs_factgraph
   $n(dictionary).freeze__V();
   return dictionary;
 });
+$c_Lgov_irs_factgraph_JSFactDictionary$.prototype.fromConfig = (function(arg) {
+  var prep0 = $as_Lgov_irs_factgraph_definitions_FactDictionaryConfigTrait(arg);
+  return this.fromConfig__Lgov_irs_factgraph_definitions_FactDictionaryConfigTrait__Lgov_irs_factgraph_FactDictionary(prep0);
+});
 $c_Lgov_irs_factgraph_JSFactDictionary$.prototype.importFromXml = (function(arg) {
   var prep0 = $as_T(arg);
   var this$1 = $m_Lgov_irs_factgraph_FactDictionary$();
   return $f_Lgov_irs_factgraph_DefaultFactDictConfig__importFromXml__T__Lgov_irs_factgraph_FactDictionary(this$1, prep0);
-});
-$c_Lgov_irs_factgraph_JSFactDictionary$.prototype.fromConfig = (function(arg) {
-  var prep0 = $as_Lgov_irs_factgraph_definitions_FactDictionaryConfigTrait(arg);
-  return this.fromConfig__Lgov_irs_factgraph_definitions_FactDictionaryConfigTrait__Lgov_irs_factgraph_FactDictionary(prep0);
 });
 var $d_Lgov_irs_factgraph_JSFactDictionary$ = new $TypeData().initClass($c_Lgov_irs_factgraph_JSFactDictionary$, "gov.irs.factgraph.JSFactDictionary$", ({
   Lgov_irs_factgraph_JSFactDictionary$: 1
@@ -8260,6 +8278,245 @@ function $m_Lgov_irs_factgraph_PersisterSyncIssueWrapper$() {
     $n_Lgov_irs_factgraph_PersisterSyncIssueWrapper$ = new $c_Lgov_irs_factgraph_PersisterSyncIssueWrapper$();
   }
   return $n_Lgov_irs_factgraph_PersisterSyncIssueWrapper$;
+}
+function $p_Lgov_irs_factgraph_RecursiveDependency$__walk__Lgov_irs_factgraph_Path__sci_List__Lgov_irs_factgraph_FactDictionary__s_Option($thiz, current, remaining, dict) {
+  var remaining$tailLocal1 = remaining;
+  var current$tailLocal1 = current;
+  while (true) {
+    var x1 = remaining$tailLocal1;
+    var x = $m_sci_Nil$();
+    if (x.equals__O__Z(x1)) {
+      var value = current$tailLocal1;
+      return new $c_s_Some(value);
+    }
+    if ((x1 instanceof $c_sci_$colon$colon)) {
+      var x8 = $as_sci_$colon$colon(x1);
+      var x9 = $as_Lgov_irs_factgraph_PathItem($n(x8).sci_$colon$colon__f_head);
+      var x10 = $n(x8).sci_$colon$colon__f_next;
+      var x$3 = $s_Lgov_irs_factgraph_PathItem$__Parent__Lgov_irs_factgraph_PathItem();
+      if (((x$3 === null) ? (x9 === null) : $n(x$3).equals__O__Z(x9))) {
+        var this$2 = $n($n(current$tailLocal1).parent__s_Option());
+        if (this$2.isEmpty__Z()) {
+          return $m_s_None$();
+        } else {
+          var x0 = this$2.get__O();
+          var _$1 = $as_Lgov_irs_factgraph_Path(x0);
+          return $p_Lgov_irs_factgraph_RecursiveDependency$__walk__Lgov_irs_factgraph_Path__sci_List__Lgov_irs_factgraph_FactDictionary__s_Option($m_Lgov_irs_factgraph_RecursiveDependency$(), _$1, x10, dict);
+        }
+      }
+      if ((x9 instanceof $c_Lgov_irs_factgraph_PathItem$Child)) {
+        var x$1 = $as_Lgov_irs_factgraph_PathItem$Child(x9);
+        $n(x$1);
+        var next = $n(current$tailLocal1).$colon$plus__Lgov_irs_factgraph_PathItem__Lgov_irs_factgraph_Path($as_Lgov_irs_factgraph_PathItem($n(remaining$tailLocal1).head__O()));
+        var this$5 = $n($n(dict).apply__Lgov_irs_factgraph_Path__s_Option(next));
+        if (this$5.isEmpty__Z()) {
+          var aliasJump = $m_s_None$();
+        } else {
+          var x0$1 = this$5.get__O();
+          var fd = $as_Lgov_irs_factgraph_FactDefinition(x0$1);
+          var this$6 = $n($n(fd).Lgov_irs_factgraph_FactDefinition__f_config);
+          if (this$6.isEmpty__Z()) {
+            var $x_1 = $m_s_None$();
+          } else {
+            var x0$2 = this$6.get__O();
+            var _$2 = $as_Lgov_irs_factgraph_definitions_fact_FactConfigTrait(x0$2);
+            var $x_1 = $n(_$2).Lgov_irs_factgraph_definitions_fact_FactConfigElement__f_writable;
+          }
+          var this$7 = $n($x_1);
+          var p = new $c_sjsr_AnonFunction1_$$Lambda$3aa60c34ef08a878abffbf4628007cc68fa3c7ab(((writ) => {
+            var writ$1 = $as_Lgov_irs_factgraph_definitions_fact_WritableConfigTrait(writ);
+            return ($n(writ$1).Lgov_irs_factgraph_definitions_fact_WritableConfigElement__f_typeName === "CollectionItem");
+          }));
+          var this$8 = new $c_s_Option$WithFilter(this$7, p);
+          var this$9 = $n(this$8.s_Option$WithFilter__f_$outer);
+          var p$1 = this$8.s_Option$WithFilter__f_p;
+          var this$10 = ((this$9.isEmpty__Z() || $uZ($n(p$1).apply__O__O(this$9.get__O()))) ? this$9 : $m_s_None$());
+          if (this$10.isEmpty__Z()) {
+            var aliasJump = $m_s_None$();
+          } else {
+            var x0$3 = this$10.get__O();
+            var writ$2 = $as_Lgov_irs_factgraph_definitions_fact_WritableConfigTrait(x0$3);
+            var this$11 = $n($n(writ$2).Lgov_irs_factgraph_definitions_fact_WritableConfigElement__f_collectionItemAlias);
+            if (this$11.isEmpty__Z()) {
+              var aliasJump = $m_s_None$();
+            } else {
+              var x0$4 = this$11.get__O();
+              var alias = $as_T(x0$4);
+              var aliasJump = new $c_s_Some($n($m_Lgov_irs_factgraph_Path$().apply__T__Lgov_irs_factgraph_Path(alias)).$colon$plus__Lgov_irs_factgraph_PathItem__Lgov_irs_factgraph_Path($s_Lgov_irs_factgraph_PathItem$__Wildcard__Lgov_irs_factgraph_PathItem()));
+            }
+          }
+        }
+        var current$tailLocal1$tmp1 = $as_Lgov_irs_factgraph_Path((aliasJump.isEmpty__Z() ? next : aliasJump.get__O()));
+        current$tailLocal1 = current$tailLocal1$tmp1;
+        remaining$tailLocal1 = x10;
+        continue;
+      }
+    }
+    return $m_s_None$();
+  }
+}
+function $p_Lgov_irs_factgraph_RecursiveDependency$__inferDerivedType__Lgov_irs_factgraph_definitions_fact_CompNodeConfigTrait__s_Option($thiz, cfg) {
+  var this$1 = $n($n($thiz.Lgov_irs_factgraph_RecursiveDependency$__f_FixedTypes).get__O__s_Option($n(cfg).Lgov_irs_factgraph_definitions_fact_CompNodeConfig__f_typeName));
+  if (this$1.isEmpty__Z()) {
+    var x11 = $n(cfg).Lgov_irs_factgraph_definitions_fact_CompNodeConfig__f_typeName;
+    if ((x11 === "Switch")) {
+      var this$2 = $n($n($n(cfg).Lgov_irs_factgraph_definitions_fact_CompNodeConfig__f_children).iterator__sc_Iterator());
+      var p = new $c_sjsr_AnonFunction1_$$Lambda$3aa60c34ef08a878abffbf4628007cc68fa3c7ab(((_$4) => {
+        var _$4$1 = $as_Lgov_irs_factgraph_definitions_fact_CompNodeConfigTrait(_$4);
+        return ($n(_$4$1).Lgov_irs_factgraph_definitions_fact_CompNodeConfig__f_typeName === "Case");
+      }));
+      var this$3 = new $c_sc_Iterator$$anon$6(this$2, p, false);
+      var f = new $c_sjsr_AnonFunction1_$$Lambda$3aa60c34ef08a878abffbf4628007cc68fa3c7ab(((_$5) => {
+        var _$5$1 = $as_Lgov_irs_factgraph_definitions_fact_CompNodeConfigTrait(_$5);
+        return $n($n(_$5$1).Lgov_irs_factgraph_definitions_fact_CompNodeConfig__f_children).iterator__sc_Iterator();
+      }));
+      var this$4 = new $c_sc_Iterator$$anon$10(this$3, f);
+      var p$1 = new $c_sjsr_AnonFunction1_$$Lambda$3aa60c34ef08a878abffbf4628007cc68fa3c7ab(((_$6) => {
+        var _$6$1 = $as_Lgov_irs_factgraph_definitions_fact_CompNodeConfigTrait(_$6);
+        return ($n(_$6$1).Lgov_irs_factgraph_definitions_fact_CompNodeConfig__f_typeName === "Then");
+      }));
+      var this$5 = new $c_sc_Iterator$$anon$6(this$4, p$1, false);
+      var f$1 = new $c_sjsr_AnonFunction1_$$Lambda$3aa60c34ef08a878abffbf4628007cc68fa3c7ab(((_$7) => {
+        var _$7$1 = $as_Lgov_irs_factgraph_definitions_fact_CompNodeConfigTrait(_$7);
+        return $n($n(_$7$1).Lgov_irs_factgraph_definitions_fact_CompNodeConfig__f_children).iterator__sc_Iterator();
+      }));
+      var this$6 = new $c_sc_Iterator$$anon$10(this$5, f$1);
+      _return: {
+        while (this$6.hasNext__Z()) {
+          var a = this$6.next__O();
+          var _$8 = $as_Lgov_irs_factgraph_definitions_fact_CompNodeConfigTrait(a);
+          if (($n(_$8).Lgov_irs_factgraph_definitions_fact_CompNodeConfig__f_typeName !== "Dependency")) {
+            var this$7 = new $c_s_Some(a);
+            break _return;
+          }
+        }
+        var this$7 = $m_s_None$();
+      }
+      if (this$7.isEmpty__Z()) {
+        return $m_s_None$();
+      } else {
+        var x0 = this$7.get__O();
+        var cfg$1 = $as_Lgov_irs_factgraph_definitions_fact_CompNodeConfigTrait(x0);
+        return $p_Lgov_irs_factgraph_RecursiveDependency$__inferDerivedType__Lgov_irs_factgraph_definitions_fact_CompNodeConfigTrait__s_Option($m_Lgov_irs_factgraph_RecursiveDependency$(), cfg$1);
+      }
+    }
+    return $m_s_None$();
+  } else {
+    return this$1;
+  }
+}
+/** @constructor */
+function $c_Lgov_irs_factgraph_RecursiveDependency$() {
+  this.Lgov_irs_factgraph_RecursiveDependency$__f_FixedTypes = null;
+  $n_Lgov_irs_factgraph_RecursiveDependency$ = this;
+  var this$63 = $m_sci_Map$();
+  var elems = $m_sr_ScalaRunTime$().wrapRefArray__AO__sci_ArraySeq(new ($d_T2.getArrayOf().constr)([$ct_T2__O__O__(new $c_T2(), "All", "Boolean"), $ct_T2__O__O__(new $c_T2(), "Any", "Boolean"), $ct_T2__O__O__(new $c_T2(), "Not", "Boolean"), $ct_T2__O__O__(new $c_T2(), "Equal", "Boolean"), $ct_T2__O__O__(new $c_T2(), "NotEqual", "Boolean"), $ct_T2__O__O__(new $c_T2(), "LessThan", "Boolean"), $ct_T2__O__O__(new $c_T2(), "LessThanOrEqual", "Boolean"), $ct_T2__O__O__(new $c_T2(), "GreaterThan", "Boolean"), $ct_T2__O__O__(new $c_T2(), "GreaterThanOrEqual", "Boolean"), $ct_T2__O__O__(new $c_T2(), "IsComplete", "Boolean"), $ct_T2__O__O__(new $c_T2(), "EnumOptionsContains", "Boolean"), $ct_T2__O__O__(new $c_T2(), "True", "Boolean"), $ct_T2__O__O__(new $c_T2(), "False", "Boolean"), $ct_T2__O__O__(new $c_T2(), "Boolean", "Boolean"), $ct_T2__O__O__(new $c_T2(), "Int", "Int"), $ct_T2__O__O__(new $c_T2(), "Length", "Int"), $ct_T2__O__O__(new $c_T2(), "Count", "Int"), $ct_T2__O__O__(new $c_T2(), "CollectionSize", "Int"), $ct_T2__O__O__(new $c_T2(), "IndexOf", "Int"), $ct_T2__O__O__(new $c_T2(), "RoundToInt", "Int"), $ct_T2__O__O__(new $c_T2(), "Dollar", "Dollar"), $ct_T2__O__O__(new $c_T2(), "Day", "Day"), $ct_T2__O__O__(new $c_T2(), "Today", "Day"), $ct_T2__O__O__(new $c_T2(), "AddPayrollMonths", "Day"), $ct_T2__O__O__(new $c_T2(), "LastDayOfMonth", "Day"), $ct_T2__O__O__(new $c_T2(), "Rational", "Rational"), $ct_T2__O__O__(new $c_T2(), "TruncateCents", "Rational"), $ct_T2__O__O__(new $c_T2(), "String", "String"), $ct_T2__O__O__(new $c_T2(), "AsString", "String"), $ct_T2__O__O__(new $c_T2(), "AsDecimalString", "String"), $ct_T2__O__O__(new $c_T2(), "ToUpper", "String")]));
+  this.Lgov_irs_factgraph_RecursiveDependency$__f_FixedTypes = this$63.from__sc_IterableOnce__sci_Map(elems);
+}
+$c_Lgov_irs_factgraph_RecursiveDependency$.prototype = new $h_O();
+$c_Lgov_irs_factgraph_RecursiveDependency$.prototype.constructor = $c_Lgov_irs_factgraph_RecursiveDependency$;
+/** @constructor */
+function $h_Lgov_irs_factgraph_RecursiveDependency$() {
+}
+$h_Lgov_irs_factgraph_RecursiveDependency$.prototype = $c_Lgov_irs_factgraph_RecursiveDependency$.prototype;
+$c_Lgov_irs_factgraph_RecursiveDependency$.prototype.resolveAbstractPath__Lgov_irs_factgraph_FactDefinition__Lgov_irs_factgraph_Path__s_Option = (function(host, path) {
+  if ($n(path).Lgov_irs_factgraph_Path__f_absolute) {
+    return new $c_s_Some(path);
+  } else {
+    var $x_1 = $n(host).Lgov_irs_factgraph_FactDefinition__f_path;
+    var this$2 = $n(path);
+    return $p_Lgov_irs_factgraph_RecursiveDependency$__walk__Lgov_irs_factgraph_Path__sci_List__Lgov_irs_factgraph_FactDictionary__s_Option(this, $x_1, $n(this$2.Lgov_irs_factgraph_Path__f__items).reverse__sci_List(), $n(host).Lgov_irs_factgraph_FactDefinition__f_dictionary);
+  }
+});
+$c_Lgov_irs_factgraph_RecursiveDependency$.prototype.inferType__Lgov_irs_factgraph_FactDefinition__s_Option = (function(host) {
+  var this$1 = $n($n(host).Lgov_irs_factgraph_FactDefinition__f_config);
+  if (this$1.isEmpty__Z()) {
+    return $m_s_None$();
+  } else {
+    var x0 = this$1.get__O();
+    var cfg = $as_Lgov_irs_factgraph_definitions_fact_FactConfigTrait(x0);
+    var this$2 = $n($n(cfg).Lgov_irs_factgraph_definitions_fact_FactConfigElement__f_writable);
+    if (this$2.isEmpty__Z()) {
+      var this$3 = $m_s_None$();
+    } else {
+      var x0$1 = this$2.get__O();
+      var _$3 = $as_Lgov_irs_factgraph_definitions_fact_WritableConfigTrait(x0$1);
+      var this$3 = new $c_s_Some($n(_$3).Lgov_irs_factgraph_definitions_fact_WritableConfigElement__f_typeName);
+    }
+    if (this$3.isEmpty__Z()) {
+      var this$4 = $n($n(cfg).Lgov_irs_factgraph_definitions_fact_FactConfigElement__f_derived);
+      if (this$4.isEmpty__Z()) {
+        var $x_1 = $m_s_None$();
+      } else {
+        var x0$2 = this$4.get__O();
+        var cfg$1 = $as_Lgov_irs_factgraph_definitions_fact_CompNodeConfigTrait(x0$2);
+        var $x_1 = $p_Lgov_irs_factgraph_RecursiveDependency$__inferDerivedType__Lgov_irs_factgraph_definitions_fact_CompNodeConfigTrait__s_Option($m_Lgov_irs_factgraph_RecursiveDependency$(), cfg$1);
+      }
+    } else {
+      var $x_1 = this$3;
+    }
+    var this$5 = $n($x_1);
+    if (this$5.isEmpty__Z()) {
+      return $m_s_None$();
+    } else {
+      var x0$3 = this$5.get__O();
+      var tpe = $as_T(x0$3);
+      return new $c_s_Some(tpe);
+    }
+  }
+});
+$c_Lgov_irs_factgraph_RecursiveDependency$.prototype.stubDependency__T__Lgov_irs_factgraph_Path__s_Option = (function(typeName, path) {
+  switch (typeName) {
+    case "Boolean": {
+      var expr = new $c_Lgov_irs_factgraph_Expression$Dependency(path);
+      var value = new $c_Lgov_irs_factgraph_compnodes_BooleanNode(expr);
+      return new $c_s_Some(value);
+      break;
+    }
+    case "Int": {
+      var expr$1 = new $c_Lgov_irs_factgraph_Expression$Dependency(path);
+      var value$1 = new $c_Lgov_irs_factgraph_compnodes_IntNode(expr$1);
+      return new $c_s_Some(value$1);
+      break;
+    }
+    case "Dollar": {
+      var expr$2 = new $c_Lgov_irs_factgraph_Expression$Dependency(path);
+      var value$2 = new $c_Lgov_irs_factgraph_compnodes_DollarNode(expr$2);
+      return new $c_s_Some(value$2);
+      break;
+    }
+    case "Day": {
+      var expr$3 = new $c_Lgov_irs_factgraph_Expression$Dependency(path);
+      var value$3 = new $c_Lgov_irs_factgraph_compnodes_DayNode(expr$3);
+      return new $c_s_Some(value$3);
+      break;
+    }
+    case "Rational": {
+      var expr$4 = new $c_Lgov_irs_factgraph_Expression$Dependency(path);
+      var value$4 = new $c_Lgov_irs_factgraph_compnodes_RationalNode(expr$4);
+      return new $c_s_Some(value$4);
+      break;
+    }
+    case "String": {
+      var expr$5 = new $c_Lgov_irs_factgraph_Expression$Dependency(path);
+      var value$5 = new $c_Lgov_irs_factgraph_compnodes_StringNode(expr$5);
+      return new $c_s_Some(value$5);
+      break;
+    }
+    default: {
+      return $m_s_None$();
+    }
+  }
+});
+var $d_Lgov_irs_factgraph_RecursiveDependency$ = new $TypeData().initClass($c_Lgov_irs_factgraph_RecursiveDependency$, "gov.irs.factgraph.RecursiveDependency$", ({
+  Lgov_irs_factgraph_RecursiveDependency$: 1
+}));
+var $n_Lgov_irs_factgraph_RecursiveDependency$;
+function $m_Lgov_irs_factgraph_RecursiveDependency$() {
+  if ((!$n_Lgov_irs_factgraph_RecursiveDependency$)) {
+    $n_Lgov_irs_factgraph_RecursiveDependency$ = new $c_Lgov_irs_factgraph_RecursiveDependency$();
+  }
+  return $n_Lgov_irs_factgraph_RecursiveDependency$;
 }
 /** @constructor */
 function $c_Lgov_irs_factgraph_WithSelfStack$() {
@@ -21453,6 +21710,23 @@ function $h_s_LowPriorityImplicits2() {
 }
 $h_s_LowPriorityImplicits2.prototype = $c_s_LowPriorityImplicits2.prototype;
 /** @constructor */
+function $c_s_Option$WithFilter(outer, p) {
+  this.s_Option$WithFilter__f_p = null;
+  this.s_Option$WithFilter__f_$outer = null;
+  this.s_Option$WithFilter__f_p = p;
+  $n(outer);
+  this.s_Option$WithFilter__f_$outer = outer;
+}
+$c_s_Option$WithFilter.prototype = new $h_O();
+$c_s_Option$WithFilter.prototype.constructor = $c_s_Option$WithFilter;
+/** @constructor */
+function $h_s_Option$WithFilter() {
+}
+$h_s_Option$WithFilter.prototype = $c_s_Option$WithFilter.prototype;
+var $d_s_Option$WithFilter = new $TypeData().initClass($c_s_Option$WithFilter, "scala.Option$WithFilter", ({
+  s_Option$WithFilter: 1
+}));
+/** @constructor */
 function $c_s_PartialFunction$() {
   this.s_PartialFunction$__f_fallback_fn = null;
   this.s_PartialFunction$__f_empty_pf = null;
@@ -30517,48 +30791,57 @@ $c_Lgov_irs_factgraph_Fact.prototype.get__Lgov_irs_factgraph_monads_MaybeVector 
     var result = new $c_Lgov_irs_factgraph_monads_Result$Complete(fact);
     return new $c_Lgov_irs_factgraph_monads_MaybeVector$Single(result);
   }
-  var this$7 = $n($n(this.Lgov_irs_factgraph_Fact__f_graph).Lgov_irs_factgraph_Graph__f_resultCache);
-  var key = this.Lgov_irs_factgraph_Fact__f_path;
-  var f = (() => {
-    var this$6 = $n(this.Lgov_irs_factgraph_Fact__f_value);
-    return $n(this$6.expr__Lgov_irs_factgraph_Expression()).get__Lgov_irs_factgraph_Factual__Lgov_irs_factgraph_monads_MaybeVector(this);
-  });
-  var x = $objectGetClass(this$7);
-  if ((!(x === $d_scm_HashMap.getClassOf()))) {
-    var x1 = this$7.get__O__s_Option(key);
-    if ((x1 instanceof $c_s_Some)) {
-      var x2 = $as_s_Some(x1);
-      var v = $n(x2).s_Some__f_value;
-      var $x_1 = v;
-    } else {
-      var x$1 = $m_s_None$();
-      if ((!(x$1 === x1))) {
-        throw new $c_s_MatchError(x1);
-      }
-      var d = f();
-      $p_scm_HashMap__put0__O__O__Z__s_Some(this$7, key, d, false);
-      var $x_1 = d;
-    }
-  } else {
-    var originalHash = $m_sr_Statics$().anyHash__O__I(key);
-    var hash = (originalHash ^ ((originalHash >>> 16) | 0));
-    var idx = (hash & (((-1) + $n(this$7.scm_HashMap__f_scala$collection$mutable$HashMap$$table).u.length) | 0));
-    var x1$1 = $n(this$7.scm_HashMap__f_scala$collection$mutable$HashMap$$table).get(idx);
-    var nd = ((x1$1 === null) ? null : $n(x1$1).findNode__O__I__scm_HashMap$Node(key, hash));
-    if ((nd !== null)) {
-      var $x_1 = $n(nd).scm_HashMap$Node__f__value;
-    } else {
-      var table0 = this$7.scm_HashMap__f_scala$collection$mutable$HashMap$$table;
-      var default$1 = f();
-      if ((((1 + this$7.scm_HashMap__f_contentSize) | 0) >= this$7.scm_HashMap__f_threshold)) {
-        $p_scm_HashMap__growTable__I__V(this$7, ($n(this$7.scm_HashMap__f_scala$collection$mutable$HashMap$$table).u.length << 1));
-      }
-      var newIdx = ((table0 === this$7.scm_HashMap__f_scala$collection$mutable$HashMap$$table) ? idx : (hash & (((-1) + $n(this$7.scm_HashMap__f_scala$collection$mutable$HashMap$$table).u.length) | 0)));
-      $p_scm_HashMap__put0__O__O__Z__I__I__s_Some(this$7, key, default$1, false, hash, newIdx);
-      var $x_1 = default$1;
-    }
+  if ($n($n(this.Lgov_irs_factgraph_Fact__f_graph).Lgov_irs_factgraph_Graph__f_inProgress).contains__O__Z(this.Lgov_irs_factgraph_Fact__f_path)) {
+    var x = $s_Lgov_irs_factgraph_monads_Result$__Incomplete__Lgov_irs_factgraph_monads_Result();
+    return new $c_Lgov_irs_factgraph_monads_MaybeVector$Single(x);
   }
-  return $as_Lgov_irs_factgraph_monads_MaybeVector($x_1);
+  $n($n(this.Lgov_irs_factgraph_Fact__f_graph).Lgov_irs_factgraph_Graph__f_inProgress).add__O__Z(this.Lgov_irs_factgraph_Fact__f_path);
+  try {
+    var this$9 = $n($n(this.Lgov_irs_factgraph_Fact__f_graph).Lgov_irs_factgraph_Graph__f_resultCache);
+    var key = this.Lgov_irs_factgraph_Fact__f_path;
+    var f = (() => {
+      var this$8 = $n(this.Lgov_irs_factgraph_Fact__f_value);
+      return $n(this$8.expr__Lgov_irs_factgraph_Expression()).get__Lgov_irs_factgraph_Factual__Lgov_irs_factgraph_monads_MaybeVector(this);
+    });
+    var x$1 = $objectGetClass(this$9);
+    if ((!(x$1 === $d_scm_HashMap.getClassOf()))) {
+      var x1 = this$9.get__O__s_Option(key);
+      if ((x1 instanceof $c_s_Some)) {
+        var x2 = $as_s_Some(x1);
+        var v = $n(x2).s_Some__f_value;
+        var $x_1 = v;
+      } else {
+        var x$2 = $m_s_None$();
+        if ((!(x$2 === x1))) {
+          throw new $c_s_MatchError(x1);
+        }
+        var d = f();
+        $p_scm_HashMap__put0__O__O__Z__s_Some(this$9, key, d, false);
+        var $x_1 = d;
+      }
+    } else {
+      var originalHash = $m_sr_Statics$().anyHash__O__I(key);
+      var hash = (originalHash ^ ((originalHash >>> 16) | 0));
+      var idx = (hash & (((-1) + $n(this$9.scm_HashMap__f_scala$collection$mutable$HashMap$$table).u.length) | 0));
+      var x1$1 = $n(this$9.scm_HashMap__f_scala$collection$mutable$HashMap$$table).get(idx);
+      var nd = ((x1$1 === null) ? null : $n(x1$1).findNode__O__I__scm_HashMap$Node(key, hash));
+      if ((nd !== null)) {
+        var $x_1 = $n(nd).scm_HashMap$Node__f__value;
+      } else {
+        var table0 = this$9.scm_HashMap__f_scala$collection$mutable$HashMap$$table;
+        var default$1 = f();
+        if ((((1 + this$9.scm_HashMap__f_contentSize) | 0) >= this$9.scm_HashMap__f_threshold)) {
+          $p_scm_HashMap__growTable__I__V(this$9, ($n(this$9.scm_HashMap__f_scala$collection$mutable$HashMap$$table).u.length << 1));
+        }
+        var newIdx = ((table0 === this$9.scm_HashMap__f_scala$collection$mutable$HashMap$$table) ? idx : (hash & (((-1) + $n(this$9.scm_HashMap__f_scala$collection$mutable$HashMap$$table).u.length) | 0)));
+        $p_scm_HashMap__put0__O__O__Z__I__I__s_Some(this$9, key, default$1, false, hash, newIdx);
+        var $x_1 = default$1;
+      }
+    }
+    return $as_Lgov_irs_factgraph_monads_MaybeVector($x_1);
+  } finally {
+    $n($n(this.Lgov_irs_factgraph_Fact__f_graph).Lgov_irs_factgraph_Graph__f_inProgress).remove__O__Z(this.Lgov_irs_factgraph_Fact__f_path);
+  }
 });
 $c_Lgov_irs_factgraph_Fact.prototype.getThunk__Lgov_irs_factgraph_monads_MaybeVector = (function() {
   var this$1 = $n(this.Lgov_irs_factgraph_Fact__f_value);
@@ -30706,6 +30989,24 @@ $c_Lgov_irs_factgraph_Fact.prototype.apply__Lgov_irs_factgraph_Path__Lgov_irs_fa
 $c_Lgov_irs_factgraph_Fact.prototype.apply__Lgov_irs_factgraph_PathItem__Lgov_irs_factgraph_monads_MaybeVector = (function(key) {
   return $p_Lgov_irs_factgraph_Fact__apply__sci_List__Z__Lgov_irs_factgraph_monads_MaybeVector(this, new $c_sci_$colon$colon(key, $m_sci_Nil$()), true);
 });
+Object.defineProperty($c_Lgov_irs_factgraph_Fact.prototype, "limits", ({
+  "get": (function() {
+    return this.Lgov_irs_factgraph_Fact__f_limits;
+  }),
+  "configurable": true
+}));
+Object.defineProperty($c_Lgov_irs_factgraph_Fact.prototype, "value", ({
+  "get": (function() {
+    return this.Lgov_irs_factgraph_Fact__f_value;
+  }),
+  "configurable": true
+}));
+Object.defineProperty($c_Lgov_irs_factgraph_Fact.prototype, "meta", ({
+  "get": (function() {
+    return this.Lgov_irs_factgraph_Fact__f_meta;
+  }),
+  "configurable": true
+}));
 Object.defineProperty($c_Lgov_irs_factgraph_Fact.prototype, "graph", ({
   "get": (function() {
     return this.Lgov_irs_factgraph_Fact__f_graph;
@@ -30721,24 +31022,6 @@ Object.defineProperty($c_Lgov_irs_factgraph_Fact.prototype, "path", ({
 Object.defineProperty($c_Lgov_irs_factgraph_Fact.prototype, "parent", ({
   "get": (function() {
     return this.Lgov_irs_factgraph_Fact__f_parent;
-  }),
-  "configurable": true
-}));
-Object.defineProperty($c_Lgov_irs_factgraph_Fact.prototype, "value", ({
-  "get": (function() {
-    return this.Lgov_irs_factgraph_Fact__f_value;
-  }),
-  "configurable": true
-}));
-Object.defineProperty($c_Lgov_irs_factgraph_Fact.prototype, "limits", ({
-  "get": (function() {
-    return this.Lgov_irs_factgraph_Fact__f_limits;
-  }),
-  "configurable": true
-}));
-Object.defineProperty($c_Lgov_irs_factgraph_Fact.prototype, "meta", ({
-  "get": (function() {
-    return this.Lgov_irs_factgraph_Fact__f_meta;
   }),
   "configurable": true
 }));
@@ -30958,15 +31241,16 @@ function $p_Lgov_irs_factgraph_FactDefinition__getExtract__Lgov_irs_factgraph_Pa
     })), $n($thiz.Lgov_irs_factgraph_FactDefinition__f_path).$colon$plus__Lgov_irs_factgraph_PathItem__Lgov_irs_factgraph_Path($n(key).asAbstract__Lgov_irs_factgraph_PathItem()), new $c_sjsr_AnonFunction1_$$Lambda$3aa60c34ef08a878abffbf4628007cc68fa3c7ab(((evidence$1) => {
       $as_Lgov_irs_factgraph_Factual(evidence$1);
       return $as_sci_Seq($m_sci_Seq$().empty__sc_SeqOps());
-    })), $thiz.Lgov_irs_factgraph_FactDefinition__f_dictionary));
+    })), $thiz.Lgov_irs_factgraph_FactDefinition__f_dictionary, $m_s_None$()));
   }
 }
 /** @constructor */
-function $c_Lgov_irs_factgraph_FactDefinition(cnBuilder, path, limitsBuilder, dictionary) {
+function $c_Lgov_irs_factgraph_FactDefinition(cnBuilder, path, limitsBuilder, dictionary, config) {
   this.Lgov_irs_factgraph_FactDefinition__f_cnBuilder = null;
   this.Lgov_irs_factgraph_FactDefinition__f_path = null;
   this.Lgov_irs_factgraph_FactDefinition__f_limitsBuilder = null;
   this.Lgov_irs_factgraph_FactDefinition__f_dictionary = null;
+  this.Lgov_irs_factgraph_FactDefinition__f_config = null;
   this.Lgov_irs_factgraph_FactDefinition__f_value$lzy1 = null;
   this.Lgov_irs_factgraph_FactDefinition__f_valuebitmap$1 = false;
   this.Lgov_irs_factgraph_FactDefinition__f_typeNode$lzy1 = null;
@@ -30983,6 +31267,7 @@ function $c_Lgov_irs_factgraph_FactDefinition(cnBuilder, path, limitsBuilder, di
   this.Lgov_irs_factgraph_FactDefinition__f_path = path;
   this.Lgov_irs_factgraph_FactDefinition__f_limitsBuilder = limitsBuilder;
   this.Lgov_irs_factgraph_FactDefinition__f_dictionary = dictionary;
+  this.Lgov_irs_factgraph_FactDefinition__f_config = config;
 }
 $c_Lgov_irs_factgraph_FactDefinition.prototype = new $h_O();
 $c_Lgov_irs_factgraph_FactDefinition.prototype.constructor = $c_Lgov_irs_factgraph_FactDefinition;
@@ -30998,7 +31283,13 @@ $c_Lgov_irs_factgraph_FactDefinition.prototype.path__Lgov_irs_factgraph_Path = (
 });
 $c_Lgov_irs_factgraph_FactDefinition.prototype.value__Lgov_irs_factgraph_compnodes_CompNode = (function() {
   if ((!this.Lgov_irs_factgraph_FactDefinition__f_valuebitmap$1)) {
-    this.Lgov_irs_factgraph_FactDefinition__f_value$lzy1 = $as_Lgov_irs_factgraph_compnodes_CompNode($n(this.Lgov_irs_factgraph_FactDefinition__f_cnBuilder).apply__O__O(this));
+    $n($n(this.Lgov_irs_factgraph_FactDefinition__f_dictionary).Lgov_irs_factgraph_FactDictionary__f_valueInProgress).add__O__Z(this.Lgov_irs_factgraph_FactDefinition__f_path);
+    try {
+      var $x_1 = $as_Lgov_irs_factgraph_compnodes_CompNode($n(this.Lgov_irs_factgraph_FactDefinition__f_cnBuilder).apply__O__O(this));
+    } finally {
+      $n($n(this.Lgov_irs_factgraph_FactDefinition__f_dictionary).Lgov_irs_factgraph_FactDictionary__f_valueInProgress).remove__O__Z(this.Lgov_irs_factgraph_FactDefinition__f_path);
+    }
+    this.Lgov_irs_factgraph_FactDefinition__f_value$lzy1 = $x_1;
     this.Lgov_irs_factgraph_FactDefinition__f_valuebitmap$1 = true;
   }
   return this.Lgov_irs_factgraph_FactDefinition__f_value$lzy1;
@@ -31037,25 +31328,30 @@ $c_Lgov_irs_factgraph_FactDefinition.prototype.meta__Lgov_irs_factgraph_Factual$
 });
 $c_Lgov_irs_factgraph_FactDefinition.prototype.size__Lgov_irs_factgraph_Factual$Size = (function() {
   if ((!this.Lgov_irs_factgraph_FactDefinition__f_sizebitmap$1)) {
-    matchResult1: {
-      var $x_1;
-      var this$1 = $n(this.value__Lgov_irs_factgraph_compnodes_CompNode());
-      var x1 = $n(this$1.expr__Lgov_irs_factgraph_Expression()).getThunk__Lgov_irs_factgraph_Factual__Lgov_irs_factgraph_monads_MaybeVector(this);
-      if ((x1 instanceof $c_Lgov_irs_factgraph_monads_MaybeVector$Single)) {
-        var x$1 = $as_Lgov_irs_factgraph_monads_MaybeVector$Single(x1);
-        var this$3 = $n(x$1);
-        $as_Lgov_irs_factgraph_monads_Thunk(this$3.Lgov_irs_factgraph_monads_MaybeVector$Single__f_x);
-        var $x_1 = $s_Lgov_irs_factgraph_Factual$Size$__Single__Lgov_irs_factgraph_Factual$Size();
-        break matchResult1;
+    $n($n(this.Lgov_irs_factgraph_FactDefinition__f_dictionary).Lgov_irs_factgraph_FactDictionary__f_sizeInProgress).add__O__Z(this.Lgov_irs_factgraph_FactDefinition__f_path);
+    try {
+      matchResult1: {
+        var $x_1;
+        var this$1 = $n(this.value__Lgov_irs_factgraph_compnodes_CompNode());
+        var x1 = $n(this$1.expr__Lgov_irs_factgraph_Expression()).getThunk__Lgov_irs_factgraph_Factual__Lgov_irs_factgraph_monads_MaybeVector(this);
+        if ((x1 instanceof $c_Lgov_irs_factgraph_monads_MaybeVector$Single)) {
+          var x$1 = $as_Lgov_irs_factgraph_monads_MaybeVector$Single(x1);
+          var this$3 = $n(x$1);
+          $as_Lgov_irs_factgraph_monads_Thunk(this$3.Lgov_irs_factgraph_monads_MaybeVector$Single__f_x);
+          var $x_1 = $s_Lgov_irs_factgraph_Factual$Size$__Single__Lgov_irs_factgraph_Factual$Size();
+          break matchResult1;
+        }
+        if ((x1 instanceof $c_Lgov_irs_factgraph_monads_MaybeVector$Multiple)) {
+          var x$1$1 = $as_Lgov_irs_factgraph_monads_MaybeVector$Multiple(x1);
+          $n(x$1$1);
+          $n(x$1$1);
+          var $x_1 = $s_Lgov_irs_factgraph_Factual$Size$__Multiple__Lgov_irs_factgraph_Factual$Size();
+          break matchResult1;
+        }
+        throw new $c_s_MatchError(x1);
       }
-      if ((x1 instanceof $c_Lgov_irs_factgraph_monads_MaybeVector$Multiple)) {
-        var x$1$1 = $as_Lgov_irs_factgraph_monads_MaybeVector$Multiple(x1);
-        $n(x$1$1);
-        $n(x$1$1);
-        var $x_1 = $s_Lgov_irs_factgraph_Factual$Size$__Multiple__Lgov_irs_factgraph_Factual$Size();
-        break matchResult1;
-      }
-      throw new $c_s_MatchError(x1);
+    } finally {
+      $n($n(this.Lgov_irs_factgraph_FactDefinition__f_dictionary).Lgov_irs_factgraph_FactDictionary__f_sizeInProgress).remove__O__Z(this.Lgov_irs_factgraph_FactDefinition__f_path);
     }
     this.Lgov_irs_factgraph_FactDefinition__f_size$lzy1 = $x_1;
     this.Lgov_irs_factgraph_FactDefinition__f_sizebitmap$1 = true;
@@ -31157,15 +31453,21 @@ $c_Lgov_irs_factgraph_FactDefinition.prototype.apply__Lgov_irs_factgraph_Path__L
 $c_Lgov_irs_factgraph_FactDefinition.prototype.apply__Lgov_irs_factgraph_PathItem__Lgov_irs_factgraph_monads_MaybeVector = (function(key) {
   return $p_Lgov_irs_factgraph_FactDefinition__apply__sci_List__Lgov_irs_factgraph_monads_MaybeVector(this, new $c_sci_$colon$colon(key, $m_sci_Nil$()));
 });
+Object.defineProperty($c_Lgov_irs_factgraph_FactDefinition.prototype, "value", ({
+  "get": (function() {
+    return this.value__Lgov_irs_factgraph_compnodes_CompNode();
+  }),
+  "configurable": true
+}));
 Object.defineProperty($c_Lgov_irs_factgraph_FactDefinition.prototype, "abstractPath", ({
   "get": (function() {
     return this.Lgov_irs_factgraph_FactDefinition__f_path;
   }),
   "configurable": true
 }));
-Object.defineProperty($c_Lgov_irs_factgraph_FactDefinition.prototype, "isBoolean", ({
+Object.defineProperty($c_Lgov_irs_factgraph_FactDefinition.prototype, "meta", ({
   "get": (function() {
-    return this.isBoolean__Z();
+    return this.meta__Lgov_irs_factgraph_Factual$Meta();
   }),
   "configurable": true
 }));
@@ -31175,21 +31477,15 @@ Object.defineProperty($c_Lgov_irs_factgraph_FactDefinition.prototype, "typeNode"
   }),
   "configurable": true
 }));
-Object.defineProperty($c_Lgov_irs_factgraph_FactDefinition.prototype, "value", ({
+Object.defineProperty($c_Lgov_irs_factgraph_FactDefinition.prototype, "isBoolean", ({
   "get": (function() {
-    return this.value__Lgov_irs_factgraph_compnodes_CompNode();
+    return this.isBoolean__Z();
   }),
   "configurable": true
 }));
 Object.defineProperty($c_Lgov_irs_factgraph_FactDefinition.prototype, "limits", ({
   "get": (function() {
     return this.limits__sci_Seq();
-  }),
-  "configurable": true
-}));
-Object.defineProperty($c_Lgov_irs_factgraph_FactDefinition.prototype, "meta", ({
-  "get": (function() {
-    return this.meta__Lgov_irs_factgraph_Factual$Meta();
   }),
   "configurable": true
 }));
@@ -31218,13 +31514,13 @@ $c_Lgov_irs_factgraph_FactDictionary$.prototype.constructor = $c_Lgov_irs_factgr
 function $h_Lgov_irs_factgraph_FactDictionary$() {
 }
 $h_Lgov_irs_factgraph_FactDictionary$.prototype = $c_Lgov_irs_factgraph_FactDictionary$.prototype;
-$c_Lgov_irs_factgraph_FactDictionary$.prototype.importFromXml = (function(arg) {
-  var prep0 = $as_T(arg);
-  return $f_Lgov_irs_factgraph_DefaultFactDictConfig__importFromXml__T__Lgov_irs_factgraph_FactDictionary(this, prep0);
-});
 $c_Lgov_irs_factgraph_FactDictionary$.prototype.fromConfig = (function(arg) {
   var prep0 = $as_Lgov_irs_factgraph_definitions_FactDictionaryConfigTrait(arg);
   return $f_Lgov_irs_factgraph_DefaultFactDictConfig__fromConfig__Lgov_irs_factgraph_definitions_FactDictionaryConfigTrait__Lgov_irs_factgraph_FactDictionary(this, prep0);
+});
+$c_Lgov_irs_factgraph_FactDictionary$.prototype.importFromXml = (function(arg) {
+  var prep0 = $as_T(arg);
+  return $f_Lgov_irs_factgraph_DefaultFactDictConfig__importFromXml__T__Lgov_irs_factgraph_FactDictionary(this, prep0);
 });
 var $d_Lgov_irs_factgraph_FactDictionary$ = new $TypeData().initClass($c_Lgov_irs_factgraph_FactDictionary$, "gov.irs.factgraph.FactDictionary$", ({
   Lgov_irs_factgraph_FactDictionary$: 1,
@@ -31242,6 +31538,7 @@ function $c_Lgov_irs_factgraph_JSGraph(dictionary, persister) {
   this.Lgov_irs_factgraph_Graph__f_root = null;
   this.Lgov_irs_factgraph_Graph__f_factCache = null;
   this.Lgov_irs_factgraph_Graph__f_resultCache = null;
+  this.Lgov_irs_factgraph_Graph__f_inProgress = null;
   this.Lgov_irs_factgraph_Graph__f_overriddenFacts = null;
   this.Lgov_irs_factgraph_JSGraph__f_dictionary = null;
   this.Lgov_irs_factgraph_JSGraph__f_persister = null;
@@ -31447,13 +31744,30 @@ $c_Lgov_irs_factgraph_JSGraph.prototype.jsCheckPersister__sjs_js_Array = (functi
   }))));
   return $m_sjs_js_JSConverters$JSRichIterableOnce$().toJSArray$extension__sc_IterableOnce__sjs_js_Array(col);
 });
-$c_Lgov_irs_factgraph_JSGraph.prototype.explainAndSolve = (function(arg) {
-  var prep0 = $as_T(arg);
-  return this.explainAndSolve__T__sjs_js_Array(prep0);
+$c_Lgov_irs_factgraph_JSGraph.prototype.checkPersister = (function() {
+  return this.jsCheckPersister__sjs_js_Array();
 });
-$c_Lgov_irs_factgraph_JSGraph.prototype.getCollectionIds = (function(arg) {
-  var prep0 = $as_T(arg);
-  return this.getCollectionIds__T__sjs_js_Array(prep0);
+Object.defineProperty($c_Lgov_irs_factgraph_JSGraph.prototype, "dictionary", ({
+  "get": (function() {
+    return this.Lgov_irs_factgraph_JSGraph__f_dictionary;
+  }),
+  "configurable": true
+}));
+Object.defineProperty($c_Lgov_irs_factgraph_JSGraph.prototype, "INVALID_BOOLEAN_ERROR", ({
+  "get": (function() {
+    return this.Lgov_irs_factgraph_JSGraph__f_INVALID_BOOLEAN_ERROR;
+  }),
+  "configurable": true
+}));
+$c_Lgov_irs_factgraph_JSGraph.prototype.toJson = (function(...rest) {
+  var prep0 = ((rest[0] === (void 0)) ? (-1) : $uI(rest[0]));
+  return $n(this.Lgov_irs_factgraph_JSGraph__f_persister).toJson__I__T(prep0);
+});
+$c_Lgov_irs_factgraph_JSGraph.prototype.toStringDictionary = (function() {
+  return this.toStringDictionary__sjs_js_Dictionary();
+});
+$c_Lgov_irs_factgraph_JSGraph.prototype.jsCheckPersister = (function() {
+  return this.jsCheckPersister__sjs_js_Array();
 });
 Object.defineProperty($c_Lgov_irs_factgraph_JSGraph.prototype, "toJson$default$1", ({
   "get": (function() {
@@ -31461,33 +31775,23 @@ Object.defineProperty($c_Lgov_irs_factgraph_JSGraph.prototype, "toJson$default$1
   }),
   "configurable": true
 }));
-$c_Lgov_irs_factgraph_JSGraph.prototype.toStringDictionary = (function() {
-  return this.toStringDictionary__sjs_js_Dictionary();
-});
-$c_Lgov_irs_factgraph_JSGraph.prototype.checkPersister = (function() {
-  return this.jsCheckPersister__sjs_js_Array();
-});
 $c_Lgov_irs_factgraph_JSGraph.prototype.getFact = (function(arg) {
   var prep0 = $as_T(arg);
   return this.getFact__T__Lgov_irs_factgraph_Fact(prep0);
+});
+Object.defineProperty($c_Lgov_irs_factgraph_JSGraph.prototype, "INVALID_INT_ERROR", ({
+  "get": (function() {
+    return this.Lgov_irs_factgraph_JSGraph__f_INVALID_INT_ERROR;
+  }),
+  "configurable": true
+}));
+$c_Lgov_irs_factgraph_JSGraph.prototype.paths = (function() {
+  return this.paths__sjs_js_Array();
 });
 $c_Lgov_irs_factgraph_JSGraph.prototype.toJSON = (function(...rest) {
   var prep0 = ((rest[0] === (void 0)) ? (-1) : $uI(rest[0]));
   return $n(this.Lgov_irs_factgraph_JSGraph__f_persister).toJson__I__T(prep0);
 });
-$c_Lgov_irs_factgraph_JSGraph.prototype.jsCheckPersister = (function() {
-  return this.jsCheckPersister__sjs_js_Array();
-});
-$c_Lgov_irs_factgraph_JSGraph.prototype.toJson = (function(...rest) {
-  var prep0 = ((rest[0] === (void 0)) ? (-1) : $uI(rest[0]));
-  return $n(this.Lgov_irs_factgraph_JSGraph__f_persister).toJson__I__T(prep0);
-});
-Object.defineProperty($c_Lgov_irs_factgraph_JSGraph.prototype, "INVALID_BOOLEAN_ERROR", ({
-  "get": (function() {
-    return this.Lgov_irs_factgraph_JSGraph__f_INVALID_BOOLEAN_ERROR;
-  }),
-  "configurable": true
-}));
 $c_Lgov_irs_factgraph_JSGraph.prototype.set = (function(arg, arg$2) {
   if (((typeof arg$2) === "string")) {
     var prep0$2 = $as_T(arg);
@@ -31504,21 +31808,14 @@ Object.defineProperty($c_Lgov_irs_factgraph_JSGraph.prototype, "persister", ({
   }),
   "configurable": true
 }));
-Object.defineProperty($c_Lgov_irs_factgraph_JSGraph.prototype, "dictionary", ({
-  "get": (function() {
-    return this.Lgov_irs_factgraph_JSGraph__f_dictionary;
-  }),
-  "configurable": true
-}));
-$c_Lgov_irs_factgraph_JSGraph.prototype.paths = (function() {
-  return this.paths__sjs_js_Array();
+$c_Lgov_irs_factgraph_JSGraph.prototype.explainAndSolve = (function(arg) {
+  var prep0 = $as_T(arg);
+  return this.explainAndSolve__T__sjs_js_Array(prep0);
 });
-Object.defineProperty($c_Lgov_irs_factgraph_JSGraph.prototype, "INVALID_INT_ERROR", ({
-  "get": (function() {
-    return this.Lgov_irs_factgraph_JSGraph__f_INVALID_INT_ERROR;
-  }),
-  "configurable": true
-}));
+$c_Lgov_irs_factgraph_JSGraph.prototype.getCollectionIds = (function(arg) {
+  var prep0 = $as_T(arg);
+  return this.getCollectionIds__T__sjs_js_Array(prep0);
+});
 var $d_Lgov_irs_factgraph_JSGraph = new $TypeData().initClass($c_Lgov_irs_factgraph_JSGraph, "gov.irs.factgraph.JSGraph", ({
   Lgov_irs_factgraph_JSGraph: 1,
   Lgov_irs_factgraph_Graph: 1
@@ -32436,7 +32733,7 @@ $c_Lgov_irs_factgraph_compnodes_Dependency$.prototype.apply__Lgov_irs_factgraph_
   matchResult1: {
     var \u03b41$___1;
     var \u03b41$___2;
-    var x1 = $n(path).popEscapes__Lgov_irs_factgraph_Factual__Lgov_irs_factgraph_SelfStack__T2(fact, $n(fact).selfStack__Lgov_irs_factgraph_SelfStack());
+    var x1 = $n(path).popEscapes__Lgov_irs_factgraph_Factual__T2(fact);
     if ((x1 !== null)) {
       var startFact = $as_Lgov_irs_factgraph_Factual($n(x1)._1__O());
       var resolvedPath = $as_Lgov_irs_factgraph_Path($n(x1)._2__O());
@@ -32448,12 +32745,54 @@ $c_Lgov_irs_factgraph_compnodes_Dependency$.prototype.apply__Lgov_irs_factgraph_
   }
   var startFact$2 = $as_Lgov_irs_factgraph_Factual(\u03b41$___1);
   var resolvedPath$2 = $as_Lgov_irs_factgraph_Path(\u03b41$___2);
-  var x4 = $as_Lgov_irs_factgraph_monads_Result($n($n(startFact$2).apply__Lgov_irs_factgraph_Path__Lgov_irs_factgraph_monads_MaybeVector(resolvedPath$2)).apply__I__O(0));
-  if ((x4 instanceof $c_Lgov_irs_factgraph_monads_Result$Complete)) {
-    var x$1 = $as_Lgov_irs_factgraph_monads_Result$Complete(x4);
-    var this$3 = $n(x$1);
-    var x7 = $as_Lgov_irs_factgraph_Factual(this$3.Lgov_irs_factgraph_monads_Result$Complete__f_v);
-    return $n($n(x7).value__Lgov_irs_factgraph_compnodes_CompNode()).dependency__Lgov_irs_factgraph_Path__Lgov_irs_factgraph_compnodes_CompNode(path);
+  matchResult4: {
+    if ((fact instanceof $c_Lgov_irs_factgraph_FactDefinition)) {
+      var host = $as_Lgov_irs_factgraph_FactDefinition(fact);
+      if (((startFact$2 === host) && $n($n($n(host).Lgov_irs_factgraph_FactDefinition__f_dictionary).Lgov_irs_factgraph_FactDictionary__f_valueInProgress).contains__O__Z($n(host).Lgov_irs_factgraph_FactDefinition__f_path))) {
+        var x7 = $m_Lgov_irs_factgraph_RecursiveDependency$().resolveAbstractPath__Lgov_irs_factgraph_FactDefinition__Lgov_irs_factgraph_Path__s_Option(host, resolvedPath$2);
+        if ((x7 instanceof $c_s_Some)) {
+          var x11 = $as_Lgov_irs_factgraph_Path($n($as_s_Some(x7)).s_Some__f_value);
+          var x$2 = $n(host).Lgov_irs_factgraph_FactDefinition__f_path;
+          if (((x11 === null) ? (x$2 === null) : $n(x11).equals__O__Z(x$2))) {
+            var this$2 = $n($m_Lgov_irs_factgraph_RecursiveDependency$().inferType__Lgov_irs_factgraph_FactDefinition__s_Option(host));
+            if (this$2.isEmpty__Z()) {
+              var $x_1 = $m_s_None$();
+            } else {
+              var x0 = this$2.get__O();
+              var _$1 = $as_T(x0);
+              var $x_1 = $m_Lgov_irs_factgraph_RecursiveDependency$().stubDependency__T__Lgov_irs_factgraph_Path__s_Option(_$1, path);
+            }
+            var this$3 = $n($x_1);
+            if (this$3.isEmpty__Z()) {
+              throw $ct_jl_IllegalArgumentException__T__(new $c_jl_IllegalArgumentException(), (("recursive Dependency on '" + $n(host).Lgov_irs_factgraph_FactDefinition__f_path) + "' but its output type couldn't be inferred from the XML config"));
+            }
+            return $as_Lgov_irs_factgraph_compnodes_CompNode(this$3.get__O());
+          }
+          var x4 = $n($n(host).Lgov_irs_factgraph_FactDefinition__f_dictionary).apply__Lgov_irs_factgraph_Path__s_Option(x11);
+          if ((x4 instanceof $c_s_Some)) {
+            var target = $as_Lgov_irs_factgraph_FactDefinition($n($as_s_Some(x4)).s_Some__f_value);
+            return $n($n(target).value__Lgov_irs_factgraph_compnodes_CompNode()).dependency__Lgov_irs_factgraph_Path__Lgov_irs_factgraph_compnodes_CompNode(path);
+          }
+          var x$3 = $m_s_None$();
+          if ((x$3 === x4)) {
+            break matchResult4;
+          }
+          throw new $c_s_MatchError(x4);
+        }
+        var x$5 = $m_s_None$();
+        if ((x$5 === x7)) {
+          break matchResult4;
+        }
+        throw new $c_s_MatchError(x7);
+      }
+    }
+  }
+  var x14 = $as_Lgov_irs_factgraph_monads_Result($n($n(startFact$2).apply__Lgov_irs_factgraph_Path__Lgov_irs_factgraph_monads_MaybeVector(resolvedPath$2)).apply__I__O(0));
+  if ((x14 instanceof $c_Lgov_irs_factgraph_monads_Result$Complete)) {
+    var x$1 = $as_Lgov_irs_factgraph_monads_Result$Complete(x14);
+    var this$5 = $n(x$1);
+    var x17 = $as_Lgov_irs_factgraph_Factual(this$5.Lgov_irs_factgraph_monads_Result$Complete__f_v);
+    return $n($n(x17).value__Lgov_irs_factgraph_compnodes_CompNode()).dependency__Lgov_irs_factgraph_Path__Lgov_irs_factgraph_compnodes_CompNode(path);
   }
   throw $ct_jl_IllegalArgumentException__T__(new $c_jl_IllegalArgumentException(), (((("cannot find fact at path '" + path) + "' from '") + $n(fact).path__Lgov_irs_factgraph_Path()) + "'"));
 });
@@ -47596,9 +47935,9 @@ $c_Lgov_irs_factgraph_Path$.prototype.apply__T__Lgov_irs_factgraph_Path = (funct
     var absolute = (this$1 === "");
     var $x_10 = $m_s_Predef$();
     var xs = $asArrayOf_O($m_sc_ArrayOps$().drop$extension__O__I__O(item_strs, (absolute ? 1 : 0)), 1);
-    var f = ((_$10) => {
-      var _$10$1 = $as_T(_$10);
-      return $m_Lgov_irs_factgraph_PathItem$().apply__T__Lgov_irs_factgraph_PathItem(_$10$1);
+    var f = ((_$9) => {
+      var _$9$1 = $as_T(_$9);
+      return $m_Lgov_irs_factgraph_PathItem$().apply__T__Lgov_irs_factgraph_PathItem(_$9$1);
     });
     var len = $n(xs).u.length;
     var ys = new ($d_Lgov_irs_factgraph_PathItem.getArrayOf().constr)(len);
@@ -47722,7 +48061,7 @@ function $c_Lgov_irs_factgraph_PathItem$() {
   this.Lgov_irs_factgraph_PathItem$__f_WildcardKey = null;
   this.Lgov_irs_factgraph_PathItem$__f_gov$irs$factgraph$PathItem$$$UnknownKey = null;
   this.Lgov_irs_factgraph_PathItem$__f_gov$irs$factgraph$PathItem$$$ParentKey = null;
-  this.Lgov_irs_factgraph_PathItem$__f_EscapeKey = 0;
+  this.Lgov_irs_factgraph_PathItem$__f_gov$irs$factgraph$PathItem$$$EscapeKey = 0;
   this.Lgov_irs_factgraph_PathItem$__f_MemberPrefix = 0;
   $n_Lgov_irs_factgraph_PathItem$ = this;
   $t_Lgov_irs_factgraph_PathItem$__Parent = new $c_Lgov_irs_factgraph_PathItem$$anon$1("Parent", 1);
@@ -47731,7 +48070,7 @@ function $c_Lgov_irs_factgraph_PathItem$() {
   this.Lgov_irs_factgraph_PathItem$__f_WildcardKey = "*";
   this.Lgov_irs_factgraph_PathItem$__f_gov$irs$factgraph$PathItem$$$UnknownKey = "?";
   this.Lgov_irs_factgraph_PathItem$__f_gov$irs$factgraph$PathItem$$$ParentKey = "..";
-  this.Lgov_irs_factgraph_PathItem$__f_EscapeKey = 94;
+  this.Lgov_irs_factgraph_PathItem$__f_gov$irs$factgraph$PathItem$$$EscapeKey = 94;
   this.Lgov_irs_factgraph_PathItem$__f_MemberPrefix = 35;
 }
 $c_Lgov_irs_factgraph_PathItem$.prototype = new $h_O();
@@ -47758,7 +48097,7 @@ $c_Lgov_irs_factgraph_PathItem$.prototype.apply__T__Lgov_irs_factgraph_PathItem 
           var this$7 = $n(str);
           var index = i;
           var x0 = $charAt(this$7, index);
-          if ((!(x0 === $m_Lgov_irs_factgraph_PathItem$().Lgov_irs_factgraph_PathItem$__f_EscapeKey))) {
+          if ((!(x0 === $m_Lgov_irs_factgraph_PathItem$().Lgov_irs_factgraph_PathItem$__f_gov$irs$factgraph$PathItem$$$EscapeKey))) {
             var $x_1 = false;
             break _return;
           }
@@ -58674,6 +59013,9 @@ $c_sc_IterableFactory$Delegate.prototype.constructor = $c_sc_IterableFactory$Del
 function $h_sc_IterableFactory$Delegate() {
 }
 $h_sc_IterableFactory$Delegate.prototype = $c_sc_IterableFactory$Delegate.prototype;
+$c_sc_IterableFactory$Delegate.prototype.apply__sci_Seq__O = (function(elems) {
+  return $n(this.sc_IterableFactory$Delegate__f_delegate).apply__sci_Seq__O(elems);
+});
 $c_sc_IterableFactory$Delegate.prototype.empty__O = (function() {
   return $n(this.sc_IterableFactory$Delegate__f_delegate).empty__O();
 });
@@ -58881,6 +59223,9 @@ $h_sc_Iterator$.prototype = $c_sc_Iterator$.prototype;
 $c_sc_Iterator$.prototype.newBuilder__scm_Builder = (function() {
   return new $c_sc_Iterator$$anon$21();
 });
+$c_sc_Iterator$.prototype.apply__sci_Seq__O = (function(elems) {
+  return $n(elems).iterator__sc_Iterator();
+});
 $c_sc_Iterator$.prototype.empty__O = (function() {
   return this.sc_Iterator$__f_scala$collection$Iterator$$_empty;
 });
@@ -58955,6 +59300,9 @@ $c_sc_View$.prototype.newBuilder__scm_Builder = (function() {
     return $m_sc_View$().from__sc_IterableOnce__sc_View(it$2);
   }));
   return new $c_scm_Builder$$anon$1(this$2, f);
+});
+$c_sc_View$.prototype.apply__sci_Seq__O = (function(elems) {
+  return new $c_sc_View$Elems(elems);
 });
 $c_sc_View$.prototype.empty__O = (function() {
   return $m_sc_View$Empty$();
@@ -60873,6 +61221,9 @@ $c_sci_HashSet$.prototype.constructor = $c_sci_HashSet$;
 function $h_sci_HashSet$() {
 }
 $h_sci_HashSet$.prototype = $c_sci_HashSet$.prototype;
+$c_sci_HashSet$.prototype.apply__sci_Seq__O = (function(elems) {
+  return this.from__sc_IterableOnce__sci_HashSet(elems);
+});
 $c_sci_HashSet$.prototype.from__sc_IterableOnce__sci_HashSet = (function(source) {
   if ((source instanceof $c_sci_HashSet)) {
     var x2 = $as_sci_HashSet(source);
@@ -61080,6 +61431,9 @@ $c_sci_Set$.prototype.constructor = $c_sci_Set$;
 function $h_sci_Set$() {
 }
 $h_sci_Set$.prototype = $c_sci_Set$.prototype;
+$c_sci_Set$.prototype.apply__sci_Seq__O = (function(elems) {
+  return this.from__sc_IterableOnce__sci_Set(elems);
+});
 $c_sci_Set$.prototype.from__sc_IterableOnce__sci_Set = (function(it) {
   if (($n(it).knownSize__I() === 0)) {
     return $m_sci_Set$EmptySet$();
@@ -61237,6 +61591,9 @@ $c_scm_HashSet$.prototype.constructor = $c_scm_HashSet$;
 function $h_scm_HashSet$() {
 }
 $h_scm_HashSet$.prototype = $c_scm_HashSet$.prototype;
+$c_scm_HashSet$.prototype.apply__sci_Seq__O = (function(elems) {
+  return this.from__sc_IterableOnce__scm_HashSet(elems);
+});
 $c_scm_HashSet$.prototype.from__sc_IterableOnce__scm_HashSet = (function(it) {
   var k = $n(it).knownSize__I();
   var cap = ((k > 0) ? $doubleToInt((((1 + k) | 0) / 0.75)) : 16);
@@ -61604,6 +61961,9 @@ $c_sjs_js_WrappedSet$.prototype.constructor = $c_sjs_js_WrappedSet$;
 function $h_sjs_js_WrappedSet$() {
 }
 $h_sjs_js_WrappedSet$.prototype = $c_sjs_js_WrappedSet$.prototype;
+$c_sjs_js_WrappedSet$.prototype.apply__sci_Seq__O = (function(elems) {
+  return this.from__sc_IterableOnce__sjs_js_WrappedSet(elems);
+});
 $c_sjs_js_WrappedSet$.prototype.newBuilder__scm_Builder = (function() {
   return new $c_sjs_js_WrappedSet$WrappedSetBuilder();
 });
@@ -65641,8 +66001,8 @@ function $p_Lgov_irs_factgraph_Path__populateFirstWildcard__Lgov_irs_factgraph_G
   while (true) {
     if ((!$n(these).isEmpty__Z())) {
       var x0 = $n(these).head__O();
-      var _$6 = $as_Lgov_irs_factgraph_PathItem(x0);
-      var $x_1 = (!$n(_$6).isWildcard__Z());
+      var _$5 = $as_Lgov_irs_factgraph_PathItem(x0);
+      var $x_1 = (!$n(_$5).isWildcard__Z());
     } else {
       var $x_1 = false;
     }
@@ -65661,8 +66021,8 @@ function $p_Lgov_irs_factgraph_Path__populateFirstWildcard__Lgov_irs_factgraph_G
     var this$3 = $n(s);
     if ((!this$3.isEmpty__Z())) {
       var x0$1 = $n(s).head__O();
-      var _$7 = $as_Lgov_irs_factgraph_PathItem(x0$1);
-      var $x_2 = (!$n(_$7).isWildcard__Z());
+      var _$6 = $as_Lgov_irs_factgraph_PathItem(x0$1);
+      var $x_2 = (!$n(_$6).isWildcard__Z());
     } else {
       var $x_2 = false;
     }
@@ -65678,8 +66038,8 @@ function $p_Lgov_irs_factgraph_Path__populateFirstWildcard__Lgov_irs_factgraph_G
     var this$5 = $n(s$1);
     if ((!this$5.isEmpty__Z())) {
       var x0$2 = $n(s$1).head__O();
-      var _$8 = $as_Lgov_irs_factgraph_PathItem(x0$2);
-      var $x_3 = $n(_$8).isWildcard__Z();
+      var _$7 = $as_Lgov_irs_factgraph_PathItem(x0$2);
+      var $x_3 = $n(_$7).isWildcard__Z();
     } else {
       var $x_3 = false;
     }
@@ -65710,11 +66070,11 @@ function $p_Lgov_irs_factgraph_Path__populateFirstWildcard__Lgov_irs_factgraph_G
       if ((vector instanceof $c_Lgov_irs_factgraph_monads_MaybeVector$Multiple)) {
         var x$1 = $as_Lgov_irs_factgraph_monads_MaybeVector$Multiple(vector);
         var this$8 = $n(x$1);
-        var x38 = this$8.Lgov_irs_factgraph_monads_MaybeVector$Multiple__f_vect;
+        var x36 = this$8.Lgov_irs_factgraph_monads_MaybeVector$Multiple__f_vect;
         var this$9 = $n(x$1);
-        var x39 = this$9.Lgov_irs_factgraph_monads_MaybeVector$Multiple__f_c;
-        if (x39) {
-          var $x_4 = $as_scg_DefaultSerializable($n(x38).map__F1__O(new $c_sjsr_AnonFunction1_$$Lambda$3aa60c34ef08a878abffbf4628007cc68fa3c7ab(((result) => {
+        var x37 = this$9.Lgov_irs_factgraph_monads_MaybeVector$Multiple__f_c;
+        if (x37) {
+          var $x_4 = $as_scg_DefaultSerializable($n(x36).map__F1__O(new $c_sjsr_AnonFunction1_$$Lambda$3aa60c34ef08a878abffbf4628007cc68fa3c7ab(((result) => {
             var result$1 = $as_Lgov_irs_factgraph_monads_Result(result);
             return $n($n(pathBeforeWildcard).$colon$plus__Lgov_irs_factgraph_PathItem__Lgov_irs_factgraph_Path($m_Lgov_irs_factgraph_PathItem$().apply__T__Lgov_irs_factgraph_PathItem(($cToS($m_Lgov_irs_factgraph_PathItem$().Lgov_irs_factgraph_PathItem$__f_MemberPrefix) + $n($as_Lgov_irs_factgraph_types_CollectionItem($n($n(result$1).value__s_Option()).get__O())).Lgov_irs_factgraph_types_CollectionItem__f_id)))).$plus$plus__sci_Seq__Lgov_irs_factgraph_Path(pathItemsAfterFirstWildcard);
           }))));
@@ -65936,24 +66296,21 @@ $c_Lgov_irs_factgraph_Path.prototype.getMemberId__s_Option = (function() {
     return $m_s_None$();
   }
 });
-$c_Lgov_irs_factgraph_Path.prototype.popEscapes__Lgov_irs_factgraph_Factual__Lgov_irs_factgraph_SelfStack__T2 = (function(currentFact, selfStack) {
-  var x22 = $n(this.Lgov_irs_factgraph_Path__f__items).reverse__sci_List();
-  if ((x22 instanceof $c_sci_$colon$colon)) {
-    var x23 = $as_sci_$colon$colon(x22);
-    var x24 = $as_Lgov_irs_factgraph_PathItem($n(x23).sci_$colon$colon__f_head);
-    var x25 = $n(x23).sci_$colon$colon__f_next;
-    if ((x24 instanceof $c_Lgov_irs_factgraph_PathItem$Escape)) {
-      var x$1 = $as_Lgov_irs_factgraph_PathItem$Escape(x24);
+$c_Lgov_irs_factgraph_Path.prototype.popEscapes__Lgov_irs_factgraph_Factual__T2 = (function(currentFact) {
+  var x20 = $n(this.Lgov_irs_factgraph_Path__f__items).reverse__sci_List();
+  if ((x20 instanceof $c_sci_$colon$colon)) {
+    var x21 = $as_sci_$colon$colon(x20);
+    var x22 = $as_Lgov_irs_factgraph_PathItem($n(x21).sci_$colon$colon__f_head);
+    var x23 = $n(x21).sci_$colon$colon__f_next;
+    if ((x22 instanceof $c_Lgov_irs_factgraph_PathItem$Escape)) {
+      var x$1 = $as_Lgov_irs_factgraph_PathItem$Escape(x22);
       var this$2 = $n(x$1);
-      var x28 = this$2.Lgov_irs_factgraph_PathItem$Escape__f_level;
-      var x17 = $n(selfStack).pop__I__s_Option(x28);
+      var x26 = this$2.Lgov_irs_factgraph_PathItem$Escape__f_level;
+      var x17 = $n($n(currentFact).selfStack__Lgov_irs_factgraph_SelfStack()).pop__I__s_Option(x26);
       if ((x17 instanceof $c_s_Some)) {
-        var x19 = $as_T2($n($as_s_Some(x17)).s_Some__f_value);
-        if ((x19 !== null)) {
-          var outerFact = $as_Lgov_irs_factgraph_Factual($n(x19)._1__O());
-          var _2 = new $c_Lgov_irs_factgraph_Path($n(x25).reverse__sci_List(), false);
-          return $ct_T2__O__O__(new $c_T2(), outerFact, _2);
-        }
+        var outerFact = $as_Lgov_irs_factgraph_Factual($n($as_s_Some(x17)).s_Some__f_value);
+        var _2 = new $c_Lgov_irs_factgraph_Path($n(x23).reverse__sci_List(), false);
+        return $ct_T2__O__O__(new $c_T2(), outerFact, _2);
       }
       var x = $m_s_None$();
       if ((x === x17)) {
@@ -65968,9 +66325,9 @@ $c_Lgov_irs_factgraph_Path.prototype.asAbstract__Lgov_irs_factgraph_Path = (func
   var this$1 = $n($n(this.Lgov_irs_factgraph_Path__f__items).reverse__sci_List());
   matchResult9: {
     var z;
-    var x29 = $as_Lgov_irs_factgraph_PathItem($n($n(this.Lgov_irs_factgraph_Path__f__items).reverse__sci_List()).head__O());
+    var x27 = $as_Lgov_irs_factgraph_PathItem($n($n(this.Lgov_irs_factgraph_Path__f__items).reverse__sci_List()).head__O());
     var x = $s_Lgov_irs_factgraph_PathItem$__Parent__Lgov_irs_factgraph_PathItem();
-    if (((x === null) ? (x29 === null) : $n(x).equals__O__Z(x29))) {
+    if (((x === null) ? (x27 === null) : $n(x).equals__O__Z(x27))) {
       var z = $m_Lgov_irs_factgraph_Path$().apply__T__Lgov_irs_factgraph_Path("");
       break matchResult9;
     }
@@ -65997,25 +66354,25 @@ $c_Lgov_irs_factgraph_Path.prototype.asAbstract__Lgov_irs_factgraph_Path = (func
   return $as_Lgov_irs_factgraph_Path(acc);
 });
 $c_Lgov_irs_factgraph_Path.prototype.populateWildcards__Lgov_irs_factgraph_Graph__sci_Seq__sci_Seq = (function(graph, pathsWithoutWildcards) {
-  var x34 = this.isWildcard__Z();
-  if ((x34 === false)) {
+  var x32 = this.isWildcard__Z();
+  if ((x32 === false)) {
     var this$1 = $n($n(pathsWithoutWildcards).toList__sci_List());
     return new $c_sci_$colon$colon(this, this$1);
   }
-  if ((x34 === true)) {
+  if ((x32 === true)) {
     return $as_sci_Seq($n($p_Lgov_irs_factgraph_Path__populateFirstWildcard__Lgov_irs_factgraph_Graph__sci_Seq(this, graph)).flatMap__F1__O(new $c_sjsr_AnonFunction1_$$Lambda$3aa60c34ef08a878abffbf4628007cc68fa3c7ab(((pathPerhapsWithWildcards) => {
       var pathPerhapsWithWildcards$1 = $as_Lgov_irs_factgraph_Path(pathPerhapsWithWildcards);
       return $n(pathPerhapsWithWildcards$1).populateWildcards__Lgov_irs_factgraph_Graph__sci_Seq__sci_Seq(graph, pathsWithoutWildcards);
     }))));
   }
-  throw new $c_s_MatchError(x34);
+  throw new $c_s_MatchError(x32);
 });
 $c_Lgov_irs_factgraph_Path.prototype.toString__T = (function() {
   var prefix = (this.Lgov_irs_factgraph_Path__f_absolute ? "/" : "");
   var this$1 = $n($n(this.Lgov_irs_factgraph_Path__f__items).reverse__sci_List());
-  var f = ((_$9) => {
-    var _$9$1 = $as_Lgov_irs_factgraph_PathItem(_$9);
-    return $n(_$9$1).toString__T();
+  var f = ((_$8) => {
+    var _$8$1 = $as_Lgov_irs_factgraph_PathItem(_$8);
+    return $n(_$8$1).toString__T();
   });
   if ((this$1 === $m_sci_Nil$())) {
     var this$2 = $m_sci_Nil$();
@@ -66169,12 +66526,7 @@ $c_Lgov_irs_factgraph_SelfStack.prototype.pop__I__s_Option = (function(level) {
   if (((level >= 1) && ($n(this.Lgov_irs_factgraph_SelfStack__f_stack).length__I() >= level))) {
     var this$1 = $n(this.Lgov_irs_factgraph_SelfStack__f_stack);
     var n = (((-1) + level) | 0);
-    var _1 = $f_sc_LinearSeqOps__apply__I__O(this$1, n);
-    $m_Lgov_irs_factgraph_SelfStack$();
-    var this$2 = $n(this.Lgov_irs_factgraph_SelfStack__f_stack);
-    var stack = $as_sci_List($p_sc_StrictOptimizedLinearSeqOps__loop$2__I__sc_LinearSeq__sc_LinearSeq(this$2, level, this$2));
-    var _2 = new $c_Lgov_irs_factgraph_SelfStack(stack);
-    var value = $ct_T2__O__O__(new $c_T2(), _1, _2);
+    var value = $f_sc_LinearSeqOps__apply__I__O(this$1, n);
     return new $c_s_Some(value);
   } else {
     return $m_s_None$();
@@ -76718,6 +77070,30 @@ function $m_scm_Map$() {
   return $n_scm_Map$;
 }
 /** @constructor */
+function $c_scm_Set$() {
+  this.sc_IterableFactory$Delegate__f_delegate = null;
+  $ct_sc_IterableFactory$Delegate__sc_IterableFactory__(this, $m_scm_HashSet$());
+}
+$c_scm_Set$.prototype = new $h_sc_IterableFactory$Delegate();
+$c_scm_Set$.prototype.constructor = $c_scm_Set$;
+/** @constructor */
+function $h_scm_Set$() {
+}
+$h_scm_Set$.prototype = $c_scm_Set$.prototype;
+var $d_scm_Set$ = new $TypeData().initClass($c_scm_Set$, "scala.collection.mutable.Set$", ({
+  scm_Set$: 1,
+  sc_IterableFactory$Delegate: 1,
+  sc_IterableFactory: 1,
+  Ljava_io_Serializable: 1
+}));
+var $n_scm_Set$;
+function $m_scm_Set$() {
+  if ((!$n_scm_Set$)) {
+    $n_scm_Set$ = new $c_scm_Set$();
+  }
+  return $n_scm_Set$;
+}
+/** @constructor */
 function $c_s_concurrent_duration_Duration() {
 }
 $c_s_concurrent_duration_Duration.prototype = new $h_O();
@@ -82465,7 +82841,7 @@ function $p_Lgov_irs_factgraph_Expression__dependency__Lgov_irs_factgraph_Path__
   matchResult10: {
     var \u03b41$___1;
     var \u03b41$___2;
-    var x163 = $n(path).popEscapes__Lgov_irs_factgraph_Factual__Lgov_irs_factgraph_SelfStack__T2(fact, $n(fact).selfStack__Lgov_irs_factgraph_SelfStack());
+    var x163 = $n(path).popEscapes__Lgov_irs_factgraph_Factual__T2(fact);
     if ((x163 !== null)) {
       var startFact = $as_Lgov_irs_factgraph_Factual($n(x163)._1__O());
       var resolvedPath = $as_Lgov_irs_factgraph_Path($n(x163)._2__O());
@@ -83386,15 +83762,15 @@ $c_Lgov_irs_factgraph_Expression.prototype.explain__Lgov_irs_factgraph_Factual__
   throw new $c_s_MatchError(this);
 });
 $c_Lgov_irs_factgraph_Expression.prototype.collect__Lgov_irs_factgraph_Path__Lgov_irs_factgraph_Expression__Lgov_irs_factgraph_operators_CollectOperator__Lgov_irs_factgraph_Factual__Lgov_irs_factgraph_monads_Result = (function(path, x, op, fact) {
-  matchResult19: {
+  matchResult20: {
     var outerScope;
-    var x205 = $as_Lgov_irs_factgraph_monads_Result($n($n(fact).apply__Lgov_irs_factgraph_PathItem__Lgov_irs_factgraph_monads_MaybeVector($s_Lgov_irs_factgraph_PathItem$__Parent__Lgov_irs_factgraph_PathItem())).apply__I__O(0));
-    if ((x205 instanceof $c_Lgov_irs_factgraph_monads_Result$Complete)) {
-      var x$1 = $as_Lgov_irs_factgraph_monads_Result$Complete(x205);
+    var x207 = $as_Lgov_irs_factgraph_monads_Result($n($n(fact).apply__Lgov_irs_factgraph_PathItem__Lgov_irs_factgraph_monads_MaybeVector($s_Lgov_irs_factgraph_PathItem$__Parent__Lgov_irs_factgraph_PathItem())).apply__I__O(0));
+    if ((x207 instanceof $c_Lgov_irs_factgraph_monads_Result$Complete)) {
+      var x$1 = $as_Lgov_irs_factgraph_monads_Result$Complete(x207);
       var this$2 = $n(x$1);
-      var x208 = $as_Lgov_irs_factgraph_Factual(this$2.Lgov_irs_factgraph_monads_Result$Complete__f_v);
-      var outerScope = x208;
-      break matchResult19;
+      var x210 = $as_Lgov_irs_factgraph_Factual(this$2.Lgov_irs_factgraph_monads_Result$Complete__f_v);
+      var outerScope = x210;
+      break matchResult20;
     }
     var outerScope = fact;
   }
@@ -83568,13 +83944,13 @@ $c_Lgov_irs_factgraph_Expression.prototype.conditionExplain__sci_List__Lgov_irs_
     while ($n(it).hasNext__Z()) {
       var x0 = $n(it).next__O();
       var x$1$4 = $as_T2(x0);
-      matchResult22: {
+      matchResult23: {
         var elems;
         if ((x$1$4 !== null)) {
           var a = $as_Lgov_irs_factgraph_Explanation($n(x$1$4)._1__O());
           var b$1 = $as_Lgov_irs_factgraph_Explanation($n(x$1$4)._2__O());
           var elems = new $c_sci_$colon$colon(a, new $c_sci_$colon$colon(b$1, $m_sci_Nil$()));
-          break matchResult22;
+          break matchResult23;
         }
         throw new $c_s_MatchError(x$1$4);
       }
@@ -83908,7 +84284,7 @@ $c_Lgov_irs_factgraph_PathItem.prototype.toString__T = (function() {
     var this$2 = $n(x$1);
     var x34 = this$2.Lgov_irs_factgraph_PathItem$Escape__f_level;
     var $x_1 = $m_sc_StringOps$();
-    var this$3 = $m_Lgov_irs_factgraph_PathItem$().Lgov_irs_factgraph_PathItem$__f_EscapeKey;
+    var this$3 = $m_Lgov_irs_factgraph_PathItem$().Lgov_irs_factgraph_PathItem$__f_gov$irs$factgraph$PathItem$$$EscapeKey;
     var x$2 = ("" + $cToS(this$3));
     return $x_1.$times$extension__T__I__T(x$2, x34);
   }
@@ -129171,6 +129547,38 @@ var $d_sc_View$Drop = new $TypeData().initClass($c_sc_View$Drop, "scala.collecti
   Ljava_io_Serializable: 1
 }));
 /** @constructor */
+function $c_sc_View$Elems(xs) {
+  this.sc_View$Elems__f_xs = null;
+  this.sc_View$Elems__f_xs = xs;
+}
+$c_sc_View$Elems.prototype = new $h_sc_AbstractView();
+$c_sc_View$Elems.prototype.constructor = $c_sc_View$Elems;
+/** @constructor */
+function $h_sc_View$Elems() {
+}
+$h_sc_View$Elems.prototype = $c_sc_View$Elems.prototype;
+$c_sc_View$Elems.prototype.iterator__sc_Iterator = (function() {
+  return $n(this.sc_View$Elems__f_xs).iterator__sc_Iterator();
+});
+$c_sc_View$Elems.prototype.knownSize__I = (function() {
+  return $n(this.sc_View$Elems__f_xs).knownSize__I();
+});
+$c_sc_View$Elems.prototype.isEmpty__Z = (function() {
+  return $n(this.sc_View$Elems__f_xs).isEmpty__Z();
+});
+var $d_sc_View$Elems = new $TypeData().initClass($c_sc_View$Elems, "scala.collection.View$Elems", ({
+  sc_View$Elems: 1,
+  sc_AbstractView: 1,
+  sc_AbstractIterable: 1,
+  sc_Iterable: 1,
+  sc_IterableOnce: 1,
+  sc_IterableOps: 1,
+  sc_IterableOnceOps: 1,
+  sc_IterableFactoryDefaults: 1,
+  sc_View: 1,
+  Ljava_io_Serializable: 1
+}));
+/** @constructor */
 function $c_sc_View$Filter(underlying, p, isFlipped) {
   this.sc_View$Filter__f_underlying = null;
   this.sc_View$Filter__f_p = null;
@@ -130898,6 +131306,15 @@ function $isArrayOf_sci_Set(obj, depth) {
 }
 function $asArrayOf_sci_Set(obj, depth) {
   return (($isArrayOf_sci_Set(obj, depth) || (obj === null)) ? obj : $throwArrayCastException(obj, "Lscala.collection.immutable.Set;", depth));
+}
+function $f_scm_SetOps__add__O__Z($thiz, elem) {
+  if ((!$thiz.contains__O__Z(elem))) {
+    var this$1 = $n($as_scm_Growable($thiz));
+    this$1.addOne__O__scm_Growable(elem);
+    return true;
+  } else {
+    return false;
+  }
 }
 function $f_Lcats_Alternative__guard__Z__O($thiz, condition) {
   return (condition ? $thiz.unit__O() : $thiz.empty__O());
@@ -138810,6 +139227,9 @@ $c_scm_AbstractSet.prototype.constructor = $c_scm_AbstractSet;
 function $h_scm_AbstractSet() {
 }
 $h_scm_AbstractSet.prototype = $c_scm_AbstractSet.prototype;
+$c_scm_AbstractSet.prototype.add__O__Z = (function(elem) {
+  return $f_scm_SetOps__add__O__Z(this, elem);
+});
 $c_scm_AbstractSet.prototype.knownSize__I = (function() {
   return (-1);
 });
@@ -139723,6 +140143,9 @@ $c_sjs_js_WrappedSet.prototype.contains__O__Z = (function(value) {
 $c_sjs_js_WrappedSet.prototype.addOne__O__sjs_js_WrappedSet = (function(elem) {
   this.sjs_js_WrappedSet__f_underlying.add(elem);
   return this;
+});
+$c_sjs_js_WrappedSet.prototype.add__O__Z = (function(elem) {
+  return ((!$uZ(this.sjs_js_WrappedSet__f_underlying.has(elem))) && (this.sjs_js_WrappedSet__f_underlying.add(elem), true));
 });
 $c_sjs_js_WrappedSet.prototype.remove__O__Z = (function(elem) {
   return $uZ(this.sjs_js_WrappedSet__f_underlying.delete(elem));

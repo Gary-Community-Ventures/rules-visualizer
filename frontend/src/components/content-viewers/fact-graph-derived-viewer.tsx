@@ -65,6 +65,22 @@ export function FactGraphDerivedViewer({ content }: Props) {
       <AdvancedSection>
         {content.dataType && <Field label="Returns" value={content.dataType} />}
         <Field label="Path" value={content.path} />
+        {content.placeholderLogic !== undefined && (
+          <div>
+            <span className="text-muted-foreground font-medium">Placeholder</span>
+            {content.placeholderLogic ? (
+              <LogicHighlighter
+                format="factGraph"
+                logic={content.placeholderLogic}
+                onNavigate={navigateToPath}
+              />
+            ) : (
+              <p className="mt-0.5 text-muted-foreground italic">
+                (empty)
+              </p>
+            )}
+          </div>
+        )}
       </AdvancedSection>
     </div>
   )
