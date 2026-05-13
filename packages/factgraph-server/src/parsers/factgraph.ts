@@ -175,6 +175,22 @@ export function parseFactGraphModules(
     }
   }
 
+  // CollectionItem reference lookup: path → target collection path. Lets
+  // resolvePath walk slash-separated paths like "relatedTo/isHeadOfHousehold"
+  // segment-by-segment, hopping through references the same way the engine
+  // follows CollectionItem aliases at evaluation time.
+  const collectionItemPathByPath: Record<string, string> = {}
+  for (const node of Object.values(nodes)) {
+    const c = node.content
+    if (
+      c.format === 'factGraph' &&
+      c.type === 'writable' &&
+      c.collectionItemPath
+    ) {
+      collectionItemPathByPath[c.path] = c.collectionItemPath
+    }
+  }
+
   // Phase 3: Resolve dependencies
   for (let i = 0; i < allFacts.length; i++) {
     const fact = allFacts[i]
@@ -185,22 +201,33 @@ export function parseFactGraphModules(
     const resolved = new Set<string>()
 
     for (const ref of depRefs) {
-      // Resolve relative paths (e.g. "../lastName") against the fact's own path
-      const absolutePath = resolvePath(ref.path, fact.path, ref.scope)
-      let depId = pathToId[absolutePath]
+      // Resolve relative paths (e.g. "../lastName") against the fact's own
+      // path. Multi-hop CollectionItem dereferences produce one entry per
+      // hop plus the final target — every fact the engine touches becomes
+      // its own dep edge.
+      const absolutePaths = resolvePaths(
+        ref.path,
+        fact.path,
+        ref.scope,
+        collectionItemPathByPath
+      )
 
-      // Fuzzy match: /primaryFiler/X or /secondaryFiler/X -> /filers/*/X
-      if (!depId) {
-        const segments = absolutePath.split('/').filter(Boolean)
-        if (segments.length >= 2) {
-          // Try matching the last segment against wildcard collection items
-          const lastSegment = segments[segments.length - 1]
-          depId = suffixToId[lastSegment]
+      for (const absolutePath of absolutePaths) {
+        let depId = pathToId[absolutePath]
+
+        // Fuzzy match: /primaryFiler/X or /secondaryFiler/X -> /filers/*/X
+        if (!depId) {
+          const segments = absolutePath.split('/').filter(Boolean)
+          if (segments.length >= 2) {
+            // Try matching the last segment against wildcard collection items
+            const lastSegment = segments[segments.length - 1]
+            depId = suffixToId[lastSegment]
+          }
         }
-      }
 
-      if (depId && depId !== id) {
-        resolved.add(depId)
+        if (depId && depId !== id) {
+          resolved.add(depId)
+        }
       }
     }
 
@@ -623,24 +650,31 @@ function inferType(node: unknown): string | undefined {
   return undefined
 }
 
-// Resolve a dependency path relative to the owning fact's path.
-//   - Absolute paths (starting with /) are returned as-is.
-//   - Relative paths starting with ../ are resolved against the parent of the
-//     fact path: "../lastName" relative to "/filers/x/fullName" becomes
-//     "/filers/x/lastName".
-//   - Escape paths starting with ^ (the SelfStack escape — see Path.popEscapes
-//     in the Scala engine) pop one path segment per ^ char, mirroring the
-//     engine's choice of pushing fact.parent onto the SelfStack at each
-//     Filter scope. "^/active" relative to "/members/*/match" becomes
-//     "/members/*/active"; bare "^" becomes "/members/*".
-//   - Bare field names ("memberId") are resolved against `scope` when given —
-//     the most-recent enclosing Filter/Find/IndexOf collection path. Inside
-//     <Filter path="/incomes">, "memberId" becomes "/incomes/*/memberId".
-function resolvePath(
+// Resolve a Dependency path to one or more absolute fact paths. Multi-element
+// returns happen when a path traverses a CollectionItem reference: every hop
+// becomes its own dep edge (the reference field itself + the dereferenced
+// target field), mirroring what the engine actually touches at evaluation
+// time.
+//   - Absolute paths (starting with /) are returned as a single-element array.
+//   - Relative paths starting with ../ are resolved against the parent of
+//     the fact path: "../lastName" relative to "/filers/x/fullName" becomes
+//     ["/filers/x/lastName"].
+//   - Escape paths starting with ^ (the SelfStack escape) pop one path
+//     segment per ^ char. "^/active" relative to "/members/*/match" becomes
+//     ["/members/*/active"]; bare "^" becomes ["/members/*"].
+//   - Bare/relative paths are walked segment-by-segment from the starting
+//     context (the Filter/Find/IndexOf `scope` collection-item if given,
+//     otherwise the fact's own collection-item). At each segment, if the
+//     resolved path is a CollectionItem reference, we record an edge to it
+//     and continue resolving against the reference's target collection.
+//     "relatedTo/isHeadOfHousehold" from /members/*/X becomes
+//     ["/members/*/relatedTo", "/members/*/isHeadOfHousehold"].
+function resolvePaths(
   depPath: string,
   factPath: string,
-  scope?: string
-): string {
+  scope: string | undefined,
+  collectionItemPathByPath: Record<string, string>
+): string[] {
   if (/^\^+(\/|$)/.test(depPath)) {
     const slashIdx = depPath.indexOf('/')
     const head = slashIdx === -1 ? depPath : depPath.slice(0, slashIdx)
@@ -651,38 +685,64 @@ function resolvePath(
     // parent, ^^ pops one further level, etc.
     for (let i = 0; i < head.length; i++) factSegments.pop()
     const base = factSegments.length === 0 ? '' : '/' + factSegments.join('/')
-    if (tail.length === 0) return base === '' ? '/' : base
-    return (base === '' ? '' : base) + '/' + tail
+    if (tail.length === 0) return [base === '' ? '/' : base]
+    return [(base === '' ? '' : base) + '/' + tail]
   }
 
-  if (!depPath.startsWith('../')) {
-    // Bare relative names ("memberId", "foo/bar") resolve against the scope
-    // path of the enclosing Filter/Find/IndexOf when one is in effect, since
-    // those operators rebind the active Factual to a collection item.
-    // Anything starting with "/" is already absolute and falls through.
-    if (depPath.length > 0 && !depPath.startsWith('/') && scope) {
-      const scopeBase = scope.endsWith('/')
-        ? `${scope}*/`
-        : `${scope}/*/`
-      return `${scopeBase}${depPath}`
+  if (depPath.startsWith('../')) {
+    // ../foo relative to /filers/*/fullName means /filers/*/foo
+    // (sibling in the collection). Each ../ pops one segment.
+    const factSegments = factPath.split('/').filter(Boolean)
+    let remaining = depPath
+    factSegments.pop()
+    while (remaining.startsWith('../')) {
+      remaining = remaining.slice(3)
     }
-    return depPath
+    return ['/' + factSegments.join('/') + '/' + remaining]
   }
 
-  // ../foo relative to /filers/*/fullName means /filers/*/foo (sibling in the collection).
-  // Each ../ pops one segment from the fact path.
-  const factSegments = factPath.split('/').filter(Boolean)
-  let remaining = depPath
-
-  // Pop the last segment (the fact's own name)
-  factSegments.pop()
-
-  while (remaining.startsWith('../')) {
-    remaining = remaining.slice(3)
-    // Don't pop further — ../ means sibling, not parent of the collection
+  // Absolute paths (start with /) — already an absolute path, no walking.
+  if (depPath.startsWith('/')) {
+    return [depPath]
   }
 
-  return '/' + factSegments.join('/') + '/' + remaining
+  // Empty path — nothing to resolve.
+  if (depPath.length === 0) {
+    return []
+  }
+
+  // Relative path through CollectionItem hops. Pick a starting collection-
+  // item base: the Filter/Find scope (if any), or the host fact's own
+  // collection-item if the host lives in one.
+  let basePath: string
+  if (scope) {
+    basePath = scope.endsWith('/') ? `${scope}*` : `${scope}/*`
+  } else {
+    const factSegs = factPath.split('/').filter(Boolean)
+    factSegs.pop() // drop the fact's own leaf to land at the collection-item
+    basePath = '/' + factSegs.join('/')
+  }
+
+  const segments = depPath.split('/').filter(Boolean)
+  const edges: string[] = []
+  for (const segment of segments) {
+    const resolved = basePath === '/' ? `/${segment}` : `${basePath}/${segment}`
+    edges.push(resolved)
+    const targetCollection = collectionItemPathByPath[resolved]
+    if (targetCollection) {
+      // Hop through the reference: subsequent segments resolve against the
+      // target collection's items.
+      basePath = targetCollection.endsWith('/')
+        ? `${targetCollection}*`
+        : `${targetCollection}/*`
+    } else {
+      // Not a CollectionItem reference — any remaining segments would be
+      // children of this resolved fact. Keep walking using the resolved
+      // path as the new base.
+      basePath = resolved
+    }
+  }
+  return edges
 }
 
 /**

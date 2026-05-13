@@ -5575,6 +5575,34 @@
           "h": 0.0756660896001351
         }
       ]
+    },
+    {
+      "id": "10-ccr-2506-1__mp3f1ik3-w7kn",
+      "documentId": "10-ccr-2506-1",
+      "text": "1. A person aged twenty-one (21) years and younger living with their natural or adoptive parent(s) or stepparent(s). A. If the child lives in the same home with both parents, regardless of marital status or whether or not the parents purchase and prepare their food together, both parents must be included in the SNAP household. 2. A child (other than a foster child) under eighteen (18) years of age who is living with and is under the parental control of a household member other than their parent. A. A child under eighteen (18) years of age is considered to be under parental control of an individual if the child is financially or otherwise dependent on that individual member of the household unless emancipated as defined by state law.",
+      "page": 47,
+      "rects": [
+        {
+          "x": 0.11405777567301738,
+          "y": 0.32566257090177203,
+          "w": 0.7717023059269243,
+          "h": 0.2278990555813593
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mp3f77m8-zwbz",
+      "documentId": "10-ccr-2506-1",
+      "text": "B. Spouses 1. Spouses refer to: A. Persons defined as married to each other under state law. B. Persons living together who are free to marry and are representing themselves as spouses to relatives, friends, neighbors, or the larger community. 2. In situations where a spouse is in an established residence elsewhere but still contributes financially to the household, the value of the financial contribution will be counted as unearned income to the household in determining eligibility. Please refer to section 4.304.4 for more information.",
+      "page": 47,
+      "rects": [
+        {
+          "x": 0.11638920257914101,
+          "y": 0.5598671339498092,
+          "w": 0.7658737386616152,
+          "h": 0.19637151824796972
+        }
+      ]
     }
   ],
   "mappings": [
@@ -6453,6 +6481,46 @@
     {
       "nodePath": "/members/*/isMandatoryHouseholdMember",
       "sectionId": "10-ccr-2506-1__mp3esal0-8lxl"
+    },
+    {
+      "nodePath": "/parentChildRelationships",
+      "sectionId": "10-ccr-2506-1__mp3f1ik3-w7kn"
+    },
+    {
+      "nodePath": "/parentChildRelationships/*/parentId",
+      "sectionId": "10-ccr-2506-1__mp3f1ik3-w7kn"
+    },
+    {
+      "nodePath": "/parentChildRelationships/*/childId",
+      "sectionId": "10-ccr-2506-1__mp3f1ik3-w7kn"
+    },
+    {
+      "nodePath": "/members/*/isUnderParentalControlOfHouseholdMember",
+      "sectionId": "10-ccr-2506-1__mp3f1ik3-w7kn"
+    },
+    {
+      "nodePath": "/members/*/isEmancipated",
+      "sectionId": "10-ccr-2506-1__mp3f1ik3-w7kn"
+    },
+    {
+      "nodePath": "/members/*/isFosterChild",
+      "sectionId": "10-ccr-2506-1__mp3f1ik3-w7kn"
+    },
+    {
+      "nodePath": "/members/*/isMandatoryChild",
+      "sectionId": "10-ccr-2506-1__mp3f1ik3-w7kn"
+    },
+    {
+      "nodePath": "/members/*/spouseId",
+      "sectionId": "10-ccr-2506-1__mp3f77m8-zwbz"
+    },
+    {
+      "nodePath": "/members/*/isSpouse",
+      "sectionId": "10-ccr-2506-1__mp3f77m8-zwbz"
+    },
+    {
+      "nodePath": "/members/*/isMandatoryHouseholdMember",
+      "sectionId": "10-ccr-2506-1__mp3f77m8-zwbz"
     }
   ]
 }

@@ -53,6 +53,24 @@
       <Writable><Dollar /></Writable>
     </Fact>
 
+    <Fact path="/parentChildRelationships">
+      <Name>Parent-child relationships</Name>
+      <Description>List of natural, adoptive, or stepparent relationships between household members. Each entry links one parent member to one child member; a single child may appear in multiple entries when more than two of their parents live in the same home (10 CCR 2506-1, 4.304.1).</Description>
+      <Writable><Collection /></Writable>
+    </Fact>
+
+    <Fact path="/parentChildRelationships/*/parentId">
+      <Name>Parent</Name>
+      <Description>The household member who is a natural, adoptive, or stepparent in this relationship. Every parent linked to a child aged twenty-one (21) years or younger who lives in the same home must be included in the SNAP household, regardless of marital status or whether the parents purchase and prepare food together (10 CCR 2506-1, 4.304.1).</Description>
+      <Writable><CollectionItem collection="/members" /></Writable>
+    </Fact>
+
+    <Fact path="/parentChildRelationships/*/childId">
+      <Name>Child</Name>
+      <Description>The household member who is the natural, adoptive, or stepchild in this relationship (10 CCR 2506-1, 4.304.1).</Description>
+      <Writable><CollectionItem collection="/members" /></Writable>
+    </Fact>
+
     <Fact path="/members/*/age">
       <Name>Age</Name>
       <Description>Age of this member in years</Description>
@@ -195,7 +213,12 @@
     <Fact path="/members/*/isMandatoryHouseholdMember">
       <Name>Is mandatory household member</Name>
       <Description>Whether this member is a mandatory household member who must be considered in the same household as the other mandatory individuals they live with, even if they declare they do not customarily purchase and prepare their food together for home consumption (10 CCR 2506-1, 4.304.1)</Description>
-      <Writable><Boolean /></Writable>
+      <Derived>
+        <Any>
+          <Dependency path="../isMandatoryChild" />
+          <Dependency path="../isSpouse" />
+        </Any>
+      </Derived>
     </Fact>
 
     <Fact path="/members/*/isPartOfHousehold">
@@ -205,6 +228,90 @@
         <Any>
           <Dependency path="../isMandatoryHouseholdMember" />
           <Dependency path="../preparesFoodWithHousehold" />
+        </Any>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/spouseId">
+      <Name>Spouse</Name>
+      <Description>The household member who is this member's spouse — either a person married to this member under state law, or a person living together with this member who is free to marry and is representing themselves as a spouse to relatives, friends, neighbors, or the larger community (10 CCR 2506-1, 4.304.1).</Description>
+      <Writable><CollectionItem collection="/members" /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/isSpouse">
+      <Name>Is spouse of a household member</Name>
+      <Description>Whether this member is in a spouse relationship with another member of the household. True when this member has a spouse set, or when another household member identifies this member as their spouse. Spouses must always be considered part of the same SNAP household regardless of whether they purchase and prepare food together (10 CCR 2506-1, 4.304.1).</Description>
+      <Derived>
+        <Any>
+          <IsComplete><Dependency path="../spouseId" /></IsComplete>
+          <GreaterThan>
+            <Left>
+              <CollectionSize>
+                <Filter path="/members">
+                  <Equal>
+                    <Left><Dependency path="spouseId" /></Left>
+                    <Right><Dependency path="^" /></Right>
+                  </Equal>
+                </Filter>
+              </CollectionSize>
+            </Left>
+            <Right><Int>0</Int></Right>
+          </GreaterThan>
+        </Any>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/isUnderParentalControlOfHouseholdMember">
+      <Name>Is under parental control of a non-parent household member</Name>
+      <Description>Whether this member, being a child under eighteen (18) years of age living with a household member other than their parent, is financially or otherwise dependent on that household member such that the household member exercises parental control over them (10 CCR 2506-1, 4.304.1).</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/isEmancipated">
+      <Name>Is emancipated minor</Name>
+      <Description>Whether this member is a minor who has been emancipated as defined by state law. An emancipated minor is not considered to be under another household member's parental control for purposes of the mandatory-child SNAP household rule (10 CCR 2506-1, 4.304.1).</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/isFosterChild">
+      <Name>Is foster child</Name>
+      <Description>Whether this member is a foster child. Foster children are explicitly excluded from the rule requiring a child under eighteen (18) who lives under the parental control of a non-parent household member to be a mandatory household member (10 CCR 2506-1, 4.304.1).</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/isMandatoryChild">
+      <Name>Is mandatory child household member</Name>
+      <Description>Whether this member must be included in the SNAP household as a child of, or a child under the parental control of, another household member. Captures two cases: (1) a person aged twenty-one (21) years or younger who is linked as a child in at least one /parentChildRelationships entry (i.e., a natural, adoptive, or stepparent lives in the same household); or (2) a non-foster child under eighteen (18) years of age living with and under the parental control of a household member other than their parent, unless emancipated under state law (10 CCR 2506-1, 4.304.1).</Description>
+      <Derived>
+        <Any>
+          <All>
+            <LessThanOrEqual>
+              <Left><Dependency path="../age" /></Left>
+              <Right><Int>21</Int></Right>
+            </LessThanOrEqual>
+            <GreaterThan>
+              <Left>
+                <CollectionSize>
+                  <Filter path="/parentChildRelationships">
+                    <Equal>
+                      <Left><Dependency path="childId" /></Left>
+                      <Right><Dependency path="^" /></Right>
+                    </Equal>
+                  </Filter>
+                </CollectionSize>
+              </Left>
+              <Right><Int>0</Int></Right>
+            </GreaterThan>
+          </All>
+          <All>
+            <LessThan>
+              <Left><Dependency path="../age" /></Left>
+              <Right><Int>18</Int></Right>
+            </LessThan>
+            <Dependency path="../isUnderParentalControlOfHouseholdMember" />
+            <Not><Dependency path="../isFosterChild" /></Not>
+            <Not><Dependency path="../isEmancipated" /></Not>
+          </All>
         </Any>
       </Derived>
     </Fact>
@@ -303,7 +410,7 @@
       <Name>Allotment</Name>
       <Description>The total amount of SNAP benefits the household is authorized to receive in a particular month, computed by rounding the unfloored allotment down to the nearest dollar, then raising it up to the federal minimum allotment for one- and two-person households (10 CCR 2506-1, 4.207.3).</Description>
       <Derived>
-        <TruncateCents>
+        <Floor>
           <Switch>
             <Case>
               <When>
@@ -324,7 +431,7 @@
               <Then><Dependency path="/unflooredAllotment" /></Then>
             </Case>
           </Switch>
-        </TruncateCents>
+        </Floor>
       </Derived>
     </Fact>
 
@@ -572,7 +679,7 @@
           <Case>
             <When><True /></When>
             <Then>
-              <TruncateCents><Dependency path="/unflooredProratedAllotment" /></TruncateCents>
+              <Floor><Dependency path="/unflooredProratedAllotment" /></Floor>
             </Then>
           </Case>
         </Switch>

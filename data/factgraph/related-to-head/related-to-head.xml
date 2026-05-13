@@ -1,0 +1,33 @@
+<FactDictionaryModule>
+  <Facts>
+    <Fact path="/members">
+      <Name>Members</Name>
+      <Description>List of household members</Description>
+      <Writable><Collection /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/isHeadOfHousehold">
+      <Name>Is head of household</Name>
+      <Description>Whether this member is the head of household.</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/relatedTo">
+      <Name>Related to</Name>
+      <Description>Another member of the household this one is related to. Leave unset for the head.</Description>
+      <Writable><CollectionItem collection="/members" /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/isRelatedToHead">
+      <Name>Is related to head</Name>
+      <Description>True when this member either IS the head, OR is directly related to the head, OR is related to someone who is (transitively) related to the head.</Description>
+      <Derived>
+        <Any>
+          <Dependency path="../isHeadOfHousehold" />
+          <Dependency path="../relatedTo/isHeadOfHousehold" />
+          <Dependency path="../relatedTo/isRelatedToHead" />
+        </Any>
+      </Derived>
+    </Fact>
+  </Facts>
+</FactDictionaryModule>
