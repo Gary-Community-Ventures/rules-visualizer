@@ -35,8 +35,25 @@ def parse_rulespec_composition(
     ruleset_id: str,
     *,
     input_entity_overrides: dict[str, str] | None = None,
+    root_entity: str | None = None,
+    collection_entities: set[str] | None = None,
 ) -> dict:
     """Load a RuleSpec composition + every transitive import, emit Model JSON.
+
+    The Model output mirrors the Fact Graph shape so the frontend can reuse
+    its collection/EntityEditor logic without RuleSpec-specific branches.
+    Specifically:
+      - `data_relation` rules are dropped — they're edge schemas, not value
+        nodes, and previously surfaced as misleading "input" nodes.
+      - Per-`collection_entity` we synthesize a Fact-Graph-shaped collection
+        parent node (`format: factGraph, type: writable, typeName: Collection`)
+        so `isCollectionParent` recognizes it. Per-member input nodes carry
+        `content.entity = <collection_entity>` and bucket under the parent
+        via the existing `getCollectionInfo` RAC branch.
+      - Inputs scoped to the `root_entity` get NO `entity` tag, so they
+        flow into the regular top-level inputs list instead of being
+        wrongly bucketed into a single-row "Household"/"TaxUnit"/etc.
+        collection.
 
     Args:
         composition_path: Path to the entry-point YAML (typically a
@@ -50,6 +67,13 @@ def parse_rulespec_composition(
             which understands `count_related`/`sum_related` scope flips
             that the formula-text heuristic misses). When provided, takes
             precedence over the local consumer-walk inference.
+        root_entity: Name of the entity treated as the query target (e.g.
+            "Household" for SNAP). Inputs at this scope get no `entity` tag
+            in the Model. Falls back to the discovered consensus if None.
+        collection_entities: Names of entities that should surface as
+            collection containers (synthesized Fact-Graph-style parents +
+            per-member EntityEditor in the frontend). Falls back to
+            "everything that's not the root entity" if None.
     """
     root = Path(rulespec_root)
     entry = Path(composition_path)
@@ -88,6 +112,13 @@ def parse_rulespec_composition(
     # the main pass.
     source_relations: list[tuple[dict, str]] = []  # (rule, owning_module_id)
 
+    # data_relation rules are dropped from the model (they're edge schemas,
+    # not value nodes). Their bare names still appear as identifiers in
+    # formulas like `count_where(member_of_household, ...)`, so the input-
+    # synthesis pass needs a list of "names that look like inputs but
+    # aren't" to exclude.
+    data_relation_names: set[str] = set()
+
     # Pass 1: emit a node for every declared rule.
     for name, entry_data in rules_by_name.items():
         rule = entry_data["rule"]
@@ -96,6 +127,15 @@ def parse_rulespec_composition(
 
         if kind == "source_relation":
             source_relations.append((rule, module_id))
+            continue
+        if kind == "data_relation":
+            # Edge schema, not a value node. Skip — the wrapper emits
+            # relation rows for these directly from the artifact. Showing
+            # them as graph nodes would mislead users into thinking
+            # they're inputs they need to fill in. Record the name so the
+            # later input-synthesis pass doesn't re-introduce it just
+            # because formulas reference it via `count_where(name, ...)`.
+            data_relation_names.add(name)
             continue
 
         module_data = loaded.get(module_id) or {}
@@ -120,8 +160,11 @@ def parse_rulespec_composition(
     # Stamp the inferred entity scope when every consumer agrees on one.
     # Mixed-scope inputs (none observed in SNAP today) get no entity tag —
     # whoever's writing such content needs to disambiguate at the source.
+    # Root-entity inputs also drop the tag so the frontend doesn't put them
+    # into a single-row "Household" collection bucket; only true collection
+    # entities (Person, etc.) keep their tag.
     declared = set(nodes.keys())
-    for ref in sorted(input_names - declared):
+    for ref in sorted(input_names - declared - data_relation_names):
         # Authoritative artifact-walk wins. It understands `count_where`
         # scope flips (an input inside `count_where(member_of_household, X)`
         # is at the related-slot entity, not the consuming rule's entity);
@@ -133,7 +176,36 @@ def parse_rulespec_composition(
             inferred_entity = (
                 next(iter(entities_seen)) if len(entities_seen) == 1 else None
             )
+        # Suppress the entity tag for root-scoped inputs — they're singletons
+        # on the household-level (or whatever root) and shouldn't bucket
+        # into a collection editor. If we don't know the topology, keep the
+        # tag and let the frontend group it the old way.
+        if (
+            inferred_entity
+            and collection_entities is not None
+            and inferred_entity not in collection_entities
+        ):
+            inferred_entity = None
+        elif inferred_entity == root_entity:
+            inferred_entity = None
         nodes[ref] = _input_node(ref, entity=inferred_entity)
+
+    # Also clear the entity tag on declared rules whose scope is the root.
+    # Declared rules go through `_rule_to_node` which copies `entity:` from
+    # YAML verbatim; the frontend would bucket them under a single-row
+    # "Household" collection just like root inputs. Same rule: only
+    # collection entities keep their tag.
+    if root_entity or collection_entities is not None:
+        for n in nodes.values():
+            c = n.get("content") or {}
+            e = c.get("entity")
+            if not e:
+                continue
+            keep = (
+                collection_entities is not None and e in collection_entities
+            )
+            if not keep:
+                c.pop("entity", None)
 
     # Pass 3: wire up dependencies — each rule's deps are the declared
     # identifiers in its formula(s). Inputs have no deps.
@@ -167,6 +239,34 @@ def parse_rulespec_composition(
                 "fromModule": owning_module_id,
             }
         )
+
+    # Pass 5: synthesize a Fact-Graph-shaped collection parent per
+    # collection entity. The frontend recognizes these via
+    # `isCollectionParent` (which checks `format=factGraph, type=writable,
+    # typeName=Collection`) so the existing Fact Graph rendering path — a
+    # single Collection node in the graph + per-member EntityEditor in the
+    # execute panel — lights up without any frontend changes.
+    if collection_entities:
+        for entity in sorted(collection_entities):
+            if entity in nodes:
+                # A rule already owns this name (unlikely but defensive).
+                # Skip rather than clobber.
+                continue
+            nodes[entity] = {
+                "id": entity,
+                "name": entity,
+                "dependencies": [],
+                "content": {
+                    "format": "factGraph",
+                    "type": "writable",
+                    "role": "input",
+                    "path": entity,
+                    "typeName": "Collection",
+                    "label": entity,
+                },
+                "overridable": False,
+                "tags": ["kind:collection", "synthetic"],
+            }
 
     # Prefer the entry-module's summary first sentence as the display name
     # if it reads like a title (short enough to fit).
