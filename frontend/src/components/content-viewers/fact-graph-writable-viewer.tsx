@@ -85,7 +85,9 @@ export function FactGraphWritableViewer({ content }: Props) {
         )}
         {content.placeholderLogic !== undefined && (
           <div>
-            <span className="text-muted-foreground font-medium">Placeholder</span>
+            <span className="text-muted-foreground font-medium">
+              Placeholder
+            </span>
             {content.placeholderLogic ? (
               <LogicHighlighter
                 format="factGraph"
@@ -93,9 +95,7 @@ export function FactGraphWritableViewer({ content }: Props) {
                 onNavigate={navigateToPath}
               />
             ) : (
-              <p className="mt-0.5 text-muted-foreground italic">
-                (empty)
-              </p>
+              <p className="mt-0.5 text-muted-foreground italic">(empty)</p>
             )}
           </div>
         )}
