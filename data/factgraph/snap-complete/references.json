@@ -1095,22 +1095,6 @@
       ]
     },
     {
-      "id": "10-ccr-2506-1__skip-1778181854735",
-      "documentId": "10-ccr-2506-1",
-      "text": "knowledge of the household’s circumstances. The head of household is the person to whom the local office addresses correspondence and notices about the household’s case. This person is generally the individual who completes the application process and is responsible for obtaining and using the household’s EBT card.",
-      "page": 5,
-      "rects": [
-        {
-          "x": 0.10714708552034413,
-          "y": 0.7085372733787719,
-          "w": 0.7539366194403884,
-          "h": 0.07806901178659109
-        }
-      ],
-      "status": "skipped",
-      "comment": "Surprisingly is only used for communication/administrative purposes"
-    },
-    {
       "id": "10-ccr-2506-1__movvl48h-oepe",
       "documentId": "10-ccr-2506-1",
       "text": "“Heating/Cooling Utility Allowance (HCUA)” means a fixed deduction applied to any household that incurs a heating or cooling expense.",
@@ -3668,31 +3652,16 @@
       "status": "skipped"
     },
     {
-      "id": "10-ccr-2506-1__skip-1778560993575",
-      "documentId": "10-ccr-2506-1",
-      "text": "4.203 HEAD OF HOUSEHOLD AND AUTHORIZED REPRESENTATIVES Application for participation shall be made in the name of the household, by the head of the household, the spouse, another household member, or an authorized representative.",
-      "page": 25,
-      "rects": [
-        {
-          "x": 0.1142910939559405,
-          "y": 0.3829477666230176,
-          "w": 0.755563923931463,
-          "h": 0.05959551869634805
-        }
-      ],
-      "status": "skipped"
-    },
-    {
       "id": "10-ccr-2506-1__skip-1778561074143",
       "documentId": "10-ccr-2506-1",
-      "text": "4.203.1 Designating a Head of Household A. The local office shall allow a household to select an adult parent of children (of any age) living in the household, or an adult who has parental control over children (under 18 years of age) living in the household, as the head of household provided that all adult members agree to the selection. The household may make this designation each time the household is certified for participation but may not change the designation during a certification period unless there is a change in the composition of the household. B. The local office shall not use the head of household designation to impose special requirements on the household, such as requiring that the head of household, rather than another responsible member of the household, appear at the local office to apply for benefits. If the household is not able to select its head of household, or an eligible household does not choose to select its head of household, the local office may make a reasonable determination of the head of household with an understanding that the head of household is usually the household member who has the most knowledge of the household's financial circumstances. If the only adult living in the home is not eligible for SNAP nor required to be included in the household, they can be designated as the head of household and apply on behalf of the unemancipated minors in the home.",
+      "text": "B. The local office shall not use the head of household designation to impose special requirements on the household, such as requiring that the head of household, rather than another responsible member of the household, appear at the local office to apply for benefits. If the household is not able to select its head of household, or an eligible household does not choose to select its head of household, the local office may make a reasonable determination of the head of household with an understanding that the head of household is usually the household member who has the most knowledge of the household's financial circumstances. If the only adult living in the home is not eligible for SNAP nor required to be included in the household, they can be designated as the head of household and apply on behalf of the unemancipated minors in the home.",
       "page": 25,
       "rects": [
         {
-          "x": 0.10826586330257955,
-          "y": 0.45557980503419176,
+          "x": 0.11179177508132858,
+          "y": 0.5772787080979503,
           "w": 0.774844662022218,
-          "h": 0.26724865415393567
+          "h": 0.14724865415393557
         }
       ],
       "status": "skipped"
@@ -5603,9 +5572,1192 @@
           "h": 0.19637151824796972
         }
       ]
+    },
+    {
+      "id": "10-ccr-2506-1__mp4a7kvq-1vez",
+      "documentId": "10-ccr-2506-1",
+      "text": "knowledge of the household’s circumstances. The head of household is the person to whom the local office addresses correspondence and notices about the household’s case. This person is generally the individual who completes the application process and is responsible for obtaining and using the household’s EBT card.",
+      "page": 5,
+      "rects": [
+        {
+          "x": 0.11264553568149263,
+          "y": 0.7081127871830166,
+          "w": 0.7510192088735447,
+          "h": 0.07538066383799968
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mp4a9u9b-1bxs",
+      "documentId": "10-ccr-2506-1",
+      "text": "4.203 HEAD OF HOUSEHOLD AND AUTHORIZED REPRESENTATIVES Application for participation shall be made in the name of the household, by the head of the household, the spouse, another household member, or an authorized representative. 4.203.1 Designating a Head of Household A. The local office shall allow a household to select an adult parent of children (of any age) living in the household, or an adult who has parental control over children (under 18 years of age) living in the household, as the head of household provided that all adult members agree to the selection. The household may make this designation each time the household is certified for participation but may not change the designation during a certification period unless there is a change in the composition of the household.",
+      "page": 25,
+      "rects": [
+        {
+          "x": 0.11264553568149263,
+          "y": 0.3797414465935376,
+          "w": 0.7768758952510376,
+          "h": 0.19663036228696307
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778703261508",
+      "documentId": "10-ccr-2506-1",
+      "text": "47",
+      "page": 47,
+      "rects": [
+        {
+          "x": 0.10842475677913475,
+          "y": 0.9471192296618574,
+          "w": 0.7829434899606706,
+          "h": 0.03173486036021633
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778703271932",
+      "documentId": "10-ccr-2506-1",
+      "text": "CODE OF COLORADO REGULATIONS 10 CCR 2506-1 Supplemental Nutrition Assistance Program (SNAP)",
+      "page": 48,
+      "rects": [
+        {
+          "x": 0.10312564686400331,
+          "y": 0.036181579705044944,
+          "w": 0.7882425998758021,
+          "h": 0.042995617262228475
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__mp4k8ynz-sz5d",
+      "documentId": "10-ccr-2506-1",
+      "text": "C. Persons aged sixty (60) and older experiencing a disability who live with others whose income exceeds 165% of the Federal Poverty Line (FPL) 1. Persons aged sixty (60) and older who are also experiencing a disability who are unable to purchase and prepare their own meals and are residing with other individuals whose income exceeds 165% of the FPL must be in the same household.",
+      "page": 47,
+      "rects": [
+        {
+          "x": 0.11239908921548333,
+          "y": 0.7618285933651109,
+          "w": 0.7657213827364935,
+          "h": 0.10953645350139152
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mp4kx88m-h2eq",
+      "documentId": "10-ccr-2506-1",
+      "text": "2. When applying the 165% limit test, the spouse of an elderly person with disabilities is not to be considered a member of their household unless the spouse is the person purchasing and preparing meals. If the spouse is not a member of the household, the spouse’s income and resources are excluded in calculating the household’s eligibility.",
+      "page": 48,
+      "rects": [
+        {
+          "x": 0.17068929828192922,
+          "y": 0.08941424869637545,
+          "w": 0.7167046160215276,
+          "h": 0.06858824658498351
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778708308566",
+      "documentId": "10-ccr-2506-1",
+      "text": "A. In instances when different households apply for the same child, the household that applies for benefits for the child second must establish that it has majority custody and/or provide a majority of the child’s meals. B. If the second requesting household provides verification that indicates that household possesses majority custody and provides the majority of meals, this constitutes unclear information as to the first household under which the child is currently receiving benefits. 1. A request for contact (RFC) must be initiated on the first case if verification was not previously provided to establish majority custody and/or that the majority of meals are being provided. The confidentiality rules described in Section 4.140 must be followed when making this request. A. If the two different households applying for the same child cannot agree in which household the child shall receive benefits the household that provides the majority of meals to the child(ren) in question shall include the child(ren) in their household. Depending on the document being used to establish majority custody and majority of meals, the eligibility technician must ensure that they are considering a period of time of sufficient length to accurately capture the custody arrangement, taking into account disruptions to established arrangements such as holidays and school breaks. Eligibility technicians may have to look at a longer period of time than just the last calendar month. 2. If the second requesting household provides verification that conclusively proves it has majority custody of the child and provides majority of meals as of the request to include the child(ren) in its household, the child(ren) should be removed from the first case and added to the second case as detailed in Section 4.604.G to avoid dual participation. 3. If the two households provide an equal number of meals to the child(ren), then the SNAP household currently receiving benefits or who applied first shall receive benefits for the child(ren). 4. If one household fails to provide verification of the percentage of meals they provide to the child(ren), the child(ren) shall remain in the household in which they first began receiving SNAP benefits.",
+      "page": 48,
+      "rects": [
+        {
+          "x": 0.11504864417304905,
+          "y": 0.16516843149173038,
+          "w": 0.7736700476091907,
+          "h": 0.5282318692216641
+        }
+      ],
+      "status": "skipped",
+      "comment": "The caseworker would figure this out and remove the child from the household if they are not part of the household."
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778708348324",
+      "documentId": "10-ccr-2506-1",
+      "text": "48",
+      "page": 48,
+      "rects": [
+        {
+          "x": 0.10842475677913475,
+          "y": 0.9452317732493042,
+          "w": 0.7869178223970192,
+          "h": 0.03480597587894685
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778708353578",
+      "documentId": "10-ccr-2506-1",
+      "text": "CODE OF COLORADO REGULATIONS 10 CCR 2506-1 Supplemental Nutrition Assistance Program (SNAP)",
+      "page": 49,
+      "rects": [
+        {
+          "x": 0.10842475677913475,
+          "y": 0.03941264915704277,
+          "w": 0.7829434899606706,
+          "h": 0.03890079657058767
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__mp4l7jno-99mi",
+      "documentId": "10-ccr-2506-1",
+      "text": "4.304.3 Optional Household Members The following individuals residing with a household shall not be considered household members in determining the household's eligibility or allotment, unless otherwise stated:",
+      "page": 48,
+      "rects": [
+        {
+          "x": 0.1070999793003519,
+          "y": 0.6944240058863047,
+          "w": 0.7590974953425792,
+          "h": 0.0830061742218241
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mp4lxp1w-ofeg",
+      "documentId": "10-ccr-2506-1",
+      "text": "does not exceed 165% Federal Poverty Level (FPL). 1. Persons aged sixty (60) and older who are also persons with disabilities who are unable to purchase and prepare their own meals and are residing with other individuals whose income does not exceed 165% of the FPL can be in a separate household.",
+      "page": 48,
+      "rects": [
+        {
+          "x": 0.11239908921548333,
+          "y": 0.7814389455836719,
+          "w": 0.7630718277789277,
+          "h": 0.0982756965993794
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mp4m0w11-f618",
+      "documentId": "10-ccr-2506-1",
+      "text": "2. When applying the 165% limit test, a person aged sixty (60) and older with disabilities’ spouse is not to be considered a member of the household unless the spouse is the person purchasing and preparing meals. If the spouse is not a member of the household, the spouse’s income and resources are excluded in calculating the household’s eligibility.",
+      "page": 49,
+      "rects": [
+        {
+          "x": 0.17201407576071207,
+          "y": 0.08752679228382226,
+          "w": 0.7127302835851791,
+          "h": 0.06756454141207333
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mp4m11zm-amfg",
+      "documentId": "10-ccr-2506-1",
+      "text": "B. Foster children 1. If a foster parent chooses not to include a foster child in their SNAP household, the foster child not included will not have their income, resources/assets, or needs included in the eligibility determination for the SNAP household. 2. If the foster parent chooses to include the foster child in their SNAP household, the foster child's income, and resources/assets, as well as their needs, are considered in the eligibility determination. 3. The foster child, including a child and/or spouse of the foster child, may not apply for benefits separately from the foster family unless they are over eighteen (18) and no longer under the parental control of the foster parents.",
+      "page": 49,
+      "rects": [
+        {
+          "x": 0.11107431173670047,
+          "y": 0.1591861543875364,
+          "w": 0.7736700476091907,
+          "h": 0.20166991906330975
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778710079734",
+      "documentId": "10-ccr-2506-1",
+      "text": "49",
+      "page": 49,
+      "rects": [
+        {
+          "x": 0.11107431173670049,
+          "y": 0.948462842701302,
+          "w": 0.7773452701304078,
+          "h": 0.029687450014395877
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778710094665",
+      "documentId": "10-ccr-2506-1",
+      "text": "CODE OF COLORADO REGULATIONS 10 CCR 2506-1 Supplemental Nutrition Assistance Program (SNAP)",
+      "page": 50,
+      "rects": [
+        {
+          "x": 0.10180086938522045,
+          "y": 0.03445407722575898,
+          "w": 0.788242599875802,
+          "h": 0.044019322435138675
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__mp4m2lnq-k010",
+      "documentId": "10-ccr-2506-1",
+      "text": "C. Boarders 1. Boarders are only considered members of a client’s SNAP household if the household requests that they be considered household members. 2. If a boarder is not considered a SNAP household member, the boarder’s income and resources shall not be considered available to the household. A. The amount of payment that a boarder gives to a household for lodging and meals shall be treated as self-employment income to the SNAP household. 3. If the SNAP household requests to include the boarder as a household member, the boarder's income and resources/assets shall be considered available to the SNAP household and used in determining eligibility and allotment. 4. Persons who only work and provide no monetary compensation in exchange for meals or who make payments to a third party on the household’s behalf in exchange for meals would not be classified as boarders. 5. Boarder status shall not be granted to individuals paying less than a reasonable monthly payment for meals. An individual not paying a reasonable monthly payment for meals will be considered a member of the household which provides the meals and lodging. A. A reasonable monthly payment is one of the following: 1) Boarders, whose board arrangement is for more than two (2) meals per day, shall pay an amount that equals or exceeds the maximum SNAP allotment for the number of persons in the boarder SNAP household. 2) Boarders, whose board arrangement is for two (2) meals or fewer per day, shall pay an amount that equals or exceeds two-thirds of the maximum allotment for the number of persons in the boarder household. B. When the boarder's payments for a room are distinguishable from their payments for meals, only the amount paid for meals will be considered in determining if reasonable compensation is being paid for meals.",
+      "page": 49,
+      "rects": [
+        {
+          "x": 0.10974953425791761,
+          "y": 0.36597459931539716,
+          "w": 0.7776443800455393,
+          "h": 0.5384689209507663
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mp5onsgd-grb3",
+      "documentId": "10-ccr-2506-1",
+      "text": "4.304.31 Non-Household Members The following individuals residing with a household shall not be considered household members in determining the household’s eligibility or allotment unless otherwise stated in 4.304.3: A. Boarders Boarders are individuals residing with others and paying reasonable compensation for lodging and meals. Boarders cannot participate in SNAP as separate households. B. Roomers Roomers are individuals to whom a household furnishes lodging, but not meals, for compensation. Roomers who are otherwise eligible may participate in SNAP as separate households. C. Live-in Attendant Live-in attendants are individuals who live with a household to provide medical, housekeeping, childcare, or other similar personal services. Live-in attendants, who are otherwise eligible may, participate in SNAP as separate households.",
+      "page": 50,
+      "rects": [
+        {
+          "x": 0.10974953425791761,
+          "y": 0.07949710483380786,
+          "w": 0.7696957151728421,
+          "h": 0.3869605553600563
+        }
+      ],
+      "comment": "Boarders are optional, so they can be excluded or included from the household if the family wants. if they are excluded, they should just be left out of the household when calculating the rules. The is optional household member node will serve as a notification to alert us if a member can be excluded."
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778777364124",
+      "documentId": "10-ccr-2506-1",
+      "text": "50",
+      "page": 50,
+      "rects": [
+        {
+          "x": 0.10974953425791761,
+          "y": 0.9465753862887488,
+          "w": 0.7829434899606706,
+          "h": 0.03378227070603668
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778777367747",
+      "documentId": "10-ccr-2506-1",
+      "text": "CODE OF COLORADO REGULATIONS 10 CCR 2506-1 Supplemental Nutrition Assistance Program (SNAP)",
+      "page": 51,
+      "rects": [
+        {
+          "x": 0.10577520182156903,
+          "y": 0.036661441504846605,
+          "w": 0.7908921548333678,
+          "h": 0.03890079657058767
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__mp5rdn1i-ibki",
+      "documentId": "10-ccr-2506-1",
+      "text": "Mandatory household members who live together must be included in the same household unless one of the mandatory individuals has established a residence separate and apart from the other mandatory household members. A residence shall only be considered established as separate and apart from mandatory SNAP household members when the individual pays shelter expenses, supports the maintenance of the other residence, or has provided that separate address to other governmental organizations or an employer as their primary residence. Supporting the maintenance of another residence can be demonstrated through paying rent/mortgage, paying utilities, paying insurance, or other charges necessary to maintain the residence. When it is determined that a person who would normally be considered a mandatory household member has established a residence separate and apart and is not required to be considered part of the SNAP household, any monies that person provides to the SNAP household should be considered as unearned income. Examples include, but are not limited to: A. A truck driver who is away from the household, returns at the end of each trip, and has not established a residence separate and apart must be considered a household member. B. A spouse in the armed forces may be considered a non-household member if the spouse is away on assignment for a calendar month or longer and has established a residence separate and apart.",
+      "page": 50,
+      "rects": [
+        {
+          "x": 0.11239908921548333,
+          "y": 0.4746473015771458,
+          "w": 0.778969157524322,
+          "h": 0.40538724847243995
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mp5reh2m-34i3",
+      "documentId": "10-ccr-2506-1",
+      "text": "C. Oil field workers living on-site while working away from the primary residence may be considered a non-household member if the spouse is away on assignment for a calendar month or longer and has established a residence separate and apart.",
+      "page": 51,
+      "rects": [
+        {
+          "x": 0.11239908921548333,
+          "y": 0.0868229949774465,
+          "w": 0.7763196025667564,
+          "h": 0.048114143126779474
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mp5tkdpd-lp6a",
+      "documentId": "10-ccr-2506-1",
+      "text": "6. Being a person with a felony conviction who is not in compliance with the terms of their sentence and was convicted as an adult for conduct that occurred after February 7, 2014 for any of the following crimes: a. Aggravated sexual abuse under Section 2241 of Title 18, United States Code; b. Murder under Section 1111 of Title 18, United States Code; c. An offense under Chapter 110 of Title 18, United States Code; d. A federal or state offense involving sexual assault, as defined in Section 40002(a) of the Violence Against Women Act of 1994 (42 U.S.C. 13925(a)); or e. An offense under state law determined by the attorney general to be substantially similar to an offense described in clause (a), (b), or (c).",
+      "page": 51,
+      "rects": [
+        {
+          "x": 0.1689700209579929,
+          "y": 0.38313852509036284,
+          "w": 0.7280017009385535,
+          "h": 0.22832464911045391
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mp5tl2uq-kzzl",
+      "documentId": "10-ccr-2506-1",
+      "text": "B. Individuals who are fleeing to avoid prosecution or custody for a crime, or an attempt to commit a crime, that would be classified as a felony shall not be considered eligible household members. If an individual is suspected of being a fleeing felon, either by their own admission or based on a report from law enforcement, the fleeing status must be verified in to determine if the client is eligible for SNAP. The following four-part test must be used to determine if the individual would be considered a fleeing felon for SNAP: 1. There is an outstanding felony warrant for the individual by a Federal, State, or local law enforcement agency and the underlying cause for the warrant is for committing, or attempting to commit, a crime that is a felony under the law of the place from which the individual is fleeing or is a high misdemeanor under the law of New Jersey; and 2. The individual is aware of, or should reasonably have been able to expect that, the felony warrant has already or would have been issued; and 3 The individual has taken some action to avoid being arrested or jailed; and",
+      "page": 51,
+      "rects": [
+        {
+          "x": 0.11162409257965555,
+          "y": 0.6189738534478711,
+          "w": 0.7804878048780488,
+          "h": 0.277895132141013
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mp5tlexz-rn0f",
+      "documentId": "10-ccr-2506-1",
+      "text": "4. The Federal, State, or local law enforcement agency is actively seeking the individual as provided in 4.304.4, C, 1.",
+      "page": 52,
+      "rects": [
+        {
+          "x": 0.1728578805090666,
+          "y": 0.08839130638877153,
+          "w": 0.7056465085198798,
+          "h": 0.03379805661174483
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778783219071",
+      "documentId": "10-ccr-2506-1",
+      "text": "CODE OF COLORADO REGULATIONS 10 CCR 2506-1 Supplemental Nutrition Assistance Program (SNAP)",
+      "page": 52,
+      "rects": [
+        {
+          "x": 0.11162409257965555,
+          "y": 0.0395718912829179,
+          "w": 0.7765999453269751,
+          "h": 0.03605126038586114
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778783223920",
+      "documentId": "10-ccr-2506-1",
+      "text": "51",
+      "page": 51,
+      "rects": [
+        {
+          "x": 0.11065212769188713,
+          "y": 0.9494437403182651,
+          "w": 0.7804878048780488,
+          "h": 0.03079378491292306
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__mp5tmob5-a0w3",
+      "documentId": "10-ccr-2506-1",
+      "text": "4.304.4 Persons Disqualified or Ineligible to Participate in SNAP A. Disqualified individuals shall not be allowed to participate in SNAP as separate households. “Disqualified individuals” are individuals disqualified for: 1. IPV/fraud; 2. Failure to either provide or obtain an SSN; 3. Being an ineligible non-citizen; 4. Failure to comply with work requirements; 5. Being an ABAWD who has been disqualified after receiving three (3) months of SNAP benefits within a period of thirty-six (36) months; or, 6. Being a person with a felony conviction who is not in compliance with the terms of their sentence and was convicted as an adult for conduct that occurred after February 7, 2014 for any of the following crimes: a. Aggravated sexual abuse under Section 2241 of Title 18, United States Code; b. Murder under Section 1111 of Title 18, United States Code; c. An offense under Chapter 110 of Title 18, United States Code; d. A federal or state offense involving sexual assault, as defined in Section 40002(a) of the Violence Against Women Act of 1994 (42 U.S.C. 13925(a)); or e. An offense under state law determined by the attorney general to be substantially similar to an offense described in clause (a), (b), or (c). B. Individuals who are fleeing to avoid prosecution or custody for a crime, or an attempt to commit a crime, that would be classified as a felony shall not be considered eligible household members. If an individual is suspected of being a fleeing felon, either by their own admission or based on a report from law enforcement, the fleeing status must be verified in to determine if the client is eligible for SNAP. The following four-part test must be used to determine if the individual would be considered a fleeing felon for SNAP: 1. There is an outstanding felony warrant for the individual by a Federal, State, or local law enforcement agency and the underlying cause for the warrant is for committing, or attempting to commit, a crime that is a felony under the law of the place from which the individual is fleeing or is a high misdemeanor under the law of New Jersey; and 2. The individual is aware of, or should reasonably have been able to expect that, the felony warrant has already or would have been issued; and 3 The individual has taken some action to avoid being arrested or jailed; and",
+      "page": 51,
+      "rects": [
+        {
+          "x": 0.10773623302858185,
+          "y": 0.14429892503403277,
+          "w": 0.7992354888679646,
+          "h": 0.7645871473501384
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mp5tp16c-ly30",
+      "documentId": "10-ccr-2506-1",
+      "text": "C. Individuals who are determined to be a parole or probation violator shall not be an eligible household member. To be considered a probation or parole violator, an impartial party, as designated by the agency, must determine that the individual violated a condition of his or her probation or parole imposed under Federal or State law, and that Federal, State, or local law enforcement authorities are actively seeking the individual to enforce the conditions of the probation or parole as outlined below. 1. For the purposes of this provision, actively seeking is defined as follows: a. A Federal, State, or local law enforcement agency informs the local office that it intends to enforce an outstanding felony warrant or to arrest an individual for a probation or parole violation within twenty (20) days of submitting a request for information about the individual to the local office; or, b. A Federal, State, or local law enforcement agency presents a felony arrest warrant as provided in 4.304.4, B, 1; or, c. A Federal, State, or local law enforcement agency states that it intends to enforce an outstanding felony warrant or to arrest an individual for a probation or parole violation within thirty (30) days of the date of a request from a local office about a specific outstanding felony warrant or probation or parole violation.",
+      "page": 52,
+      "rects": [
+        {
+          "x": 0.11162409257965555,
+          "y": 0.1319532460216871,
+          "w": 0.7688242262248276,
+          "h": 0.315448528376285
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mp5x2ybj-r0tb",
+      "documentId": "10-ccr-2506-1",
+      "text": "D. Residents of commercial and noncommercial boarding houses and institutions are not eligible to participate in the Program unless exempt in Section 4.304.41. 1. The household of the proprietor of a boarding house may participate in the Program separate and apart from the residents of the boarding house if that household meets all eligibility requirements for Program participation. 2. An institution is a place which has not been authorized by FNS to accept SNAP benefits, but which provides its residents with more than fifty percent (50%) of their daily meals as a part of its normal services. Residents of a halfway house for persons with a disability are residents of an institution if they are provided meals as part of their regular service. 3. Students who purchase meal plans through an institution of higher education shall be considered residents of an institution if the meal plan provides the student more than fifty percent (50%) of his/her meals, unless the individual is otherwise exempt from the institution provisions as provided in Section 4.304.41.",
+      "page": 52,
+      "rects": [
+        {
+          "x": 0.11162409257965555,
+          "y": 0.45341031779561564,
+          "w": 0.7717401208881329,
+          "h": 0.24334600760456276
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778789134960",
+      "documentId": "10-ccr-2506-1",
+      "text": "52",
+      "page": 52,
+      "rects": [
+        {
+          "x": 0.1096801628041187,
+          "y": 0.9506172839506173,
+          "w": 0.7843756644291224,
+          "h": 0.027038445289395807
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778789139726",
+      "documentId": "10-ccr-2506-1",
+      "text": "CODE OF COLORADO REGULATIONS 10 CCR 2506-1 Supplemental Nutrition Assistance Program (SNAP)",
+      "page": 53,
+      "rects": [
+        {
+          "x": 0.10482033836527656,
+          "y": 0.03398582359292118,
+          "w": 0.7853476293168908,
+          "h": 0.042810871708210116
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__mp5xbse2-f1i6",
+      "documentId": "10-ccr-2506-1",
+      "text": "4.304.41 EXEMPTIONS FROM THE BOARDING HOUSE AND INSTITUTION PROHIBITIONS A. An individual who is a resident of federally subsidized housing for persons aged sixty (60) and older under 12 U.S.C. 1701Q or 12 U.S.C. 1715Z-1. B. Narcotic addicts or alcoholics and their children, who, for purposes of regular participation in a drug or alcoholic treatment and rehabilitation program, reside at a facility or treatment center. C. Residents of a public or private nonprofit group living arrangement facility, who are blind or a person with disabilities. D. Women or women and their children who are temporarily residing in a public or private nonprofit shelter for battered women and children.",
+      "page": 52,
+      "rects": [
+        {
+          "x": 0.11745588190626613,
+          "y": 0.7027648687978219,
+          "w": 0.7591045773471433,
+          "h": 0.20804581514340703
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mp5xc3nj-hhi1",
+      "documentId": "10-ccr-2506-1",
+      "text": "E. Residents of public or private nonprofit shelters for homeless",
+      "page": 53,
+      "rects": [
+        {
+          "x": 0.11259605746742399,
+          "y": 0.08806271417171291,
+          "w": 0.5685994593445312,
+          "h": 0.019527766042341452
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mp5xdy53-a16r",
+      "documentId": "10-ccr-2506-1",
+      "text": "4.305 CITIZENSHIP AND NON-CITIZENSHIP STATUS Citizens of the United States are potentially eligible for participation in SNAP, provided they meet other eligibility requirements. Most non-citizens must be in a qualified non-citizen status and meet one (1) additional condition to be eligible for participation in the Program. Some classes of non-citizens are eligible for participation without having to meet an additional condition. A. Citizens and Non-Citizen Nationals 1. The following individuals are considered United States citizens: a. A person born in the United States or in the District of Columbia, Puerto Rico, Guam, the U.S. Virgin Islands or the Mariana Islands; b. A person who has become a citizen through the naturalization process; c. A person born outside of the United States to at least one (1) U.S. citizen parent; and d. A child under eighteen (18) years of age adopted or born outside the U.S. with a parent who is a U. S. citizen, who has been admitted as a lawful permanent resident, and is in the legal and physical custody of a parent who is a U.S. citizen.",
+      "page": 53,
+      "rects": [
+        {
+          "x": 0.10870819791635027,
+          "y": 0.11435009153640333,
+          "w": 0.7824317346535857,
+          "h": 0.347744449138619
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mp5xen49-6ir3",
+      "documentId": "10-ccr-2506-1",
+      "text": "eligibility for SNAP as U.S. citizens. Non-citizen nationals are those individuals born in an outlying possession of the United States (either American Samoa or Swain’s Island) on or after the date the U.S. acquired the possession, or a person whose parents are U.S. non- citizen nationals.",
+      "page": 53,
+      "rects": [
+        {
+          "x": 0.1699419858457613,
+          "y": 0.4733605595456039,
+          "w": 0.7182820520608693,
+          "h": 0.07735999624466033
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778790477621",
+      "documentId": "10-ccr-2506-1",
+      "text": "53",
+      "page": 53,
+      "rects": [
+        {
+          "x": 0.1088774913083887,
+          "y": 0.949168772443144,
+          "w": 0.7831744174038759,
+          "h": 0.03149354967415885
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778790483733",
+      "documentId": "10-ccr-2506-1",
+      "text": "CODE OF COLORADO REGULATIONS 10 CCR 2506-1 Supplemental Nutrition Assistance Program (SNAP)",
+      "page": 54,
+      "rects": [
+        {
+          "x": 0.1088774913083887,
+          "y": 0.03854235935629738,
+          "w": 0.7787683728615193,
+          "h": 0.03830296581992286
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__mp5y0gmn-k2vk",
+      "documentId": "10-ccr-2506-1",
+      "text": "Citizens of the United States are potentially eligible for participation in SNAP, provided they meet other eligibility requirements. Most non-citizens must be in a qualified non-citizen status and meet one (1) additional condition to be eligible for participation in the Program. Some classes of non-citizens are eligible for participation without having to meet an additional condition.",
+      "page": 53,
+      "rects": [
+        {
+          "x": 0.09565935768131906,
+          "y": 0.1209735337145897,
+          "w": 0.7721593060479846,
+          "h": 0.08937358691315335
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mp5y94ur-lwr8",
+      "documentId": "10-ccr-2506-1",
+      "text": "B. Non-Citizens Qualified non-citizens and certain groups of non-citizens who are not qualified are eligible for participation under certain conditions. Some qualified non-citizens must also meet an additional condition, as outlined in Section 4.305, B, 3, to be eligible for participation. Each of the following categories of qualified non-citizens stands alone for the purposes of determining eligibility. If eligibility expires under one (1) eligible category, the local office shall determine if eligibility exists under another category.",
+      "page": 53,
+      "rects": [
+        {
+          "x": 0.11328353585074524,
+          "y": 0.5593296980981514,
+          "w": 0.7677532615056281,
+          "h": 0.13959303098816334
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mp5yxsg6-qlzm",
+      "documentId": "10-ccr-2506-1",
+      "text": "1. Qualified Non-Citizen Status The following classes of non-citizens, based on the immigration status of an individual, are defined as a qualified non-citizen. The non-citizen shall be qualified as listed below at the time the non-citizen applies for, receives, or attempts to receive SNAP benefits.",
+      "page": 53,
+      "rects": [
+        {
+          "x": 0.17166362603696947,
+          "y": 0.7048809682138583,
+          "w": 0.7126777047261712,
+          "h": 0.08246774837079385
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mp5yyg9o-h5s0",
+      "documentId": "10-ccr-2506-1",
+      "text": "A non-citizen under the age of eighteen (18) that is in a qualified alien status, as outlined in paragraphs A and B of this subsection, shall be eligible for participation in the program without having to meet an additional requirement. Once the non-citizen turns eighteen (18), the eligibility of the non-citizen shall be reviewed.",
+      "page": 53,
+      "rects": [
+        {
+          "x": 0.22673918281642627,
+          "y": 0.7942545551270116,
+          "w": 0.6565006368111252,
+          "h": 0.06383827636653805
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mp5yyq9w-frv9",
+      "documentId": "10-ccr-2506-1",
+      "text": "1) A refugee who is admitted to the United States under 8 U.S.C. 1157.",
+      "page": 54,
+      "rects": [
+        {
+          "x": 0.2906268286805962,
+          "y": 0.16111184998005054,
+          "w": 0.5617706791504595,
+          "h": 0.02457707141907167
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mp5yz0s8-0r5j",
+      "documentId": "10-ccr-2506-1",
+      "text": "2) Victims of trafficking, under the Trafficking Victims Protection Act of 2000, as amended, certified by the U.S. Department of Health and Human Services Office of Refugee Resettlement (ORR). This person shall have a certification letter. a) ORR issues a letter of eligibility for adults and children under the age of eighteen (18). A trafficked minor shall have either an interim assistance letter or an eligibility letter from ORR to be eligible for SNAP. The local office shall accept these letters in place of Department of Homeland Security documentation. b) Certification letters and eligibility letters do not expire; however, interim assistance letters that are provided to children are valid for ninety (90) calendar days from the effective date of the letter. ORR may extend the interim eligibility an additional thirty (30) calendar days. Children with an interim assistance letter can only receive SNAP benefits until the expiration of the period established in the interim letter. c) The local office can verify the status of these individuals through SAVE.",
+      "page": 54,
+      "rects": [
+        {
+          "x": 0.2884238064094179,
+          "y": 0.19090304561776833,
+          "w": 0.6025265911672576,
+          "h": 0.3140843197233674
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mp5yzhyw-ri6q",
+      "documentId": "10-ccr-2506-1",
+      "text": "3) Asylees granted asylum under Section 208 of the INA, which is codified throughout Title 8 of the United States Code. The U.S. Code does not include any later amendments to or editions of the incorporated material. Copies of the federal laws are available for inspection as defined in 4.000.",
+      "page": 54,
+      "rects": [
+        {
+          "x": 0.2884238064094179,
+          "y": 0.5126479585051203,
+          "w": 0.5959175243537228,
+          "h": 0.07915946269450724
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mp5yzrus-jiev",
+      "documentId": "10-ccr-2506-1",
+      "text": "4) A non-citizen whose deportation is being withheld under 8 U.S.C. 1224(H) as in effect prior to April 1, 1997, or whose removal is withheld under 8 U.S.C. 1231(B)(3).",
+      "page": 54,
+      "rects": [
+        {
+          "x": 0.2884238064094179,
+          "y": 0.6003191913818327,
+          "w": 0.589308457540188,
+          "h": 0.052772975129671496
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mp5z0452-ftho",
+      "documentId": "10-ccr-2506-1",
+      "text": "5) Retroactive to August 22, 1996, Cuban or Haitian entrants under 8 U.S.C. 1522(E).",
+      "page": 54,
+      "rects": [
+        {
+          "x": 0.28952531754500704,
+          "y": 0.6599015826572683,
+          "w": 0.5584661457436921,
+          "h": 0.034047080728820345
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mp5z0k0h-rhz2",
+      "documentId": "10-ccr-2506-1",
+      "text": "6) Retroactive to August 22, 1996, Amerasians under 8 U.S.C 1612..",
+      "page": 54,
+      "rects": [
+        {
+          "x": 0.2873222952738288,
+          "y": 0.6990557254954116,
+          "w": 0.5507555677945681,
+          "h": 0.02808884160127678
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mp5ze2rl-baqr",
+      "documentId": "10-ccr-2506-1",
+      "text": "Special immigrant status under 8 U.S.C. 1101(A)(27) may be granted to Iraqi and Afghan nationals who have worked on behalf of the U.S. Government in Iraq or Afghanistan. The Department of Defense Appropriations Act of 2010 (DODAA), P.L. 111-118, Section 8120 enacted on December 19, 2009 provides that SIVs are eligible for all benefits to the same extent and the same period as refugees.",
+      "page": 54,
+      "rects": [
+        {
+          "x": 0.29172833981618534,
+          "y": 0.7356563372788935,
+          "w": 0.5915114798113661,
+          "h": 0.12597419869663518
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778792962101",
+      "documentId": "10-ccr-2506-1",
+      "text": "54",
+      "page": 54,
+      "rects": [
+        {
+          "x": 0.10557295790162129,
+          "y": 0.9467482377975794,
+          "w": 0.7864789508106433,
+          "h": 0.030642372655938277
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778792965862",
+      "documentId": "10-ccr-2506-1",
+      "text": "CODE OF COLORADO REGULATIONS 10 CCR 2506-1 Supplemental Nutrition Assistance Program (SNAP)",
+      "page": 55,
+      "rects": [
+        {
+          "x": 0.10447144676603215,
+          "y": 0.03356829365607129,
+          "w": 0.7886819730818216,
+          "h": 0.044261204947466416
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__mp5zhojo-b2nd",
+      "documentId": "10-ccr-2506-1",
+      "text": "1) Lawfully Admitted for Permanent Residence (LPRs) under the Immigration and Nationality Act (INA). LPRs are holders of Green Cards. If a non-citizen is in a qualified non-citizen status as outlined in paragraph a. of this section and later adjusts to LPR status, the non- citizen does not have to meet an additional condition to be eligible for participation and shall remain eligible based on the previous qualified status.",
+      "page": 55,
+      "rects": [
+        {
+          "x": 0.29282985095177444,
+          "y": 0.14422130602473734,
+          "w": 0.5882069464045989,
+          "h": 0.10895065833222503
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mp5zhyha-v246",
+      "documentId": "10-ccr-2506-1",
+      "text": "2) Paroled into the United States under 8 U.S.C. 1182(d)(5) for at least one (1) year.",
+      "page": 55,
+      "rects": [
+        {
+          "x": 0.28952531754500704,
+          "y": 0.26253491155738795,
+          "w": 0.5948160132181337,
+          "h": 0.038302965819922874
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mp5ziag3-s1zi",
+      "documentId": "10-ccr-2506-1",
+      "text": "3) Granted conditional entry pursuant to 8 U.S.C. 1153(a)(7) as in effect before April 1, 1980.",
+      "page": 55,
+      "rects": [
+        {
+          "x": 0.2851192730026505,
+          "y": 0.30764729352307485,
+          "w": 0.5771918350487074,
+          "h": 0.034047080728820345
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778793196872",
+      "documentId": "10-ccr-2506-1",
+      "text": "CODE OF COLORADO REGULATIONS 10 CCR 2506-1 Supplemental Nutrition Assistance Program (SNAP)",
+      "page": 56,
+      "rects": [
+        {
+          "x": 0.10336993563044301,
+          "y": 0.0294454049740657,
+          "w": 0.7941895287597672,
+          "h": 0.04766591302034845
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__mp5zpk3q-c155",
+      "documentId": "10-ccr-2506-1",
+      "text": "4) A non-citizen who has been battered or subjected to extreme cruelty in the U.S. by a family member with whom the non-citizen resides, such as by a spouse, a parent, or a member of the spouse or parent's family. This qualified alien status also extends to a non-citizen whose child has been battered or subjected to battery or cruelty or to a non-citizen child whose parent has been battered. To establish eligibility, the local office shall determine that the non-citizen has satisfied three (3) requirements. Spouses and children who have applied for or have been granted protection under the Violence Against Women Act will meet these requirements. a) The battered non-citizen(s) shall show that he/he has an approved or pending petition which makes a prima facie case for immigration status in one (1) of the following categories: i) United States Citizenship and Immigration Services (USCIS) Form I-130, last modified July 20, 2021, petition for alien relative, filed by their spouse or the child’s parent, which is incorporated by reference. No later editions or amendments are incorporated. This form is available at no cost from the USCIS at https://www.USCIS.gov/I-130. The form is also available for public inspection and copying at the Food and Energy Assistance Division Director, Colorado Department of Human Services, 1575 Sherman Street, 3rd Floor, Denver, Colorado 80203; ii) Form I-130, as incorporated by reference above, petition as a widow(er) of a U.S. citizen;",
+      "page": 55,
+      "rects": [
+        {
+          "x": 0.28622078413823965,
+          "y": 0.3527596754887618,
+          "w": 0.6014250800316685,
+          "h": 0.45112381965686926
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mp5zpsjg-lffh",
+      "documentId": "10-ccr-2506-1",
+      "text": "iii) Self-petition under the Violence Against Women Act (including those filed by a parent on behalf of an abused child), USCIS Form I-360, last modified June 9, 2020, which is incorporated by reference. No later editions or amendments are incorporated. This form is available at no cost from the USCIS at https://www.USCIS.gov/I-360. The form is also available for public inspection and copying at the Food and Energy Assistance Division Director, Colorado Department of Human Services, 1575 Sherman Street, 3rd Floor, Denver, Colorado, 80203; or, iv) An application for cancellation of removal or suspension of deportation filed as a victim of domestic violence. b) There is substantial connection between the battery or extreme cruelty and the need for SNAP benefits; and c) The battered non-citizen, child, or parent no longer resides in the same home as the abuser.",
+      "page": 56,
+      "rects": [
+        {
+          "x": 0.22894220508760457,
+          "y": 0.08817661923128076,
+          "w": 0.6598915699975905,
+          "h": 0.2847054129538503
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mp5zsc78-2nvs",
+      "documentId": "10-ccr-2506-1",
+      "text": "a. A non-citizen in one (1) of the following qualified non-citizen statuses is not required to meet an additional condition to be eligible for participation in the Program and is eligible for participation indefinitely from the date the non-citizen obtains qualified non-citizen status or enters the U.S. in a qualifying status. 1) A refugee who is admitted to the United States under 8 U.S.C. 1157. 2) Victims of trafficking, under the Trafficking Victims Protection Act of 2000, as amended, certified by the U.S. Department of Health and Human Services Office of Refugee Resettlement (ORR). This person shall have a certification letter. a) ORR issues a letter of eligibility for adults and children under the age of eighteen (18). A trafficked minor shall have either an interim assistance letter or an eligibility letter from ORR to be eligible for SNAP. The local office shall accept these letters in place of Department of Homeland Security documentation. b) Certification letters and eligibility letters do not expire; however, interim assistance letters that are provided to children are valid for ninety (90) calendar days from the effective date of the letter. ORR may extend the interim eligibility an additional thirty (30) calendar days. Children with an interim assistance letter can only receive SNAP benefits until the expiration of the period established in the interim letter. c) The local office can verify the status of these individuals through SAVE. 3) Asylees granted asylum under Section 208 of the INA, which is codified throughout Title 8 of the United States Code. The U.S. Code does not include any later amendments to or editions of the incorporated material. Copies of the federal laws are available for inspection as defined in 4.000. 4) A non-citizen whose deportation is being withheld under 8 U.S.C. 1224(H) as in effect prior to April 1, 1997, or whose removal is withheld under 8 U.S.C. 1231(B)(3). 5) Retroactive to August 22, 1996, Cuban or Haitian entrants under 8 U.S.C. 1522(E). 6) Retroactive to August 22, 1996, Amerasians under 8 U.S.C 1612.. 7) Iraqi and Afghan Special Immigrants (SIV) Special immigrant status under 8 U.S.C. 1101(A)(27) may be granted to Iraqi and Afghan nationals who have worked on behalf of the U.S. Government in Iraq or Afghanistan. The Department of Defense Appropriations Act of 2010 (DODAA), P.L. 111-118, Section 8120 enacted on December 19, 2009 provides that SIVs are eligible for all benefits to the same extent and the same period as refugees.",
+      "page": 54,
+      "rects": [
+        {
+          "x": 0.22894220508760454,
+          "y": 0.08791062641308685,
+          "w": 0.6774293483873188,
+          "h": 0.7805293257082059
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mp5ztjff-ktzz",
+      "documentId": "10-ccr-2506-1",
+      "text": "b. Non-citizens in one (1) of the following qualified non-citizen statuses are required to meet an additional condition (see Section 4.305, B, 3) to be eligible for participation in the Program. 1) Lawfully Admitted for Permanent Residence (LPRs) under the Immigration and Nationality Act (INA). LPRs are holders of Green Cards. If a non-citizen is in a qualified non-citizen status as outlined in paragraph a. of this section and later adjusts to LPR status, the non- citizen does not have to meet an additional condition to be eligible for participation and shall remain eligible based on the previous qualified status. 2) Paroled into the United States under 8 U.S.C. 1182(d)(5) for at least one (1) year. 3) Granted conditional entry pursuant to 8 U.S.C. 1153(a)(7) as in effect before April 1, 1980. 4) A non-citizen who has been battered or subjected to extreme cruelty in the U.S. by a family member with whom the non-citizen resides, such as by a spouse, a parent, or a member of the spouse or parent's family. This qualified alien status also extends to a non-citizen whose child has been battered or subjected to battery or cruelty or to a non-citizen child whose parent has been battered.",
+      "page": 55,
+      "rects": [
+        {
+          "x": 0.22343464940965888,
+          "y": 0.08719244580396329,
+          "w": 0.6719217927093732,
+          "h": 0.3643037637983774
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mp6018al-mdoc",
+      "documentId": "10-ccr-2506-1",
+      "text": "American Indians born abroad in Canada living in the U.S. under Section 289 of the INA or non-citizen members of a federally recognized Indian tribe under Section 4(e) of the Indian Self-Determination and Education Assistance Act (25 U.S.C. 450(B)(E) who are recognized as eligible for the special programs and services provided by the U.S. to Indians because of their status as Indians. This provision was intended to cover Native Americans who are entitled to cross the U.S. border between Canada and/or Mexico. It was intended to include but is not limited to the St. Regis Band of the Mohawk in New York State, the Micmac (also known as Mi’kmaq) in Maine, the Abenaki in Vermont, and the Kickapoo in Texas.",
+      "page": 56,
+      "rects": [
+        {
+          "x": 0.23114522735878282,
+          "y": 0.4865274637584785,
+          "w": 0.6520945922687686,
+          "h": 0.19066365208139385
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mp602a73-r8e5",
+      "documentId": "10-ccr-2506-1",
+      "text": "b. Hmong or Highland Laotian Tribal Members An individual lawfully residing in the U.S. who was a member of a Hmong or Highland Laotian tribe that rendered assistance to U.S. personnel by taking part in a military or rescue operation during the Vietnam era (August 5, 1964 – May 7, 1975). This category includes: 1) Spouse or surviving spouse of a deceased Hmong or Highland Laotian Tribal Member who is not remarried; and/or, 2) Unmarried dependent child of Hmong or Highland Laotian Tribal Member who is: under the age of eighteen (18) or a full-time student under the age of twenty-two (22);",
+      "page": 56,
+      "rects": [
+        {
+          "x": 0.2300437162231937,
+          "y": 0.6882564170767389,
+          "w": 0.6576021479467145,
+          "h": 0.19747306822715793
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mp602i9b-dze2",
+      "documentId": "10-ccr-2506-1",
+      "text": "3) Unmarried child under the age of eighteen (18) or a full-time student under the age of twenty-two (22) of a deceased Hmong or Highland Laotian Tribal Member, provided the child was dependent upon them at the time of the Hmong or Highland Laotian tribal member’s death; or, 4) Unmarried child with disabilities age eighteen (18) or older if the child with disabilities had a disability and was dependent on the person prior to the child's eighteenth (18th) birthday. A) For purposes of this paragraph, “child” means the legally adopted or biological child of the person described in this section as a Hmong or Highland Laotian Tribal Member.",
+      "page": 57,
+      "rects": [
+        {
+          "x": 0.2884238064094179,
+          "y": 0.08490490756749568,
+          "w": 0.6069326357096142,
+          "h": 0.18385423593562972
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778794098546",
+      "documentId": "10-ccr-2506-1",
+      "text": "56",
+      "page": 56,
+      "rects": [
+        {
+          "x": 0.10997900244397783,
+          "y": 0.9453118765793324,
+          "w": 0.7820729062682867,
+          "h": 0.03149354967415885
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778794101961",
+      "documentId": "10-ccr-2506-1",
+      "text": "CODE OF COLORADO REGULATIONS 10 CCR 2506-1 Supplemental Nutrition Assistance Program (SNAP)",
+      "page": 57,
+      "rects": [
+        {
+          "x": 0.10777598017279956,
+          "y": 0.033834286474265195,
+          "w": 0.7831744174038759,
+          "h": 0.042558850911025396
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__mp607a2g-sxkc",
+      "documentId": "10-ccr-2506-1",
+      "text": "2. Eligible Non-Citizens Not in a Qualified Status: The following classes of non-citizens are not defined as having a qualified status but are potentially eligible for participation in SNAP without having to meet an additional condition (see Section 4.305, B, 3). All other classes of non-citizens that are not in a qualified status are not eligible for participation in SNAP. a. Certain American Indians Born Abroad American Indians born abroad in Canada living in the U.S. under Section 289 of the INA or non-citizen members of a federally recognized Indian tribe under Section 4(e) of the Indian Self-Determination and Education Assistance Act (25 U.S.C. 450(B)(E) who are recognized as eligible for the special programs and services provided by the U.S. to Indians because of their status as Indians. This provision was intended to cover Native Americans who are entitled to cross the U.S. border between Canada and/or Mexico. It was intended to include but is not limited to the St. Regis Band of the Mohawk in New York State, the Micmac (also known as Mi’kmaq) in Maine, the Abenaki in Vermont, and the Kickapoo in Texas. b. Hmong or Highland Laotian Tribal Members An individual lawfully residing in the U.S. who was a member of a Hmong or Highland Laotian tribe that rendered assistance to U.S. personnel by taking part in a military or rescue operation during the Vietnam era (August 5, 1964 – May 7, 1975). This category includes:",
+      "page": 56,
+      "rects": [
+        {
+          "x": 0.16285153695225638,
+          "y": 0.376725628408033,
+          "w": 0.7347079274379539,
+          "h": 0.4077137917276234
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mp610mxi-5uws",
+      "documentId": "10-ccr-2506-1",
+      "text": "3. Additional Conditions Non-citizens in a qualified status as outlined in subsection 4.305, B, 1, are required to meet one additional condition to be eligible for participation in the Program. At the time the non-citizen applies for SNAP, they need only satisfy one of the following conditions to be eligible:",
+      "page": 57,
+      "rects": [
+        {
+          "x": 0.16725758149461292,
+          "y": 0.278122090703551,
+          "w": 0.7303018828955974,
+          "h": 0.09703418007713793
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mp6147i4-f5fz",
+      "documentId": "10-ccr-2506-1",
+      "text": "a. Five (5) Years of Residence The non-citizen has lived in the U.S. in a qualified non-citizen status for five (5) years. The five (5) year waiting period begins on the date the non-citizen obtains status as a qualified non-citizen or enters the U.S. in a qualifying status.",
+      "page": 57,
+      "rects": [
+        {
+          "x": 0.22563767168083715,
+          "y": 0.3828168639446735,
+          "w": 0.6520945922687688,
+          "h": 0.07830828567628673
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mp614kse-7s17",
+      "documentId": "10-ccr-2506-1",
+      "text": "b. Forty (40) Qualifying Work Quarters A person shall have satisfied this additional condition if they are lawfully admitted for permanent residence while already possessing credit for forty (40) qualifying work quarters as defined under Title II of the Social Security Act. In some cases, an applicant may have work from employment that is not covered by Title II of the Social Security Act, but which is countable toward the forty (40) quarters test, and there are also cases in which SSA records do not show current year’s earnings. Such quarters are still countable for the forty (40) quarter test, but the individual non-citizen shall be responsible for providing evidence needed to verify the quarters. 1) The sum of work quarters can include: a) Quarters the non-citizen worked; b) Quarters credited from the work of a parent of such a non-citizen while the non-citizen was under eighteen (18), which includes quarters worked before the non-citizen was born or adopted; or c) Quarters credited from the work of the non-citizen’s spouse. Quarters are only creditable to the non-citizen for work performed by his or her spouse if the couple is still legally married, or if the spouse becomes deceased while married to the non-citizen, and the work being credited to the non-citizen was performed after the marriage began.",
+      "page": 57,
+      "rects": [
+        {
+          "x": 0.2300437162231937,
+          "y": 0.4696369198031653,
+          "w": 0.6609066813534819,
+          "h": 0.39069025136321317
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mp614yrc-bdr4",
+      "documentId": "10-ccr-2506-1",
+      "text": "If a couple divorces prior to determination of SNAP eligibility, a spouse may not get credit for quarters of their spouse. However, if the local office determines eligibility of a non-citizen based on the quarters of the spouse, and then the couple divorces, the non-citizen's eligibility continues until the next re-certification. At that time, the local office shall determine the non-citizen's eligibility without crediting the non-citizen with the former spouse's quarters of coverage. 2) The sum of work quarters cannot include: a) Quarters in which not enough income was earned to qualify, or, b) Quarters earned after December 31, 1996, cannot be counted if the non-citizen, during the quarter, received SNAP or any other federal means-tested public benefits, such as Medicaid, SSI, TANF, or state Children’s Health Insurance Program.",
+      "page": 58,
+      "rects": [
+        {
+          "x": 0.2586830057485112,
+          "y": 0.08588908099481314,
+          "w": 0.6267598361502186,
+          "h": 0.2536507514297114
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mp615jgk-eui1",
+      "documentId": "10-ccr-2506-1",
+      "text": "c. Children Under Eighteen (18) A non-citizen under eighteen (18) years of age in a qualified non-citizen status who lawfully resides in the U.S. When the non-citizen turns eighteen (18), non- citizen eligibility shall be reviewed.",
+      "page": 58,
+      "rects": [
+        {
+          "x": 0.22894220508760454,
+          "y": 0.34890277962495014,
+          "w": 0.6410794809128774,
+          "h": 0.08341534778560977
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mp615qbn-2cl5",
+      "documentId": "10-ccr-2506-1",
+      "text": "d. Blind or Person with Disabilities A non-citizen who is blind or a person with a disability if the non-citizen is receiving benefits or assistance for their condition regardless of entry date.",
+      "page": 58,
+      "rects": [
+        {
+          "x": 0.22563767168083715,
+          "y": 0.4416810746109855,
+          "w": 0.6212522804722729,
+          "h": 0.06724298443942012
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mp61c1am-z4fc",
+      "documentId": "10-ccr-2506-1",
+      "text": "e. Born on or before August 22, 1931 who lawfully resided in the U.S. on August 22, 1996.",
+      "page": 58,
+      "rects": [
+        {
+          "x": 0.22894220508760454,
+          "y": 0.5140311211597287,
+          "w": 0.6598051702178926,
+          "h": 0.03574943476526127
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mp61cl4i-ktgf",
+      "documentId": "10-ccr-2506-1",
+      "text": "f. Military Connection 1) Qualified non-citizens with a military connection, including an individual who is lawfully residing in a state and is on active duty, other than training, in the military, excluding national guard; or, 2) An honorably discharged veteran, as defined in Section 101 of Title 38, U.S.C, whose discharge is not because of immigration status, who fulfills the minimum active-duty service requirements. This includes an individual who died in active military duty, naval or air service. This provision extends to the spouse, un-remarried surviving spouse, and unmarried dependent children. A discharge “under honorable conditions,” which is not the same as an honorable discharge, does not meet this requirement. 3) The definition of “veteran” shall also include: a. An individual who served before July 1, 1946, in the organized military forces of the Commonwealth of the Philippines while such forces were in the service of the Armed Forces of the U.S. or in the Philippine Scouts; or,",
+      "page": 58,
+      "rects": [
+        {
+          "x": 0.22784069395201542,
+          "y": 0.5565899720707541,
+          "w": 0.6531961034043579,
+          "h": 0.32429844394201357
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mp61cooc-4ii7",
+      "documentId": "10-ccr-2506-1",
+      "text": "b. An individual who is on active duty (other than active duty for training) in the Armed Forces of the United States, or the spouse of such a person; or, c. The spouse of a veteran who served at least twenty-four (24) months in the Armed Forces. This includes the spouse of a deceased veteran, provided the marriage fulfilled the requirements of 38 U.S.C. 1304, and the spouse has not remarried; or d. An unmarried dependent child of a veteran who is under the age of eighteen (18) or, if a full-time student, under the age of twenty- two (22); or, e. Unmarried dependent child of a deceased veteran provided such child was dependent upon the veteran at the time of the veteran's death; or an unmarried child with disabilities age eighteen (18) or older if the child with disabilities was disabled and dependent upon the deceased veteran prior to the child's eighteenth (18th) birthday. 1. For purposes of this provision, “child” means the legally adopted or biological child of the veteran.",
+      "page": 59,
+      "rects": [
+        {
+          "x": 0.24326184985026333,
+          "y": 0.08091501529458704,
+          "w": 0.6454855254552339,
+          "h": 0.34728022343396725
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778796502257",
+      "documentId": "10-ccr-2506-1",
+      "text": "57",
+      "page": 57,
+      "rects": [
+        {
+          "x": 0.1121820247151561,
+          "y": 0.9488495810613113,
+          "w": 0.7831744174038759,
+          "h": 0.030642372655938277
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778796505679",
+      "documentId": "10-ccr-2506-1",
+      "text": "CODE OF COLORADO REGULATIONS 10 CCR 2506-1 Supplemental Nutrition Assistance Program (SNAP)",
+      "page": 58,
+      "rects": [
+        {
+          "x": 0.10667446903721042,
+          "y": 0.03311610586514164,
+          "w": 0.7864789508106433,
+          "h": 0.04341002792924591
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778796509835",
+      "documentId": "10-ccr-2506-1",
+      "text": "58",
+      "page": 58,
+      "rects": [
+        {
+          "x": 0.10557295790162129,
+          "y": 0.9472802234339672,
+          "w": 0.7853774396750542,
+          "h": 0.03234472669237931
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778796515072",
+      "documentId": "10-ccr-2506-1",
+      "text": "CODE OF COLORADO REGULATIONS 10 CCR 2506-1 Supplemental Nutrition Assistance Program (SNAP)",
+      "page": 59,
+      "rects": [
+        {
+          "x": 0.10557295790162129,
+          "y": 0.03580263332890012,
+          "w": 0.7886819730818216,
+          "h": 0.03915414283814337
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778796771568",
+      "documentId": "10-ccr-2506-1",
+      "text": "59",
+      "page": 59,
+      "rects": [
+        {
+          "x": 0.10777598017279956,
+          "y": 0.9482643968612847,
+          "w": 0.7831744174038759,
+          "h": 0.030642372655938277
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__mp620y9z-czhz",
+      "documentId": "10-ccr-2506-1",
+      "text": "4.305.1 Non-Citizens Ineligible for Participation in SNAP The following non-citizens are not eligible to participate in SNAP as a member of any household. A. Non-citizens who are lawfully present in the U.S. but not in a qualified status, such as students and H-1B Visa workers; B. Undocumented non-citizens (e.g., individuals who entered the country as temporary residents and overstayed their visas or who entered without a visa); C. Non-citizen visitors; D. Tourists; E. Diplomats; F. Students who enter the U.S. temporarily with no intention of abandoning their residence in a foreign country; G. Individuals granted temporary protection status (TPS), unless in some other qualifying status; H. Citizens of nations under Compact of Free Association agreements (Palau, Micronesia, and the Marshall Islands) who have been admitted under those agreements are not qualified non-citizens. These individuals may otherwise reside, work, and study in the U.S.; and, I. Individuals with U Visas, including minor children under the age of eighteen (18), are ineligible as they have temporary status and are not considered qualified non-citizens. However, if the individual adjusts to qualified non-citizen status, such as LPR or battered immigrant status, then the individual’s non-citizen eligibility shall be reviewed under the new status.",
+      "page": 59,
+      "rects": [
+        {
+          "x": 0.1121820247151561,
+          "y": 0.4392605399654209,
+          "w": 0.7798698839971084,
+          "h": 0.4443144035111052
+        }
+      ],
+      "comment": "Strictly used to provide other guidance for people not eligible. We already know that these people are not eligible because they don't fall under one of the above categories."
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778797383766",
+      "documentId": "10-ccr-2506-1",
+      "text": "CODE OF COLORADO REGULATIONS 10 CCR 2506-1 Supplemental Nutrition Assistance Program (SNAP)",
+      "page": 60,
+      "rects": [
+        {
+          "x": 0.10997900244397783,
+          "y": 0.0384891607926586,
+          "w": 0.7809713951326976,
+          "h": 0.03830296581992286
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__mp62sy8l-1kdu",
+      "documentId": "10-ccr-2506-1",
+      "text": "status are not eligible for participation in SNAP.",
+      "page": 56,
+      "rects": [
+        {
+          "x": 0.22984967930260725,
+          "y": 0.44244284179837345,
+          "w": 0.613832681347922,
+          "h": 0.031425502531839844
+        }
+      ]
     }
   ],
   "mappings": [
+    {
+      "nodePath": "/members/*/meetsAdditionalConditionForNonCitizenEligibility",
+      "sectionId": "10-ccr-2506-1__mp610mxi-5uws"
+    },
+    {
+      "nodePath": "/members/*/isEligibleNonCitizen",
+      "sectionId": "10-ccr-2506-1__mp610mxi-5uws"
+    },
+    {
+      "nodePath": "/members/*/isNonCitizenNational",
+      "sectionId": "10-ccr-2506-1__mp5xen49-6ir3"
+    },
+    {
+      "nodePath": "/members/*/isOptionalHouseholdMember",
+      "sectionId": "10-ccr-2506-1__mp4l7jno-99mi"
+    },
+    {
+      "nodePath": "/members/*/isOptionalHouseholdMember",
+      "sectionId": "10-ccr-2506-1__mp4m11zm-amfg"
+    },
     {
       "nodePath": "/allotment",
       "sectionId": "10-ccr-2506-1__mokge7h8-n5fq"
@@ -5731,10 +6883,6 @@
       "sectionId": "10-ccr-2506-1__mox49xlg-m0sk"
     },
     {
-      "nodePath": "/members/*/isPersonWithDisability",
-      "sectionId": "10-ccr-2506-1__mox4aggc-gh9f"
-    },
-    {
       "nodePath": "/members/*/isAbawd",
       "sectionId": "10-ccr-2506-1__mokg9qpe-ps5v"
     },
@@ -5833,6 +6981,10 @@
     {
       "nodePath": "/members/*/isIneligibleNonCitizen",
       "sectionId": "10-ccr-2506-1__movskv9b-gjhh"
+    },
+    {
+      "nodePath": "/members/*/isIneligibleNonCitizen",
+      "sectionId": "10-ccr-2506-1__mp5y0gmn-k2vk"
     },
     {
       "nodePath": "/members/*/disqualifiedForWorkRequirementsCooperation",
@@ -6495,7 +7647,7 @@
       "sectionId": "10-ccr-2506-1__mp3f1ik3-w7kn"
     },
     {
-      "nodePath": "/members/*/isUnderParentalControlOfHouseholdMember",
+      "nodePath": "/parentChildRelationships/*/isUnderParentalControl",
       "sectionId": "10-ccr-2506-1__mp3f1ik3-w7kn"
     },
     {
@@ -6507,7 +7659,35 @@
       "sectionId": "10-ccr-2506-1__mp3f1ik3-w7kn"
     },
     {
+      "nodePath": "/mandatoryChildParentAgeLimit",
+      "sectionId": "10-ccr-2506-1__mp3f1ik3-w7kn"
+    },
+    {
+      "nodePath": "/mandatoryChildParentalControlAgeLimit",
+      "sectionId": "10-ccr-2506-1__mp3f1ik3-w7kn"
+    },
+    {
+      "nodePath": "/members/*/isMandatoryChildViaParent",
+      "sectionId": "10-ccr-2506-1__mp3f1ik3-w7kn"
+    },
+    {
+      "nodePath": "/members/*/isMandatoryChildViaParentalControl",
+      "sectionId": "10-ccr-2506-1__mp3f1ik3-w7kn"
+    },
+    {
       "nodePath": "/members/*/isMandatoryChild",
+      "sectionId": "10-ccr-2506-1__mp3f1ik3-w7kn"
+    },
+    {
+      "nodePath": "/members/*/isMandatoryParentViaChild",
+      "sectionId": "10-ccr-2506-1__mp3f1ik3-w7kn"
+    },
+    {
+      "nodePath": "/members/*/isMandatoryParentViaParentalControl",
+      "sectionId": "10-ccr-2506-1__mp3f1ik3-w7kn"
+    },
+    {
+      "nodePath": "/members/*/isMandatoryParent",
       "sectionId": "10-ccr-2506-1__mp3f1ik3-w7kn"
     },
     {
@@ -6515,12 +7695,320 @@
       "sectionId": "10-ccr-2506-1__mp3f77m8-zwbz"
     },
     {
-      "nodePath": "/members/*/isSpouse",
+      "nodePath": "/members/*/isMandatorySpouse",
       "sectionId": "10-ccr-2506-1__mp3f77m8-zwbz"
     },
     {
       "nodePath": "/members/*/isMandatoryHouseholdMember",
       "sectionId": "10-ccr-2506-1__mp3f77m8-zwbz"
+    },
+    {
+      "nodePath": "/members/*/isHeadOfHousehold",
+      "sectionId": "10-ccr-2506-1__mp4a7kvq-1vez"
+    },
+    {
+      "nodePath": "/members/*/isHeadOfHousehold",
+      "sectionId": "10-ccr-2506-1__mp4a9u9b-1bxs"
+    },
+    {
+      "nodePath": "/members/*/isMandatoryHouseholdMember",
+      "sectionId": "10-ccr-2506-1__mp4a9u9b-1bxs"
+    },
+    {
+      "nodePath": "/members/*/isUnableToPurchaseAndPrepareOwnMealsDueToDisability",
+      "sectionId": "10-ccr-2506-1__mp4k8ynz-sz5d"
+    },
+    {
+      "nodePath": "/members/*/othersInFoodPrepGroupIncomeExceeds165PercentFpl",
+      "sectionId": "10-ccr-2506-1__mp4k8ynz-sz5d"
+    },
+    {
+      "nodePath": "/members/*/isMandatoryElderlyWithDisability",
+      "sectionId": "10-ccr-2506-1__mp4k8ynz-sz5d"
+    },
+    {
+      "nodePath": "/members/*/isMandatoryHouseholdMember",
+      "sectionId": "10-ccr-2506-1__mp4k8ynz-sz5d"
+    },
+    {
+      "nodePath": "/members/*/canBeSeparateElderlyWithDisabilityHousehold",
+      "sectionId": "10-ccr-2506-1__mp4lxp1w-ofeg"
+    },
+    {
+      "nodePath": "/members/*/isBoarder",
+      "sectionId": "10-ccr-2506-1__mp4m2lnq-k010"
+    },
+    {
+      "nodePath": "/members/*/isNonHouseholdMember",
+      "sectionId": "10-ccr-2506-1__mp5onsgd-grb3"
+    },
+    {
+      "nodePath": "/members/*/isRoomer",
+      "sectionId": "10-ccr-2506-1__mp5onsgd-grb3"
+    },
+    {
+      "nodePath": "/members/*/isLiveInAttendant",
+      "sectionId": "10-ccr-2506-1__mp5onsgd-grb3"
+    },
+    {
+      "nodePath": "/members/*/isSeparateAndApart",
+      "sectionId": "10-ccr-2506-1__mp5rdn1i-ibki"
+    },
+    {
+      "nodePath": "/members/*/isPartOfHousehold",
+      "sectionId": "10-ccr-2506-1__mp5rdn1i-ibki"
+    },
+    {
+      "nodePath": "/members/*/isSeparateAndApart",
+      "sectionId": "10-ccr-2506-1__mp5reh2m-34i3"
+    },
+    {
+      "nodePath": "/members/*/isFleeingFelon",
+      "sectionId": "10-ccr-2506-1__mp5tl2uq-kzzl"
+    },
+    {
+      "nodePath": "/members/*/isFleeingFelon",
+      "sectionId": "10-ccr-2506-1__mp5tlexz-rn0f"
+    },
+    {
+      "nodePath": "/members/*/isDisqualified",
+      "sectionId": "10-ccr-2506-1__mp5tmob5-a0w3"
+    },
+    {
+      "nodePath": "/members/*/disqualifiedForFelonyNonCompliance",
+      "sectionId": "10-ccr-2506-1__mp5tkdpd-lp6a"
+    },
+    {
+      "nodePath": "/members/*/disqualifiedForParoleOrProbationViolation",
+      "sectionId": "10-ccr-2506-1__mp5tp16c-ly30"
+    },
+    {
+      "nodePath": "/members/*/livesInBoardingHouse",
+      "sectionId": "10-ccr-2506-1__mp5x2ybj-r0tb"
+    },
+    {
+      "nodePath": "/members/*/livesInInstitution",
+      "sectionId": "10-ccr-2506-1__mp5x2ybj-r0tb"
+    },
+    {
+      "nodePath": "/members/*/isExemptFromBoardingHouseOrInstitutionRule",
+      "sectionId": "10-ccr-2506-1__mp5xbse2-f1i6"
+    },
+    {
+      "nodePath": "/members/*/isExemptFromBoardingHouseOrInstitutionRule",
+      "sectionId": "10-ccr-2506-1__mp5xc3nj-hhi1"
+    },
+    {
+      "nodePath": "/members/*/livesInFederallySubsidizedElderlyHousing",
+      "sectionId": "10-ccr-2506-1__mp5xbse2-f1i6"
+    },
+    {
+      "nodePath": "/members/*/residesAtSubstanceAbuseTreatmentFacility",
+      "sectionId": "10-ccr-2506-1__mp5xbse2-f1i6"
+    },
+    {
+      "nodePath": "/members/*/livesInGroupLivingArrangement",
+      "sectionId": "10-ccr-2506-1__mp5xbse2-f1i6"
+    },
+    {
+      "nodePath": "/members/*/isPersonWithDisability",
+      "sectionId": "10-ccr-2506-1__mp5xbse2-f1i6"
+    },
+    {
+      "nodePath": "/members/*/isResidentOfBatteredWomensShelter",
+      "sectionId": "10-ccr-2506-1__mp5xbse2-f1i6"
+    },
+    {
+      "nodePath": "/members/*/livesInHomelessShelter",
+      "sectionId": "10-ccr-2506-1__mp5xc3nj-hhi1"
+    },
+    {
+      "nodePath": "/members/*/disqualifiedForBoardingHouseOrInstitutionResidence",
+      "sectionId": "10-ccr-2506-1__mp5x2ybj-r0tb"
+    },
+    {
+      "nodePath": "/members/*/isCitizen",
+      "sectionId": "10-ccr-2506-1__mp5xdy53-a16r"
+    },
+    {
+      "nodePath": "/members/*/isNonCitizen",
+      "sectionId": "10-ccr-2506-1__mp5y94ur-lwr8"
+    },
+    {
+      "nodePath": "/members/*/isQualifiedNonCitizen",
+      "sectionId": "10-ccr-2506-1__mp5y94ur-lwr8"
+    },
+    {
+      "nodePath": "/members/*/isEligibleNonCitizen",
+      "sectionId": "10-ccr-2506-1__mp5y94ur-lwr8"
+    },
+    {
+      "nodePath": "/members/*/isQualifiedNonCitizen",
+      "sectionId": "10-ccr-2506-1__mp5yxsg6-qlzm"
+    },
+    {
+      "nodePath": "/members/*/isQualifiedNonCitizenWithoutAdditionalCondition",
+      "sectionId": "10-ccr-2506-1__mp5zsc78-2nvs"
+    },
+    {
+      "nodePath": "/members/*/isQualifiedNonCitizenWithAdditionalCondition",
+      "sectionId": "10-ccr-2506-1__mp5ztjff-ktzz"
+    },
+    {
+      "nodePath": "/members/*/isRefugee",
+      "sectionId": "10-ccr-2506-1__mp5yyq9w-frv9"
+    },
+    {
+      "nodePath": "/members/*/isVictimOfTrafficking",
+      "sectionId": "10-ccr-2506-1__mp5yz0s8-0r5j"
+    },
+    {
+      "nodePath": "/members/*/isAsylee",
+      "sectionId": "10-ccr-2506-1__mp5yzhyw-ri6q"
+    },
+    {
+      "nodePath": "/members/*/hasWithholdingOfDeportationOrRemoval",
+      "sectionId": "10-ccr-2506-1__mp5yzrus-jiev"
+    },
+    {
+      "nodePath": "/members/*/isCubanOrHaitianEntrant",
+      "sectionId": "10-ccr-2506-1__mp5z0452-ftho"
+    },
+    {
+      "nodePath": "/members/*/isAmerasian",
+      "sectionId": "10-ccr-2506-1__mp5z0k0h-rhz2"
+    },
+    {
+      "nodePath": "/members/*/isIraqiOrAfghanSpecialImmigrant",
+      "sectionId": "10-ccr-2506-1__mp5ze2rl-baqr"
+    },
+    {
+      "nodePath": "/members/*/isLawfulPermanentResident",
+      "sectionId": "10-ccr-2506-1__mp5zhojo-b2nd"
+    },
+    {
+      "nodePath": "/members/*/isParolee",
+      "sectionId": "10-ccr-2506-1__mp5zhyha-v246"
+    },
+    {
+      "nodePath": "/members/*/isConditionalEntrant",
+      "sectionId": "10-ccr-2506-1__mp5ziag3-s1zi"
+    },
+    {
+      "nodePath": "/members/*/isBatteredImmigrant",
+      "sectionId": "10-ccr-2506-1__mp5zpk3q-c155"
+    },
+    {
+      "nodePath": "/members/*/isBatteredImmigrant",
+      "sectionId": "10-ccr-2506-1__mp5zpsjg-lffh"
+    },
+    {
+      "nodePath": "/members/*/isAmericanIndianBornAbroad",
+      "sectionId": "10-ccr-2506-1__mp6018al-mdoc"
+    },
+    {
+      "nodePath": "/members/*/isHmongOrHighlandLaotianTribalMember",
+      "sectionId": "10-ccr-2506-1__mp602a73-r8e5"
+    },
+    {
+      "nodePath": "/members/*/isHmongOrHighlandLaotianTribalMember",
+      "sectionId": "10-ccr-2506-1__mp602i9b-dze2"
+    },
+    {
+      "nodePath": "/members/*/isEligibleNonQualifiedNonCitizen",
+      "sectionId": "10-ccr-2506-1__mp607a2g-sxkc"
+    },
+    {
+      "nodePath": "/members/*/isIneligibleNonCitizen",
+      "sectionId": "10-ccr-2506-1__mp620y9z-czhz"
+    },
+    {
+      "nodePath": "/qualifiedNonCitizenResidenceYearsThreshold",
+      "sectionId": "10-ccr-2506-1__mp6147i4-f5fz"
+    },
+    {
+      "nodePath": "/members/*/qualifiedYearsInUs",
+      "sectionId": "10-ccr-2506-1__mp6147i4-f5fz"
+    },
+    {
+      "nodePath": "/members/*/hasFiveYearsInQualifiedNonCitizenStatus",
+      "sectionId": "10-ccr-2506-1__mp6147i4-f5fz"
+    },
+    {
+      "nodePath": "/members/*/meetsAdditionalConditionForNonCitizenEligibility",
+      "sectionId": "10-ccr-2506-1__mp6147i4-f5fz"
+    },
+    {
+      "nodePath": "/qualifyingWorkQuartersThreshold",
+      "sectionId": "10-ccr-2506-1__mp614kse-7s17"
+    },
+    {
+      "nodePath": "/members/*/qualifyingWorkQuarters",
+      "sectionId": "10-ccr-2506-1__mp614kse-7s17"
+    },
+    {
+      "nodePath": "/members/*/hasFortyQualifyingWorkQuarters",
+      "sectionId": "10-ccr-2506-1__mp614kse-7s17"
+    },
+    {
+      "nodePath": "/members/*/meetsAdditionalConditionForNonCitizenEligibility",
+      "sectionId": "10-ccr-2506-1__mp614kse-7s17"
+    },
+    {
+      "nodePath": "/members/*/qualifyingWorkQuarters",
+      "sectionId": "10-ccr-2506-1__mp614yrc-bdr4"
+    },
+    {
+      "nodePath": "/members/*/hasFortyQualifyingWorkQuarters",
+      "sectionId": "10-ccr-2506-1__mp614yrc-bdr4"
+    },
+    {
+      "nodePath": "/members/*/meetsAdditionalConditionForNonCitizenEligibility",
+      "sectionId": "10-ccr-2506-1__mp614yrc-bdr4"
+    },
+    {
+      "nodePath": "/nonCitizenChildAgeLimit",
+      "sectionId": "10-ccr-2506-1__mp615jgk-eui1"
+    },
+    {
+      "nodePath": "/members/*/meetsAdditionalConditionForNonCitizenEligibility",
+      "sectionId": "10-ccr-2506-1__mp615jgk-eui1"
+    },
+    {
+      "nodePath": "/members/*/meetsAdditionalConditionForNonCitizenEligibility",
+      "sectionId": "10-ccr-2506-1__mp615qbn-2cl5"
+    },
+    {
+      "nodePath": "/members/*/wasBornOnOrBeforeAug221931AndLawfullyResidedAug221996",
+      "sectionId": "10-ccr-2506-1__mp61c1am-z4fc"
+    },
+    {
+      "nodePath": "/members/*/meetsAdditionalConditionForNonCitizenEligibility",
+      "sectionId": "10-ccr-2506-1__mp61c1am-z4fc"
+    },
+    {
+      "nodePath": "/members/*/hasQualifyingMilitaryConnection",
+      "sectionId": "10-ccr-2506-1__mp61cl4i-ktgf"
+    },
+    {
+      "nodePath": "/members/*/meetsAdditionalConditionForNonCitizenEligibility",
+      "sectionId": "10-ccr-2506-1__mp61cl4i-ktgf"
+    },
+    {
+      "nodePath": "/members/*/hasQualifyingMilitaryConnection",
+      "sectionId": "10-ccr-2506-1__mp61cooc-4ii7"
+    },
+    {
+      "nodePath": "/members/*/meetsAdditionalConditionForNonCitizenEligibility",
+      "sectionId": "10-ccr-2506-1__mp61cooc-4ii7"
+    },
+    {
+      "nodePath": "/members/*/meetsAdditionalConditionForNonCitizenEligibility",
+      "sectionId": "10-ccr-2506-1__mp5yyg9o-h5s0"
+    },
+    {
+      "nodePath": "/members/*/isIneligibleNonCitizen",
+      "sectionId": "10-ccr-2506-1__mp62sy8l-1kdu"
     }
   ]
 }
