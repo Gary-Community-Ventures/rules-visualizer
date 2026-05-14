@@ -907,8 +907,7 @@ function buildCollectionItemOptions(
       if (labelExtras.length >= 1) break
     }
     const base = `${getCollectionDisplayName(target)} ${idx + 1}`
-    const label =
-      labelExtras.length > 0 ? `${base} — ${labelExtras[0]}` : base
+    const label = labelExtras.length > 0 ? `${base} — ${labelExtras[0]}` : base
     return { value: `#${idx}`, label }
   })
 }

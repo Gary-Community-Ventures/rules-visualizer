@@ -71,6 +71,43 @@ def _find_rulespec_root(data_dir: Path) -> Path | None:
     return None
 
 
+def _try_extract_topology(
+    ruleset_id: str, composition_path: Path
+) -> dict | None:
+    """Compile the composition and return a topology summary the parser
+    can use to emit a Fact-Graph-shaped Model:
+        {
+            'input_entity_overrides': {bare_input → entity},
+            'root_entity': str,
+            'collection_entities': set[str],
+        }
+    Returns None on any failure so the parser can fall back to its
+    formula-text heuristics."""
+    try:
+        from .axiom_engine import (
+            compile_program,
+            _collect_input_references,
+            _classify_topology,
+        )
+    except Exception:
+        return None
+    try:
+        artifact = compile_program(ruleset_id, composition_path)
+    except Exception as e:
+        print(f'  Warning: could not pre-compile {composition_path.name} '
+              f'for entity inference: {e}')
+        return None
+    topology = _classify_topology(artifact)
+    refs = _collect_input_references(artifact, topology)
+    return {
+        "input_entity_overrides": {
+            bare: entity for bare, (_durable, entity) in refs.items()
+        },
+        "root_entity": topology.get("root_entity"),
+        "collection_entities": topology.get("collection_entities") or set(),
+    }
+
+
 def _find_rulespec_compositions(rulespec_root: Path) -> list[tuple[Path, str]]:
     """Find every YAML under `<rulespec_root>/rulespec-<juris>/policies/**`
     whose top-level `module.kind` is `composition`. Returns
@@ -152,8 +189,21 @@ def main() -> None:
     rulesets: dict = {}
     for comp_path, ruleset_id in _find_rulespec_compositions(rulespec_root):
         try:
+            # Eagerly compile to harvest the program's entity/relation
+            # topology. The artifact is the source of truth for input
+            # entity scopes (handles `count_related` slot flips the
+            # parser's formula-text walk can't see) and for which entities
+            # are collection containers vs. the root entity. If compilation
+            # fails — engine binary missing, malformed YAML — we still
+            # parse with the heuristic fallback so the visualizer renders.
+            topo = _try_extract_topology(ruleset_id, comp_path) or {}
             model = parse_rulespec_composition(
-                comp_path, str(rulespec_root), ruleset_id
+                comp_path,
+                str(rulespec_root),
+                ruleset_id,
+                input_entity_overrides=topo.get("input_entity_overrides"),
+                root_entity=topo.get("root_entity"),
+                collection_entities=topo.get("collection_entities"),
             )
             # Allow per-ruleset references.json (sibling of the composition
             # file) to attach policy-doc citations onto nodes.

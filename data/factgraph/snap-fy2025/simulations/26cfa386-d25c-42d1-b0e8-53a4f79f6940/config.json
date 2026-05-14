@@ -2,9 +2,7 @@
   "id": "26cfa386-d25c-42d1-b0e8-53a4f79f6940",
   "seed": 74449084,
   "caseCount": 100,
-  "outcomeNodes": [
-    "/eligible"
-  ],
+  "outcomeNodes": ["/eligible"],
   "scalarFields": [
     {
       "path": "/grossEarnedIncome",

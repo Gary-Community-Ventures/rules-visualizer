@@ -10,15 +10,12 @@
     us:statutes/7/2015/d/2/B#input.person_otherwise_required_to_comply_with_paragraph_1_requirements: true
     us:statutes/7/2015/d/2/B#input.person_is_parent_or_other_household_member_with_responsibility_for_care_of_dependent_child: true
     us:statutes/7/2015/d/2/B#input.dependent_child_age_years: 5
-    ? us:statutes/7/2015/d/2/B#input.person_is_parent_or_other_household_member_with_responsibility_for_care_of_incapacitated_person
-    : false
+    us:statutes/7/2015/d/2/B#input.person_is_parent_or_other_household_member_with_responsibility_for_care_of_incapacitated_person: false
     us:statutes/7/2015/d/2/C#input.person_otherwise_required_to_comply_with_paragraph_1_requirements: true
-    ? us:statutes/7/2015/d/2/C#input.person_is_bona_fide_student_enrolled_at_least_half_time_in_recognized_school_or_training_program
-    : false
+    us:statutes/7/2015/d/2/C#input.person_is_bona_fide_student_enrolled_at_least_half_time_in_recognized_school_or_training_program: false
     us:statutes/7/2015/d/2/C#input.person_is_bona_fide_student_enrolled_at_least_half_time_in_institution_of_higher_education: false
     us:statutes/7/2015/d/2/D#input.person_otherwise_required_to_comply_with_paragraph_1_requirements: true
-    ? us:statutes/7/2015/d/2/D#input.person_is_regular_participant_in_drug_addiction_or_alcoholic_treatment_and_rehabilitation_program
-    : false
+    us:statutes/7/2015/d/2/D#input.person_is_regular_participant_in_drug_addiction_or_alcoholic_treatment_and_rehabilitation_program: false
     us:statutes/7/2015/d/2/E#input.person_otherwise_required_to_comply_with_paragraph_1_requirements: true
     us:statutes/7/2015/d/2/E#input.employed_hours_per_week: 0
     us:statutes/7/2015/d/2/E#input.weekly_earnings: 0
@@ -48,15 +45,12 @@
     us:statutes/7/2015/d/2/B#input.person_otherwise_required_to_comply_with_paragraph_1_requirements: true
     us:statutes/7/2015/d/2/B#input.person_is_parent_or_other_household_member_with_responsibility_for_care_of_dependent_child: false
     us:statutes/7/2015/d/2/B#input.dependent_child_age_years: 10
-    ? us:statutes/7/2015/d/2/B#input.person_is_parent_or_other_household_member_with_responsibility_for_care_of_incapacitated_person
-    : false
+    us:statutes/7/2015/d/2/B#input.person_is_parent_or_other_household_member_with_responsibility_for_care_of_incapacitated_person: false
     us:statutes/7/2015/d/2/C#input.person_otherwise_required_to_comply_with_paragraph_1_requirements: true
-    ? us:statutes/7/2015/d/2/C#input.person_is_bona_fide_student_enrolled_at_least_half_time_in_recognized_school_or_training_program
-    : false
+    us:statutes/7/2015/d/2/C#input.person_is_bona_fide_student_enrolled_at_least_half_time_in_recognized_school_or_training_program: false
     us:statutes/7/2015/d/2/C#input.person_is_bona_fide_student_enrolled_at_least_half_time_in_institution_of_higher_education: false
     us:statutes/7/2015/d/2/D#input.person_otherwise_required_to_comply_with_paragraph_1_requirements: true
-    ? us:statutes/7/2015/d/2/D#input.person_is_regular_participant_in_drug_addiction_or_alcoholic_treatment_and_rehabilitation_program
-    : false
+    us:statutes/7/2015/d/2/D#input.person_is_regular_participant_in_drug_addiction_or_alcoholic_treatment_and_rehabilitation_program: false
     us:statutes/7/2015/d/2/E#input.person_otherwise_required_to_comply_with_paragraph_1_requirements: true
     us:statutes/7/2015/d/2/E#input.employed_hours_per_week: 0
     us:statutes/7/2015/d/2/E#input.weekly_earnings: 0
@@ -86,15 +80,12 @@
     us:statutes/7/2015/d/2/B#input.person_otherwise_required_to_comply_with_paragraph_1_requirements: true
     us:statutes/7/2015/d/2/B#input.person_is_parent_or_other_household_member_with_responsibility_for_care_of_dependent_child: false
     us:statutes/7/2015/d/2/B#input.dependent_child_age_years: 10
-    ? us:statutes/7/2015/d/2/B#input.person_is_parent_or_other_household_member_with_responsibility_for_care_of_incapacitated_person
-    : false
+    us:statutes/7/2015/d/2/B#input.person_is_parent_or_other_household_member_with_responsibility_for_care_of_incapacitated_person: false
     us:statutes/7/2015/d/2/C#input.person_otherwise_required_to_comply_with_paragraph_1_requirements: true
-    ? us:statutes/7/2015/d/2/C#input.person_is_bona_fide_student_enrolled_at_least_half_time_in_recognized_school_or_training_program
-    : false
+    us:statutes/7/2015/d/2/C#input.person_is_bona_fide_student_enrolled_at_least_half_time_in_recognized_school_or_training_program: false
     us:statutes/7/2015/d/2/C#input.person_is_bona_fide_student_enrolled_at_least_half_time_in_institution_of_higher_education: false
     us:statutes/7/2015/d/2/D#input.person_otherwise_required_to_comply_with_paragraph_1_requirements: true
-    ? us:statutes/7/2015/d/2/D#input.person_is_regular_participant_in_drug_addiction_or_alcoholic_treatment_and_rehabilitation_program
-    : false
+    us:statutes/7/2015/d/2/D#input.person_is_regular_participant_in_drug_addiction_or_alcoholic_treatment_and_rehabilitation_program: false
     us:statutes/7/2015/d/2/E#input.person_otherwise_required_to_comply_with_paragraph_1_requirements: true
     us:statutes/7/2015/d/2/E#input.employed_hours_per_week: 0
     us:statutes/7/2015/d/2/E#input.weekly_earnings: 0

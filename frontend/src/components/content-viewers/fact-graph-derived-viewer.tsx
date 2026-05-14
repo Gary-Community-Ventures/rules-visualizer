@@ -35,9 +35,13 @@ export function FactGraphDerivedViewer({ content }: Props) {
         const tail = slashIdx === -1 ? '' : path.slice(slashIdx + 1)
         const segments = content.path.split('/').filter(Boolean)
         for (let i = 0; i < head.length; i++) segments.pop()
-        const base =
-          segments.length === 0 ? '/' : '/' + segments.join('/')
-        path = tail.length === 0 ? base : base === '/' ? '/' + tail : base + '/' + tail
+        const base = segments.length === 0 ? '/' : '/' + segments.join('/')
+        path =
+          tail.length === 0
+            ? base
+            : base === '/'
+              ? '/' + tail
+              : base + '/' + tail
       }
 
       for (const [nodeId, node] of Object.entries(model.nodes)) {
@@ -67,7 +71,9 @@ export function FactGraphDerivedViewer({ content }: Props) {
         <Field label="Path" value={content.path} />
         {content.placeholderLogic !== undefined && (
           <div>
-            <span className="text-muted-foreground font-medium">Placeholder</span>
+            <span className="text-muted-foreground font-medium">
+              Placeholder
+            </span>
             {content.placeholderLogic ? (
               <LogicHighlighter
                 format="factGraph"
@@ -75,9 +81,7 @@ export function FactGraphDerivedViewer({ content }: Props) {
                 onNavigate={navigateToPath}
               />
             ) : (
-              <p className="mt-0.5 text-muted-foreground italic">
-                (empty)
-              </p>
+              <p className="mt-0.5 text-muted-foreground italic">(empty)</p>
             )}
           </div>
         )}

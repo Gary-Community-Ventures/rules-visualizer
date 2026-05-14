@@ -385,9 +385,7 @@ export function TypedValueInput({
       }
       return <TextInput {...rest} />
     case 'CollectionItem':
-      return (
-        <CollectionItemInput {...rest} options={collectionItems ?? []} />
-      )
+      return <CollectionItemInput {...rest} options={collectionItems ?? []} />
     default:
       return <TextInput {...rest} />
   }

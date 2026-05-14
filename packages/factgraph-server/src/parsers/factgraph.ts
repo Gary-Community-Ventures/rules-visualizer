@@ -438,10 +438,7 @@ const SCOPE_ELEMENTS = new Set(['Filter', 'Find', 'IndexOf'])
  * Recursively collect all dependency paths from a fact's XML tree.
  * Dependencies can be nested deep inside expression trees (Switch/Case/When/Then/All/Any/etc).
  */
-function collectDependencyPaths(
-  obj: unknown,
-  scope?: string
-): DepRef[] {
+function collectDependencyPaths(obj: unknown, scope?: string): DepRef[] {
   const refs: DepRef[] = []
 
   if (obj === null || obj === undefined || typeof obj !== 'object') {
@@ -489,7 +486,11 @@ function collectDependencyPaths(
     // Scope-introducing elements (Filter / Find / IndexOf) attach a path
     // attribute pointing at the collection they iterate. Capture it as
     // both a dependency edge and as the new scope for everything inside.
-    if (SCOPE_ELEMENTS.has(key) && typeof value === 'object' && value !== null) {
+    if (
+      SCOPE_ELEMENTS.has(key) &&
+      typeof value === 'object' &&
+      value !== null
+    ) {
       const elements = Array.isArray(value) ? value : [value]
       for (const el of elements) {
         const elObj = el as Record<string, unknown>

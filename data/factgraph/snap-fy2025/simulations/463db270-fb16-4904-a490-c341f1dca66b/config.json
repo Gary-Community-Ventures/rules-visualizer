@@ -2,9 +2,7 @@
   "id": "463db270-fb16-4904-a490-c341f1dca66b",
   "seed": 2049765002,
   "caseCount": 1000,
-  "outcomeNodes": [
-    "/snap"
-  ],
+  "outcomeNodes": ["/snap"],
   "scalarFields": [
     {
       "path": "/grossEarnedIncome",

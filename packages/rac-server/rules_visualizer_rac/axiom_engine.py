@@ -29,6 +29,10 @@ from typing import Any
 # Resolved at first call; None means "look it up again next time".
 _binary_path: Path | None = None
 
+# Sentinel distinct from None — None is a legitimate user-supplied value
+# (e.g. a profile that wants to set a Person field to "no value yet").
+_UNSET: Any = object()
+
 
 def _resolve_binary() -> Path:
     """Locate the axiom-rules-engine binary.
@@ -140,14 +144,23 @@ def _zero_value_for(dtype: str | None) -> dict[str, Any]:
 
 # --- Input dtype inference from compiled artifact ---
 
-def _compiled_program_ids(artifact_path: Path) -> tuple[dict[str, str], dict[str, str]]:
-    """Returns `({bare_name → durable_id}, {bare_name → entity})` for every
-    rule the compiled program knows about. The engine requires queries to
-    use durable IDs like `us:statutes/7/2017/a#snap_regular_month_allotment`;
+def _compiled_program_ids(
+    artifact_path: Path,
+) -> tuple[dict[str, str], dict[str, str | None]]:
+    """Returns `({bare_name → durable_id}, {bare_name → entity_or_None})`
+    for every rule the compiled program knows about. The engine requires
+    queries to use durable IDs like `us:statutes/7/2017/a#snap_regular_month_allotment`;
     our visualizer nodes are keyed by bare names. The entity map lets the
-    caller pick only outputs evaluable at a given entity scope — querying a
-    Person-scoped rule against a Household entity_id makes the engine try
-    to look up Person inputs at the wrong entity_id and fail."""
+    caller pick only outputs evaluable at a given entity scope — querying
+    a collection-scoped rule against the root entity_id makes the engine
+    try to look up collection inputs at the wrong scope and fail.
+
+    Rules with no `entity:` field map to `None` (not a fallback entity
+    string), so downstream filters can match unentitled rules against any
+    chosen root entity rather than incorrectly tagging them as a specific
+    one. Whichever entity is conceptually the root is decided by the
+    topology classifier, not assumed here.
+    """
     try:
         with artifact_path.open("r", encoding="utf-8") as f:
             artifact = json.load(f)
@@ -155,7 +168,7 @@ def _compiled_program_ids(artifact_path: Path) -> tuple[dict[str, str], dict[str
         return {}, {}
     program = artifact.get("program") or {}
     ids: dict[str, str] = {}
-    entities: dict[str, str] = {}
+    entities: dict[str, str | None] = {}
     for r in (program.get("derived") or []) + (program.get("parameters") or []):
         if not isinstance(r, dict):
             continue
@@ -163,7 +176,7 @@ def _compiled_program_ids(artifact_path: Path) -> tuple[dict[str, str], dict[str
         rule_id = r.get("id")
         if name and rule_id:
             ids[name] = rule_id
-            entities[name] = r.get("entity") or "Household"
+            entities[name] = r.get("entity") or None
     return ids, entities
 
 
@@ -293,7 +306,222 @@ def _infer_input_dtypes(artifact_path: Path) -> dict[str, str]:
 _fixture_overrides: dict[tuple[str, frozenset[str]], dict[str, dict[str, Any]]] = {}
 
 
-def _collect_input_references(artifact_path: Path) -> dict[str, tuple[str, str]]:
+def _classify_topology(artifact_path: Path) -> dict[str, Any]:
+    """Discover the program's entity/relation topology from the compiled
+    artifact. The engine treats entity names as opaque strings; this
+    function reconstructs the structural roles they play so the wrapper
+    doesn't have to hardcode anything program-specific.
+
+    Returns:
+        {
+            'entity_types': {<entity_name>, ...},   # every entity_name seen on a derived rule
+            'relation_slots': {(rel_name, slot_idx): entity_name},
+            'root_entity': str | None,              # entity treated as the query target
+            'collection_entities': {<entity_name>, ...}, # entities that appear as a related slot
+            'relation_links': {(parent_entity, child_entity): [(rel_name, parent_slot, child_slot), ...]},
+        }
+
+    `relation_slots` is built by walking every `count_related`/`sum_related`:
+    that node says "I'm evaluated in entity X (= consuming rule's entity) at
+    slot `current_slot` of relation R." So R[current_slot] = X. The
+    related-side slot's entity is inferred from any `kind: derived` reference
+    inside the `where`/`value` subtree (those derived rules carry explicit
+    `entity` declarations and are evaluated at the related entity).
+
+    The "root" is whichever entity is treated as the query container — it
+    appears as a current_slot somewhere and never as a related_slot. Anything
+    that does appear as a related_slot is a "collection entity" and gets
+    member fan-out treatment at execute time. Entities that are neither
+    (e.g. SnapUnit in SNAP) just float along without special handling.
+    """
+    try:
+        with artifact_path.open("r", encoding="utf-8") as f:
+            artifact = json.load(f)
+    except Exception:
+        return {
+            "entity_types": set(),
+            "relation_slots": {},
+            "root_entity": None,
+            "collection_entities": set(),
+            "relation_links": {},
+        }
+
+    program = artifact.get("program") or {}
+
+    # Step 1: all entity types appearing on derived rules.
+    derived_rules = program.get("derived") or []
+    entity_types: set[str] = set()
+    derived_entity: dict[str, str] = {}  # bare_name → entity
+    for r in derived_rules:
+        e = r.get("entity")
+        if e:
+            entity_types.add(e)
+            if r.get("name"):
+                derived_entity[r["name"]] = e
+
+    # Step 2: walk count_related/sum_related to learn relation slot entities.
+    relation_slots: dict[tuple[str, int], str] = {}
+    current_slots_seen: set[str] = set()
+    related_slots_seen: set[str] = set()
+
+    def first_derived_entity(node: Any) -> str | None:
+        """Find the first `{kind: derived, name: X}` reference in a subtree
+        and return X's declared entity (if known)."""
+        if not isinstance(node, dict):
+            return None
+        if node.get("kind") == "derived":
+            return derived_entity.get(node.get("name") or "")
+        for value in node.values():
+            if isinstance(value, list):
+                for x in value:
+                    found = first_derived_entity(x)
+                    if found:
+                        return found
+            elif isinstance(value, dict):
+                found = first_derived_entity(value)
+                if found:
+                    return found
+        return None
+
+    def walk_for_relations(node: Any, outer_entity: str) -> None:
+        if not isinstance(node, dict):
+            return
+        kind = node.get("kind")
+        if kind in ("count_related", "sum_related"):
+            rel = node.get("relation")
+            cs = node.get("current_slot")
+            rs = node.get("related_slot")
+            if isinstance(rel, str):
+                if isinstance(cs, int) and outer_entity:
+                    # First observation wins; conflicts are content bugs.
+                    relation_slots.setdefault((rel, cs), outer_entity)
+                    current_slots_seen.add(outer_entity)
+                if isinstance(rs, int):
+                    # Try to learn the related slot's entity from the
+                    # `where`/`value` subtree. A `kind: derived` ref inside
+                    # carries the canonical entity tag.
+                    inferred = first_derived_entity(node.get("where")) or \
+                        first_derived_entity(node.get("value"))
+                    if inferred:
+                        relation_slots.setdefault((rel, rs), inferred)
+                        related_slots_seen.add(inferred)
+                # Descend into where/value subtrees with the related entity
+                # context (or fall back to outer if we couldn't infer).
+                inner_entity = relation_slots.get((rel, rs)) if isinstance(rs, int) else None
+                for field in ("where", "value"):
+                    child = node.get(field)
+                    if child is not None:
+                        walk_for_relations(child, inner_entity or outer_entity)
+            return
+        for value in node.values():
+            if isinstance(value, list):
+                for x in value:
+                    walk_for_relations(x, outer_entity)
+            elif isinstance(value, dict):
+                walk_for_relations(value, outer_entity)
+
+    for r in derived_rules:
+        walk_for_relations(r.get("expr"), r.get("entity") or "")
+
+    # Step 2b: unify equivalent relation names. A composition often carries
+    # both a bare name (`member_of_household`) and a durable form
+    # (`us:statutes/7/2012/j#relation.member_of_household`) for the same
+    # logical relation; the engine treats them as distinct keys but the
+    # compiler emits both. Two relations are equivalent if one's name ends
+    # with `#relation.<bare>` where `<bare>` is the other's full name.
+    # Merging their slot maps lets us fill in slots that only one form
+    # happened to observe.
+    rel_names_all = {rel for (rel, _) in relation_slots}
+    equivalents: dict[str, set[str]] = {n: {n} for n in rel_names_all}
+    for n in rel_names_all:
+        bare = n
+        if "#relation." in n:
+            bare = n.rsplit("#relation.", 1)[1]
+        for m in rel_names_all:
+            if m == n:
+                continue
+            m_bare = m.rsplit("#relation.", 1)[1] if "#relation." in m else m
+            if bare == m or m_bare == n or bare == m_bare:
+                equivalents[n].add(m)
+                equivalents.setdefault(m, set()).add(n)
+    # Apply union: every group of equivalent names sees the union of all
+    # observed slot entities. Conflicting entities in the same slot get
+    # the first-seen value (consistent with the rest of this function).
+    for name, group in equivalents.items():
+        if len(group) <= 1:
+            continue
+        merged: dict[int, str] = {}
+        for member in group:
+            for (rel, slot), entity in relation_slots.items():
+                if rel == member:
+                    merged.setdefault(slot, entity)
+        for member in group:
+            for slot, entity in merged.items():
+                relation_slots.setdefault((member, slot), entity)
+
+    # Step 3: decide root + collection entities.
+    # Root is an entity that hosts count_related (current_slot) but is never
+    # iterated *over* (never a related_slot). Collection entities are the
+    # related-slot ones. If we can't find a unique root, fall back to the
+    # entity with the most derived rules — that's almost always the right
+    # answer for benefit-determination programs.
+    collection_entities = set(related_slots_seen)
+    root_candidates = current_slots_seen - related_slots_seen
+    if len(root_candidates) == 1:
+        root_entity = next(iter(root_candidates))
+    else:
+        # Fallback: most-frequent entity on derived rules.
+        if entity_types:
+            counts: dict[str, int] = {}
+            for r in derived_rules:
+                e = r.get("entity")
+                if e:
+                    counts[e] = counts.get(e, 0) + 1
+            root_entity = max(counts, key=counts.get) if counts else None
+        else:
+            root_entity = None
+
+    # Step 4: relation_links lets the wrapper figure out which relations
+    # tie a collection entity back to the root (or any parent entity).
+    # Keyed by (parent_entity, child_entity) → list of (rel_name, parent_slot, child_slot).
+    relation_links: dict[tuple[str, str], list[tuple[str, int, int]]] = {}
+    rel_names = {rel for (rel, _) in relation_slots}
+    for rel in rel_names:
+        # Find every slot of this relation that we have an entity for.
+        slot_entities = {
+            slot: relation_slots[(rel, slot)]
+            for (r, slot) in relation_slots if r == rel
+        }
+        # For each pair (parent_slot, child_slot), record the link.
+        for p_slot, p_ent in slot_entities.items():
+            for c_slot, c_ent in slot_entities.items():
+                if p_slot == c_slot or p_ent == c_ent:
+                    continue
+                relation_links.setdefault((p_ent, c_ent), []).append(
+                    (rel, p_slot, c_slot)
+                )
+
+    return {
+        "entity_types": entity_types,
+        "relation_slots": relation_slots,
+        "root_entity": root_entity,
+        "collection_entities": collection_entities,
+        "relation_links": relation_links,
+    }
+
+
+def _collect_relation_names(artifact_path: Path) -> list[str]:
+    """Every distinct `count_related.relation` / `sum_related.relation`
+    name. Used as a defensive fallback when no per-link topology is
+    available; the generalized path uses `_classify_topology`."""
+    topo = _classify_topology(artifact_path)
+    rels = {rel for (rel, _) in topo.get("relation_slots", {})}
+    return sorted(rels)
+
+
+def _collect_input_references(
+    artifact_path: Path, topology: dict[str, Any] | None = None
+) -> dict[str, tuple[str, str]]:
     """Walk every expression in the compiled program and collect every
     `{kind: input, name: X}` reference. Returns `{bare_input_name →
     (sample_durable_id, entity)}`.
@@ -304,11 +532,13 @@ def _collect_input_references(artifact_path: Path) -> dict[str, tuple[str, str]]
     form per input, which we can build from any rule that references it
     (its containing rule's `id` gives us a module:path prefix).
 
-    Entity scope is inferred from the consuming rule: every derived rule has
-    an `entity` field, and an input referenced inside that rule's expr is
-    scoped to that entity. We verified on the SNAP program that every input
-    is used at exactly one entity scope across all consumers — clean
-    partition between Household and Person inputs.
+    Entity scope is inferred from context:
+      - Default: the consuming derived rule's entity.
+      - Inside `count_related`/`sum_related`: switch to the entity at the
+        relation's related slot (looked up in `topology.relation_slots`).
+
+    Topology is discovered once per artifact via `_classify_topology`; no
+    program-specific entity names are hardcoded.
     """
     try:
         with artifact_path.open("r", encoding="utf-8") as f:
@@ -316,15 +546,30 @@ def _collect_input_references(artifact_path: Path) -> dict[str, tuple[str, str]]
     except Exception:
         return {}
 
+    topo = topology or _classify_topology(artifact_path)
+    relation_slots: dict[tuple[str, int], str] = topo.get("relation_slots", {})
+
     inputs: dict[str, tuple[str, str]] = {}
 
     def visit(node: Any, current_module: str, current_entity: str) -> None:
         if not isinstance(node, dict):
             return
-        if node.get("kind") == "input":
+        kind = node.get("kind")
+        if kind == "input":
             name = node.get("name")
             if name and name not in inputs and current_module:
                 inputs[name] = (f"{current_module}#input.{name}", current_entity)
+            return
+        if kind in ("count_related", "sum_related"):
+            rel = node.get("relation")
+            rs = node.get("related_slot")
+            related_entity = current_entity
+            if isinstance(rel, str) and isinstance(rs, int):
+                related_entity = relation_slots.get((rel, rs), current_entity)
+            for field in ("where", "value"):
+                child = node.get(field)
+                if child is not None:
+                    visit(child, current_module, related_entity)
             return
         for value in node.values():
             if isinstance(value, list):
@@ -334,10 +579,15 @@ def _collect_input_references(artifact_path: Path) -> dict[str, tuple[str, str]]
                 visit(value, current_module, current_entity)
 
     program = artifact.get("program") or {}
+    root_entity = topo.get("root_entity")
     for rule in program.get("derived") or []:
         rule_id = rule.get("id") or ""
         module = rule_id.rsplit("#", 1)[0] if "#" in rule_id else ""
-        entity = rule.get("entity") or "Household"
+        # An unentitled rule inherits the discovered root entity. If even
+        # the topology couldn't determine a root (degenerate artifact),
+        # we leave the entity unset rather than guessing a name — the
+        # downstream input tagger will treat it as un-bucketed.
+        entity = rule.get("entity") or root_entity or ""
         visit(rule.get("expr"), module, entity)
 
     return inputs
@@ -501,6 +751,24 @@ def execute(
     user_inputs = user_inputs or {}
     entities = entities or {}
 
+    # Discover the program's entity/relation topology — what's the root
+    # entity, which entities are collection-scoped, how do relations link
+    # them. Replaces every program-specific assumption (Person/Household,
+    # member_of_household) with values read from the artifact.
+    topology = _classify_topology(artifact)
+    root_entity: str | None = topology.get("root_entity")
+    collection_entities: set[str] = topology.get("collection_entities") or set()
+    relation_links: dict[tuple[str, str], list[tuple[str, int, int]]] = (
+        topology.get("relation_links") or {}
+    )
+    # Label sent on root-scope InputRecord (the engine wants a non-empty
+    # string but never inspects the value — it's metadata for tooling).
+    # We need a real string here even when topology can't determine a
+    # root (extremely degenerate program); fall back to empty string,
+    # which the engine accepts. Importantly we do NOT default to
+    # "Household" because that's only correct for SNAP-shaped programs.
+    root_entity_label: str = root_entity or ""
+
     # Build {bare_name → durable_id} for every compiled rule. We need this
     # to address queried outputs (engine requires durable IDs for queries
     # in composed programs) and to filter fixture inputs that conflict with
@@ -512,7 +780,7 @@ def execute(
     # Enumerate every input slot the program actually references — this is
     # the canonical "what does this program need" list (not the test
     # fixtures, which only cover paths exercised by unit tests).
-    input_refs = _collect_input_references(artifact)
+    input_refs = _collect_input_references(artifact, topology)
 
     # Fixture values give us correct dtypes (bool vs decimal) and any
     # meaningful starting values upstream maintainers encoded.
@@ -527,56 +795,133 @@ def execute(
     # Wide interval — engine just needs it to cover the query period.
     default_interval = {"start": "1970-01-01", "end": "2099-12-31"}
 
-    # Seed every input the program references. Precedence per input:
-    #   1. user-supplied value (by bare name)
-    #   2. fixture value (gives meaningful default + correct dtype)
-    #   3. zero-typed value using inferred dtype, falling back to decimal
-    #
-    # MVP entity model: one Household ("h1") with one Person member
-    # ("person-1") for any Person-scoped inputs. The engine's eligibility
-    # gates (snap_ssn_eligible, snap_residency_citizenship_eligible, etc.)
-    # are computed as count_where(member_of_household, …) > 0, so we need
-    # at least one member with the right person-level flags set for the
-    # household to qualify. Multi-member households are TODO — would need
-    # the profile/UI to express a list of members.
-    person_id = "person-1"
-    has_person_input = False
+    # Partition input slots by entity. Anything tagged with a collection
+    # entity (e.g. Person) gets per-row fan-out; everything else is a
+    # singleton at the root entity_id. Inputs with an unrecognized entity
+    # (or none) flow to the root by default — same as the engine, which
+    # has no schema for entities.
+    inputs_by_entity: dict[str, list[tuple[str, str]]] = {}
     for bare, (durable, entity) in input_refs.items():
+        bucket = entity if entity in collection_entities else root_entity
+        inputs_by_entity.setdefault(bucket, []).append((bare, durable))
+
+    def value_for(bare: str, override: Any = _UNSET) -> dict[str, Any]:
+        """Precedence: row-level override (if not _UNSET) > top-level
+        user_inputs > fixture default > typed zero."""
+        if override is not _UNSET:
+            return _user_value(override)
         if bare in user_inputs:
-            value = _user_value(user_inputs[bare])
-        elif bare in fixture_overrides:
-            value = fixture_overrides[bare]
-        else:
-            value = _zero_value_for(inferred_dtypes.get(bare))
-        if entity == "Person":
-            has_person_input = True
-            target_entity_id = person_id
-        else:
-            target_entity_id = entity_id
+            return _user_value(user_inputs[bare])
+        if bare in fixture_overrides:
+            return fixture_overrides[bare]
+        return _zero_value_for(inferred_dtypes.get(bare))
+
+    # Root-entity inputs go in as singletons.
+    for bare, durable in inputs_by_entity.get(root_entity, []):
         input_records.append(
             {
                 "name": durable,
-                "entity": entity,
-                "entity_id": target_entity_id,
+                "entity": root_entity_label,
+                "entity_id": entity_id,
                 "interval": default_interval,
-                "value": value,
+                "value": value_for(bare),
             }
         )
 
-    # The engine's `count_related`/`sum_related` over `member_of_household`
-    # needs an actual relation row tying the Person to the Household. Slot
-    # ordering: arity-2 tuples are [Person, Household] per upstream
-    # convention (related_slot=0 is Person, current_slot=1 is Household in
-    # the compiled `count_related` expressions we observed).
+    # Member fan-out, one bucket per collection entity. The wire format
+    # mirrors factgraph's: `entities = {<collection_entity_name>: [{row}, ...]}`.
+    # Each row's per-input overrides win; otherwise fall back through
+    # user_inputs → fixture → typed zero. If the caller passed no rows for
+    # a collection that has inputs, we auto-mint one default row so any
+    # `count_related(..., where) > 0` gates can still hit someone — keeps
+    # single-member flat profiles producing realistic results.
     relation_records: list[dict[str, Any]] = []
-    if has_person_input:
-        relation_records.append(
-            {
-                "name": "member_of_household",
-                "tuple": [person_id, entity_id],
-                "interval": default_interval,
-            }
-        )
+    # Per-collection state we'll need below for the multi-query response
+    # flattening and per-member input echoing.
+    member_order_by_collection: dict[str, list[str]] = {}
+    member_id_to_collection: dict[str, str] = {}
+    member_input_scalars: dict[str, dict[str, dict[str, Any]]] = {}
+    for collection in sorted(collection_entities):
+        member_slots = inputs_by_entity.get(collection, [])
+        rows: list[dict[str, Any]] = list(entities.get(collection) or [])
+        if not rows and member_slots:
+            rows = [{}]
+        if not rows:
+            continue
+
+        # Slot ordering for relations that link this collection back to
+        # the root: ask the topology where the root and the collection
+        # sit, and write the tuple positionally. The artifact may carry
+        # multiple equivalent names for the same logical relation (bare +
+        # durable form); we emit a row under each because the engine
+        # indexes by exact-name match.
+        links = relation_links.get((root_entity, collection)) or []
+        # Fallback if the topology couldn't infer this link: use whatever
+        # relation names are in the artifact and assume `[child, parent]`.
+        fallback_relations: list[str] = []
+        if not links:
+            fallback_relations = sorted({
+                rel for (rel, _) in topology.get("relation_slots", {})
+            })
+
+        member_prefix = collection.lower().rstrip("s")
+        member_order_by_collection[collection] = []
+        for idx, row in enumerate(rows, start=1):
+            member_id = str(row.get("id") or f"{member_prefix}-{idx}")
+            member_order_by_collection[collection].append(member_id)
+            member_id_to_collection[member_id] = collection
+            per_member_values: dict[str, dict[str, Any]] = {}
+            for bare, durable in member_slots:
+                override = row.get(bare, _UNSET)
+                v = value_for(bare, override)
+                per_member_values[bare] = v
+                input_records.append(
+                    {
+                        "name": durable,
+                        "entity": collection,
+                        "entity_id": member_id,
+                        "interval": default_interval,
+                        "value": v,
+                    }
+                )
+            member_input_scalars[member_id] = per_member_values
+            # Duplicate every root-entity input at this member's entity_id
+            # too. Person-scoped derived rules can transitively reference
+            # Household-scoped inputs (e.g. `household_size > 4`); the
+            # engine looks those up at whatever entity_id is the current
+            # evaluation context, so without a copy at the member's id
+            # they'd fail with "missing input X for entity person-1". The
+            # engine indexes inputs by (name, entity_id) so duplicating is
+            # cheap and value-safe (same scalar, different keys).
+            for bare, durable in inputs_by_entity.get(root_entity, []):
+                input_records.append(
+                    {
+                        "name": durable,
+                        "entity": root_entity_label,
+                        "entity_id": member_id,
+                        "interval": default_interval,
+                        "value": value_for(bare),
+                    }
+                )
+            for rel_name, parent_slot, child_slot in links:
+                tuple_vals = ["", ""]
+                tuple_vals[parent_slot] = entity_id
+                tuple_vals[child_slot] = member_id
+                relation_records.append(
+                    {
+                        "name": rel_name,
+                        "tuple": tuple_vals,
+                        "interval": default_interval,
+                    }
+                )
+            for rel_name in fallback_relations:
+                relation_records.append(
+                    {
+                        "name": rel_name,
+                        "tuple": [member_id, entity_id],
+                        "interval": default_interval,
+                    }
+                )
 
     # Default the query to every computed leaf (computed nodes nobody else
     # depends on) intersected with what the compiled program supports.
@@ -603,22 +948,81 @@ def execute(
     else:
         query_bare = [n for n in query_outputs if n in compiled_ids]
 
-    # The engine evaluates each queried output at the query's entity_id. A
-    # Person-scoped output evaluated at a Household id makes it try to find
-    # Person inputs at the wrong scope (engine errors with "missing input X
-    # for entity h1"). Restrict the query to Household-scoped rules here;
-    # Person-scoped outputs are still surfaced via the response trace,
-    # which carries every dependency the engine evaluated en route.
-    query_bare = [n for n in query_bare if compiled_entities.get(n) == "Household"]
+    # The engine evaluates each queried output at the query's entity_id.
+    # An output scoped to a collection entity (e.g. Person) evaluated at
+    # the root entity_id would make the engine look up collection inputs
+    # at the wrong scope and error. Split the auto-query into one block
+    # per scope: root-scoped outputs queried at `entity_id`; each
+    # collection-scoped output queried at each member entity_id (so we
+    # get per-member arrays of values back).
+    root_query_bare = [
+        n for n in query_bare
+        if compiled_entities.get(n) in (root_entity, None)
+    ]
+    # Degenerate-shape fallback: if the auto-query came up empty after
+    # scope filtering (no root-scoped leaves in the model, or the caller
+    # specified an empty outputs list), pick any root-scoped derived rule
+    # so the engine has something to compute and we still produce a
+    # response. No program-specific names — just whatever the topology
+    # has tagged at root scope.
+    if not root_query_bare:
+        root_query_bare = sorted(
+            n for n, e in compiled_entities.items()
+            if e in (root_entity, None) and n in compiled_ids
+        )[:1]
 
-    # If our intersection came up empty, just query the canonical answer.
-    if not query_bare and "snap_allotment" in compiled_ids:
-        query_bare = ["snap_allotment"]
+    # Per-collection: every derived rule the engine knows about at that
+    # scope. We query *all* of them per member so the visualizer can show
+    # values on every Person-scoped node, not just leaves.
+    member_query_bare: dict[str, list[str]] = {}
+    for collection in collection_entities:
+        member_query_bare[collection] = sorted(
+            n for n, e in compiled_entities.items() if e == collection
+        )
 
-    # The engine wants durable IDs. Track the reverse mapping so we can
-    # convert response keys back to bare names for the frontend.
-    query_outputs = [compiled_ids[n] for n in query_bare]
-    id_to_bare = {compiled_ids[n]: n for n in query_bare}
+    # Track bare ↔ durable for every name we'll see in the response.
+    id_to_bare: dict[str, str] = {}
+    for n in root_query_bare:
+        if n in compiled_ids:
+            id_to_bare[compiled_ids[n]] = n
+    for names in member_query_bare.values():
+        for n in names:
+            if n in compiled_ids:
+                id_to_bare[compiled_ids[n]] = n
+
+    period_block = {
+        "period_kind": "month",
+        "start": period_start,
+        "end": period_end,
+    }
+
+    # First query: root entity, root-scoped outputs.
+    queries = [
+        {
+            "entity_id": entity_id,
+            "period": period_block,
+            "outputs": [compiled_ids[n] for n in root_query_bare if n in compiled_ids],
+        }
+    ]
+    # Then one query per member, asking for that collection's derived
+    # outputs. The engine evaluates each in its own entity context so
+    # `{kind: input, name: X}` resolves at the right entity_id, and we
+    # get back a separate result block we can merge into arrays.
+    for collection, members in member_order_by_collection.items():
+        outputs_durable = [
+            compiled_ids[n] for n in member_query_bare.get(collection, [])
+            if n in compiled_ids
+        ]
+        if not outputs_durable:
+            continue
+        for member_id in members:
+            queries.append(
+                {
+                    "entity_id": member_id,
+                    "period": period_block,
+                    "outputs": outputs_durable,
+                }
+            )
 
     request = {
         "mode": "explain",
@@ -626,17 +1030,7 @@ def execute(
             "inputs": input_records,
             "relations": relation_records,
         },
-        "queries": [
-            {
-                "entity_id": entity_id,
-                "period": {
-                    "period_kind": "month",
-                    "start": period_start,
-                    "end": period_end,
-                },
-                "outputs": query_outputs,
-            }
-        ],
+        "queries": queries,
     }
 
     if os.environ.get("AXIOM_DEBUG"):
@@ -654,26 +1048,72 @@ def execute(
 
     response = json.loads(proc.stdout)
 
-    # Flatten the engine's response into {nodeId: {value}} matching the
-    # existing /execute contract. The trace also has values; we use it to
-    # back-fill the rest of the graph so the visualizer can show every
-    # computed value, not just the queried ones. Response keys may be
-    # either bare names (trace) or durable IDs (outputs) — strip the prefix.
+    # Flatten the engine's response into {nodeId: {value}}. Multiple
+    # result blocks come back — one per query. The root block keys to
+    # `entity_id`; each member block keys to a member id. Root-scoped
+    # values become scalar `{value: x}`. Collection-scoped values come
+    # back as `{value: [v_member_1, v_member_2, ...]}` in member order,
+    # matching factgraph's per-member array convention. Response keys
+    # may be bare names (trace) or durable IDs (outputs) — strip the
+    # prefix to get the bare node id.
     def to_bare(key: str) -> str:
         if "#" in key:
             return key.rsplit("#", 1)[1]
         return key
 
     results: dict[str, dict[str, Any]] = {}
+    member_results: dict[str, dict[str, Any]] = {}  # bare → {member_id: value}
+
     for entity_result in response.get("results") or []:
+        eid = entity_result.get("entity_id")
         outputs = entity_result.get("outputs") or {}
         trace = entity_result.get("trace") or {}
-        # Outputs win on conflict.
+        is_member = eid in member_id_to_collection
+        # Outputs win on trace conflict.
         for key, payload in {**trace, **outputs}.items():
             bare = id_to_bare.get(key) or to_bare(key)
             if bare not in nodes:
                 continue
-            results[bare] = {"value": _value_from_payload(payload)}
+            value = _value_from_payload(payload)
+            if is_member:
+                member_results.setdefault(bare, {})[eid] = value
+            else:
+                # Root-scoped result. Don't overwrite an existing member
+                # array (shouldn't happen given our scope filtering, but
+                # be defensive — collection-scoped wins for clarity).
+                if bare not in results:
+                    results[bare] = {"value": value}
+
+    # Flatten member result maps into arrays in member-fan-out order.
+    all_member_ids: list[str] = []
+    for collection in sorted(collection_entities):
+        all_member_ids.extend(member_order_by_collection.get(collection, []))
+    for bare, by_member in member_results.items():
+        # Use only the members actually relevant to this bare node's
+        # collection. The bare's compiled entity tells us which group.
+        collection = compiled_entities.get(bare)
+        member_ids = (
+            member_order_by_collection.get(collection, [])
+            if collection in collection_entities
+            else all_member_ids
+        )
+        array = [by_member.get(mid) for mid in member_ids]
+        results[bare] = {"value": array}
+
+    # Per-member input values aren't in the engine response (the engine
+    # only echoes computed values, not inputs). Surface them ourselves so
+    # the visualizer can show a result on Person-scoped input nodes too —
+    # same array shape as derived values, indexed by member order.
+    for collection, member_ids in member_order_by_collection.items():
+        slot_bares = [bare for bare, _durable in inputs_by_entity.get(collection, [])]
+        for bare in slot_bares:
+            if bare not in nodes:
+                continue
+            array = []
+            for mid in member_ids:
+                scalar = member_input_scalars.get(mid, {}).get(bare)
+                array.append(_scalar_value(scalar) if scalar else None)
+            results[bare] = {"value": array}
 
     return results
 
