@@ -13,11 +13,7 @@
 import { parentPort, workerData } from 'node:worker_threads'
 import { executeFactGraph } from '../executor.js'
 import { compareValues } from '../testStore.js'
-import type {
-  CaseResult,
-  CaseDiff,
-  GeneratedScenario,
-} from './types.js'
+import type { CaseResult, CaseDiff, GeneratedScenario } from './types.js'
 import type { RawFact } from '../store.js'
 
 type WorkerInit = {
@@ -57,9 +53,19 @@ function diffResults(
     let diff: CaseDiff | null = null
 
     if (!(path in base)) {
-      diff = { path, baseValue: undefined, editedValue: ev, changeType: 'added' }
+      diff = {
+        path,
+        baseValue: undefined,
+        editedValue: ev,
+        changeType: 'added',
+      }
     } else if (!(path in edited)) {
-      diff = { path, baseValue: bv, editedValue: undefined, changeType: 'removed' }
+      diff = {
+        path,
+        baseValue: bv,
+        editedValue: undefined,
+        changeType: 'removed',
+      }
     } else if (!compareValues(bv, ev)) {
       diff = { path, baseValue: bv, editedValue: ev, changeType: 'changed' }
     }
