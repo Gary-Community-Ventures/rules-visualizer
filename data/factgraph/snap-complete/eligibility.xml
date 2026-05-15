@@ -55,20 +55,26 @@
 
     <Fact path="/parentChildRelationships">
       <Name>Parent-child relationships</Name>
-      <Description>List of natural, adoptive, or stepparent relationships between household members. Each entry links one parent member to one child member; a single child may appear in multiple entries when more than two of their parents live in the same home (10 CCR 2506-1, 4.304.1).</Description>
+      <Description>List of parent-or-caregiver relationships between household members. Each entry links one adult to one child and covers either (a) a natural, adoptive, or stepparent relationship or (b) a non-parent household member who exercises parental control over the child. A single child may appear in multiple entries (10 CCR 2506-1, 4.304.1).</Description>
       <Writable><Collection /></Writable>
     </Fact>
 
     <Fact path="/parentChildRelationships/*/parentId">
-      <Name>Parent</Name>
-      <Description>The household member who is a natural, adoptive, or stepparent in this relationship. Every parent linked to a child aged twenty-one (21) years or younger who lives in the same home must be included in the SNAP household, regardless of marital status or whether the parents purchase and prepare food together (10 CCR 2506-1, 4.304.1).</Description>
+      <Name>Parent / caregiver</Name>
+      <Description>The household member who is either a natural, adoptive, or stepparent in this relationship, or a non-parent household member exercising parental control over the child. When the relationship is a natural, adoptive, or stepparent relationship to a child aged twenty-one (21) years or younger living in the same home, this member must be included in the SNAP household (10 CCR 2506-1, 4.304.1).</Description>
       <Writable><CollectionItem collection="/members" /></Writable>
     </Fact>
 
     <Fact path="/parentChildRelationships/*/childId">
       <Name>Child</Name>
-      <Description>The household member who is the natural, adoptive, or stepchild in this relationship (10 CCR 2506-1, 4.304.1).</Description>
+      <Description>The household member who is the child in this relationship — either the natural, adoptive, or stepchild of the parent, or a child under the parental control of a non-parent household member (10 CCR 2506-1, 4.304.1).</Description>
       <Writable><CollectionItem collection="/members" /></Writable>
+    </Fact>
+
+    <Fact path="/parentChildRelationships/*/isUnderParentalControl">
+      <Name>Is non-parent parental-control relationship</Name>
+      <Description>Whether this relationship is the non-parent caregiver kind (the child is under the parental control of an adult who is not their natural, adoptive, or stepparent), rather than a natural, adoptive, or stepparent relationship. A child under eighteen (18) is considered to be under parental control of a household member when financially or otherwise dependent on that member (10 CCR 2506-1, 4.304.1).</Description>
+      <Writable><Boolean /></Writable>
     </Fact>
 
     <Fact path="/members/*/age">
@@ -192,6 +198,47 @@
       <Writable><Boolean /></Writable>
     </Fact>
 
+    <Fact path="/members/*/livesInInstitution">
+      <Name>Lives in an institution</Name>
+      <Description>Whether this member lives in a place which has not been authorized by FNS to accept SNAP benefits, but which provides its residents with more than fifty percent (50%) of their daily meals as part of its normal services. Residents of a halfway house for persons with a disability are residents of an institution if they are provided meals as part of their regular service. Students who purchase meal plans through an institution of higher education are residents of an institution if the meal plan provides them more than fifty percent (50%) of their meals (10 CCR 2506-1, 4.304.4)</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/livesInFederallySubsidizedElderlyHousing">
+      <Name>Lives in federally subsidized housing for persons aged 60 and older</Name>
+      <Description>Whether this member is a resident of federally subsidized housing for persons aged sixty (60) and older under 12 U.S.C. 1701Q or 12 U.S.C. 1715Z-1 (10 CCR 2506-1, 4.304.41)</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/residesAtSubstanceAbuseTreatmentFacility">
+      <Name>Resides at a drug or alcohol treatment and rehabilitation facility</Name>
+      <Description>Whether this member is a narcotic addict or alcoholic, or the child of one, who resides at a facility or treatment center for purposes of regular participation in a drug or alcoholic treatment and rehabilitation program (10 CCR 2506-1, 4.304.41)</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/livesInHomelessShelter">
+      <Name>Resident of a homeless shelter</Name>
+      <Description>Whether this member is a resident of a public or private nonprofit shelter for the homeless (10 CCR 2506-1, 4.304.41)</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/isExemptFromBoardingHouseOrInstitutionRule">
+      <Name>Exempt from boarding house or institution disqualification</Name>
+      <Description>Whether this member, although a resident of a boarding house or institution, qualifies for an exemption under Section 4.304.41 that allows them to participate in SNAP. The exemptions are: (A) resident of federally subsidized housing for persons aged 60 and older under 12 U.S.C. 1701Q or 1715Z-1; (B) narcotic addicts or alcoholics and their children residing at a drug or alcohol treatment and rehabilitation facility; (C) blind or disabled residents of a public or private nonprofit group living arrangement facility; (D) women, or women and their children, temporarily residing in a public or private nonprofit shelter for battered women and children; (E) residents of public or private nonprofit shelters for the homeless (10 CCR 2506-1, 4.304.41)</Description>
+      <Derived>
+        <Any>
+          <Dependency path="../livesInFederallySubsidizedElderlyHousing" />
+          <Dependency path="../residesAtSubstanceAbuseTreatmentFacility" />
+          <All>
+            <Dependency path="../livesInGroupLivingArrangement" />
+            <Dependency path="../isPersonWithDisability" />
+          </All>
+          <Dependency path="../isResidentOfBatteredWomensShelter" />
+          <Dependency path="../livesInHomelessShelter" />
+        </Any>
+      </Derived>
+    </Fact>
+
     <Fact path="/members/*/preparesFoodWithHousehold">
       <Name>Prepares food with household</Name>
       <Description>Whether this member customarily purchases and prepares food together with the rest of the household for home consumption (10 CCR 2506-1, 4.000.1)</Description>
@@ -210,26 +257,85 @@
       <Writable><Boolean /></Writable>
     </Fact>
 
+    <Fact path="/members/*/isSeparateAndApart">
+      <Name>Is separate and apart</Name>
+      <Description>Whether this member, who would otherwise be a mandatory household member, has established a residence separate and apart from the other mandatory household members. A residence is only considered established as separate and apart when the individual pays shelter expenses, supports the maintenance of the other residence (e.g., paying rent/mortgage, utilities, insurance, or other charges necessary to maintain the residence), or has provided that separate address to other governmental organizations or an employer as their primary residence. When true, the member is not required to be considered part of the SNAP household, and any monies that person provides to the SNAP household should be considered unearned income (10 CCR 2506-1, 4.304.1).</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
     <Fact path="/members/*/isMandatoryHouseholdMember">
       <Name>Is mandatory household member</Name>
-      <Description>Whether this member is a mandatory household member who must be considered in the same household as the other mandatory individuals they live with, even if they declare they do not customarily purchase and prepare their food together for home consumption (10 CCR 2506-1, 4.304.1)</Description>
+      <Description>Whether this member is a mandatory household member who must be considered in the same household as the other mandatory individuals they live with, even if they declare they do not customarily purchase and prepare their food together for home consumption. Mandatory members include the designated head of household, anyone in a spouse relationship with another household member, any mandatory child, any parent of a mandatory child living in the same home, and any person aged sixty (60) or older with a disability who is unable to purchase and prepare their own meals and lives with others whose income exceeds 165% of the federal poverty line (10 CCR 2506-1, 4.203, 4.304.1).</Description>
       <Derived>
         <Any>
-          <Dependency path="../isMandatoryChild" />
-          <Dependency path="../isSpouse" />
+          <Dependency path="../isHeadOfHousehold" />
+          <All>
+            <IsComplete><Dependency path="../isMandatoryChild" /></IsComplete>
+            <Dependency path="../isMandatoryChild" />
+          </All>
+          <All>
+            <IsComplete><Dependency path="../isMandatoryParent" /></IsComplete>
+            <Dependency path="../isMandatoryParent" />
+          </All>
+          <All>
+            <IsComplete><Dependency path="../isMandatorySpouse" /></IsComplete>
+            <Dependency path="../isMandatorySpouse" />
+          </All>
+          <All>
+            <IsComplete><Dependency path="../isMandatoryElderlyWithDisability" /></IsComplete>
+            <Dependency path="../isMandatoryElderlyWithDisability" />
+          </All>
+        </Any>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/isOptionalHouseholdMember">
+      <Name>Is optional household member</Name>
+      <Description>Whether this member is an optional household member who resides with the household but shall not be considered a household member in determining the household's eligibility or allotment, unless otherwise stated. True when this member is eligible to be in a separate household as a person aged sixty (60) or older with a disability whose food-preparation-group co-residents' combined income does not exceed 165% of the federal poverty line, when this member is a foster child whom the foster parent may choose to include in or exclude from the SNAP household, or when this member is a boarder whom the household may choose to include as a household member (10 CCR 2506-1, 4.304.1, 4.304.3).</Description>
+      <Derived>
+        <Any>
+          <Dependency path="../canBeSeparateElderlyWithDisabilityHousehold" />
+          <Dependency path="../isFosterChild" />
+          <Dependency path="../isBoarder" />
+        </Any>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/isBoarder">
+      <Name>Is boarder</Name>
+      <Description>Whether this member is a boarder of the client's household. Boarders are only considered members of a client's SNAP household if the household requests that they be considered household members (10 CCR 2506-1, 4.304.1).</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/isNonHouseholdMember">
+      <Name>Is non-household member</Name>
+      <Description>Whether this member resides with the household but shall not be considered a household member in determining the household's eligibility or allotment, unless otherwise stated in 4.304.3. True when this member is a roomer or a live-in attendant. Boarders are excluded here because they are essentially optional household members — see /members/*/isOptionalHouseholdMember (10 CCR 2506-1, 4.304.31).</Description>
+      <Derived>
+        <Any>
+          <Dependency path="../isRoomer" />
+          <Dependency path="../isLiveInAttendant" />
         </Any>
       </Derived>
     </Fact>
 
     <Fact path="/members/*/isPartOfHousehold">
       <Name>Is part of household</Name>
-      <Description>Whether this member is part of the SNAP household — a group of individuals who live together and customarily purchase and prepare food together for home consumption. Mandatory household members are always considered part of the household regardless of food preparation (10 CCR 2506-1, 4.304, 4.304.1).</Description>
+      <Description>Whether this member is part of the SNAP household — a group of individuals who live together and customarily purchase and prepare food together for home consumption. Mandatory household members are always considered part of the household regardless of food preparation. A member who would otherwise be part of the household but has established a residence separate and apart (/members/*/isSeparateAndApart) is excluded (10 CCR 2506-1, 4.304, 4.304.1).</Description>
       <Derived>
-        <Any>
-          <Dependency path="../isMandatoryHouseholdMember" />
-          <Dependency path="../preparesFoodWithHousehold" />
-        </Any>
+        <All>
+          <Any>
+            <Dependency path="../isMandatoryHouseholdMember" />
+            <Dependency path="../preparesFoodWithHousehold" />
+          </Any>
+          <Not><Dependency path="../isSeparateAndApart" /></Not>
+        </All>
       </Derived>
+    </Fact>
+
+    <Fact path="/members/*/isHeadOfHousehold">
+      <Name>Is head of household</Name>
+      <Description>Whether this member is the head of the SNAP household — the person to whom the local office addresses correspondence and notices about the household's case, generally the individual who completes the application process and is responsible for obtaining and using the household's EBT card (10 CCR 2506-1, 4.304).</Description>
+      <Writable><Boolean /></Writable>
     </Fact>
 
     <Fact path="/members/*/spouseId">
@@ -238,20 +344,26 @@
       <Writable><CollectionItem collection="/members" /></Writable>
     </Fact>
 
-    <Fact path="/members/*/isSpouse">
-      <Name>Is spouse of a household member</Name>
-      <Description>Whether this member is in a spouse relationship with another member of the household. True when this member has a spouse set, or when another household member identifies this member as their spouse. Spouses must always be considered part of the same SNAP household regardless of whether they purchase and prepare food together (10 CCR 2506-1, 4.304.1).</Description>
+    <Fact path="/members/*/isMandatorySpouse">
+      <Name>Is mandatory spouse</Name>
+      <Description>Whether this member is in a spouse relationship with another member of the household who is themselves part of the SNAP household. True when this member's spouseId references a household member who is part of the household, or when another member who is part of the household identifies this member as their spouse. Spouses must always be considered part of the same SNAP household regardless of whether they purchase and prepare food together (10 CCR 2506-1, 4.304.1).</Description>
       <Derived>
         <Any>
-          <IsComplete><Dependency path="../spouseId" /></IsComplete>
+          <All>
+            <IsComplete><Dependency path="../spouseId" /></IsComplete>
+            <Dependency path="../spouseId/isPartOfHousehold" />
+          </All>
           <GreaterThan>
             <Left>
               <CollectionSize>
                 <Filter path="/members">
-                  <Equal>
-                    <Left><Dependency path="spouseId" /></Left>
-                    <Right><Dependency path="^" /></Right>
-                  </Equal>
+                  <All>
+                    <Equal>
+                      <Left><Dependency path="spouseId" /></Left>
+                      <Right><Dependency path="^" /></Right>
+                    </Equal>
+                    <Dependency path="isPartOfHousehold" />
+                  </All>
                 </Filter>
               </CollectionSize>
             </Left>
@@ -259,12 +371,6 @@
           </GreaterThan>
         </Any>
       </Derived>
-    </Fact>
-
-    <Fact path="/members/*/isUnderParentalControlOfHouseholdMember">
-      <Name>Is under parental control of a non-parent household member</Name>
-      <Description>Whether this member, being a child under eighteen (18) years of age living with a household member other than their parent, is financially or otherwise dependent on that household member such that the household member exercises parental control over them (10 CCR 2506-1, 4.304.1).</Description>
-      <Writable><Boolean /></Writable>
     </Fact>
 
     <Fact path="/members/*/isEmancipated">
@@ -279,40 +385,202 @@
       <Writable><Boolean /></Writable>
     </Fact>
 
-    <Fact path="/members/*/isMandatoryChild">
-      <Name>Is mandatory child household member</Name>
-      <Description>Whether this member must be included in the SNAP household as a child of, or a child under the parental control of, another household member. Captures two cases: (1) a person aged twenty-one (21) years or younger who is linked as a child in at least one /parentChildRelationships entry (i.e., a natural, adoptive, or stepparent lives in the same household); or (2) a non-foster child under eighteen (18) years of age living with and under the parental control of a household member other than their parent, unless emancipated under state law (10 CCR 2506-1, 4.304.1).</Description>
+    <Fact path="/mandatoryChildParentAgeLimit">
+      <Name>Mandatory child age limit (parent case)</Name>
+      <Description>Upper bound (inclusive) on a child's age for the first mandatory-child SNAP household case: a person aged twenty-one (21) years or younger living with their natural, adoptive, or stepparent (10 CCR 2506-1, 4.304.1).</Description>
+      <Derived><Int>21</Int></Derived>
+    </Fact>
+
+    <Fact path="/mandatoryChildParentalControlAgeLimit">
+      <Name>Mandatory child age limit (parental control case)</Name>
+      <Description>Upper bound (exclusive) on a child's age for the second mandatory-child SNAP household case: a non-foster, non-emancipated child under eighteen (18) years of age living with and under the parental control of a non-parent household member (10 CCR 2506-1, 4.304.1).</Description>
+      <Derived><Int>18</Int></Derived>
+    </Fact>
+
+    <Fact path="/members/*/isMandatoryChildViaParent">
+      <Name>Is mandatory child via parent in household</Name>
+      <Description>Whether this member is a mandatory household member under the first mandatory-child case: a person aged twenty-one (21) years or younger who has at least one /parentChildRelationships entry whose parent-side member is part of the SNAP household (10 CCR 2506-1, 4.304.1).</Description>
       <Derived>
-        <Any>
-          <All>
-            <LessThanOrEqual>
-              <Left><Dependency path="../age" /></Left>
-              <Right><Int>21</Int></Right>
-            </LessThanOrEqual>
-            <GreaterThan>
-              <Left>
-                <CollectionSize>
-                  <Filter path="/parentChildRelationships">
+        <All>
+          <LessThanOrEqual>
+            <Left><Dependency path="../age" /></Left>
+            <Right><Dependency path="/mandatoryChildParentAgeLimit" /></Right>
+          </LessThanOrEqual>
+          <GreaterThan>
+            <Left>
+              <CollectionSize>
+                <Filter path="/parentChildRelationships">
+                  <All>
                     <Equal>
                       <Left><Dependency path="childId" /></Left>
                       <Right><Dependency path="^" /></Right>
                     </Equal>
-                  </Filter>
-                </CollectionSize>
-              </Left>
-              <Right><Int>0</Int></Right>
-            </GreaterThan>
-          </All>
-          <All>
-            <LessThan>
-              <Left><Dependency path="../age" /></Left>
-              <Right><Int>18</Int></Right>
-            </LessThan>
-            <Dependency path="../isUnderParentalControlOfHouseholdMember" />
-            <Not><Dependency path="../isFosterChild" /></Not>
-            <Not><Dependency path="../isEmancipated" /></Not>
-          </All>
+                    <Dependency path="parentId/isPartOfHousehold" />
+                  </All>
+                </Filter>
+              </CollectionSize>
+            </Left>
+            <Right><Int>0</Int></Right>
+          </GreaterThan>
+        </All>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/isMandatoryChildViaParentalControl">
+      <Name>Is mandatory child via non-parent parental control</Name>
+      <Description>Whether this member is a mandatory household member under the second mandatory-child case: a non-foster, non-emancipated child under eighteen (18) years of age who has at least one /parentChildRelationships entry of the non-parent caregiver kind (isUnderParentalControl is true) whose parent-side member is part of the SNAP household (10 CCR 2506-1, 4.304.1).</Description>
+      <Derived>
+        <All>
+          <LessThan>
+            <Left><Dependency path="../age" /></Left>
+            <Right><Dependency path="/mandatoryChildParentalControlAgeLimit" /></Right>
+          </LessThan>
+          <Not><Dependency path="../isFosterChild" /></Not>
+          <Not><Dependency path="../isEmancipated" /></Not>
+          <GreaterThan>
+            <Left>
+              <CollectionSize>
+                <Filter path="/parentChildRelationships">
+                  <All>
+                    <Equal>
+                      <Left><Dependency path="childId" /></Left>
+                      <Right><Dependency path="^" /></Right>
+                    </Equal>
+                    <Dependency path="isUnderParentalControl" />
+                    <Dependency path="parentId/isPartOfHousehold" />
+                  </All>
+                </Filter>
+              </CollectionSize>
+            </Left>
+            <Right><Int>0</Int></Right>
+          </GreaterThan>
+        </All>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/isMandatoryChild">
+      <Name>Is mandatory child household member</Name>
+      <Description>Whether this member must be included in the SNAP household as the child of, or a child under the parental control of, another household member. True when either /members/*/isMandatoryChildViaParent or /members/*/isMandatoryChildViaParentalControl is true (10 CCR 2506-1, 4.304.1).</Description>
+      <Derived>
+        <Any>
+          <Dependency path="../isMandatoryChildViaParent" />
+          <Dependency path="../isMandatoryChildViaParentalControl" />
         </Any>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/isMandatoryParentViaChild">
+      <Name>Is mandatory parent via child in household</Name>
+      <Description>Whether this member is a mandatory household member under the parent-side mirror of the first mandatory-child case: a natural, adoptive, or stepparent (i.e., the linked /parentChildRelationships entry has isUnderParentalControl false) of a household member aged twenty-one (21) years or younger who is themselves part of the SNAP household. Uses childId/isPartOfHousehold on the child side so the existence-in-household check matches the policy phrasing "living with their natural or adoptive parent(s) or stepparent(s)" (10 CCR 2506-1, 4.304.1).</Description>
+      <Derived>
+        <GreaterThan>
+          <Left>
+            <CollectionSize>
+              <Filter path="/parentChildRelationships">
+                <All>
+                  <Equal>
+                    <Left><Dependency path="parentId" /></Left>
+                    <Right><Dependency path="^" /></Right>
+                  </Equal>
+                  <Not><Dependency path="isUnderParentalControl" /></Not>
+                  <LessThanOrEqual>
+                    <Left><Dependency path="childId/age" /></Left>
+                    <Right><Dependency path="/mandatoryChildParentAgeLimit" /></Right>
+                  </LessThanOrEqual>
+                  <Dependency path="childId/isPartOfHousehold" />
+                </All>
+              </Filter>
+            </CollectionSize>
+          </Left>
+          <Right><Int>0</Int></Right>
+        </GreaterThan>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/isMandatoryParentViaParentalControl">
+      <Name>Is mandatory parent via non-parent parental control</Name>
+      <Description>Whether this member is a mandatory household member under the parent-side mirror of the second mandatory-child case: a non-parent caregiver (the linked /parentChildRelationships entry has isUnderParentalControl true) over a non-foster, non-emancipated child under eighteen (18) years of age who is themselves part of the SNAP household. Uses childId/isPartOfHousehold on the child side so the existence-in-household check matches the policy phrasing "living with…a household member" (10 CCR 2506-1, 4.304.1).</Description>
+      <Derived>
+        <GreaterThan>
+          <Left>
+            <CollectionSize>
+              <Filter path="/parentChildRelationships">
+                <All>
+                  <Equal>
+                    <Left><Dependency path="parentId" /></Left>
+                    <Right><Dependency path="^" /></Right>
+                  </Equal>
+                  <Dependency path="isUnderParentalControl" />
+                  <LessThan>
+                    <Left><Dependency path="childId/age" /></Left>
+                    <Right><Dependency path="/mandatoryChildParentalControlAgeLimit" /></Right>
+                  </LessThan>
+                  <Not><Dependency path="childId/isFosterChild" /></Not>
+                  <Not><Dependency path="childId/isEmancipated" /></Not>
+                  <Dependency path="childId/isPartOfHousehold" />
+                </All>
+              </Filter>
+            </CollectionSize>
+          </Left>
+          <Right><Int>0</Int></Right>
+        </GreaterThan>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/isMandatoryParent">
+      <Name>Is mandatory parent household member</Name>
+      <Description>Whether this member must be included in the SNAP household as the parent of, or non-parent caregiver exercising parental control over, a child who is themselves part of the SNAP household. True when either /members/*/isMandatoryParentViaChild or /members/*/isMandatoryParentViaParentalControl is true (10 CCR 2506-1, 4.304.1).</Description>
+      <Derived>
+        <Any>
+          <Dependency path="../isMandatoryParentViaChild" />
+          <Dependency path="../isMandatoryParentViaParentalControl" />
+        </Any>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/isUnableToPurchaseAndPrepareOwnMealsDueToDisability">
+      <Name>Is unable to purchase and prepare own meals due to a disability</Name>
+      <Description>Whether this member is experiencing a disability and, as a result of that disability, is unable to purchase and prepare their own meals. Used together with age sixty (60) or older to determine when the member must be considered part of the same SNAP household as the others they live with (10 CCR 2506-1, 4.304.1).</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <!-- TODO: derive this from the combined income of every household member
+         in the food-preparation group other than this elderly member with a
+         disability, compared to 165% of the FPL for a household size equal to
+         (food-prep-group size − 1, excluding this member). Currently a
+         writable placeholder so the mandatory-elderly-with-disability rule is
+         structurally complete; wire it up once household income and a
+         size-keyed FPL lookup are available (10 CCR 2506-1, 4.304.1). -->
+    <Fact path="/members/*/othersInFoodPrepGroupIncomeExceeds165PercentFpl">
+      <Name>Others in food-prep group have income exceeding 165% FPL</Name>
+      <Description>Whether the combined income of every other member of this member's food-preparation group exceeds 165% of the federal poverty level for a household size equal to the food-preparation group's size minus this member (10 CCR 2506-1, 4.304.1). Placeholder pending the income calculation work.</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/isMandatoryElderlyWithDisability">
+      <Name>Is mandatory elderly member with disability</Name>
+      <Description>Whether this member must be included in the SNAP household under the rule that a person aged sixty (60) or older who is also experiencing a disability, is unable to purchase and prepare their own meals, prepares food with the rest of the household, and is residing with other individuals whose combined income exceeds 165% of the federal poverty line (for the food-preparation group's size excluding this member) must be in the same household (10 CCR 2506-1, 4.304.1).</Description>
+      <Derived>
+        <All>
+          <Dependency path="../isElderly" />
+          <Dependency path="../isUnableToPurchaseAndPrepareOwnMealsDueToDisability" />
+          <Dependency path="../preparesFoodWithHousehold" />
+          <Dependency path="../othersInFoodPrepGroupIncomeExceeds165PercentFpl" />
+        </All>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/canBeSeparateElderlyWithDisabilityHousehold">
+      <Name>Can be separate elderly-with-disability household</Name>
+      <Description>Whether this member is eligible to be considered a separate SNAP household under the rule that a person aged sixty (60) or older who is also experiencing a disability, is unable to purchase and prepare their own meals, and is residing with other individuals whose combined income does not exceed 165% of the federal poverty line (for the food-preparation group's size excluding this member) can be in a separate household (10 CCR 2506-1, 4.304.1).</Description>
+      <Derived>
+        <All>
+          <Dependency path="../isElderly" />
+          <Dependency path="../isUnableToPurchaseAndPrepareOwnMealsDueToDisability" />
+          <Not>
+            <Dependency path="../othersInFoodPrepGroupIncomeExceeds165PercentFpl" />
+          </Not>
+        </All>
       </Derived>
     </Fact>
 
@@ -982,7 +1250,7 @@
 
     <Fact path="/members/*/isElderlyOrPersonWithDisability">
       <Name>Is elderly or person with disabilities</Name>
-      <Description>Whether this member is aged sixty (60) or older, or is a person with disabilities (10 CCR 2506-1, 4.000.1)</Description>
+      <Description>Whether this member is aged sixty (60) or older, or is a person with a disability (10 CCR 2506-1, 4.000.1).</Description>
       <Derived>
         <Any>
           <Dependency path="../isElderly" />
@@ -1241,8 +1509,14 @@
 
     <Fact path="/members/*/isIneligibleNonCitizen">
       <Name>Is ineligible non-citizen</Name>
-      <Description>Whether this member is an ineligible non-citizen (10 CCR 2506-1, 4.000.1)</Description>
-      <Writable><Boolean /></Writable>
+      <Description>Whether this member is an ineligible non-citizen. Citizens and non-citizen nationals are potentially eligible for SNAP; other non-citizens are ineligible unless they are a qualified non-citizen who is exempt from the additional-condition requirement, a qualified non-citizen who meets one of the additional conditions, or fall in one of the classes of non-qualified non-citizens eligible for participation (10 CCR 2506-1, 4.305).</Description>
+      <Derived>
+        <And>
+          <Not><Dependency path="../isCitizen" /></Not>
+          <Not><Dependency path="../isNonCitizenNational" /></Not>
+          <Not><Dependency path="../isEligibleNonCitizen" /></Not>
+        </And>
+      </Derived>
     </Fact>
 
     <Fact path="/members/*/disqualifiedForWorkRequirementsCooperation">
@@ -1299,6 +1573,32 @@
           <Not><Dependency path="../isResidentOfBatteredWomensShelter" /></Not>
         </All>
       </Derived>
+    </Fact>
+
+    <Fact path="/members/*/disqualifiedForFelonyNonCompliance">
+      <Name>Disqualified for felony conviction non-compliance</Name>
+      <Description>Whether this member is a person with a felony conviction who is not in compliance with the terms of their sentence and was convicted as an adult for conduct that occurred after February 7, 2014 for any of the following crimes: aggravated sexual abuse under Section 2241 of Title 18, United States Code; murder under Section 1111 of Title 18, United States Code; an offense under Chapter 110 of Title 18, United States Code; a federal or state offense involving sexual assault, as defined in Section 40002(a) of the Violence Against Women Act of 1994 (42 U.S.C. 13925(a)); or an offense under state law determined by the attorney general to be substantially similar to the foregoing (10 CCR 2506-1)</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/disqualifiedForBoardingHouseOrInstitutionResidence">
+      <Name>Disqualified for living in a boarding house or institution</Name>
+      <Description>Whether this member is disqualified because they are a resident of a commercial or noncommercial boarding house or an institution that has not been authorized by FNS to accept SNAP benefits, and they do not qualify for an exemption under Section 4.304.41 (10 CCR 2506-1, 4.304.4)</Description>
+      <Derived>
+        <All>
+          <Any>
+            <Dependency path="../livesInBoardingHouse" />
+            <Dependency path="../livesInInstitution" />
+          </Any>
+          <Not><Dependency path="../isExemptFromBoardingHouseOrInstitutionRule" /></Not>
+        </All>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/disqualifiedForParoleOrProbationViolation">
+      <Name>Disqualified for parole or probation violation</Name>
+      <Description>Whether this member is disqualified as a parole or probation violator. An impartial party designated by the agency must determine that the individual violated a condition of probation or parole imposed under federal or state law, and that federal, state, or local law enforcement authorities are actively seeking the individual to enforce those conditions. Active pursuit is established when a law enforcement agency informs the local office it intends to enforce an outstanding felony warrant or arrest the individual for a probation or parole violation within 20 days of submitting a request for information about the individual; presents a felony arrest warrant as provided in 4.304.4, B, 1; or states it intends to enforce an outstanding felony warrant or arrest the individual for a probation or parole violation within 30 days of the date of a request from a local office about a specific outstanding felony warrant or probation or parole violation (10 CCR 2506-1, 4.304.4)</Description>
+      <Writable><Boolean /></Writable>
     </Fact>
 
     <Fact path="/abawdCountableMonthsLimit">
@@ -1537,6 +1837,24 @@
       <Writable><Boolean /></Writable>
     </Fact>
 
+    <Fact path="/members/*/isCitizen">
+      <Name>Is U.S. citizen</Name>
+      <Description>Whether this member is considered a U.S. citizen for SNAP: a person born in the United States or in the District of Columbia, Puerto Rico, Guam, the U.S. Virgin Islands, or the Mariana Islands; a person who has become a citizen through the naturalization process; a person born outside the United States to at least one (1) U.S. citizen parent; or a child under eighteen (18) years of age adopted or born outside the U.S. with a parent who is a U.S. citizen, who has been admitted as a lawful permanent resident, and is in the legal and physical custody of a parent who is a U.S. citizen (10 CCR 2506-1, 4.305).</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/isNonCitizen">
+      <Name>Is non-citizen</Name>
+      <Description>Whether this member is a non-citizen — anyone who is not a U.S. citizen. Qualified non-citizens and certain groups of non-citizens who are not qualified are eligible for SNAP participation under certain conditions; some qualified non-citizens must also meet an additional condition to be eligible. Each category of qualified non-citizen stands alone for purposes of determining eligibility (10 CCR 2506-1, 4.305, B).</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/isNonCitizenNational">
+      <Name>Is non-citizen national</Name>
+      <Description>Whether this member is a non-citizen national of the United States — an individual born in an outlying possession of the United States (either American Samoa or Swain's Island) on or after the date the U.S. acquired the possession, or a person whose parents are U.S. non-citizen nationals. Non-citizen nationals have eligibility for SNAP as U.S. citizens (10 CCR 2506-1, 4.305)</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
     <Fact path="/members/*/isLawfulPermanentResident">
       <Name>Is lawful permanent resident</Name>
       <Description>Whether this member is a non-citizen legally admitted into the United States to reside on a permanent basis (10 CCR 2506-1, 4.000.1)</Description>
@@ -1591,20 +1909,174 @@
       <Writable><Boolean /></Writable>
     </Fact>
 
-    <Fact path="/members/*/isQualifiedNonCitizen">
-      <Name>Is qualified non-citizen</Name>
-      <Description>Whether this member meets the definition of "qualified alien" under 7 C.F.R. 273.4(a)(5), (6)(1) (2019) for SNAP purposes: lawful permanent residents, asylees, refugees, parolees, individuals granted withholding of deportation or removal, conditional entrants, Cuban or Haitian entrants, battered immigrants, and non-citizen victims of a severe form of trafficking. This term is not itself an immigration status; qualified non-citizens are not automatically eligible for SNAP and must meet all other eligibility requirements (10 CCR 2506-1, 4.000.1)</Description>
+    <Fact path="/members/*/isAmerasian">
+      <Name>Is Amerasian</Name>
+      <Description>Whether this member is an Amerasian eligible for SNAP under 8 U.S.C. 1612, retroactive to August 22, 1996 (10 CCR 2506-1, 4.305, B).</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/isIraqiOrAfghanSpecialImmigrant">
+      <Name>Is Iraqi or Afghan special immigrant</Name>
+      <Description>Whether this member is an Iraqi or Afghan national granted special immigrant status under 8 U.S.C. 1101(a)(27) for having worked on behalf of the U.S. Government in Iraq or Afghanistan. Under the Department of Defense Appropriations Act of 2010 (P.L. 111-118, Section 8120), Special Immigrant Visa holders are eligible for SNAP to the same extent and for the same period as refugees (10 CCR 2506-1, 4.305, B).</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/isQualifiedNonCitizenWithoutAdditionalCondition">
+      <Name>Is qualified non-citizen without additional condition</Name>
+      <Description>Whether this member is in a qualified non-citizen status that is eligible for SNAP participation indefinitely from the date the non-citizen obtains qualified non-citizen status or enters the U.S. in a qualifying status, without having to meet an additional condition: refugees admitted under 8 U.S.C. 1157, victims of trafficking under the Trafficking Victims Protection Act of 2000, asylees granted asylum under Section 208 of the INA, non-citizens whose deportation or removal is being withheld under 8 U.S.C. 1224(H) or 8 U.S.C. 1231(B)(3), Cuban or Haitian entrants under 8 U.S.C. 1522(E), Amerasians under 8 U.S.C. 1612, and Iraqi or Afghan Special Immigrants under 8 U.S.C. 1101(A)(27) (10 CCR 2506-1, 4.305, B, 2, a).</Description>
+      <Derived>
+        <Any>
+          <Dependency path="../isRefugee" />
+          <Dependency path="../isVictimOfTrafficking" />
+          <Dependency path="../isAsylee" />
+          <Dependency path="../hasWithholdingOfDeportationOrRemoval" />
+          <Dependency path="../isCubanOrHaitianEntrant" />
+          <Dependency path="../isAmerasian" />
+          <Dependency path="../isIraqiOrAfghanSpecialImmigrant" />
+        </Any>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/isQualifiedNonCitizenWithAdditionalCondition">
+      <Name>Is qualified non-citizen with additional condition</Name>
+      <Description>Whether this member is in a qualified non-citizen status that is required to meet an additional condition (see Section 4.305, B, 3) to be eligible for participation in the Program: Lawfully Admitted for Permanent Residence (LPRs) under the Immigration and Nationality Act, non-citizens paroled into the United States under 8 U.S.C. 1182(d)(5) for at least one (1) year, non-citizens granted conditional entry pursuant to 8 U.S.C. 1153(a)(7) as in effect before April 1, 1980, and non-citizens who have been battered or subjected to extreme cruelty in the U.S. by a family member with whom the non-citizen resides (10 CCR 2506-1, 4.305, B, 2, b).</Description>
       <Derived>
         <Any>
           <Dependency path="../isLawfulPermanentResident" />
-          <Dependency path="../isAsylee" />
-          <Dependency path="../isRefugee" />
           <Dependency path="../isParolee" />
-          <Dependency path="../hasWithholdingOfDeportationOrRemoval" />
           <Dependency path="../isConditionalEntrant" />
-          <Dependency path="../isCubanOrHaitianEntrant" />
           <Dependency path="../isBatteredImmigrant" />
-          <Dependency path="../isVictimOfTrafficking" />
+        </Any>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/isQualifiedNonCitizen">
+      <Name>Is qualified non-citizen</Name>
+      <Description>Whether this member meets the definition of "qualified alien" under 7 C.F.R. 273.4(a)(5), (6)(1) (2019) for SNAP purposes: lawful permanent residents, asylees, refugees, parolees, individuals granted withholding of deportation or removal, conditional entrants, Cuban or Haitian entrants, battered immigrants, and non-citizen victims of a severe form of trafficking. This term is not itself an immigration status; qualified non-citizens are not automatically eligible for SNAP and must meet all other eligibility requirements (10 CCR 2506-1, 4.305, B).</Description>
+      <Derived>
+        <Any>
+          <Dependency path="../isQualifiedNonCitizenWithoutAdditionalCondition" />
+          <Dependency path="../isQualifiedNonCitizenWithAdditionalCondition" />
+        </Any>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/isAmericanIndianBornAbroad">
+      <Name>Is American Indian born abroad</Name>
+      <Description>Whether this member is an American Indian born abroad in Canada living in the U.S. under Section 289 of the INA, or a non-citizen member of a federally recognized Indian tribe under Section 4(e) of the Indian Self-Determination and Education Assistance Act (25 U.S.C. 450(B)(E)) who is recognized as eligible for the special programs and services provided by the U.S. to Indians because of their status as Indians. This provision covers Native Americans entitled to cross the U.S. border between Canada and/or Mexico, including but not limited to the St. Regis Band of the Mohawk in New York State, the Micmac (also known as Mi'kmaq) in Maine, the Abenaki in Vermont, and the Kickapoo in Texas (10 CCR 2506-1, 4.305, B).</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/isHmongOrHighlandLaotianTribalMember">
+      <Name>Is Hmong or Highland Laotian Tribal Member</Name>
+      <Description>Whether this member is an individual lawfully residing in the U.S. who was a member of a Hmong or Highland Laotian tribe that rendered assistance to U.S. personnel by taking part in a military or rescue operation during the Vietnam era (August 5, 1964 – May 7, 1975); the spouse or surviving (not remarried) spouse of such a tribal member; an unmarried dependent child of such a tribal member who is under the age of eighteen (18) or a full-time student under the age of twenty-two (22); an unmarried child under the age of eighteen (18) or a full-time student under the age of twenty-two (22) of a deceased Hmong or Highland Laotian Tribal Member, provided the child was dependent upon them at the time of the tribal member's death; or an unmarried child with disabilities age eighteen (18) or older if the child had a disability and was dependent on the tribal member prior to the child's eighteenth (18th) birthday. For purposes of this category, "child" means the legally adopted or biological child of the Hmong or Highland Laotian Tribal Member (10 CCR 2506-1, 4.305, B).</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/isEligibleNonQualifiedNonCitizen">
+      <Name>Is eligible non-qualified non-citizen</Name>
+      <Description>Whether this member is in a class of non-citizens that is not defined as a qualified non-citizen status but is potentially eligible for SNAP participation without having to meet an additional condition (see Section 4.305, B, 3): certain American Indians born abroad, and Hmong or Highland Laotian Tribal Members. All other classes of non-citizens that are not in a qualified status are not eligible for participation in SNAP (10 CCR 2506-1, 4.305, B, 2).</Description>
+      <Derived>
+        <Any>
+          <Dependency path="../isAmericanIndianBornAbroad" />
+          <Dependency path="../isHmongOrHighlandLaotianTribalMember" />
+        </Any>
+      </Derived>
+    </Fact>
+
+    <Fact path="/nonCitizenChildAgeLimit">
+      <Name>Non-citizen child age limit (additional-condition case)</Name>
+      <Description>Upper bound (exclusive) on a non-citizen's age for the children-under-eighteen additional condition (10 CCR 2506-1, 4.305, B, 3, c): a non-citizen under eighteen (18) years of age in a qualified non-citizen status who lawfully resides in the U.S. satisfies the additional-condition requirement. When the non-citizen turns eighteen (18), non-citizen eligibility shall be reviewed.</Description>
+      <Derived><Int>18</Int></Derived>
+    </Fact>
+
+    <Fact path="/qualifiedNonCitizenResidenceYearsThreshold">
+      <Name>Qualified non-citizen residence years threshold</Name>
+      <Description>Lower bound (inclusive) on the number of years a non-citizen must have lived in the U.S. in a qualified non-citizen status to satisfy the five-year residence additional condition (10 CCR 2506-1, 4.305, B, 3, a).</Description>
+      <Derived><Int>5</Int></Derived>
+    </Fact>
+
+    <Fact path="/members/*/qualifiedYearsInUs">
+      <Name>Qualified years in the U.S.</Name>
+      <Description>The number of years this non-citizen has lived in the U.S. in a qualified non-citizen status. The waiting period begins on the date the non-citizen obtains status as a qualified non-citizen or enters the U.S. in a qualifying status (10 CCR 2506-1, 4.305, B, 3, a).</Description>
+      <Writable><Int /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/hasFiveYearsInQualifiedNonCitizenStatus">
+      <Name>Has five years in a qualified non-citizen status</Name>
+      <Description>Whether this non-citizen has lived in the U.S. in a qualified non-citizen status for five (5) years. The five (5) year waiting period begins on the date the non-citizen obtains status as a qualified non-citizen or enters the U.S. in a qualifying status (10 CCR 2506-1, 4.305, B, 3, a).</Description>
+      <Derived>
+        <GreaterThanOrEqual>
+          <Left><Dependency path="../qualifiedYearsInUs" /></Left>
+          <Right><Dependency path="/qualifiedNonCitizenResidenceYearsThreshold" /></Right>
+        </GreaterThanOrEqual>
+      </Derived>
+    </Fact>
+
+    <Fact path="/qualifyingWorkQuartersThreshold">
+      <Name>Qualifying work quarters threshold</Name>
+      <Description>Lower bound (inclusive) on the number of qualifying work quarters a non-citizen must have to satisfy the work-quarters additional condition (10 CCR 2506-1, 4.305, B, 3, b).</Description>
+      <Derived><Int>40</Int></Derived>
+    </Fact>
+
+    <Fact path="/members/*/qualifyingWorkQuarters">
+      <Name>Qualifying work quarters</Name>
+      <Description>The total number of qualifying work quarters credited to this non-citizen under Title II of the Social Security Act. The sum may include the non-citizen's own quarters, quarters credited from the work of a parent while the non-citizen was under eighteen (18), and quarters credited from the work of the non-citizen's spouse, subject to the restrictions in 4.305, B, 3, b (10 CCR 2506-1, 4.305, B, 3, b).</Description>
+      <Writable><Int /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/hasFortyQualifyingWorkQuarters">
+      <Name>Has forty qualifying work quarters</Name>
+      <Description>Whether this non-citizen has satisfied the forty (40) qualifying work quarters additional condition, as defined under Title II of the Social Security Act. The sum may include the non-citizen's own quarters, quarters credited from the work of a parent while the non-citizen was under eighteen (18), and quarters credited from the work of the non-citizen's spouse, subject to the restrictions in 4.305, B, 3, b (10 CCR 2506-1, 4.305, B, 3, b).</Description>
+      <Derived>
+        <GreaterThanOrEqual>
+          <Left><Dependency path="../qualifyingWorkQuarters" /></Left>
+          <Right><Dependency path="/qualifyingWorkQuartersThreshold" /></Right>
+        </GreaterThanOrEqual>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/wasBornOnOrBeforeAug221931AndLawfullyResidedAug221996">
+      <Name>Born on or before August 22, 1931 and lawfully resided in the U.S. on August 22, 1996</Name>
+      <Description>Whether this non-citizen was born on or before August 22, 1931 and lawfully resided in the U.S. on August 22, 1996 (10 CCR 2506-1, 4.305, B, 3, e).</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/hasQualifyingMilitaryConnection">
+      <Name>Has qualifying military connection</Name>
+      <Description>Whether this qualified non-citizen has a qualifying military connection: an individual lawfully residing in a state on active duty (other than training) in the military, excluding national guard; an honorably discharged veteran (as defined in Section 101 of Title 38, U.S.C.) whose discharge is not because of immigration status and who fulfills the minimum active-duty service requirements, including an individual who died in active military, naval, or air service; or the spouse, un-remarried surviving spouse, or unmarried dependent child of such a person, as further defined in 4.305, B, 3, f (10 CCR 2506-1, 4.305, B, 3, f).</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/meetsAdditionalConditionForNonCitizenEligibility">
+      <Name>Meets additional condition for non-citizen eligibility</Name>
+      <Description>Whether this member, who is in a qualified non-citizen status as outlined in subsection 4.305, B, 1, satisfies at least one of the additional conditions listed in 4.305, B, 3, required for eligibility for participation in the Program: five (5) years of residence in a qualified non-citizen status, forty (40) qualifying work quarters, under eighteen (18) years of age, a person with disabilities, born on or before August 22, 1931 and lawfully residing in the U.S. on August 22, 1996, or a qualifying military connection (10 CCR 2506-1, 4.305, B, 3).</Description>
+      <Derived>
+        <Any>
+          <Dependency path="../hasFiveYearsInQualifiedNonCitizenStatus" />
+          <Dependency path="../hasFortyQualifyingWorkQuarters" />
+          <LessThan>
+            <Left><Dependency path="../age" /></Left>
+            <Right><Dependency path="/nonCitizenChildAgeLimit" /></Right>
+          </LessThan>
+          <Dependency path="../isPersonWithDisability" />
+          <Dependency path="../wasBornOnOrBeforeAug221931AndLawfullyResidedAug221996" />
+          <Dependency path="../hasQualifyingMilitaryConnection" />
+        </Any>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/isEligibleNonCitizen">
+      <Name>Is eligible non-citizen</Name>
+      <Description>Whether this non-citizen member is eligible for SNAP participation: they are a qualified non-citizen who is either not required to meet an additional condition (4.305, B, 2, a) or meets one of the additional conditions in 4.305, B, 3, OR they fall in one of the classes of non-qualified non-citizens eligible for participation (4.305, B, 2). Each category stands alone for purposes of determining eligibility (10 CCR 2506-1, 4.305, B).</Description>
+      <Derived>
+        <Any>
+          <Dependency path="../isQualifiedNonCitizenWithoutAdditionalCondition" />
+          <All>
+            <Dependency path="../isQualifiedNonCitizenWithAdditionalCondition" />
+            <Dependency path="../meetsAdditionalConditionForNonCitizenEligibility" />
+          </All>
+          <Dependency path="../isEligibleNonQualifiedNonCitizen" />
         </Any>
       </Derived>
     </Fact>
@@ -1949,6 +2421,9 @@
           <Dependency path="../disqualifiedForQualityAssuranceCooperation" />
           <Dependency path="../exceededAbawdCountableMonthsLimit" />
           <Dependency path="../disqualifiedForMultiHouseholdParticipation" />
+          <Dependency path="../disqualifiedForFelonyNonCompliance" />
+          <Dependency path="../disqualifiedForParoleOrProbationViolation" />
+          <Dependency path="../disqualifiedForBoardingHouseOrInstitutionResidence" />
         </Any>
       </Derived>
     </Fact>
