@@ -3,6 +3,8 @@
  * compares results.
  */
 
+import os from 'node:os'
+import { Worker } from 'node:worker_threads'
 import { getRuleset, getRawFacts } from '../store.js'
 import { executeFactGraph } from '../executor.js'
 import { compareValues } from '../testStore.js'
@@ -16,6 +18,24 @@ import type {
   NodeChangeStats,
   GeneratedScenario,
 } from './types.js'
+
+// Worker pool size. Cap at 8 because the Scala.js bundle is ~6MB per
+// worker and we get diminishing returns past 8 cores once memory pressure
+// kicks in. Env override mainly useful for benchmarking / disabling
+// parallelism (SIMULATION_WORKERS=1 falls back to inline execution).
+const DEFAULT_MAX_WORKERS = 8
+const WORKER_COUNT = Math.max(
+  1,
+  Math.min(
+    Number(process.env.SIMULATION_WORKERS) ||
+      os.availableParallelism?.() ||
+      os.cpus().length,
+    DEFAULT_MAX_WORKERS
+  )
+)
+// Worker spawn + Scala.js bundle load is ~1-2s; for tiny runs that
+// dominates wall-clock. Stay inline below this threshold.
+const PARALLEL_THRESHOLD = 100
 
 /**
  * Diff the results from two executions. Returns outcome-only diffs and all diffs.
@@ -147,6 +167,129 @@ function yieldEventLoop(): Promise<void> {
 }
 
 /**
+ * Resolve how to spawn the worker. There's an asymmetry between dev and
+ * prod that bites us: under `tsx watch` we want the worker to run the
+ * .ts source (because there's no compiled .js on disk), but Node's
+ * `new Worker(fileUrl)` opens the file directly with no module-resolver
+ * involvement — so tsx's loader never gets a chance to transform .ts.
+ * Workaround: in dev, spawn an inline ESM shim via `eval: true` that
+ * calls `tsImport` to load the .ts worker through tsx's API. In prod
+ * (after `tsc` compile) the .js exists on disk and we hand back a plain
+ * file URL.
+ */
+function workerSpawnArgs(): {
+  source: string | URL
+  options: { eval?: boolean }
+} {
+  const here = import.meta.url
+  const isDev = here.endsWith('.ts')
+  if (!isDev) {
+    return {
+      source: new URL(here.replace(/runner\.js$/, 'worker.js')),
+      options: {},
+    }
+  }
+  const workerUrl = here.replace(/runner\.ts$/, 'worker.ts')
+  // `tsImport(specifier, parent)` runs `specifier` through tsx's loader,
+  // resolving .ts and yielding an ESM module. Awaiting it as the worker
+  // entry means the worker's lifetime tracks the import's promise.
+  const shim = `
+import { tsImport } from 'tsx/esm/api'
+await tsImport(${JSON.stringify(workerUrl)}, ${JSON.stringify(here)})
+`
+  return { source: shim, options: { eval: true } }
+}
+
+type WorkerProgressMsg = { type: 'progress'; count: number }
+type WorkerDoneMsg = { type: 'done'; results: CaseResult[] }
+type WorkerMsg = WorkerProgressMsg | WorkerDoneMsg
+
+/**
+ * Fan a scenario list out across N worker threads. Each worker gets a
+ * contiguous slice; results are merged back in chunk order so the final
+ * array matches scenario order (case-detail navigation relies on that).
+ */
+async function runParallel(
+  baseRulesetId: string,
+  comparedRulesetId: string,
+  baseFacts: ReturnType<typeof getRawFacts>,
+  comparedFacts: ReturnType<typeof getRawFacts>,
+  baseModelNodes: Record<string, { content: { dataType?: string } }>,
+  comparedModelNodes: Record<string, { content: { dataType?: string } }>,
+  scenarios: GeneratedScenario[],
+  outcomeNodes: string[],
+  baseOverrides: Record<string, unknown> | undefined,
+  comparedOverrides: Record<string, unknown> | undefined,
+  onProgress?: (completed: number, total: number) => void
+): Promise<CaseResult[]> {
+  const workerCount = Math.min(WORKER_COUNT, scenarios.length)
+  const chunkSize = Math.ceil(scenarios.length / workerCount)
+  const chunks: GeneratedScenario[][] = []
+  for (let i = 0; i < workerCount; i++) {
+    const slice = scenarios.slice(i * chunkSize, (i + 1) * chunkSize)
+    if (slice.length > 0) chunks.push(slice)
+  }
+
+  const total = scenarios.length
+  // Each worker reports a count *within its slice*; we keep per-worker
+  // counters and report the sum so the UI sees monotonic progress.
+  const perWorkerCompleted = chunks.map(() => 0)
+  // Throttle progress emission to avoid spamming the active-runs map.
+  const PROGRESS_REPORT_EVERY = 50
+
+  const { source, options } = workerSpawnArgs()
+
+  const chunkResults: CaseResult[][] = await Promise.all(
+    chunks.map(
+      (chunk, idx) =>
+        new Promise<CaseResult[]>((resolve, reject) => {
+          const worker = new Worker(source as never, {
+            ...options,
+            workerData: {
+              baseRulesetId,
+              comparedRulesetId,
+              baseFacts,
+              comparedFacts,
+              baseModelNodes,
+              comparedModelNodes,
+              scenarios: chunk,
+              outcomeNodes,
+              baseOverrides,
+              comparedOverrides,
+              progressInterval: PROGRESS_REPORT_EVERY,
+            },
+          })
+          worker.on('message', (msg: WorkerMsg) => {
+            if (msg.type === 'progress') {
+              perWorkerCompleted[idx] = msg.count
+              if (onProgress) {
+                const sum = perWorkerCompleted.reduce((a, b) => a + b, 0)
+                onProgress(sum, total)
+              }
+            } else if (msg.type === 'done') {
+              perWorkerCompleted[idx] = chunk.length
+              if (onProgress) {
+                const sum = perWorkerCompleted.reduce((a, b) => a + b, 0)
+                onProgress(sum, total)
+              }
+              resolve(msg.results)
+              worker.terminate()
+            }
+          })
+          worker.on('error', reject)
+          worker.on('exit', (code) => {
+            if (code !== 0) {
+              reject(new Error(`Worker exited with code ${code}`))
+            }
+          })
+        })
+    )
+  )
+
+  return chunkResults.flat()
+}
+
+/**
  * Run a full simulation: generate or use provided scenarios, execute both
  * versions, diff, summarize.
  *
@@ -189,7 +332,42 @@ export async function runSimulation(
   const hasComparedOverrides =
     comparedOverrides && Object.keys(comparedOverrides).length > 0
 
-  // Execute and compare
+  // Parallel path: hand the whole scenario list off to a worker pool.
+  // Skipped for tiny runs (spawn overhead dominates) and when the user
+  // pinned worker count to 1 for benchmarking.
+  if (WORKER_COUNT > 1 && scenarios.length >= PARALLEL_THRESHOLD) {
+    const results = await runParallel(
+      baseRulesetId,
+      comparedRulesetId,
+      baseFacts,
+      editedFacts,
+      baseModel.nodes as Record<string, { content: { dataType?: string } }>,
+      editedModel.nodes as Record<string, { content: { dataType?: string } }>,
+      scenarios,
+      config.outcomeNodes,
+      baseOverrides,
+      comparedOverrides,
+      onProgress
+    )
+    const executionTimeMs = Date.now() - startTime
+    const summary = computeSummary(results, executionTimeMs)
+    return {
+      run: {
+        id: config.id,
+        rulesetId: baseRulesetId,
+        comparedRulesetId,
+        config,
+        status: 'completed',
+        summary,
+        startedAt: new Date(startTime).toISOString(),
+        completedAt: new Date().toISOString(),
+      },
+      results,
+    }
+  }
+
+  // Inline path: execute in the main thread. Used for small runs and
+  // when the worker pool is disabled.
   const results: CaseResult[] = []
   for (let i = 0; i < scenarios.length; i++) {
     const scenario = scenarios[i]
