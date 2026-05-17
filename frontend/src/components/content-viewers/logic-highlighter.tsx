@@ -11,7 +11,8 @@
  *   muted    — gray   (structural labels)
  */
 
-import type { ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
+import { Copy, Check } from 'lucide-react'
 
 // --- Shared color classes ---
 const C = {
@@ -38,9 +39,40 @@ export function LogicHighlighter({ format, logic, onNavigate }: Props) {
       : renderRac(logic, onNavigate)
 
   return (
-    <pre className="mt-1 rounded-md border bg-muted/50 p-2 text-xs whitespace-pre-wrap font-mono leading-relaxed">
-      {content}
-    </pre>
+    <div className="relative group">
+      <pre className="mt-1 rounded-md border bg-muted/50 p-2 pr-7 text-xs whitespace-pre-wrap font-mono leading-relaxed">
+        {content}
+      </pre>
+      <LogicCopyButton text={logic} />
+    </div>
+  )
+}
+
+// Small absolute-positioned copy icon that flashes a green check on click.
+// Hover-revealed so it doesn't clutter the syntax-highlighted block when
+// the user is just reading; always rendered (not just on hover) on
+// touch / hover-incapable devices via the `group-hover` Tailwind class.
+function LogicCopyButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false)
+  return (
+    <button
+      type="button"
+      className="absolute top-2 right-1.5 p-0.5 text-muted-foreground opacity-0 group-hover:opacity-100 hover:text-foreground"
+      onClick={() => {
+        if (!text) return
+        navigator.clipboard.writeText(text).then(() => {
+          setCopied(true)
+          setTimeout(() => setCopied(false), 1200)
+        })
+      }}
+      title={copied ? 'Copied' : 'Copy'}
+    >
+      {copied ? (
+        <Check className="size-3 text-emerald-600" />
+      ) : (
+        <Copy className="size-3" />
+      )}
+    </button>
   )
 }
 

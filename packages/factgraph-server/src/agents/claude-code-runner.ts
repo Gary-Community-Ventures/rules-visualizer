@@ -253,7 +253,7 @@ async function spawnClaude(
         threadId,
         {
           status: 'ready',
-          summary: parsed?.summary ?? lastAssistantText.slice(0, 240),
+          summary: parsed?.summary ?? lastAssistantText,
           modifiedPaths: parsed?.modifiedPaths ?? [],
         },
         'ready'

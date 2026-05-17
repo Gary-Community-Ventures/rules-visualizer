@@ -19,6 +19,7 @@
           <String>Ssi</String>
           <String>SelfEmployment</String>
           <String>VendorPayments</String>
+          <String>SponsorPayments</String>
         </EnumOptions>
       </Derived>
     </Fact>
@@ -74,6 +75,18 @@
     <Fact path="/parentChildRelationships/*/isUnderParentalControl">
       <Name>Is non-parent parental-control relationship</Name>
       <Description>Whether this relationship is the non-parent caregiver kind (the child is under the parental control of an adult who is not their natural, adoptive, or stepparent), rather than a natural, adoptive, or stepparent relationship. A child under eighteen (18) is considered to be under parental control of a household member when financially or otherwise dependent on that member (10 CCR 2506-1, 4.304.1).</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/parentChildRelationships/*/parentProvidesMoreThanHalfOfPhysicalCare">
+      <Name>Parent provides more than half of physical care</Name>
+      <Description>Whether the parent-side member in this relationship is responsible for more than half of the physical care of the child. Used by the SNAP student-eligibility exemption for a student responsible for the physical care of a dependent household member aged six (6) to under twelve (12) (10 CCR 2506-1, 4.306.1, E).</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/parentChildRelationships/*/adequateChildcareUnavailable">
+      <Name>Adequate childcare is unavailable</Name>
+      <Description>Whether the local office has determined that adequate childcare is not available for the child-side member in this relationship to enable the parent-side member to attend class and satisfy the requirement of item B or item C of 4.306.1 (10 CCR 2506-1, 4.306.1, E).</Description>
       <Writable><Boolean /></Writable>
     </Fact>
 
@@ -1319,12 +1332,11 @@
          categories beyond liquid + non-liquid (10 CCR 2506-1, 4.408). -->
     <Fact path="/resources">
       <Name>Resources</Name>
-      <Description>The household's total countable resources, including both liquid and non-liquid resources (10 CCR 2506-1, 4.000.1)</Description>
+      <Description>The household's total countable resources, the sum of each member's total resources (liquid plus non-liquid) (10 CCR 2506-1, 4.000.1)</Description>
       <Derived>
-        <Add>
-          <Dependency path="/liquidResources" />
-          <Dependency path="/nonLiquidResources" />
-        </Add>
+        <CollectionSum>
+          <Dependency path="/members/*/resources" />
+        </CollectionSum>
       </Derived>
     </Fact>
 
@@ -1511,11 +1523,262 @@
       <Name>Is ineligible non-citizen</Name>
       <Description>Whether this member is an ineligible non-citizen. Citizens and non-citizen nationals are potentially eligible for SNAP; other non-citizens are ineligible unless they are a qualified non-citizen who is exempt from the additional-condition requirement, a qualified non-citizen who meets one of the additional conditions, or fall in one of the classes of non-qualified non-citizens eligible for participation (10 CCR 2506-1, 4.305).</Description>
       <Derived>
-        <And>
+        <All>
           <Not><Dependency path="../isCitizen" /></Not>
           <Not><Dependency path="../isNonCitizenNational" /></Not>
           <Not><Dependency path="../isEligibleNonCitizen" /></Not>
-        </And>
+        </All>
+      </Derived>
+    </Fact>
+
+    <Fact path="/studentIneligibilityAgeMin">
+      <Name>Student ineligibility minimum age</Name>
+      <Description>Lower bound (inclusive) of the age range subject to the SNAP student-eligibility rule. Persons aged seventeen (17) or under are not considered under student eligibility criteria (10 CCR 2506-1, 4.306, B, 1).</Description>
+      <Derived><Int>18</Int></Derived>
+    </Fact>
+
+    <Fact path="/studentIneligibilityAgeMax">
+      <Name>Student ineligibility maximum age</Name>
+      <Description>Upper bound (inclusive) of the age range subject to the SNAP student-eligibility rule. Persons aged fifty (50) or over are not considered under student eligibility criteria (10 CCR 2506-1, 4.306, B, 2).</Description>
+      <Derived><Int>49</Int></Derived>
+    </Fact>
+
+    <Fact path="/studentExemptionDependentMemberAgeLimit">
+      <Name>Student exemption dependent member age limit</Name>
+      <Description>Upper bound (exclusive) on the age of a dependent household member whose care qualifies a full-time student for the SNAP student-eligibility exemption: a dependent household member under the age of six (6) (10 CCR 2506-1, 4.306.1).</Description>
+      <Derived><Int>6</Int></Derived>
+    </Fact>
+
+    <Fact path="/studentExemptionDependentChildAgeLimit">
+      <Name>Student exemption dependent child age limit (single-parent provision)</Name>
+      <Description>Upper bound (exclusive) on the age of a dependent child whose care qualifies a full-time, single-parent student for the SNAP student-eligibility exemption: a dependent child under age twelve (12) (10 CCR 2506-1, 4.306.1).</Description>
+      <Derived><Int>12</Int></Derived>
+    </Fact>
+
+    <Fact path="/members/*/isEnrolledAtLeastHalfTimeInInstitutionOfHigherEducation">
+      <Name>Enrolled at least half time in an institution of higher education</Name>
+      <Description>Whether this member is enrolled at least half time in an institution of higher education. Persons enrolled less than half time, persons enrolled full time in schools or training programs that are not institutions of higher education, persons attending high school, and persons participating in an on-the-job training program (training in an employment environment, excluding internships, field work, or practical experience associated with a course of higher education) are not considered under student eligibility criteria (10 CCR 2506-1, 4.306, B, 3-6). Enrollment status begins on the first day of the school term of the institution of higher education and continues through normal periods of class attendance, vacation, and recess unless the student graduates, is suspended or expelled, drops out, or does not intend to register for the next normal school term (excluding summer session); for eligibility purposes enrollment starts when the student starts classes (10 CCR 2506-1, 4.306, C).</Description>
+      <Derived>
+        <Any>
+          <Equal>
+            <Left><Dependency path="../studentEnrollmentStatus" /></Left>
+            <Right><Enum optionsPath="/studentEnrollmentStatusOptions">FullTime</Enum></Right>
+          </Equal>
+          <Equal>
+            <Left><Dependency path="../studentEnrollmentStatus" /></Left>
+            <Right><Enum optionsPath="/studentEnrollmentStatusOptions">HalfTime</Enum></Right>
+          </Equal>
+        </Any>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/meetsStudentEligibilityExemption">
+      <Name>Meets student eligibility exemption</Name>
+      <Description>Whether this member meets one of the student eligibility exemption criteria outlined at 4.306.1 (10 CCR 2506-1, 4.306, A). TODO: derive from the specific 4.306.1 exemption criteria once those are modeled.</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/isParticipatingInWorkStudy">
+      <Name>Is participating in work-study</Name>
+      <Description>Whether this member is participating in a work-study program for purposes of the SNAP student eligibility exemption. The work-study shall be approved for the school term and the student shall anticipate working during that time. The student qualifies for this exemption the month the school term in which the work-study will occur begins or the month work-study is approved, whichever is later. The exemption continues until the end of the school term or until it becomes known that the student has refused an assignment. The exemption shall not continue between terms when there is a break of one (1) full month or longer unless the student is participating in work-study during the break (10 CCR 2506-1, 4.306.1).</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/isAssignedToHigherEducationThroughEmploymentTrainingProgram">
+      <Name>Is assigned to higher education through an employment and training program</Name>
+      <Description>Whether this member qualifies for the SNAP student eligibility exemption as a student assigned to or placed in an institution of higher education through a program under the Workforce Innovation and Opportunity Act (WIOA), Employment First (EF), a program under Section 236 of the Trade Act of 1974 (19 U.S.C. 2296), another program for the purpose of employment and training operated by the state or local government (program shall have at least one (1) component equivalent to the SNAP EF Program), or as a result of participating in the JOBS program under Title IV of the Social Security Act (10 CCR 2506-1, 4.306.1, G).</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/isFullTimeStudent">
+      <Name>Is full-time student</Name>
+      <Description>Whether this member's /members/*/studentEnrollmentStatus is FullTime (10 CCR 2506-1, 4.306.1).</Description>
+      <Derived>
+        <Equal>
+          <Left><Dependency path="../studentEnrollmentStatus" /></Left>
+          <Right><Enum optionsPath="/studentEnrollmentStatusOptions">FullTime</Enum></Right>
+        </Equal>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/hasCareOfDependentHouseholdMember">
+      <Name>Has care of a dependent household member</Name>
+      <Description>Whether this member has at least one /parentChildRelationships entry whose child-side member is part of the SNAP household and is under the age of six (6). This captures responsibility for the care of a dependent household member under age six for the SNAP full-time-student exemption (10 CCR 2506-1, 4.306.1).</Description>
+      <Derived>
+        <GreaterThan>
+          <Left>
+            <CollectionSize>
+              <Filter path="/parentChildRelationships">
+                <All>
+                  <Equal>
+                    <Left><Dependency path="parentId" /></Left>
+                    <Right><Dependency path="^" /></Right>
+                  </Equal>
+                  <Dependency path="childId/isPartOfHousehold" />
+                  <LessThan>
+                    <Left><Dependency path="childId/age" /></Left>
+                    <Right><Dependency path="/studentExemptionDependentMemberAgeLimit" /></Right>
+                  </LessThan>
+                </All>
+              </Filter>
+            </CollectionSize>
+          </Left>
+          <Right><Int>0</Int></Right>
+        </GreaterThan>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/isSingleParentOfDependentChild">
+      <Name>Is single parent of a dependent child</Name>
+      <Description>Whether this member has at least one natural, adoptive, or stepparent /parentChildRelationships entry (isUnderParentalControl is false) to a household child under age twelve (12) for whom this member is the only such parent in the same SNAP household. Captures the single-parent provision of the SNAP full-time-student exemption (10 CCR 2506-1, 4.306.1).</Description>
+      <Derived>
+        <GreaterThan>
+          <Left>
+            <CollectionSize>
+              <Filter path="/parentChildRelationships">
+                <All>
+                  <Equal>
+                    <Left><Dependency path="parentId" /></Left>
+                    <Right><Dependency path="^" /></Right>
+                  </Equal>
+                  <Not><Dependency path="isUnderParentalControl" /></Not>
+                  <Dependency path="childId/isPartOfHousehold" />
+                  <LessThan>
+                    <Left><Dependency path="childId/age" /></Left>
+                    <Right><Dependency path="/studentExemptionDependentChildAgeLimit" /></Right>
+                  </LessThan>
+                  <Equal>
+                    <Left>
+                      <CollectionSize>
+                        <Filter path="/parentChildRelationships">
+                          <All>
+                            <Equal>
+                              <Left><Dependency path="childId" /></Left>
+                              <Right><Dependency path="^/childId" /></Right>
+                            </Equal>
+                            <Not><Dependency path="isUnderParentalControl" /></Not>
+                            <Dependency path="parentId/isPartOfHousehold" />
+                          </All>
+                        </Filter>
+                      </CollectionSize>
+                    </Left>
+                    <Right><Int>1</Int></Right>
+                  </Equal>
+                </All>
+              </Filter>
+            </CollectionSize>
+          </Left>
+          <Right><Int>0</Int></Right>
+        </GreaterThan>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/hasParentalControlOfDependentChild">
+      <Name>Has parental control of a dependent child</Name>
+      <Description>Whether this member has at least one non-parent parental-control /parentChildRelationships entry (isUnderParentalControl is true) to a household child under age twelve (12). Pairs with Not(/members/*/isMandatorySpouse) to capture the "full-time student in the same SNAP household with a child who is under their parental control may qualify if they do not reside with their spouse" branch of the SNAP full-time-student exemption (10 CCR 2506-1, 4.306.1).</Description>
+      <Derived>
+        <GreaterThan>
+          <Left>
+            <CollectionSize>
+              <Filter path="/parentChildRelationships">
+                <All>
+                  <Equal>
+                    <Left><Dependency path="parentId" /></Left>
+                    <Right><Dependency path="^" /></Right>
+                  </Equal>
+                  <Dependency path="isUnderParentalControl" />
+                  <Dependency path="childId/isPartOfHousehold" />
+                  <LessThan>
+                    <Left><Dependency path="childId/age" /></Left>
+                    <Right><Dependency path="/studentExemptionDependentChildAgeLimit" /></Right>
+                  </LessThan>
+                </All>
+              </Filter>
+            </CollectionSize>
+          </Left>
+          <Right><Int>0</Int></Right>
+        </GreaterThan>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/isFullTimeStudentResponsibleForDependentChild">
+      <Name>Is student responsible for a dependent child</Name>
+      <Description>Whether this member qualifies for the SNAP student eligibility exemption as a student who has responsibility for the care of a dependent household member under the age of six (6); or as a full-time student who is a single parent with responsibility for the care of a dependent child under age twelve (12). The full-time requirement only applies to the single-parent leg; the under-six leg applies to any student. The single-parent provision applies in those situations where only one natural, adoptive, or stepparent — regardless of marital status — is in the same SNAP household as the child. A full-time student in the same SNAP household with a child who is under their parental control may qualify if they do not reside with their spouse (10 CCR 2506-1, 4.306.1).</Description>
+      <Derived>
+        <Any>
+          <Dependency path="../hasCareOfDependentHouseholdMember" />
+          <All>
+            <Dependency path="../isFullTimeStudent" />
+            <Any>
+              <Dependency path="../isSingleParentOfDependentChild" />
+              <All>
+                <Dependency path="../hasParentalControlOfDependentChild" />
+                <Not><Dependency path="../isMandatorySpouse" /></Not>
+              </All>
+            </Any>
+          </All>
+        </Any>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/isStudentResponsibleForPhysicalCareOfDependentChildWithoutAdequateChildcare">
+      <Name>Is student responsible for physical care of a dependent child without adequate childcare</Name>
+      <Description>Whether this member qualifies for the SNAP student eligibility exemption as a student who is responsible for more than half of the physical care of a dependent household member who has reached the age of six (6) but is under the age of twelve (12), where the local office has determined that adequate childcare is not available to enable the individual to attend class and satisfy the requirement of item B or item C of 4.306.1. Derived from any /parentChildRelationships entry whose parent-side member is this member, whose child-side member is part of the SNAP household and aged six (6) to under twelve (12), and where parentProvidesMoreThanHalfOfPhysicalCare and adequateChildcareUnavailable are both true (10 CCR 2506-1, 4.306.1, E).</Description>
+      <Derived>
+        <GreaterThan>
+          <Left>
+            <CollectionSize>
+              <Filter path="/parentChildRelationships">
+                <All>
+                  <Equal>
+                    <Left><Dependency path="parentId" /></Left>
+                    <Right><Dependency path="^" /></Right>
+                  </Equal>
+                  <Dependency path="childId/isPartOfHousehold" />
+                  <GreaterThanOrEqual>
+                    <Left><Dependency path="childId/age" /></Left>
+                    <Right><Dependency path="/studentExemptionDependentMemberAgeLimit" /></Right>
+                  </GreaterThanOrEqual>
+                  <LessThan>
+                    <Left><Dependency path="childId/age" /></Left>
+                    <Right><Dependency path="/studentExemptionDependentChildAgeLimit" /></Right>
+                  </LessThan>
+                  <Dependency path="parentProvidesMoreThanHalfOfPhysicalCare" />
+                  <Dependency path="adequateChildcareUnavailable" />
+                </All>
+              </Filter>
+            </CollectionSize>
+          </Left>
+          <Right><Int>0</Int></Right>
+        </GreaterThan>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/isInK12">
+      <Name>Is in K-12</Name>
+      <Description>Whether this member is attending a K-12 school (kindergarten through twelfth grade). Persons attending high school are not considered under SNAP student eligibility criteria (10 CCR 2506-1, 4.306, B, 5).</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/isIneligibleStudent">
+      <Name>Is ineligible student</Name>
+      <Description>Whether this member is an ineligible student. A person aged eighteen (18) through forty-nine (49) and enrolled at least half time in an institution of higher education is ineligible to participate in the SNAP unless they meet one of the exemption criteria outlined at 4.306.1. Persons attending K-12 and persons participating in an on-the-job training program are not considered under student eligibility criteria (10 CCR 2506-1, 4.306, B, 5-6).</Description>
+      <Derived>
+        <All>
+          <GreaterThanOrEqual>
+            <Left><Dependency path="../age" /></Left>
+            <Right><Dependency path="/studentIneligibilityAgeMin" /></Right>
+          </GreaterThanOrEqual>
+          <LessThanOrEqual>
+            <Left><Dependency path="../age" /></Left>
+            <Right><Dependency path="/studentIneligibilityAgeMax" /></Right>
+          </LessThanOrEqual>
+          <Dependency path="../isEnrolledAtLeastHalfTimeInInstitutionOfHigherEducation" />
+          <Not><Dependency path="../isInK12" /></Not>
+          <Not><Dependency path="../isInOnTheJobTraining" /></Not>
+          <Not><Dependency path="../isEnrolledInEmploymentTrainingProgram" /></Not>
+          <Not><Dependency path="../meetsStudentEligibilityExemption" /></Not>
+        </All>
       </Derived>
     </Fact>
 
@@ -1531,9 +1794,21 @@
       <Writable><Boolean /></Writable>
     </Fact>
 
+    <Fact path="/members/*/workHoursPerWeek">
+      <Name>Work hours per week</Name>
+      <Description>The average number of hours per week this member works (10 CCR 2506-1, 4.000.1)</Description>
+      <Writable><Int /></Writable>
+    </Fact>
+
     <Fact path="/members/*/disqualifiedForQualityAssuranceCooperation">
       <Name>Disqualified for failure to cooperate with QA division</Name>
       <Description>Whether this member has been disqualified for failure to cooperate with the state quality assurance division (10 CCR 2506-1, 4.000.1)</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/isPhysicallyOrMentallyUnfitForEmployment">
+      <Name>Physically or mentally unfit for employment</Name>
+      <Description>Whether this member is physically or mentally unfit for employment, including students participating through or in a vocational rehabilitation program. When unfitness is claimed and is not evident to the local office, verification may be required — appropriate verification may consist of receipt of temporary or permanent disability benefits or a statement from a physician or licensed psychologist (10 CCR 2506-1, 4.310)</Description>
       <Writable><Boolean /></Writable>
     </Fact>
 
@@ -1679,8 +1954,18 @@
 
     <Fact path="/members/*/unearnedIncome">
       <Name>Unearned income</Name>
-      <Description>This member's unearned income (10 CCR 2506-1, 4.000.1)</Description>
-      <Writable><Dollar /></Writable>
+      <Description>This member's unearned income (10 CCR 2506-1, 4.000.1). Currently equal to /members/*/sponsorIncome — the only unearned-income component modeled so far — so the value reflects the post-exemption sponsor income (deemed share or actual money paid, with the 4.000.1, E exemptions applied).</Description>
+      <Derived>
+        <Dependency path="../sponsorIncome" />
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/unearnedIncomeWithSponsorIncome">
+      <Name>Unearned income (including sponsor income)</Name>
+      <Description>This member's unearned income for the indigent-non-citizen determination (10 CCR 2506-1, 4.000.1, E, 4). Mirrors /members/*/unearnedIncome but points at /members/*/deemedSponsorIncome — the raw per-non-citizen deemed share — instead of /members/*/sponsorIncome, so the indigence check uses sponsor income before the 4.000.1, E exemptions are applied and avoids cycling through /members/*/sponsorIncomeAndResourcesDoNotApply.</Description>
+      <Derived>
+        <Dependency path="../deemedSponsorIncome" />
+      </Derived>
     </Fact>
     <Fact path="/totalSelfEmploymentIncome">
       <Name>Total self-employment income</Name>
@@ -1704,6 +1989,18 @@
       <Writable><Dollar /></Writable>
     </Fact>
 
+    <Fact path="/members/*/resources">
+      <Name>Resources</Name>
+      <Description>This member's total countable resources, the sum of liquid resources, non-liquid resources, and any sponsor resources deemed to this member as a sponsored non-citizen (10 CCR 2506-1, 4.000.1).</Description>
+      <Derived>
+        <Add>
+          <Dependency path="../liquidResources" />
+          <Dependency path="../nonLiquidResources" />
+          <Dependency path="../sponsorResources" />
+        </Add>
+      </Derived>
+    </Fact>
+
     <Fact path="/members/*/grossIncome">
       <Name>Gross income</Name>
       <Description>The total of all non-exempt earned and unearned income added together before any deduction or disregard is considered (10 CCR 2506-1, 4.000.1)</Description>
@@ -1711,6 +2008,17 @@
         <Add>
           <Dependency path="../nonExemptEarnedIncome" />
           <Dependency path="../unearnedIncome" />
+        </Add>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/grossIncomeWithSponsorIncome">
+      <Name>Gross income (including sponsor income)</Name>
+      <Description>This member's gross income with /members/*/unearnedIncomeWithSponsorIncome standing in for /members/*/unearnedIncome — i.e., using /members/*/deemedSponsorIncome (the raw per-non-citizen deemed share, NOT the post-exemption /members/*/sponsorIncome) as the sponsor-income contribution. Used to assess indigent non-citizen status (10 CCR 2506-1, 4.000.1, E, 4) without cycling through /members/*/sponsorIncomeAndResourcesDoNotApply, since indigence itself feeds into that exemption umbrella.</Description>
+      <Derived>
+        <Add>
+          <Dependency path="../nonExemptEarnedIncome" />
+          <Dependency path="../unearnedIncomeWithSponsorIncome" />
         </Add>
       </Derived>
     </Fact>
@@ -1819,16 +2127,22 @@
       <Writable><Boolean /></Writable>
     </Fact>
 
-    <Fact path="/members/*/isFullTimeStudent">
-      <Name>Is full-time student</Name>
-      <Description>Whether this member has a school schedule equivalent to a full-time curriculum as defined by the institution of higher education the person is attending (10 CCR 2506-1, 4.000.1)</Description>
-      <Writable><Boolean /></Writable>
+    <Fact path="/studentEnrollmentStatusOptions">
+      <Name>Student enrollment status options</Name>
+      <Description>Options describing a member's enrollment status in an institution of higher education — an institution that normally requires a high school diploma or equivalency certificate for a student to enroll, such as a college, university, or vocational or technical school: full time (a school schedule equivalent to a full-time curriculum as defined by the institution of higher education the person is attending), at least half time but less than full time, or less than half time / not enrolled (10 CCR 2506-1, 4.000.1).</Description>
+      <Derived>
+        <EnumOptions>
+          <String>FullTime</String>
+          <String>HalfTime</String>
+          <String>LessThanHalfTimeOrNotEnrolled</String>
+        </EnumOptions>
+      </Derived>
     </Fact>
 
-    <Fact path="/members/*/isEnrolledInInstitutionOfHigherEducation">
-      <Name>Enrolled in institution of higher education</Name>
-      <Description>Whether this member is enrolled in an institution that normally requires a high school diploma or equivalency certificate for a student to enroll, such as a college, university, or vocational or technical school (10 CCR 2506-1, 4.000.1)</Description>
-      <Writable><Boolean /></Writable>
+    <Fact path="/members/*/studentEnrollmentStatus">
+      <Name>Student enrollment status</Name>
+      <Description>This member's enrollment status in an institution of higher education — an institution that normally requires a high school diploma or equivalency certificate for a student to enroll, such as a college, university, or vocational or technical school: full time (a school schedule equivalent to a full-time curriculum as defined by the institution of higher education the person is attending), at least half time but less than full time, or less than half time / not enrolled (10 CCR 2506-1, 4.000.1).</Description>
+      <Writable><Enum optionsPath="/studentEnrollmentStatusOptions" /></Writable>
     </Fact>
 
     <Fact path="/members/*/isEnrolledInPostHighSchoolEducation">
@@ -2083,20 +2397,361 @@
 
     <Fact path="/members/*/isSponsoredNonCitizen">
       <Name>Is sponsored non-citizen</Name>
-      <Description>Whether this member is a non-citizen lawfully admitted for permanent residence into the United States who has been sponsored by an individual for entry into the country (10 CCR 2506-1, 4.000.1)</Description>
-      <Writable><Boolean /></Writable>
+      <Description>Whether this member is a non-citizen lawfully admitted for permanent residence into the United States who has been sponsored by an individual for entry into the country, derived from whether /members/*/sponsorId is set on this member (10 CCR 2506-1, 4.000.1).</Description>
+      <Derived>
+        <IsComplete><Dependency path="../sponsorId" /></IsComplete>
+      </Derived>
+    </Fact>
+
+    <Fact path="/sponsorEarnedIncomeDeductionRate">
+      <Name>Sponsor earned income deduction rate</Name>
+      <Description>The fraction of the sponsor and sponsor's spouse's earned income subtracted from their combined gross income when deeming sponsor income to a sponsored non-citizen. Twenty percent (20%) per 10 CCR 2506-1, 4.000.1, D, 2, a.</Description>
+      <Derived><Rational>1/5</Rational></Derived>
+    </Fact>
+
+    <Fact path="/members/*/sponsorAndSpouseGrossIncome">
+      <Name>Sponsor and spouse gross income</Name>
+      <Description>The combined gross income of this sponsored non-citizen's sponsor and the sponsor's spouse, used in sponsor income deeming (10 CCR 2506-1, 4.000.1, D). The spouse's income is counted even if the sponsor and spouse were married after the signing of the affidavit of support.</Description>
+      <Derived>
+        <Switch>
+          <Case>
+            <When>
+              <All>
+                <IsComplete><Dependency path="../sponsorId" /></IsComplete>
+                <IsComplete><Dependency path="../sponsorId/spouseId" /></IsComplete>
+              </All>
+            </When>
+            <Then>
+              <Add>
+                <Dependency path="../sponsorId/grossIncome" />
+                <Dependency path="../sponsorId/spouseId/grossIncome" />
+              </Add>
+            </Then>
+          </Case>
+          <Case>
+            <When><IsComplete><Dependency path="../sponsorId" /></IsComplete></When>
+            <Then><Dependency path="../sponsorId/grossIncome" /></Then>
+          </Case>
+        </Switch>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/sponsorAndSpouseNonExemptEarnedIncome">
+      <Name>Sponsor and spouse non-exempt earned income</Name>
+      <Description>The combined non-exempt earned income of this sponsored non-citizen's sponsor and the sponsor's spouse, used in the twenty percent (20%) earned-income reduction in sponsor income deeming (10 CCR 2506-1, 4.000.1, D, 2, a).</Description>
+      <Derived>
+        <Switch>
+          <Case>
+            <When>
+              <All>
+                <IsComplete><Dependency path="../sponsorId" /></IsComplete>
+                <IsComplete><Dependency path="../sponsorId/spouseId" /></IsComplete>
+              </All>
+            </When>
+            <Then>
+              <Add>
+                <Dependency path="../sponsorId/nonExemptEarnedIncome" />
+                <Dependency path="../sponsorId/spouseId/nonExemptEarnedIncome" />
+              </Add>
+            </Then>
+          </Case>
+          <Case>
+            <When><IsComplete><Dependency path="../sponsorId" /></IsComplete></When>
+            <Then><Dependency path="../sponsorId/nonExemptEarnedIncome" /></Then>
+          </Case>
+        </Switch>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/sponsorAndSpouseDependentCount">
+      <Name>Sponsor and spouse dependent count</Name>
+      <Description>The number of other people who are claimed or could be claimed for federal income tax purposes as a dependent by this sponsored non-citizen's sponsor or the sponsor's spouse, used to size the sponsor's tax household in sponsor income deeming (10 CCR 2506-1, 4.000.1, D, 2, b).</Description>
+      <Writable><Int /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/sponsorHouseholdSize">
+      <Name>Sponsor household size</Name>
+      <Description>The size of this sponsored non-citizen's sponsor's tax household, equal to one (the sponsor) plus one if the sponsor has a spouse plus the number of other people claimed or who could be claimed as a dependent for federal income tax purposes by the sponsor or the sponsor's spouse (10 CCR 2506-1, 4.000.1, D, 2, b).</Description>
+      <Derived>
+        <Switch>
+          <Case>
+            <When>
+              <All>
+                <IsComplete><Dependency path="../sponsorId" /></IsComplete>
+                <IsComplete><Dependency path="../sponsorId/spouseId" /></IsComplete>
+              </All>
+            </When>
+            <Then>
+              <Add>
+                <Int>2</Int>
+                <Dependency path="../sponsorAndSpouseDependentCount" />
+              </Add>
+            </Then>
+          </Case>
+          <Case>
+            <When><IsComplete><Dependency path="../sponsorId" /></IsComplete></When>
+            <Then>
+              <Add>
+                <Int>1</Int>
+                <Dependency path="../sponsorAndSpouseDependentCount" />
+              </Add>
+            </Then>
+          </Case>
+        </Switch>
+      </Derived>
+    </Fact>
+
+    <!-- TODO: derive /members/*/sponsorHouseholdFpl from a per-size FPL
+         schedule keyed off ../sponsorHouseholdSize (mirroring the
+         /maxAllotment per-size lookup). Currently a writable placeholder;
+         revisit when the size-indexed FPL numbers are wired up. -->
+    <Fact path="/members/*/sponsorHouseholdFpl">
+      <Name>Sponsor household federal poverty level</Name>
+      <Description>The federal poverty level for a household equal in size to ../sponsorHouseholdSize (this sponsored non-citizen's sponsor's tax household), used in computing the sponsor gross income eligibility limit (10 CCR 2506-1, 4.000.1, D, 2, b). Placeholder writable until the per-size FPL schedule is wired up.</Description>
+      <Writable><Dollar /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/sponsorGrossIncomeEligibilityLimit">
+      <Name>Sponsor gross income eligibility limit</Name>
+      <Description>The SNAP monthly gross income eligibility limit for a household equal in size to this sponsored non-citizen's sponsor, the sponsor's spouse, and any other person who is claimed or could be claimed by the sponsor or the sponsor's spouse for federal income tax purposes as a dependent, subtracted from the combined sponsor and spouse gross income (after the twenty percent earned-income reduction) in sponsor income deeming (10 CCR 2506-1, 4.000.1, D, 2, b). One hundred thirty percent (130%) of the FPL for the sponsor's tax household size.</Description>
+      <Derived>
+        <Multiply>
+          <Dependency path="../sponsorHouseholdFpl" />
+          <Dependency path="/grossIncomeTestRate" />
+        </Multiply>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/sponsorAndSpouseDeemedIncome">
+      <Name>Sponsor and spouse deemed income</Name>
+      <Description>The combined monthly income of this sponsored non-citizen's sponsor and the sponsor's spouse after the two policy deductions in sponsor income deeming: their combined gross income reduced by twenty percent (20%) of their combined earned income (10 CCR 2506-1, 4.000.1, D, 2, a) and by the SNAP monthly gross income eligibility limit for the sponsor's tax household (10 CCR 2506-1, 4.000.1, D, 2, b). This is the per-sponsor amount, before any division among multiple sponsored non-citizens.</Description>
+      <Derived>
+        <Subtract>
+          <Minuend><Dependency path="../sponsorAndSpouseGrossIncome" /></Minuend>
+          <Subtrahends>
+            <Multiply>
+              <Dependency path="/sponsorEarnedIncomeDeductionRate" />
+              <Dependency path="../sponsorAndSpouseNonExemptEarnedIncome" />
+            </Multiply>
+            <Dependency path="../sponsorGrossIncomeEligibilityLimit" />
+          </Subtrahends>
+        </Subtract>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/sponsoredNonCitizenCountInHousehold">
+      <Name>Sponsored non-citizen count in household</Name>
+      <Description>The number of sponsored non-citizens this member sponsors who are themselves members of this SNAP household, derived as the count of /members whose sponsorId references this member (10 CCR 2506-1, 4.000.1, D, 2, c).</Description>
+      <Derived>
+        <CollectionSize>
+          <Filter path="/members">
+            <Equal>
+              <Left><Dependency path="sponsorId" /></Left>
+              <Right><Dependency path="^" /></Right>
+            </Equal>
+          </Filter>
+        </CollectionSize>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/sponsoredNonCitizenCountOutsideHousehold">
+      <Name>Sponsored non-citizen count outside household</Name>
+      <Description>The number of sponsored non-citizens this member sponsors who are not members of this SNAP household, as demonstrated by a sponsored non-citizen in this household to the local office's satisfaction (10 CCR 2506-1, 4.000.1, D, 2, c).</Description>
+      <Writable><Int /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/sponsoredNonCitizenCount">
+      <Name>Sponsored non-citizen count</Name>
+      <Description>The total number of sponsored non-citizens this member sponsors, across all households — the sum of the in-household and outside-household counts. Used to divide the deemed sponsor income among the sponsored non-citizens when the sponsor has sponsored more than one (10 CCR 2506-1, 4.000.1, D, 2, c).</Description>
+      <Derived>
+        <Add>
+          <Dependency path="../sponsoredNonCitizenCountInHousehold" />
+          <Dependency path="../sponsoredNonCitizenCountOutsideHousehold" />
+        </Add>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/deemedSponsorIncome">
+      <Name>Deemed sponsor income</Name>
+      <Description>The monthly sponsor income deemed to this sponsored non-citizen as unearned income, computed as the sponsor and spouse's deemed income (after the 20% earned-income reduction and the sponsor's tax-household gross income limit) divided among all non-citizens the sponsor sponsors (10 CCR 2506-1, 4.000.1, D, 2, c). Zero for members without a sponsor so the value can be added into /members/*/unearnedIncome without making it incomplete for non-sponsored members.</Description>
+      <Derived>
+        <Switch>
+          <Case>
+            <When><IsComplete><Dependency path="../sponsorId" /></IsComplete></When>
+            <Then>
+              <Divide>
+                <Dividend><Dependency path="../sponsorAndSpouseDeemedIncome" /></Dividend>
+                <Divisors><Dependency path="../sponsorId/sponsoredNonCitizenCount" /></Divisors>
+              </Divide>
+            </Then>
+          </Case>
+          <Case>
+            <When><True /></When>
+            <Then><Dollar>0</Dollar></Then>
+          </Case>
+        </Switch>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/actualMoneyPaidBySponsor">
+      <Name>Actual money paid by sponsor</Name>
+      <Description>The actual monthly money paid to this sponsored non-citizen by the sponsor or the sponsor's spouse, derived as the sum of monthlyAmount across /incomes entries belonging to this member with type SponsorPayments. Used to determine whether any excess over the deemed sponsor income must be added as additional income to the non-citizen (10 CCR 2506-1, 4.000.1, D, 4).</Description>
+      <Derived>
+        <CollectionSum>
+          <Switch>
+            <Case>
+              <When>
+                <All>
+                  <Equal>
+                    <Left><Dependency path="/incomes/*/memberId" /></Left>
+                    <Right><Dependency path=".." /></Right>
+                  </Equal>
+                  <Equal>
+                    <Left><Dependency path="/incomes/*/type" /></Left>
+                    <Right><Enum optionsPath="/incomeSourceOptions">SponsorPayments</Enum></Right>
+                  </Equal>
+                </All>
+              </When>
+              <Then><Dependency path="/incomes/*/monthlyAmount" /></Then>
+            </Case>
+            <Case>
+              <When><True /></When>
+              <Then><Dollar>0</Dollar></Then>
+            </Case>
+          </Switch>
+        </CollectionSum>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/effectiveDeemedSponsorIncome">
+      <Name>Effective deemed sponsor income</Name>
+      <Description>The deemed sponsor income share applied to this sponsored non-citizen for SNAP, zeroed when the sponsor income and resource deeming provisions do not apply per 10 CCR 2506-1, 4.000.1, E (see /members/*/sponsorIncomeAndResourcesDoNotApply). Otherwise equal to /members/*/deemedSponsorIncome.</Description>
+      <Derived>
+        <Switch>
+          <Case>
+            <When><Dependency path="../sponsorIncomeAndResourcesDoNotApply" /></When>
+            <Then><Dollar>0</Dollar></Then>
+          </Case>
+          <Case>
+            <When><True /></When>
+            <Then><Dependency path="../deemedSponsorIncome" /></Then>
+          </Case>
+        </Switch>
+      </Derived>
     </Fact>
 
     <Fact path="/members/*/sponsorIncome">
       <Name>Sponsor income</Name>
-      <Description>Income and contributions provided by the sponsor and other sources to this sponsored non-citizen (10 CCR 2506-1, 4.000.1)</Description>
-      <Writable><Dollar /></Writable>
+      <Description>The monthly sponsor income considered for this sponsored non-citizen, equal to the greater of the effective deemed sponsor income share (zeroed when the 4.000.1, E exemptions apply) and the actual money paid by the sponsor or the sponsor's spouse. Per 10 CCR 2506-1, 4.000.1, D, 4, actual money paid is not considered as income unless it exceeds the amount already deemed; when it does, only the excess is added to the considered income, so the total considered equals the actual amount paid.</Description>
+      <Derived>
+        <Switch>
+          <Case>
+            <When>
+              <GreaterThan>
+                <Left><Dependency path="../actualMoneyPaidBySponsor" /></Left>
+                <Right><Dependency path="../effectiveDeemedSponsorIncome" /></Right>
+              </GreaterThan>
+            </When>
+            <Then><Dependency path="../actualMoneyPaidBySponsor" /></Then>
+          </Case>
+          <Case>
+            <When><True /></When>
+            <Then><Dependency path="../effectiveDeemedSponsorIncome" /></Then>
+          </Case>
+        </Switch>
+      </Derived>
+    </Fact>
+
+    <Fact path="/sponsorResourceDeduction">
+      <Name>Sponsor resource deduction</Name>
+      <Description>The flat dollar amount subtracted from the combined total resources of a sponsored non-citizen's sponsor and the sponsor's spouse when deeming sponsor resources to the non-citizen. One thousand five hundred dollars ($1,500) per 10 CCR 2506-1, 4.000.1, D, 6.</Description>
+      <Derived><Dollar>1500</Dollar></Derived>
+    </Fact>
+
+    <Fact path="/members/*/sponsorAndSpouseResources">
+      <Name>Sponsor and spouse resources</Name>
+      <Description>The combined total resources (liquid and non-liquid) of this sponsored non-citizen's sponsor and the sponsor's spouse, used in sponsor resource deeming (10 CCR 2506-1, 4.000.1, D, 6).</Description>
+      <Derived>
+        <Switch>
+          <Case>
+            <When>
+              <All>
+                <IsComplete><Dependency path="../sponsorId" /></IsComplete>
+                <IsComplete><Dependency path="../sponsorId/spouseId" /></IsComplete>
+              </All>
+            </When>
+            <Then>
+              <Add>
+                <Dependency path="../sponsorId/resources" />
+                <Dependency path="../sponsorId/spouseId/resources" />
+              </Add>
+            </Then>
+          </Case>
+          <Case>
+            <When><IsComplete><Dependency path="../sponsorId" /></IsComplete></When>
+            <Then><Dependency path="../sponsorId/resources" /></Then>
+          </Case>
+        </Switch>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/sponsorResources">
+      <Name>Sponsor resources</Name>
+      <Description>The sponsor resources considered for this sponsored non-citizen, computed as the combined total resources of the sponsor and the sponsor's spouse reduced by one thousand five hundred dollars ($1,500) and divided among all non-citizens the sponsor sponsors (10 CCR 2506-1, 4.000.1, D, 6). Zero for members without a sponsor, and zero when the sponsor income and resource deeming provisions do not apply per 10 CCR 2506-1, 4.000.1, E (see /members/*/sponsorIncomeAndResourcesDoNotApply), so the value can be added into household resources without making it incomplete for non-sponsored members.</Description>
+      <Derived>
+        <Switch>
+          <Case>
+            <When><Dependency path="../sponsorIncomeAndResourcesDoNotApply" /></When>
+            <Then><Dollar>0</Dollar></Then>
+          </Case>
+          <Case>
+            <When><IsComplete><Dependency path="../sponsorId" /></IsComplete></When>
+            <Then>
+              <Divide>
+                <Dividend>
+                  <Subtract>
+                    <Minuend><Dependency path="../sponsorAndSpouseResources" /></Minuend>
+                    <Subtrahends>
+                      <Dependency path="/sponsorResourceDeduction" />
+                    </Subtrahends>
+                  </Subtract>
+                </Dividend>
+                <Divisors><Dependency path="../sponsorId/sponsoredNonCitizenCount" /></Divisors>
+              </Divide>
+            </Then>
+          </Case>
+          <Case>
+            <When><True /></When>
+            <Then><Dollar>0</Dollar></Then>
+          </Case>
+        </Switch>
+      </Derived>
     </Fact>
 
     <Fact path="/members/*/sponsorId">
       <Name>Sponsor</Name>
       <Description>The household member who executed an affidavit of support (USCIS form I-864A) or another form deemed legally binding by the Department of Homeland Security on behalf of this non-citizen as a condition of the non-citizen's entry or admission into the United States as a permanent resident (10 CCR 2506-1, 4.000.1)</Description>
       <Writable><CollectionItem collection="/members" /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/isSponsor">
+      <Name>Is sponsor</Name>
+      <Description>Whether this member is a sponsor — a person who executed an affidavit(s) of support (INS Form I-864 or I-864A) or another form deemed legally binding by the Department of Homeland Security on behalf of a non-citizen as a condition of the non-citizen's entry or admission to the United States as a permanent resident (10 CCR 2506-1, 4.000.1)</Description>
+      <Derived>
+        <GreaterThan>
+          <Left>
+            <CollectionSize>
+              <Filter path="/members">
+                <Equal>
+                  <Left><Dependency path="sponsorId" /></Left>
+                  <Right><Dependency path="^" /></Right>
+                </Equal>
+              </Filter>
+            </CollectionSize>
+          </Left>
+          <Right><Int>0</Int></Right>
+        </GreaterThan>
+      </Derived>
     </Fact>
 
     <!-- TODO: FPL is published per household size; this placeholder ignores
@@ -2125,22 +2780,68 @@
       </Derived>
     </Fact>
 
-    <!-- TODO: per 10 CCR 2506-1, 4.000.1, indigence is determined using sponsor
-         income plus the non-citizen's own income vs. 130% FPL. We currently
-         compare only sponsor income to avoid a circular dependency, since
-         isIndigentNonCitizen will eventually feed back into gross income via
-         sponsor-income deeming. Revisit once deeming logic lands. -->
     <Fact path="/members/*/isIndigentNonCitizen">
       <Name>Is indigent non-citizen</Name>
-      <Description>A sponsored non-citizen who, after considering all income and contributions provided by the sponsor and other sources in conjunction with the non-citizen's own income, is unable to obtain food and shelter amounting to one hundred thirty percent (130%) of the federal poverty level for the non-citizen's household size (10 CCR 2506-1, 4.000.1)</Description>
+      <Description>A sponsored non-citizen who, after considering all income and contributions provided by the sponsor and other sources in conjunction with the non-citizen's own income, is unable to obtain food and shelter amounting to one hundred thirty percent (130%) of the federal poverty level for the non-citizen's household size (10 CCR 2506-1, 4.000.1). Determined by comparing /grossIncomeWithSponsorIncome (the SNAP household's combined gross income with each sponsored non-citizen's sponsor income rolled in) to /indigentNonCitizenFplThreshold.</Description>
       <Derived>
         <All>
           <Dependency path="../isSponsoredNonCitizen" />
           <LessThan>
-            <Left><Dependency path="../sponsorIncome" /></Left>
+            <Left><Dependency path="/grossIncomeWithSponsorIncome" /></Left>
             <Right><Dependency path="/indigentNonCitizenFplThreshold" /></Right>
           </LessThan>
         </All>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/isSponsoredByOrganization">
+      <Name>Is sponsored by organization</Name>
+      <Description>Whether this non-citizen is sponsored by an organization or group as opposed to an individual, which exempts the non-citizen from sponsor income and resource deeming (10 CCR 2506-1, 4.000.1, E, 2).</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/isNotRequiredToHaveSponsorUnderIna">
+      <Name>Is not required to have a sponsor under the INA</Name>
+      <Description>Whether this non-citizen falls into a class that is not required to have a sponsor under the Immigration and Nationality Act, which exempts them from SNAP sponsor income and resource deeming (10 CCR 2506-1, 4.000.1, E, 3). Covers refugees (INA § 207), asylees (INA § 208), parolees (INA § 212), Cuban or Haitian entrants (Refugee Education Assistance Act), individuals whose deportation or removal is withheld (INA §§ 243, 241), victims of severe trafficking (Trafficking Victims Protection Act T-visas), Iraqi/Afghan special immigrants (SIV), conditional entrants (INA § 203, pre-April 1, 1980), American Indians born abroad with treaty border-crossing rights, Hmong or Highland Laotian Tribal members, and Amerasian immigrants.</Description>
+      <Derived>
+        <Any>
+          <Dependency path="../isRefugee" />
+          <Dependency path="../isAsylee" />
+          <Dependency path="../isParolee" />
+          <Dependency path="../isCubanOrHaitianEntrant" />
+          <Dependency path="../hasWithholdingOfDeportationOrRemoval" />
+          <Dependency path="../isVictimOfTrafficking" />
+          <Dependency path="../isIraqiOrAfghanSpecialImmigrant" />
+          <Dependency path="../isConditionalEntrant" />
+          <Dependency path="../isAmericanIndianBornAbroad" />
+          <Dependency path="../isHmongOrHighlandLaotianTribalMember" />
+          <Dependency path="../isAmerasian" />
+        </Any>
+      </Derived>
+    </Fact>
+
+    <!-- TODO: condition 5 covers a non-citizen whose battered status is
+         relational (battered spouse, parent of a battered child, child of
+         a battered parent or non-citizen). This currently exempts only
+         the host when they are themselves /members/*/isBatteredImmigrant;
+         extend to walk /parentChildRelationships and spouseId once those
+         relational battered flags are modeled. -->
+    <Fact path="/members/*/sponsorIncomeAndResourcesDoNotApply">
+      <Name>Sponsor income and resources do not apply</Name>
+      <Description>Whether the SNAP sponsor income and resource deeming provisions do not apply to this sponsored non-citizen (10 CCR 2506-1, 4.000.1, E). True when any of the modeled statutory exemptions holds: 1) the non-citizen is a member of the sponsor's SNAP household, 2) sponsored by an organization or group rather than an individual, 3) not required to have a sponsor under the INA (see ../isNotRequiredToHaveSponsorUnderIna), 4) is an indigent non-citizen, 5) is a battered non-citizen, 6) had been sponsored but has since obtained citizenship, or 8) has worked or can receive credit for forty (40) qualifying work quarters. Condition 7 (sponsor has died) is not yet modeled.</Description>
+      <Derived>
+        <Any>
+          <All>
+            <IsComplete><Dependency path="../sponsorId" /></IsComplete>
+            <Dependency path="../sponsorId/isPartOfHousehold" />
+          </All>
+          <Dependency path="../isSponsoredByOrganization" />
+          <Dependency path="../isNotRequiredToHaveSponsorUnderIna" />
+          <Dependency path="../isIndigentNonCitizen" />
+          <Dependency path="../isBatteredImmigrant" />
+          <Dependency path="../isCitizen" />
+          <Dependency path="../hasFortyQualifyingWorkQuarters" />
+        </Any>
       </Derived>
     </Fact>
 
@@ -2343,6 +3044,16 @@
       </Derived>
     </Fact>
 
+    <Fact path="/grossIncomeWithSponsorIncome">
+      <Name>Gross income (including sponsor income)</Name>
+      <Description>The SNAP household's combined gross income with each sponsored non-citizen's /members/*/sponsorIncome rolled in, used to assess indigent non-citizen status against one hundred thirty percent (130%) of the federal poverty level (10 CCR 2506-1, 4.000.1, E, 4).</Description>
+      <Derived>
+        <CollectionSum>
+          <Dependency path="/members/*/grossIncomeWithSponsorIncome" />
+        </CollectionSum>
+      </Derived>
+    </Fact>
+
     <Fact path="/expeditedLiquidResourcesThreshold">
       <Name>Expedited service liquid resources threshold</Name>
       <Description>The maximum liquid resources a household may have (one hundred dollars, $100) to qualify for expedited service under criteria 1 and 2 (10 CCR 2506-1, 4.000.1)</Description>
@@ -2424,6 +3135,7 @@
           <Dependency path="../disqualifiedForFelonyNonCompliance" />
           <Dependency path="../disqualifiedForParoleOrProbationViolation" />
           <Dependency path="../disqualifiedForBoardingHouseOrInstitutionResidence" />
+          <Dependency path="../isIneligibleStudent" />
         </Any>
       </Derived>
     </Fact>

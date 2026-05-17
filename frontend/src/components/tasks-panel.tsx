@@ -15,6 +15,7 @@ import {
 import { getReferences } from '@/lib/api/rules-api'
 import { usePolicyNavigation } from '@/lib/use-policy-navigation'
 import { useNodeNavigation } from '@/lib/use-node-navigation'
+import { useWorkspaceActions } from '@/lib/use-workspace-actions'
 import type { PolicyReferences } from '@/lib/model'
 import { Button } from './ui/button'
 import { NodeAutocompleteInput } from './node-autocomplete-input'
@@ -417,8 +418,8 @@ function IterationView({
   stopDisabled?: boolean
   muted?: boolean
 }) {
-  const { setWorkspaceItems, setSelectedNodes, setShowChildren } =
-    useMainContext()
+  const { setShowChildren } = useMainContext()
+  const { createWorkspace } = useWorkspaceActions()
   const [expandedSources, setExpandedSources] = useState<Set<string>>(new Set())
   const toggleSource = (id: string) =>
     setExpandedSources((prev) => {
@@ -591,11 +592,11 @@ function IterationView({
               className="h-5 px-1.5 text-[10px] gap-1"
               onClick={() => {
                 const ids = iteration.modifiedPaths
-                // Clear the workspace and replace it with exactly the
-                // paths the agent reported it touched — review focus is
-                // a clean slate, not a layer on top of prior work.
-                setWorkspaceItems(ids)
-                setSelectedNodes(ids)
+                // Review opens a fresh workspace so the current workspace
+                // stays untouched and the agent's changes get their own
+                // self-contained context: items + selected chips both
+                // seeded to the modified-paths set.
+                createWorkspace({ items: ids, selectedNodes: ids })
                 setShowChildren((prev) => {
                   const next = { ...prev }
                   for (const id of ids) next[id] = true
@@ -605,7 +606,7 @@ function IterationView({
                 // they can start reviewing without an extra click.
                 if (ids[0]) onOpenNode(ids[0])
               }}
-              title="Replace the workspace with modified nodes, select them, expand their children, and open the first one"
+              title="Open the modified nodes in a new workspace, select them, expand their children, and open the first one"
             >
               Review
             </Button>

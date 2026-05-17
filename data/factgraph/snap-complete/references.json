@@ -6735,9 +6735,677 @@
           "h": 0.031425502531839844
         }
       ]
+    },
+    {
+      "id": "10-ccr-2506-1__mp75e82t-974j",
+      "documentId": "10-ccr-2506-1",
+      "text": "1. Sponsored non-citizens are those non-citizens lawfully admitted for permanent residence into the United States who have been sponsored by an individual for entry into the country.",
+      "page": 60,
+      "rects": [
+        {
+          "x": 0.17073883197362655,
+          "y": 0.24099124518323847,
+          "w": 0.7144198468504184,
+          "h": 0.057785015236283294
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mp75elf0-vhr4",
+      "documentId": "10-ccr-2506-1",
+      "text": "2. A sponsor is a person who executed an affidavit(s) of support (INS Form I-864 or I-864A) or another form deemed legally binding by the Department of Homeland Security on behalf of a non-citizen as a condition of the non-citizen's entry or admission to the United States as a permanent resident. Date of entry or admission means the date established by the Immigration and Naturalization Service (INS) as the date the sponsored non- citizen was admitted for permanent residence.",
+      "page": 60,
+      "rects": [
+        {
+          "x": 0.1640620109750245,
+          "y": 0.3049675120519807,
+          "w": 0.7210966678490204,
+          "h": 0.09906002611934284
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778863673467",
+      "documentId": "10-ccr-2506-1",
+      "text": "B. Definition of a Sponsor",
+      "page": 60,
+      "rects": [
+        {
+          "x": 0.10664135038704697,
+          "y": 0.21622623865340276,
+          "w": 0.2457070127485551,
+          "h": 0.022701255985682733
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__mp75id2l-9jfn",
+      "documentId": "10-ccr-2506-1",
+      "text": "A. The provisions of this section apply only to those non-citizens for whom a sponsor has executed an affidavit of support (INS Form I-864 or I-864A) on behalf of the non-citizen pursuant to Section 213A of the Immigration and Nationality Act (INA) on or after December 19, 1997. Prior to this time, affidavits of supports, known as I-134s, were not legally binding; therefore, the sponsor could not be legally compelled to support the non-citizen based on an affidavit of support signed prior to December 19, 1997.",
+      "page": 60,
+      "rects": [
+        {
+          "x": 0.1119828071859286,
+          "y": 0.09136933073214776,
+          "w": 0.7758466000375571,
+          "h": 0.11969753156087257
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778867456308",
+      "documentId": "10-ccr-2506-1",
+      "text": "60",
+      "page": 60,
+      "rects": [
+        {
+          "x": 0.10664135038704697,
+          "y": 0.9385389291069443,
+          "w": 0.7878648778350408,
+          "h": 0.041275010883059404
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__mp77riyy-4e3q",
+      "documentId": "10-ccr-2506-1",
+      "text": "C. Only when a sponsored non-citizen is an eligible non-citizen will the local office consider the income and resources of the sponsor and sponsor's spouse available to the household. For purposes of determining eligibility and benefit level of a household of which an eligible sponsored non-citizen is a member, the local office shall deem the income and resources of the sponsor and the sponsor's spouse, if they have executed USCIS Form I-864 or I-864A, as the unearned income and resources of the sponsored non-citizen.",
+      "page": 60,
+      "rects": [
+        {
+          "x": 0.10797671458676737,
+          "y": 0.407123163987553,
+          "w": 0.7825234210361591,
+          "h": 0.1021556519355723
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778867667493",
+      "documentId": "10-ccr-2506-1",
+      "text": "CODE OF COLORADO REGULATIONS 10 CCR 2506-1 Supplemental Nutrition Assistance Program (SNAP)",
+      "page": 61,
+      "rects": [
+        {
+          "x": 0.10129989358816534,
+          "y": 0.03863083049836351,
+          "w": 0.7958770630333631,
+          "h": 0.041275010883059515
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778867901154",
+      "documentId": "10-ccr-2506-1",
+      "text": "5. If the non-citizen changes sponsors during the certification period, a change shall be processed to consider the new sponsor's income and resources toward the non-citizen as soon as possible after the information is verified. The previous sponsor's income and resources shall be used until such determination; however, should any present sponsor become deceased, that sponsor's income and resources shall not be attributed to the non-citizen.",
+      "page": 61,
+      "rects": [
+        {
+          "x": 0.16673273937446534,
+          "y": 0.4090740531738226,
+          "w": 0.7050722974523755,
+          "h": 0.0939006497589604
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__mp78kq9o-criu",
+      "documentId": "10-ccr-2506-1",
+      "text": "D. Calculating Sponsor Income 1. The total gross income and resources of a sponsor and sponsor's spouse shall be considered as unearned income and resources of a sponsored non-citizen for a period until the person’s citizenship is obtained; or until the non-citizen has worked or can receive credit for forty (40) work quarters under Title II of the Social Security Act; or the sponsor dies. The spouse's income and resources shall be counted even if the sponsor and spouse were married after the signing of the agreement.",
+      "page": 60,
+      "rects": [
+        {
+          "x": 0.1119828071859286,
+          "y": 0.5113425664672783,
+          "w": 0.7651636864397939,
+          "h": 0.15581316608354967
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mp7998ow-8xk2",
+      "documentId": "10-ccr-2506-1",
+      "text": "2. The monthly income of the sponsor and the sponsor's spouse to be considered toward the non-citizen shall be the total monthly earned and unearned income of the sponsor and spouse at the time the household containing the sponsored non-citizen member applies for or is recertified for Program participation and shall be calculated as follows: a. Reduced by an amount equal to twenty percent (20%) of the earned income of the sponsor and the sponsor's spouse; and, b. An amount equal to the SNAP monthly gross income eligibility limit for a household equal in size to the sponsor, the sponsor's spouse, and any other person who is claimed or could be claimed by the sponsor or the sponsor's spouse as a dependent for federal income tax purposes; and,",
+      "page": 60,
+      "rects": [
+        {
+          "x": 0.16806810357418575,
+          "y": 0.6723151089112104,
+          "w": 0.7050722974523754,
+          "h": 0.1878012995179208
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mp799pyo-8m4n",
+      "documentId": "10-ccr-2506-1",
+      "text": "c. If a sponsored non-citizen can demonstrate to the local office's satisfaction that his or her sponsor is the sponsor of other non-citizens, the local office shall divide the deemed income and resources of the sponsor and the sponsor's spouse by the number of such sponsored non-citizens.",
+      "page": 61,
+      "rects": [
+        {
+          "x": 0.1800863813716694,
+          "y": 0.08712896828595844,
+          "w": 0.7077430258518163,
+          "h": 0.06810376795704819
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mp7euzay-nff0",
+      "documentId": "10-ccr-2506-1",
+      "text": "3. If the sponsored non-citizen has already reported gross income information on his/her sponsor in compliance with the sponsored non-citizen rules of another state assistance program, and the local office is aware of the amounts that income amount shall be used for SNAP deeming purposes. However, the local office shall limit allowable reductions to the total gross income of the sponsor and the sponsor's spouse prior to attributing an income amount to the non-citizen. The only reduction will be twenty percent (20%) earned income amount for that portion of the income determined as earned income of the sponsor and the sponsor's spouse and an amount equal to the SNAP monthly gross income eligibility limit for a household equal in size to the sponsor, the sponsor's spouse, and any other person who is claimed or could be claimed by the sponsor or the sponsor's spouse as a dependent for federal income tax purposes.",
+      "page": 61,
+      "rects": [
+        {
+          "x": 0.16385477638777307,
+          "y": 0.15922427682438325,
+          "w": 0.7271892574314243,
+          "h": 0.17028069708660368
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mp7f1pl0-tuvz",
+      "documentId": "10-ccr-2506-1",
+      "text": "4. Actual money paid to the non-citizen by the sponsor or the sponsor's spouse shall not be considered as income to the non-citizen unless the amount paid exceeds the amount already considered as income as above. Only the portion that exceeds the income already considered shall be added to that income.",
+      "page": 61,
+      "rects": [
+        {
+          "x": 0.16997589808332378,
+          "y": 0.33423499327450373,
+          "w": 0.7137227897012127,
+          "h": 0.06622027108923478
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mp7fsg34-b9mu",
+      "documentId": "10-ccr-2506-1",
+      "text": "6. Total resources of the sponsor and the sponsor's spouse shall be considered as resources to the non-citizen reduced by one thousand five hundred dollars ($1,500).",
+      "page": 61,
+      "rects": [
+        {
+          "x": 0.16833950311033088,
+          "y": 0.5092968047302379,
+          "w": 0.6814486890814029,
+          "h": 0.038691222223860566
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778881208484",
+      "documentId": "10-ccr-2506-1",
+      "text": "61",
+      "page": 61,
+      "rects": [
+        {
+          "x": 0.1093949218607701,
+          "y": 0.9445312390040677,
+          "w": 0.7880222942697899,
+          "h": 0.030626750552435578
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778881212874",
+      "documentId": "10-ccr-2506-1",
+      "text": "CODE OF COLORADO REGULATIONS 10 CCR 2506-1 Supplemental Nutrition Assistance Program (SNAP)",
+      "page": 62,
+      "rects": [
+        {
+          "x": 0.10123492768933737,
+          "y": 0.032808343537558585,
+          "w": 0.7985137153473462,
+          "h": 0.04684091260960746
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__mp8p664u-fvc1",
+      "documentId": "10-ccr-2506-1",
+      "text": "E. The counting of a sponsor’s income and resource provisions do not apply to a non-citizen who is: 1. A member of his or her sponsor's SNAP household; 2. Sponsored by an organization or group as opposed to an individual; 3. Not required to have a sponsor under the Immigration and Nationality Act (INA), such as a refugee, a parolee, an asylee, or a Cuban or Haitian entrant; 4. Considered as an “indigent” non-citizen; An indigent non-citizen is a non-citizen who has been determined to be unable to obtain food and shelter which totals to an amount exceeding one hundred thirty percent (130%) of the federal poverty level, as defined in section 4.401.1. A non-citizen who is receiving in-kind benefits that exceed the gross income level for the household size shall not be considered indigent. The noncitizen's own income plus any cash, food, housing, or other assistance provided by other individuals, including the sponsor, will be counted in making this determination.",
+      "page": 61,
+      "rects": [
+        {
+          "x": 0.10634362862955428,
+          "y": 0.5535928657177157,
+          "w": 0.7847604956537821,
+          "h": 0.28445663979877667
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mp8p6h46-vvp5",
+      "documentId": "10-ccr-2506-1",
+      "text": "For purposes of this provision, the sum of the eligible sponsored non-citizen household's own income, the cash contributions of the sponsor and others, and the value of any in- kind assistance from the sponsor and others, shall not exceed one hundred thirty percent (130%) of the poverty income guideline for the household's size. The local office shall determine the amount of income and other assistance provided in the month of application. If the non-citizen is below one hundred thirty percent (130%) of the federal poverty level, the only amount that the local office shall consider deemed to such a non- citizen will be the amount provided by the sponsor for a period beginning on the date of such determination and ending twelve (12) months after such date. Each determination is renewable for additional twelve (12) month periods. The local office shall notify the U.S. attorney general of each such determination, including the names of the sponsor and the sponsored non-citizen involved. 5. A child of a battered parent is exempt from the provision of sponsorship. A battered non- citizen spouse, non-citizen parent of a battered child, or child of a battered non-citizen will not have sponsor's income and resources counted during a twelve (12) month period after the local office determines that the battering is substantially connected to the need for benefits, and the battered individual does not live with the batterer. After twelve (12) months, the local office shall not deem the batterer's income and resources if the battery is recognized by a court or the INS and has a substantial connection to the need for benefits, and the non-citizen does not live with the batterer; 6. Had been sponsored but has since obtained citizenship; 7. A person whose sponsor has died; or, 8. Who has worked or can receive credit for a total of forty (40) work quarters under Title II of the Social Security Act.",
+      "page": 62,
+      "rects": [
+        {
+          "x": 0.10397632698353985,
+          "y": 0.08226147601897903,
+          "w": 0.7884760495653782,
+          "h": 0.42128880123477963
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mp8posbt-kr3x",
+      "documentId": "10-ccr-2506-1",
+      "text": "4. Considered as an “indigent” non-citizen; An indigent non-citizen is a non-citizen who has been determined to be unable to obtain food and shelter which totals to an amount exceeding one hundred thirty percent (130%) of the federal poverty level, as defined in section 4.401.1. A non-citizen who is receiving in-kind benefits that exceed the gross income level for the household size shall not be considered indigent. The noncitizen's own income plus any cash, food, housing, or other assistance provided by other individuals, including the sponsor, will be counted in making this determination.",
+      "page": 61,
+      "rects": [
+        {
+          "x": 0.1525060107268356,
+          "y": 0.6907906019550678,
+          "w": 0.7338635102644719,
+          "h": 0.13079517521294226
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mp8pps1x-yhn2",
+      "documentId": "10-ccr-2506-1",
+      "text": "For purposes of this provision, the sum of the eligible sponsored non-citizen household's own income, the cash contributions of the sponsor and others, and the value of any in- kind assistance from the sponsor and others, shall not exceed one hundred thirty percent (130%) of the poverty income guideline for the household's size. The local office shall determine the amount of income and other assistance provided in the month of application. If the non-citizen is below one hundred thirty percent (130%) of the federal poverty level, the only amount that the local office shall consider deemed to such a non- citizen will be the amount provided by the sponsor for a period beginning on the date of such determination and ending twelve (12) months after such date. Each determination is renewable for additional twelve (12) month periods. The local office shall notify the U.S. attorney general of each such determination, including the names of the sponsor and the sponsored non-citizen involved.",
+      "page": 62,
+      "rects": [
+        {
+          "x": 0.23181061586831883,
+          "y": 0.08957868861830445,
+          "w": 0.6648243018309599,
+          "h": 0.18091750986108732
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778958678471",
+      "documentId": "10-ccr-2506-1",
+      "text": "F. Verification Requirements The local office shall verify the following information at the time of initial application and recertification: 1. The income and resources of the non-citizen's sponsor and the sponsor's spouse (if the spouse is living with the sponsor) at the time of the non-citizen's application for SNAP. 2. The names (and alien registration numbers) of other non-citizens for whom the sponsor has signed an affidavit of support or similar agreement. 3. The number of dependents who are eligible to be claimed for federal income tax purposes by the sponsor and the sponsor's spouse. 4. The name, address, and phone number of the non-citizen's sponsor.",
+      "page": 62,
+      "rects": [
+        {
+          "x": 0.11462918439060477,
+          "y": 0.5121477162293488,
+          "w": 0.7658220824856667,
+          "h": 0.22774824215400447
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778958683408",
+      "documentId": "10-ccr-2506-1",
+      "text": "62",
+      "page": 62,
+      "rects": [
+        {
+          "x": 0.10160902533752543,
+          "y": 0.9484365174641285,
+          "w": 0.7942297022378398,
+          "h": 0.0283541988223861
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778958688443",
+      "documentId": "10-ccr-2506-1",
+      "text": "CODE OF COLORADO REGULATIONS 10 CCR 2506-1 Supplemental Nutrition Assistance Program (SNAP)",
+      "page": 63,
+      "rects": [
+        {
+          "x": 0.10160902533752543,
+          "y": 0.03624306865603384,
+          "w": 0.7873562049195488,
+          "h": 0.04079374606985652
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778958726574",
+      "documentId": "10-ccr-2506-1",
+      "text": "G. Awaiting Verification 1. Until the non-citizen provides information or verification necessary to determine eligibility, the sponsored non-citizen shall be ineligible. When such verification is provided, the local office shall act on the information as a reported change in household circumstances. The eligibility of any remaining household members shall be determined. The income and resources of the ineligible non-citizen (excluding the attributed income and resources of the non-citizen's sponsor and sponsor's spouse) shall be treated in the same manner as a disqualified member as set forth in Section 4.411.1 and considered available in determining the eligibility and benefit level of the remaining household members.",
+      "page": 62,
+      "rects": [
+        {
+          "x": 0.10989458109857592,
+          "y": 0.7472131709826788,
+          "w": 0.7752912890697243,
+          "h": 0.15914937403532836
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778958739302",
+      "documentId": "10-ccr-2506-1",
+      "text": "2. If the sponsored non-citizen refuses to cooperate in providing and/or verifying needed information, other adult members of the non-citizen's household shall be responsible for providing and/or verifying the information. If the information or verification is subsequently received, the local office shall act on the information as a reported change. If the same sponsor is responsible for the entire household, the entire household is ineligible until such time as the needed information is provided and/or verified. The local office shall assist the non-citizen in obtaining verification provided the household is cooperating with the local office.",
+      "page": 63,
+      "rects": [
+        {
+          "x": 0.171444423894951,
+          "y": 0.08654890527639628,
+          "w": 0.717292398742371,
+          "h": 0.1216486594637855
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778958764416",
+      "documentId": "10-ccr-2506-1",
+      "text": "H. Sponsored Non-Citizen’s Responsibility 1. During the period the sponsored non-citizen is subject to deeming, the eligible sponsored non-citizen shall be responsible for obtaining the cooperation of their sponsor, for providing the local office, at the time of application and/or recertification, the information and/or documentation necessary to calculate income and resources attributable to the non-citizen's household. The eligible sponsored non-citizen shall be responsible for providing the names (or other identifying factors) of other non-citizens for whom the non- citizen's sponsor has signed an agreement to support. The local office shall attribute the entire amount of income and resources to the eligible sponsored non-citizen until they provide the information required. 2. The local office will determine how many of such non-citizens are SNAP applicants or participants and initiate appropriate proration. The eligible sponsored non-citizen shall also be responsible for reporting the required information about the sponsor and sponsor's spouse should the non-citizen obtain a different sponsor during the certification period. The eligible sponsored non-citizen shall report changes in income should the sponsor or sponsor's spouse change or lose employment or become deceased during the certification period. The local office shall act on the information as a reported change in household circumstances as set forth in Section 4.604.",
+      "page": 63,
+      "rects": [
+        {
+          "x": 0.11226188274459034,
+          "y": 0.2210026867890013,
+          "w": 0.7741076382467172,
+          "h": 0.3009203681472589
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778963285110",
+      "documentId": "10-ccr-2506-1",
+      "text": "63",
+      "page": 63,
+      "rects": [
+        {
+          "x": 0.10925539318023661,
+          "y": 0.9468864750257348,
+          "w": 0.7902177154786758,
+          "h": 0.03146557684330209
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778963288959",
+      "documentId": "10-ccr-2506-1",
+      "text": "CODE OF COLORADO REGULATIONS 10 CCR 2506-1 Supplemental Nutrition Assistance Program (SNAP)",
+      "page": 64,
+      "rects": [
+        {
+          "x": 0.09653047022566856,
+          "y": 0.03243351206846221,
+          "w": 0.7965801769559598,
+          "h": 0.04523176671224668
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778963376904",
+      "documentId": "10-ccr-2506-1",
+      "text": "4.305.3 Reporting Undocumented Non-Citizens A. The local office shall immediately inform the local USCIS office whenever personnel responsible for the certification or recertification of households determine that any member of a household is ineligible to receive SNAP because the member is present in the United States in violation of immigration laws. B. In determining whether the member is present in the United States in violation of immigration laws, caution shall be exercised to ensure that the determination is not made merely on the non- citizen's inability or unwillingness to provide documentation of non-citizen status. When a person indicates an inability or unwillingness to provide documentation of non-citizen status, the local office shall not continue efforts to obtain documentation other than that necessary to obtain information on the income and resources to be made available to remaining members of the household. C. Because many non-citizens who are legally present in the United States are not eligible for SNAP, eligibility technicians are cautioned that a determination that a person is an ineligible non- citizen is not equivalent to a determination that a person is a non-citizen present in the United States in violation of immigration laws. D. When and if a SNAP eligibility technician is able, based on information that becomes available to him/her in the process of reviewing a household's eligibility for SNAP, to determine that a member or members of that household are in fact non-citizens present in the United States in violation of the immigration laws, the eligibility technician will report the determination to their supervisor. The report to USCIS, if made, shall be in writing.",
+      "page": 63,
+      "rects": [
+        {
+          "x": 0.11052788547569341,
+          "y": 0.5260343847465699,
+          "w": 0.7698578387513669,
+          "h": 0.3726704257378586
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778963419334",
+      "documentId": "10-ccr-2506-1",
+      "text": "This rule does not permit the reporting to USCIS on mere suspicion or prejudice. Firm evidence that a household is illegally in the U.S. would be required. A person known to be a non-citizen in the United States in violation of the Immigration and Nationality Act is only known to have such status when they are found in this country and are known to have a final order of deportation outstanding against them. An outstanding order of deportation is final when it is not subject to appeal because the relevant statutory appeal period of ten (10) days has expired or because there are no lawful grounds upon which an appeal may be based or because the available administrative and/or judicial appeals have been exhausted, and the order is not subject to review under the limited standards of reopening for consideration. E. The failure to report a non-citizen illegally present in the United States in violation of immigration laws to USCIS will not be considered a quality assurance error or assessed as an administrative deficiency.",
+      "page": 64,
+      "rects": [
+        {
+          "x": 0.09780296252112536,
+          "y": 0.08946487009694716,
+          "w": 0.7914902077741326,
+          "h": 0.19469325671793142
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__mp8uxz0m-2fie",
+      "documentId": "10-ccr-2506-1",
+      "text": "4.306 STUDENT ELIGIBILITY A. Any person who is age eighteen (18) through forty-nine (49) and enrolled at least half time in an institution of higher education shall not be eligible to participate in the SNAP unless the person meets one of the exemption criteria outlined at 4.306.1. B. The following individuals are not considered under student eligibility criteria: 1. Persons aged seventeen (17) or under; 2. Persons aged fifty (50) or over; 3. Persons enrolled less than half time; 4. Persons enrolled full time in schools and training programs that are not institutions of higher education; 5. Persons attending high school; 6. Persons participating in an on-the-job training program. On-the-job training is defined as training in an employment environment and does not include an internship, field work, or practical experience associated with a course of higher education. C. The enrollment status of a student shall begin on the first day of the school term of the institution of higher education. Once a student enrolls in an institution of higher education, such enrollment shall be deemed continuous through normal periods of class attendance, vacation, and recess unless the student graduates, is suspended or expelled, drops out or does not intend to register for the next normal school term (excluding summer session). It is possible for a student to enroll prior to the beginning of the school term. However, for eligibility purposes, enrollment starts when the student starts classes.",
+      "page": 64,
+      "rects": [
+        {
+          "x": 0.10518528370268158,
+          "y": 0.2855270933429254,
+          "w": 0.7787357649914383,
+          "h": 0.4520170345057941
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778967942373",
+      "documentId": "10-ccr-2506-1",
+      "text": "64",
+      "page": 64,
+      "rects": [
+        {
+          "x": 0.10837725058602517,
+          "y": 0.9449140566789137,
+          "w": 0.7799039084969493,
+          "h": 0.033709308599470744
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778967957983",
+      "documentId": "10-ccr-2506-1",
+      "text": "CODE OF COLORADO REGULATIONS 10 CCR 2506-1 Supplemental Nutrition Assistance Program (SNAP)",
+      "page": 65,
+      "rects": [
+        {
+          "x": 0.10624927266379611,
+          "y": 0.03864237815061278,
+          "w": 0.7862878422636365,
+          "h": 0.03864237815061278
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778967965512",
+      "documentId": "10-ccr-2506-1",
+      "text": "65",
+      "page": 65,
+      "rects": [
+        {
+          "x": 0.11369719539159781,
+          "y": 0.9471493538192749,
+          "w": 0.785223853302522,
+          "h": 0.031242773823899728
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1778967970435",
+      "documentId": "10-ccr-2506-1",
+      "text": "CODE OF COLORADO REGULATIONS 10 CCR 2506-1 Supplemental Nutrition Assistance Program (SNAP)",
+      "page": 66,
+      "rects": [
+        {
+          "x": 0.10624927266379611,
+          "y": 0.03758896225687932,
+          "w": 0.7894798091469801,
+          "h": 0.03946455640913645
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__mp8vm7ud-el97",
+      "documentId": "10-ccr-2506-1",
+      "text": "4.306.1 Student Exemption Criteria To be eligible to participate in SNAP, a student must meet at least one (1) of the following exemptions:",
+      "page": 64,
+      "rects": [
+        {
+          "x": 0.11050522850825423,
+          "y": 0.7508799876673261,
+          "w": 0.751176206546857,
+          "h": 0.046864160735849536
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mp8w774f-zmz2",
+      "documentId": "10-ccr-2506-1",
+      "text": "A. Be physically or mentally unfit for employment (including students participating through or in a vocational rehabilitation program).",
+      "page": 64,
+      "rects": [
+        {
+          "x": 0.11050522850825423,
+          "y": 0.8084324657639834,
+          "w": 0.7543681734302006,
+          "h": 0.033709308599470744
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mp8w9tft-9gs7",
+      "documentId": "10-ccr-2506-1",
+      "text": "If mental or physical unfitness for employment is claimed and the unfitness is not evident to the local office, verification may be required. Appropriate verification may consist of receipt of temporary or permanent disability benefits or a statement from a physician or licensed psychologist.",
+      "page": 65,
+      "rects": [
+        {
+          "x": 0.13072101876943026,
+          "y": 0.08468436062793865,
+          "w": 0.7388324383634519,
+          "h": 0.06577426068189408
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mp8wf042-hr3h",
+      "documentId": "10-ccr-2506-1",
+      "text": "B. The student is employed for an average of twenty (20) hours per week and is paid for such employment. The student shall be employed an average of twenty (20) hours each week, regardless of wages received. If the student is self-employed, the student shall work an average of twenty (20) hours a week and have earnings after allowable business expenses are deducted equal to at least the federal minimum wage multiplied by twenty (20) hours. The weekly employment of twenty (20) hours may be based on an average number of hours worked per month, so long as the student is employed for eighty (80) hours per month.",
+      "page": 65,
+      "rects": [
+        {
+          "x": 0.11263320643048329,
+          "y": 0.15703604737802215,
+          "w": 0.7589440740802315,
+          "h": 0.16519089951440094
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mp8wk20o-ss8j",
+      "documentId": "10-ccr-2506-1",
+      "text": "be approved for a work-study program at the time of application for SNAP. The work-study shall be approved for the school term and the student shall anticipate working during that time. The student qualifies for this exemption the month the school term in which the work-study will occur begins or the month work-study is approved, whichever is later. The exemption will continue until the end of the school term or until it becomes known that the student has refused an assignment. The exemption shall not continue between terms when there is a break of one (1) full month or longer unless the student is participating in work-study during the break.",
+      "page": 65,
+      "rects": [
+        {
+          "x": 0.11156921746936875,
+          "y": 0.32558259037537574,
+          "w": 0.7682000299246895,
+          "h": 0.12086020400298042
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mp8wmz93-lmgp",
+      "documentId": "10-ccr-2506-1",
+      "text": "member under the age of six (6), or a full-time student who is a single parent with responsibility for the care of a dependent child under age twelve (12). The single parent provision applies in those situations where only one natural, adoptive, or stepparent regardless of marital status is in the same SNAP household as the child. A full-time student in the same SNAP household with a child who is under their parental control may qualify if they do not reside with their spouse.",
+      "page": 65,
+      "rects": [
+        {
+          "x": 0.1094412395471397,
+          "y": 0.45713111173916393,
+          "w": 0.7640482286246281,
+          "h": 0.09283921276431745
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mp8wq1ra-2m94",
+      "documentId": "10-ccr-2506-1",
+      "text": "E. The student is responsible for more than half of the physical care of a dependent household member who has reached the age of six (6) but is under the age of twelve (12) where the local office has determined that adequate childcare is not available to enable the individual to attend class and satisfy the requirement of item B or item C, above.",
+      "page": 65,
+      "rects": [
+        {
+          "x": 0.11134423172188711,
+          "y": 0.5555505516775501,
+          "w": 0.7562432613573448,
+          "h": 0.06917360954739926
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mp8wtu1d-l5zm",
+      "documentId": "10-ccr-2506-1",
+      "text": "the grant to be eligible under this provision. Family Preservation is not considered a TANF grant.",
+      "page": 65,
+      "rects": [
+        {
+          "x": 0.11041174927878311,
+          "y": 0.6319297455528035,
+          "w": 0.7469184369263047,
+          "h": 0.0468362981310515
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mp8wuqhz-dlb6",
+      "documentId": "10-ccr-2506-1",
+      "text": "G. The student is assigned to or placed in an institution of higher education through a program under the Workforce Innovation and Opportunity Act (WIOA), Employment First (EF), a program under Section 236 of the Trade Act of 1974 (19 U.S.C. 2296), another program for the purpose of employment and training operated by the state or local government (program shall have at least one (1) component equivalent to the SNAP EF Program), or as a result of participating in the JOBS program under Title IV of the Social Security Act.",
+      "page": 65,
+      "rects": [
+        {
+          "x": 0.1150741614943031,
+          "y": 0.6895744201756361,
+          "w": 0.7739604277763207,
+          "h": 0.09799594685881563
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mp8wxvrv-nave",
+      "documentId": "10-ccr-2506-1",
+      "text": "Self-initiated placement during the period the person is enrolled in one of these employment and training programs shall comply with the requirements of the employment and training program in which the person is enrolled. This placement is considered in compliance provided that the Employment and Training program has a component for enrollment in an institution of higher education and that the Employment and Training program accepts the placement. Persons who voluntarily participate in one of these employment and training programs and are placed in an institution of higher education through or in compliance with the requirements of the Employment and Training program shall also qualify for the exemption.",
+      "page": 66,
+      "rects": [
+        {
+          "x": 0.11570050528249885,
+          "y": 0.08950477055883689,
+          "w": 0.763178686265503,
+          "h": 0.12358019082235348
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mp8x00bl-jw4v",
+      "documentId": "10-ccr-2506-1",
+      "text": "H. The student is participating in an on-the-job training program. A person is participating in an on- the-job training program only during the period the person is being trained by an employer.",
+      "page": 66,
+      "rects": [
+        {
+          "x": 0.11217271474506202,
+          "y": 0.21671967287596547,
+          "w": 0.7667064768029399,
+          "h": 0.04270786006360747
+        }
+      ]
     }
   ],
   "mappings": [
+    {
+      "nodePath": "/members/*/isStudentResponsibleForPhysicalCareOfDependentChildWithoutAdequateChildcare",
+      "sectionId": "10-ccr-2506-1__mp8wq1ra-2m94"
+    },
     {
       "nodePath": "/members/*/meetsAdditionalConditionForNonCitizenEligibility",
       "sectionId": "10-ccr-2506-1__mp610mxi-5uws"
@@ -7139,8 +7807,20 @@
       "sectionId": "10-ccr-2506-1__movu9igu-c8j5"
     },
     {
-      "nodePath": "/members/*/isFullTimeStudent",
+      "nodePath": "/members/*/studentEnrollmentStatus",
       "sectionId": "10-ccr-2506-1__movub8hb-s78w"
+    },
+    {
+      "nodePath": "/members/*/studentEnrollmentStatus",
+      "sectionId": "10-ccr-2506-1__movyv2cv-wutv"
+    },
+    {
+      "nodePath": "/studentEnrollmentStatusOptions",
+      "sectionId": "10-ccr-2506-1__movub8hb-s78w"
+    },
+    {
+      "nodePath": "/studentEnrollmentStatusOptions",
+      "sectionId": "10-ccr-2506-1__movyv2cv-wutv"
     },
     {
       "nodePath": "/members/*/preparesFoodWithHousehold",
@@ -7169,10 +7849,6 @@
     {
       "nodePath": "/members/*/isIndigentNonCitizen",
       "sectionId": "10-ccr-2506-1__movy0vgv-f14h"
-    },
-    {
-      "nodePath": "/members/*/isEnrolledInInstitutionOfHigherEducation",
-      "sectionId": "10-ccr-2506-1__movyv2cv-wutv"
     },
     {
       "nodePath": "/members/*/isLawfulPermanentResident",
@@ -7312,10 +7988,6 @@
     },
     {
       "nodePath": "/members/*/sponsorId",
-      "sectionId": "10-ccr-2506-1__moxc1no4-3ypt"
-    },
-    {
-      "nodePath": "/members/*/sponsorId",
       "sectionId": "10-ccr-2506-1__movyhwbe-3hew"
     },
     {
@@ -7407,12 +8079,24 @@
       "sectionId": "10-ccr-2506-1__mp1r5oy8-p66y"
     },
     {
+      "nodePath": "/members/*/workHoursPerWeek",
+      "sectionId": "10-ccr-2506-1__mp1r5oy8-p66y"
+    },
+    {
+      "nodePath": "/members/*/workHoursPerWeek",
+      "sectionId": "10-ccr-2506-1__mp8wf042-hr3h"
+    },
+    {
       "nodePath": "/incomes/*/type",
       "sectionId": "10-ccr-2506-1__mp1r4h77-ifrb"
     },
     {
       "nodePath": "/incomeSourceOptions",
       "sectionId": "10-ccr-2506-1__mp1r4h77-ifrb"
+    },
+    {
+      "nodePath": "/incomeSourceOptions",
+      "sectionId": "10-ccr-2506-1__mp7f1pl0-tuvz"
     },
     {
       "nodePath": "/members/*/isDisqualified",
@@ -8009,6 +8693,254 @@
     {
       "nodePath": "/members/*/isIneligibleNonCitizen",
       "sectionId": "10-ccr-2506-1__mp62sy8l-1kdu"
+    },
+    {
+      "nodePath": "/members/*/isSponsoredNonCitizen",
+      "sectionId": "10-ccr-2506-1__mp75e82t-974j"
+    },
+    {
+      "nodePath": "/members/*/isSponsor",
+      "sectionId": "10-ccr-2506-1__mp75elf0-vhr4"
+    },
+    {
+      "nodePath": "/members/*/isSponsor",
+      "sectionId": "10-ccr-2506-1__mp75id2l-9jfn"
+    },
+    {
+      "nodePath": "/members/*/sponsorId",
+      "sectionId": "10-ccr-2506-1__mp75id2l-9jfn"
+    },
+    {
+      "nodePath": "/members/*/isSponsoredNonCitizen",
+      "sectionId": "10-ccr-2506-1__mp75id2l-9jfn"
+    },
+    {
+      "nodePath": "/members/*/sponsorId",
+      "sectionId": "10-ccr-2506-1__moxc1no4-3ypt"
+    },
+    {
+      "nodePath": "/members/*/isSponsor",
+      "sectionId": "10-ccr-2506-1__moxc1no4-3ypt"
+    },
+    {
+      "nodePath": "/members/*/deemedSponsorIncome",
+      "sectionId": "10-ccr-2506-1__mp77riyy-4e3q"
+    },
+    {
+      "nodePath": "/members/*/deemedSponsorIncome",
+      "sectionId": "10-ccr-2506-1__mp78kq9o-criu"
+    },
+    {
+      "nodePath": "/members/*/deemedSponsorIncome",
+      "sectionId": "10-ccr-2506-1__mp7998ow-8xk2"
+    },
+    {
+      "nodePath": "/members/*/sponsorIncome",
+      "sectionId": "10-ccr-2506-1__mp7f1pl0-tuvz"
+    },
+    {
+      "nodePath": "/members/*/actualMoneyPaidBySponsor",
+      "sectionId": "10-ccr-2506-1__mp7f1pl0-tuvz"
+    },
+    {
+      "nodePath": "/sponsorEarnedIncomeDeductionRate",
+      "sectionId": "10-ccr-2506-1__mp7998ow-8xk2"
+    },
+    {
+      "nodePath": "/members/*/sponsorAndSpouseGrossIncome",
+      "sectionId": "10-ccr-2506-1__mp78kq9o-criu"
+    },
+    {
+      "nodePath": "/members/*/sponsorAndSpouseNonExemptEarnedIncome",
+      "sectionId": "10-ccr-2506-1__mp7998ow-8xk2"
+    },
+    {
+      "nodePath": "/members/*/sponsorAndSpouseDependentCount",
+      "sectionId": "10-ccr-2506-1__mp7998ow-8xk2"
+    },
+    {
+      "nodePath": "/members/*/sponsorGrossIncomeEligibilityLimit",
+      "sectionId": "10-ccr-2506-1__mp7998ow-8xk2"
+    },
+    {
+      "nodePath": "/members/*/sponsorHouseholdSize",
+      "sectionId": "10-ccr-2506-1__mp7998ow-8xk2"
+    },
+    {
+      "nodePath": "/members/*/sponsorHouseholdFpl",
+      "sectionId": "10-ccr-2506-1__mp7998ow-8xk2"
+    },
+    {
+      "nodePath": "/members/*/sponsorAndSpouseDeemedIncome",
+      "sectionId": "10-ccr-2506-1__mp7998ow-8xk2"
+    },
+    {
+      "nodePath": "/members/*/sponsorAndSpouseDeemedIncome",
+      "sectionId": "10-ccr-2506-1__mp7euzay-nff0"
+    },
+    {
+      "nodePath": "/sponsorResourceDeduction",
+      "sectionId": "10-ccr-2506-1__mp7fsg34-b9mu"
+    },
+    {
+      "nodePath": "/members/*/sponsorAndSpouseResources",
+      "sectionId": "10-ccr-2506-1__mp7fsg34-b9mu"
+    },
+    {
+      "nodePath": "/members/*/sponsorResources",
+      "sectionId": "10-ccr-2506-1__mp7fsg34-b9mu"
+    },
+    {
+      "nodePath": "/members/*/deemedSponsorIncome",
+      "sectionId": "10-ccr-2506-1__mp799pyo-8m4n"
+    },
+    {
+      "nodePath": "/members/*/sponsoredNonCitizenCount",
+      "sectionId": "10-ccr-2506-1__mp799pyo-8m4n"
+    },
+    {
+      "nodePath": "/members/*/sponsoredNonCitizenCountInHousehold",
+      "sectionId": "10-ccr-2506-1__mp799pyo-8m4n"
+    },
+    {
+      "nodePath": "/members/*/sponsoredNonCitizenCountOutsideHousehold",
+      "sectionId": "10-ccr-2506-1__mp799pyo-8m4n"
+    },
+    {
+      "nodePath": "/members/*/sponsorResources",
+      "sectionId": "10-ccr-2506-1__mp799pyo-8m4n"
+    },
+    {
+      "nodePath": "/members/*/sponsorIncomeAndResourcesDoNotApply",
+      "sectionId": "10-ccr-2506-1__mp8p664u-fvc1"
+    },
+    {
+      "nodePath": "/members/*/sponsorIncomeAndResourcesDoNotApply",
+      "sectionId": "10-ccr-2506-1__mp8p6h46-vvp5"
+    },
+    {
+      "nodePath": "/members/*/isSponsoredByOrganization",
+      "sectionId": "10-ccr-2506-1__mp8p664u-fvc1"
+    },
+    {
+      "nodePath": "/members/*/isIndigentNonCitizen",
+      "sectionId": "10-ccr-2506-1__mp8posbt-kr3x"
+    },
+    {
+      "nodePath": "/members/*/isIndigentNonCitizen",
+      "sectionId": "10-ccr-2506-1__mp8pps1x-yhn2"
+    },
+    {
+      "nodePath": "/members/*/isNotRequiredToHaveSponsorUnderIna",
+      "sectionId": "10-ccr-2506-1__mp8p664u-fvc1"
+    },
+    {
+      "nodePath": "/members/*/effectiveDeemedSponsorIncome",
+      "sectionId": "10-ccr-2506-1__mp8p664u-fvc1"
+    },
+    {
+      "nodePath": "/members/*/grossIncomeWithSponsorIncome",
+      "sectionId": "10-ccr-2506-1__mp8p664u-fvc1"
+    },
+    {
+      "nodePath": "/grossIncomeWithSponsorIncome",
+      "sectionId": "10-ccr-2506-1__mp8p664u-fvc1"
+    },
+    {
+      "nodePath": "/members/*/unearnedIncomeWithSponsorIncome",
+      "sectionId": "10-ccr-2506-1__mp8p664u-fvc1"
+    },
+    {
+      "nodePath": "/members/*/isIneligibleStudent",
+      "sectionId": "10-ccr-2506-1__mp8uxz0m-2fie"
+    },
+    {
+      "nodePath": "/studentIneligibilityAgeMin",
+      "sectionId": "10-ccr-2506-1__mp8uxz0m-2fie"
+    },
+    {
+      "nodePath": "/studentIneligibilityAgeMax",
+      "sectionId": "10-ccr-2506-1__mp8uxz0m-2fie"
+    },
+    {
+      "nodePath": "/members/*/isEnrolledAtLeastHalfTimeInInstitutionOfHigherEducation",
+      "sectionId": "10-ccr-2506-1__mp8uxz0m-2fie"
+    },
+    {
+      "nodePath": "/members/*/meetsStudentEligibilityExemption",
+      "sectionId": "10-ccr-2506-1__mp8uxz0m-2fie"
+    },
+    {
+      "nodePath": "/members/*/isInK12",
+      "sectionId": "10-ccr-2506-1__mp8uxz0m-2fie"
+    },
+    {
+      "nodePath": "/members/*/meetsStudentEligibilityExemption",
+      "sectionId": "10-ccr-2506-1__mp8vm7ud-el97"
+    },
+    {
+      "nodePath": "/members/*/isPhysicallyOrMentallyUnfitForEmployment",
+      "sectionId": "10-ccr-2506-1__mp8w774f-zmz2"
+    },
+    {
+      "nodePath": "/members/*/isPhysicallyOrMentallyUnfitForEmployment",
+      "sectionId": "10-ccr-2506-1__mp8w9tft-9gs7"
+    },
+    {
+      "nodePath": "/members/*/isParticipatingInWorkStudy",
+      "sectionId": "10-ccr-2506-1__mp8wk20o-ss8j"
+    },
+    {
+      "nodePath": "/members/*/isAssignedToHigherEducationThroughEmploymentTrainingProgram",
+      "sectionId": "10-ccr-2506-1__mp8wuqhz-dlb6"
+    },
+    {
+      "nodePath": "/members/*/isFullTimeStudentResponsibleForDependentChild",
+      "sectionId": "10-ccr-2506-1__mp8wmz93-lmgp"
+    },
+    {
+      "nodePath": "/members/*/receivesTanf",
+      "sectionId": "10-ccr-2506-1__mp8wtu1d-l5zm"
+    },
+    {
+      "nodePath": "/studentExemptionDependentMemberAgeLimit",
+      "sectionId": "10-ccr-2506-1__mp8wmz93-lmgp"
+    },
+    {
+      "nodePath": "/studentExemptionDependentChildAgeLimit",
+      "sectionId": "10-ccr-2506-1__mp8wmz93-lmgp"
+    },
+    {
+      "nodePath": "/members/*/isAssignedToHigherEducationThroughEmploymentTrainingProgram",
+      "sectionId": "10-ccr-2506-1__mp8wxvrv-nave"
+    },
+    {
+      "nodePath": "/members/*/isFullTimeStudent",
+      "sectionId": "10-ccr-2506-1__mp8wmz93-lmgp"
+    },
+    {
+      "nodePath": "/members/*/hasCareOfDependentHouseholdMember",
+      "sectionId": "10-ccr-2506-1__mp8wmz93-lmgp"
+    },
+    {
+      "nodePath": "/members/*/isSingleParentOfDependentChild",
+      "sectionId": "10-ccr-2506-1__mp8wmz93-lmgp"
+    },
+    {
+      "nodePath": "/members/*/hasParentalControlOfDependentChild",
+      "sectionId": "10-ccr-2506-1__mp8wmz93-lmgp"
+    },
+    {
+      "nodePath": "/members/*/isInOnTheJobTraining",
+      "sectionId": "10-ccr-2506-1__mp8x00bl-jw4v"
+    },
+    {
+      "nodePath": "/parentChildRelationships/*/parentProvidesMoreThanHalfOfPhysicalCare",
+      "sectionId": "10-ccr-2506-1__mp8wq1ra-2m94"
+    },
+    {
+      "nodePath": "/parentChildRelationships/*/adequateChildcareUnavailable",
+      "sectionId": "10-ccr-2506-1__mp8wq1ra-2m94"
     }
   ]
 }
