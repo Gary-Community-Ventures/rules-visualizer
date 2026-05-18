@@ -7,6 +7,7 @@ import {
   followTask,
   listTasks,
   setTaskStatus,
+  type AgentRunnerName,
   type Task,
   type TaskIteration,
   type TaskStatus,
@@ -645,6 +646,10 @@ function statusIcon(status: TaskStatus) {
   }
 }
 
+function agentLabel(agent: AgentRunnerName): string {
+  return agent === 'opencode' ? 'OpenCode' : 'Claude Code'
+}
+
 function TaskCard({
   task,
   nodes,
@@ -682,6 +687,9 @@ function TaskCard({
 
   const isArchived = task.status === 'archived'
   const isRunning = task.status === 'running'
+  const taskAgent = task.agentRunner ?? 'claude'
+  const activeAgent = task.activeAgentRunner ?? taskAgent
+  const agentMismatch = taskAgent !== activeAgent
   const iterations = task.iterations
   const latestIteration = iterations[iterations.length - 1]
   const headerPrompt = iterations[0]?.prompt ?? ''
@@ -699,7 +707,7 @@ function TaskCard({
 
   async function sendFollowUp() {
     const trimmed = followUp.trim()
-    if (!trimmed || busy) return
+    if (!trimmed || busy || agentMismatch) return
     // While the agent is busy, queue the follow-up instead of blocking on
     // it; the drain effect below will fire it once the task transitions
     // out of running. The queued snapshot captures both the prompt and
@@ -736,7 +744,7 @@ function TaskCard({
   // the head item.
   const drainingRef = useRef(false)
   useEffect(() => {
-    if (drainingRef.current || busy || isRunning) return
+    if (drainingRef.current || busy || isRunning || agentMismatch) return
     const head = cardQueue[0]
     if (!head) return
     drainingRef.current = true
@@ -758,6 +766,7 @@ function TaskCard({
   }, [
     busy,
     isRunning,
+    agentMismatch,
     cardQueue,
     refs,
     task.rulesetId,
@@ -857,6 +866,12 @@ function TaskCard({
           )}
           {!isArchived && task.status !== 'complete' && (
             <div className="space-y-1.5">
+              {agentMismatch && (
+                <div className="rounded border border-amber-200 bg-amber-50 px-2 py-1.5 text-[11px] text-amber-900">
+                  This thread was run using {agentLabel(taskAgent)}. Switch the
+                  task agent back to {agentLabel(taskAgent)} to follow up.
+                </div>
+              )}
               {cardQueue.length > 0 && (
                 <ul className="space-y-1">
                   {cardQueue.map((q) => (
@@ -891,14 +906,16 @@ function TaskCard({
               )}
               <NodeAutocompleteInput
                 placeholder={
-                  isRunning
-                    ? 'Queue a follow-up to send when the agent finishes…'
-                    : 'Follow up to refine this thread…'
+                  agentMismatch
+                    ? `This thread was run using ${agentLabel(taskAgent)}…`
+                    : isRunning
+                      ? 'Queue a follow-up to send when the agent finishes…'
+                      : 'Follow up to refine this thread…'
                 }
                 value={followUp}
                 onChange={setFollowUp}
                 onSubmit={sendFollowUp}
-                disabled={busy}
+                disabled={busy || agentMismatch}
                 rows={2}
                 className="text-xs"
               />
@@ -915,7 +932,7 @@ function TaskCard({
                   variant="outline"
                   size="sm"
                   className="h-7 text-xs gap-1"
-                  disabled={busy}
+                  disabled={busy || agentMismatch}
                   onClick={() => {
                     setAttachTarget({
                       kind: 'follow-up',
@@ -931,7 +948,7 @@ function TaskCard({
                 <Button
                   size="sm"
                   className="h-7 text-xs"
-                  disabled={busy || !followUp.trim()}
+                  disabled={busy || agentMismatch || !followUp.trim()}
                   onClick={sendFollowUp}
                   title={
                     isRunning

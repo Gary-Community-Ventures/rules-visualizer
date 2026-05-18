@@ -221,6 +221,11 @@ See `packages/rac-server/rules_visualizer_rac/axiom_engine.py`.
 | `AI_MODEL`               | No                 | Model ID (default: `google/gemini-2.5-flash`)                                                                                    |
 | `ALLOW_WRITES`           | For write features | Set to `1` to enable backend write surfaces (Tasks routes mount; Tests/References PUT/POST/DELETE return `200` instead of `403`) |
 | `VITE_ALLOW_WRITES`      | For write features | Must mirror `ALLOW_WRITES`. Vite inlines this at build time                                                                      |
+| `TASK_AGENT_RUNNER`      | No                 | Task panel agent backend: `claude` (default) or `opencode`                                                                       |
+| `OPENCODE_BIN`           | No                 | OpenCode executable path when `TASK_AGENT_RUNNER=opencode` (default: `opencode`)                                                 |
+| `OPENCODE_MODEL`         | No                 | OpenCode model, passed as `opencode run --model`                                                                                 |
+| `OPENCODE_VARIANT`       | No                 | OpenCode model variant, passed as `opencode run --variant`                                                                       |
+| `OPENCODE_AGENT`         | No                 | OpenCode agent, passed as `opencode run --agent`                                                                                 |
 | `AXIOM_RULES_ENGINE_BIN` | No                 | Override path to the axiom-rules-engine binary (default: `vendor/axiom-rules-engine/target/release/axiom-rules-engine`)          |
 
 `ALLOW_WRITES` and `VITE_ALLOW_WRITES` must be set together. Without them, the UI runs read-only.
@@ -232,6 +237,9 @@ OPEN_ROUTER_KEY=sk-or-v1-your-key-here
 # Uncomment for full write access (local dev only)
 # ALLOW_WRITES=1
 # VITE_ALLOW_WRITES=1
+# TASK_AGENT_RUNNER=opencode
+# OPENCODE_MODEL=openai/gpt-5.5
+# OPENCODE_VARIANT=medium
 ```
 
 ## Usage

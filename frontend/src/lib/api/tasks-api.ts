@@ -5,6 +5,8 @@ export type TaskStatus =
   | 'archived'
   | 'failed'
 
+export type AgentRunnerName = 'claude' | 'opencode'
+
 export type TaskSource = {
   sectionId: string
   text: string
@@ -33,6 +35,8 @@ export type Task = {
   iterations: TaskIteration[]
   status: TaskStatus
   sessionId?: string
+  agentRunner?: AgentRunnerName
+  activeAgentRunner?: AgentRunnerName
   resumeCommand?: string
   createdAt: string
   updatedAt: string

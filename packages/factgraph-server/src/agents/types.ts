@@ -11,6 +11,8 @@ export type TaskStatus =
   | 'archived' // user gave up / dismissed
   | 'failed'
 
+export type AgentRunnerName = 'claude' | 'opencode'
+
 /**
  * A policy reference attached to a task iteration as supporting context.
  * The runner formats these into the agent's system prompt so the agent can
@@ -64,6 +66,10 @@ export type Task = {
   status: TaskStatus
   /** Provider-specific session id used to resume the same thread. */
   sessionId?: string
+  /** Agent backend that created this task. Legacy tasks are treated as Claude. */
+  agentRunner?: AgentRunnerName
+  /** Currently configured backend. Derived at the API boundary, not persisted. */
+  activeAgentRunner?: AgentRunnerName
   /**
    * Shell command the user can paste to attach to this thread in their own
    * terminal. Provided by the active AgentRunner — different runners (Claude,
