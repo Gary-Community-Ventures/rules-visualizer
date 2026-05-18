@@ -431,10 +431,9 @@ export function ModelProvider({
     (patch: (w: Workspace) => Workspace): void => {
       setWorkspaces((prev) => {
         if (prev.length === 0) return prev
-        const targetId =
-          prev.some((w) => w.id === activeWorkspaceId)
-            ? activeWorkspaceId
-            : prev[0].id
+        const targetId = prev.some((w) => w.id === activeWorkspaceId)
+          ? activeWorkspaceId
+          : prev[0].id
         return prev.map((w) => (w.id === targetId ? patch(w) : w))
       })
     },

@@ -14,12 +14,8 @@ import { useModelContext, type Workspace } from '@/context/model-context'
  *   switchWorkspace(id)            — make `id` active
  */
 export function useWorkspaceActions() {
-  const {
-    workspaces,
-    setWorkspaces,
-    activeWorkspaceId,
-    setActiveWorkspaceId,
-  } = useModelContext()
+  const { workspaces, setWorkspaces, activeWorkspaceId, setActiveWorkspaceId } =
+    useModelContext()
 
   const createWorkspace = useCallback(
     (init?: { items?: string[]; selectedNodes?: string[] }): string => {
