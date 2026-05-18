@@ -304,20 +304,6 @@
       "status": "skipped"
     },
     {
-      "id": "10-ccr-2506-1__mokgtqxq-1opy",
-      "documentId": "10-ccr-2506-1",
-      "text": "“Basic Categorical Eligibility (BCE)” means the status granted to any household that is not eligible for Expanded Categorical Eligibility and contains only members who receive, or are eligible to receive, benefits from Colorado Works, Supplemental Security Income (SSI), Old Age Pension, Aid to the Needy and Disabled, Aid to the Blind, or a combination of these programs.",
-      "page": 2,
-      "rects": [
-        {
-          "x": 0.10760204266415559,
-          "y": 0.2314064620852749,
-          "w": 0.7765021187207997,
-          "h": 0.07254103522102348
-        }
-      ]
-    },
-    {
       "id": "10-ccr-2506-1__moki2xhz-tyyo",
       "documentId": "10-ccr-2506-1",
       "text": "“Basic Utility Allowance (BUA)” means a fixed deduction applied to a household that does not pay for heating or cooling and incurs at least two (2) non-heating or non-cooling utility costs, such as electricity, water, sewer, trash, cooking fuel, or telephone.",
@@ -888,20 +874,6 @@
           "y": 0.8224539896009637,
           "w": 0.7653024981254193,
           "h": 0.021468978241312442
-        }
-      ]
-    },
-    {
-      "id": "10-ccr-2506-1__movts74o-he42",
-      "documentId": "10-ccr-2506-1",
-      "text": "“Expanded Categorical Eligibility (ECE)” means households that are exempt from having resources considered when determining eligibility for SNAP.",
-      "page": 4,
-      "rects": [
-        {
-          "x": 0.10967283633923991,
-          "y": 0.8517298690209353,
-          "w": 0.7261533604325348,
-          "h": 0.03415519265663358
         }
       ]
     },
@@ -1993,20 +1965,6 @@
       ]
     },
     {
-      "id": "10-ccr-2506-1__mox4aggc-gh9f",
-      "documentId": "10-ccr-2506-1",
-      "text": "“Person with disabilities” means a person who: 1. Receives Supplemental Security Income (SSI) benefits under Title XVI of the Social Security Act, or the Colorado Supplement, or Aid to the Needy and Disabled- Supplemental Security Income- Colorado Supplement (AND-SSI-CS), or Aid to the Blind- Supplemental Security Income- Colorado Supplement (AB-SSI-CS); or Disability or Blindness Payments under Title I, II, X, or IXV of the Social Security Act; 2. Is a veteran with a service-connected disability rated or paid as a total disability under Title 38 of the United States Code or is a veteran receiving a pension for a non-service connected disability; 3. Is a veteran considered by the Veterans Affairs (VA) to be in need of regular aid and attendance or permanently housebound under Title 38 of the United States Code; 4. Is a surviving spouse of a veteran and considered in need of aid and attendance or permanently housebound or a surviving child of a veteran and considered by the VA to be permanently incapable of self-support under Title 38 of the United States Code; 5. Is a surviving spouse or child of a veteran and considered by the VA to be entitled to compensation for a service-connected death or pension benefits for a non-service- connected death under Title 38 of the United States Code and has a disability considered permanent under Section 221(i) of the Social Security Act. “Entitled”, as used in this definition, refers to those veterans’ surviving spouses and children who are receiving the compensation or benefits or have been approved for such benefits but are not yet receiving them; 6. Has a disability considered permanent under Section 221(i) of the Social Security Act and receives a federal, state, or local public disability retirement pension; 7. Receives an annuity for disability from the railroad retirement board who is considered as a disabled person with disabilities by the SSA or who qualifies for Medicare as determined by the railroad retirement board; or 8. Is a recipient of interim assistance benefits pending the receipt of the Supplemental Security Income (SSI), disability-related medical assistance under Title XIX of the Social Security Act, or disability-based state assistance benefits provided that the eligibility to receive these benefits is based on disability or blindness criteria which are at least as stringent as those used under Title XVI of the Social Security Act.",
-      "page": 9,
-      "rects": [
-        {
-          "x": 0.10806581229116441,
-          "y": 0.17139215269720393,
-          "w": 0.7985450238971366,
-          "h": 0.5877796479989541
-        }
-      ]
-    },
-    {
       "id": "10-ccr-2506-1__mox4ctqu-nlvi",
       "documentId": "10-ccr-2506-1",
       "text": "“Post high school education” means colleges, universities, and post-high school level technical and vocational schools.",
@@ -2588,20 +2546,6 @@
           "y": 0.5955746572320364,
           "w": 0.7755360994797614,
           "h": 0.09935776967953847
-        }
-      ]
-    },
-    {
-      "id": "10-ccr-2506-1__mp1qd3ho-nm7p",
-      "documentId": "10-ccr-2506-1",
-      "text": "“SNAP” means Supplemental Nutrition Assistance Program, formerly known as the Food Assistance program, administered by the state department in Colorado.",
-      "page": 11,
-      "rects": [
-        {
-          "x": 0.10863509749303621,
-          "y": 0.3658066139267045,
-          "w": 0.7385594906486271,
-          "h": 0.03899211695971821
         }
       ]
     },
@@ -5646,20 +5590,6 @@
       ]
     },
     {
-      "id": "10-ccr-2506-1__mp4kx88m-h2eq",
-      "documentId": "10-ccr-2506-1",
-      "text": "2. When applying the 165% limit test, the spouse of an elderly person with disabilities is not to be considered a member of their household unless the spouse is the person purchasing and preparing meals. If the spouse is not a member of the household, the spouse’s income and resources are excluded in calculating the household’s eligibility.",
-      "page": 48,
-      "rects": [
-        {
-          "x": 0.17068929828192922,
-          "y": 0.08941424869637545,
-          "w": 0.7167046160215276,
-          "h": 0.06858824658498351
-        }
-      ]
-    },
-    {
       "id": "10-ccr-2506-1__skip-1778708308566",
       "documentId": "10-ccr-2506-1",
       "text": "A. In instances when different households apply for the same child, the household that applies for benefits for the child second must establish that it has majority custody and/or provide a majority of the child’s meals. B. If the second requesting household provides verification that indicates that household possesses majority custody and provides the majority of meals, this constitutes unclear information as to the first household under which the child is currently receiving benefits. 1. A request for contact (RFC) must be initiated on the first case if verification was not previously provided to establish majority custody and/or that the majority of meals are being provided. The confidentiality rules described in Section 4.140 must be followed when making this request. A. If the two different households applying for the same child cannot agree in which household the child shall receive benefits the household that provides the majority of meals to the child(ren) in question shall include the child(ren) in their household. Depending on the document being used to establish majority custody and majority of meals, the eligibility technician must ensure that they are considering a period of time of sufficient length to accurately capture the custody arrangement, taking into account disruptions to established arrangements such as holidays and school breaks. Eligibility technicians may have to look at a longer period of time than just the last calendar month. 2. If the second requesting household provides verification that conclusively proves it has majority custody of the child and provides majority of meals as of the request to include the child(ren) in its household, the child(ren) should be removed from the first case and added to the second case as detailed in Section 4.604.G to avoid dual participation. 3. If the two households provide an equal number of meals to the child(ren), then the SNAP household currently receiving benefits or who applied first shall receive benefits for the child(ren). 4. If one household fails to provide verification of the percentage of meals they provide to the child(ren), the child(ren) shall remain in the household in which they first began receiving SNAP benefits.",
@@ -5730,20 +5660,6 @@
           "y": 0.7814389455836719,
           "w": 0.7630718277789277,
           "h": 0.0982756965993794
-        }
-      ]
-    },
-    {
-      "id": "10-ccr-2506-1__mp4m0w11-f618",
-      "documentId": "10-ccr-2506-1",
-      "text": "2. When applying the 165% limit test, a person aged sixty (60) and older with disabilities’ spouse is not to be considered a member of the household unless the spouse is the person purchasing and preparing meals. If the spouse is not a member of the household, the spouse’s income and resources are excluded in calculating the household’s eligibility.",
-      "page": 49,
-      "rects": [
-        {
-          "x": 0.17201407576071207,
-          "y": 0.08752679228382226,
-          "w": 0.7127302835851791,
-          "h": 0.06756454141207333
         }
       ]
     },
@@ -7399,6 +7315,681 @@
           "h": 0.04270786006360747
         }
       ]
+    },
+    {
+      "id": "10-ccr-2506-1__mpa7b1kj-ujf7",
+      "documentId": "10-ccr-2506-1",
+      "text": "A. Households containing a striking member, as defined in section 4.000.1, shall not be eligible for SNAP unless the household was eligible for the Program the day before the strike and are otherwise eligible at time of the strike. Households where the striking member was exempt from work registration the day before the strike shall not be subject to these provisions and shall be certified if otherwise eligible unless the exemption was based on the employment.",
+      "page": 66,
+      "rects": [
+        {
+          "x": 0.11377131727708897,
+          "y": 0.26628000880992586,
+          "w": 0.7722198470381454,
+          "h": 0.11026356361500617
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mpa7kh0w-qm18",
+      "documentId": "10-ccr-2506-1",
+      "text": "4.307.1 Households Not Affected by the Striker Provisions A. Employees whose work place is closed by an employer (i.e., lockout), B. Employees unable to work as a result of other striking employees (e.g., a paper strike closes operations at a printing company; therefore, pressmen are out of work), C. Employees not wanting to cross a picket line due to fear of personal injury or death (this does not include persons sympathetic to the strike who refuse to cross the picket line),",
+      "page": 66,
+      "rects": [
+        {
+          "x": 0.11183396386521939,
+          "y": 0.48103219813395626,
+          "w": 0.7682353357140331,
+          "h": 0.14075925850033466
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mpa7ksha-8rnd",
+      "documentId": "10-ccr-2506-1",
+      "text": "D. Persons who were exempt from work registration the day before the strike such as the caretaker of a child under six (6) years of age (other than those exempt solely on the ground that they were employed).",
+      "page": 66,
+      "rects": [
+        {
+          "x": 0.11635965067354948,
+          "y": 0.6305342677212683,
+          "w": 0.7704981791181982,
+          "h": 0.05158258541316607
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1779053442819",
+      "documentId": "10-ccr-2506-1",
+      "text": "66",
+      "page": 66,
+      "rects": [
+        {
+          "x": 0.10806581229116441,
+          "y": 0.9484581569787394,
+          "w": 0.7795964979063571,
+          "h": 0.03242200905332315
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1779053448170",
+      "documentId": "10-ccr-2506-1",
+      "text": "CODE OF COLORADO REGULATIONS 10 CCR 2506-1 Supplemental Nutrition Assistance Program (SNAP)",
+      "page": 67,
+      "rects": [
+        {
+          "x": 0.09723808315357611,
+          "y": 0.036311342800647135,
+          "w": 0.7958380916127396,
+          "h": 0.04078897913160002
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1779053763449",
+      "documentId": "10-ccr-2506-1",
+      "text": "67",
+      "page": 67,
+      "rects": [
+        {
+          "x": 0.1040054138645688,
+          "y": 0.9441275962936937,
+          "w": 0.7890707609017469,
+          "h": 0.03660549409246161
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1779053766465",
+      "documentId": "10-ccr-2506-1",
+      "text": "CODE OF COLORADO REGULATIONS 10 CCR 2506-1 Supplemental Nutrition Assistance Program (SNAP)",
+      "page": 68,
+      "rects": [
+        {
+          "x": 0.09994501543797318,
+          "y": 0.029889039596032226,
+          "w": 0.7917776931861439,
+          "h": 0.0460183354305231
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__mpaauv4f-hsqa",
+      "documentId": "10-ccr-2506-1",
+      "text": "4.308 VOLUNTARY QUIT A. No individual who quit his or her most recent job without good cause or reduces work effort and, after the reduction, is working less than thirty (30) hours each week, without good cause, or earning less than the federal minimum wage multiplied by thirty (30) hours, shall be eligible for participation in SNAP. At the time of application, the eligibility technician shall explain to the applicant the potential penalties if a household member quits his or her job or reduced hours or wages without good cause or if another member joins the household if that individual has voluntarily quit employment.",
+      "page": 66,
+      "rects": [
+        {
+          "x": 0.11347967685995855,
+          "y": 0.6890820845521547,
+          "w": 0.7890707609017469,
+          "h": 0.14014674881113853
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mpaav587-vl95",
+      "documentId": "10-ccr-2506-1",
+      "text": "B. When a household files an application, or when a participating household reports the loss of a source of income or reduction in hours, the local office shall determine whether any household member voluntarily quit or reduced his or her hours or income. Benefits shall not be delayed pending the outcome of this determination. A sanction shall be imposed if the quit or reduction in hours or wages occurred within sixty (60) calendar days prior to the date of application or anytime thereafter, and the quit or reduction was without good cause. An employee of the federal government, or of a state or local government who participates in a strike against such government and is dismissed from his or her job because of participation in the strike, shall be considered to have voluntarily quit his or her job without good cause. If an individual quits a job, secures new employment at comparable wages or hours, and, through no fault of his or her own loses the new job, the earlier quit shall not be a basis for disqualification. C. In the case of an applicant household, the local office shall determine whether any currently unemployed household member who is required to register for work or was exempt from registration for being employed has voluntarily quit his or her most recent job within the last sixty (60) days. If the local office learns that a household has lost a source of income after the date of application but before the household is certified, the local office shall determine whether a voluntary quit occurred. The nonexempt individual who quit or reduced work hours will be ineligible to participate for the sanction period if the household is determined eligible for SNAP. The individual will be required to comply with EF following the sanction period unless the individual becomes exempt from work requirements. D. In the case of the participating household, the local office shall determine whether any household member voluntarily quit his or her job while participating in the Program. If a household is already participating when a quit that occurred prior to certification is discovered, the household shall be regarded as a participating household. E. Upon a determination that the individual voluntarily quit employment, reduced work hours below thirty (30) hours, or reduced wages to the point at which the person is earning less than the federal minimum wage multiplied by thirty (30) hours, the local office shall determine if the voluntary quit was with good cause. If an individual voluntarily quits or reduces work hours/wages without good cause, the individual will be disqualified in the same manner as individuals failing to comply with work registration or EF requirements. F. If the local office determines that the individual voluntarily quit his or her job or reduced his or her work hours without good cause while participating in SNAP, the local office shall provide the household with a Notice of Adverse Action within ten (10) calendar days after the determination of a voluntary quit is made. The notice shall contain the act of noncompliance, the proposed period of disqualification, the action to be taken at the end of the disqualification and shall specify that the individual may be included in the household after the disqualification period if the individual meets other work requirements. G. Individuals have the right to a fair hearing to appeal a disqualification due to a determination that the individual quit his or her job without good cause or reduced his or her work hours without good cause. If a participating household requests a fair hearing and the local office determination is upheld, the disqualification period shall begin the first of the month after the hearing decision is rendered.",
+      "page": 67,
+      "rects": [
+        {
+          "x": 0.11077274457556148,
+          "y": 0.08546729201052408,
+          "w": 0.7863638286173498,
+          "h": 0.7708071184612619
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mpaazm6k-wlp5",
+      "documentId": "10-ccr-2506-1",
+      "text": "4.308.1 Good Cause for Quitting or Reducing Work Hours Upon a determination that the individual voluntarily quit employment, the local office shall determine if there was good cause which shall include, but not be limited to, any of the following: A. Discrimination by an employer based on age, race, sex, color, handicap, religious beliefs, national origin, or political beliefs; B. Work demands or conditions that render continued employment unreasonable such as working without being paid on schedule; C. Acceptance by the individual of employment; or enrollment of at least half-time in any recognized school, training program, or institution of higher education, that requires the individual to leave employment; D. Acceptance by any other household member of employment or enrollment at least half-time in any recognized school, training program, or institution of higher education in another county or political sub-division which requires the household to move and thereby requires the individual to leave employment; E. Resignations by persons under the age of sixty (60) that are recognized by the employer as retirement; F. Resignation from employment that does not meet suitable criteria specified in Section 4.310.7; G. Because of circumstances beyond the control of the individual, accepted full time employment subsequently either does not materialize or results in employment of less than thirty (30) hours a week or weekly earnings of less than the federal minimum wage multiplied by thirty (30) hours; H. Leaving a job in connection with patterns of employment in which workers frequently move from one employer to another, such as migrant farm labor or construction work, even though employment at the new site has not actually begun; I. Illness of the head of household; J. Illness of another household member requiring the presence of the head of household; K. A household emergency; L. The unavailability of transportation; or, M. Employer demands a reduction in participant's work effort or salary through no fault of the employee. N. Lack of adequate child care for children who have reached age 6 but are under age 12.",
+      "page": 68,
+      "rects": [
+        {
+          "x": 0.10941927843336294,
+          "y": 0.08845783014397071,
+          "w": 0.7877172947595482,
+          "h": 0.6735410913012927
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1779054903488",
+      "documentId": "10-ccr-2506-1",
+      "text": "68",
+      "page": 68,
+      "rects": [
+        {
+          "x": 0.10535888000676732,
+          "y": 0.9460722631673557,
+          "w": 0.7904242270439454,
+          "h": 0.03242200905332315
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1779054908583",
+      "documentId": "10-ccr-2506-1",
+      "text": "CODE OF COLORADO REGULATIONS 10 CCR 2506-1 Supplemental Nutrition Assistance Program (SNAP)",
+      "page": 69,
+      "rects": [
+        {
+          "x": 0.09723808315357611,
+          "y": 0.03078783520990963,
+          "w": 0.8012519561815337,
+          "h": 0.04915594920987694
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1779055018919",
+      "documentId": "10-ccr-2506-1",
+      "text": "4.309.1 Dining Facilities and Homeless Meal Providers Households with special circumstances, such as a person with disabilities, persons aged sixty (60) and older, or group living arrangements, may be authorized to use SNAP benefits to buy food from authorized communal dining facilities, meals on wheels, drug and alcohol treatment and rehabilitation centers, and shelters for battered women and children. Households experiencing homelessness may also use SNAP benefits to purchase prepared meals from approved restaurants. SNAP households experiencing homelessness may use food benefits for meals prepared for and served by an authorized provider (for example, a soup kitchen or temporary shelter) that feeds persons experiencing homelessness.",
+      "page": 69,
+      "rects": [
+        {
+          "x": 0.11077274457556148,
+          "y": 0.14792541630578662,
+          "w": 0.7917776931861439,
+          "h": 0.171522886604677
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__mpabh230-klv2",
+      "documentId": "10-ccr-2506-1",
+      "text": "4.309.2 Shelters for Battered Women and Children There are no restrictions on how long a center shall be in operation or on the number of residents served by the shelter. The local office shall determine a shelter's status as a shelter for battered women and children and shall document the basis for their determination. The rules within this subsection apply specifically to centers which provide meals to their residents. Centers which do not provide meals are not to be considered institutions and their residents' eligibility will be determined using the standard rules for eligibility.",
+      "page": 69,
+      "rects": [
+        {
+          "x": 0.10806581229116441,
+          "y": 0.3204941741702482,
+          "w": 0.7728291671953643,
+          "h": 0.12864216495350778
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mpabrfft-wnlu",
+      "documentId": "10-ccr-2506-1",
+      "text": "B. In many instances battered women and their children who were previously certified in the household of an abuser may not have access to their allotment. Therefore, these individuals shall be allowed to participate in one (1) additional project area and/or household so long as one of the two households with which they are participating contains the individual who abused them. These persons may receive an additional allotment only once in a month. C. The local office should act promptly to reflect the changes in household composition and shall act on the change to reduce or terminate benefits to the applicant's former household as appropriate.",
+      "page": 69,
+      "rects": [
+        {
+          "x": 0.108593515710906,
+          "y": 0.5860830383006115,
+          "w": 0.7826463630002333,
+          "h": 0.12606372706791125
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mpabspc9-l6kw",
+      "documentId": "10-ccr-2506-1",
+      "text": "A. They shall be allowed to apply and be considered for eligibility as individual (parent/child) units, rather than considered as part of a household consisting of all shelter residents.",
+      "page": 69,
+      "rects": [
+        {
+          "x": 0.1075272400119956,
+          "y": 0.5374702285162536,
+          "w": 0.7655859518176669,
+          "h": 0.04449308014161579
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mpabt7vq-xwqo",
+      "documentId": "10-ccr-2506-1",
+      "text": "4.309.21 Residents of Shelters for Battered Women and Children Women or women with their children who are temporarily residing in a shelter for battered women and children (which serves over fifty percent (50%) of their meals) shall be considered exempt from the prohibition against residents of institutions.",
+      "page": 69,
+      "rects": [
+        {
+          "x": 0.10326213721635401,
+          "y": 0.45754747344705504,
+          "w": 0.758122021925294,
+          "h": 0.07662697135500485
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1779055688758",
+      "documentId": "10-ccr-2506-1",
+      "text": "69",
+      "page": 69,
+      "rects": [
+        {
+          "x": 0.1064609643130852,
+          "y": 0.9420276794335372,
+          "w": 0.7869114657958749,
+          "h": 0.03460572899903447
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1779055706901",
+      "documentId": "10-ccr-2506-1",
+      "text": "CODE OF COLORADO REGULATIONS 10 CCR 2506-1 Supplemental Nutrition Assistance Program (SNAP)",
+      "page": 70,
+      "rects": [
+        {
+          "x": 0.1000633101196228,
+          "y": 0.03348567750241391,
+          "w": 0.7943753956882477,
+          "h": 0.04614097199871259
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__mpabu5zd-3210",
+      "documentId": "10-ccr-2506-1",
+      "text": "D. Shelter residents who apply as separate households shall be certified solely on the basis of their income and resources and the expenses for which they are responsible. They shall be certified without regard to the income, resources, and/or expenses of their former household. Jointly held resources shall be considered inaccessible to the household if access to such resources is dependent upon the agreement of a joint owner who still resides in the former household.",
+      "page": 69,
+      "rects": [
+        {
+          "x": 0.108593515710906,
+          "y": 0.7187383327969102,
+          "w": 0.7730498817100396,
+          "h": 0.08239459285484385
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mpaby0pr-0mla",
+      "documentId": "10-ccr-2506-1",
+      "text": "4.309.3 Drug and Alcohol Treatment and Rehabilitation Centers (Center) A. Residents of publicly operated community mental health centers or private non-profit organizations or institutions, operating a residential drug or alcohol treatment or rehabilitation program, are eligible to participate in SNAP. Applications shall be made through an authorized representative who is employed by the drug or alcohol treatment or rehabilitation facility and designated by the facility for that purpose. Individuals residing in a for-profit facility are considered residents of an institution per Section 4.304.4(E), above.",
+      "page": 70,
+      "rects": [
+        {
+          "x": 0.1117923428076372,
+          "y": 0.08869005471515931,
+          "w": 0.7773149845056813,
+          "h": 0.12523978113936274
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1779055915695",
+      "documentId": "10-ccr-2506-1",
+      "text": "B. The center shall be approved by the Colorado Department of Human Services (CDHS), Office of Behavioral Health (OBH) before its residents are eligible for SNAP participation. The OBH will ensure that the center is providing treatment that can lead to the rehabilitation of drug or alcohol addiction. Before the certification of residents can be accomplished, the local office shall verify that the center has been approved by FNS as a retailer and is certified by the OBH. Proof of OBH certification may be provided in the form of a license or an approval letter issued to the center by that agency, or proof that the center is funded under Part B of Title XIX of the Public Health Service Act (42 U.S.C. 300x-1 through 300x-13).",
+      "page": 70,
+      "rects": [
+        {
+          "x": 0.1096597914098164,
+          "y": 0.22052140328290956,
+          "w": 0.7773149845056813,
+          "h": 0.15009172835532675
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1779055958670",
+      "documentId": "10-ccr-2506-1",
+      "text": "C. Residents and their children residing in a certified center must voluntarily elect to participate in SNAP. Residents shall have their eligibility determined as one-person households unless children are residing with them at the center. Children of the residents in a center who live with their parents in the treatment center will qualify for SNAP. Meals served to the children are eligible for purchase with SNAP benefits. The local office shall certify residents of centers by using the same provisions that apply to other applicant households.",
+      "page": 70,
+      "rects": [
+        {
+          "x": 0.1075272400119956,
+          "y": 0.3795429674927583,
+          "w": 0.7879777414947853,
+          "h": 0.09887351142581269
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__mpac03fh-5vs4",
+      "documentId": "10-ccr-2506-1",
+      "text": "D. Residents of centers may be receiving public assistance or SSI benefits or may be destitute of income and resources and eligible for expedited service. Residents who qualify for expedited service shall have benefits available for spending no later than seven (7) calendar days following the date the application was filed.",
+      "page": 70,
+      "rects": [
+        {
+          "x": 0.113924894205458,
+          "y": 0.48418410041841003,
+          "w": 0.7815800873013228,
+          "h": 0.06426778242677827
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mpac1ooy-ok3v",
+      "documentId": "10-ccr-2506-1",
+      "text": "E. Any applicant household containing a member who regularly participates in a drug and alcohol treatment program on a non-resident basis shall include this member when having its eligibility determined. The household must complete the application process through the head of household or through an authorized representative and shall meet all financial and non-financial criteria unless specifically exempt. Such households may use any part of their SNAP benefits to purchase food prepared for or served to the individual during the program, provided the program has been authorized by FNS for such purposes.",
+      "page": 70,
+      "rects": [
+        {
+          "x": 0.1075272400119956,
+          "y": 0.5542195043450273,
+          "w": 0.768784778914398,
+          "h": 0.11123270035403932
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1779056098299",
+      "documentId": "10-ccr-2506-1",
+      "text": "70",
+      "page": 70,
+      "rects": [
+        {
+          "x": 0.1075272400119956,
+          "y": 0.9472417122626328,
+          "w": 0.7847789143980541,
+          "h": 0.03378178307048596
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1779056103313",
+      "documentId": "10-ccr-2506-1",
+      "text": "CODE OF COLORADO REGULATIONS 10 CCR 2506-1 Supplemental Nutrition Assistance Program (SNAP)",
+      "page": 71,
+      "rects": [
+        {
+          "x": 0.1043284129152644,
+          "y": 0.03787576440296105,
+          "w": 0.7911765685915164,
+          "h": 0.037901512713228204
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1779056144160",
+      "documentId": "10-ccr-2506-1",
+      "text": "4.309.31 Responsibilities of the Center Drug or alcohol treatment and rehabilitation centers will be responsible for the following: A. The drug or alcohol treatment center employee designated to serve as an authorized representative shall be responsible for obtaining their own Electronic Benefit Transfer (EBT) card and Personal Identification Number (PIN) with which to access benefits from the resident’s account while the resident remains a resident of the facility. The resident’s EBT card shall be stored in a secure area while the resident receives treatment at the facility. The drug or alcohol treatment center shall not have access to, or knowledge of, the PIN for the resident’s own EBT card.",
+      "page": 70,
+      "rects": [
+        {
+          "x": 0.1128586185065476,
+          "y": 0.673691663984551,
+          "w": 0.7741161574089501,
+          "h": 0.2175217251367879
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1779056170830",
+      "documentId": "10-ccr-2506-1",
+      "text": "B. Each treatment and rehabilitation center shall provide the certification office with a certified list of currently participating residents and their children residing with them in the center. The certification office shall require the list on a monthly or semimonthly basis. In addition, the certification office shall conduct periodic, random, onsite visits to the center to ensure the accuracy of the listings and that the local office's records are consistent and up-to-date. The frequency of periodic visits is left to the discretion of the local office but once each year is recommended.",
+      "page": 71,
+      "rects": [
+        {
+          "x": 0.1096597914098164,
+          "y": 0.08648857418731895,
+          "w": 0.7709173303122189,
+          "h": 0.1079369166398455
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1779056223723",
+      "documentId": "10-ccr-2506-1",
+      "text": "C. The center shall also report when the resident leaves the center. The center shall return to the issuing office any benefits received after the household has left the center. The center shall provide the residents with their EBT card when the household leaves the treatment and rehabilitation program. Once the household leaves the center, the center is no longer allowed to act as that household's authorized representative. The departing resident shall receive his/her full allotment if already issued and if no benefits have been spent on his/her behalf. If benefits have been issued and any portion has been spent on his/her behalf and the resident leaves prior to the sixteenth (16th) of the month, the center shall provide the resident with one half of his/her monthly allotment; on or after the sixteenth (16th), if benefits have already been used, the resident shall not receive any benefits. Under no circumstances shall the center pull benefits from an EBT card after the resident has left the facility. The center shall return the authorized representative EBT card, and the resident’s card if it was left behind, to the issuing office within five (5) calendar days of the resident’s departure. The center shall provide the household with a change report form as soon as it has knowledge the household plans to leave the facility and advise the household to return the form to the local office within ten (10) days of any change the household is required to report.",
+      "page": 71,
+      "rects": [
+        {
+          "x": 0.108593515710906,
+          "y": 0.20184100418410042,
+          "w": 0.7773149845056813,
+          "h": 0.3328741551335693
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1779056241019",
+      "documentId": "10-ccr-2506-1",
+      "text": "D. The center shall be responsible for any misrepresentation or fraud, which it knowingly commits in the certification of center residents. The organization or institution shall be knowledgeable about household circumstances when serving as an authorized representative. The organization or institution should carefully review those circumstances with residents prior to applying on their behalf.",
+      "page": 71,
+      "rects": [
+        {
+          "x": 0.1117923428076372,
+          "y": 0.5404827808175089,
+          "w": 0.7815800873013229,
+          "h": 0.07992275506919855
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1779056246034",
+      "documentId": "10-ccr-2506-1",
+      "text": "E. The center may be penalized or disqualified if it is determined administratively or judicially that benefits were misappropriated or used for purchases that did not contribute to a certified household's meals. The local office shall promptly notify the state department when it has reason to believe that a center is misusing SNAP benefits in its possession. However, no action shall be taken against the center prior to an FNS investigation. The local office shall establish a claim for over-issuance of SNAP benefits held on behalf of center residents if any over-issuances are discovered because of an FNS investigation or hearing. If FNS disqualifies a center as an authorized drug and alcohol rehabilitation and treatment center, the local office shall suspend its authorized representative status for the same period.",
+      "page": 71,
+      "rects": [
+        {
+          "x": 0.108593515710906,
+          "y": 0.625349211457998,
+          "w": 0.7805138116024124,
+          "h": 0.14583842935307378
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1779056250483",
+      "documentId": "10-ccr-2506-1",
+      "text": "71",
+      "page": 71,
+      "rects": [
+        {
+          "x": 0.1075272400119956,
+          "y": 0.9458641776633409,
+          "w": 0.7879777414947853,
+          "h": 0.032133891213389165
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1779056254566",
+      "documentId": "10-ccr-2506-1",
+      "text": "CODE OF COLORADO REGULATIONS 10 CCR 2506-1 Supplemental Nutrition Assistance Program (SNAP)",
+      "page": 72,
+      "rects": [
+        {
+          "x": 0.097930758721802,
+          "y": 0.03649822980366913,
+          "w": 0.7986404984838892,
+          "h": 0.043669134213067264
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__mpac7y12-bcz1",
+      "documentId": "10-ccr-2506-1",
+      "text": "4.309.4 Residents of Group Living Arrangements A. Group living arrangements are residential settings that are considered alternatives to institutional living. Institutional settings are not included in this provision. To be eligible as residents of a group living arrangement, the person must be a person with disabilities. In addition, the local office shall verify that the group living arrangement is a public or private nonprofit facility with no more than sixteen (16) residents and is certified as a group living arrangement by the Colorado Department of Public Health and Environment and the state department under Section 1616(e) of the Social Security Act (codified at 42 U.S.C. 1382e(e)). FNS may also certify under standards determined by the USDA that are comparable to standards implemented by the state under 1616(e) of the Social Security Act. Individuals residing in a for-profit facility are considered residents of an institution per Section 4.304.4(E).",
+      "page": 72,
+      "rects": [
+        {
+          "x": 0.1075272400119956,
+          "y": 0.08593498551657547,
+          "w": 0.7741161574089501,
+          "h": 0.1837399420663019
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1779056392674",
+      "documentId": "10-ccr-2506-1",
+      "text": "B. Residents of group living arrangements must voluntarily elect to participate in SNAP. Residents shall either apply and be certified through an authorized representative, who is employed and designated by the group living arrangement or apply and be certified on their own behalf or through an authorized representative of their own choice. The group living arrangement shall determine if any resident may apply for SNAP on his/her own behalf; the determination shall be based on the resident's physical and mental capability to handle his/her own affairs. 1. If residents apply using the group living facility's authorized representative, eligibility shall be determined as a one-person household. The group living arrangement may either: a) Receive and spend the allotment on food prepared by and/or served to the eligible resident, or b) Allow the eligible resident to use all or any portion of the allotment on his/her own behalf. 2. The group living facility employee designated to serve as an authorized representative shall be responsible for obtaining their own Electronic Benefit Transfer (EBT) card and Personal Identification Number (PIN) with which to access benefits from the resident’s account while the resident remains a resident of the facility. 3. The resident’s EBT card shall be stored in a secure area while the resident resides in the group living facility. The group living facility shall not have access to, or knowledge of, the PIN for the resident’s personal EBT card. 4. If the residents apply on their own behalf, the applications shall be accepted for any individual applying as a one-person household or for any grouping of residents applying as a household. If residents are certified on their own behalf, the allotment may be returned to the facility to be used to purchase food for meals served either communally or individually to eligible residents, used by eligible residents to purchase and prepare food for their own consumption, and/or to purchase meals prepared and served by the group living arrangement.",
+      "page": 72,
+      "rects": [
+        {
+          "x": 0.1107260671087268,
+          "y": 0.27461860315416803,
+          "w": 0.7879777414947853,
+          "h": 0.493543611200515
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1779056428733",
+      "documentId": "10-ccr-2506-1",
+      "text": "72",
+      "page": 72,
+      "rects": [
+        {
+          "x": 0.0968644830228916,
+          "y": 0.9436626971355004,
+          "w": 0.8039718769784412,
+          "h": 0.04119729642742198
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1779056434191",
+      "documentId": "10-ccr-2506-1",
+      "text": "CODE OF COLORADO REGULATIONS 10 CCR 2506-1 Supplemental Nutrition Assistance Program (SNAP)",
+      "page": 73,
+      "rects": [
+        {
+          "x": 0.1021958615174436,
+          "y": 0.03594464113292565,
+          "w": 0.7965079470860684,
+          "h": 0.042021242355970385
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1779056450490",
+      "documentId": "10-ccr-2506-1",
+      "text": "C. Applications for residents of group living arrangements shall be processed using the same standards that apply to all other SNAP households including that residents entitled to expedited service shall have benefits available for spending no later than seven (7) calendar days following the date the application was filed. Required verification shall be obtained prior to further benefits being issued.",
+      "page": 72,
+      "rects": [
+        {
+          "x": 0.1064609643130852,
+          "y": 0.7764016736401673,
+          "w": 0.7794475359035021,
+          "h": 0.08074670099774706
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1779056460052",
+      "documentId": "10-ccr-2506-1",
+      "text": "D. The local office shall process changes in household circumstances and recertifications by using the same standards that apply to all other SNAP households, and resident households shall be afforded the same rights all other SNAP households enjoy, including the right to notices of adverse action, fair hearings, and entitlement to lost benefits.",
+      "page": 73,
+      "rects": [
+        {
+          "x": 0.1075272400119956,
+          "y": 0.0878532346314773,
+          "w": 0.768784778914398,
+          "h": 0.06591567428387514
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1779056503374",
+      "documentId": "10-ccr-2506-1",
+      "text": "4.309.41 Responsibilities of Group Living Arrangements A. Each group living arrangement shall provide the local office with a list of currently participating residents. The local office shall require the list on either a monthly or semimonthly basis and the list shall be signed by a responsible center official attesting to the validity of the list. In addition, the local office shall conduct periodic random onsite visits to ensure the accuracy of the list and that the local office's records are consistent and up to date. B. If the resident has applied on his/her own behalf, the household is responsible for reporting changes to the local office in accordance with Section 4.603. If the group living arrangement is acting in the capacity of an authorized representative, the group living arrangement shall notify the local office of changes in the household's income or other household circumstances and when the individual leaves the group living arrangement. C. When the household leaves the group living facility, the group living arrangement, either acting as an authorized representative or retaining use of the benefits on behalf of the residents (regardless of the method of application), shall provide residents with their EBT card. The household, not the group living arrangement, shall be allowed to receive his/her authorized issuance. Also, the departing household shall receive its full allotment if no benefits have been spent on behalf of that individual household. These procedures are applicable any time during the month. However, if the benefits have already been issued and any portion spent on behalf of the individual and the household leaves the group living arrangement prior to the sixteenth (16th) of the month, the facility shall provide the resident with one half of his/her monthly allotment. If the household leaves on or after the sixteenth (16th) of the month and the benefits have already been issued and used, the household does not receive any benefits. Once the resident leaves, the group living arrangement no longer acts as his/her authorized representative. Under no circumstances shall the group living arrangement pull benefits from an EBT card after the resident or group of residents have left the group living facility. The facility shall return the authorized representative EBT card, and the resident’s card if it was left behind, to the issuing office within five (5) calendar days of the resident’s departure. The group living arrangement shall provide the household with a change report form as soon as it has knowledge of the household plan to leave the facility and advise the household to return the form to the local office within ten (10) days of any change the household is required to report. D. When acting as the authorized representative, a group living arrangement shall be responsible for any misrepresentation or fraud, which it knowingly commits in the certification of group living facility residents. The facility shall be knowledgeable about household circumstances as an authorized representative and should carefully review those circumstances with residents prior to applying on their behalf. The facility shall be strictly liable for all losses or misuse of benefits held on behalf of resident households and for all over-issuances that occur while the households are residents of the group living facility. However, the resident applying on his/her own behalf shall be responsible for over-issuance as would any other household.",
+      "page": 73,
+      "rects": [
+        {
+          "x": 0.1107260671087268,
+          "y": 0.15871258448664308,
+          "w": 0.790110292892606,
+          "h": 0.6764596073382685
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1779056507848",
+      "documentId": "10-ccr-2506-1",
+      "text": "73",
+      "page": 73,
+      "rects": [
+        {
+          "x": 0.108593515710906,
+          "y": 0.948876729964596,
+          "w": 0.7879777414947852,
+          "h": 0.02719021564209856
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1779056512278",
+      "documentId": "10-ccr-2506-1",
+      "text": "CODE OF COLORADO REGULATIONS 10 CCR 2506-1 Supplemental Nutrition Assistance Program (SNAP)",
+      "page": 74,
+      "rects": [
+        {
+          "x": 0.10539468861417481,
+          "y": 0.03456710653363373,
+          "w": 0.7890440171936957,
+          "h": 0.0444930801416157
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1779056529512",
+      "documentId": "10-ccr-2506-1",
+      "text": "E. The group living arrangement may purchase and prepare food to be consumed by eligible residents on a group basis if residents normally obtain their meals at a central location as part of the group living arrangement services, or if meals are prepared at a central location for delivery to the individual residents. If residents purchase and/or prepare food for individual consumption, as opposed to communal dining, the group living arrangement shall ensure that each resident’s SNAP benefits are used for meals intended for that resident. If the resident retains use of their own allotment, they may either use the benefits to purchase meals prepared for them by the facility or to purchase food to prepare meals for their own consumption.",
+      "page": 74,
+      "rects": [
+        {
+          "x": 0.1107260671087268,
+          "y": 0.08400386224654006,
+          "w": 0.7783812602045916,
+          "h": 0.12523978113936274
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1779056575400",
+      "documentId": "10-ccr-2506-1",
+      "text": "4.309.42 Disqualification of the Group Living Arrangements A group living arrangement facility authorized by FNS may be penalized or disqualified if it is determined administratively or judicially that benefits were misappropriated or used for purchases that did not contribute to a certified household's meals. The local office shall promptly notify the state department when it has reason to believe that a facility is misusing benefits. However, the local office shall take no action prior to FNS action against the facility. The local office shall establish a claim for over-issuances of SNAP benefits held on behalf of resident clients if any over-issuances are discovered during an investigation or hearing procedure for redemption violations. If the group living facility loses its authorization from FNS to accept SNAP benefits or is no longer certified by the Colorado Department of Public Health and Environment as a group living arrangement, residents using the facility as an authorized representative shall no longer be able to participate. The residents are not entitled to a Notice of Adverse Action but shall receive a written notice explaining the termination and when it shall become effective. Residents applying on their own behalf shall still be able to participate, if otherwise eligible.",
+      "page": 74,
+      "rects": [
+        {
+          "x": 0.1128586185065476,
+          "y": 0.21665915674283875,
+          "w": 0.7783812602045916,
+          "h": 0.26036691342130674
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1779056598376",
+      "documentId": "10-ccr-2506-1",
+      "text": "74",
+      "page": 74,
+      "rects": [
+        {
+          "x": 0.1107260671087268,
+          "y": 0.9466752494367557,
+          "w": 0.7805138116024125,
+          "h": 0.03378178307048596
+        }
+      ],
+      "status": "skipped"
     }
   ],
   "mappings": [
@@ -8331,7 +8922,7 @@
       "sectionId": "10-ccr-2506-1__mp3f1ik3-w7kn"
     },
     {
-      "nodePath": "/parentChildRelationships/*/isUnderParentalControl",
+      "nodePath": "/parentChildRelationships/*/isNonparentParentalControl",
       "sectionId": "10-ccr-2506-1__mp3f1ik3-w7kn"
     },
     {
@@ -8895,7 +9486,7 @@
       "sectionId": "10-ccr-2506-1__mp8wuqhz-dlb6"
     },
     {
-      "nodePath": "/members/*/isFullTimeStudentResponsibleForDependentChild",
+      "nodePath": "/members/*/isStudentResponsibleForDependentChild",
       "sectionId": "10-ccr-2506-1__mp8wmz93-lmgp"
     },
     {
@@ -8927,10 +9518,6 @@
       "sectionId": "10-ccr-2506-1__mp8wmz93-lmgp"
     },
     {
-      "nodePath": "/members/*/hasParentalControlOfDependentChild",
-      "sectionId": "10-ccr-2506-1__mp8wmz93-lmgp"
-    },
-    {
       "nodePath": "/members/*/isInOnTheJobTraining",
       "sectionId": "10-ccr-2506-1__mp8x00bl-jw4v"
     },
@@ -8941,6 +9528,90 @@
     {
       "nodePath": "/parentChildRelationships/*/adequateChildcareUnavailable",
       "sectionId": "10-ccr-2506-1__mp8wq1ra-2m94"
+    },
+    {
+      "nodePath": "/members/*/isIneligibleStriker",
+      "sectionId": "10-ccr-2506-1__mpa7b1kj-ujf7"
+    },
+    {
+      "nodePath": "/members/*/wasEligibleForSnapDayBeforeStrike",
+      "sectionId": "10-ccr-2506-1__mpa7b1kj-ujf7"
+    },
+    {
+      "nodePath": "/members/*/wasExemptFromWorkRegistrationDayBeforeStrike",
+      "sectionId": "10-ccr-2506-1__mpa7ksha-8rnd"
+    },
+    {
+      "nodePath": "/members/*/isStriker",
+      "sectionId": "10-ccr-2506-1__mpa7kh0w-qm18"
+    },
+    {
+      "nodePath": "/members/*/isIneligibleStriker",
+      "sectionId": "10-ccr-2506-1__mpa7kh0w-qm18"
+    },
+    {
+      "nodePath": "/members/*/voluntarilyQuitOrReducedWorkEffort",
+      "sectionId": "10-ccr-2506-1__mpaauv4f-hsqa"
+    },
+    {
+      "nodePath": "/members/*/voluntarilyQuitOrReducedWorkEffort",
+      "sectionId": "10-ccr-2506-1__mpaav587-vl95"
+    },
+    {
+      "nodePath": "/studentExemptionWorkHoursPerWeek",
+      "sectionId": "10-ccr-2506-1__mp8wf042-hr3h"
+    },
+    {
+      "nodePath": "/voluntaryQuitReasonOptions",
+      "sectionId": "10-ccr-2506-1__mpaazm6k-wlp5"
+    },
+    {
+      "nodePath": "/members/*/voluntaryQuitReason",
+      "sectionId": "10-ccr-2506-1__mpaazm6k-wlp5"
+    },
+    {
+      "nodePath": "/members/*/isIneligibleVoluntaryQuit",
+      "sectionId": "10-ccr-2506-1__mpaazm6k-wlp5"
+    },
+    {
+      "nodePath": "/members/*/livesInInstitution",
+      "sectionId": "10-ccr-2506-1__mpabh230-klv2"
+    },
+    {
+      "nodePath": "/members/*/disqualifiedForMultiHouseholdParticipation",
+      "sectionId": "10-ccr-2506-1__mpabrfft-wnlu"
+    },
+    {
+      "nodePath": "/members/*/preparesFoodWithHousehold",
+      "sectionId": "10-ccr-2506-1__mpabspc9-l6kw"
+    },
+    {
+      "nodePath": "/members/*/isResidentOfBatteredWomensShelter",
+      "sectionId": "10-ccr-2506-1__mpabt7vq-xwqo"
+    },
+    {
+      "nodePath": "/members/*/residesAtSubstanceAbuseTreatmentFacility",
+      "sectionId": "10-ccr-2506-1__mpaby0pr-0mla"
+    },
+    {
+      "nodePath": "/isExpedited",
+      "sectionId": "10-ccr-2506-1__mpac03fh-5vs4"
+    },
+    {
+      "nodePath": "/members/*/residesAtSubstanceAbuseTreatmentFacility",
+      "sectionId": "10-ccr-2506-1__mpac1ooy-ok3v"
+    },
+    {
+      "nodePath": "/members/*/isPartOfHousehold",
+      "sectionId": "10-ccr-2506-1__mpac1ooy-ok3v"
+    },
+    {
+      "nodePath": "/members/*/livesInGroupLivingArrangement",
+      "sectionId": "10-ccr-2506-1__mpac7y12-bcz1"
+    },
+    {
+      "nodePath": "/members/*/isExemptFromBoardingHouseOrInstitutionRule",
+      "sectionId": "10-ccr-2506-1__mpac7y12-bcz1"
     }
   ]
 }

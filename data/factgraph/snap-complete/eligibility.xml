@@ -72,7 +72,7 @@
       <Writable><CollectionItem collection="/members" /></Writable>
     </Fact>
 
-    <Fact path="/parentChildRelationships/*/isUnderParentalControl">
+    <Fact path="/parentChildRelationships/*/isNonparentParentalControl">
       <Name>Is non-parent parental-control relationship</Name>
       <Description>Whether this relationship is the non-parent caregiver kind (the child is under the parental control of an adult who is not their natural, adoptive, or stepparent), rather than a natural, adoptive, or stepparent relationship. A child under eighteen (18) is considered to be under parental control of a household member when financially or otherwise dependent on that member (10 CCR 2506-1, 4.304.1).</Description>
       <Writable><Boolean /></Writable>
@@ -441,7 +441,7 @@
 
     <Fact path="/members/*/isMandatoryChildViaParentalControl">
       <Name>Is mandatory child via non-parent parental control</Name>
-      <Description>Whether this member is a mandatory household member under the second mandatory-child case: a non-foster, non-emancipated child under eighteen (18) years of age who has at least one /parentChildRelationships entry of the non-parent caregiver kind (isUnderParentalControl is true) whose parent-side member is part of the SNAP household (10 CCR 2506-1, 4.304.1).</Description>
+      <Description>Whether this member is a mandatory household member under the second mandatory-child case: a non-foster, non-emancipated child under eighteen (18) years of age who has at least one /parentChildRelationships entry of the non-parent caregiver kind (isNonparentParentalControl is true) whose parent-side member is part of the SNAP household (10 CCR 2506-1, 4.304.1).</Description>
       <Derived>
         <All>
           <LessThan>
@@ -459,7 +459,7 @@
                       <Left><Dependency path="childId" /></Left>
                       <Right><Dependency path="^" /></Right>
                     </Equal>
-                    <Dependency path="isUnderParentalControl" />
+                    <Dependency path="isNonparentParentalControl" />
                     <Dependency path="parentId/isPartOfHousehold" />
                   </All>
                 </Filter>
@@ -484,7 +484,7 @@
 
     <Fact path="/members/*/isMandatoryParentViaChild">
       <Name>Is mandatory parent via child in household</Name>
-      <Description>Whether this member is a mandatory household member under the parent-side mirror of the first mandatory-child case: a natural, adoptive, or stepparent (i.e., the linked /parentChildRelationships entry has isUnderParentalControl false) of a household member aged twenty-one (21) years or younger who is themselves part of the SNAP household. Uses childId/isPartOfHousehold on the child side so the existence-in-household check matches the policy phrasing "living with their natural or adoptive parent(s) or stepparent(s)" (10 CCR 2506-1, 4.304.1).</Description>
+      <Description>Whether this member is a mandatory household member under the parent-side mirror of the first mandatory-child case: a natural, adoptive, or stepparent (i.e., the linked /parentChildRelationships entry has isNonparentParentalControl false) of a household member aged twenty-one (21) years or younger who is themselves part of the SNAP household. Uses childId/isPartOfHousehold on the child side so the existence-in-household check matches the policy phrasing "living with their natural or adoptive parent(s) or stepparent(s)" (10 CCR 2506-1, 4.304.1).</Description>
       <Derived>
         <GreaterThan>
           <Left>
@@ -495,7 +495,7 @@
                     <Left><Dependency path="parentId" /></Left>
                     <Right><Dependency path="^" /></Right>
                   </Equal>
-                  <Not><Dependency path="isUnderParentalControl" /></Not>
+                  <Not><Dependency path="isNonparentParentalControl" /></Not>
                   <LessThanOrEqual>
                     <Left><Dependency path="childId/age" /></Left>
                     <Right><Dependency path="/mandatoryChildParentAgeLimit" /></Right>
@@ -512,7 +512,7 @@
 
     <Fact path="/members/*/isMandatoryParentViaParentalControl">
       <Name>Is mandatory parent via non-parent parental control</Name>
-      <Description>Whether this member is a mandatory household member under the parent-side mirror of the second mandatory-child case: a non-parent caregiver (the linked /parentChildRelationships entry has isUnderParentalControl true) over a non-foster, non-emancipated child under eighteen (18) years of age who is themselves part of the SNAP household. Uses childId/isPartOfHousehold on the child side so the existence-in-household check matches the policy phrasing "living with…a household member" (10 CCR 2506-1, 4.304.1).</Description>
+      <Description>Whether this member is a mandatory household member under the parent-side mirror of the second mandatory-child case: a non-parent caregiver (the linked /parentChildRelationships entry has isNonparentParentalControl true) over a non-foster, non-emancipated child under eighteen (18) years of age who is themselves part of the SNAP household. Uses childId/isPartOfHousehold on the child side so the existence-in-household check matches the policy phrasing "living with…a household member" (10 CCR 2506-1, 4.304.1).</Description>
       <Derived>
         <GreaterThan>
           <Left>
@@ -523,7 +523,7 @@
                     <Left><Dependency path="parentId" /></Left>
                     <Right><Dependency path="^" /></Right>
                   </Equal>
-                  <Dependency path="isUnderParentalControl" />
+                  <Dependency path="isNonparentParentalControl" />
                   <LessThan>
                     <Left><Dependency path="childId/age" /></Left>
                     <Right><Dependency path="/mandatoryChildParentalControlAgeLimit" /></Right>
@@ -1543,6 +1543,12 @@
       <Derived><Int>49</Int></Derived>
     </Fact>
 
+    <Fact path="/studentExemptionWorkHoursPerWeek">
+      <Name>Student exemption work hours per week</Name>
+      <Description>Minimum (inclusive) average hours worked per week for the SNAP student-eligibility employment exemption: twenty (20) hours per week, paid (10 CCR 2506-1, 4.306.1, B). TODO: the self-employed branch additionally requires earnings after allowable business expenses equal to at least the federal minimum wage multiplied by twenty (20) hours — not yet modeled.</Description>
+      <Derived><Int>20</Int></Derived>
+    </Fact>
+
     <Fact path="/studentExemptionDependentMemberAgeLimit">
       <Name>Student exemption dependent member age limit</Name>
       <Description>Upper bound (exclusive) on the age of a dependent household member whose care qualifies a full-time student for the SNAP student-eligibility exemption: a dependent household member under the age of six (6) (10 CCR 2506-1, 4.306.1).</Description>
@@ -1574,8 +1580,22 @@
 
     <Fact path="/members/*/meetsStudentEligibilityExemption">
       <Name>Meets student eligibility exemption</Name>
-      <Description>Whether this member meets one of the student eligibility exemption criteria outlined at 4.306.1 (10 CCR 2506-1, 4.306, A). TODO: derive from the specific 4.306.1 exemption criteria once those are modeled.</Description>
-      <Writable><Boolean /></Writable>
+      <Description>Whether this member meets at least one of the eight student-eligibility exemption criteria at 10 CCR 2506-1, 4.306.1: A physically or mentally unfit for employment; B employed for an average of twenty (20) hours per week and paid for such employment; C participating in a state or federally financed work-study program; D responsible for the care of a dependent household member under age six (6), or a full-time student who is a single parent with responsibility for the care of a dependent child under age twelve (12) (the single-parent provision); E responsible for more than half of the physical care of a dependent household member aged six (6) to under twelve (12) where the local office has determined that adequate childcare is not available; F receiving a Title IV-A TANF cash grant; G assigned to or placed in an institution of higher education through a WIOA, Employment First, Trade Act, other state/local employment-and-training, or JOBS program; H participating in an on-the-job training program.</Description>
+      <Derived>
+        <Any>
+          <Dependency path="../isPhysicallyOrMentallyUnfitForEmployment" />
+          <GreaterThanOrEqual>
+            <Left><Dependency path="../workHoursPerWeek" /></Left>
+            <Right><Dependency path="/studentExemptionWorkHoursPerWeek" /></Right>
+          </GreaterThanOrEqual>
+          <Dependency path="../isParticipatingInWorkStudy" />
+          <Dependency path="../isStudentResponsibleForDependentChild" />
+          <Dependency path="../isStudentResponsibleForPhysicalCareOfDependentChildWithoutAdequateChildcare" />
+          <Dependency path="../receivesTanf" />
+          <Dependency path="../isAssignedToHigherEducationThroughEmploymentTrainingProgram" />
+          <Dependency path="../isInOnTheJobTraining" />
+        </Any>
+      </Derived>
     </Fact>
 
     <Fact path="/members/*/isParticipatingInWorkStudy">
@@ -1630,7 +1650,7 @@
 
     <Fact path="/members/*/isSingleParentOfDependentChild">
       <Name>Is single parent of a dependent child</Name>
-      <Description>Whether this member has at least one natural, adoptive, or stepparent /parentChildRelationships entry (isUnderParentalControl is false) to a household child under age twelve (12) for whom this member is the only such parent in the same SNAP household. Captures the single-parent provision of the SNAP full-time-student exemption (10 CCR 2506-1, 4.306.1).</Description>
+      <Description>Whether this member has at least one /parentChildRelationships entry to a household child under age twelve (12) for whom this member is the only parent of any kind (natural, adoptive, stepparent, or non-parent caregiver) in the same SNAP household. Captures the single-parent provision of the SNAP full-time-student exemption (10 CCR 2506-1, 4.306.1).</Description>
       <Derived>
         <GreaterThan>
           <Left>
@@ -1641,7 +1661,6 @@
                     <Left><Dependency path="parentId" /></Left>
                     <Right><Dependency path="^" /></Right>
                   </Equal>
-                  <Not><Dependency path="isUnderParentalControl" /></Not>
                   <Dependency path="childId/isPartOfHousehold" />
                   <LessThan>
                     <Left><Dependency path="childId/age" /></Left>
@@ -1656,7 +1675,6 @@
                               <Left><Dependency path="childId" /></Left>
                               <Right><Dependency path="^/childId" /></Right>
                             </Equal>
-                            <Not><Dependency path="isUnderParentalControl" /></Not>
                             <Dependency path="parentId/isPartOfHousehold" />
                           </All>
                         </Filter>
@@ -1673,49 +1691,15 @@
       </Derived>
     </Fact>
 
-    <Fact path="/members/*/hasParentalControlOfDependentChild">
-      <Name>Has parental control of a dependent child</Name>
-      <Description>Whether this member has at least one non-parent parental-control /parentChildRelationships entry (isUnderParentalControl is true) to a household child under age twelve (12). Pairs with Not(/members/*/isMandatorySpouse) to capture the "full-time student in the same SNAP household with a child who is under their parental control may qualify if they do not reside with their spouse" branch of the SNAP full-time-student exemption (10 CCR 2506-1, 4.306.1).</Description>
-      <Derived>
-        <GreaterThan>
-          <Left>
-            <CollectionSize>
-              <Filter path="/parentChildRelationships">
-                <All>
-                  <Equal>
-                    <Left><Dependency path="parentId" /></Left>
-                    <Right><Dependency path="^" /></Right>
-                  </Equal>
-                  <Dependency path="isUnderParentalControl" />
-                  <Dependency path="childId/isPartOfHousehold" />
-                  <LessThan>
-                    <Left><Dependency path="childId/age" /></Left>
-                    <Right><Dependency path="/studentExemptionDependentChildAgeLimit" /></Right>
-                  </LessThan>
-                </All>
-              </Filter>
-            </CollectionSize>
-          </Left>
-          <Right><Int>0</Int></Right>
-        </GreaterThan>
-      </Derived>
-    </Fact>
-
-    <Fact path="/members/*/isFullTimeStudentResponsibleForDependentChild">
+    <Fact path="/members/*/isStudentResponsibleForDependentChild">
       <Name>Is student responsible for a dependent child</Name>
-      <Description>Whether this member qualifies for the SNAP student eligibility exemption as a student who has responsibility for the care of a dependent household member under the age of six (6); or as a full-time student who is a single parent with responsibility for the care of a dependent child under age twelve (12). The full-time requirement only applies to the single-parent leg; the under-six leg applies to any student. The single-parent provision applies in those situations where only one natural, adoptive, or stepparent — regardless of marital status — is in the same SNAP household as the child. A full-time student in the same SNAP household with a child who is under their parental control may qualify if they do not reside with their spouse (10 CCR 2506-1, 4.306.1).</Description>
+      <Description>Whether this member qualifies for the SNAP student eligibility exemption as a student who has responsibility for the care of a dependent household member under the age of six (6); or as a full-time student who is a single parent with responsibility for the care of a dependent child under age twelve (12). The full-time requirement only applies to the single-parent leg; the under-six leg applies to any student. The single-parent provision applies in those situations where only one parent of any kind (natural, adoptive, stepparent, or non-parent caregiver) — regardless of marital status — is in the same SNAP household as the child; this subsumes the policy's separate parental-control branch (10 CCR 2506-1, 4.306.1).</Description>
       <Derived>
         <Any>
           <Dependency path="../hasCareOfDependentHouseholdMember" />
           <All>
             <Dependency path="../isFullTimeStudent" />
-            <Any>
-              <Dependency path="../isSingleParentOfDependentChild" />
-              <All>
-                <Dependency path="../hasParentalControlOfDependentChild" />
-                <Not><Dependency path="../isMandatorySpouse" /></Not>
-              </All>
-            </Any>
+            <Dependency path="../isSingleParentOfDependentChild" />
           </All>
         </Any>
       </Derived>
@@ -1723,7 +1707,7 @@
 
     <Fact path="/members/*/isStudentResponsibleForPhysicalCareOfDependentChildWithoutAdequateChildcare">
       <Name>Is student responsible for physical care of a dependent child without adequate childcare</Name>
-      <Description>Whether this member qualifies for the SNAP student eligibility exemption as a student who is responsible for more than half of the physical care of a dependent household member who has reached the age of six (6) but is under the age of twelve (12), where the local office has determined that adequate childcare is not available to enable the individual to attend class and satisfy the requirement of item B or item C of 4.306.1. Derived from any /parentChildRelationships entry whose parent-side member is this member, whose child-side member is part of the SNAP household and aged six (6) to under twelve (12), and where parentProvidesMoreThanHalfOfPhysicalCare and adequateChildcareUnavailable are both true (10 CCR 2506-1, 4.306.1, E).</Description>
+      <Description>Whether this member qualifies for the SNAP student eligibility exemption as a student who is responsible for more than half of the physical care of a dependent household member who has reached the age of six (6) but is under the age of twelve (12), where the local office has determined that adequate childcare is not available to enable the individual to attend class and satisfy the requirement of item B or item C of 4.306.1. Derived from any /parentChildRelationships entry where this member is the parent, the child is part of the SNAP household and aged six (6) to under twelve (12), and both per-relationship flags parentProvidesMoreThanHalfOfPhysicalCare and adequateChildcareUnavailable are true (10 CCR 2506-1, 4.306.1, E).</Description>
       <Derived>
         <GreaterThan>
           <Left>
@@ -1790,8 +1774,52 @@
 
     <Fact path="/members/*/voluntarilyQuitOrReducedWorkEffort">
       <Name>Voluntarily quit or reduced work effort</Name>
-      <Description>Whether this member has voluntarily quit a job or reduced their work effort to less than 30 hours a week without good cause (10 CCR 2506-1, 4.000.1)</Description>
+      <Description>Whether this member has voluntarily quit a job or reduced their work effort to less than 30 hours a week. Whether the quit or reduction was with good cause is captured separately on /members/*/voluntaryQuitReason (10 CCR 2506-1, 4.000.1; 4.308).</Description>
       <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/voluntaryQuitReasonOptions">
+      <Name>Voluntary quit reason options</Name>
+      <Description>Options enumerating the good cause reasons under which a member's voluntary quit of employment or reduction in work hours is not subject to sanction under SNAP. The list is not exhaustive (the local office may recognize other reasons) but captures the categories called out in policy: discrimination by an employer; work demands or conditions that render continued employment unreasonable; acceptance of new employment or at-least-half-time enrollment in a recognized school, training program, or institution of higher education that requires leaving employment; another household member accepting employment or at-least-half-time enrollment in another county or political sub-division that requires the household to move; resignations by persons under sixty (60) recognized by the employer as retirement; resignation from employment that does not meet the suitable-employment criteria of 4.310.7; circumstances beyond the individual's control where accepted full-time employment did not materialize or resulted in less than thirty (30) hours per week or weekly earnings below the federal minimum wage times thirty (30); leaving a job in connection with patterns of employment in which workers frequently move from one employer to another (such as migrant farm labor or construction work); illness of the head of household; illness of another household member requiring the head of household's presence; a household emergency; the unavailability of transportation; an employer demanding a reduction in the participant's work effort or salary through no fault of the employee; and lack of adequate child care for children who have reached age six (6) but are under age twelve (12) (10 CCR 2506-1, 4.308.1).</Description>
+      <Derived>
+        <EnumOptions>
+          <String>Discrimination</String>
+          <String>UnreasonableWorkConditions</String>
+          <String>NewEmploymentOrSchooling</String>
+          <String>HouseholdMoveForJobOrSchooling</String>
+          <String>RecognizedRetirementUnderSixty</String>
+          <String>UnsuitableEmployment</String>
+          <String>AcceptedFullTimeEmploymentDidNotMaterialize</String>
+          <String>PatternsOfEmployment</String>
+          <String>IllnessOfHeadOfHousehold</String>
+          <String>IllnessOfOtherHouseholdMember</String>
+          <String>HouseholdEmergency</String>
+          <String>UnavailableTransportation</String>
+          <String>EmployerDemandsReduction</String>
+          <String>LackOfAdequateChildCare</String>
+          <String>Other</String>
+        </EnumOptions>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/voluntaryQuitReason">
+      <Name>Voluntary quit reason</Name>
+      <Description>The reason for this member's voluntary quit of employment or reduction in work hours from the list enumerated in /voluntaryQuitReasonOptions. Selecting one of the 4.308.1 enumerated good cause reasons indicates good cause; selecting Other indicates a reason was given but it does not fall within an enumerated good cause category and — combined with /members/*/voluntarilyQuitOrReducedWorkEffort — drives the ineligible-voluntary-quit determination (10 CCR 2506-1, 4.308.1).</Description>
+      <Writable><Enum optionsPath="/voluntaryQuitReasonOptions" /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/isIneligibleVoluntaryQuit">
+      <Name>Is ineligible due to voluntary quit</Name>
+      <Description>Whether this member is ineligible for SNAP participation because they voluntarily quit their most recent job or reduced their work effort below thirty (30) hours per week without good cause. True when /members/*/voluntarilyQuitOrReducedWorkEffort is true and /members/*/voluntaryQuitReason is set to Other (a reason was given but it does not fall within one of the enumerated 4.308.1 good cause categories) (10 CCR 2506-1, 4.308; 4.308.1).</Description>
+      <Derived>
+        <All>
+          <Dependency path="../voluntarilyQuitOrReducedWorkEffort" />
+          <Equal>
+            <Left><Dependency path="../voluntaryQuitReason" /></Left>
+            <Right><Enum optionsPath="/voluntaryQuitReasonOptions">Other</Enum></Right>
+          </Equal>
+        </All>
+      </Derived>
     </Fact>
 
     <Fact path="/members/*/workHoursPerWeek">
@@ -2125,6 +2153,30 @@
       <Name>Is striker</Name>
       <Description>Whether this member is involved in a strike or other concerted stoppage of work by employees, including a stoppage by reason of the expiration of a collective bargaining agreement and any concerted slowdown or other concerted interruption of operations by employees (10 CCR 2506-1, 4.000.1)</Description>
       <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/wasEligibleForSnapDayBeforeStrike">
+      <Name>Was eligible for SNAP the day before the strike</Name>
+      <Description>Whether the household containing this striking member was eligible for SNAP the day before the strike. A household containing a striker is only eligible for SNAP if the household was eligible the day before the strike and is otherwise eligible at the time of the strike (10 CCR 2506-1, 4.305).</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/wasExemptFromWorkRegistrationDayBeforeStrike">
+      <Name>Was exempt from work registration the day before the strike</Name>
+      <Description>Whether this striking member was exempt from work registration the day before the strike, such as the caretaker of a child under six (6) years of age, other than persons exempt solely on the ground that they were employed. Households where the striking member was so exempt are not subject to the striker eligibility restriction (10 CCR 2506-1, 4.305, A and D).</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/isIneligibleStriker">
+      <Name>Is ineligible striker</Name>
+      <Description>Whether this member is an ineligible striker. A household containing a striking member shall not be eligible for SNAP unless the household was eligible for the Program the day before the strike and is otherwise eligible at the time of the strike. Households where the striking member was exempt from work registration the day before the strike (other than persons exempt solely on the ground that they were employed) are not subject to these provisions (10 CCR 2506-1, 4.305).</Description>
+      <Derived>
+        <All>
+          <Dependency path="../isStriker" />
+          <Not><Dependency path="../wasEligibleForSnapDayBeforeStrike" /></Not>
+          <Not><Dependency path="../wasExemptFromWorkRegistrationDayBeforeStrike" /></Not>
+        </All>
+      </Derived>
     </Fact>
 
     <Fact path="/studentEnrollmentStatusOptions">
@@ -3136,6 +3188,8 @@
           <Dependency path="../disqualifiedForParoleOrProbationViolation" />
           <Dependency path="../disqualifiedForBoardingHouseOrInstitutionResidence" />
           <Dependency path="../isIneligibleStudent" />
+          <Dependency path="../isIneligibleStriker" />
+          <Dependency path="../isIneligibleVoluntaryQuit" />
         </Any>
       </Derived>
     </Fact>
