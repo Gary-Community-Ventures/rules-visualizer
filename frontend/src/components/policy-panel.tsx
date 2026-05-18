@@ -95,11 +95,7 @@ function readStoredPage(rulesetId: string, docId: string): number {
     return 0
   }
 }
-function writeStoredPage(
-  rulesetId: string,
-  docId: string,
-  page: number
-): void {
+function writeStoredPage(rulesetId: string, docId: string, page: number): void {
   try {
     localStorage.setItem(pageKeyFor(rulesetId, docId), String(page))
   } catch {

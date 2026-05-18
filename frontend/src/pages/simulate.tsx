@@ -1565,10 +1565,16 @@ function DetailView({
                 Path
               </th>
               <th className="text-left px-3 py-2 font-medium w-[25%] truncate">
-                {rulesetId}
+                <RulesetWithOverrides
+                  rulesetId={rulesetId}
+                  overrides={baseOverrides}
+                />
               </th>
               <th className="text-left px-3 py-2 font-medium w-[25%] truncate">
-                {comparedRulesetId}
+                <RulesetWithOverrides
+                  rulesetId={comparedRulesetId}
+                  overrides={comparedOverrides}
+                />
               </th>
               <th className="text-right px-3 py-2 font-medium w-[20%]">
                 Change
@@ -2120,17 +2126,25 @@ function NodeChangesPanel({
                 </span>
                 {nc.avgDelta !== undefined && (
                   <span
-                    className={cn(
-                      'font-mono',
-                      nc.avgDelta > 0
-                        ? 'text-emerald-700'
-                        : nc.avgDelta < 0
-                          ? 'text-red-700'
-                          : 'text-muted-foreground'
-                    )}
+                    className="flex items-center gap-1"
+                    title={`Average delta across ${nc.timesChanged.toLocaleString()} changed case${nc.timesChanged !== 1 ? 's' : ''}: edited − base = ${nc.avgDelta > 0 ? '+' : ''}${nc.avgDelta} on average`}
                   >
-                    {nc.avgDelta > 0 ? '+' : ''}
-                    {nc.avgDelta}
+                    <span className="text-[10px] text-muted-foreground">
+                      avg
+                    </span>
+                    <span
+                      className={cn(
+                        'font-mono',
+                        nc.avgDelta > 0
+                          ? 'text-emerald-700'
+                          : nc.avgDelta < 0
+                            ? 'text-red-700'
+                            : 'text-muted-foreground'
+                      )}
+                    >
+                      {nc.avgDelta > 0 ? '+' : ''}
+                      {nc.avgDelta}
+                    </span>
                   </span>
                 )}
               </div>
