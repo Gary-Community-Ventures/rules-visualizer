@@ -80,6 +80,32 @@ function writeStoredScroll(
     // ignore
   }
 }
+// We persist the page number alongside the raw scrollTop so that a panel
+// resize between sessions (which changes the pixel offset of every page)
+// can be corrected: on restore we check whether the scrollTop still lands
+// on the saved page, and if not, scroll to that page instead.
+const pageKeyFor = (rulesetId: string, docId: string) =>
+  `policy-panel:page:${rulesetId}:${docId}`
+function readStoredPage(rulesetId: string, docId: string): number {
+  try {
+    const v = localStorage.getItem(pageKeyFor(rulesetId, docId))
+    const n = v ? parseInt(v, 10) : 0
+    return Number.isFinite(n) && n >= 1 ? n : 0
+  } catch {
+    return 0
+  }
+}
+function writeStoredPage(
+  rulesetId: string,
+  docId: string,
+  page: number
+): void {
+  try {
+    localStorage.setItem(pageKeyFor(rulesetId, docId), String(page))
+  } catch {
+    // ignore
+  }
+}
 
 /**
  * Walk pdf.js's text items on a page and concatenate the str of every item
@@ -327,42 +353,95 @@ export function PolicyPanel() {
     scrollToPage,
   ])
 
-  // Save scroll position on scroll, restore on mount + on doc switch.
-  // The handler is rebound when the active doc changes so the stored
-  // scrollTop is keyed by the doc the user is currently looking at.
+  // Compute the page number currently scrolled into view by finding the
+  // page wrapper whose top is at or above the container's scrollTop. The
+  // 8px slop matches the `offsetTop - 8` used by scrollToPage.
+  const pageAtScrollTop = useCallback((top: number): number => {
+    let current = 1
+    for (const [p, el] of pageRefs.current) {
+      if (el.offsetTop - 8 <= top) current = Math.max(current, p)
+    }
+    return current
+  }, [])
+
+  // Save scroll position + current page on scroll, restore on mount + on
+  // doc switch. The page number is the resize-resilient anchor: if the
+  // panel's width has changed since last visit, the raw scrollTop puts the
+  // user on a different page, so we scroll to the saved page instead.
   useEffect(() => {
     const container = containerRef.current
     if (!container) return
     const docId = selectedDoc?.id ?? null
-    // Restore from the per-doc localStorage entry (falls back to the
-    // module-level scroll for first-mount-no-doc-yet edge cases).
     if (docId) {
-      const saved = readStoredScroll(model.id, docId)
-      _savedScrollTop = saved
-      container.scrollTop = saved
+      const savedTop = readStoredScroll(model.id, docId)
+      const savedPage = readStoredPage(model.id, docId)
+      _savedScrollTop = savedTop
+      container.scrollTop = savedTop
+      // Page wrappers render placeholders (height from pageDimensions) as
+      // soon as numPages is set; they may not be in the DOM yet on first
+      // mount. Defer the page-alignment check until at least one wrapper
+      // exists, then correct via scrollToPage if the restored scrollTop
+      // landed us on a different page than where we left off.
+      if (savedPage > 0) {
+        let attempts = 0
+        const tryAlign = () => {
+          attempts++
+          if (pageRefs.current.size === 0) {
+            if (attempts < 240) requestAnimationFrame(tryAlign)
+            return
+          }
+          const current = pageAtScrollTop(container.scrollTop)
+          if (current !== savedPage) scrollToPage(savedPage)
+        }
+        tryAlign()
+      }
     } else {
       container.scrollTop = _savedScrollTop
     }
     const handleScroll = () => {
       _savedScrollTop = container.scrollTop
-      if (docId) writeStoredScroll(model.id, docId, container.scrollTop)
+      if (!docId) return
+      writeStoredScroll(model.id, docId, container.scrollTop)
+      writeStoredPage(model.id, docId, pageAtScrollTop(container.scrollTop))
     }
     container.addEventListener('scroll', handleScroll, { passive: true })
     return () => container.removeEventListener('scroll', handleScroll)
-  }, [model.id, selectedDoc?.id])
+  }, [model.id, selectedDoc?.id, scrollToPage, pageAtScrollTop])
 
   // Track container width for responsive PDF sizing
   useEffect(() => {
     const container = containerRef.current
     if (!container) return
+    // The saved page is recorded on every scroll, so it's already in sync
+    // with whatever page the user is currently looking at. When the panel
+    // resizes, each page's wrapper height changes (pages re-flow at the
+    // new width) — the browser keeps scrollTop the same numerically, which
+    // means the same scrollTop now points at a different page. After the
+    // resize settles, snap back to the saved page so the user stays on it.
+    let lastWidth = container.clientWidth
+    let realignTimer: ReturnType<typeof setTimeout> | null = null
     const observer = new ResizeObserver((entries) => {
       for (const entry of entries) {
         setContainerWidth(entry.contentRect.width)
       }
+      if (Math.abs(container.clientWidth - lastWidth) < 1) return
+      lastWidth = container.clientWidth
+      if (realignTimer) clearTimeout(realignTimer)
+      realignTimer = setTimeout(() => {
+        const docId = selectedDoc?.id ?? null
+        if (!docId) return
+        const savedPage = readStoredPage(model.id, docId)
+        if (savedPage > 0 && pageRefs.current.has(savedPage)) {
+          scrollToPage(savedPage)
+        }
+      }, 120)
     })
     observer.observe(container)
-    return () => observer.disconnect()
-  }, [])
+    return () => {
+      if (realignTimer) clearTimeout(realignTimer)
+      observer.disconnect()
+    }
+  }, [model.id, selectedDoc?.id, scrollToPage])
 
   // Virtualization: only mount react-pdf <Page> for pages within ~1 viewport
   // of the visible area. Re-run when numPages changes (new document) so new
@@ -631,16 +710,26 @@ export function PolicyPanel() {
       // Restore scroll position after PDF renders. Prefer the per-doc
       // localStorage value over the in-session module fallback; the page
       // wrappers don't exist yet at the start of this callback, so the
-      // raF gives them a tick to lay out.
+      // raF gives them a tick to lay out. After the raw scrollTop lands,
+      // verify we're on the saved page and correct via scrollToPage when
+      // a panel-size change has shifted the page-to-pixel mapping.
       requestAnimationFrame(() => {
         if (!containerRef.current) return
         const docId = selectedDoc?.id ?? null
-        containerRef.current.scrollTop = docId
+        const savedTop = docId
           ? readStoredScroll(model.id, docId)
           : _savedScrollTop
+        containerRef.current.scrollTop = savedTop
+        if (docId) {
+          const savedPage = readStoredPage(model.id, docId)
+          if (savedPage > 0) {
+            const current = pageAtScrollTop(savedTop)
+            if (current !== savedPage) scrollToPage(savedPage)
+          }
+        }
       })
     },
-    [model.id, selectedDoc?.id]
+    [model.id, selectedDoc?.id, pageAtScrollTop, scrollToPage]
   )
 
   const onDocumentLoadError = useCallback((err: Error) => {

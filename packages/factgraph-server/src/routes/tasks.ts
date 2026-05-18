@@ -2,6 +2,7 @@ import { Router } from 'express'
 import path from 'node:path'
 import fs from 'node:fs'
 import { claudeCodeRunner } from '../agents/claude-code-runner.js'
+import { openCodeRunner } from '../agents/opencode-runner.js'
 import {
   finishLastIteration,
   getTaskDir,
@@ -14,6 +15,7 @@ import {
 import { getDataDir } from '../store.js'
 import type {
   AgentContext,
+  AgentRunnerName,
   AgentRunner,
   Task,
   TaskSource,
@@ -40,8 +42,24 @@ function parseSources(raw: unknown): TaskSource[] | undefined {
   return out.length > 0 ? out : undefined
 }
 
-// DI seam — swap this if we add another agent backend.
-const runner: AgentRunner = claudeCodeRunner
+function selectRunner(): { name: AgentRunnerName; runner: AgentRunner } {
+  const value = (process.env.TASK_AGENT_RUNNER ?? 'claude').toLowerCase()
+  if (value === 'opencode' || value === 'open-code') {
+    return { name: 'opencode', runner: openCodeRunner }
+  }
+  if (value === 'claude' || value === 'claude-code') {
+    return { name: 'claude', runner: claudeCodeRunner }
+  }
+  throw new Error(
+    `Invalid TASK_AGENT_RUNNER=${process.env.TASK_AGENT_RUNNER}. Use "claude" or "opencode".`
+  )
+}
+
+const { name: activeRunnerName, runner } = selectRunner()
+
+function runnerFor(name: AgentRunnerName): AgentRunner {
+  return name === 'opencode' ? openCodeRunner : claudeCodeRunner
+}
 
 const router = Router()
 
@@ -64,8 +82,15 @@ function buildContext(rulesetId: string): AgentContext | undefined {
 // looks like. Not persisted, so swapping runners takes effect immediately.
 function withRuntime(task: Task): Task {
   const ctx = buildContext(task.rulesetId)
-  if (!ctx) return task
-  return { ...task, resumeCommand: runner.resumeCommand(task.threadId, ctx) }
+  const agentRunner = task.agentRunner ?? 'claude'
+  if (!ctx) return { ...task, agentRunner, activeAgentRunner: activeRunnerName }
+  const taskRunner = runnerFor(agentRunner)
+  return {
+    ...task,
+    agentRunner,
+    activeAgentRunner: activeRunnerName,
+    resumeCommand: taskRunner.resumeCommand(task.threadId, ctx),
+  }
 }
 
 router.get('/rulesets/:id/tasks', (req, res) => {
@@ -109,6 +134,7 @@ router.post('/rulesets/:id/tasks', async (req, res) => {
       },
     ],
     status: 'running',
+    agentRunner: activeRunnerName,
     createdAt: now,
     updatedAt: now,
   }
@@ -142,6 +168,13 @@ router.post('/rulesets/:id/tasks/:threadId/follow', async (req, res) => {
   const task = readTask(rulesetId, threadId)
   if (!task) {
     res.status(404).json({ error: 'Task not found' })
+    return
+  }
+  const taskRunner = task.agentRunner ?? 'claude'
+  if (taskRunner !== activeRunnerName) {
+    res.status(409).json({
+      error: `This task was run using ${taskRunner}; current task agent is ${activeRunnerName}`,
+    })
     return
   }
   const ctx = buildContext(rulesetId)
@@ -195,7 +228,8 @@ router.post('/rulesets/:id/tasks/:threadId/status', (req, res) => {
 
 router.post('/rulesets/:id/tasks/:threadId/cancel', async (req, res) => {
   const { id: rulesetId, threadId } = req.params
-  await runner.cancel(threadId)
+  const taskBeforeCancel = readTask(rulesetId, threadId)
+  await runnerFor(taskBeforeCancel?.agentRunner ?? 'claude').cancel(threadId)
   // Force-finalize a still-running iteration so the UI reflects the stop
   // immediately, instead of waiting for the runner's close handler — and
   // so orphan tasks (proc lost across a server restart, or close event

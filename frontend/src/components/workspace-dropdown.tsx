@@ -2,13 +2,22 @@ import { useRef, useState, useEffect } from 'react'
 import * as Popover from '@radix-ui/react-popover'
 import { useMainContext } from '@/context'
 import { useNodeNavigation } from '@/lib/use-node-navigation'
+import { useWorkspaceActions } from '@/lib/use-workspace-actions'
 import { Button } from './ui/button'
 import { cn } from '@/lib/utils'
-import { LayoutList, X, GripVertical } from 'lucide-react'
+import { LayoutList, X, GripVertical, Plus } from 'lucide-react'
 
 export function WorkspaceDropdown() {
-  const { model, openNode, workspaceItems, setWorkspaceItems } =
-    useMainContext()
+  const {
+    model,
+    openNode,
+    workspaceItems,
+    setWorkspaceItems,
+    workspaces,
+    activeWorkspaceId,
+  } = useMainContext()
+  const { createWorkspace, removeWorkspace, switchWorkspace } =
+    useWorkspaceActions()
   const { setOpenNode } = useNodeNavigation()
   const [open, setOpen] = useState(false)
 
@@ -89,6 +98,51 @@ export function WorkspaceDropdown() {
                 Clear
               </button>
             )}
+          </div>
+          {/* Workspace switcher: one button per workspace + "+" creates a
+              new empty workspace and makes it active. Each button doubles
+              as a delete target via the hover X. */}
+          <div className="flex flex-wrap items-center gap-1 mb-2 px-1">
+            {workspaces.map((ws, i) => {
+              const isActive = ws.id === activeWorkspaceId
+              const label = `WS ${i + 1}`
+              return (
+                <div
+                  key={ws.id}
+                  className={cn(
+                    'group flex items-center rounded-sm border text-[11px] font-mono leading-none transition-colors',
+                    isActive
+                      ? 'border-primary bg-primary/10 text-foreground'
+                      : 'border-border text-muted-foreground hover:text-foreground'
+                  )}
+                >
+                  <button
+                    className="px-1.5 py-0.5"
+                    onClick={() => switchWorkspace(ws.id)}
+                    title={`Switch to ${label}`}
+                  >
+                    {label}
+                    <span className="ml-1 opacity-50">({ws.items.length})</span>
+                  </button>
+                  {workspaces.length > 1 && (
+                    <button
+                      className="opacity-0 group-hover:opacity-100 px-1 py-0.5 hover:text-destructive"
+                      onClick={() => removeWorkspace(ws.id)}
+                      title={`Delete ${label}`}
+                    >
+                      <X className="size-2.5" />
+                    </button>
+                  )}
+                </div>
+              )
+            })}
+            <button
+              className="flex items-center rounded-sm border border-dashed border-border px-1.5 py-0.5 text-[11px] text-muted-foreground hover:text-foreground hover:border-foreground/40"
+              onClick={() => createWorkspace()}
+              title="Create a new workspace"
+            >
+              <Plus className="size-2.5" />
+            </button>
           </div>
           {validItems.length === 0 ? (
             <div className="text-xs text-muted-foreground px-1 py-3 text-center">

@@ -7,6 +7,7 @@ import {
   followTask,
   listTasks,
   setTaskStatus,
+  type AgentRunnerName,
   type Task,
   type TaskIteration,
   type TaskStatus,
@@ -15,6 +16,7 @@ import {
 import { getReferences } from '@/lib/api/rules-api'
 import { usePolicyNavigation } from '@/lib/use-policy-navigation'
 import { useNodeNavigation } from '@/lib/use-node-navigation'
+import { useWorkspaceActions } from '@/lib/use-workspace-actions'
 import type { PolicyReferences } from '@/lib/model'
 import { Button } from './ui/button'
 import { NodeAutocompleteInput } from './node-autocomplete-input'
@@ -417,8 +419,8 @@ function IterationView({
   stopDisabled?: boolean
   muted?: boolean
 }) {
-  const { setWorkspaceItems, setSelectedNodes, setShowChildren } =
-    useMainContext()
+  const { setShowChildren } = useMainContext()
+  const { createWorkspace } = useWorkspaceActions()
   const [expandedSources, setExpandedSources] = useState<Set<string>>(new Set())
   const toggleSource = (id: string) =>
     setExpandedSources((prev) => {
@@ -591,11 +593,11 @@ function IterationView({
               className="h-5 px-1.5 text-[10px] gap-1"
               onClick={() => {
                 const ids = iteration.modifiedPaths
-                // Clear the workspace and replace it with exactly the
-                // paths the agent reported it touched — review focus is
-                // a clean slate, not a layer on top of prior work.
-                setWorkspaceItems(ids)
-                setSelectedNodes(ids)
+                // Review opens a fresh workspace so the current workspace
+                // stays untouched and the agent's changes get their own
+                // self-contained context: items + selected chips both
+                // seeded to the modified-paths set.
+                createWorkspace({ items: ids, selectedNodes: ids })
                 setShowChildren((prev) => {
                   const next = { ...prev }
                   for (const id of ids) next[id] = true
@@ -605,7 +607,7 @@ function IterationView({
                 // they can start reviewing without an extra click.
                 if (ids[0]) onOpenNode(ids[0])
               }}
-              title="Replace the workspace with modified nodes, select them, expand their children, and open the first one"
+              title="Open the modified nodes in a new workspace, select them, expand their children, and open the first one"
             >
               Review
             </Button>
@@ -642,6 +644,10 @@ function statusIcon(status: TaskStatus) {
     case 'failed':
       return <AlertCircle className="size-3.5 text-red-600" />
   }
+}
+
+function agentLabel(agent: AgentRunnerName): string {
+  return agent === 'opencode' ? 'OpenCode' : 'Claude Code'
 }
 
 function TaskCard({
@@ -681,6 +687,9 @@ function TaskCard({
 
   const isArchived = task.status === 'archived'
   const isRunning = task.status === 'running'
+  const taskAgent = task.agentRunner ?? 'claude'
+  const activeAgent = task.activeAgentRunner ?? taskAgent
+  const agentMismatch = taskAgent !== activeAgent
   const iterations = task.iterations
   const latestIteration = iterations[iterations.length - 1]
   const headerPrompt = iterations[0]?.prompt ?? ''
@@ -698,7 +707,7 @@ function TaskCard({
 
   async function sendFollowUp() {
     const trimmed = followUp.trim()
-    if (!trimmed || busy) return
+    if (!trimmed || busy || agentMismatch) return
     // While the agent is busy, queue the follow-up instead of blocking on
     // it; the drain effect below will fire it once the task transitions
     // out of running. The queued snapshot captures both the prompt and
@@ -735,7 +744,7 @@ function TaskCard({
   // the head item.
   const drainingRef = useRef(false)
   useEffect(() => {
-    if (drainingRef.current || busy || isRunning) return
+    if (drainingRef.current || busy || isRunning || agentMismatch) return
     const head = cardQueue[0]
     if (!head) return
     drainingRef.current = true
@@ -757,6 +766,7 @@ function TaskCard({
   }, [
     busy,
     isRunning,
+    agentMismatch,
     cardQueue,
     refs,
     task.rulesetId,
@@ -856,6 +866,12 @@ function TaskCard({
           )}
           {!isArchived && task.status !== 'complete' && (
             <div className="space-y-1.5">
+              {agentMismatch && (
+                <div className="rounded border border-amber-200 bg-amber-50 px-2 py-1.5 text-[11px] text-amber-900">
+                  This thread was run using {agentLabel(taskAgent)}. Switch the
+                  task agent back to {agentLabel(taskAgent)} to follow up.
+                </div>
+              )}
               {cardQueue.length > 0 && (
                 <ul className="space-y-1">
                   {cardQueue.map((q) => (
@@ -890,14 +906,16 @@ function TaskCard({
               )}
               <NodeAutocompleteInput
                 placeholder={
-                  isRunning
-                    ? 'Queue a follow-up to send when the agent finishes…'
-                    : 'Follow up to refine this thread…'
+                  agentMismatch
+                    ? `This thread was run using ${agentLabel(taskAgent)}…`
+                    : isRunning
+                      ? 'Queue a follow-up to send when the agent finishes…'
+                      : 'Follow up to refine this thread…'
                 }
                 value={followUp}
                 onChange={setFollowUp}
                 onSubmit={sendFollowUp}
-                disabled={busy}
+                disabled={busy || agentMismatch}
                 rows={2}
                 className="text-xs"
               />
@@ -914,7 +932,7 @@ function TaskCard({
                   variant="outline"
                   size="sm"
                   className="h-7 text-xs gap-1"
-                  disabled={busy}
+                  disabled={busy || agentMismatch}
                   onClick={() => {
                     setAttachTarget({
                       kind: 'follow-up',
@@ -930,7 +948,7 @@ function TaskCard({
                 <Button
                   size="sm"
                   className="h-7 text-xs"
-                  disabled={busy || !followUp.trim()}
+                  disabled={busy || agentMismatch || !followUp.trim()}
                   onClick={sendFollowUp}
                   title={
                     isRunning

@@ -25,6 +25,15 @@ export type RightBarOptions =
   | 'profiles'
   | null
 
+// A workspace is a saved bag of nodes (`items`) the user is working with,
+// plus the search-bar's pinned chips (`selectedNodes`) for that workspace.
+// Persisted per ruleset; at least one workspace exists at all times.
+export type Workspace = {
+  id: string
+  items: string[]
+  selectedNodes: string[]
+}
+
 /** Check if a node is an "input" that users must provide values for */
 export function isInputNode(node: ModelNode): boolean {
   if (node.content.type === 'entity') return false
@@ -283,6 +292,17 @@ type ModelContextValue = {
   setExecutionError: Dispatch<SetStateAction<string | null>>
   workspaceItems: string[]
   setWorkspaceItems: Dispatch<SetStateAction<string[]>>
+  // Multi-workspace support. Each workspace is a named bag of saved nodes
+  // (`items`) plus its own pinned filter chips (`selectedNodes`). The
+  // top-level `workspaceItems` / `selectedNodes` setters operate on the
+  // active workspace; switching the active workspace swaps both at once.
+  //
+  // Higher-level helpers (create/remove/switch) live in
+  // lib/use-workspace-actions.ts so the context stays a thin get/set surface.
+  workspaces: Workspace[]
+  setWorkspaces: Dispatch<SetStateAction<Workspace[]>>
+  activeWorkspaceId: string
+  setActiveWorkspaceId: Dispatch<SetStateAction<string>>
   // Active test state displayed on graph nodes
   activeTest: {
     expectations: Record<
@@ -337,7 +357,9 @@ export function ModelProvider({
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null)
-  const [selectedNodes, setSelectedNodes] = useState<string[]>([])
+  // `selectedNodes` lives inside the active workspace below; this stub
+  // keeps existing setter call-sites working until they're refactored.
+  // The actual reads come from the active workspace.
   const [showChildren, setShowChildren] = useLocalStorage<
     Record<string, boolean>
   >(`showChildren:${rulesetId}`, {})
@@ -370,10 +392,77 @@ export function ModelProvider({
   // Keep refs of the current execution inputs so runExecution doesn't need
   // them in its dep list. Without this, the callback's closure is captured
 
-  const [workspaceItems, setWorkspaceItems] = useLocalStorage<string[]>(
-    `workspace:${rulesetId}`,
-    []
+  // Migration: old single-workspace state lived at `workspace:<rulesetId>`
+  // as a flat string[]. Seed the new multi-workspace storage with it on
+  // first read so users don't lose their saved nodes when they upgrade.
+  const seedWorkspace = (): Workspace[] => {
+    try {
+      const legacy = localStorage.getItem(`workspace:${rulesetId}`)
+      if (legacy) {
+        const items = JSON.parse(legacy) as string[]
+        if (Array.isArray(items)) {
+          return [{ id: 'default', items, selectedNodes: [] }]
+        }
+      }
+    } catch {
+      // ignore
+    }
+    return [{ id: 'default', items: [], selectedNodes: [] }]
+  }
+  const [workspaces, setWorkspaces] = useLocalStorage<Workspace[]>(
+    `workspaces:${rulesetId}`,
+    seedWorkspace()
   )
+  const [activeWorkspaceId, setActiveWorkspaceId] = useLocalStorage<string>(
+    `workspaces-active:${rulesetId}`,
+    workspaces[0]?.id ?? 'default'
+  )
+
+  // Always treat the workspaces array as non-empty. Guard reads against
+  // pathological states (empty array after a manual localStorage edit).
+  const safeWorkspaces: Workspace[] =
+    workspaces.length > 0
+      ? workspaces
+      : [{ id: 'default', items: [], selectedNodes: [] }]
+  const activeWorkspace: Workspace =
+    safeWorkspaces.find((w) => w.id === activeWorkspaceId) ?? safeWorkspaces[0]
+
+  const updateActiveWorkspace = useCallback(
+    (patch: (w: Workspace) => Workspace): void => {
+      setWorkspaces((prev) => {
+        if (prev.length === 0) return prev
+        const targetId =
+          prev.some((w) => w.id === activeWorkspaceId)
+            ? activeWorkspaceId
+            : prev[0].id
+        return prev.map((w) => (w.id === targetId ? patch(w) : w))
+      })
+    },
+    [activeWorkspaceId, setWorkspaces]
+  )
+
+  const workspaceItems = activeWorkspace.items
+  const setWorkspaceItems: Dispatch<SetStateAction<string[]>> = useCallback(
+    (update) => {
+      updateActiveWorkspace((w) => ({
+        ...w,
+        items: typeof update === 'function' ? update(w.items) : update,
+      }))
+    },
+    [updateActiveWorkspace]
+  )
+  const selectedNodes = activeWorkspace.selectedNodes
+  const setSelectedNodes: Dispatch<SetStateAction<string[]>> = useCallback(
+    (update) => {
+      updateActiveWorkspace((w) => ({
+        ...w,
+        selectedNodes:
+          typeof update === 'function' ? update(w.selectedNodes) : update,
+      }))
+    },
+    [updateActiveWorkspace]
+  )
+
   const [activeTest, setActiveTest] = useState<{
     expectations: Record<
       string,
@@ -555,6 +644,10 @@ export function ModelProvider({
       setExecutionError,
       workspaceItems,
       setWorkspaceItems,
+      workspaces: safeWorkspaces,
+      setWorkspaces,
+      activeWorkspaceId: activeWorkspace.id,
+      setActiveWorkspaceId,
       activeTest,
       setActiveTest,
       refreshModel,
@@ -596,6 +689,10 @@ export function ModelProvider({
       executionError,
       workspaceItems,
       setWorkspaceItems,
+      safeWorkspaces,
+      setWorkspaces,
+      activeWorkspace.id,
+      setActiveWorkspaceId,
       activeTest,
       setActiveTest,
       loadModel,
