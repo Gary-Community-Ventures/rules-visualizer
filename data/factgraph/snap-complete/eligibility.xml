@@ -1583,7 +1583,7 @@
       <Description>Whether this member meets at least one of the eight student-eligibility exemption criteria at 10 CCR 2506-1, 4.306.1: A physically or mentally unfit for employment; B employed for an average of twenty (20) hours per week and paid for such employment; C participating in a state or federally financed work-study program; D responsible for the care of a dependent household member under age six (6), or a full-time student who is a single parent with responsibility for the care of a dependent child under age twelve (12) (the single-parent provision); E responsible for more than half of the physical care of a dependent household member aged six (6) to under twelve (12) where the local office has determined that adequate childcare is not available; F receiving a Title IV-A TANF cash grant; G assigned to or placed in an institution of higher education through a WIOA, Employment First, Trade Act, other state/local employment-and-training, or JOBS program; H participating in an on-the-job training program.</Description>
       <Derived>
         <Any>
-          <Dependency path="../isPhysicallyOrMentallyUnfitForEmployment" />
+          <Dependency path="../isPhysicallyOrMentallyUnfitForEmploymentForStudentEligibility" />
           <GreaterThanOrEqual>
             <Left><Dependency path="../workHoursPerWeek" /></Left>
             <Right><Dependency path="/studentExemptionWorkHoursPerWeek" /></Right>
@@ -1822,6 +1822,44 @@
       </Derived>
     </Fact>
 
+    <Fact path="/members/*/registeredForWork">
+      <Name>Registered for work</Name>
+      <Description>Whether this non-exempt member registered for work at initial application and at every recertification by signing the application for assistance or recertification, either personally or through an authorized representative or another adult household member (10 CCR 2506-1, 4.310).</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/providedEmploymentStatusOrAvailabilityInfo">
+      <Name>Provided employment status or availability information</Name>
+      <Description>Whether this non-exempt member provided the eligibility technician sufficient information regarding employment status or availability for work (10 CCR 2506-1, 4.310).</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/acceptedSuitableEmploymentOffer">
+      <Name>Accepted suitable employment offer</Name>
+      <Description>Whether this non-exempt member accepted any offer of suitable employment (10 CCR 2506-1, 4.310).</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/reportedToReferredSuitableEmployer">
+      <Name>Reported to referred suitable employer</Name>
+      <Description>Whether this non-exempt member reported to an employer when referred by the local office and the potential employment was suitable employment (10 CCR 2506-1, 4.310).</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/meetsGeneralWorkRequirements">
+      <Name>Meets general work requirements</Name>
+      <Description>Whether this non-exempt member complies with the SNAP general work requirements by registering for work at application and recertification, providing sufficient information about employment status or availability for work, not committing an act of voluntary quit, accepting suitable employment, and reporting to a referred suitable employer when the potential employment is suitable (10 CCR 2506-1, 4.310).</Description>
+      <Derived>
+        <All>
+          <Dependency path="../registeredForWork" />
+          <Dependency path="../providedEmploymentStatusOrAvailabilityInfo" />
+          <Not><Dependency path="../isIneligibleVoluntaryQuit" /></Not>
+          <Dependency path="../acceptedSuitableEmploymentOffer" />
+          <Dependency path="../reportedToReferredSuitableEmployer" />
+        </All>
+      </Derived>
+    </Fact>
+
     <Fact path="/members/*/workHoursPerWeek">
       <Name>Work hours per week</Name>
       <Description>The average number of hours per week this member works (10 CCR 2506-1, 4.000.1)</Description>
@@ -1834,9 +1872,69 @@
       <Writable><Boolean /></Writable>
     </Fact>
 
-    <Fact path="/members/*/isPhysicallyOrMentallyUnfitForEmployment">
-      <Name>Physically or mentally unfit for employment</Name>
-      <Description>Whether this member is physically or mentally unfit for employment, including students participating through or in a vocational rehabilitation program. When unfitness is claimed and is not evident to the local office, verification may be required — appropriate verification may consist of receipt of temporary or permanent disability benefits or a statement from a physician or licensed psychologist (10 CCR 2506-1, 4.310)</Description>
+    <Fact path="/members/*/isPhysicallyOrMentallyUnfitForEmploymentForStudentEligibility">
+      <Name>Physically or mentally unfit for employment for student eligibility</Name>
+      <Description>Whether this member is physically or mentally unfit for employment for purposes of the SNAP student eligibility exemption. This student-specific flag is separate from the work-requirements unfitness determination so the two policy contexts can be captured independently (10 CCR 2506-1, 4.306.1).</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/isPhysicallyOrMentallyUnfitForEmploymentForWorkRequirements">
+      <Name>Physically or mentally unfit for employment for work requirements</Name>
+      <Description>Whether this member is physically or mentally unfit for employment for purposes of SNAP work requirements. Examples include persons experiencing homelessness, persons recently released from an institution, persons with disabilities including self-declared temporary conditions preventing successful participation in work activities, persons receiving temporary or permanent disability benefits from government or private sources, persons participating in vocational rehabilitation, persons applying for or appealing SSI benefits, persons unable to maintain employment, and persons impacted by domestic violence (10 CCR 2506-1, 4.310).</Description>
+      <Derived>
+        <Any>
+          <Dependency path="../isExperiencingHomelessness" />
+          <Dependency path="../recentlyReleasedFromInstitution" />
+          <Dependency path="../isPersonWithDisabilities" />
+          <Dependency path="../hasSelfDeclaredTemporaryConditionPreventingWorkActivities" />
+          <Dependency path="../receivesTemporaryOrPermanentDisabilityBenefits" />
+          <Dependency path="../isParticipatingInVocationalRehabilitation" />
+          <Dependency path="../isApplyingForOrAppealingSsiBenefits" />
+          <Dependency path="../isUnableToMaintainEmployment" />
+          <Dependency path="../isImpactedByDomesticViolence" />
+        </Any>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/recentlyReleasedFromInstitution">
+      <Name>Recently released from an institution</Name>
+      <Description>Whether this member was recently released from an institution, which is an example of being physically or mentally unfit for employment for SNAP work-requirements purposes (10 CCR 2506-1, 4.310).</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/hasSelfDeclaredTemporaryConditionPreventingWorkActivities">
+      <Name>Has self-declared temporary condition preventing work activities</Name>
+      <Description>Whether this member has a self-declared temporary condition that would prevent successful participation in work activities, which is an example of being physically or mentally unfit for employment for SNAP work-requirements purposes (10 CCR 2506-1, 4.310).</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/receivesTemporaryOrPermanentDisabilityBenefits">
+      <Name>Receives temporary or permanent disability benefits</Name>
+      <Description>Whether this member receives temporary or permanent disability benefits issued by government or private sources, which is an example of being physically or mentally unfit for employment for SNAP work-requirements purposes (10 CCR 2506-1, 4.310).</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/isParticipatingInVocationalRehabilitation">
+      <Name>Is participating in vocational rehabilitation</Name>
+      <Description>Whether this member is participating in vocational rehabilitation, which is an example of being physically or mentally unfit for employment for SNAP work-requirements purposes (10 CCR 2506-1, 4.310).</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/isApplyingForOrAppealingSsiBenefits">
+      <Name>Is applying for or appealing SSI benefits</Name>
+      <Description>Whether this member is applying for and/or appealing Supplemental Security Income (SSI) benefits, which is an example of being physically or mentally unfit for employment for SNAP work-requirements purposes (10 CCR 2506-1, 4.310).</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/isUnableToMaintainEmployment">
+      <Name>Is unable to maintain employment</Name>
+      <Description>Whether this member is unable to maintain employment, which is an example of being physically or mentally unfit for employment for SNAP work-requirements purposes (10 CCR 2506-1, 4.310).</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/isImpactedByDomesticViolence">
+      <Name>Is impacted by domestic violence</Name>
+      <Description>Whether this member is impacted by domestic violence, which is an example of being physically or mentally unfit for employment for SNAP work-requirements purposes (10 CCR 2506-1, 4.310).</Description>
       <Writable><Boolean /></Writable>
     </Fact>
 
@@ -3189,7 +3287,6 @@
           <Dependency path="../disqualifiedForBoardingHouseOrInstitutionResidence" />
           <Dependency path="../isIneligibleStudent" />
           <Dependency path="../isIneligibleStriker" />
-          <Dependency path="../isIneligibleVoluntaryQuit" />
         </Any>
       </Derived>
     </Fact>

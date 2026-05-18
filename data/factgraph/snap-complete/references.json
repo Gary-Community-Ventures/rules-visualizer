@@ -7990,9 +7990,161 @@
         }
       ],
       "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__mpbfom7g-rhp0",
+      "documentId": "10-ccr-2506-1",
+      "text": "4.310 GENERAL WORK REQUIREMENTS As a condition of eligibility for SNAP, each household member not determined to be exempt must comply with the following work requirements: A. Register for work at the time of initial application and at every recertification by signing the application for assistance or recertification. The application must be signed by the member required to register, an authorized representative, or by another adult household member; and B. Provide the eligibility techncian with sufficient information regarding employment status or availability for work; and C. Cannot commit an act of voluntary quit; and D. Accept an offer of suitable employment; and E. Report to an employer if referred by the local office if the potential employment is suitable employment.",
+      "page": 74,
+      "rects": [
+        {
+          "x": 0.11544360748491769,
+          "y": 0.4808259587020649,
+          "w": 0.7689423634070691,
+          "h": 0.27475769068689426
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1779122730749",
+      "documentId": "10-ccr-2506-1",
+      "text": "CODE OF COLORADO REGULATIONS 10 CCR 2506-1 Supplemental Nutrition Assistance Program (SNAP)",
+      "page": 75,
+      "rects": [
+        {
+          "x": 0.10453662360680323,
+          "y": 0.035398230088495575,
+          "w": 0.7885749343876751,
+          "h": 0.04298356510745892
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1779122753415",
+      "documentId": "10-ccr-2506-1",
+      "text": "4.310.1 Work Requirements and Verification Client statements are considered acceptable verification unless questionable. If verification is requested from the client because client statement is considered questionable, case documentation must thoroughly explain why the original client statement was considered questionable. A. Examples of verification that can be obtained to resolve questionable information can include but is not limited to:",
+      "page": 74,
+      "rects": [
+        {
+          "x": 0.10999011554586045,
+          "y": 0.7614833544037084,
+          "w": 0.7754865537339377,
+          "h": 0.1441213653603034
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1779122760581",
+      "documentId": "10-ccr-2506-1",
+      "text": "1. Receipt of temporary or permanent disability benefits issued by government or private sources; or 2. Persons may provide a statement from a physician, physician’s assistance, nurse, nurse practitioner, designated representative of the physician’s office, or a licensed or certified psychologist. A county agency may determine other licensed medical personnel appropriate to provide verification that a work registrant is physically or mentally unfit for employment; or 3. A statement from a licensed social worker or a social worker employed by or acting on behalf of a 501(C)(3) non-profit organization or government entity.",
+      "page": 75,
+      "rects": [
+        {
+          "x": 0.11544360748491769,
+          "y": 0.08512431521281079,
+          "w": 0.7656702682436348,
+          "h": 0.17361989043404974
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1779123058151",
+      "documentId": "10-ccr-2506-1",
+      "text": "4.310.2 Informing the Household of General Work Requirements At the point of initial application and recertification, when an interview is required, SNAP households must receive from the eligibility technician a written notice and a verbal explanation of: A. The SNAP general work requirements; B. The rights and responsibilities of household members subject to work requirements; C. The consequences of failure to comply with these work requirements; and D. The availability of additional employment and training programs and services, outside of Employment First (EF), within their community. When an interview is not required at recertification, the written statement of these requirements to the work registrants in the household is sufficient.",
+      "page": 75,
+      "rects": [
+        {
+          "x": 0.11544360748491769,
+          "y": 0.2604298356510746,
+          "w": 0.7689423634070691,
+          "h": 0.24441635061104083
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1779123619320",
+      "documentId": "10-ccr-2506-1",
+      "text": "75",
+      "page": 75,
+      "rects": [
+        {
+          "x": 0.10562732199461468,
+          "y": 0.944795617361989,
+          "w": 0.7874842359998637,
+          "h": 0.029498525073746285
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__mpbgyg0h-8w4s",
+      "documentId": "10-ccr-2506-1",
+      "text": "Examples of being physically or mentally unfit for employment can include but are not limited to: 1. Persons experiencing homelessness, as defined in 4.000.1 2. Recently released from an institution 3. Person with disabilities as defined in 4.100 and includes but is not limited to:",
+      "page": 75,
+      "rects": [
+        {
+          "x": 0.11435290909710624,
+          "y": 0.7694900969237253,
+          "w": 0.7613074746923889,
+          "h": 0.14243573535608933
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mpbgys99-ua33",
+      "documentId": "10-ccr-2506-1",
+      "text": "a. Persons with self-declared temporary conditions that would prevent successful participation in work activities b. Persons receiving temporary or permanent disability benefits issued by government or private sources c. Persons participating in vocational rehabilitation d. Persons applying for and/or appealing SSI benefits 4. Persons unable to maintain employment 5. Persons impacted by domestic violence",
+      "page": 76,
+      "rects": [
+        {
+          "x": 0.11871570264835202,
+          "y": 0.07711757269279393,
+          "w": 0.7656702682436347,
+          "h": 0.20986093552465232
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1779125273698",
+      "documentId": "10-ccr-2506-1",
+      "text": "CODE OF COLORADO REGULATIONS 10 CCR 2506-1 Supplemental Nutrition Assistance Program (SNAP)",
+      "page": 76,
+      "rects": [
+        {
+          "x": 0.10671802038242612,
+          "y": 0.03581963758954909,
+          "w": 0.7842121408364293,
+          "h": 0.03792667509481669
+        }
+      ],
+      "status": "skipped"
     }
   ],
   "mappings": [
+    {
+      "nodePath": "/members/*/registeredForWork",
+      "sectionId": "10-ccr-2506-1__mpbfom7g-rhp0"
+    },
+    {
+      "nodePath": "/members/*/providedEmploymentStatusOrAvailabilityInfo",
+      "sectionId": "10-ccr-2506-1__mpbfom7g-rhp0"
+    },
+    {
+      "nodePath": "/members/*/acceptedSuitableEmploymentOffer",
+      "sectionId": "10-ccr-2506-1__mpbfom7g-rhp0"
+    },
+    {
+      "nodePath": "/members/*/reportedToReferredSuitableEmployer",
+      "sectionId": "10-ccr-2506-1__mpbfom7g-rhp0"
+    },
+    {
+      "nodePath": "/members/*/meetsGeneralWorkRequirements",
+      "sectionId": "10-ccr-2506-1__mpbfom7g-rhp0"
+    },
     {
       "nodePath": "/members/*/isStudentResponsibleForPhysicalCareOfDependentChildWithoutAdequateChildcare",
       "sectionId": "10-ccr-2506-1__mp8wq1ra-2m94"
@@ -9470,12 +9622,56 @@
       "sectionId": "10-ccr-2506-1__mp8vm7ud-el97"
     },
     {
-      "nodePath": "/members/*/isPhysicallyOrMentallyUnfitForEmployment",
+      "nodePath": "/members/*/isPhysicallyOrMentallyUnfitForEmploymentForStudentEligibility",
       "sectionId": "10-ccr-2506-1__mp8w774f-zmz2"
     },
     {
-      "nodePath": "/members/*/isPhysicallyOrMentallyUnfitForEmployment",
+      "nodePath": "/members/*/isPhysicallyOrMentallyUnfitForEmploymentForStudentEligibility",
       "sectionId": "10-ccr-2506-1__mp8w9tft-9gs7"
+    },
+    {
+      "nodePath": "/members/*/isPhysicallyOrMentallyUnfitForEmploymentForStudentEligibility",
+      "sectionId": "10-ccr-2506-1__mpbgyg0h-8w4s"
+    },
+    {
+      "nodePath": "/members/*/isPhysicallyOrMentallyUnfitForEmploymentForStudentEligibility",
+      "sectionId": "10-ccr-2506-1__mpbgys99-ua33"
+    },
+    {
+      "nodePath": "/members/*/isPhysicallyOrMentallyUnfitForEmploymentForWorkRequirements",
+      "sectionId": "10-ccr-2506-1__mpbgyg0h-8w4s"
+    },
+    {
+      "nodePath": "/members/*/isPhysicallyOrMentallyUnfitForEmploymentForWorkRequirements",
+      "sectionId": "10-ccr-2506-1__mpbgys99-ua33"
+    },
+    {
+      "nodePath": "/members/*/recentlyReleasedFromInstitution",
+      "sectionId": "10-ccr-2506-1__mpbgyg0h-8w4s"
+    },
+    {
+      "nodePath": "/members/*/hasSelfDeclaredTemporaryConditionPreventingWorkActivities",
+      "sectionId": "10-ccr-2506-1__mpbgys99-ua33"
+    },
+    {
+      "nodePath": "/members/*/receivesTemporaryOrPermanentDisabilityBenefits",
+      "sectionId": "10-ccr-2506-1__mpbgys99-ua33"
+    },
+    {
+      "nodePath": "/members/*/isParticipatingInVocationalRehabilitation",
+      "sectionId": "10-ccr-2506-1__mpbgys99-ua33"
+    },
+    {
+      "nodePath": "/members/*/isApplyingForOrAppealingSsiBenefits",
+      "sectionId": "10-ccr-2506-1__mpbgys99-ua33"
+    },
+    {
+      "nodePath": "/members/*/isUnableToMaintainEmployment",
+      "sectionId": "10-ccr-2506-1__mpbgys99-ua33"
+    },
+    {
+      "nodePath": "/members/*/isImpactedByDomesticViolence",
+      "sectionId": "10-ccr-2506-1__mpbgys99-ua33"
     },
     {
       "nodePath": "/members/*/isParticipatingInWorkStudy",
