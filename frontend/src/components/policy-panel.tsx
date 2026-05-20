@@ -166,6 +166,56 @@ async function extractTextInBox(
   return parts.join(' ').replace(/\s+/g, ' ').trim()
 }
 
+async function countWordsCoveredByBoxes(
+  pdfDoc: pdfjs.PDFDocumentProxy,
+  pageNum: number,
+  pdfDim: { width: number; height: number },
+  boxes: { x: number; y: number; w: number; h: number }[]
+): Promise<{ covered: number; total: number }> {
+  const page = await pdfDoc.getPage(pageNum)
+  const content = await page.getTextContent()
+  let covered = 0
+  let total = 0
+  for (const item of content.items) {
+    if (!('str' in item)) continue
+    const str = item.str
+    if (!str) continue
+    const transform = (item as { transform: number[] }).transform
+    const itemWidth = (item as { width: number }).width
+    const itemHeight = (item as { height: number }).height
+    if (itemWidth <= 0) continue
+
+    const top = (pdfDim.height - transform[5] - itemHeight) / pdfDim.height
+    const bottom = (pdfDim.height - transform[5]) / pdfDim.height
+    const len = str.length
+    let i = 0
+    while (i < len) {
+      while (i < len && /\s/.test(str[i])) i++
+      if (i >= len) break
+      const wordStart = i
+      while (i < len && !/\s/.test(str[i])) i++
+      const wordEnd = i
+      total++
+      const wordLeft =
+        (transform[4] + (wordStart / len) * itemWidth) / pdfDim.width
+      const wordRight =
+        (transform[4] + (wordEnd / len) * itemWidth) / pdfDim.width
+      if (
+        boxes.some(
+          (box) =>
+            bottom >= box.y &&
+            top <= box.y + box.h &&
+            wordRight >= box.x &&
+            wordLeft <= box.x + box.w
+        )
+      ) {
+        covered++
+      }
+    }
+  }
+  return { covered, total }
+}
+
 export function PolicyPanel() {
   const {
     model,
@@ -209,6 +259,10 @@ export function PolicyPanel() {
   const [searchIndex, setSearchIndex] = useState(0)
   const [isSearching, setIsSearching] = useState(false)
   const [searchHighlight, setSearchHighlight] = useState('')
+  const [sourceCoverage, setSourceCoverage] = useState<{
+    covered: number
+    total: number
+  } | null>(null)
   const pdfDocRef = useRef<pdfjs.PDFDocumentProxy | null>(null)
 
   // Selected section in the PDF — shows linked nodes popover and the
@@ -486,6 +540,45 @@ export function PolicyPanel() {
       ) ?? [],
     [refs, selectedDoc]
   )
+
+  useEffect(() => {
+    const pdf = pdfDocRef.current
+    if (!pdf || !refs || !selectedDoc || pageDimensions.length < numPages) {
+      setSourceCoverage(null)
+      return
+    }
+    let cancelled = false
+    ;(async () => {
+      let covered = 0
+      let total = 0
+      for (let pageNum = 1; pageNum <= numPages; pageNum++) {
+        const dim = pageDimensions[pageNum - 1]
+        if (!dim) continue
+        const boxes = refs.sections
+          .filter(
+            (s) =>
+              s.documentId === selectedDoc.id &&
+              s.page === pageNum &&
+              (s.rects?.length ?? 0) > 0
+          )
+          .flatMap((s) => s.rects ?? [])
+        const pageCounts = await countWordsCoveredByBoxes(
+          pdf,
+          pageNum,
+          dim,
+          boxes
+        )
+        covered += pageCounts.covered
+        total += pageCounts.total
+      }
+      if (!cancelled) setSourceCoverage({ covered, total })
+    })().catch(() => {
+      if (!cancelled) setSourceCoverage(null)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [refs, selectedDoc, pageDimensions, numPages])
 
   // Find the page wrapper whose bounding rect contains a given client point.
   // Lets click/selection code work without knowing a single "current page".
@@ -1368,6 +1461,15 @@ export function PolicyPanel() {
                 <ChevronRight className="size-3" />
               </Button>
             </div>
+          )}
+          {sourceCoverage && sourceCoverage.total > 0 && !searchOpen && (
+            <span
+              className="text-[10px] text-muted-foreground shrink-0 tabular-nums"
+              title={`${sourceCoverage.covered} of ${sourceCoverage.total} words covered by skip/link boxes`}
+            >
+              {Math.round((sourceCoverage.covered / sourceCoverage.total) * 100)}
+              % covered
+            </span>
           )}
           {searchOpen ? (
             <div className="flex items-center gap-1 flex-1 min-w-0">

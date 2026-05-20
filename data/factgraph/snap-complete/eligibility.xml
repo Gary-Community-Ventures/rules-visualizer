@@ -12,14 +12,66 @@
       <Derived>
         <EnumOptions>
           <String>Tanf</String>
+          <String>OtherNeedsBasedAssistance</String>
           <String>OldAgePension</String>
           <String>AidToNeedyDisabled</String>
           <String>AidToBlind</String>
           <String>ColoradoSupplementSsi</String>
           <String>Ssi</String>
+          <String>AnnuitiesPensionsRetirement</String>
+          <String>VeteransBenefits</String>
+          <String>DisabilityBenefits</String>
+          <String>WorkersCompensation</String>
+          <String>UnemploymentCompensation</String>
+          <String>OldAgeSurvivorsSocialSecurityBenefits</String>
+          <String>StrikeBenefits</String>
+          <String>SupportAndAlimony</String>
+          <String>RentalIncomeNotActivelyManaged</String>
+          <String>PostEmploymentVacationSickBonusPay</String>
+          <String>AnticipatedGifts</String>
+          <String>WagesAndSalaries</String>
+          <String>AgriculturalStabilizationConservationService</String>
           <String>SelfEmployment</String>
+          <String>Vista</String>
+          <String>SickLeaveVacationBonusPay</String>
+          <String>VocationalRehabilitationTrainingAllowance</String>
+          <String>WioaOnTheJobTraining</String>
+          <String>TitleIVistaUniversityYearOfAction</String>
+          <String>LlcSCorporation</String>
+          <String>BoarderIncome</String>
+          <String>LotteryOrGamblingWinnings</String>
           <String>VendorPayments</String>
+          <String>IrregularIncome</String>
+          <String>NonHouseholdMemberCarePayments</String>
+          <String>ChildStudentEarnings</String>
+          <String>Recoupments</String>
+          <String>TitleIVDTransferredChildSupport</String>
+          <String>NonRecurringLumpSum</String>
+          <String>Loans</String>
+          <String>ReverseAnnuityMortgage</String>
+          <String>InKindBenefits</String>
+          <String>Reimbursements</String>
+          <String>EducationalAssistance</String>
           <String>SponsorPayments</String>
+          <String>Other</String>
+        </EnumOptions>
+      </Derived>
+    </Fact>
+
+    <Fact path="/incomeFrequencyOptions">
+      <Name>Income frequency options</Name>
+      <Description>Options describing how often an income amount is received or anticipated for monthly income conversion (10 CCR 2506-1, 4.402).</Description>
+      <Derived>
+        <EnumOptions>
+          <String>Monthly</String>
+          <String>Weekly</String>
+          <String>BiWeekly</String>
+          <String>SemiMonthly</String>
+          <String>EveryOtherMonth</String>
+          <String>Quarterly</String>
+          <String>TwiceAYear</String>
+          <String>Annual</String>
+          <String>OtherSpecificTimePeriod</String>
         </EnumOptions>
       </Derived>
     </Fact>
@@ -48,45 +100,618 @@
       <Writable><Enum optionsPath="/incomeSourceOptions" /></Writable>
     </Fact>
 
-    <Fact path="/incomes/*/monthlyAmount">
-      <Name>Monthly amount</Name>
-      <Description>The monthly amount of this income.</Description>
+    <Fact path="/incomes/*/startedBeforeSnapParticipation">
+      <Name>Started before SNAP participation</Name>
+      <Description>Whether the client was not receiving SNAP benefits when they joined AmeriCorps Volunteers in Service to America (VISTA). VISTA payments count as earned income when the client was not receiving SNAP benefits when they joined VISTA, and are excluded when the client was receiving SNAP benefits at that time; temporary interruptions in SNAP participation do not alter the initial determination (10 CCR 2506-1, 4.405.2, A, 3).</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/incomes/*/isEarned">
+      <Name>Is earned income</Name>
+      <Description>Whether this income source is a type treated as earned income: wages and salaries; government payments from Agricultural Stabilization and Conservation Service; VISTA wages; sick leave, vacation pay, and bonus pay while still employed; covered vocational or rehabilitation training allowances; WIOA on-the-job-training earnings; Title I VISTA-University Year of Action payments; self-employment income; LLC or S-Corporation owner income; or boarder income (10 CCR 2506-1, 4.403).</Description>
+      <Derived>
+        <Any>
+          <Equal>
+            <Left><Dependency path="../type" /></Left>
+            <Right><Enum optionsPath="/incomeSourceOptions">WagesAndSalaries</Enum></Right>
+          </Equal>
+          <Equal>
+            <Left><Dependency path="../type" /></Left>
+            <Right><Enum optionsPath="/incomeSourceOptions">AgriculturalStabilizationConservationService</Enum></Right>
+          </Equal>
+          <Equal>
+            <Left><Dependency path="../type" /></Left>
+            <Right><Enum optionsPath="/incomeSourceOptions">Vista</Enum></Right>
+          </Equal>
+          <Equal>
+            <Left><Dependency path="../type" /></Left>
+            <Right><Enum optionsPath="/incomeSourceOptions">SickLeaveVacationBonusPay</Enum></Right>
+          </Equal>
+          <Equal>
+            <Left><Dependency path="../type" /></Left>
+            <Right><Enum optionsPath="/incomeSourceOptions">VocationalRehabilitationTrainingAllowance</Enum></Right>
+          </Equal>
+          <Equal>
+            <Left><Dependency path="../type" /></Left>
+            <Right><Enum optionsPath="/incomeSourceOptions">WioaOnTheJobTraining</Enum></Right>
+          </Equal>
+          <Equal>
+            <Left><Dependency path="../type" /></Left>
+            <Right><Enum optionsPath="/incomeSourceOptions">TitleIVistaUniversityYearOfAction</Enum></Right>
+          </Equal>
+          <Equal>
+            <Left><Dependency path="../type" /></Left>
+            <Right><Enum optionsPath="/incomeSourceOptions">SelfEmployment</Enum></Right>
+          </Equal>
+          <Equal>
+            <Left><Dependency path="../type" /></Left>
+            <Right><Enum optionsPath="/incomeSourceOptions">LlcSCorporation</Enum></Right>
+          </Equal>
+          <Equal>
+            <Left><Dependency path="../type" /></Left>
+            <Right><Enum optionsPath="/incomeSourceOptions">BoarderIncome</Enum></Right>
+          </Equal>
+        </Any>
+      </Derived>
+    </Fact>
+
+    <Fact path="/incomes/*/isExempt">
+      <Name>Is exempt income</Name>
+      <Description>Whether this income is exempt from consideration for SNAP eligibility because it is one of the excluded income sources in 10 CCR 2506-1, 4.405, including education assistance received specifically for educational expenses under 4.405.1, or because VISTA payments are excluded when the client was receiving SNAP benefits when they joined VISTA under 10 CCR 2506-1, 4.403.</Description>
+      <Derived>
+        <Any>
+          <All>
+            <Equal>
+              <Left><Dependency path="../type" /></Left>
+              <Right><Enum optionsPath="/incomeSourceOptions">Vista</Enum></Right>
+            </Equal>
+            <Not><Dependency path="../startedBeforeSnapParticipation" /></Not>
+          </All>
+          <Equal>
+            <Left><Dependency path="../type" /></Left>
+            <Right><Enum optionsPath="/incomeSourceOptions">IrregularIncome</Enum></Right>
+          </Equal>
+          <Equal>
+            <Left><Dependency path="../type" /></Left>
+            <Right><Enum optionsPath="/incomeSourceOptions">NonHouseholdMemberCarePayments</Enum></Right>
+          </Equal>
+          <Equal>
+            <Left><Dependency path="../type" /></Left>
+            <Right><Enum optionsPath="/incomeSourceOptions">ChildStudentEarnings</Enum></Right>
+          </Equal>
+          <Equal>
+            <Left><Dependency path="../type" /></Left>
+            <Right><Enum optionsPath="/incomeSourceOptions">Recoupments</Enum></Right>
+          </Equal>
+          <Equal>
+            <Left><Dependency path="../type" /></Left>
+            <Right><Enum optionsPath="/incomeSourceOptions">TitleIVDTransferredChildSupport</Enum></Right>
+          </Equal>
+          <Equal>
+            <Left><Dependency path="../type" /></Left>
+            <Right><Enum optionsPath="/incomeSourceOptions">NonRecurringLumpSum</Enum></Right>
+          </Equal>
+          <Equal>
+            <Left><Dependency path="../type" /></Left>
+            <Right><Enum optionsPath="/incomeSourceOptions">Loans</Enum></Right>
+          </Equal>
+          <Equal>
+            <Left><Dependency path="../type" /></Left>
+            <Right><Enum optionsPath="/incomeSourceOptions">ReverseAnnuityMortgage</Enum></Right>
+          </Equal>
+          <Equal>
+            <Left><Dependency path="../type" /></Left>
+            <Right><Enum optionsPath="/incomeSourceOptions">InKindBenefits</Enum></Right>
+          </Equal>
+          <Equal>
+            <Left><Dependency path="../type" /></Left>
+            <Right><Enum optionsPath="/incomeSourceOptions">VendorPayments</Enum></Right>
+          </Equal>
+          <Equal>
+            <Left><Dependency path="../type" /></Left>
+            <Right><Enum optionsPath="/incomeSourceOptions">Reimbursements</Enum></Right>
+          </Equal>
+          <Equal>
+            <Left><Dependency path="../type" /></Left>
+            <Right><Enum optionsPath="/incomeSourceOptions">EducationalAssistance</Enum></Right>
+          </Equal>
+        </Any>
+      </Derived>
+    </Fact>
+
+    <Fact path="/incomes/*/isUnearned">
+      <Name>Is unearned income</Name>
+      <Description>Whether this income source is a type treated as countable unearned income: assistance payments including SSI, TANF/Colorado Works, and other needs-based assistance; annuities, pensions, retirement, veterans or disability benefits, workers' or unemployment compensation, old age, survivors, or Social Security benefits, and strike benefits; support and alimony; rental income when the household member is not actively managing the property at least twenty (20) hours per week; income of non-citizen sponsors; installment vacation, sick, or bonus pay received after employment terminates; anticipated gifts; other nonexempt income including dividends, interest, royalties, trust withdrawals, and other direct money payments that are a gain or benefit; and substantial lottery or gambling winnings (10 CCR 2506-1, 4.404).</Description>
+      <Derived>
+        <Any>
+          <Equal>
+            <Left><Dependency path="../type" /></Left>
+            <Right><Enum optionsPath="/incomeSourceOptions">Tanf</Enum></Right>
+          </Equal>
+          <Equal>
+            <Left><Dependency path="../type" /></Left>
+            <Right><Enum optionsPath="/incomeSourceOptions">OtherNeedsBasedAssistance</Enum></Right>
+          </Equal>
+          <Equal>
+            <Left><Dependency path="../type" /></Left>
+            <Right><Enum optionsPath="/incomeSourceOptions">Ssi</Enum></Right>
+          </Equal>
+          <Equal>
+            <Left><Dependency path="../type" /></Left>
+            <Right><Enum optionsPath="/incomeSourceOptions">OldAgePension</Enum></Right>
+          </Equal>
+          <Equal>
+            <Left><Dependency path="../type" /></Left>
+            <Right><Enum optionsPath="/incomeSourceOptions">AidToNeedyDisabled</Enum></Right>
+          </Equal>
+          <Equal>
+            <Left><Dependency path="../type" /></Left>
+            <Right><Enum optionsPath="/incomeSourceOptions">AidToBlind</Enum></Right>
+          </Equal>
+          <Equal>
+            <Left><Dependency path="../type" /></Left>
+            <Right><Enum optionsPath="/incomeSourceOptions">ColoradoSupplementSsi</Enum></Right>
+          </Equal>
+          <Equal>
+            <Left><Dependency path="../type" /></Left>
+            <Right><Enum optionsPath="/incomeSourceOptions">AnnuitiesPensionsRetirement</Enum></Right>
+          </Equal>
+          <Equal>
+            <Left><Dependency path="../type" /></Left>
+            <Right><Enum optionsPath="/incomeSourceOptions">VeteransBenefits</Enum></Right>
+          </Equal>
+          <Equal>
+            <Left><Dependency path="../type" /></Left>
+            <Right><Enum optionsPath="/incomeSourceOptions">DisabilityBenefits</Enum></Right>
+          </Equal>
+          <Equal>
+            <Left><Dependency path="../type" /></Left>
+            <Right><Enum optionsPath="/incomeSourceOptions">WorkersCompensation</Enum></Right>
+          </Equal>
+          <Equal>
+            <Left><Dependency path="../type" /></Left>
+            <Right><Enum optionsPath="/incomeSourceOptions">UnemploymentCompensation</Enum></Right>
+          </Equal>
+          <Equal>
+            <Left><Dependency path="../type" /></Left>
+            <Right><Enum optionsPath="/incomeSourceOptions">OldAgeSurvivorsSocialSecurityBenefits</Enum></Right>
+          </Equal>
+          <Equal>
+            <Left><Dependency path="../type" /></Left>
+            <Right><Enum optionsPath="/incomeSourceOptions">StrikeBenefits</Enum></Right>
+          </Equal>
+          <Equal>
+            <Left><Dependency path="../type" /></Left>
+            <Right><Enum optionsPath="/incomeSourceOptions">SupportAndAlimony</Enum></Right>
+          </Equal>
+          <Equal>
+            <Left><Dependency path="../type" /></Left>
+            <Right><Enum optionsPath="/incomeSourceOptions">RentalIncomeNotActivelyManaged</Enum></Right>
+          </Equal>
+          <Equal>
+            <Left><Dependency path="../type" /></Left>
+            <Right><Enum optionsPath="/incomeSourceOptions">SponsorPayments</Enum></Right>
+          </Equal>
+          <Equal>
+            <Left><Dependency path="../type" /></Left>
+            <Right><Enum optionsPath="/incomeSourceOptions">PostEmploymentVacationSickBonusPay</Enum></Right>
+          </Equal>
+          <Equal>
+            <Left><Dependency path="../type" /></Left>
+            <Right><Enum optionsPath="/incomeSourceOptions">AnticipatedGifts</Enum></Right>
+          </Equal>
+          <Equal>
+            <Left><Dependency path="../type" /></Left>
+            <Right><Enum optionsPath="/incomeSourceOptions">Other</Enum></Right>
+          </Equal>
+          <Equal>
+            <Left><Dependency path="../type" /></Left>
+            <Right><Enum optionsPath="/incomeSourceOptions">LotteryOrGamblingWinnings</Enum></Right>
+          </Equal>
+        </Any>
+      </Derived>
+    </Fact>
+
+    <Fact path="/incomes/*/amount">
+      <Name>Amount</Name>
+      <Description>The average income amount for this income at its stated frequency.</Description>
       <Writable><Dollar /></Writable>
     </Fact>
 
-    <Fact path="/parentChildRelationships">
-      <Name>Parent-child relationships</Name>
+    <Fact path="/incomes/*/isSubstantialLotteryOrGamblingWinnings">
+      <Name>Is substantial lottery or gambling winnings</Name>
+      <Description>Whether this income is a single-game lottery or gambling cash prize that equals or exceeds the substantial lottery or gambling winnings threshold (10 CCR 2506-1, 4.206).</Description>
+      <Derived>
+        <All>
+          <Equal>
+            <Left><Dependency path="../type" /></Left>
+            <Right><Enum optionsPath="/incomeSourceOptions">LotteryOrGamblingWinnings</Enum></Right>
+          </Equal>
+          <GreaterThanOrEqual>
+            <Left><Dependency path="../amount" /></Left>
+            <Right><Dependency path="/substantialLotteryOrGamblingWinningsThreshold" /></Right>
+          </GreaterThanOrEqual>
+        </All>
+      </Derived>
+    </Fact>
+
+    <Fact path="/incomes/*/frequency">
+      <Name>Income frequency</Name>
+      <Description>How often this income amount is received or anticipated, used to convert the amount to a monthly amount (10 CCR 2506-1, 4.402).</Description>
+      <Writable><Enum optionsPath="/incomeFrequencyOptions" /></Writable>
+    </Fact>
+
+    <Fact path="/incomes/*/intendedMonths">
+      <Name>Months intended to cover</Name>
+      <Description>The number of months this income amount is intended to cover when the income is for another specific period of time; that income is divided by this number of months to obtain average monthly income (10 CCR 2506-1, 4.402.2).</Description>
+      <Writable><Int /></Writable>
+    </Fact>
+
+    <Fact path="/incomes/*/monthlyAmount">
+      <Name>Monthly amount</Name>
+      <Description>The monthly amount of this income, computed by converting the stated income amount using the pay-frequency conversion rules or, for income intended to cover another specific period of time, by dividing by the number of intended months (10 CCR 2506-1, 4.402 and 4.402.2).</Description>
+      <Derived>
+        <Switch>
+          <Case>
+            <When>
+              <Equal>
+                <Left><Dependency path="../frequency" /></Left>
+                <Right><Enum optionsPath="/incomeFrequencyOptions">Weekly</Enum></Right>
+              </Equal>
+            </When>
+            <Then>
+              <Multiply>
+                <Dependency path="../amount" />
+                <Dependency path="/weeklyToMonthlyConversionMultiplier" />
+              </Multiply>
+            </Then>
+          </Case>
+          <Case>
+            <When>
+              <Equal>
+                <Left><Dependency path="../frequency" /></Left>
+                <Right><Enum optionsPath="/incomeFrequencyOptions">BiWeekly</Enum></Right>
+              </Equal>
+            </When>
+            <Then>
+              <Multiply>
+                <Dependency path="../amount" />
+                <Dependency path="/biWeeklyToMonthlyConversionMultiplier" />
+              </Multiply>
+            </Then>
+          </Case>
+          <Case>
+            <When>
+              <Equal>
+                <Left><Dependency path="../frequency" /></Left>
+                <Right><Enum optionsPath="/incomeFrequencyOptions">SemiMonthly</Enum></Right>
+              </Equal>
+            </When>
+            <Then>
+              <Multiply>
+                <Dependency path="../amount" />
+                <Dependency path="/semiMonthlyToMonthlyConversionMultiplier" />
+              </Multiply>
+            </Then>
+          </Case>
+          <Case>
+            <When>
+              <Equal>
+                <Left><Dependency path="../frequency" /></Left>
+                <Right><Enum optionsPath="/incomeFrequencyOptions">EveryOtherMonth</Enum></Right>
+              </Equal>
+            </When>
+            <Then>
+              <Multiply>
+                <Dependency path="../amount" />
+                <Dependency path="/everyOtherMonthToMonthlyConversionMultiplier" />
+              </Multiply>
+            </Then>
+          </Case>
+          <Case>
+            <When>
+              <Equal>
+                <Left><Dependency path="../frequency" /></Left>
+                <Right><Enum optionsPath="/incomeFrequencyOptions">Quarterly</Enum></Right>
+              </Equal>
+            </When>
+            <Then>
+              <Multiply>
+                <Dependency path="../amount" />
+                <Dependency path="/quarterlyToMonthlyConversionMultiplier" />
+              </Multiply>
+            </Then>
+          </Case>
+          <Case>
+            <When>
+              <Equal>
+                <Left><Dependency path="../frequency" /></Left>
+                <Right><Enum optionsPath="/incomeFrequencyOptions">TwiceAYear</Enum></Right>
+              </Equal>
+            </When>
+            <Then>
+              <Multiply>
+                <Dependency path="../amount" />
+                <Dependency path="/twiceAYearToMonthlyConversionMultiplier" />
+              </Multiply>
+            </Then>
+          </Case>
+          <Case>
+            <When>
+              <Equal>
+                <Left><Dependency path="../frequency" /></Left>
+                <Right><Enum optionsPath="/incomeFrequencyOptions">Annual</Enum></Right>
+              </Equal>
+            </When>
+            <Then>
+              <Multiply>
+                <Dependency path="../amount" />
+                <Dependency path="/annualToMonthlyConversionMultiplier" />
+              </Multiply>
+            </Then>
+          </Case>
+          <Case>
+            <When>
+              <Equal>
+                <Left><Dependency path="../frequency" /></Left>
+                <Right><Enum optionsPath="/incomeFrequencyOptions">OtherSpecificTimePeriod</Enum></Right>
+              </Equal>
+            </When>
+            <Then>
+              <Divide>
+                <Dividend><Dependency path="../amount" /></Dividend>
+                <Divisors><Dependency path="../intendedMonths" /></Divisors>
+              </Divide>
+            </Then>
+          </Case>
+          <Case>
+            <When><True /></When>
+            <Then><Dependency path="../amount" /></Then>
+          </Case>
+        </Switch>
+      </Derived>
+    </Fact>
+
+    <Fact path="/weeklyToMonthlyConversionMultiplier">
+      <Name>Weekly to monthly conversion multiplier</Name>
+      <Description>Multiplier used to convert weekly average income to a monthly amount: weekly average multiplied by 4.3 (10 CCR 2506-1).</Description>
+      <Derived><Rational>43/10</Rational></Derived>
+    </Fact>
+
+    <Fact path="/biWeeklyToMonthlyConversionMultiplier">
+      <Name>Bi-weekly to monthly conversion multiplier</Name>
+      <Description>Multiplier used to convert bi-weekly (every two weeks) average income to a monthly amount: bi-weekly average multiplied by 2.15 (10 CCR 2506-1).</Description>
+      <Derived><Rational>43/20</Rational></Derived>
+    </Fact>
+
+    <Fact path="/semiMonthlyToMonthlyConversionMultiplier">
+      <Name>Semi-monthly to monthly conversion multiplier</Name>
+      <Description>Multiplier used to convert semi-monthly (twice a month) average income to a monthly amount: semi-monthly average multiplied by 2 (10 CCR 2506-1).</Description>
+      <Derived><Rational>2/1</Rational></Derived>
+    </Fact>
+
+    <Fact path="/everyOtherMonthToMonthlyConversionMultiplier">
+      <Name>Every-other-month to monthly conversion multiplier</Name>
+      <Description>Multiplier used to convert every-other-month average income to a monthly amount: average multiplied by 0.5 (10 CCR 2506-1).</Description>
+      <Derived><Rational>1/2</Rational></Derived>
+    </Fact>
+
+    <!-- TODO: Confirm that the policy's rounded decimal conversion multipliers
+         for quarterly (0.333333), twice-a-year (0.166666), and annual (.083)
+         should be implemented as the exact natural fractions 1/3, 1/6, and
+         1/12 rather than as the displayed rounded decimal values. -->
+    <Fact path="/quarterlyToMonthlyConversionMultiplier">
+      <Name>Quarterly to monthly conversion multiplier</Name>
+      <Description>Multiplier used to convert quarterly average income to a monthly amount: average multiplied by 0.333333 (10 CCR 2506-1).</Description>
+      <Derived><Rational>1/3</Rational></Derived>
+    </Fact>
+
+    <Fact path="/twiceAYearToMonthlyConversionMultiplier">
+      <Name>Twice-a-year to monthly conversion multiplier</Name>
+      <Description>Multiplier used to convert twice-a-year average income to a monthly amount: average multiplied by 0.166666 (10 CCR 2506-1).</Description>
+      <Derived><Rational>1/6</Rational></Derived>
+    </Fact>
+
+    <Fact path="/annualToMonthlyConversionMultiplier">
+      <Name>Annual to monthly conversion multiplier</Name>
+      <Description>Multiplier used to convert annual average income to a monthly amount: average multiplied by .083 (10 CCR 2506-1).</Description>
+      <Derived><Rational>1/12</Rational></Derived>
+    </Fact>
+
+    <Fact path="/abawdWorkTypeOptions">
+      <Name>ABAWD work type options</Name>
+      <Description>Options describing whether job hours count as ABAWD work: compensated work, in-kind work, unpaid work verified by the provider of the unpaid work, or other work that does not count toward the ABAWD work requirement (10 CCR 2506-1, 4.000.1).</Description>
+      <Derived>
+        <EnumOptions>
+          <String>CompensatedWork</String>
+          <String>InKindWork</String>
+          <String>VerifiedUnpaidWork</String>
+          <String>Other</String>
+        </EnumOptions>
+      </Derived>
+    </Fact>
+
+    <Fact path="/jobs">
+      <Name>Jobs</Name>
+      <Description>List of jobs held by household members for SNAP employment and work-requirement determinations.</Description>
+      <Writable><Collection /></Writable>
+    </Fact>
+
+    <Fact path="/federalMinimumWageHourlyRate">
+      <Name>Federal minimum wage hourly rate</Name>
+      <Description>The federal minimum wage hourly rate in effect beginning July 24, 2009.</Description>
+      <Derived><Dollar>7.25</Dollar></Derived>
+    </Fact>
+
+    <Fact path="/jobs/*/memberId">
+      <Name>Member</Name>
+      <Description>The household member who holds this job.</Description>
+      <Writable><CollectionItem collection="/members" /></Writable>
+    </Fact>
+
+    <Fact path="/jobs/*/hoursPerWeek">
+      <Name>Hours per week</Name>
+      <Description>The average number of hours per week worked in this job. Employed or self-employed individuals may be exempt from SNAP work requirements when they work at least thirty (30) hours per week (10 CCR 2506-1, 4.310).</Description>
+      <Writable><Int /></Writable>
+    </Fact>
+
+    <Fact path="/jobs/*/abawdWorkType">
+      <Name>ABAWD work type</Name>
+      <Description>The type of work performed in this job for ABAWD work-requirement purposes. Compensated work, in-kind work, and unpaid work verified by the provider of the unpaid work count toward ABAWD work hours (10 CCR 2506-1, 4.000.1).</Description>
+      <Writable><Enum optionsPath="/abawdWorkTypeOptions" /></Writable>
+    </Fact>
+
+    <Fact path="/jobs/*/isSelfEmployed">
+      <Name>Is self-employed</Name>
+      <Description>Whether this job is self-employment. The work-requirement employment exemption applies to employed or self-employed individuals who meet the hours or weekly-earnings threshold (10 CCR 2506-1, 4.310).</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/jobs/*/isAtFederalMinimumWage">
+      <Name>Is at federal minimum wage</Name>
+      <Description>Whether this job is paid at least the federal minimum wage for the hours worked. For self-employment, this means earnings after allowable business expenses are deducted are at least equal to the federal minimum wage for the hours worked. Used to add up hours that count toward the student self-employment wage requirement and the work-requirement employment earnings threshold (10 CCR 2506-1, 4.306.1, B; 4.310).</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/jobs/*/employmentIsSuitable">
+      <Name>Employment is suitable</Name>
+      <Description>Whether this offered employment is suitable for the member. Employment is considered suitable unless wages are below the applicable federal or state minimum wage (or eighty percent of the federal minimum wage if neither applies), piece-rate expected hourly yield is below that wage, the job requires joining, resigning from, or refraining from joining a legitimate labor organization, the worksite is subject to a strike or lockout that has not been enjoined, health and safety risk is unreasonable, the member is physically or mentally unfit for the job, the job is outside the member's major field of experience during the first thirty (30) days after registration while opportunities in that field have not been offered, distance is unreasonable considering wage and commute time/cost, daily commuting time exceeds two (2) hours excluding child-care transportation, the distance prohibits walking and no public or private transportation is available, or the working hours or nature of employment interferes with the member's religious observances, convictions, or beliefs (10 CCR 2506-1, 4.310.7).</Description>
+      <Derived>
+        <Not>
+          <Any>
+            <Dependency path="../wagesBelowApplicableMinimum" />
+            <Dependency path="../pieceRateYieldBelowApplicableWage" />
+            <Dependency path="../requiresLaborOrganizationAction" />
+            <Dependency path="../worksiteSubjectToStrikeOrLockout" />
+            <Dependency path="../unreasonableHealthSafetyRisk" />
+            <Dependency path="../memberPhysicallyOrMentallyUnfit" />
+            <Dependency path="../outsideMajorFieldDuringInitialThirtyDays" />
+            <Dependency path="../unreasonableDistance" />
+            <Dependency path="../dailyCommuteExceedsTwoHours" />
+            <Dependency path="../noTransportationForNonWalkingDistance" />
+            <Dependency path="../interferesWithReligiousObservance" />
+          </Any>
+        </Not>
+      </Derived>
+    </Fact>
+
+    <Fact path="/jobs/*/offerAccepted">
+      <Name>Offer accepted</Name>
+      <Description>Whether the member accepted this offered job.</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/jobs/*/wagesBelowApplicableMinimum">
+      <Name>Wages below applicable minimum</Name>
+      <Description>Whether the wages offered for this employment are less than the higher of the applicable federal or state minimum wage, or less than eighty percent (80%) of the federal minimum wage if neither the federal nor state minimum wage is applicable (10 CCR 2506-1, 4.310.7).</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/jobs/*/pieceRateYieldBelowApplicableWage">
+      <Name>Piece-rate yield below applicable wage</Name>
+      <Description>Whether this employment is offered on a piece-rate basis and the average hourly yield the employee can reasonably be expected to earn is less than the applicable hourly wage for suitable employment (10 CCR 2506-1, 4.310.7).</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/jobs/*/requiresLaborOrganizationAction">
+      <Name>Requires labor organization action</Name>
+      <Description>Whether the member is required, as a condition of this employment, to join, resign from, or refrain from joining any legitimate labor organization (10 CCR 2506-1, 4.310.7).</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/jobs/*/worksiteSubjectToStrikeOrLockout">
+      <Name>Worksite subject to strike or lockout</Name>
+      <Description>Whether this employment is at a site subject to a strike or lockout at the time of the offer, unless the strike has been enjoined under the Labor Management Relations Act or Railway Labor Act (10 CCR 2506-1, 4.310.7).</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/jobs/*/unreasonableHealthSafetyRisk">
+      <Name>Unreasonable health or safety risk</Name>
+      <Description>Whether the member can demonstrate, or the local office becomes aware, that this employment presents an unreasonable degree of risk to health and safety (10 CCR 2506-1, 4.310.7).</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/jobs/*/memberPhysicallyOrMentallyUnfit">
+      <Name>Member physically or mentally unfit</Name>
+      <Description>Whether the member is physically or mentally unfit to perform this employment, as established by documentary medical evidence or reliable information obtained from other sources (10 CCR 2506-1, 4.310.7).</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/jobs/*/outsideMajorFieldDuringInitialThirtyDays">
+      <Name>Outside major field during initial thirty days</Name>
+      <Description>Whether this employment is not in the member's major field of experience and job opportunities in that major field have not failed to be offered after thirty (30) calendar days from registration (10 CCR 2506-1, 4.310.7).</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/jobs/*/unreasonableDistance">
+      <Name>Unreasonable distance</Name>
+      <Description>Whether the distance from the member's home to the place of employment is unreasonable considering the expected wage and the time and cost of commuting (10 CCR 2506-1, 4.310.7).</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/jobs/*/dailyCommuteExceedsTwoHours">
+      <Name>Daily commute exceeds two hours</Name>
+      <Description>Whether the daily commuting time for this employment exceeds two (2) hours per day, not including the time needed to transport a child or children to and from a child care facility (10 CCR 2506-1, 4.310.7).</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/jobs/*/noTransportationForNonWalkingDistance">
+      <Name>No transportation for non-walking distance</Name>
+      <Description>Whether the distance to the place of employment prohibits walking and neither public nor private transportation is available to transport the member to the job site (10 CCR 2506-1, 4.310.7).</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/jobs/*/interferesWithReligiousObservance">
+      <Name>Interferes with religious observance</Name>
+      <Description>Whether the working hours or nature of this employment interferes with the member's religious observances, convictions, or beliefs (10 CCR 2506-1, 4.310.7).</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/caregiverRelationships">
+      <Name>Caregiver relationships</Name>
       <Description>List of parent-or-caregiver relationships between household members. Each entry links one adult to one child and covers either (a) a natural, adoptive, or stepparent relationship or (b) a non-parent household member who exercises parental control over the child. A single child may appear in multiple entries (10 CCR 2506-1, 4.304.1).</Description>
       <Writable><Collection /></Writable>
     </Fact>
 
-    <Fact path="/parentChildRelationships/*/parentId">
-      <Name>Parent / caregiver</Name>
+    <Fact path="/caregiverRelationships/*/caregiverId">
+      <Name>Caregiver</Name>
       <Description>The household member who is either a natural, adoptive, or stepparent in this relationship, or a non-parent household member exercising parental control over the child. When the relationship is a natural, adoptive, or stepparent relationship to a child aged twenty-one (21) years or younger living in the same home, this member must be included in the SNAP household (10 CCR 2506-1, 4.304.1).</Description>
       <Writable><CollectionItem collection="/members" /></Writable>
     </Fact>
 
-    <Fact path="/parentChildRelationships/*/childId">
-      <Name>Child</Name>
-      <Description>The household member who is the child in this relationship — either the natural, adoptive, or stepchild of the parent, or a child under the parental control of a non-parent household member (10 CCR 2506-1, 4.304.1).</Description>
+    <Fact path="/caregiverRelationships/*/dependentId">
+      <Name>Dependent</Name>
+      <Description>The household member who is the child or dependent in this caregiver relationship — either the natural, adoptive, or stepchild of the caregiver, or a child under the parental control of a non-parent household member (10 CCR 2506-1, 4.304.1).</Description>
       <Writable><CollectionItem collection="/members" /></Writable>
     </Fact>
 
-    <Fact path="/parentChildRelationships/*/isNonparentParentalControl">
+    <Fact path="/caregiverRelationships/*/isParent">
+      <Name>Is parent relationship</Name>
+      <Description>Whether the caregiver-side member is the child's natural, adoptive, or stepparent, rather than a non-parent household member exercising parental control over the child. A child under eighteen (18) is considered to be under parental control of a household member when financially or otherwise dependent on that member (10 CCR 2506-1, 4.304.1).</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/caregiverRelationships/*/isNonparentParentalControl">
       <Name>Is non-parent parental-control relationship</Name>
-      <Description>Whether this relationship is the non-parent caregiver kind (the child is under the parental control of an adult who is not their natural, adoptive, or stepparent), rather than a natural, adoptive, or stepparent relationship. A child under eighteen (18) is considered to be under parental control of a household member when financially or otherwise dependent on that member (10 CCR 2506-1, 4.304.1).</Description>
+      <Description>Whether this caregiver relationship is the non-parent parental-control kind: the dependent-side member is a child under the parental control of a caregiver-side member who is not the child's natural, adoptive, or stepparent. A child under eighteen (18) is considered to be under parental control of a household member when financially or otherwise dependent on that member (10 CCR 2506-1, 4.304.1).</Description>
       <Writable><Boolean /></Writable>
     </Fact>
 
-    <Fact path="/parentChildRelationships/*/parentProvidesMoreThanHalfOfPhysicalCare">
-      <Name>Parent provides more than half of physical care</Name>
-      <Description>Whether the parent-side member in this relationship is responsible for more than half of the physical care of the child. Used by the SNAP student-eligibility exemption for a student responsible for the physical care of a dependent household member aged six (6) to under twelve (12) (10 CCR 2506-1, 4.306.1, E).</Description>
+    <Fact path="/caregiverRelationships/*/caregiverProvidesMoreThanHalfOfPhysicalCare">
+      <Name>Caregiver provides more than half of physical care</Name>
+      <Description>Whether the caregiver-side member in this relationship is responsible for more than half of the physical care of the child. Used by the SNAP student-eligibility exemption for a student responsible for the physical care of a dependent household member aged six (6) to under twelve (12) (10 CCR 2506-1, 4.306.1, E).</Description>
       <Writable><Boolean /></Writable>
     </Fact>
 
-    <Fact path="/parentChildRelationships/*/adequateChildcareUnavailable">
+    <Fact path="/caregiverRelationships/*/adequateChildcareUnavailable">
       <Name>Adequate childcare is unavailable</Name>
-      <Description>Whether the local office has determined that adequate childcare is not available for the child-side member in this relationship to enable the parent-side member to attend class and satisfy the requirement of item B or item C of 4.306.1 (10 CCR 2506-1, 4.306.1, E).</Description>
+      <Description>Whether the local office has determined that adequate childcare is not available for the dependent-side member in this relationship to enable the caregiver-side member to attend class and satisfy the requirement of item B or item C of 4.306.1 (10 CCR 2506-1, 4.306.1, E).</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/caregiverRelationships/*/claimedForWorkRequirementsCareExemption">
+      <Name>Claimed for work-requirements care exemption</Name>
+      <Description>Whether this caregiver relationship is the one claimed for the SNAP work-requirements exemption for a parent or other household member responsible for the care of this dependent child under six (6) or incapacitated person. This per-relationship flag identifies which caregiver claims the exemption when multiple caregivers are associated with the same dependent (10 CCR 2506-1, 4.310).</Description>
       <Writable><Boolean /></Writable>
     </Fact>
 
@@ -105,6 +730,12 @@
     <Fact path="/members/*/hasMentalDisability">
       <Name>Has mental disability</Name>
       <Description>Whether this member has a mental disability</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/isIncapacitated">
+      <Name>Is incapacitated</Name>
+      <Description>Whether this member is an incapacitated person whose care may qualify one parent or other household member for the SNAP work-requirements exemption (10 CCR 2506-1, 4.310).</Description>
       <Writable><Boolean /></Writable>
     </Fact>
 
@@ -412,7 +1043,7 @@
 
     <Fact path="/members/*/isMandatoryChildViaParent">
       <Name>Is mandatory child via parent in household</Name>
-      <Description>Whether this member is a mandatory household member under the first mandatory-child case: a person aged twenty-one (21) years or younger who has at least one /parentChildRelationships entry whose parent-side member is part of the SNAP household (10 CCR 2506-1, 4.304.1).</Description>
+      <Description>Whether this member is a mandatory household member under the first mandatory-child case: a person aged twenty-one (21) years or younger who has at least one /caregiverRelationships entry whose caregiver-side member is part of the SNAP household (10 CCR 2506-1, 4.304.1).</Description>
       <Derived>
         <All>
           <LessThanOrEqual>
@@ -422,13 +1053,14 @@
           <GreaterThan>
             <Left>
               <CollectionSize>
-                <Filter path="/parentChildRelationships">
+                <Filter path="/caregiverRelationships">
                   <All>
                     <Equal>
-                      <Left><Dependency path="childId" /></Left>
+                      <Left><Dependency path="dependentId" /></Left>
                       <Right><Dependency path="^" /></Right>
                     </Equal>
-                    <Dependency path="parentId/isPartOfHousehold" />
+                    <Dependency path="isParent" />
+                    <Dependency path="caregiverId/isPartOfHousehold" />
                   </All>
                 </Filter>
               </CollectionSize>
@@ -441,7 +1073,7 @@
 
     <Fact path="/members/*/isMandatoryChildViaParentalControl">
       <Name>Is mandatory child via non-parent parental control</Name>
-      <Description>Whether this member is a mandatory household member under the second mandatory-child case: a non-foster, non-emancipated child under eighteen (18) years of age who has at least one /parentChildRelationships entry of the non-parent caregiver kind (isNonparentParentalControl is true) whose parent-side member is part of the SNAP household (10 CCR 2506-1, 4.304.1).</Description>
+      <Description>Whether this member is a mandatory household member under the second mandatory-child case: a non-foster, non-emancipated child under eighteen (18) years of age who has at least one /caregiverRelationships entry where the child is under parental control of the caregiver-side member and that caregiver-side member is part of the SNAP household (10 CCR 2506-1, 4.304.1).</Description>
       <Derived>
         <All>
           <LessThan>
@@ -453,14 +1085,14 @@
           <GreaterThan>
             <Left>
               <CollectionSize>
-                <Filter path="/parentChildRelationships">
+                <Filter path="/caregiverRelationships">
                   <All>
                     <Equal>
-                      <Left><Dependency path="childId" /></Left>
+                      <Left><Dependency path="dependentId" /></Left>
                       <Right><Dependency path="^" /></Right>
                     </Equal>
                     <Dependency path="isNonparentParentalControl" />
-                    <Dependency path="parentId/isPartOfHousehold" />
+                    <Dependency path="caregiverId/isPartOfHousehold" />
                   </All>
                 </Filter>
               </CollectionSize>
@@ -484,23 +1116,23 @@
 
     <Fact path="/members/*/isMandatoryParentViaChild">
       <Name>Is mandatory parent via child in household</Name>
-      <Description>Whether this member is a mandatory household member under the parent-side mirror of the first mandatory-child case: a natural, adoptive, or stepparent (i.e., the linked /parentChildRelationships entry has isNonparentParentalControl false) of a household member aged twenty-one (21) years or younger who is themselves part of the SNAP household. Uses childId/isPartOfHousehold on the child side so the existence-in-household check matches the policy phrasing "living with their natural or adoptive parent(s) or stepparent(s)" (10 CCR 2506-1, 4.304.1).</Description>
+      <Description>Whether this member is a mandatory household member under the caregiver-side mirror of the first mandatory-child case: a natural, adoptive, or stepparent (i.e., the linked /caregiverRelationships entry has isParent true) of a household member aged twenty-one (21) years or younger who is themselves part of the SNAP household. Uses dependentId/isPartOfHousehold on the dependent side so the existence-in-household check matches the policy phrasing "living with their natural or adoptive parent(s) or stepparent(s)" (10 CCR 2506-1, 4.304.1).</Description>
       <Derived>
         <GreaterThan>
           <Left>
             <CollectionSize>
-              <Filter path="/parentChildRelationships">
+              <Filter path="/caregiverRelationships">
                 <All>
                   <Equal>
-                    <Left><Dependency path="parentId" /></Left>
+                    <Left><Dependency path="caregiverId" /></Left>
                     <Right><Dependency path="^" /></Right>
                   </Equal>
-                  <Not><Dependency path="isNonparentParentalControl" /></Not>
+                  <Dependency path="isParent" />
                   <LessThanOrEqual>
-                    <Left><Dependency path="childId/age" /></Left>
+                    <Left><Dependency path="dependentId/age" /></Left>
                     <Right><Dependency path="/mandatoryChildParentAgeLimit" /></Right>
                   </LessThanOrEqual>
-                  <Dependency path="childId/isPartOfHousehold" />
+                  <Dependency path="dependentId/isPartOfHousehold" />
                 </All>
               </Filter>
             </CollectionSize>
@@ -512,25 +1144,25 @@
 
     <Fact path="/members/*/isMandatoryParentViaParentalControl">
       <Name>Is mandatory parent via non-parent parental control</Name>
-      <Description>Whether this member is a mandatory household member under the parent-side mirror of the second mandatory-child case: a non-parent caregiver (the linked /parentChildRelationships entry has isNonparentParentalControl true) over a non-foster, non-emancipated child under eighteen (18) years of age who is themselves part of the SNAP household. Uses childId/isPartOfHousehold on the child side so the existence-in-household check matches the policy phrasing "living with…a household member" (10 CCR 2506-1, 4.304.1).</Description>
+      <Description>Whether this member is a mandatory household member under the caregiver-side mirror of the second mandatory-child case: a non-parent caregiver with parental control over a non-foster, non-emancipated child under eighteen (18) years of age who is themselves part of the SNAP household. Uses dependentId/isPartOfHousehold on the dependent side so the existence-in-household check matches the policy phrasing "living with…a household member" (10 CCR 2506-1, 4.304.1).</Description>
       <Derived>
         <GreaterThan>
           <Left>
             <CollectionSize>
-              <Filter path="/parentChildRelationships">
+              <Filter path="/caregiverRelationships">
                 <All>
                   <Equal>
-                    <Left><Dependency path="parentId" /></Left>
+                    <Left><Dependency path="caregiverId" /></Left>
                     <Right><Dependency path="^" /></Right>
                   </Equal>
                   <Dependency path="isNonparentParentalControl" />
                   <LessThan>
-                    <Left><Dependency path="childId/age" /></Left>
+                    <Left><Dependency path="dependentId/age" /></Left>
                     <Right><Dependency path="/mandatoryChildParentalControlAgeLimit" /></Right>
                   </LessThan>
-                  <Not><Dependency path="childId/isFosterChild" /></Not>
-                  <Not><Dependency path="childId/isEmancipated" /></Not>
-                  <Dependency path="childId/isPartOfHousehold" />
+                  <Not><Dependency path="dependentId/isFosterChild" /></Not>
+                  <Not><Dependency path="dependentId/isEmancipated" /></Not>
+                  <Dependency path="dependentId/isPartOfHousehold" />
                 </All>
               </Filter>
             </CollectionSize>
@@ -542,7 +1174,7 @@
 
     <Fact path="/members/*/isMandatoryParent">
       <Name>Is mandatory parent household member</Name>
-      <Description>Whether this member must be included in the SNAP household as the parent of, or non-parent caregiver exercising parental control over, a child who is themselves part of the SNAP household. True when either /members/*/isMandatoryParentViaChild or /members/*/isMandatoryParentViaParentalControl is true (10 CCR 2506-1, 4.304.1).</Description>
+      <Description>Whether this member must be included in the SNAP household as the parent of, or a non-parent caregiver exercising parental control over, a child who is themselves part of the SNAP household. True when either /members/*/isMandatoryParentViaChild or /members/*/isMandatoryParentViaParentalControl is true (10 CCR 2506-1, 4.304.1).</Description>
       <Derived>
         <Any>
           <Dependency path="../isMandatoryParentViaChild" />
@@ -604,6 +1236,7 @@
         <Any>
           <Dependency path="../hasPhysicalDisability" />
           <Dependency path="../hasMentalDisability" />
+          <Dependency path="../receivesTemporaryOrPermanentDisabilityBenefits" />
         </Any>
       </Derived>
     </Fact>
@@ -746,10 +1379,15 @@
 
     <Fact path="/householdSize">
       <Name>Household size</Name>
-      <Description>The number of members in the household, used to look up the maximum monthly SNAP allotment (10 CCR 2506-1, 4.207.3).</Description>
+      <Description>The number of non-disqualified members who are part of the household, used to look up the maximum monthly SNAP allotment (10 CCR 2506-1, 4.207.3; 4.304.4).</Description>
       <Derived>
         <CollectionSize>
-          <Dependency path="/members" />
+          <Filter path="/members">
+            <All>
+              <Dependency path="isPartOfHousehold" />
+              <Not><Dependency path="isDisqualified" /></Not>
+            </All>
+          </Filter>
         </CollectionSize>
       </Derived>
     </Fact>
@@ -1359,17 +1997,35 @@
       </Derived>
     </Fact>
 
-    <Fact path="/meetsFinancialCriteria">
-      <Name>Meets financial criteria</Name>
-      <Description>Whether the household meets the financial criteria for Standard Eligibility: net income (after all applicable deductions) at or below one hundred percent (100%) of the federal poverty level and resources below the Section 4.408 limit; households that do not include a member aged sixty (60) or older or a person with a disability must additionally have combined gross income at or below one hundred thirty percent (130%) of the federal poverty level (10 CCR 2506-1, 4.000.1).</Description>
+    <Fact path="/meetsIncomeCriteria">
+      <Name>Meets income criteria</Name>
+      <Description>Whether the household meets the income criteria for Standard Eligibility: net income (after all applicable deductions) at or below one hundred percent (100%) of the federal poverty level; households that do not include a member aged sixty (60) or older or a person with a disability must additionally have combined gross income at or below one hundred thirty percent (130%) of the federal poverty level (10 CCR 2506-1, 4.401).</Description>
       <Derived>
         <All>
           <Dependency path="/meetsNetIncomeTest" />
-          <Dependency path="/meetsResourceTest" />
           <Any>
             <Dependency path="/hasMemberElderlyOrPersonWithDisability" />
             <Dependency path="/meetsGrossIncomeTest" />
           </Any>
+        </All>
+      </Derived>
+    </Fact>
+
+    <Fact path="/meetsResourceCriteria">
+      <Name>Meets resource criteria</Name>
+      <Description>Whether the household meets the resource criteria for Standard Eligibility, currently represented by the household meeting the resource test.</Description>
+      <Derived>
+        <Dependency path="/meetsResourceTest" />
+      </Derived>
+    </Fact>
+
+    <Fact path="/meetsFinancialCriteria">
+      <Name>Meets financial criteria</Name>
+      <Description>Whether the household meets the financial criteria for Standard Eligibility by meeting both the income criteria and the resource criteria (10 CCR 2506-1, 4.000.1).</Description>
+      <Derived>
+        <All>
+          <Dependency path="/meetsIncomeCriteria" />
+          <Dependency path="/meetsResourceCriteria" />
         </All>
       </Derived>
     </Fact>
@@ -1545,7 +2201,7 @@
 
     <Fact path="/studentExemptionWorkHoursPerWeek">
       <Name>Student exemption work hours per week</Name>
-      <Description>Minimum (inclusive) average hours worked per week for the SNAP student-eligibility employment exemption: twenty (20) hours per week, paid (10 CCR 2506-1, 4.306.1, B). TODO: the self-employed branch additionally requires earnings after allowable business expenses equal to at least the federal minimum wage multiplied by twenty (20) hours — not yet modeled.</Description>
+      <Description>Minimum (inclusive) average hours worked per week for the SNAP student-eligibility employment exemption: twenty (20) hours per week. For non-self-employment, the student must be paid for the employment regardless of wages received; for self-employment, earnings after allowable business expenses are deducted must equal at least the federal minimum wage multiplied by twenty (20) hours (10 CCR 2506-1, 4.306.1, B).</Description>
       <Derived><Int>20</Int></Derived>
     </Fact>
 
@@ -1584,10 +2240,7 @@
       <Derived>
         <Any>
           <Dependency path="../isPhysicallyOrMentallyUnfitForEmploymentForStudentEligibility" />
-          <GreaterThanOrEqual>
-            <Left><Dependency path="../workHoursPerWeek" /></Left>
-            <Right><Dependency path="/studentExemptionWorkHoursPerWeek" /></Right>
-          </GreaterThanOrEqual>
+          <Dependency path="../meetsStudentEmploymentExemption" />
           <Dependency path="../isParticipatingInWorkStudy" />
           <Dependency path="../isStudentResponsibleForDependentChild" />
           <Dependency path="../isStudentResponsibleForPhysicalCareOfDependentChildWithoutAdequateChildcare" />
@@ -1595,6 +2248,78 @@
           <Dependency path="../isAssignedToHigherEducationThroughEmploymentTrainingProgram" />
           <Dependency path="../isInOnTheJobTraining" />
         </Any>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/meetsStudentEmploymentExemption">
+      <Name>Meets student employment exemption</Name>
+      <Description>Whether this member meets the SNAP student-eligibility employment exemption through average employment of twenty (20) or more hours per week and paid for that employment, with self-employment additionally requiring earnings after allowable business expenses equal to at least the federal minimum wage multiplied by twenty (20) hours. Hours are added across the member's jobs in the applicable category (10 CCR 2506-1, 4.306.1, B).</Description>
+      <Derived>
+        <Any>
+          <GreaterThanOrEqual>
+            <Left><Dependency path="../studentNonSelfEmploymentJobHoursPerWeek" /></Left>
+            <Right><Dependency path="/studentExemptionWorkHoursPerWeek" /></Right>
+          </GreaterThanOrEqual>
+          <GreaterThanOrEqual>
+            <Left><Dependency path="../studentSelfEmploymentFederalMinimumWageJobHoursPerWeek" /></Left>
+            <Right><Dependency path="/studentExemptionWorkHoursPerWeek" /></Right>
+          </GreaterThanOrEqual>
+        </Any>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/studentNonSelfEmploymentJobHoursPerWeek">
+      <Name>Student non-self-employment job hours per week</Name>
+      <Description>The total average hours per week this member works across jobs that are not self-employment. These paid employment hours count toward the twenty (20) hour SNAP student-eligibility employment exemption regardless of wages received (10 CCR 2506-1, 4.306.1, B).</Description>
+      <Derived>
+        <CollectionSum>
+          <Switch>
+            <Case>
+              <When>
+                <All>
+                  <Equal>
+                    <Left><Dependency path="/jobs/*/memberId" /></Left>
+                    <Right><Dependency path=".." /></Right>
+                  </Equal>
+                  <Not><Dependency path="/jobs/*/isSelfEmployed" /></Not>
+                </All>
+              </When>
+              <Then><Dependency path="/jobs/*/hoursPerWeek" /></Then>
+            </Case>
+            <Case>
+              <When><True /></When>
+              <Then><Int>0</Int></Then>
+            </Case>
+          </Switch>
+        </CollectionSum>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/studentSelfEmploymentFederalMinimumWageJobHoursPerWeek">
+      <Name>Student self-employment federal-minimum-wage job hours per week</Name>
+      <Description>The total average hours per week this member works across self-employment jobs whose earnings after allowable business expenses are deducted are at least equal to the federal minimum wage for the hours worked. These hours count toward the self-employment branch of the twenty (20) hour SNAP student-eligibility employment exemption (10 CCR 2506-1, 4.306.1, B).</Description>
+      <Derived>
+        <CollectionSum>
+          <Switch>
+            <Case>
+              <When>
+                <All>
+                  <Equal>
+                    <Left><Dependency path="/jobs/*/memberId" /></Left>
+                    <Right><Dependency path=".." /></Right>
+                  </Equal>
+                  <Dependency path="/jobs/*/isSelfEmployed" />
+                  <Dependency path="/jobs/*/isAtFederalMinimumWage" />
+                </All>
+              </When>
+              <Then><Dependency path="/jobs/*/hoursPerWeek" /></Then>
+            </Case>
+            <Case>
+              <When><True /></When>
+              <Then><Int>0</Int></Then>
+            </Case>
+          </Switch>
+        </CollectionSum>
       </Derived>
     </Fact>
 
@@ -1623,20 +2348,20 @@
 
     <Fact path="/members/*/hasCareOfDependentHouseholdMember">
       <Name>Has care of a dependent household member</Name>
-      <Description>Whether this member has at least one /parentChildRelationships entry whose child-side member is part of the SNAP household and is under the age of six (6). This captures responsibility for the care of a dependent household member under age six for the SNAP full-time-student exemption (10 CCR 2506-1, 4.306.1).</Description>
+      <Description>Whether this member has at least one /caregiverRelationships entry whose dependent-side member is part of the SNAP household and is under the age of six (6). This captures responsibility for the care of a dependent household member under age six for the SNAP full-time-student exemption (10 CCR 2506-1, 4.306.1).</Description>
       <Derived>
         <GreaterThan>
           <Left>
             <CollectionSize>
-              <Filter path="/parentChildRelationships">
+              <Filter path="/caregiverRelationships">
                 <All>
                   <Equal>
-                    <Left><Dependency path="parentId" /></Left>
+                    <Left><Dependency path="caregiverId" /></Left>
                     <Right><Dependency path="^" /></Right>
                   </Equal>
-                  <Dependency path="childId/isPartOfHousehold" />
+                  <Dependency path="dependentId/isPartOfHousehold" />
                   <LessThan>
-                    <Left><Dependency path="childId/age" /></Left>
+                    <Left><Dependency path="dependentId/age" /></Left>
                     <Right><Dependency path="/studentExemptionDependentMemberAgeLimit" /></Right>
                   </LessThan>
                 </All>
@@ -1650,32 +2375,36 @@
 
     <Fact path="/members/*/isSingleParentOfDependentChild">
       <Name>Is single parent of a dependent child</Name>
-      <Description>Whether this member has at least one /parentChildRelationships entry to a household child under age twelve (12) for whom this member is the only parent of any kind (natural, adoptive, stepparent, or non-parent caregiver) in the same SNAP household. Captures the single-parent provision of the SNAP full-time-student exemption (10 CCR 2506-1, 4.306.1).</Description>
+      <Description>Whether this member has at least one /caregiverRelationships entry to a household child under age twelve (12) for whom this member is the only parent of any kind (natural, adoptive, stepparent, or non-parent caregiver) in the same SNAP household. Captures the single-parent provision of the SNAP full-time-student exemption (10 CCR 2506-1, 4.306.1).</Description>
+      <!-- TODO: Confirm whether third-type caregiver relationships (neither
+           isParent nor isNonparentParentalControl) should count for this
+           single-parent student exemption, or whether this should filter to
+           parent / parental-control relationships only. -->
       <Derived>
         <GreaterThan>
           <Left>
             <CollectionSize>
-              <Filter path="/parentChildRelationships">
+              <Filter path="/caregiverRelationships">
                 <All>
                   <Equal>
-                    <Left><Dependency path="parentId" /></Left>
+                    <Left><Dependency path="caregiverId" /></Left>
                     <Right><Dependency path="^" /></Right>
                   </Equal>
-                  <Dependency path="childId/isPartOfHousehold" />
+                  <Dependency path="dependentId/isPartOfHousehold" />
                   <LessThan>
-                    <Left><Dependency path="childId/age" /></Left>
+                    <Left><Dependency path="dependentId/age" /></Left>
                     <Right><Dependency path="/studentExemptionDependentChildAgeLimit" /></Right>
                   </LessThan>
                   <Equal>
                     <Left>
                       <CollectionSize>
-                        <Filter path="/parentChildRelationships">
+                        <Filter path="/caregiverRelationships">
                           <All>
                             <Equal>
-                              <Left><Dependency path="childId" /></Left>
-                              <Right><Dependency path="^/childId" /></Right>
+                              <Left><Dependency path="dependentId" /></Left>
+                              <Right><Dependency path="^/dependentId" /></Right>
                             </Equal>
-                            <Dependency path="parentId/isPartOfHousehold" />
+                            <Dependency path="caregiverId/isPartOfHousehold" />
                           </All>
                         </Filter>
                       </CollectionSize>
@@ -1707,27 +2436,27 @@
 
     <Fact path="/members/*/isStudentResponsibleForPhysicalCareOfDependentChildWithoutAdequateChildcare">
       <Name>Is student responsible for physical care of a dependent child without adequate childcare</Name>
-      <Description>Whether this member qualifies for the SNAP student eligibility exemption as a student who is responsible for more than half of the physical care of a dependent household member who has reached the age of six (6) but is under the age of twelve (12), where the local office has determined that adequate childcare is not available to enable the individual to attend class and satisfy the requirement of item B or item C of 4.306.1. Derived from any /parentChildRelationships entry where this member is the parent, the child is part of the SNAP household and aged six (6) to under twelve (12), and both per-relationship flags parentProvidesMoreThanHalfOfPhysicalCare and adequateChildcareUnavailable are true (10 CCR 2506-1, 4.306.1, E).</Description>
+      <Description>Whether this member qualifies for the SNAP student eligibility exemption as a student who is responsible for more than half of the physical care of a dependent household member who has reached the age of six (6) but is under the age of twelve (12), where the local office has determined that adequate childcare is not available to enable the individual to attend class and satisfy the requirement of item B or item C of 4.306.1. Derived from any /caregiverRelationships entry where this member is the caregiver, the dependent child is part of the SNAP household and aged six (6) to under twelve (12), and both per-relationship flags caregiverProvidesMoreThanHalfOfPhysicalCare and adequateChildcareUnavailable are true (10 CCR 2506-1, 4.306.1, E).</Description>
       <Derived>
         <GreaterThan>
           <Left>
             <CollectionSize>
-              <Filter path="/parentChildRelationships">
+              <Filter path="/caregiverRelationships">
                 <All>
                   <Equal>
-                    <Left><Dependency path="parentId" /></Left>
+                    <Left><Dependency path="caregiverId" /></Left>
                     <Right><Dependency path="^" /></Right>
                   </Equal>
-                  <Dependency path="childId/isPartOfHousehold" />
+                  <Dependency path="dependentId/isPartOfHousehold" />
                   <GreaterThanOrEqual>
-                    <Left><Dependency path="childId/age" /></Left>
+                    <Left><Dependency path="dependentId/age" /></Left>
                     <Right><Dependency path="/studentExemptionDependentMemberAgeLimit" /></Right>
                   </GreaterThanOrEqual>
                   <LessThan>
-                    <Left><Dependency path="childId/age" /></Left>
+                    <Left><Dependency path="dependentId/age" /></Left>
                     <Right><Dependency path="/studentExemptionDependentChildAgeLimit" /></Right>
                   </LessThan>
-                  <Dependency path="parentProvidesMoreThanHalfOfPhysicalCare" />
+                  <Dependency path="caregiverProvidesMoreThanHalfOfPhysicalCare" />
                   <Dependency path="adequateChildcareUnavailable" />
                 </All>
               </Filter>
@@ -1780,7 +2509,7 @@
 
     <Fact path="/voluntaryQuitReasonOptions">
       <Name>Voluntary quit reason options</Name>
-      <Description>Options enumerating the good cause reasons under which a member's voluntary quit of employment or reduction in work hours is not subject to sanction under SNAP. The list is not exhaustive (the local office may recognize other reasons) but captures the categories called out in policy: discrimination by an employer; work demands or conditions that render continued employment unreasonable; acceptance of new employment or at-least-half-time enrollment in a recognized school, training program, or institution of higher education that requires leaving employment; another household member accepting employment or at-least-half-time enrollment in another county or political sub-division that requires the household to move; resignations by persons under sixty (60) recognized by the employer as retirement; resignation from employment that does not meet the suitable-employment criteria of 4.310.7; circumstances beyond the individual's control where accepted full-time employment did not materialize or resulted in less than thirty (30) hours per week or weekly earnings below the federal minimum wage times thirty (30); leaving a job in connection with patterns of employment in which workers frequently move from one employer to another (such as migrant farm labor or construction work); illness of the head of household; illness of another household member requiring the head of household's presence; a household emergency; the unavailability of transportation; an employer demanding a reduction in the participant's work effort or salary through no fault of the employee; and lack of adequate child care for children who have reached age six (6) but are under age twelve (12) (10 CCR 2506-1, 4.308.1).</Description>
+      <Description>Options enumerating the reasons a member may give for a voluntary quit of employment or reduction in work hours. Most listed options are good-cause reasons not subject to sanction under SNAP: discrimination by an employer; work demands or conditions that render continued employment unreasonable; acceptance of new employment or at-least-half-time enrollment in a recognized school, training program, or institution of higher education that requires leaving employment; another household member accepting employment or at-least-half-time enrollment in another county or political sub-division that requires the household to move; resignations by persons under sixty (60) recognized by the employer as retirement; resignation from employment that does not meet the suitable-employment criteria of 4.310.7; circumstances beyond the individual's control where accepted full-time employment did not materialize or resulted in less than thirty (30) hours per week or weekly earnings below the federal minimum wage times thirty (30); leaving a job in connection with patterns of employment in which workers frequently move from one employer to another (such as migrant farm labor or construction work); illness of the head of household; illness of another household member requiring the head of household's presence; a household emergency; the unavailability of transportation; an employer demanding a reduction in the participant's work effort or salary through no fault of the employee; and lack of adequate child care for children who have reached age six (6) but are under age twelve (12). Other and StrikingGovernmentEmployee are not good-cause reasons; a federal, state, or local government employee dismissed for participating in a strike against that government is considered to have voluntarily quit without good cause (10 CCR 2506-1, 4.308.1).</Description>
       <Derived>
         <EnumOptions>
           <String>Discrimination</String>
@@ -1797,6 +2526,7 @@
           <String>UnavailableTransportation</String>
           <String>EmployerDemandsReduction</String>
           <String>LackOfAdequateChildCare</String>
+          <String>StrikingGovernmentEmployee</String>
           <String>Other</String>
         </EnumOptions>
       </Derived>
@@ -1804,20 +2534,26 @@
 
     <Fact path="/members/*/voluntaryQuitReason">
       <Name>Voluntary quit reason</Name>
-      <Description>The reason for this member's voluntary quit of employment or reduction in work hours from the list enumerated in /voluntaryQuitReasonOptions. Selecting one of the 4.308.1 enumerated good cause reasons indicates good cause; selecting Other indicates a reason was given but it does not fall within an enumerated good cause category and — combined with /members/*/voluntarilyQuitOrReducedWorkEffort — drives the ineligible-voluntary-quit determination (10 CCR 2506-1, 4.308.1).</Description>
+      <Description>The reason for this member's voluntary quit of employment or reduction in work hours from the list enumerated in /voluntaryQuitReasonOptions. Selecting one of the 4.308.1 enumerated good-cause reasons indicates good cause; selecting Other or StrikingGovernmentEmployee indicates there is no good cause and — combined with /members/*/voluntarilyQuitOrReducedWorkEffort — drives the ineligible-voluntary-quit determination (10 CCR 2506-1, 4.308.1).</Description>
       <Writable><Enum optionsPath="/voluntaryQuitReasonOptions" /></Writable>
     </Fact>
 
     <Fact path="/members/*/isIneligibleVoluntaryQuit">
       <Name>Is ineligible due to voluntary quit</Name>
-      <Description>Whether this member is ineligible for SNAP participation because they voluntarily quit their most recent job or reduced their work effort below thirty (30) hours per week without good cause. True when /members/*/voluntarilyQuitOrReducedWorkEffort is true and /members/*/voluntaryQuitReason is set to Other (a reason was given but it does not fall within one of the enumerated 4.308.1 good cause categories) (10 CCR 2506-1, 4.308; 4.308.1).</Description>
+      <Description>Whether this member is ineligible for SNAP participation because they voluntarily quit their most recent job or reduced their work effort below thirty (30) hours per week without good cause. True when /members/*/voluntarilyQuitOrReducedWorkEffort is true and /members/*/voluntaryQuitReason is set to Other (a reason was given but it does not fall within one of the enumerated 4.308.1 good-cause categories) or StrikingGovernmentEmployee (a federal, state, or local government employee dismissed for participating in a strike against that government is considered to have voluntarily quit without good cause) (10 CCR 2506-1, 4.308; 4.308.1).</Description>
       <Derived>
         <All>
           <Dependency path="../voluntarilyQuitOrReducedWorkEffort" />
-          <Equal>
-            <Left><Dependency path="../voluntaryQuitReason" /></Left>
-            <Right><Enum optionsPath="/voluntaryQuitReasonOptions">Other</Enum></Right>
-          </Equal>
+          <Any>
+            <Equal>
+              <Left><Dependency path="../voluntaryQuitReason" /></Left>
+              <Right><Enum optionsPath="/voluntaryQuitReasonOptions">Other</Enum></Right>
+            </Equal>
+            <Equal>
+              <Left><Dependency path="../voluntaryQuitReason" /></Left>
+              <Right><Enum optionsPath="/voluntaryQuitReasonOptions">StrikingGovernmentEmployee</Enum></Right>
+            </Equal>
+          </Any>
         </All>
       </Derived>
     </Fact>
@@ -1836,8 +2572,26 @@
 
     <Fact path="/members/*/acceptedSuitableEmploymentOffer">
       <Name>Accepted suitable employment offer</Name>
-      <Description>Whether this non-exempt member accepted any offer of suitable employment (10 CCR 2506-1, 4.310).</Description>
-      <Writable><Boolean /></Writable>
+      <Description>Whether this non-exempt member accepted an offer of employment that is suitable under the 4.310.7 criteria captured on /jobs/*/employmentIsSuitable (10 CCR 2506-1, 4.310; 4.310.7).</Description>
+      <Derived>
+        <GreaterThan>
+          <Left>
+            <CollectionSize>
+              <Filter path="/jobs">
+                <All>
+                  <Equal>
+                    <Left><Dependency path="memberId" /></Left>
+                    <Right><Dependency path="^" /></Right>
+                  </Equal>
+                  <Dependency path="offerAccepted" />
+                  <Dependency path="employmentIsSuitable" />
+                </All>
+              </Filter>
+            </CollectionSize>
+          </Left>
+          <Right><Int>0</Int></Right>
+        </GreaterThan>
+      </Derived>
     </Fact>
 
     <Fact path="/members/*/reportedToReferredSuitableEmployer">
@@ -1848,22 +2602,239 @@
 
     <Fact path="/members/*/meetsGeneralWorkRequirements">
       <Name>Meets general work requirements</Name>
-      <Description>Whether this non-exempt member complies with the SNAP general work requirements by registering for work at application and recertification, providing sufficient information about employment status or availability for work, not committing an act of voluntary quit, accepting suitable employment, and reporting to a referred suitable employer when the potential employment is suitable (10 CCR 2506-1, 4.310).</Description>
+      <Description>Whether this member satisfies the SNAP general work requirements either by meeting a general work requirement exemption or, if non-exempt, by registering for work at application and recertification, providing sufficient information about employment status or availability for work, not committing an act of voluntary quit, accepting suitable employment, and reporting to a referred suitable employer when the potential employment is suitable (10 CCR 2506-1, 4.310).</Description>
       <Derived>
-        <All>
-          <Dependency path="../registeredForWork" />
-          <Dependency path="../providedEmploymentStatusOrAvailabilityInfo" />
-          <Not><Dependency path="../isIneligibleVoluntaryQuit" /></Not>
-          <Dependency path="../acceptedSuitableEmploymentOffer" />
-          <Dependency path="../reportedToReferredSuitableEmployer" />
-        </All>
+        <Any>
+          <Dependency path="../meetsGeneralWorkRequirementException" />
+          <All>
+            <Dependency path="../registeredForWork" />
+            <Dependency path="../providedEmploymentStatusOrAvailabilityInfo" />
+            <Not><Dependency path="../isIneligibleVoluntaryQuit" /></Not>
+            <Dependency path="../acceptedSuitableEmploymentOffer" />
+            <Dependency path="../reportedToReferredSuitableEmployer" />
+          </All>
+        </Any>
       </Derived>
     </Fact>
 
-    <Fact path="/members/*/workHoursPerWeek">
-      <Name>Work hours per week</Name>
-      <Description>The average number of hours per week this member works (10 CCR 2506-1, 4.000.1)</Description>
-      <Writable><Int /></Writable>
+    <Fact path="/workRequirementsAlwaysExemptAgeMax">
+      <Name>Work-requirements always-exempt age maximum</Name>
+      <Description>Upper bound (inclusive) for the SNAP general work requirement exemption for a person age fifteen (15) or younger (10 CCR 2506-1, 4.310).</Description>
+      <Derived><Int>15</Int></Derived>
+    </Fact>
+
+    <Fact path="/workRequirementsConditionalMinorAgeMin">
+      <Name>Work-requirements conditional-minor age minimum</Name>
+      <Description>Lower bound (inclusive) for the SNAP general work requirement exemption for a person age sixteen (16) or seventeen (17) who is not the head of household, is attending school, or is enrolled in an Employment and Training Program on at least a half-time basis (10 CCR 2506-1, 4.310).</Description>
+      <Derived><Int>16</Int></Derived>
+    </Fact>
+
+    <Fact path="/workRequirementsConditionalMinorAgeMax">
+      <Name>Work-requirements conditional-minor age maximum</Name>
+      <Description>Upper bound (inclusive) for the SNAP general work requirement exemption for a person age sixteen (16) or seventeen (17) who is not the head of household, is attending school, or is enrolled in an Employment and Training Program on at least a half-time basis (10 CCR 2506-1, 4.310).</Description>
+      <Derived><Int>17</Int></Derived>
+    </Fact>
+
+    <Fact path="/members/*/isExemptFromWorkRequirementsDueToAge">
+      <Name>Exempt from work requirements due to age</Name>
+      <Description>Whether this member is exempt from SNAP general work requirements because they are age fifteen (15) or younger, age sixty (60) or older, or age sixteen (16) or seventeen (17) and either not the head of household, attending school, or enrolled in an Employment and Training Program on at least a half-time basis (10 CCR 2506-1, 4.310).</Description>
+      <Derived>
+        <Any>
+          <LessThanOrEqual>
+            <Left><Dependency path="../age" /></Left>
+            <Right><Dependency path="/workRequirementsAlwaysExemptAgeMax" /></Right>
+          </LessThanOrEqual>
+          <Dependency path="../isElderly" />
+          <All>
+            <GreaterThanOrEqual>
+              <Left><Dependency path="../age" /></Left>
+              <Right><Dependency path="/workRequirementsConditionalMinorAgeMin" /></Right>
+            </GreaterThanOrEqual>
+            <LessThanOrEqual>
+              <Left><Dependency path="../age" /></Left>
+              <Right><Dependency path="/workRequirementsConditionalMinorAgeMax" /></Right>
+            </LessThanOrEqual>
+            <Any>
+              <Not><Dependency path="../isHeadOfHousehold" /></Not>
+              <Dependency path="../isInK12" />
+              <Dependency path="../isEnrolledAtLeastHalfTimeInInstitutionOfHigherEducation" />
+              <Dependency path="../isEnrolledInEmploymentTrainingProgram" />
+            </Any>
+          </All>
+        </Any>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/isApplyingForOrReceivingUnemploymentInsuranceBenefits">
+      <Name>Applying for or receiving unemployment insurance benefits</Name>
+      <Description>Whether this member is applying for or receiving Unemployment Insurance Benefits (UIB), including a person denied UIB who is appealing the decision, for purposes of the SNAP general work requirement exemption (10 CCR 2506-1, 4.310).</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/isRegularParticipantInDrugOrAlcoholTreatment">
+      <Name>Regular participant in drug or alcohol treatment</Name>
+      <Description>Whether this member is a regular participant in a drug or alcohol treatment or rehabilitation program for purposes of the SNAP general work requirement exemption (10 CCR 2506-1, 4.310).</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/isComplyingWithColoradoWorksOrRefugeeServicesWorkProgram">
+      <Name>Complying with Colorado Works or refugee services work program</Name>
+      <Description>Whether this member is subject to and complying with Colorado Works (CW) or the Colorado Refugee Services Program (CRSP) work programs for purposes of the SNAP general work requirement exemption (10 CCR 2506-1, 4.310).</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/meetsGeneralWorkRequirementException">
+      <Name>Meets general work requirement exception</Name>
+      <Description>Whether this member meets a SNAP general work requirement exemption: qualifying age, responsibility for the care of a dependent child under six (6) or incapacitated person, physical or mental unfitness for employment, at-least-half-time student enrollment, qualifying employment or self-employment, applying for or receiving UIB, regular participation in drug or alcohol treatment or rehabilitation, or complying with CW or CRSP work programs (10 CCR 2506-1, 4.310).</Description>
+      <Derived>
+        <Any>
+          <Dependency path="../isExemptFromWorkRequirementsDueToAge" />
+          <Dependency path="../isExemptFromWorkRequirementsDueToCaregiving" />
+          <Dependency path="../isPhysicallyOrMentallyUnfitForEmploymentForWorkRequirements" />
+          <Dependency path="../isExemptFromWorkRequirementsDueToStudentEnrollment" />
+          <Dependency path="../isExemptFromWorkRequirementsDueToEmployment" />
+          <Dependency path="../isApplyingForOrReceivingUnemploymentInsuranceBenefits" />
+          <Dependency path="../isRegularParticipantInDrugOrAlcoholTreatment" />
+          <Dependency path="../isComplyingWithColoradoWorksOrRefugeeServicesWorkProgram" />
+        </Any>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/isExemptFromWorkRequirementsDueToCaregiving">
+      <Name>Exempt from work requirements due to caregiving</Name>
+      <Description>Whether this member is a parent or other household member responsible for the care of a dependent child under six (6) or an incapacitated person, based on a claimed /caregiverRelationships entry for this caregiver. The dependent-side member does not need to be part of the SNAP household. The claimed relationship selects the single caregiver who receives the exemption when multiple caregivers are listed for the same dependent (10 CCR 2506-1, 4.310).</Description>
+      <Derived>
+        <GreaterThan>
+          <Left>
+            <CollectionSize>
+              <Filter path="/caregiverRelationships">
+                <All>
+                  <Equal>
+                    <Left><Dependency path="caregiverId" /></Left>
+                    <Right><Dependency path="^" /></Right>
+                  </Equal>
+                  <Dependency path="claimedForWorkRequirementsCareExemption" />
+                  <Any>
+                    <LessThan>
+                      <Left><Dependency path="dependentId/age" /></Left>
+                      <Right><Dependency path="/workRequirementsCareExemptionDependentChildAgeLimit" /></Right>
+                    </LessThan>
+                    <Dependency path="dependentId/isIncapacitated" />
+                  </Any>
+                </All>
+              </Filter>
+            </CollectionSize>
+          </Left>
+          <Right><Int>0</Int></Right>
+        </GreaterThan>
+      </Derived>
+    </Fact>
+
+    <Fact path="/workRequirementsCareExemptionDependentChildAgeLimit">
+      <Name>Work-requirements care exemption dependent child age limit</Name>
+      <Description>Upper bound (exclusive) on the age of a dependent child whose care can qualify one parent or other household member for the SNAP work-requirements exemption: a dependent child under age six (6) (10 CCR 2506-1, 4.310).</Description>
+      <Derived><Int>6</Int></Derived>
+    </Fact>
+
+    <Fact path="/members/*/isExemptFromWorkRequirementsDueToStudentEnrollment">
+      <Name>Exempt from work requirements due to student enrollment</Name>
+      <Description>Whether this member is exempt from SNAP work requirements because they are enrolled at least half-time, as defined by the educational facility, in an accredited school, training program, or institution of higher education. Students who are eligible for SNAP remain exempt during normal periods of class attendance and school breaks; persons enrolled less than half-time, or with an enrollment-status break due to graduation, expulsion, suspension, dropping out, or not intending to register for the next normal school term other than summer, do not qualify for this exemption. A student enrolled in an institution of higher education must also meet SNAP student-eligibility requirements to receive SNAP (10 CCR 2506-1, 4.310).</Description>
+      <Derived>
+        <Any>
+          <Dependency path="../isInK12" />
+          <Dependency path="../isEnrolledAtLeastHalfTimeInInstitutionOfHigherEducation" />
+          <Dependency path="../isEnrolledInEmploymentTrainingProgram" />
+        </Any>
+      </Derived>
+    </Fact>
+
+    <Fact path="/workRequirementsEmploymentExemptionHoursPerWeek">
+      <Name>Work-requirements employment exemption hours per week</Name>
+      <Description>Minimum hours per week for the SNAP work-requirement employment exemption: employed or self-employed individuals qualify when working at least thirty (30) hours per week or when receiving weekly earnings at least equal to the federal minimum wage multiplied by thirty (30) hours (10 CCR 2506-1, 4.310).</Description>
+      <Derived><Int>30</Int></Derived>
+    </Fact>
+
+    <Fact path="/workRequirementsEmploymentExemptionMonthlyEarningsLimit">
+      <Name>Work-requirements employment exemption monthly earnings limit</Name>
+      <Description>Monthly earnings threshold for the SNAP work-requirement employment exemption, equal to the federal minimum wage hourly rate multiplied by thirty (30) hours and the weekly-to-monthly conversion multiplier (10 CCR 2506-1, 4.310).</Description>
+      <Derived>
+        <Multiply>
+          <Dependency path="/federalMinimumWageHourlyRate" />
+          <Dependency path="/workRequirementsEmploymentExemptionHoursPerWeek" />
+          <Dependency path="/weeklyToMonthlyConversionMultiplier" />
+        </Multiply>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/isExemptFromWorkRequirementsDueToEmployment">
+      <Name>Exempt from work requirements due to employment</Name>
+      <Description>Whether this member is exempt from SNAP work requirements because the member is employed or self-employed for a total of thirty (30) or more hours per week, or has non-exempt earned income at least equal to the federal minimum wage multiplied by thirty (30) hours and converted to a monthly amount (10 CCR 2506-1, 4.310).</Description>
+      <Derived>
+        <Any>
+          <GreaterThanOrEqual>
+            <Left><Dependency path="../workRequirementsTotalJobHoursPerWeek" /></Left>
+            <Right><Dependency path="/workRequirementsEmploymentExemptionHoursPerWeek" /></Right>
+          </GreaterThanOrEqual>
+          <GreaterThanOrEqual>
+            <Left><Dependency path="../nonExemptEarnedIncome" /></Left>
+            <Right><Dependency path="/workRequirementsEmploymentExemptionMonthlyEarningsLimit" /></Right>
+          </GreaterThanOrEqual>
+        </Any>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/workRequirementsTotalJobHoursPerWeek">
+      <Name>Work-requirements total job hours per week</Name>
+      <Description>The total average hours per week this member works across employed or self-employed jobs that are paid at least the federal minimum wage. A total of at least thirty (30) such hours per week can qualify the member for the SNAP work-requirement employment exemption (10 CCR 2506-1, 4.310).</Description>
+      <Derived>
+        <CollectionSum>
+          <Switch>
+            <Case>
+              <When>
+                <All>
+                  <Equal>
+                    <Left><Dependency path="/jobs/*/memberId" /></Left>
+                    <Right><Dependency path=".." /></Right>
+                  </Equal>
+                  <Dependency path="/jobs/*/isAtFederalMinimumWage" />
+                </All>
+              </When>
+              <Then><Dependency path="/jobs/*/hoursPerWeek" /></Then>
+            </Case>
+            <Case>
+              <When><True /></When>
+              <Then><Int>0</Int></Then>
+            </Case>
+          </Switch>
+        </CollectionSum>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/workRequirementsFederalMinimumWageJobHoursPerWeek">
+      <Name>Work-requirements federal-minimum-wage job hours per week</Name>
+      <Description>The total average hours per week this member works across jobs paid at least the federal minimum wage, including self-employment jobs where earnings after allowable business expenses are deducted are at least equal to the federal minimum wage for the hours worked. These hours are added together to determine whether weekly earnings meet the thirty (30) hour federal-minimum-wage threshold for the SNAP work-requirement employment exemption (10 CCR 2506-1, 4.310).</Description>
+      <Derived>
+        <CollectionSum>
+          <Switch>
+            <Case>
+              <When>
+                <All>
+                  <Equal>
+                    <Left><Dependency path="/jobs/*/memberId" /></Left>
+                    <Right><Dependency path=".." /></Right>
+                  </Equal>
+                  <Dependency path="/jobs/*/isAtFederalMinimumWage" />
+                </All>
+              </When>
+              <Then><Dependency path="/jobs/*/hoursPerWeek" /></Then>
+            </Case>
+            <Case>
+              <When><True /></When>
+              <Then><Int>0</Int></Then>
+            </Case>
+          </Switch>
+        </CollectionSum>
+      </Derived>
     </Fact>
 
     <Fact path="/members/*/disqualifiedForQualityAssuranceCooperation">
@@ -1878,6 +2849,7 @@
       <Writable><Boolean /></Writable>
     </Fact>
 
+    <!-- TODO: Double check that /members/*/isPhysicallyOrMentallyUnfitForEmploymentForStudentEligibility and /members/*/isPhysicallyOrMentallyUnfitForEmploymentForWorkRequirements are not the same definition. -->
     <Fact path="/members/*/isPhysicallyOrMentallyUnfitForEmploymentForWorkRequirements">
       <Name>Physically or mentally unfit for employment for work requirements</Name>
       <Description>Whether this member is physically or mentally unfit for employment for purposes of SNAP work requirements. Examples include persons experiencing homelessness, persons recently released from an institution, persons with disabilities including self-declared temporary conditions preventing successful participation in work activities, persons receiving temporary or permanent disability benefits from government or private sources, persons participating in vocational rehabilitation, persons applying for or appealing SSI benefits, persons unable to maintain employment, and persons impacted by domestic violence (10 CCR 2506-1, 4.310).</Description>
@@ -1885,13 +2857,10 @@
         <Any>
           <Dependency path="../isExperiencingHomelessness" />
           <Dependency path="../recentlyReleasedFromInstitution" />
-          <Dependency path="../isPersonWithDisabilities" />
-          <Dependency path="../hasSelfDeclaredTemporaryConditionPreventingWorkActivities" />
-          <Dependency path="../receivesTemporaryOrPermanentDisabilityBenefits" />
-          <Dependency path="../isParticipatingInVocationalRehabilitation" />
-          <Dependency path="../isApplyingForOrAppealingSsiBenefits" />
+          <Dependency path="../isWorkRequirementDisabled" />
           <Dependency path="../isUnableToMaintainEmployment" />
           <Dependency path="../isImpactedByDomesticViolence" />
+          <Dependency path="../hasOtherValidReasonForWorkRequirementsUnfitness" />
         </Any>
       </Derived>
     </Fact>
@@ -1926,6 +2895,20 @@
       <Writable><Boolean /></Writable>
     </Fact>
 
+    <Fact path="/members/*/isWorkRequirementDisabled">
+      <Name>Is work-requirement disabled</Name>
+      <Description>Whether this member meets the disability-related examples of being physically or mentally unfit for employment for SNAP work-requirements purposes: a person with disabilities as defined in 4.100, including but not limited to self-declared temporary conditions that would prevent successful participation in work activities, receipt of temporary or permanent disability benefits issued by government or private sources, participation in vocational rehabilitation, or applying for and/or appealing SSI benefits (10 CCR 2506-1, 4.310).</Description>
+      <Derived>
+        <Any>
+          <Dependency path="../isPersonWithDisability" />
+          <Dependency path="../hasSelfDeclaredTemporaryConditionPreventingWorkActivities" />
+          <Dependency path="../receivesTemporaryOrPermanentDisabilityBenefits" />
+          <Dependency path="../isParticipatingInVocationalRehabilitation" />
+          <Dependency path="../isApplyingForOrAppealingSsiBenefits" />
+        </Any>
+      </Derived>
+    </Fact>
+
     <Fact path="/members/*/isUnableToMaintainEmployment">
       <Name>Is unable to maintain employment</Name>
       <Description>Whether this member is unable to maintain employment, which is an example of being physically or mentally unfit for employment for SNAP work-requirements purposes (10 CCR 2506-1, 4.310).</Description>
@@ -1935,6 +2918,12 @@
     <Fact path="/members/*/isImpactedByDomesticViolence">
       <Name>Is impacted by domestic violence</Name>
       <Description>Whether this member is impacted by domestic violence, which is an example of being physically or mentally unfit for employment for SNAP work-requirements purposes (10 CCR 2506-1, 4.310).</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/hasOtherValidReasonForWorkRequirementsUnfitness">
+      <Name>Has other valid reason for work-requirements unfitness</Name>
+      <Description>Whether this member has another valid reason, not otherwise listed, for being physically or mentally unfit for employment for SNAP work-requirements purposes. The listed examples of unfitness are not exhaustive (10 CCR 2506-1, 4.310).</Description>
       <Writable><Boolean /></Writable>
     </Fact>
 
@@ -2002,10 +2991,165 @@
       <Writable><Boolean /></Writable>
     </Fact>
 
+    <Fact path="/members/*/isPregnant">
+      <Name>Is pregnant</Name>
+      <Description>Whether this member is pregnant for purposes of the ABAWD exemption from the ABAWD work requirement (10 CCR 2506-1, 4.311.1).</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/isVeteran">
+      <Name>Is veteran</Name>
+      <Description>Whether this member is a veteran for purposes of the ABAWD exemption from the ABAWD work requirement (10 CCR 2506-1, 4.311.1).</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/wasInFosterCareOn18thBirthday">
+      <Name>Was in foster care on 18th birthday</Name>
+      <Description>Whether this member was in foster care on their eighteenth (18th) birthday for purposes of the ABAWD exemption for individuals aged twenty-four (24) years and younger (10 CCR 2506-1, 4.311.1).</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/isExemptUnderAbawdWaiver">
+      <Name>Exempt under ABAWD waiver</Name>
+      <Description>Whether this member is exempt from the ABAWD work requirement under a waiver approved by USDA FNS (10 CCR 2506-1, 4.311.1).</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/isExemptUnderColoradoAbawdStateExemption">
+      <Name>Exempt under Colorado ABAWD state exemption</Name>
+      <Description>Whether this member is exempt from the ABAWD work requirement using a Colorado-defined state exemption identified in the current SNAP Employment and Training State Plan (10 CCR 2506-1, 4.311.1).</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/abawdFosterCareExemptionAgeMax">
+      <Name>ABAWD foster care exemption maximum age</Name>
+      <Description>Upper bound (inclusive) for the ABAWD exemption for individuals aged twenty-four (24) years and younger and in foster care on their eighteenth (18th) birthday (10 CCR 2506-1, 4.311.1).</Description>
+      <Derived><Int>24</Int></Derived>
+    </Fact>
+
+    <Fact path="/members/*/isYoungAdultFosterCareAbawdExempt">
+      <Name>Young adult foster care ABAWD exempt</Name>
+      <Description>Whether this member is aged twenty-four (24) years or younger and was in foster care on their eighteenth (18th) birthday for purposes of the ABAWD exemption from the ABAWD work requirement (10 CCR 2506-1, 4.311.1).</Description>
+      <Derived>
+        <All>
+          <LessThanOrEqual>
+            <Left><Dependency path="../age" /></Left>
+            <Right><Dependency path="/abawdFosterCareExemptionAgeMax" /></Right>
+          </LessThanOrEqual>
+          <Dependency path="../wasInFosterCareOn18thBirthday" />
+        </All>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/isAbawdExempt">
+      <Name>Is ABAWD exempt</Name>
+      <Description>Whether this member meets an ABAWD exemption from the ABAWD work requirement by being exempt from the general work requirements, pregnant, experiencing homelessness, a veteran, aged twenty-four (24) years or younger and in foster care on their eighteenth (18th) birthday, exempt under a USDA FNS waiver, or exempt under a Colorado-defined state exemption in the current SNAP Employment and Training State Plan (10 CCR 2506-1, 4.311.1).</Description>
+      <Derived>
+        <Any>
+          <Dependency path="../meetsGeneralWorkRequirementException" />
+          <Dependency path="../isPregnant" />
+          <Dependency path="../isExperiencingHomelessness" />
+          <Dependency path="../isVeteran" />
+          <Dependency path="../isYoungAdultFosterCareAbawdExempt" />
+          <Dependency path="../isExemptUnderAbawdWaiver" />
+          <Dependency path="../isExemptUnderColoradoAbawdStateExemption" />
+        </Any>
+      </Derived>
+    </Fact>
+
     <Fact path="/abawdCountableMonthsLimit">
       <Name>ABAWD countable months limit</Name>
       <Description>The number of countable months an ABAWD may accrue within a thirty-six (36) month window before being disqualified (10 CCR 2506-1, 4.000.1)</Description>
       <Derived><Int>3</Int></Derived>
+    </Fact>
+
+    <Fact path="/abawdWorkRequirementHoursPerWeek">
+      <Name>ABAWD work requirement hours per week</Name>
+      <Description>Minimum weekly hours needed to fulfill the ABAWD work requirement through work, a qualifying work program, or a combination of work and a qualifying work program: twenty (20) hours per week (10 CCR 2506-1, 4.000.1).</Description>
+      <Derived><Int>20</Int></Derived>
+    </Fact>
+
+    <Fact path="/members/*/averageAbawdWorkHoursPerWeek">
+      <Name>Average ABAWD work hours per week</Name>
+      <Description>This member's average weekly ABAWD work hours from jobs classified as compensated work, in-kind work, or unpaid work verified by the provider of the unpaid work. This average is used for both the twenty (20) hours per week threshold and the eighty (80) hours per month averaged-monthly threshold (10 CCR 2506-1, 4.000.1).</Description>
+      <Derived>
+        <CollectionSum>
+          <Switch>
+            <Case>
+              <When>
+                <All>
+                  <Equal>
+                    <Left><Dependency path="/jobs/*/memberId" /></Left>
+                    <Right><Dependency path=".." /></Right>
+                  </Equal>
+                  <Any>
+                    <Equal>
+                      <Left><Dependency path="/jobs/*/abawdWorkType" /></Left>
+                      <Right><Enum optionsPath="/abawdWorkTypeOptions">CompensatedWork</Enum></Right>
+                    </Equal>
+                    <Equal>
+                      <Left><Dependency path="/jobs/*/abawdWorkType" /></Left>
+                      <Right><Enum optionsPath="/abawdWorkTypeOptions">InKindWork</Enum></Right>
+                    </Equal>
+                    <Equal>
+                      <Left><Dependency path="/jobs/*/abawdWorkType" /></Left>
+                      <Right><Enum optionsPath="/abawdWorkTypeOptions">VerifiedUnpaidWork</Enum></Right>
+                    </Equal>
+                  </Any>
+                </All>
+              </When>
+              <Then><Dependency path="/jobs/*/hoursPerWeek" /></Then>
+            </Case>
+            <Case>
+              <When><True /></When>
+              <Then><Int>0</Int></Then>
+            </Case>
+          </Switch>
+        </CollectionSum>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/abawdWorkProgramHoursPerWeek">
+      <Name>ABAWD work program hours per week</Name>
+      <Description>This member's weekly hours participating in and complying with a qualifying ABAWD work program, including a CDHS-operated or supervised employment and training program other than job search or job-search training, a WIOA program, or a Trade Act Section 236 program (10 CCR 2506-1, 4.000.1).</Description>
+      <Writable><Int /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/participatesInColoradoWorkfare">
+      <Name>Participates in Colorado Workfare</Name>
+      <Description>Whether this member is participating in and complying with the Colorado Workfare program for purposes of fulfilling the ABAWD work requirement (10 CCR 2506-1, 4.000.1).</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/members/*/meetsAbawdWorkRequirement">
+      <Name>Meets ABAWD work requirement</Name>
+      <Description>Whether this member fulfills the ABAWD work requirement by working at least twenty (20) average hours per week (including work averaged monthly), participating in and complying with a qualifying work program for at least twenty (20) average hours per week (including participation averaged monthly), combining work and qualifying work-program participation to reach that threshold, or participating in and complying with the Colorado Workfare program (10 CCR 2506-1, 4.000.1).</Description>
+      <Derived>
+        <Any>
+          <GreaterThanOrEqual>
+            <Left>
+              <Add>
+                <Dependency path="../averageAbawdWorkHoursPerWeek" />
+                <Dependency path="../abawdWorkProgramHoursPerWeek" />
+              </Add>
+            </Left>
+            <Right><Dependency path="/abawdWorkRequirementHoursPerWeek" /></Right>
+          </GreaterThanOrEqual>
+          <Dependency path="../participatesInColoradoWorkfare" />
+        </Any>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/isAbawdNotMeetingWorkRequirementOrExemption">
+      <Name>Is ABAWD not meeting work requirement or exemption</Name>
+      <Description>Whether this member is an ABAWD who is not meeting the ABAWD work requirement and does not meet an ABAWD exemption from those requirements (10 CCR 2506-1, 4.000.1; 4.311.1).</Description>
+      <Derived>
+        <All>
+          <Dependency path="../isAbawd" />
+          <Not><Dependency path="../meetsAbawdWorkRequirement" /></Not>
+          <Not><Dependency path="../isAbawdExempt" /></Not>
+        </All>
+      </Derived>
     </Fact>
 
     <Fact path="/members/*/exceededAbawdCountableMonthsLimit">
@@ -2013,7 +3157,7 @@
       <Description>Whether this member is an ABAWD who has accrued at least the limit of countable months without meeting an exemption or ABAWD work requirements (10 CCR 2506-1, 4.000.1)</Description>
       <Derived>
         <All>
-          <Dependency path="../isAbawd" />
+          <Dependency path="../isAbawdNotMeetingWorkRequirementOrExemption" />
           <GreaterThanOrEqual>
             <Left><Dependency path="../countableMonths" /></Left>
             <Right><Dependency path="/abawdCountableMonthsLimit" /></Right>
@@ -2045,7 +3189,7 @@
 
     <Fact path="/largestLotteryOrGamblingWinningsThisMonth">
       <Name>Largest lottery or gambling winnings this month</Name>
-      <Description>The largest cash prize won by any household member in a single lottery or gambling game during the month, before taxes or other amounts are withheld (10 CCR 2506-1, 4.206).</Description>
+      <Description>The largest portion of substantial lottery or gambling winnings allocated to any member who is part of the SNAP household in a single lottery or gambling game during the month received; those winnings are counted as unearned income in that month (10 CCR 2506-1). Placeholder because the factgraph engine does not currently support collection maximum aggregation.</Description>
       <Writable><Dollar /></Writable>
     </Fact>
 
@@ -2053,10 +3197,17 @@
       <Name>Has substantial lottery or gambling winnings this month</Name>
       <Description>Whether the household's largest single-game lottery or gambling cash prize during the month equals or exceeds the substantial lottery or gambling winnings threshold. Such winnings from an individual will disqualify the entire SNAP household from eligibility in the month the winnings are received (10 CCR 2506-1, 4.206).</Description>
       <Derived>
-        <GreaterThanOrEqual>
-          <Left><Dependency path="/largestLotteryOrGamblingWinningsThisMonth" /></Left>
-          <Right><Dependency path="/substantialLotteryOrGamblingWinningsThreshold" /></Right>
-        </GreaterThanOrEqual>
+        <GreaterThan>
+          <Left>
+            <Count>
+              <All>
+                <Dependency path="/incomes/*/isSubstantialLotteryOrGamblingWinnings" />
+                <Dependency path="/incomes/*/memberId/isPartOfHousehold" />
+              </All>
+            </Count>
+          </Left>
+          <Right><Int>0</Int></Right>
+        </GreaterThan>
       </Derived>
     </Fact>
 
@@ -2074,25 +3225,105 @@
 
     <Fact path="/members/*/nonExemptEarnedIncome">
       <Name>Non-exempt earned income</Name>
-      <Description>This member's earned income that is not exempt from consideration when determining eligibility for SNAP (10 CCR 2506-1, 4.000.1)</Description>
-      <Writable><Dollar /></Writable>
+      <Description>This member's monthly income entries that are earned income and are not exempt from consideration when determining eligibility for SNAP (10 CCR 2506-1, 4.000.1; 4.403; 4.405).</Description>
+      <Derived>
+        <CollectionSum>
+          <Switch>
+            <Case>
+              <When>
+                <All>
+                  <Equal>
+                    <Left><Dependency path="/incomes/*/memberId" /></Left>
+                    <Right><Dependency path=".." /></Right>
+                  </Equal>
+                  <Dependency path="/incomes/*/isEarned" />
+                  <Not><Dependency path="/incomes/*/isExempt" /></Not>
+                </All>
+              </When>
+              <Then><Dependency path="/incomes/*/monthlyAmount" /></Then>
+            </Case>
+            <Case>
+              <When><True /></When>
+              <Then><Dollar>0</Dollar></Then>
+            </Case>
+          </Switch>
+        </CollectionSum>
+      </Derived>
     </Fact>
 
     <Fact path="/members/*/unearnedIncome">
       <Name>Unearned income</Name>
-      <Description>This member's unearned income (10 CCR 2506-1, 4.000.1). Currently equal to /members/*/sponsorIncome — the only unearned-income component modeled so far — so the value reflects the post-exemption sponsor income (deemed share or actual money paid, with the 4.000.1, E exemptions applied).</Description>
+      <Description>This member's unearned income (10 CCR 2506-1, 4.000.1; 4.404), including monthly income entries whose source is treated as unearned income and this member's post-exemption sponsor income. SponsorPayments income entries are excluded from the direct income-entry sum because /members/*/sponsorIncome separately applies the sponsor deeming rules and actual-money-paid comparison.</Description>
       <Derived>
-        <Dependency path="../sponsorIncome" />
+        <Add>
+          <CollectionSum>
+            <Switch>
+              <Case>
+                <When>
+                  <All>
+                    <Equal>
+                      <Left><Dependency path="/incomes/*/memberId" /></Left>
+                      <Right><Dependency path=".." /></Right>
+                    </Equal>
+                    <Dependency path="/incomes/*/isUnearned" />
+                    <Not>
+                      <Equal>
+                        <Left><Dependency path="/incomes/*/type" /></Left>
+                        <Right><Enum optionsPath="/incomeSourceOptions">SponsorPayments</Enum></Right>
+                      </Equal>
+                    </Not>
+                  </All>
+                </When>
+                <Then><Dependency path="/incomes/*/monthlyAmount" /></Then>
+              </Case>
+              <Case>
+                <When><True /></When>
+                <Then><Dollar>0</Dollar></Then>
+              </Case>
+            </Switch>
+          </CollectionSum>
+          <Dependency path="../sponsorIncome" />
+        </Add>
       </Derived>
     </Fact>
 
     <Fact path="/members/*/unearnedIncomeWithSponsorIncome">
       <Name>Unearned income (including sponsor income)</Name>
-      <Description>This member's unearned income for the indigent-non-citizen determination (10 CCR 2506-1, 4.000.1, E, 4). Mirrors /members/*/unearnedIncome but points at /members/*/deemedSponsorIncome — the raw per-non-citizen deemed share — instead of /members/*/sponsorIncome, so the indigence check uses sponsor income before the 4.000.1, E exemptions are applied and avoids cycling through /members/*/sponsorIncomeAndResourcesDoNotApply.</Description>
+      <Description>This member's unearned income for the indigent-non-citizen determination (10 CCR 2506-1, 4.000.1, E, 4; 4.404). Mirrors /members/*/unearnedIncome but points at /members/*/deemedSponsorIncome — the raw per-non-citizen deemed share — instead of /members/*/sponsorIncome, so the indigence check uses sponsor income before the 4.000.1, E exemptions are applied and avoids cycling through /members/*/sponsorIncomeAndResourcesDoNotApply.</Description>
       <Derived>
-        <Dependency path="../deemedSponsorIncome" />
+        <Add>
+          <CollectionSum>
+            <Switch>
+              <Case>
+                <When>
+                  <All>
+                    <Equal>
+                      <Left><Dependency path="/incomes/*/memberId" /></Left>
+                      <Right><Dependency path=".." /></Right>
+                    </Equal>
+                    <Dependency path="/incomes/*/isUnearned" />
+                    <Not>
+                      <Equal>
+                        <Left><Dependency path="/incomes/*/type" /></Left>
+                        <Right><Enum optionsPath="/incomeSourceOptions">SponsorPayments</Enum></Right>
+                      </Equal>
+                    </Not>
+                  </All>
+                </When>
+                <Then><Dependency path="/incomes/*/monthlyAmount" /></Then>
+              </Case>
+              <Case>
+                <When><True /></When>
+                <Then><Dollar>0</Dollar></Then>
+              </Case>
+            </Switch>
+          </CollectionSum>
+          <Dependency path="../deemedSponsorIncome" />
+        </Add>
       </Derived>
     </Fact>
+    <!-- TODO: Check whether total self-employment income should be calculated
+         from modeled income sources instead of collected as a writable value. -->
     <Fact path="/totalSelfEmploymentIncome">
       <Name>Total self-employment income</Name>
       <Description>The household's total income received from self-operated businesses or enterprises in which the individual retains control over work or services offered and assumes the necessary business risks and expenses connected with the operation of the business (10 CCR 2506-1, 4.000.1)</Description>
@@ -2904,13 +4135,154 @@
       </Derived>
     </Fact>
 
-    <!-- TODO: FPL is published per household size; this placeholder ignores
-         household size. Replace with a lookup keyed off household size once
-         that fact exists. -->
+    <Fact path="/fplForSize1">
+      <Name>Federal poverty level for 1-person household</Name>
+      <Description>One hundred percent (100%) of the federal poverty level for a 1-person household, effective October 1, 2025 (10 CCR 2506-1, 4.401.1).</Description>
+      <Derived><Dollar>1305</Dollar></Derived>
+    </Fact>
+
+    <Fact path="/fplForSize2">
+      <Name>Federal poverty level for 2-person household</Name>
+      <Description>One hundred percent (100%) of the federal poverty level for a 2-person household, effective October 1, 2025 (10 CCR 2506-1, 4.401.1).</Description>
+      <Derived><Dollar>1763</Dollar></Derived>
+    </Fact>
+
+    <Fact path="/fplForSize3">
+      <Name>Federal poverty level for 3-person household</Name>
+      <Description>One hundred percent (100%) of the federal poverty level for a 3-person household, effective October 1, 2025 (10 CCR 2506-1, 4.401.1).</Description>
+      <Derived><Dollar>2221</Dollar></Derived>
+    </Fact>
+
+    <Fact path="/fplForSize4">
+      <Name>Federal poverty level for 4-person household</Name>
+      <Description>One hundred percent (100%) of the federal poverty level for a 4-person household, effective October 1, 2025 (10 CCR 2506-1, 4.401.1).</Description>
+      <Derived><Dollar>2680</Dollar></Derived>
+    </Fact>
+
+    <Fact path="/fplForSize5">
+      <Name>Federal poverty level for 5-person household</Name>
+      <Description>One hundred percent (100%) of the federal poverty level for a 5-person household, effective October 1, 2025 (10 CCR 2506-1, 4.401.1).</Description>
+      <Derived><Dollar>3138</Dollar></Derived>
+    </Fact>
+
+    <Fact path="/fplForSize6">
+      <Name>Federal poverty level for 6-person household</Name>
+      <Description>One hundred percent (100%) of the federal poverty level for a 6-person household, effective October 1, 2025 (10 CCR 2506-1, 4.401.1).</Description>
+      <Derived><Dollar>3596</Dollar></Derived>
+    </Fact>
+
+    <Fact path="/fplForSize7">
+      <Name>Federal poverty level for 7-person household</Name>
+      <Description>One hundred percent (100%) of the federal poverty level for a 7-person household, effective October 1, 2025 (10 CCR 2506-1, 4.401.1).</Description>
+      <Derived><Dollar>4055</Dollar></Derived>
+    </Fact>
+
+    <Fact path="/fplForSize8">
+      <Name>Federal poverty level for 8-person household</Name>
+      <Description>One hundred percent (100%) of the federal poverty level for an 8-person household, effective October 1, 2025 (10 CCR 2506-1, 4.401.1).</Description>
+      <Derived><Dollar>4513</Dollar></Derived>
+    </Fact>
+
+    <Fact path="/fplPerAdditionalPerson">
+      <Name>Federal poverty level per additional person</Name>
+      <Description>The amount added to the 8-person one hundred percent (100%) federal poverty level for each additional household member beyond eight, effective October 1, 2025 (10 CCR 2506-1, 4.401.1).</Description>
+      <Derived><Dollar>459</Dollar></Derived>
+    </Fact>
+
     <Fact path="/fpl">
       <Name>Federal poverty level</Name>
-      <Description>The federal poverty level for the household's size (10 CCR 2506-1, 4.401.1). Placeholder.</Description>
-      <Writable><Dollar /></Writable>
+      <Description>One hundred percent (100%) of the federal poverty level for the household's size, effective October 1, 2025 (10 CCR 2506-1, 4.401.1). Looked up from the household-size schedule, with /fplPerAdditionalPerson added for each member beyond eight.</Description>
+      <Derived>
+        <Switch>
+          <Case>
+            <When>
+              <Equal>
+                <Left><Dependency path="/householdSize" /></Left>
+                <Right><Int>1</Int></Right>
+              </Equal>
+            </When>
+            <Then><Dependency path="/fplForSize1" /></Then>
+          </Case>
+          <Case>
+            <When>
+              <Equal>
+                <Left><Dependency path="/householdSize" /></Left>
+                <Right><Int>2</Int></Right>
+              </Equal>
+            </When>
+            <Then><Dependency path="/fplForSize2" /></Then>
+          </Case>
+          <Case>
+            <When>
+              <Equal>
+                <Left><Dependency path="/householdSize" /></Left>
+                <Right><Int>3</Int></Right>
+              </Equal>
+            </When>
+            <Then><Dependency path="/fplForSize3" /></Then>
+          </Case>
+          <Case>
+            <When>
+              <Equal>
+                <Left><Dependency path="/householdSize" /></Left>
+                <Right><Int>4</Int></Right>
+              </Equal>
+            </When>
+            <Then><Dependency path="/fplForSize4" /></Then>
+          </Case>
+          <Case>
+            <When>
+              <Equal>
+                <Left><Dependency path="/householdSize" /></Left>
+                <Right><Int>5</Int></Right>
+              </Equal>
+            </When>
+            <Then><Dependency path="/fplForSize5" /></Then>
+          </Case>
+          <Case>
+            <When>
+              <Equal>
+                <Left><Dependency path="/householdSize" /></Left>
+                <Right><Int>6</Int></Right>
+              </Equal>
+            </When>
+            <Then><Dependency path="/fplForSize6" /></Then>
+          </Case>
+          <Case>
+            <When>
+              <Equal>
+                <Left><Dependency path="/householdSize" /></Left>
+                <Right><Int>7</Int></Right>
+              </Equal>
+            </When>
+            <Then><Dependency path="/fplForSize7" /></Then>
+          </Case>
+          <Case>
+            <When>
+              <Equal>
+                <Left><Dependency path="/householdSize" /></Left>
+                <Right><Int>8</Int></Right>
+              </Equal>
+            </When>
+            <Then><Dependency path="/fplForSize8" /></Then>
+          </Case>
+          <Case>
+            <When><True /></When>
+            <Then>
+              <Add>
+                <Dependency path="/fplForSize8" />
+                <Multiply>
+                  <Subtract>
+                    <Minuend><Dependency path="/householdSize" /></Minuend>
+                    <Subtrahends><Int>8</Int></Subtrahends>
+                  </Subtract>
+                  <Dependency path="/fplPerAdditionalPerson" />
+                </Multiply>
+              </Add>
+            </Then>
+          </Case>
+        </Switch>
+      </Derived>
     </Fact>
 
     <Fact path="/indigentNonCitizenFplRate">
@@ -2974,7 +4346,7 @@
          relational (battered spouse, parent of a battered child, child of
          a battered parent or non-citizen). This currently exempts only
          the host when they are themselves /members/*/isBatteredImmigrant;
-         extend to walk /parentChildRelationships and spouseId once those
+         extend to walk /caregiverRelationships and spouseId once those
          relational battered flags are modeled. -->
     <Fact path="/members/*/sponsorIncomeAndResourcesDoNotApply">
       <Name>Sponsor income and resources do not apply</Name>
@@ -3180,16 +4552,21 @@
       </Derived>
     </Fact>
 
-    <!-- TODO: exclude members whose income is not applicable to the household
-         (e.g., ineligible non-citizens, disqualified individuals, boarders,
-         live-in attendants, etc.) once those exclusion rules are wired up
-         (10 CCR 2506-1, 4.000.1). -->
     <Fact path="/grossIncome">
       <Name>Gross income</Name>
-      <Description>The sum of gross income across all household members (10 CCR 2506-1, 4.000.1)</Description>
+      <Description>The sum of gross income across members who are part of the SNAP household (10 CCR 2506-1, 4.000.1)</Description>
       <Derived>
         <CollectionSum>
-          <Dependency path="/members/*/grossIncome" />
+          <Switch>
+            <Case>
+              <When><Dependency path="/members/*/isPartOfHousehold" /></When>
+              <Then><Dependency path="/members/*/grossIncome" /></Then>
+            </Case>
+            <Case>
+              <When><True /></When>
+              <Then><Dollar>0</Dollar></Then>
+            </Case>
+          </Switch>
         </CollectionSum>
       </Derived>
     </Fact>
@@ -3272,12 +4649,14 @@
 
     <Fact path="/members/*/isDisqualified">
       <Name>Is disqualified individual</Name>
-      <Description>Whether this member is ineligible to receive SNAP benefits due to disqualification for an Intentional Program Violation/fraud, failure to provide or obtain a SSN, status as an ineligible non-citizen, failure to cooperate with work requirements, failure to cooperate with the state quality assurance division, or as an ABAWD who has received three countable months of SNAP within thirty-six (36) months without meeting an exemption or ABAWD work requirements (10 CCR 2506-1, 4.000.1)</Description>
+      <Description>Whether this member is ineligible to receive SNAP benefits due to disqualification for an Intentional Program Violation/fraud, failure to provide or obtain a SSN, status as an ineligible non-citizen, failure to meet general work requirements, having a level sanction imposed, failure to cooperate with work requirements, failure to cooperate with the state quality assurance division, or as an ABAWD who has received three countable months of SNAP within thirty-six (36) months without meeting an exemption or ABAWD work requirements (10 CCR 2506-1, 4.000.1; 4.310; 4.310.8)</Description>
       <Derived>
         <Any>
           <Dependency path="../disqualifiedForIPV" />
           <Dependency path="../failedToProvideOrObtainSSN" />
           <Dependency path="../isIneligibleNonCitizen" />
+          <Not><Dependency path="../meetsGeneralWorkRequirements" /></Not>
+          <Dependency path="../hasLevelSanctionImposed" />
           <Dependency path="../disqualifiedForWorkRequirementsCooperation" />
           <Dependency path="../disqualifiedForQualityAssuranceCooperation" />
           <Dependency path="../exceededAbawdCountableMonthsLimit" />
