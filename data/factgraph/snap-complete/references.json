@@ -1174,21 +1174,6 @@
       ]
     },
     {
-      "id": "10-ccr-2506-1__skip-1778183063492",
-      "documentId": "10-ccr-2506-1",
-      "text": "repay due to an over-issuance of benefits that was issued to a household based on a or unintentional error on the part of the household.",
-      "page": 6,
-      "rects": [
-        {
-          "x": 0.11219858715813567,
-          "y": 0.2228168885229404,
-          "w": 0.7526737440309405,
-          "h": 0.047817269719287014
-        }
-      ],
-      "status": "skipped"
-    },
-    {
       "id": "10-ccr-2506-1__skip-1778183072772",
       "documentId": "10-ccr-2506-1",
       "text": "“Income and Eligibility Verification System (IEVS)” means a system used to match client’s Social Security Numbers with the Social Security Administration, Internal Revenue Service, and the Department of Labor and Employment to obtain information about household income.",
@@ -10318,6 +10303,162 @@
           "h": 0.18759251388624265
         }
       ]
+    },
+    {
+      "id": "10-ccr-2506-1__mpfpu5yv-wbgz",
+      "documentId": "10-ccr-2506-1",
+      "text": "4.407 DEDUCTIONS AND EXCLUSIONS FROM INCOME A. Allowable deductions are subtracted from total monthly gross income to determine the household's monthly net SNAP income.",
+      "page": 107,
+      "rects": [
+        {
+          "x": 0.10819559671575879,
+          "y": 0.8044925951694663,
+          "w": 0.7024674684331254,
+          "h": 0.06997316370142137
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mpfpv23s-4vcj",
+      "documentId": "10-ccr-2506-1",
+      "text": "B. Households may elect to have fluctuating monthly expenses averaged over the certification period. Also, households have the option of having expenses that are billed less often than monthly averaged over the period the expense is intended to cover. Households may elect to have medical expenses averaged as described in Sections 4.407.6 and 4.407.61. Expenses that have been averaged are subject to the reporting requirements contained in Section 4.603. C. Actual or averaged expenses that result in deductions for medical, dependent care, and shelter costs shall be anticipated. Households who expect changes cannot have their expenses averaged solely on the basis of the last several bills. Expenses that are billed on a weekly or biweekly basis shall be converted to a monthly figure utilizing the conversion outlined in Section 4.402.",
+      "page": 108,
+      "rects": [
+        {
+          "x": 0.11231161703860913,
+          "y": 0.1596594109266806,
+          "w": 0.7738118206958646,
+          "h": 0.16769555710167983
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mpfq4s3b-8u2j",
+      "documentId": "10-ccr-2506-1",
+      "text": "D. Legally obligated child support is considered an income exclusion.",
+      "page": 108,
+      "rects": [
+        {
+          "x": 0.11093961026432568,
+          "y": 0.3324719212801908,
+          "w": 0.5515467232619461,
+          "h": 0.025444786800516872
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mpfqvdcr-59ms",
+      "documentId": "10-ccr-2506-1",
+      "text": "Allowable expenses will not be deductible if covered by vendor payments such as HUD, or reimbursements, such as insurance. An expense which is covered by an excluded vendor payment that has been converted to a direct cash payment under a federally authorized demonstration project shall not be deductible.",
+      "page": 108,
+      "rects": [
+        {
+          "x": 0.1063857042208416,
+          "y": 0.08900437185515137,
+          "w": 0.7802045304126903,
+          "h": 0.06440650004124393
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mpfqxlrt-954h",
+      "documentId": "10-ccr-2506-1",
+      "text": "E. The following subsections contain the only deductions allowed from a household's monthly income. The deductions are as follows: 1. Standard deduction 2. Earned income deduction 3. Excess shelter deduction 4. Dependent care deduction 5. Excess medical deduction",
+      "page": 108,
+      "rects": [
+        {
+          "x": 0.11185123508187621,
+          "y": 0.36774725727955127,
+          "w": 0.7364802835244134,
+          "h": 0.18371690175699085
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mpfqyuam-uez7",
+      "documentId": "10-ccr-2506-1",
+      "text": "4.407.1 Standard Deduction A standard deduction of 8.31% of the federal poverty income guidelines for the household size as described in Section 4.401.2 will be used to calculate the amount that is allowed to all households. The established standard amount will be adjusted annually as announced by FNS, USDA. The calculation of 8.31% of the federal poverty income guidelines for eligible members will be used for all households up to the household size of six (6). All households with six (6) or more eligible members will use the six (6) person standard deduction. Standard Deduction Amount Household Size 1 - 3 4 5 6+ Effective October 1, 2025 $209 $223 $261 $299",
+      "page": 108,
+      "rects": [
+        {
+          "x": 0.11048485236661756,
+          "y": 0.5609667574032831,
+          "w": 0.7706398514058798,
+          "h": 0.18794027880887565
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1779383529435",
+      "documentId": "10-ccr-2506-1",
+      "text": "108",
+      "page": 108,
+      "rects": [
+        {
+          "x": 0.10501932150558295,
+          "y": 0.9474057576507465,
+          "w": 0.7884028267042422,
+          "h": 0.030619483626165178
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1779383535031",
+      "documentId": "10-ccr-2506-1",
+      "text": "CODE OF COLORADO REGULATIONS 10 CCR 2506-1 Supplemental Nutrition Assistance Program (SNAP)",
+      "page": 109,
+      "rects": [
+        {
+          "x": 0.10092017335980699,
+          "y": 0.037152520003299515,
+          "w": 0.7938683575652768,
+          "h": 0.04117792625587726
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__mpfr7wl0-5gnj",
+      "documentId": "10-ccr-2506-1",
+      "text": "“Inadvertent Household Error Claim (IHE)” means a debt that has been established for the household to repay due to an over-issuance of benefits that was issued to a household based on a misunderstanding or unintentional error on the part of the household.",
+      "page": 6,
+      "rects": [
+        {
+          "x": 0.10893552140593027,
+          "y": 0.2177471863082504,
+          "w": 0.7652369297436104,
+          "h": 0.05357641149660497
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mpfraivv-lw08",
+      "documentId": "10-ccr-2506-1",
+      "text": "An Inadvertent Household Error (IHE) claim that is due to earned income being reported in an untimely manner will be calculated without allowing the twenty percent (20%) earned income deduction",
+      "page": 109,
+      "rects": [
+        {
+          "x": 0.16799743209083978,
+          "y": 0.08644157132669829,
+          "w": 0.6946194278377402,
+          "h": 0.05456856726506061
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mpfrbgl0-qwzk",
+      "documentId": "10-ccr-2506-1",
+      "text": "4.407.2 Earned Income Deduction A. A household with earned income shall receive a deduction of twenty percent (20%) of its gross nonexempt earned income. The twenty percent (20%) deduction shall also apply to prorated income earned by the disqualified member and attributed to the household. B. The earned income deduction will not be applied to any portion of income earned under a work supplementation or work support program that is attributable to a federal, state, or local public assistance program.",
+      "page": 108,
+      "rects": [
+        {
+          "x": 0.110219475986037,
+          "y": 0.752085077357145,
+          "w": 0.766520884323717,
+          "h": 0.15080767680525842
+        }
+      ]
     }
   ],
   "mappings": [
@@ -13132,6 +13273,130 @@
     {
       "nodePath": "/isDestituteOfIncome",
       "sectionId": "10-ccr-2506-1__mpel5p1x-teca"
+    },
+    {
+      "nodePath": "/deductions",
+      "sectionId": "10-ccr-2506-1__mpfpu5yv-wbgz"
+    },
+    {
+      "nodePath": "/netIncome",
+      "sectionId": "10-ccr-2506-1__mpfpu5yv-wbgz"
+    },
+    {
+      "nodePath": "/expenseFrequencyOptions",
+      "sectionId": "10-ccr-2506-1__mpfpv23s-4vcj"
+    },
+    {
+      "nodePath": "/expenses",
+      "sectionId": "10-ccr-2506-1__mpfpv23s-4vcj"
+    },
+    {
+      "nodePath": "/expenses/*/amount",
+      "sectionId": "10-ccr-2506-1__mpfpv23s-4vcj"
+    },
+    {
+      "nodePath": "/expenses/*/frequency",
+      "sectionId": "10-ccr-2506-1__mpfpv23s-4vcj"
+    },
+    {
+      "nodePath": "/expenses/*/shouldAverage",
+      "sectionId": "10-ccr-2506-1__mpfpv23s-4vcj"
+    },
+    {
+      "nodePath": "/expenses/*/intendedMonths",
+      "sectionId": "10-ccr-2506-1__mpfpv23s-4vcj"
+    },
+    {
+      "nodePath": "/expenses/*/monthlyAmount",
+      "sectionId": "10-ccr-2506-1__mpfpv23s-4vcj"
+    },
+    {
+      "nodePath": "/expenseTypeOptions",
+      "sectionId": "10-ccr-2506-1__mpfq4s3b-8u2j"
+    },
+    {
+      "nodePath": "/expenses/*/type",
+      "sectionId": "10-ccr-2506-1__mpfq4s3b-8u2j"
+    },
+    {
+      "nodePath": "/expenses/*/memberId",
+      "sectionId": "10-ccr-2506-1__mpfq4s3b-8u2j"
+    },
+    {
+      "nodePath": "/legallyObligatedChildSupportIncomeExclusion",
+      "sectionId": "10-ccr-2506-1__mpfq4s3b-8u2j"
+    },
+    {
+      "nodePath": "/grossIncome",
+      "sectionId": "10-ccr-2506-1__mpfq4s3b-8u2j"
+    },
+    {
+      "nodePath": "/deductions",
+      "sectionId": "10-ccr-2506-1__mpfqxlrt-954h"
+    },
+    {
+      "nodePath": "/standardDeduction",
+      "sectionId": "10-ccr-2506-1__mpfqyuam-uez7"
+    },
+    {
+      "nodePath": "/deductions",
+      "sectionId": "10-ccr-2506-1__mpfqyuam-uez7"
+    },
+    {
+      "nodePath": "/expenses/*/isCoveredByVendorPaymentOrReimbursement",
+      "sectionId": "10-ccr-2506-1__mpfqvdcr-59ms"
+    },
+    {
+      "nodePath": "/expenses/*/monthlyAmount",
+      "sectionId": "10-ccr-2506-1__mpfqvdcr-59ms"
+    },
+    {
+      "nodePath": "/standardDeductionForSize1To3",
+      "sectionId": "10-ccr-2506-1__mpfqyuam-uez7"
+    },
+    {
+      "nodePath": "/standardDeductionForSize4",
+      "sectionId": "10-ccr-2506-1__mpfqyuam-uez7"
+    },
+    {
+      "nodePath": "/standardDeductionForSize5",
+      "sectionId": "10-ccr-2506-1__mpfqyuam-uez7"
+    },
+    {
+      "nodePath": "/standardDeductionForSize6OrMore",
+      "sectionId": "10-ccr-2506-1__mpfqyuam-uez7"
+    },
+    {
+      "nodePath": "/hasInadvertentHouseholdErrorClaimDueToEarnedIncomeCalculation",
+      "sectionId": "10-ccr-2506-1__mpfraivv-lw08"
+    },
+    {
+      "nodePath": "/hasInadvertentHouseholdErrorClaimDueToEarnedIncomeCalculation",
+      "sectionId": "10-ccr-2506-1__mpfr7wl0-5gnj"
+    },
+    {
+      "nodePath": "/incomes/*/isWorkSupplementationOrWorkSupportPublicAssistancePortion",
+      "sectionId": "10-ccr-2506-1__mpfrbgl0-qwzk"
+    },
+    {
+      "nodePath": "/members/*/earnedIncomeDeductionEligibleIncome",
+      "sectionId": "10-ccr-2506-1__mpfrbgl0-qwzk"
+    },
+    {
+      "nodePath": "/earnedIncomeDeductionRate",
+      "sectionId": "10-ccr-2506-1__mpfrbgl0-qwzk"
+    },
+    {
+      "nodePath": "/earnedIncomeDeduction",
+      "sectionId": "10-ccr-2506-1__mpfrbgl0-qwzk"
+    },
+    {
+      "nodePath": "/earnedIncomeDeduction",
+      "sectionId": "10-ccr-2506-1__mpfraivv-lw08"
+    },
+    {
+      "nodePath": "/deductions",
+      "sectionId": "10-ccr-2506-1__mpfrbgl0-qwzk"
     }
   ]
 }

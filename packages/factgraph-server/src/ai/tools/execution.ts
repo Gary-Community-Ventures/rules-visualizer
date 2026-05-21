@@ -84,6 +84,40 @@ function normalizeValueForPath(
   return normalizeValue(value)
 }
 
+function resolveCollectionItemValue(
+  model: Model,
+  path: string,
+  value: unknown,
+  entities: Record<string, Record<string, unknown>[]>
+): unknown {
+  const info = getFactGraphWritableInfo(model, path)
+  if (info?.typeName !== 'CollectionItem') {
+    return normalizeValueForPath(model, path, value)
+  }
+
+  const normalized = normalizeValueForPath(model, path, value)
+  if (typeof normalized !== 'string' || /^#\d+$/.test(normalized)) {
+    return normalized
+  }
+
+  const targetRows = info.collectionItemPath
+    ? (entities[info.collectionItemPath] ?? [])
+    : []
+  const wanted = normalized.toLowerCase().trim()
+  const matches = targetRows
+    .map((row, idx) => ({ row, idx }))
+    .filter(({ row, idx }) => {
+      if (wanted === String(idx).toLowerCase()) return true
+      if (wanted === String(idx + 1).toLowerCase()) return true
+      return Object.entries(row).some(([key, rowValue]) => {
+        if (key === 'id') return false
+        return String(rowValue).toLowerCase().trim() === wanted
+      })
+    })
+
+  return matches.length === 1 ? `#${matches[0].idx}` : normalized
+}
+
 function resolveCollectionPath(
   model: Model,
   nameOrPath: string
@@ -228,9 +262,7 @@ export const executeGraph = tool(
               continue
             }
             const p = resolvePathFromName(model, k)
-            resolved[p ?? k] = p
-              ? normalizeValueForPath(model, p, v)
-              : normalizeValue(v)
+            resolved[p ?? k] = p ? v : normalizeValue(v)
           }
           return resolved
         })
@@ -240,6 +272,19 @@ export const executeGraph = tool(
           `Could not resolve these collection names/paths: ${unresolvedCollections.join(', ')}. Use list_writable_inputs to see available collection paths.`,
           null,
         ] as const
+      }
+      for (const rows of Object.values(resolvedEntities)) {
+        for (const row of rows) {
+          for (const [path, value] of Object.entries(row)) {
+            if (path === 'id') continue
+            row[path] = resolveCollectionItemValue(
+              model,
+              path,
+              value,
+              resolvedEntities
+            )
+          }
+        }
       }
     }
 
@@ -345,7 +390,7 @@ export const executeGraph = tool(
         .record(z.string(), z.array(z.record(z.string(), z.unknown())))
         .optional()
         .describe(
-          'Collection entity data: collection path → array of row objects. Row keys should be full wildcard paths like /members/*/age. For CollectionItem link fields, set the value to #0 for the first row in the referenced collection, #1 for the second, etc.'
+          'Collection entity data: collection path → array of row objects. Row keys should be full wildcard paths like /members/*/age. For CollectionItem link fields, set the value to #0 for the first row in the referenced collection, #1 for the second, etc. A label/name value from the referenced row is also accepted when unambiguous.'
         ),
       outputNodes: z
         .array(z.string())

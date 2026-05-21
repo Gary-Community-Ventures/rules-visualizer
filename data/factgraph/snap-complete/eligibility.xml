@@ -75,6 +75,34 @@
       </Derived>
     </Fact>
 
+    <Fact path="/expenseFrequencyOptions">
+      <Name>Expense frequency options</Name>
+      <Description>Options describing how often a household expense is billed or incurred when the household elects to average the expense over the period the expense is intended to cover (10 CCR 2506-1, 4.407, B).</Description>
+      <Derived>
+        <EnumOptions>
+          <String>Monthly</String>
+          <String>Weekly</String>
+          <String>BiWeekly</String>
+          <String>SemiMonthly</String>
+          <String>EveryOtherMonth</String>
+          <String>Quarterly</String>
+          <String>TwiceAYear</String>
+          <String>Annual</String>
+          <String>OtherSpecificTimePeriod</String>
+        </EnumOptions>
+      </Derived>
+    </Fact>
+
+    <Fact path="/expenseTypeOptions">
+      <Name>Expense type options</Name>
+      <Description>Options describing the type of household expense. Legally obligated child support is captured separately because it is considered an income exclusion (10 CCR 2506-1, 4.405, D).</Description>
+      <Derived>
+        <EnumOptions>
+          <String>ChildSupport</String>
+        </EnumOptions>
+      </Derived>
+    </Fact>
+
     <Fact path="/otherExcludedIncomeOptions">
       <Name>Other excluded income options</Name>
       <Description>Options for income excluded by other federal statutes under 10 CCR 2506-1, 4.405.2. Some options include the qualifying condition in the option name because the exclusion depends on additional facts, such as age, program participation, disaster status, quarterly charitable-donation limits, military deployment status, or statutory tribal/payment limits.</Description>
@@ -179,6 +207,240 @@
       <Writable><Collection /></Writable>
     </Fact>
 
+    <Fact path="/expenses">
+      <Name>Expenses</Name>
+      <Description>List of household expenses that may be averaged when the household elects to average fluctuating monthly expenses or expenses billed less often than monthly (10 CCR 2506-1, 4.407, B).</Description>
+      <Writable><Collection /></Writable>
+    </Fact>
+
+    <Fact path="/hasInadvertentHouseholdErrorClaimDueToEarnedIncomeCalculation">
+      <Name>Has inadvertent household error claim due to earned income calculation</Name>
+      <Description>Whether an Inadvertent Household Error (IHE) claim is due to earned income being reported in an untimely manner, so the claim is calculated without allowing the twenty percent (20%) earned income deduction (10 CCR 2506-1, 4.000.1).</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/expenses/*/memberId">
+      <Name>Member</Name>
+      <Description>The household member who pays or is legally obligated to pay this expense.</Description>
+      <Writable><CollectionItem collection="/members" /></Writable>
+    </Fact>
+
+    <Fact path="/expenses/*/type">
+      <Name>Expense type</Name>
+      <Description>The type of household expense. Select ChildSupport for legally obligated child support, which is considered an income exclusion (10 CCR 2506-1, 4.405, D).</Description>
+      <Writable><Enum optionsPath="/expenseTypeOptions" /></Writable>
+    </Fact>
+
+    <Fact path="/expenses/*/amount">
+      <Name>Amount</Name>
+      <Description>The expense amount at its stated frequency or, when the household does not elect averaging, the monthly expense amount.</Description>
+      <Writable><Dollar /></Writable>
+    </Fact>
+
+    <Fact path="/expenses/*/isCoveredByVendorPaymentOrReimbursement">
+      <Name>Is covered by vendor payment or reimbursement</Name>
+      <Description>Whether this allowable expense is covered by a vendor payment, reimbursement, or excluded vendor payment converted to a direct cash payment under a federally authorized demonstration project, making the expense not deductible (10 CCR 2506-1, 4.407, B).</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/expenses/*/frequency">
+      <Name>Expense frequency</Name>
+      <Description>How often this expense is billed or incurred. Weekly, bi-weekly, and semi-monthly expenses are converted to monthly amounts; other non-monthly frequencies are averaged only when the household elects to average the expense over the period it is intended to cover (10 CCR 2506-1, 4.407, B).</Description>
+      <Writable><Enum optionsPath="/expenseFrequencyOptions" /></Writable>
+    </Fact>
+
+    <Fact path="/expenses/*/shouldAverage">
+      <Name>Should average expense</Name>
+      <Description>Whether the household elects to average this fluctuating monthly expense or expense billed less often than monthly over the applicable period. This election controls optional averaging frequencies other than weekly, bi-weekly, and semi-monthly, which are converted to monthly amounts regardless of this election (10 CCR 2506-1, 4.407, B).</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/expenses/*/intendedMonths">
+      <Name>Months intended to cover</Name>
+      <Description>The number of months this expense amount is intended to cover when the household elects to average an expense over a specific period not represented by another frequency option (10 CCR 2506-1, 4.407, B).</Description>
+      <Writable><Int /></Writable>
+    </Fact>
+
+    <Fact path="/expenses/*/monthlyAmount">
+      <Name>Monthly amount</Name>
+      <Description>The monthly deductible amount of this expense. Expenses covered by vendor payments, reimbursements, or excluded vendor payments converted to direct cash payments under federally authorized demonstration projects are not deductible and are set to zero. Otherwise, weekly, bi-weekly, and semi-monthly expenses are converted to monthly amounts. For other non-monthly frequencies, the amount is converted using the selected frequency or divided by the number of intended months only when the household elects averaging; otherwise the stated amount is used without frequency conversion (10 CCR 2506-1, 4.407, B).</Description>
+      <Derived>
+        <Switch>
+          <Case>
+            <When><Dependency path="../isCoveredByVendorPaymentOrReimbursement" /></When>
+            <Then><Dollar>0</Dollar></Then>
+          </Case>
+          <Case>
+            <When>
+              <Equal>
+                <Left><Dependency path="../frequency" /></Left>
+                <Right><Enum optionsPath="/expenseFrequencyOptions">Monthly</Enum></Right>
+              </Equal>
+            </When>
+            <Then><Dependency path="../amount" /></Then>
+          </Case>
+          <Case>
+            <When>
+              <Equal>
+                <Left><Dependency path="../frequency" /></Left>
+                <Right><Enum optionsPath="/expenseFrequencyOptions">Weekly</Enum></Right>
+              </Equal>
+            </When>
+            <Then>
+              <Multiply>
+                <Dependency path="../amount" />
+                <Dependency path="/weeklyToMonthlyConversionMultiplier" />
+              </Multiply>
+            </Then>
+          </Case>
+          <Case>
+            <When>
+              <Equal>
+                <Left><Dependency path="../frequency" /></Left>
+                <Right><Enum optionsPath="/expenseFrequencyOptions">BiWeekly</Enum></Right>
+              </Equal>
+            </When>
+            <Then>
+              <Multiply>
+                <Dependency path="../amount" />
+                <Dependency path="/biWeeklyToMonthlyConversionMultiplier" />
+              </Multiply>
+            </Then>
+          </Case>
+          <Case>
+            <When>
+              <Equal>
+                <Left><Dependency path="../frequency" /></Left>
+                <Right><Enum optionsPath="/expenseFrequencyOptions">SemiMonthly</Enum></Right>
+              </Equal>
+            </When>
+            <Then>
+              <Multiply>
+                <Dependency path="../amount" />
+                <Dependency path="/semiMonthlyToMonthlyConversionMultiplier" />
+              </Multiply>
+            </Then>
+          </Case>
+          <Case>
+            <When>
+              <All>
+                <Dependency path="../shouldAverage" />
+                <Equal>
+                  <Left><Dependency path="../frequency" /></Left>
+                  <Right><Enum optionsPath="/expenseFrequencyOptions">EveryOtherMonth</Enum></Right>
+                </Equal>
+              </All>
+            </When>
+            <Then>
+              <Multiply>
+                <Dependency path="../amount" />
+                <Dependency path="/everyOtherMonthToMonthlyConversionMultiplier" />
+              </Multiply>
+            </Then>
+          </Case>
+          <Case>
+            <When>
+              <All>
+                <Dependency path="../shouldAverage" />
+                <Equal>
+                  <Left><Dependency path="../frequency" /></Left>
+                  <Right><Enum optionsPath="/expenseFrequencyOptions">Quarterly</Enum></Right>
+                </Equal>
+              </All>
+            </When>
+            <Then>
+              <Multiply>
+                <Dependency path="../amount" />
+                <Dependency path="/quarterlyToMonthlyConversionMultiplier" />
+              </Multiply>
+            </Then>
+          </Case>
+          <Case>
+            <When>
+              <All>
+                <Dependency path="../shouldAverage" />
+                <Equal>
+                  <Left><Dependency path="../frequency" /></Left>
+                  <Right><Enum optionsPath="/expenseFrequencyOptions">TwiceAYear</Enum></Right>
+                </Equal>
+              </All>
+            </When>
+            <Then>
+              <Multiply>
+                <Dependency path="../amount" />
+                <Dependency path="/twiceAYearToMonthlyConversionMultiplier" />
+              </Multiply>
+            </Then>
+          </Case>
+          <Case>
+            <When>
+              <All>
+                <Dependency path="../shouldAverage" />
+                <Equal>
+                  <Left><Dependency path="../frequency" /></Left>
+                  <Right><Enum optionsPath="/expenseFrequencyOptions">Annual</Enum></Right>
+                </Equal>
+              </All>
+            </When>
+            <Then>
+              <Multiply>
+                <Dependency path="../amount" />
+                <Dependency path="/annualToMonthlyConversionMultiplier" />
+              </Multiply>
+            </Then>
+          </Case>
+          <Case>
+            <When>
+              <All>
+                <Dependency path="../shouldAverage" />
+                <Equal>
+                  <Left><Dependency path="../frequency" /></Left>
+                  <Right><Enum optionsPath="/expenseFrequencyOptions">OtherSpecificTimePeriod</Enum></Right>
+                </Equal>
+              </All>
+            </When>
+            <Then>
+              <Divide>
+                <Dividend><Dependency path="../amount" /></Dividend>
+                <Divisors><Dependency path="../intendedMonths" /></Divisors>
+              </Divide>
+            </Then>
+          </Case>
+          <Case>
+            <When><True /></When>
+            <Then><Dependency path="../amount" /></Then>
+          </Case>
+        </Switch>
+      </Derived>
+    </Fact>
+
+    <Fact path="/legallyObligatedChildSupportIncomeExclusion">
+      <Name>Legally obligated child support income exclusion</Name>
+      <Description>The total monthly legally obligated child support expense paid by or legally obligated to members who are part of the SNAP household, excluded from gross income because legally obligated child support is considered an income exclusion (10 CCR 2506-1, 4.405, D).</Description>
+      <Derived>
+        <CollectionSum>
+          <Switch>
+            <Case>
+              <When>
+                <All>
+                  <Equal>
+                    <Left><Dependency path="/expenses/*/type" /></Left>
+                    <Right><Enum optionsPath="/expenseTypeOptions">ChildSupport</Enum></Right>
+                  </Equal>
+                  <Dependency path="/expenses/*/memberId/isPartOfHousehold" />
+                </All>
+              </When>
+              <Then><Dependency path="/expenses/*/monthlyAmount" /></Then>
+            </Case>
+            <Case>
+              <When><True /></When>
+              <Then><Dollar>0</Dollar></Then>
+            </Case>
+          </Switch>
+        </CollectionSum>
+      </Derived>
+    </Fact>
+
     <Fact path="/incomes/*/memberId">
       <Name>Member</Name>
       <Description>The household member to whom this income belongs</Description>
@@ -212,6 +474,12 @@
     <Fact path="/incomes/*/receivedBeforeSnapParticipation">
       <Name>Received before SNAP participation</Name>
       <Description>Whether this income source was received before SNAP participation for exclusions that depend on the income's timing relative to SNAP participation. VISTA payments and earned income tax credits count as income when this is true, and are excluded only when this is false (10 CCR 2506-1, 4.405.2, A, 3 and A, 20).</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/incomes/*/isWorkSupplementationOrWorkSupportPublicAssistancePortion">
+      <Name>Is work supplementation or work support public assistance portion</Name>
+      <Description>Whether this income is the portion earned under a work supplementation or work support program that is attributable to a federal, state, or local public assistance program, so it is not eligible for the earned income deduction (10 CCR 2506-1, 4.407.2, B).</Description>
       <Writable><Boolean /></Writable>
     </Fact>
 
@@ -3653,6 +3921,79 @@
       <Derived><Dollar>0</Dollar></Derived>
     </Fact>
 
+    <Fact path="/standardDeduction">
+      <Name>Standard deduction</Name>
+      <Description>The standard deduction allowed to all SNAP households, based on eligible household size and capped at the six-person amount for households with six (6) or more eligible members. Effective October 1, 2025, household sizes 1-3 receive $209, size 4 receives $223, size 5 receives $261, and size 6 or more receives $299 (10 CCR 2506-1, 4.407.1).</Description>
+      <Derived>
+        <Switch>
+          <Case>
+            <When>
+              <LessThanOrEqual>
+                <Left><Dependency path="/householdSize" /></Left>
+                <Right><Int>0</Int></Right>
+              </LessThanOrEqual>
+            </When>
+            <Then><Dollar>0</Dollar></Then>
+          </Case>
+          <Case>
+            <When>
+              <LessThanOrEqual>
+                <Left><Dependency path="/householdSize" /></Left>
+                <Right><Int>3</Int></Right>
+              </LessThanOrEqual>
+            </When>
+            <Then><Dependency path="/standardDeductionForSize1To3" /></Then>
+          </Case>
+          <Case>
+            <When>
+              <Equal>
+                <Left><Dependency path="/householdSize" /></Left>
+                <Right><Int>4</Int></Right>
+              </Equal>
+            </When>
+            <Then><Dependency path="/standardDeductionForSize4" /></Then>
+          </Case>
+          <Case>
+            <When>
+              <Equal>
+                <Left><Dependency path="/householdSize" /></Left>
+                <Right><Int>5</Int></Right>
+              </Equal>
+            </When>
+            <Then><Dependency path="/standardDeductionForSize5" /></Then>
+          </Case>
+          <Case>
+            <When><True /></When>
+            <Then><Dependency path="/standardDeductionForSize6OrMore" /></Then>
+          </Case>
+        </Switch>
+      </Derived>
+    </Fact>
+
+    <Fact path="/standardDeductionForSize1To3">
+      <Name>Standard deduction for 1-3 person household</Name>
+      <Description>Standard deduction amount for SNAP households with one (1), two (2), or three (3) eligible members, effective October 1, 2025 (10 CCR 2506-1, 4.407.1).</Description>
+      <Derived><Dollar>209</Dollar></Derived>
+    </Fact>
+
+    <Fact path="/standardDeductionForSize4">
+      <Name>Standard deduction for 4-person household</Name>
+      <Description>Standard deduction amount for SNAP households with four (4) eligible members, effective October 1, 2025 (10 CCR 2506-1, 4.407.1).</Description>
+      <Derived><Dollar>223</Dollar></Derived>
+    </Fact>
+
+    <Fact path="/standardDeductionForSize5">
+      <Name>Standard deduction for 5-person household</Name>
+      <Description>Standard deduction amount for SNAP households with five (5) eligible members, effective October 1, 2025 (10 CCR 2506-1, 4.407.1).</Description>
+      <Derived><Dollar>261</Dollar></Derived>
+    </Fact>
+
+    <Fact path="/standardDeductionForSize6OrMore">
+      <Name>Standard deduction for 6-or-more-person household</Name>
+      <Description>Standard deduction amount for SNAP households with six (6) or more eligible members, effective October 1, 2025 (10 CCR 2506-1, 4.407.1).</Description>
+      <Derived><Dollar>299</Dollar></Derived>
+    </Fact>
+
     <!-- TODO: derive from the resource limit applicable to households
          containing a person aged sixty (60) or older or a person with
          disabilities (10 CCR 2506-1, 4.000.1). -->
@@ -3712,6 +4053,34 @@
                     <Right><Dependency path=".." /></Right>
                   </Equal>
                   <Dependency path="/incomes/*/isEarned" />
+                </All>
+              </When>
+              <Then><Dependency path="/incomes/*/monthlyAmount" /></Then>
+            </Case>
+            <Case>
+              <When><True /></When>
+              <Then><Dollar>0</Dollar></Then>
+            </Case>
+          </Switch>
+        </CollectionSum>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/earnedIncomeDeductionEligibleIncome">
+      <Name>Earned income deduction eligible income</Name>
+      <Description>This member's monthly gross nonexempt earned income eligible for the twenty percent (20%) earned income deduction, excluding any portion earned under a work supplementation or work support program that is attributable to a federal, state, or local public assistance program (10 CCR 2506-1, 4.407.2).</Description>
+      <Derived>
+        <CollectionSum>
+          <Switch>
+            <Case>
+              <When>
+                <All>
+                  <Equal>
+                    <Left><Dependency path="/incomes/*/memberId" /></Left>
+                    <Right><Dependency path=".." /></Right>
+                  </Equal>
+                  <Dependency path="/incomes/*/isEarned" />
+                  <Not><Dependency path="/incomes/*/isWorkSupplementationOrWorkSupportPublicAssistancePortion" /></Not>
                 </All>
               </When>
               <Then><Dependency path="/incomes/*/monthlyAmount" /></Then>
@@ -3871,14 +4240,69 @@
       </Derived>
     </Fact>
 
-    <!-- TODO: derive net income from total gross income minus all allowable
-         deductions (earned income deduction, standard deduction, dependent
-         care, child support, medical, shelter, etc.) once those facts exist
-         (10 CCR 2506-1, 4.000.1). -->
+    <Fact path="/earnedIncomeDeductionRate">
+      <Name>Earned income deduction rate</Name>
+      <Description>The percentage of gross nonexempt earned income deducted for households with earned income (10 CCR 2506-1, 4.407.2, A).</Description>
+      <Derived><Rational>1/5</Rational></Derived>
+    </Fact>
+
+    <Fact path="/earnedIncomeDeduction">
+      <Name>Earned income deduction</Name>
+      <Description>Twenty percent (20%) of the household's gross nonexempt earned income, excluding any income earned under a work supplementation or work support program that is attributable to a federal, state, or local public assistance program; zero when an Inadvertent Household Error (IHE) claim is due to earned income being reported in an untimely manner (10 CCR 2506-1, 4.407.2; 4.000.1).</Description>
+      <Derived>
+        <Switch>
+          <Case>
+            <When><Dependency path="/hasInadvertentHouseholdErrorClaimDueToEarnedIncomeCalculation" /></When>
+            <Then><Dollar>0</Dollar></Then>
+          </Case>
+          <Case>
+            <When><True /></When>
+            <Then>
+              <Multiply>
+                <CollectionSum>
+                  <Switch>
+                    <Case>
+                      <When><Dependency path="/members/*/isPartOfHousehold" /></When>
+                      <Then><Dependency path="/members/*/earnedIncomeDeductionEligibleIncome" /></Then>
+                    </Case>
+                    <Case>
+                      <When><True /></When>
+                      <Then><Dollar>0</Dollar></Then>
+                    </Case>
+                  </Switch>
+                </CollectionSum>
+                <Dependency path="/earnedIncomeDeductionRate" />
+              </Multiply>
+            </Then>
+          </Case>
+        </Switch>
+      </Derived>
+    </Fact>
+
+    <Fact path="/deductions">
+      <Name>Deductions</Name>
+      <Description>The household-wide total monthly allowable deductions subtracted from total monthly gross income to determine monthly net SNAP income (10 CCR 2506-1, 4.407, A).</Description>
+      <Derived>
+        <Add>
+          <Dependency path="/earnedIncomeDeduction" />
+          <Dependency path="/standardDeduction" />
+          <Dependency path="/excessMedicalDeduction" />
+        </Add>
+      </Derived>
+    </Fact>
+
     <Fact path="/netIncome">
       <Name>Net income</Name>
-      <Description>The household's income after all allowable deductions are considered, used for the net income test (10 CCR 2506-1, 4.000.1). Placeholder.</Description>
-      <Writable><Dollar /></Writable>
+      <Description>The household's monthly net SNAP income after subtracting household-wide allowable deductions from total monthly gross income, used for the net income test (10 CCR 2506-1, 4.407, A).</Description>
+      <Derived>
+        <GreaterOf>
+          <Dollar>0</Dollar>
+          <Subtract>
+            <Minuend><Dependency path="/grossIncome" /></Minuend>
+            <Subtrahends><Dependency path="/deductions" /></Subtrahends>
+          </Subtract>
+        </GreaterOf>
+      </Derived>
     </Fact>
 
     <Fact path="/meetsNetIncomeTest">
@@ -5028,20 +5452,28 @@
 
     <Fact path="/grossIncome">
       <Name>Gross income</Name>
-      <Description>The sum of gross income across members who are part of the SNAP household (10 CCR 2506-1, 4.000.1)</Description>
+      <Description>The sum of gross income across members who are part of the SNAP household, less legally obligated child support because it is considered an income exclusion (10 CCR 2506-1, 4.000.1; 4.405, D).</Description>
       <Derived>
-        <CollectionSum>
-          <Switch>
-            <Case>
-              <When><Dependency path="/members/*/isPartOfHousehold" /></When>
-              <Then><Dependency path="/members/*/grossIncome" /></Then>
-            </Case>
-            <Case>
-              <When><True /></When>
-              <Then><Dollar>0</Dollar></Then>
-            </Case>
-          </Switch>
-        </CollectionSum>
+        <GreaterOf>
+          <Dollar>0</Dollar>
+          <Subtract>
+            <Minuend>
+              <CollectionSum>
+                <Switch>
+                  <Case>
+                    <When><Dependency path="/members/*/isPartOfHousehold" /></When>
+                    <Then><Dependency path="/members/*/grossIncome" /></Then>
+                  </Case>
+                  <Case>
+                    <When><True /></When>
+                    <Then><Dollar>0</Dollar></Then>
+                  </Case>
+                </Switch>
+              </CollectionSum>
+            </Minuend>
+            <Subtrahends><Dependency path="/legallyObligatedChildSupportIncomeExclusion" /></Subtrahends>
+          </Subtract>
+        </GreaterOf>
       </Derived>
     </Fact>
 

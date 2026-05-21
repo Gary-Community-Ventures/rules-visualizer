@@ -121,7 +121,8 @@ CollectionItem fields link one collection row to a row in another collection.
 Use the target row sentinel as the value: #0 means the first row in the referenced
 collection, #1 means the second row, etc. Example: if /incomes/*/memberId links
 to /members, then { "/incomes/*/memberId": "#0" } links that income row to
-the first /members row.
+the first /members row. If the target row has a clear name/label value, that
+label can also be used as the link value.
 
 Scalar (non-collection) inputs go in the "inputs" parameter as usual. Never use numeric indexes like members/0/age — always use the /* wildcard path as the key within entity rows.
 
