@@ -43,7 +43,6 @@
           <String>VendorPayments</String>
           <String>IrregularIncome</String>
           <String>NonHouseholdMemberCarePayments</String>
-          <String>ChildStudentEarnings</String>
           <String>Recoupments</String>
           <String>TitleIVDTransferredChildSupport</String>
           <String>NonRecurringLumpSum</String>
@@ -76,6 +75,98 @@
       </Derived>
     </Fact>
 
+    <Fact path="/otherExcludedIncomeOptions">
+      <Name>Other excluded income options</Name>
+      <Description>Options for income excluded by other federal statutes under 10 CCR 2506-1, 4.405.2. Some options include the qualifying condition in the option name because the exclusion depends on additional facts, such as age, program participation, disaster status, quarterly charitable-donation limits, military deployment status, or statutory tribal/payment limits.</Description>
+      <Derived>
+        <EnumOptions>
+          <String>ChildNutritionActAssistance</String>
+          <String>UniformRelocationActReimbursement</String>
+          <String>DomesticVolunteerServicesTitleIiPayment</String>
+          <String>NationalCommunityServiceActPayment</String>
+          <String>PresidentialDisasterOrEmergencyAssistance</String>
+          <String>WioaPaymentNotOnTheJobTraining</String>
+          <String>WioaSummerYouthEmploymentTrainingPayment</String>
+          <String>FederalEnergyAssistanceWeatherizationOrEmergencyHeatingCoolingPayment</String>
+          <String>YouthIncentiveOrCetaTitleIvPayment</String>
+          <String>OlderAmericansActTitleVAge55OrOlderPayment</String>
+          <String>NeedBasedNonprofitCashDonation</String>
+          <String>MilitaryRetirementPaymentToExSpouseByDivorceDecree</String>
+          <String>MilitaryCombatAdditionalPayDuringDesignatedCombatZoneDeployment</String>
+          <String>MandatoryMilitaryEducationDeduction</String>
+          <String>JapaneseAmericanOrAleutCivilLibertiesPayment</String>
+          <String>MigrantSeasonalFarmworkerEmergencyAssistance</String>
+          <String>WicBenefit</String>
+          <String>TitleIvAChildCarePayment</String>
+          <String>AgentOrangeSettlementFundPayment</String>
+          <String>AtRiskBlockGrantChildCarePayment</String>
+          <String>EarnedIncomeTaxCredit</String>
+          <String>EmploymentFirstParticipationCostPayment</String>
+          <String>PassPlanAmount</String>
+          <String>RadiationExposureCompensationTrustFundPayment</String>
+          <String>ChildCareDevelopmentBlockGrantCarePaymentOrService</String>
+          <String>PublicHousingFamilyInvestmentCenterService</String>
+          <String>HudDemonstrationProjectEarnedIncomeIncrease</String>
+          <String>NaziPersecutionVictimPayment</String>
+          <String>CrimeVictimCompensationPayment</String>
+          <String>VietnamVeteranChildSpinaBifidaAllowance</String>
+          <String>AlaskaNativeClaimsSettlementActPayment</String>
+          <String>IndianJudgmentOrTrustPerCapitaPayment</String>
+          <String>IndianTrustRestrictedLandInterest</String>
+          <String>NavajoHopiRelocationAssistancePayment</String>
+          <String>IndianSubmarginalLandIncomeForListedTribe</String>
+          <String>SacAndFoxPerCapitaOrTrustFundPayment</String>
+          <String>GrandRiverBandOttawaPayment</String>
+          <String>YakimaOrMescaleroApacheClaimsPayment</String>
+          <String>MaineIndianClaimsSettlementPayment</String>
+          <String>TurtleMountainBandChippewasPayment</String>
+          <String>BlackfeetGrosventreAssiniboineOrPapagoPayment</String>
+          <String>RedLakeBandChippewaPayment</String>
+          <String>AssiniboineFortBelknapOrFortPeckPayment</String>
+          <String>OldAgeAssistanceClaimsSettlementHeirPayment</String>
+          <String>ChippewasOfLakeSuperiorPayment</String>
+          <String>WhiteEarthReservationLandSettlementPayment</String>
+          <String>SaginawChippewaIndianTribePayment</String>
+          <String>ChippewasOfMississippiPayment</String>
+          <String>PuyallupTribeSettlementPayment</String>
+          <String>SeminoleIndianClaimsPayment</String>
+          <String>SenecaNationSettlementPayment</String>
+          <String>ColvilleReservationGrandCouleeDamSettlementPayment</String>
+          <String>MigrantFarmWorkerEmployerRelocationTravelAdvanceReimbursement</String>
+        </EnumOptions>
+      </Derived>
+    </Fact>
+
+    <Fact path="/needBasedNonprofitCashDonationQuarterlyExclusionLimit">
+      <Name>Need-based nonprofit cash donation quarterly exclusion limit</Name>
+      <Description>Maximum aggregate amount of need-based cash donations from private nonprofit charitable organizations excluded per fiscal quarter under 10 CCR 2506-1, 4.405.2, A, 10.</Description>
+      <Derived><Dollar>300</Dollar></Derived>
+    </Fact>
+
+    <Fact path="/federalIndianPaymentExclusionLimit">
+      <Name>Federal Indian payment exclusion limit</Name>
+      <Description>Dollar limit used by specified federal Indian payment exclusions that exclude only the first two thousand dollars ($2,000) or payments of two thousand dollars ($2,000) or less under 10 CCR 2506-1, 4.405.2, B.</Description>
+      <Derived><Dollar>2000</Dollar></Derived>
+    </Fact>
+
+    <Fact path="/wioaOnTheJobTrainingExcludedAgeLimit">
+      <Name>WIOA on-the-job training excluded age limit</Name>
+      <Description>Upper age bound for excluding Workforce Innovation and Opportunity Act (WIOA) on-the-job training payments: the participating member must be under nineteen (19) years of age and under the parental control of an adult household member (10 CCR 2506-1, 4.405.2, A, 6).</Description>
+      <Derived><Int>19</Int></Derived>
+    </Fact>
+
+    <Fact path="/wioaOnTheJobTrainingAdultCaregiverAgeMinimum">
+      <Name>WIOA on-the-job training adult caregiver age minimum</Name>
+      <Description>Minimum age for the adult household member whose parental control qualifies a WIOA on-the-job training payment for exclusion; the participating member must be under nineteen (19) and under the parental control of an adult household member (10 CCR 2506-1, 4.405.2, A, 6).</Description>
+      <Derived><Int>18</Int></Derived>
+    </Fact>
+
+    <Fact path="/isPresidentiallyDeclaredDisasterOrEmergency">
+      <Name>Is presidentially declared disaster or emergency</Name>
+      <Description>Whether there is a major disaster or emergency declared by the President. Disaster or emergency assistance is excluded under 10 CCR 2506-1, 4.405.2 only when precipitated by an emergency or major disaster as defined in the Disaster Relief Act; FEMA-funded homeless rent, mortgage, food, or utility assistance when there is no major disaster or emergency is not excluded under this provision.</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
     <Fact path="/members">
       <Name>Household members</Name>
       <Description>List of household members</Description>
@@ -100,9 +191,27 @@
       <Writable><Enum optionsPath="/incomeSourceOptions" /></Writable>
     </Fact>
 
-    <Fact path="/incomes/*/startedBeforeSnapParticipation">
-      <Name>Started before SNAP participation</Name>
-      <Description>Whether the client was not receiving SNAP benefits when they joined AmeriCorps Volunteers in Service to America (VISTA). VISTA payments count as earned income when the client was not receiving SNAP benefits when they joined VISTA, and are excluded when the client was receiving SNAP benefits at that time; temporary interruptions in SNAP participation do not alter the initial determination (10 CCR 2506-1, 4.405.2, A, 3).</Description>
+    <Fact path="/incomes/*/otherExcludedIncomeType">
+      <Name>Other excluded income type</Name>
+      <Description>The specific type of other federally excluded income under 10 CCR 2506-1, 4.405.2. Use when /incomes/*/type is Other and the payment matches one of the listed statutory exclusions; several option names include required qualifying facts such as age, program participation, disaster/emergency status, quarterly limits, deployment status, or tribal/statutory payment limits.</Description>
+      <Writable><Enum optionsPath="/otherExcludedIncomeOptions" /></Writable>
+    </Fact>
+
+    <Fact path="/incomes/*/needBasedNonprofitCashDonationQuarterlyExclusionUsed">
+      <Name>Need-based nonprofit cash donation quarterly exclusion used</Name>
+      <Description>The amount of the three hundred dollar ($300) aggregate fiscal-quarter exclusion for need-based cash donations from private nonprofit charitable organizations that has already been used by other donations in the same fiscal quarter (10 CCR 2506-1, 4.405.2, A, 10).</Description>
+      <Writable><Dollar /></Writable>
+    </Fact>
+
+    <Fact path="/incomes/*/indianTrustRestrictedLandInterestAnnualExclusionUsed">
+      <Name>Indian trust or restricted land interest annual exclusion used</Name>
+      <Description>The amount of the two thousand dollar ($2,000) calendar-year exclusion for income derived from an individual Indian's interest in trust or restricted lands that has already been used by other such income in the same calendar year (10 CCR 2506-1, 4.405.2, B, 2).</Description>
+      <Writable><Dollar /></Writable>
+    </Fact>
+
+    <Fact path="/incomes/*/receivedBeforeSnapParticipation">
+      <Name>Received before SNAP participation</Name>
+      <Description>Whether this income source was received before SNAP participation for exclusions that depend on the income's timing relative to SNAP participation. VISTA payments and earned income tax credits count as income when this is true, and are excluded only when this is false (10 CCR 2506-1, 4.405.2, A, 3 and A, 20).</Description>
       <Writable><Boolean /></Writable>
     </Fact>
 
@@ -165,7 +274,7 @@
               <Left><Dependency path="../type" /></Left>
               <Right><Enum optionsPath="/incomeSourceOptions">Vista</Enum></Right>
             </Equal>
-            <Not><Dependency path="../startedBeforeSnapParticipation" /></Not>
+            <Not><Dependency path="../receivedBeforeSnapParticipation" /></Not>
           </All>
           <Equal>
             <Left><Dependency path="../type" /></Left>
@@ -175,10 +284,7 @@
             <Left><Dependency path="../type" /></Left>
             <Right><Enum optionsPath="/incomeSourceOptions">NonHouseholdMemberCarePayments</Enum></Right>
           </Equal>
-          <Equal>
-            <Left><Dependency path="../type" /></Left>
-            <Right><Enum optionsPath="/incomeSourceOptions">ChildStudentEarnings</Enum></Right>
-          </Equal>
+          <Dependency path="../isChildStudentEarningsExcluded" />
           <Equal>
             <Left><Dependency path="../type" /></Left>
             <Right><Enum optionsPath="/incomeSourceOptions">Recoupments</Enum></Right>
@@ -215,7 +321,240 @@
             <Left><Dependency path="../type" /></Left>
             <Right><Enum optionsPath="/incomeSourceOptions">EducationalAssistance</Enum></Right>
           </Equal>
+          <Dependency path="../isOtherExcludedIncome" />
         </Any>
+      </Derived>
+    </Fact>
+
+    <Fact path="/incomes/*/isChildStudentEarningsExcluded">
+      <Name>Is child student earnings excluded</Name>
+      <Description>Whether this income is earned income of a child under eighteen (18) who lives with a natural, adoptive, or stepparent, or is under the parental control of another household member, and is a student at least half-time in elementary school, high school, or GED classes. This uses the member's K-12 attendance flag to represent elementary/high-school or GED attendance for the child-earnings exclusion (10 CCR 2506-1, 4.405, C).</Description>
+      <Derived>
+        <All>
+          <Dependency path="../isEarned" />
+          <LessThan>
+            <Left><Dependency path="../memberId/age" /></Left>
+            <Right><Dependency path="/mandatoryChildParentalControlAgeLimit" /></Right>
+          </LessThan>
+          <Dependency path="../memberId/isInK12" />
+          <Any>
+            <Dependency path="../memberId/isMandatoryChildViaParent" />
+            <Dependency path="../memberId/isMandatoryChildViaParentalControl" />
+          </Any>
+        </All>
+      </Derived>
+    </Fact>
+
+    <Fact path="/incomes/*/isWioaOnTheJobTrainingExcluded">
+      <Name>Is WIOA on-the-job training excluded</Name>
+      <Description>Whether this WIOA on-the-job training payment is excluded because the participating member is under nineteen (19) years of age and under the parental control of an adult household member (10 CCR 2506-1, 4.405.2, A, 6).</Description>
+      <Derived>
+        <All>
+          <Equal>
+            <Left><Dependency path="../type" /></Left>
+            <Right><Enum optionsPath="/incomeSourceOptions">WioaOnTheJobTraining</Enum></Right>
+          </Equal>
+          <LessThan>
+            <Left><Dependency path="../memberId/age" /></Left>
+            <Right><Dependency path="/wioaOnTheJobTrainingExcludedAgeLimit" /></Right>
+          </LessThan>
+          <GreaterThan>
+            <Left>
+              <CollectionSize>
+                <Filter path="/caregiverRelationships">
+                  <All>
+                    <Equal>
+                      <Left><Dependency path="dependentId" /></Left>
+                      <Right><Dependency path="^/memberId" /></Right>
+                    </Equal>
+                    <Dependency path="caregiverId/isPartOfHousehold" />
+                    <GreaterThanOrEqual>
+                      <Left><Dependency path="caregiverId/age" /></Left>
+                      <Right><Dependency path="/wioaOnTheJobTrainingAdultCaregiverAgeMinimum" /></Right>
+                    </GreaterThanOrEqual>
+                    <Any>
+                      <Dependency path="isParent" />
+                      <Dependency path="isNonparentParentalControl" />
+                    </Any>
+                  </All>
+                </Filter>
+              </CollectionSize>
+            </Left>
+            <Right><Int>0</Int></Right>
+          </GreaterThan>
+        </All>
+      </Derived>
+    </Fact>
+
+    <Fact path="/incomes/*/isOtherExcludedIncome">
+      <Name>Is other excluded income</Name>
+      <Description>Whether this income is excluded by another federal statute under 10 CCR 2506-1, 4.405.2, either because it is marked as Other with a selected other excluded income type or because it is a WIOA on-the-job training payment excluded for a participating member under nineteen (19) years of age and under the parental control of an adult household member.</Description>
+      <Derived>
+        <Any>
+          <Dependency path="../isWioaOnTheJobTrainingExcluded" />
+          <All>
+            <Equal>
+              <Left><Dependency path="../type" /></Left>
+              <Right><Enum optionsPath="/incomeSourceOptions">Other</Enum></Right>
+            </Equal>
+            <Any>
+              <Equal><Left><Dependency path="../otherExcludedIncomeType" /></Left><Right><Enum optionsPath="/otherExcludedIncomeOptions">ChildNutritionActAssistance</Enum></Right></Equal>
+              <Equal><Left><Dependency path="../otherExcludedIncomeType" /></Left><Right><Enum optionsPath="/otherExcludedIncomeOptions">UniformRelocationActReimbursement</Enum></Right></Equal>
+              <Equal><Left><Dependency path="../otherExcludedIncomeType" /></Left><Right><Enum optionsPath="/otherExcludedIncomeOptions">DomesticVolunteerServicesTitleIiPayment</Enum></Right></Equal>
+              <Equal><Left><Dependency path="../otherExcludedIncomeType" /></Left><Right><Enum optionsPath="/otherExcludedIncomeOptions">NationalCommunityServiceActPayment</Enum></Right></Equal>
+              <All>
+                <Equal><Left><Dependency path="../otherExcludedIncomeType" /></Left><Right><Enum optionsPath="/otherExcludedIncomeOptions">PresidentialDisasterOrEmergencyAssistance</Enum></Right></Equal>
+                <Dependency path="/isPresidentiallyDeclaredDisasterOrEmergency" />
+              </All>
+              <Equal><Left><Dependency path="../otherExcludedIncomeType" /></Left><Right><Enum optionsPath="/otherExcludedIncomeOptions">WioaPaymentNotOnTheJobTraining</Enum></Right></Equal>
+              <Equal><Left><Dependency path="../otherExcludedIncomeType" /></Left><Right><Enum optionsPath="/otherExcludedIncomeOptions">WioaSummerYouthEmploymentTrainingPayment</Enum></Right></Equal>
+              <Equal><Left><Dependency path="../otherExcludedIncomeType" /></Left><Right><Enum optionsPath="/otherExcludedIncomeOptions">FederalEnergyAssistanceWeatherizationOrEmergencyHeatingCoolingPayment</Enum></Right></Equal>
+              <Equal><Left><Dependency path="../otherExcludedIncomeType" /></Left><Right><Enum optionsPath="/otherExcludedIncomeOptions">YouthIncentiveOrCetaTitleIvPayment</Enum></Right></Equal>
+              <Equal><Left><Dependency path="../otherExcludedIncomeType" /></Left><Right><Enum optionsPath="/otherExcludedIncomeOptions">OlderAmericansActTitleVAge55OrOlderPayment</Enum></Right></Equal>
+              <Equal><Left><Dependency path="../otherExcludedIncomeType" /></Left><Right><Enum optionsPath="/otherExcludedIncomeOptions">NeedBasedNonprofitCashDonation</Enum></Right></Equal>
+              <Equal><Left><Dependency path="../otherExcludedIncomeType" /></Left><Right><Enum optionsPath="/otherExcludedIncomeOptions">MilitaryRetirementPaymentToExSpouseByDivorceDecree</Enum></Right></Equal>
+              <Equal><Left><Dependency path="../otherExcludedIncomeType" /></Left><Right><Enum optionsPath="/otherExcludedIncomeOptions">MilitaryCombatAdditionalPayDuringDesignatedCombatZoneDeployment</Enum></Right></Equal>
+              <Equal><Left><Dependency path="../otherExcludedIncomeType" /></Left><Right><Enum optionsPath="/otherExcludedIncomeOptions">MandatoryMilitaryEducationDeduction</Enum></Right></Equal>
+              <Equal><Left><Dependency path="../otherExcludedIncomeType" /></Left><Right><Enum optionsPath="/otherExcludedIncomeOptions">JapaneseAmericanOrAleutCivilLibertiesPayment</Enum></Right></Equal>
+              <Equal><Left><Dependency path="../otherExcludedIncomeType" /></Left><Right><Enum optionsPath="/otherExcludedIncomeOptions">MigrantSeasonalFarmworkerEmergencyAssistance</Enum></Right></Equal>
+              <Equal><Left><Dependency path="../otherExcludedIncomeType" /></Left><Right><Enum optionsPath="/otherExcludedIncomeOptions">WicBenefit</Enum></Right></Equal>
+              <Equal><Left><Dependency path="../otherExcludedIncomeType" /></Left><Right><Enum optionsPath="/otherExcludedIncomeOptions">TitleIvAChildCarePayment</Enum></Right></Equal>
+              <Equal><Left><Dependency path="../otherExcludedIncomeType" /></Left><Right><Enum optionsPath="/otherExcludedIncomeOptions">AgentOrangeSettlementFundPayment</Enum></Right></Equal>
+              <Equal><Left><Dependency path="../otherExcludedIncomeType" /></Left><Right><Enum optionsPath="/otherExcludedIncomeOptions">AtRiskBlockGrantChildCarePayment</Enum></Right></Equal>
+              <All>
+                <Equal><Left><Dependency path="../otherExcludedIncomeType" /></Left><Right><Enum optionsPath="/otherExcludedIncomeOptions">EarnedIncomeTaxCredit</Enum></Right></Equal>
+                <Not><Dependency path="../receivedBeforeSnapParticipation" /></Not>
+              </All>
+              <Equal><Left><Dependency path="../otherExcludedIncomeType" /></Left><Right><Enum optionsPath="/otherExcludedIncomeOptions">EmploymentFirstParticipationCostPayment</Enum></Right></Equal>
+              <Equal><Left><Dependency path="../otherExcludedIncomeType" /></Left><Right><Enum optionsPath="/otherExcludedIncomeOptions">PassPlanAmount</Enum></Right></Equal>
+              <Equal><Left><Dependency path="../otherExcludedIncomeType" /></Left><Right><Enum optionsPath="/otherExcludedIncomeOptions">RadiationExposureCompensationTrustFundPayment</Enum></Right></Equal>
+              <Equal><Left><Dependency path="../otherExcludedIncomeType" /></Left><Right><Enum optionsPath="/otherExcludedIncomeOptions">ChildCareDevelopmentBlockGrantCarePaymentOrService</Enum></Right></Equal>
+              <Equal><Left><Dependency path="../otherExcludedIncomeType" /></Left><Right><Enum optionsPath="/otherExcludedIncomeOptions">PublicHousingFamilyInvestmentCenterService</Enum></Right></Equal>
+              <Equal><Left><Dependency path="../otherExcludedIncomeType" /></Left><Right><Enum optionsPath="/otherExcludedIncomeOptions">HudDemonstrationProjectEarnedIncomeIncrease</Enum></Right></Equal>
+              <Equal><Left><Dependency path="../otherExcludedIncomeType" /></Left><Right><Enum optionsPath="/otherExcludedIncomeOptions">NaziPersecutionVictimPayment</Enum></Right></Equal>
+              <Equal><Left><Dependency path="../otherExcludedIncomeType" /></Left><Right><Enum optionsPath="/otherExcludedIncomeOptions">CrimeVictimCompensationPayment</Enum></Right></Equal>
+              <Equal><Left><Dependency path="../otherExcludedIncomeType" /></Left><Right><Enum optionsPath="/otherExcludedIncomeOptions">VietnamVeteranChildSpinaBifidaAllowance</Enum></Right></Equal>
+              <Equal><Left><Dependency path="../otherExcludedIncomeType" /></Left><Right><Enum optionsPath="/otherExcludedIncomeOptions">AlaskaNativeClaimsSettlementActPayment</Enum></Right></Equal>
+              <Equal><Left><Dependency path="../otherExcludedIncomeType" /></Left><Right><Enum optionsPath="/otherExcludedIncomeOptions">IndianJudgmentOrTrustPerCapitaPayment</Enum></Right></Equal>
+              <Equal><Left><Dependency path="../otherExcludedIncomeType" /></Left><Right><Enum optionsPath="/otherExcludedIncomeOptions">IndianTrustRestrictedLandInterest</Enum></Right></Equal>
+              <Equal><Left><Dependency path="../otherExcludedIncomeType" /></Left><Right><Enum optionsPath="/otherExcludedIncomeOptions">NavajoHopiRelocationAssistancePayment</Enum></Right></Equal>
+              <Equal><Left><Dependency path="../otherExcludedIncomeType" /></Left><Right><Enum optionsPath="/otherExcludedIncomeOptions">IndianSubmarginalLandIncomeForListedTribe</Enum></Right></Equal>
+              <Equal><Left><Dependency path="../otherExcludedIncomeType" /></Left><Right><Enum optionsPath="/otherExcludedIncomeOptions">SacAndFoxPerCapitaOrTrustFundPayment</Enum></Right></Equal>
+              <Equal><Left><Dependency path="../otherExcludedIncomeType" /></Left><Right><Enum optionsPath="/otherExcludedIncomeOptions">GrandRiverBandOttawaPayment</Enum></Right></Equal>
+              <Equal><Left><Dependency path="../otherExcludedIncomeType" /></Left><Right><Enum optionsPath="/otherExcludedIncomeOptions">YakimaOrMescaleroApacheClaimsPayment</Enum></Right></Equal>
+              <Equal><Left><Dependency path="../otherExcludedIncomeType" /></Left><Right><Enum optionsPath="/otherExcludedIncomeOptions">MaineIndianClaimsSettlementPayment</Enum></Right></Equal>
+              <Equal><Left><Dependency path="../otherExcludedIncomeType" /></Left><Right><Enum optionsPath="/otherExcludedIncomeOptions">TurtleMountainBandChippewasPayment</Enum></Right></Equal>
+              <Equal><Left><Dependency path="../otherExcludedIncomeType" /></Left><Right><Enum optionsPath="/otherExcludedIncomeOptions">BlackfeetGrosventreAssiniboineOrPapagoPayment</Enum></Right></Equal>
+              <Equal><Left><Dependency path="../otherExcludedIncomeType" /></Left><Right><Enum optionsPath="/otherExcludedIncomeOptions">RedLakeBandChippewaPayment</Enum></Right></Equal>
+              <Equal><Left><Dependency path="../otherExcludedIncomeType" /></Left><Right><Enum optionsPath="/otherExcludedIncomeOptions">AssiniboineFortBelknapOrFortPeckPayment</Enum></Right></Equal>
+              <Equal><Left><Dependency path="../otherExcludedIncomeType" /></Left><Right><Enum optionsPath="/otherExcludedIncomeOptions">OldAgeAssistanceClaimsSettlementHeirPayment</Enum></Right></Equal>
+              <Equal><Left><Dependency path="../otherExcludedIncomeType" /></Left><Right><Enum optionsPath="/otherExcludedIncomeOptions">ChippewasOfLakeSuperiorPayment</Enum></Right></Equal>
+              <Equal><Left><Dependency path="../otherExcludedIncomeType" /></Left><Right><Enum optionsPath="/otherExcludedIncomeOptions">WhiteEarthReservationLandSettlementPayment</Enum></Right></Equal>
+              <Equal><Left><Dependency path="../otherExcludedIncomeType" /></Left><Right><Enum optionsPath="/otherExcludedIncomeOptions">SaginawChippewaIndianTribePayment</Enum></Right></Equal>
+              <Equal><Left><Dependency path="../otherExcludedIncomeType" /></Left><Right><Enum optionsPath="/otherExcludedIncomeOptions">ChippewasOfMississippiPayment</Enum></Right></Equal>
+              <Equal><Left><Dependency path="../otherExcludedIncomeType" /></Left><Right><Enum optionsPath="/otherExcludedIncomeOptions">PuyallupTribeSettlementPayment</Enum></Right></Equal>
+              <Equal><Left><Dependency path="../otherExcludedIncomeType" /></Left><Right><Enum optionsPath="/otherExcludedIncomeOptions">SeminoleIndianClaimsPayment</Enum></Right></Equal>
+              <Equal><Left><Dependency path="../otherExcludedIncomeType" /></Left><Right><Enum optionsPath="/otherExcludedIncomeOptions">SenecaNationSettlementPayment</Enum></Right></Equal>
+              <Equal><Left><Dependency path="../otherExcludedIncomeType" /></Left><Right><Enum optionsPath="/otherExcludedIncomeOptions">ColvilleReservationGrandCouleeDamSettlementPayment</Enum></Right></Equal>
+              <Equal><Left><Dependency path="../otherExcludedIncomeType" /></Left><Right><Enum optionsPath="/otherExcludedIncomeOptions">MigrantFarmWorkerEmployerRelocationTravelAdvanceReimbursement</Enum></Right></Equal>
+            </Any>
+          </All>
+        </Any>
+      </Derived>
+    </Fact>
+
+    <Fact path="/incomes/*/exemptAmount">
+      <Name>Exempt amount</Name>
+      <Description>The amount of this income that is exempt from consideration for SNAP. Most exempt income is fully exempt; need-based nonprofit cash donations are capped at three hundred dollars ($300) in the aggregate per fiscal quarter, specified federal Indian per-capita payments exclude only the first two thousand dollars ($2,000) or payments of two thousand dollars ($2,000) or less, and income derived from an individual Indian's interest in trust or restricted lands is capped at two thousand dollars ($2,000) per calendar year (10 CCR 2506-1, 4.405 and 4.405.2).</Description>
+      <Derived>
+        <Switch>
+          <Case>
+            <When><Not><Dependency path="../isExempt" /></Not></When>
+            <Then><Dollar>0</Dollar></Then>
+          </Case>
+          <Case>
+            <When>
+              <All>
+                <Dependency path="../isOtherExcludedIncome" />
+                <Equal>
+                  <Left><Dependency path="../otherExcludedIncomeType" /></Left>
+                  <Right><Enum optionsPath="/otherExcludedIncomeOptions">NeedBasedNonprofitCashDonation</Enum></Right>
+                </Equal>
+              </All>
+            </When>
+            <Then>
+              <LesserOf>
+                <Dependency path="../amountAfterExemption" />
+                <GreaterOf>
+                  <Dollar>0</Dollar>
+                  <Subtract>
+                    <Minuend><Dependency path="/needBasedNonprofitCashDonationQuarterlyExclusionLimit" /></Minuend>
+                    <Subtrahends><Dependency path="../needBasedNonprofitCashDonationQuarterlyExclusionUsed" /></Subtrahends>
+                  </Subtract>
+                </GreaterOf>
+              </LesserOf>
+            </Then>
+          </Case>
+          <Case>
+            <When>
+              <All>
+                <Dependency path="../isOtherExcludedIncome" />
+                <Any>
+                  <Equal><Left><Dependency path="../otherExcludedIncomeType" /></Left><Right><Enum optionsPath="/otherExcludedIncomeOptions">IndianJudgmentOrTrustPerCapitaPayment</Enum></Right></Equal>
+                  <Equal><Left><Dependency path="../otherExcludedIncomeType" /></Left><Right><Enum optionsPath="/otherExcludedIncomeOptions">OldAgeAssistanceClaimsSettlementHeirPayment</Enum></Right></Equal>
+                  <Equal><Left><Dependency path="../otherExcludedIncomeType" /></Left><Right><Enum optionsPath="/otherExcludedIncomeOptions">SeminoleIndianClaimsPayment</Enum></Right></Equal>
+                </Any>
+              </All>
+            </When>
+            <Then>
+              <LesserOf>
+                <Dependency path="../amountAfterExemption" />
+                <Dependency path="/federalIndianPaymentExclusionLimit" />
+              </LesserOf>
+            </Then>
+          </Case>
+          <Case>
+            <When>
+              <All>
+                <Dependency path="../isOtherExcludedIncome" />
+                <Equal>
+                  <Left><Dependency path="../otherExcludedIncomeType" /></Left>
+                  <Right><Enum optionsPath="/otherExcludedIncomeOptions">IndianTrustRestrictedLandInterest</Enum></Right>
+                </Equal>
+              </All>
+            </When>
+            <Then>
+              <LesserOf>
+                <Dependency path="../amountAfterExemption" />
+                <GreaterOf>
+                  <Dollar>0</Dollar>
+                  <Subtract>
+                    <Minuend><Dependency path="/federalIndianPaymentExclusionLimit" /></Minuend>
+                    <Subtrahends><Dependency path="../indianTrustRestrictedLandInterestAnnualExclusionUsed" /></Subtrahends>
+                  </Subtract>
+                </GreaterOf>
+              </LesserOf>
+            </Then>
+          </Case>
+          <Case>
+            <When><True /></When>
+            <Then><Dependency path="../amount" /></Then>
+          </Case>
+        </Switch>
+      </Derived>
+    </Fact>
+
+    <Fact path="/incomes/*/amountAfterExemption">
+      <Name>Amount after exemption</Name>
+      <Description>The income amount remaining after subtracting the exempt amount, floored at zero, before monthly conversion.</Description>
+      <Derived>
+        <GreaterOf>
+          <Dollar>0</Dollar>
+          <Subtract>
+            <Minuend><Dependency path="../amount" /></Minuend>
+            <Subtrahends><Dependency path="../exemptAmount" /></Subtrahends>
+          </Subtract>
+        </GreaterOf>
       </Derived>
     </Fact>
 
@@ -318,6 +657,106 @@
       <Writable><Dollar /></Writable>
     </Fact>
 
+    <Fact path="/incomes/*/targetPayDate">
+      <Name>Target pay date</Name>
+      <Description>The date this income was received or is expected to be received, used to test whether terminated-source income was received prior to the date of application and whether new-source income will be received within the applicable tenth-day destitute-income deadline (10 CCR 2506-1, 4.406, A, 1-3).</Description>
+      <Writable><Day /></Writable>
+    </Fact>
+
+    <Fact path="/incomes/*/isFromTerminatedSourceForDestituteIncome">
+      <Name>Is from terminated source for destitute income</Name>
+      <Description>Whether this income source meets the terminated-source definition for destitute-of-income rules: income normally received monthly or more often that is not expected again from the same source during the remainder of the application month or the following month, or income normally received less often than monthly that is not anticipated in the month it would normally be received (10 CCR 2506-1, 4.406, A, 1).</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/incomes/*/isTerminatedSourceForDestituteIncome">
+      <Name>Is terminated source for destitute income</Name>
+      <Description>Whether this income was received before the application date and is from a terminated source for the destitute-of-income rules (10 CCR 2506-1, 4.406, A, 1).</Description>
+      <Derived>
+        <All>
+          <Dependency path="../isFromTerminatedSourceForDestituteIncome" />
+          <LessThan>
+            <Left><Dependency path="../targetPayDate" /></Left>
+            <Right><Dependency path="/applicationFilingDate" /></Right>
+          </LessThan>
+        </All>
+      </Derived>
+    </Fact>
+
+    <Fact path="/incomes/*/isFromNewSourceForDestituteIncome">
+      <Name>Is from new source for destitute income</Name>
+      <Description>Whether this income source meets the new-source definition for destitute-of-income rules: income normally received monthly or more often but not received from that source within thirty (30) calendar days before the application filing date, or income normally received less often than monthly but not received within the last normal interval between payments (10 CCR 2506-1, 4.406, A, 2).</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/incomes/*/isNewSourceNotReceivedWithinDestituteIncomeDeadline">
+      <Name>Is new source not received within destitute income deadline</Name>
+      <Description>Whether this income is from a new source and its target pay date is after the applicable tenth-day destitute-income deadline, meaning it will not be received by the tenth (10th) calendar day after the filing date for initial certification or by the tenth (10th) calendar day after the household's normal issuance cycle for recertification (10 CCR 2506-1, 4.406, A, 2-3).</Description>
+      <Derived>
+        <All>
+          <Dependency path="../isFromNewSourceForDestituteIncome" />
+          <GreaterThan>
+            <Left><Dependency path="../targetPayDate" /></Left>
+            <Right><Dependency path="/destituteIncomeNewSourceDeadlineDate" /></Right>
+          </GreaterThan>
+        </All>
+      </Derived>
+    </Fact>
+
+    <Fact path="/incomes/*/receivedThisMonth">
+      <Name>Received this month</Name>
+      <Description>Whether this income is received or anticipated to be received in the month of application; the destitute-of-income source criteria evaluate the household's only income for the month of application (10 CCR 2506-1, 4.406, A).</Description>
+      <Derived>
+        <All>
+          <Equal>
+            <Left><Dependency path="../targetPayDate/year" /></Left>
+            <Right><Dependency path="/applicationFilingDate/year" /></Right>
+          </Equal>
+          <Equal>
+            <Left><Dependency path="../targetPayDate/month" /></Left>
+            <Right><Dependency path="/applicationFilingDate/month" /></Right>
+          </Equal>
+        </All>
+      </Derived>
+    </Fact>
+
+    <Fact path="/incomes/*/isDisregardedForDestituteIncomeCalculation">
+      <Name>Is disregarded for destitute income calculation</Name>
+      <Description>Whether this income is disregarded when the household is destitute of income: for the month of application, destitute households count only income received between the first of the month and the date of application, and income of more than twenty-five dollars ($25) from a new source is disregarded when it will not be received within the applicable ten-day deadline (10 CCR 2506-1, 4.406.1).</Description>
+      <Derived>
+        <All>
+          <Dependency path="/isDestituteOfIncome" />
+          <Any>
+            <LessThan>
+              <Left><Dependency path="../targetPayDate" /></Left>
+              <Right><Dependency path="/applicationMonthStartDate" /></Right>
+            </LessThan>
+            <GreaterThan>
+              <Left><Dependency path="../targetPayDate" /></Left>
+              <Right><Dependency path="/applicationFilingDate" /></Right>
+            </GreaterThan>
+          </Any>
+        </All>
+      </Derived>
+    </Fact>
+
+    <Fact path="/incomes/*/countsTowardDestituteIncomeRequirement">
+      <Name>Counts toward destitute income requirement</Name>
+      <Description>Whether this income satisfies the destitute-of-income source requirement: it is from a terminated source received before application, or it is more than twenty-five dollars ($25), from a new source, and will not be received within the applicable tenth-day deadline (10 CCR 2506-1, 4.406, A, 1-3). Household membership, exempt-income, and application-month filtering are applied by /destituteIncomeSourceCriteriaMet.</Description>
+      <Derived>
+        <Any>
+          <Dependency path="../isTerminatedSourceForDestituteIncome" />
+          <All>
+            <GreaterThan>
+              <Left><Dependency path="../amount" /></Left>
+              <Right><Dependency path="/destituteIncomeNewSourceThreshold" /></Right>
+            </GreaterThan>
+            <Dependency path="../isNewSourceNotReceivedWithinDestituteIncomeDeadline" />
+          </All>
+        </Any>
+      </Derived>
+    </Fact>
+
     <Fact path="/incomes/*/isSubstantialLotteryOrGamblingWinnings">
       <Name>Is substantial lottery or gambling winnings</Name>
       <Description>Whether this income is a single-game lottery or gambling cash prize that equals or exceeds the substantial lottery or gambling winnings threshold (10 CCR 2506-1, 4.206).</Description>
@@ -349,9 +788,17 @@
 
     <Fact path="/incomes/*/monthlyAmount">
       <Name>Monthly amount</Name>
-      <Description>The monthly amount of this income, computed by converting the stated income amount using the pay-frequency conversion rules or, for income intended to cover another specific period of time, by dividing by the number of intended months (10 CCR 2506-1, 4.402 and 4.402.2).</Description>
+      <Description>The monthly amount of this income after subtracting any exempt amount, computed by converting the remaining income amount using the pay-frequency conversion rules or, for income intended to cover another specific period of time, by dividing by the number of intended months. When the household is destitute of income, disregarded income is zero and counted income is not converted with monthly multipliers (10 CCR 2506-1, 4.402; 4.402.2; 4.406.1).</Description>
       <Derived>
         <Switch>
+          <Case>
+            <When><Dependency path="../isDisregardedForDestituteIncomeCalculation" /></When>
+            <Then><Dollar>0</Dollar></Then>
+          </Case>
+          <Case>
+            <When><Dependency path="/isDestituteOfIncome" /></When>
+            <Then><Dependency path="../amountAfterExemption" /></Then>
+          </Case>
           <Case>
             <When>
               <Equal>
@@ -361,7 +808,7 @@
             </When>
             <Then>
               <Multiply>
-                <Dependency path="../amount" />
+                <Dependency path="../amountAfterExemption" />
                 <Dependency path="/weeklyToMonthlyConversionMultiplier" />
               </Multiply>
             </Then>
@@ -375,7 +822,7 @@
             </When>
             <Then>
               <Multiply>
-                <Dependency path="../amount" />
+                <Dependency path="../amountAfterExemption" />
                 <Dependency path="/biWeeklyToMonthlyConversionMultiplier" />
               </Multiply>
             </Then>
@@ -389,7 +836,7 @@
             </When>
             <Then>
               <Multiply>
-                <Dependency path="../amount" />
+                <Dependency path="../amountAfterExemption" />
                 <Dependency path="/semiMonthlyToMonthlyConversionMultiplier" />
               </Multiply>
             </Then>
@@ -403,7 +850,7 @@
             </When>
             <Then>
               <Multiply>
-                <Dependency path="../amount" />
+                <Dependency path="../amountAfterExemption" />
                 <Dependency path="/everyOtherMonthToMonthlyConversionMultiplier" />
               </Multiply>
             </Then>
@@ -417,7 +864,7 @@
             </When>
             <Then>
               <Multiply>
-                <Dependency path="../amount" />
+                <Dependency path="../amountAfterExemption" />
                 <Dependency path="/quarterlyToMonthlyConversionMultiplier" />
               </Multiply>
             </Then>
@@ -431,7 +878,7 @@
             </When>
             <Then>
               <Multiply>
-                <Dependency path="../amount" />
+                <Dependency path="../amountAfterExemption" />
                 <Dependency path="/twiceAYearToMonthlyConversionMultiplier" />
               </Multiply>
             </Then>
@@ -445,7 +892,7 @@
             </When>
             <Then>
               <Multiply>
-                <Dependency path="../amount" />
+                <Dependency path="../amountAfterExemption" />
                 <Dependency path="/annualToMonthlyConversionMultiplier" />
               </Multiply>
             </Then>
@@ -459,14 +906,14 @@
             </When>
             <Then>
               <Divide>
-                <Dividend><Dependency path="../amount" /></Dividend>
+                <Dividend><Dependency path="../amountAfterExemption" /></Dividend>
                 <Divisors><Dependency path="../intendedMonths" /></Divisors>
               </Divide>
             </Then>
           </Case>
           <Case>
             <When><True /></When>
-            <Then><Dependency path="../amount" /></Then>
+            <Then><Dependency path="../amountAfterExemption" /></Then>
           </Case>
         </Switch>
       </Derived>
@@ -717,7 +1164,7 @@
 
     <Fact path="/members/*/age">
       <Name>Age</Name>
-      <Description>Age of this member in years</Description>
+      <Description>Age of this member in years. If their birthday occurs in the middle of a month, use the age they were when the month began (the last day of the previous month).</Description>
       <Writable><Int /></Writable>
     </Fact>
 
@@ -1310,7 +1757,7 @@
 
     <Fact path="/applicationFilingDate">
       <Name>Application filing date</Name>
-      <Description>The date an application for public assistance is received by the county office (10 CCR 2506-1, 4.000.1)</Description>
+      <Description>The date an application for public assistance is received by the county office, used as the application date for destitute-of-income timing (10 CCR 2506-1, 4.000.1; 4.406)</Description>
       <Writable><Day /></Writable>
     </Fact>
 
@@ -1318,6 +1765,28 @@
       <Name>Application for recertification</Name>
       <Description>Whether this application was submitted prior to the last month of the certification period to determine the household's continued eligibility for the next certification period (10 CCR 2506-1, 4.000.1)</Description>
       <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/normalIssuanceCycleDate">
+      <Name>Normal issuance cycle date</Name>
+      <Description>The household's normal issuance cycle date, used for recertification applications when determining whether new-source income will be received by the tenth (10th) calendar day after that normal issuance cycle for destitute-of-income treatment (10 CCR 2506-1, 4.406, A, 2-3).</Description>
+      <Writable><Day /></Writable>
+    </Fact>
+
+    <Fact path="/applicationMonthStartDate">
+      <Name>Application month start date</Name>
+      <Description>The first day of the month of application, used to determine which income is counted for destitute households because eligibility and benefit levels are calculated using only income received between the first of the month and the date of application (10 CCR 2506-1, 4.406.1).</Description>
+      <Derived>
+        <Add>
+          <LastDayOfMonth>
+            <AddPayrollMonths>
+              <Dependency path="/applicationFilingDate" />
+              <Int>-1</Int>
+            </AddPayrollMonths>
+          </LastDayOfMonth>
+          <Days>1</Days>
+        </Add>
+      </Derived>
     </Fact>
 
     <Fact path="/allotment">
@@ -1544,14 +2013,20 @@
 
     <Fact path="/daysInApplicationMonth">
       <Name>Days in application month</Name>
-      <Description>The exact number of days in the calendar month in which the household applied for benefits (10 CCR 2506-1, 4.207.2).</Description>
-      <Writable><Int /></Writable>
+      <Description>The last day of the calendar month in which the household applied for benefits; use /daysInApplicationMonth/day to obtain the exact number of days in that month (10 CCR 2506-1, 4.207.2).</Description>
+      <Derived>
+        <LastDayOfMonth>
+          <Dependency path="/applicationFilingDate" />
+        </LastDayOfMonth>
+      </Derived>
     </Fact>
 
     <Fact path="/applicationDayOfMonth">
       <Name>Application day of month</Name>
       <Description>The day of the month on which the household submitted its application for benefits (10 CCR 2506-1, 4.207.2).</Description>
-      <Writable><Int /></Writable>
+      <Derived>
+        <Dependency path="/applicationFilingDate/day" />
+      </Derived>
     </Fact>
 
     <Fact path="/members/*/isMigrantFarmWorker">
@@ -1629,7 +2104,7 @@
                     <Subtract>
                       <Minuend>
                         <Add>
-                          <Dependency path="/daysInApplicationMonth" />
+                          <Dependency path="/daysInApplicationMonth/day" />
                           <Int>1</Int>
                         </Add>
                       </Minuend>
@@ -1640,7 +2115,7 @@
                   </Multiply>
                 </Dividend>
                 <Divisors>
-                  <Dependency path="/daysInApplicationMonth" />
+                  <Dependency path="/daysInApplicationMonth/day" />
                 </Divisors>
               </Divide>
             </Then>
@@ -3225,7 +3700,7 @@
 
     <Fact path="/members/*/nonExemptEarnedIncome">
       <Name>Non-exempt earned income</Name>
-      <Description>This member's monthly income entries that are earned income and are not exempt from consideration when determining eligibility for SNAP (10 CCR 2506-1, 4.000.1; 4.403; 4.405).</Description>
+      <Description>This member's monthly earned income after any per-income exempt amount has been subtracted from each income entry before monthly conversion (10 CCR 2506-1, 4.000.1; 4.403; 4.405).</Description>
       <Derived>
         <CollectionSum>
           <Switch>
@@ -3237,7 +3712,6 @@
                     <Right><Dependency path=".." /></Right>
                   </Equal>
                   <Dependency path="/incomes/*/isEarned" />
-                  <Not><Dependency path="/incomes/*/isExempt" /></Not>
                 </All>
               </When>
               <Then><Dependency path="/incomes/*/monthlyAmount" /></Then>
@@ -4593,14 +5067,128 @@
       <Derived><Dollar>150</Dollar></Derived>
     </Fact>
 
-    <!-- TODO: capture the Section 4.406 definition of "destitute of income"
-         in references.json and map it to this fact; then derive this from
-         the underlying inputs rather than leaving it as a writable
-         placeholder (10 CCR 2506-1, 4.000.1). -->
+    <Fact path="/destituteIncomeNewSourceThreshold">
+      <Name>Destitute income new-source threshold</Name>
+      <Description>The amount a new income source must exceed — twenty-five dollars ($25) — to satisfy the destitute-of-income new-source rule (10 CCR 2506-1, 4.406, A, 2-3).</Description>
+      <Derived><Dollar>25</Dollar></Derived>
+    </Fact>
+
+    <Fact path="/destituteIncomeNewSourceDeadlineOffsetDays">
+      <Name>Destitute income new-source deadline offset days</Name>
+      <Description>The ten (10) calendar-day offset added to the application filing date for initial certification, or to the household's normal issuance cycle date for recertification, when calculating the new-source income deadline for destitute-of-income treatment (10 CCR 2506-1, 4.406, A, 2-3).</Description>
+      <Derived><Days>10</Days></Derived>
+    </Fact>
+
+    <Fact path="/destituteIncomeNewSourceDeadlineDate">
+      <Name>Destitute income new-source deadline date</Name>
+      <Description>The tenth (10th) calendar day after the filing date for initial certification, or the tenth (10th) calendar day after the household's normal issuance cycle for recertification; new-source income counts toward destitute income only if it will not be received by this date (10 CCR 2506-1, 4.406, A, 2-3).</Description>
+      <Derived>
+        <Switch>
+          <Case>
+            <When><Dependency path="/isApplicationForRecertification" /></When>
+            <Then>
+              <Add>
+                <Dependency path="/normalIssuanceCycleDate" />
+                <Dependency path="/destituteIncomeNewSourceDeadlineOffsetDays" />
+              </Add>
+            </Then>
+          </Case>
+          <Case>
+            <When><True /></When>
+            <Then>
+              <Add>
+                <Dependency path="/applicationFilingDate" />
+                <Dependency path="/destituteIncomeNewSourceDeadlineOffsetDays" />
+              </Add>
+            </Then>
+          </Case>
+        </Switch>
+      </Derived>
+    </Fact>
+
+    <!-- TODO: Confirm this destitute-of-income implementation against Section
+         4.406, especially that exempt income should be ignored, that
+         /incomes/*/receivedThisMonth correctly represents income for the month
+         of application, and that checking zero non-qualifying household-member
+         incomes matches the "only income" requirement. -->
+    <Fact path="/destituteIncomeSourceCriteriaMet">
+      <Name>Destitute income source criteria met</Name>
+      <Description>Whether, after filtering to non-exempt incomes of people who are part of the SNAP household, at least one income counts toward the destitute-income requirement and zero incomes fail to count toward that requirement. Exempt incomes count neither toward nor against this requirement (10 CCR 2506-1, 4.406).</Description>
+      <Derived>
+        <All>
+          <GreaterThan>
+            <Left>
+              <CollectionSize>
+                <Filter path="/incomes">
+                  <All>
+                    <Dependency path="memberId/isPartOfHousehold" />
+                    <Not><Dependency path="isExempt" /></Not>
+                    <Dependency path="receivedThisMonth" />
+                    <Dependency path="countsTowardDestituteIncomeRequirement" />
+                  </All>
+                </Filter>
+              </CollectionSize>
+            </Left>
+            <Right><Int>0</Int></Right>
+          </GreaterThan>
+          <Equal>
+            <Left>
+              <CollectionSize>
+                <Filter path="/incomes">
+                  <All>
+                    <Dependency path="memberId/isPartOfHousehold" />
+                    <Not><Dependency path="isExempt" /></Not>
+                    <Dependency path="receivedThisMonth" />
+                    <Not><Dependency path="countsTowardDestituteIncomeRequirement" /></Not>
+                  </All>
+                </Filter>
+              </CollectionSize>
+            </Left>
+            <Right><Int>0</Int></Right>
+          </Equal>
+        </All>
+      </Derived>
+    </Fact>
+
+    <Fact path="/benefitMonth">
+      <Name>Benefit month</Name>
+      <Description>The specific calendar month for which the engine is currently calculating benefits and eligibility, used to determine whether the household is in the first month of the certification period for destitute-of-income treatment (10 CCR 2506-1, 4.406).</Description>
+      <Writable><Day /></Writable>
+    </Fact>
+
+    <Fact path="/certificationPeriodStartDate">
+      <Name>Certification period start date</Name>
+      <Description>The official first day of the household's approved initial certification or recertification period, used to determine whether the benefit month is the first month of the certification period for destitute-of-income treatment (10 CCR 2506-1, 4.406).</Description>
+      <Writable><Day /></Writable>
+    </Fact>
+
+    <Fact path="/isFirstMonthOfCertificationPeriod">
+      <Name>Is first month of certification period</Name>
+      <Description>Whether the benefit month is the same calendar month and year as the household's certification period start date; migrant or seasonal farm worker households may be considered destitute of income only for the first month of each certification period (10 CCR 2506-1, 4.406).</Description>
+      <Derived>
+        <All>
+          <Equal>
+            <Left><Dependency path="/benefitMonth/year" /></Left>
+            <Right><Dependency path="/certificationPeriodStartDate/year" /></Right>
+          </Equal>
+          <Equal>
+            <Left><Dependency path="/benefitMonth/month" /></Left>
+            <Right><Dependency path="/certificationPeriodStartDate/month" /></Right>
+          </Equal>
+        </All>
+      </Derived>
+    </Fact>
+
     <Fact path="/isDestituteOfIncome">
       <Name>Is destitute of income</Name>
-      <Description>Whether the household is destitute of income as defined in Section 4.406 (10 CCR 2506-1, 4.000.1). Placeholder.</Description>
-      <Writable><Boolean /></Writable>
+      <Description>Whether a migrant or seasonal farm worker household is destitute of income for the first month of an initial certification or recertification period. The detailed terminated/new income-source test is represented by /destituteIncomeSourceCriteriaMet for now (10 CCR 2506-1, 4.406).</Description>
+      <Derived>
+        <All>
+          <Dependency path="/hasMigrantFarmWorker" />
+          <Dependency path="/isFirstMonthOfCertificationPeriod" />
+          <Dependency path="/destituteIncomeSourceCriteriaMet" />
+        </All>
+      </Derived>
     </Fact>
 
     <!-- TODO: derive from rent/mortgage and utility cost facts once housing

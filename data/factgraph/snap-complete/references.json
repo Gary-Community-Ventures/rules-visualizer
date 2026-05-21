@@ -10202,6 +10202,122 @@
           "h": 0.43697843286008453
         }
       ]
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1779311107875",
+      "documentId": "10-ccr-2506-1",
+      "text": "106",
+      "page": 106,
+      "rects": [
+        {
+          "x": 0.10937686641449333,
+          "y": 0.9446487085211451,
+          "w": 0.7886920167230739,
+          "h": 0.03544451794532566
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1779311111639",
+      "documentId": "10-ccr-2506-1",
+      "text": "CODE OF COLORADO REGULATIONS 10 CCR 2506-1 Supplemental Nutrition Assistance Program (SNAP)",
+      "page": 107,
+      "rects": [
+        {
+          "x": 0.10300617161059128,
+          "y": 0.0352291432703106,
+          "w": 0.7963368504877564,
+          "h": 0.04332107748873129
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__mpel591b-45ub",
+      "documentId": "10-ccr-2506-1",
+      "text": "4.406 HOUSEHOLDS DESTITUTE OF INCOME Migrant or seasonal farm worker households may be considered destitute of income upon initial certification or recertification, but only for the first month of each certification period. A. Migrant or seasonal farm worker households may have little or no income at the time of application even though they receive income at some time during the month of application. Such households will be considered destitute and thereby entitled to expedited application processing if their only income is from a terminated and/or new source under the following circumstances: 1. The household's only income for the month of application was received from a terminated source prior to the date of application. a. Income is considered to be from a terminated source if it is normally received on a monthly or more frequent basis and is not expected to be received again from the same source during either the remainder of the month of application or the month following (i.e., migrant work ended with one grower). b. Income that is normally received less often than monthly is considered to be from a terminated source if it is not anticipated to be received during the month in which it would normally be received (i.e., quarterly income not received in the normal third month).",
+      "page": 106,
+      "rects": [
+        {
+          "x": 0.10801925001191214,
+          "y": 0.5253594506526261,
+          "w": 0.7974460380235384,
+          "h": 0.36053682873396053
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mpel5p1x-teca",
+      "documentId": "10-ccr-2506-1",
+      "text": "2. The household's only income for the month of application is more than twenty-five dollars ($25) from a new source and it will not be received by the tenth (10th) calendar day after the filing date of an application for initial certification, or by the tenth calendar day after the household's normal issuance cycle if the application is for recertification. a. Income is considered to be from a new source if the income of more than twenty- five dollars ($25) is normally received on a monthly or more frequent basis but has not been received from that source within thirty (30) calendar days prior to the filing date of application. b. Income is considered to be from a new source if the income of more than twenty- five dollars ($25) is normally received less often than monthly but was not received within the last normal interval between payments. 3. The household's only income is a combination of that received from a terminated source prior to date of application and income of more than twenty-five dollars ($25) received in the month of application from a new source, which will not be received by the tenth (10th) calendar day after the date of initial application, or by the tenth (10th) calendar day after the household's normal issuance cycle if application is for recertification. B. A migrant farm worker's source of income shall be considered to be the particular grower, and not the crew chief. A migrant who moves from one grower to another shall be considered to have moved from a terminated source to a new source. C. There is no limit on the number of times a household can be considered destitute of income provided that before each subsequent expedited certification, the household either has completed the verification requirements that were postponed at the last expedited certification or the household was certified under normal processing standards since the last expedited certification.",
+      "page": 107,
+      "rects": [
+        {
+          "x": 0.1019202363367799,
+          "y": 0.08383806771111398,
+          "w": 0.7974460380235383,
+          "h": 0.42240854949465195
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mpeztiwq-l2wp",
+      "documentId": "10-ccr-2506-1",
+      "text": "C. Travel advances provided by an employer to reimburse travel costs of relocation of a new employee is exempt income and does not affect the destitute status of a household. If the travel advance is, by written contract, an advance of wages that will be subtracted from wages later earned by the employee, the money is considered as income but shall not affect the determination of whether subsequent payments from the employer are from a new source of income nor whether the household shall be considered destitute.",
+      "page": 107,
+      "rects": [
+        {
+          "x": 0.11007814065317571,
+          "y": 0.7029989626716624,
+          "w": 0.764255660188339,
+          "h": 0.09710631841335204
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1779337980276",
+      "documentId": "10-ccr-2506-1",
+      "text": "107",
+      "page": 107,
+      "rects": [
+        {
+          "x": 0.10691846288023067,
+          "y": 0.9489320147991253,
+          "w": 0.7837246142071446,
+          "h": 0.030808587893875417
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1779337988184",
+      "documentId": "10-ccr-2506-1",
+      "text": "CODE OF COLORADO REGULATIONS 10 CCR 2506-1 Supplemental Nutrition Assistance Program (SNAP)",
+      "page": 108,
+      "rects": [
+        {
+          "x": 0.10008365519819162,
+          "y": 0.035196060901976425,
+          "w": 0.7939768257302031,
+          "h": 0.04577275915661491
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__mpf45gdi-do2d",
+      "documentId": "10-ccr-2506-1",
+      "text": "4.406.1 Income Calculation When Destitute of Income A. Destitute households shall have their eligibility and level of benefits calculated for the month of application by considering only that income received between the first of the month and the date of application. It if is an initial month application, the first application or an application received after the household's last certification period expired, the allotment for the initial month shall be prorated to cover days from date of application to the end of the month. B. If income of more than twenty-five dollars ($25) from a new source has not been received or is not anticipated within ten (10) calendar days from the date of initial application or within ten (10) calendar days after the household's normal issuance cycle if applying for recertification, it shall be disregarded.",
+      "page": 107,
+      "rects": [
+        {
+          "x": 0.10541288927663771,
+          "y": 0.5122154969003269,
+          "w": 0.7817016272806585,
+          "h": 0.18759251388624265
+        }
+      ]
     }
   ],
   "mappings": [
@@ -12534,12 +12650,8 @@
       "sectionId": "10-ccr-2506-1__mpd4f0m4-5bgn"
     },
     {
-      "nodePath": "/incomes/*/startedBeforeSnapParticipation",
+      "nodePath": "/incomes/*/receivedBeforeSnapParticipation",
       "sectionId": "10-ccr-2506-1__mpd4f0m4-5bgn"
-    },
-    {
-      "nodePath": "/incomes/*/startedBeforeSnapParticipation",
-      "sectionId": "10-ccr-2506-1__mpd4pjah-9mv2"
     },
     {
       "nodePath": "/incomeSourceOptions",
@@ -12674,6 +12786,10 @@
       "sectionId": "10-ccr-2506-1__mpd6j7g6-km8k"
     },
     {
+      "nodePath": "/incomes/*/isChildStudentEarningsExcluded",
+      "sectionId": "10-ccr-2506-1__mpd6j7g6-km8k"
+    },
+    {
       "nodePath": "/incomes/*/isExempt",
       "sectionId": "10-ccr-2506-1__mpd6k07g-9s8c"
     },
@@ -12698,8 +12814,324 @@
       "sectionId": "10-ccr-2506-1__mpd7vmn0-pt1p"
     },
     {
+      "nodePath": "/otherExcludedIncomeOptions",
+      "sectionId": "10-ccr-2506-1__mpecchmm-is9d"
+    },
+    {
+      "nodePath": "/otherExcludedIncomeOptions",
+      "sectionId": "10-ccr-2506-1__mpeccukj-n76e"
+    },
+    {
+      "nodePath": "/otherExcludedIncomeOptions",
+      "sectionId": "10-ccr-2506-1__mpecd3ac-6opw"
+    },
+    {
+      "nodePath": "/otherExcludedIncomeOptions",
+      "sectionId": "10-ccr-2506-1__mpecddrm-fg0e"
+    },
+    {
+      "nodePath": "/otherExcludedIncomeOptions",
+      "sectionId": "10-ccr-2506-1__mpecdnxx-culd"
+    },
+    {
+      "nodePath": "/otherExcludedIncomeOptions",
+      "sectionId": "10-ccr-2506-1__mpecdxn3-karf"
+    },
+    {
+      "nodePath": "/otherExcludedIncomeOptions",
+      "sectionId": "10-ccr-2506-1__mpece8cr-ekth"
+    },
+    {
+      "nodePath": "/otherExcludedIncomeOptions",
+      "sectionId": "10-ccr-2506-1__mpecejeb-mxks"
+    },
+    {
+      "nodePath": "/otherExcludedIncomeOptions",
+      "sectionId": "10-ccr-2506-1__mpeztiwq-l2wp"
+    },
+    {
+      "nodePath": "/incomes/*/otherExcludedIncomeType",
+      "sectionId": "10-ccr-2506-1__mpecchmm-is9d"
+    },
+    {
+      "nodePath": "/incomes/*/otherExcludedIncomeType",
+      "sectionId": "10-ccr-2506-1__mpeccukj-n76e"
+    },
+    {
+      "nodePath": "/incomes/*/otherExcludedIncomeType",
+      "sectionId": "10-ccr-2506-1__mpecd3ac-6opw"
+    },
+    {
+      "nodePath": "/incomes/*/otherExcludedIncomeType",
+      "sectionId": "10-ccr-2506-1__mpecddrm-fg0e"
+    },
+    {
+      "nodePath": "/incomes/*/otherExcludedIncomeType",
+      "sectionId": "10-ccr-2506-1__mpecdnxx-culd"
+    },
+    {
+      "nodePath": "/incomes/*/otherExcludedIncomeType",
+      "sectionId": "10-ccr-2506-1__mpecdxn3-karf"
+    },
+    {
+      "nodePath": "/incomes/*/otherExcludedIncomeType",
+      "sectionId": "10-ccr-2506-1__mpece8cr-ekth"
+    },
+    {
+      "nodePath": "/incomes/*/otherExcludedIncomeType",
+      "sectionId": "10-ccr-2506-1__mpecejeb-mxks"
+    },
+    {
+      "nodePath": "/incomes/*/isOtherExcludedIncome",
+      "sectionId": "10-ccr-2506-1__mpecchmm-is9d"
+    },
+    {
+      "nodePath": "/incomes/*/isOtherExcludedIncome",
+      "sectionId": "10-ccr-2506-1__mpeccukj-n76e"
+    },
+    {
+      "nodePath": "/incomes/*/isOtherExcludedIncome",
+      "sectionId": "10-ccr-2506-1__mpecd3ac-6opw"
+    },
+    {
+      "nodePath": "/incomes/*/isOtherExcludedIncome",
+      "sectionId": "10-ccr-2506-1__mpecddrm-fg0e"
+    },
+    {
+      "nodePath": "/incomes/*/isOtherExcludedIncome",
+      "sectionId": "10-ccr-2506-1__mpecdnxx-culd"
+    },
+    {
+      "nodePath": "/incomes/*/isOtherExcludedIncome",
+      "sectionId": "10-ccr-2506-1__mpecdxn3-karf"
+    },
+    {
+      "nodePath": "/incomes/*/isOtherExcludedIncome",
+      "sectionId": "10-ccr-2506-1__mpece8cr-ekth"
+    },
+    {
+      "nodePath": "/incomes/*/isOtherExcludedIncome",
+      "sectionId": "10-ccr-2506-1__mpecejeb-mxks"
+    },
+    {
+      "nodePath": "/incomes/*/isOtherExcludedIncome",
+      "sectionId": "10-ccr-2506-1__mpeztiwq-l2wp"
+    },
+    {
+      "nodePath": "/incomes/*/isExempt",
+      "sectionId": "10-ccr-2506-1__mpecchmm-is9d"
+    },
+    {
+      "nodePath": "/incomes/*/isExempt",
+      "sectionId": "10-ccr-2506-1__mpeccukj-n76e"
+    },
+    {
+      "nodePath": "/incomes/*/isExempt",
+      "sectionId": "10-ccr-2506-1__mpecd3ac-6opw"
+    },
+    {
+      "nodePath": "/incomes/*/isExempt",
+      "sectionId": "10-ccr-2506-1__mpecddrm-fg0e"
+    },
+    {
+      "nodePath": "/incomes/*/isExempt",
+      "sectionId": "10-ccr-2506-1__mpecdnxx-culd"
+    },
+    {
+      "nodePath": "/incomes/*/isExempt",
+      "sectionId": "10-ccr-2506-1__mpecdxn3-karf"
+    },
+    {
+      "nodePath": "/incomes/*/isExempt",
+      "sectionId": "10-ccr-2506-1__mpece8cr-ekth"
+    },
+    {
+      "nodePath": "/incomes/*/isExempt",
+      "sectionId": "10-ccr-2506-1__mpecejeb-mxks"
+    },
+    {
+      "nodePath": "/needBasedNonprofitCashDonationQuarterlyExclusionLimit",
+      "sectionId": "10-ccr-2506-1__mpeccukj-n76e"
+    },
+    {
+      "nodePath": "/incomes/*/needBasedNonprofitCashDonationQuarterlyExclusionUsed",
+      "sectionId": "10-ccr-2506-1__mpeccukj-n76e"
+    },
+    {
+      "nodePath": "/federalIndianPaymentExclusionLimit",
+      "sectionId": "10-ccr-2506-1__mpecdnxx-culd"
+    },
+    {
+      "nodePath": "/incomes/*/indianTrustRestrictedLandInterestAnnualExclusionUsed",
+      "sectionId": "10-ccr-2506-1__mpecdnxx-culd"
+    },
+    {
+      "nodePath": "/federalIndianPaymentExclusionLimit",
+      "sectionId": "10-ccr-2506-1__mpece8cr-ekth"
+    },
+    {
+      "nodePath": "/federalIndianPaymentExclusionLimit",
+      "sectionId": "10-ccr-2506-1__mpecejeb-mxks"
+    },
+    {
+      "nodePath": "/incomes/*/exemptAmount",
+      "sectionId": "10-ccr-2506-1__mpeccukj-n76e"
+    },
+    {
+      "nodePath": "/incomes/*/exemptAmount",
+      "sectionId": "10-ccr-2506-1__mpecdnxx-culd"
+    },
+    {
+      "nodePath": "/incomes/*/exemptAmount",
+      "sectionId": "10-ccr-2506-1__mpece8cr-ekth"
+    },
+    {
+      "nodePath": "/incomes/*/exemptAmount",
+      "sectionId": "10-ccr-2506-1__mpecejeb-mxks"
+    },
+    {
+      "nodePath": "/incomes/*/exemptAmount",
+      "sectionId": "10-ccr-2506-1__movtrqa2-fxaj"
+    },
+    {
+      "nodePath": "/incomes/*/amountAfterExemption",
+      "sectionId": "10-ccr-2506-1__movtrqa2-fxaj"
+    },
+    {
+      "nodePath": "/incomes/*/monthlyAmount",
+      "sectionId": "10-ccr-2506-1__movtrqa2-fxaj"
+    },
+    {
+      "nodePath": "/wioaOnTheJobTrainingExcludedAgeLimit",
+      "sectionId": "10-ccr-2506-1__mpeccukj-n76e"
+    },
+    {
+      "nodePath": "/wioaOnTheJobTrainingAdultCaregiverAgeMinimum",
+      "sectionId": "10-ccr-2506-1__mpeccukj-n76e"
+    },
+    {
+      "nodePath": "/incomes/*/isWioaOnTheJobTrainingExcluded",
+      "sectionId": "10-ccr-2506-1__mpeccukj-n76e"
+    },
+    {
+      "nodePath": "/isPresidentiallyDeclaredDisasterOrEmergency",
+      "sectionId": "10-ccr-2506-1__mpeccukj-n76e"
+    },
+    {
+      "nodePath": "/incomes/*/isOtherExcludedIncome",
+      "sectionId": "10-ccr-2506-1__mpeccukj-n76e"
+    },
+    {
+      "nodePath": "/incomes/*/isOtherExcludedIncome",
+      "sectionId": "10-ccr-2506-1__mpecd3ac-6opw"
+    },
+    {
+      "nodePath": "/incomes/*/receivedBeforeSnapParticipation",
+      "sectionId": "10-ccr-2506-1__mpecd3ac-6opw"
+    },
+    {
+      "nodePath": "/incomes/*/isExempt",
+      "sectionId": "10-ccr-2506-1__mpeccukj-n76e"
+    },
+    {
       "nodePath": "/members/*/nonExemptEarnedIncome",
       "sectionId": "10-ccr-2506-1__mpd51631-96bk"
+    },
+    {
+      "nodePath": "/incomes/*/isTerminatedSourceForDestituteIncome",
+      "sectionId": "10-ccr-2506-1__mpel591b-45ub"
+    },
+    {
+      "nodePath": "/incomes/*/isNewSourceNotReceivedWithinDestituteIncomeDeadline",
+      "sectionId": "10-ccr-2506-1__mpel5p1x-teca"
+    },
+    {
+      "nodePath": "/incomes/*/targetPayDate",
+      "sectionId": "10-ccr-2506-1__mpel591b-45ub"
+    },
+    {
+      "nodePath": "/incomes/*/targetPayDate",
+      "sectionId": "10-ccr-2506-1__mpel5p1x-teca"
+    },
+    {
+      "nodePath": "/incomes/*/isFromTerminatedSourceForDestituteIncome",
+      "sectionId": "10-ccr-2506-1__mpel591b-45ub"
+    },
+    {
+      "nodePath": "/incomes/*/isFromNewSourceForDestituteIncome",
+      "sectionId": "10-ccr-2506-1__mpel5p1x-teca"
+    },
+    {
+      "nodePath": "/incomes/*/receivedThisMonth",
+      "sectionId": "10-ccr-2506-1__mpel591b-45ub"
+    },
+    {
+      "nodePath": "/incomes/*/isDisregardedForDestituteIncomeCalculation",
+      "sectionId": "10-ccr-2506-1__mpf45gdi-do2d"
+    },
+    {
+      "nodePath": "/incomes/*/monthlyAmount",
+      "sectionId": "10-ccr-2506-1__mpf45gdi-do2d"
+    },
+    {
+      "nodePath": "/incomes/*/countsTowardDestituteIncomeRequirement",
+      "sectionId": "10-ccr-2506-1__mpel591b-45ub"
+    },
+    {
+      "nodePath": "/incomes/*/countsTowardDestituteIncomeRequirement",
+      "sectionId": "10-ccr-2506-1__mpel5p1x-teca"
+    },
+    {
+      "nodePath": "/destituteIncomeNewSourceThreshold",
+      "sectionId": "10-ccr-2506-1__mpel5p1x-teca"
+    },
+    {
+      "nodePath": "/destituteIncomeNewSourceDeadlineOffsetDays",
+      "sectionId": "10-ccr-2506-1__mpel5p1x-teca"
+    },
+    {
+      "nodePath": "/destituteIncomeNewSourceDeadlineDate",
+      "sectionId": "10-ccr-2506-1__mpel5p1x-teca"
+    },
+    {
+      "nodePath": "/applicationFilingDate",
+      "sectionId": "10-ccr-2506-1__mpel591b-45ub"
+    },
+    {
+      "nodePath": "/normalIssuanceCycleDate",
+      "sectionId": "10-ccr-2506-1__mpel5p1x-teca"
+    },
+    {
+      "nodePath": "/applicationMonthStartDate",
+      "sectionId": "10-ccr-2506-1__mpf45gdi-do2d"
+    },
+    {
+      "nodePath": "/benefitMonth",
+      "sectionId": "10-ccr-2506-1__mpel591b-45ub"
+    },
+    {
+      "nodePath": "/certificationPeriodStartDate",
+      "sectionId": "10-ccr-2506-1__mpel591b-45ub"
+    },
+    {
+      "nodePath": "/isFirstMonthOfCertificationPeriod",
+      "sectionId": "10-ccr-2506-1__mpel591b-45ub"
+    },
+    {
+      "nodePath": "/destituteIncomeSourceCriteriaMet",
+      "sectionId": "10-ccr-2506-1__mpel591b-45ub"
+    },
+    {
+      "nodePath": "/destituteIncomeSourceCriteriaMet",
+      "sectionId": "10-ccr-2506-1__mpel5p1x-teca"
+    },
+    {
+      "nodePath": "/isDestituteOfIncome",
+      "sectionId": "10-ccr-2506-1__mpel591b-45ub"
+    },
+    {
+      "nodePath": "/isDestituteOfIncome",
+      "sectionId": "10-ccr-2506-1__mpel5p1x-teca"
     }
   ]
 }

@@ -1,0 +1,342 @@
+[
+  {
+    "id": "38fe2335-ab72-4e6f-84fa-73a4e4ccc88b",
+    "name": "Destitute: Migrant with terminated income in first month → true",
+    "description": "Migrant farm worker household in first month of certification, only income is from a terminated source received before application date. Should be destitute.",
+    "inputs": {
+      "/applicationFilingDate": "2025-01-15",
+      "/certificationPeriodStartDate": "2025-01-01",
+      "/benefitMonth": "2025-01-01",
+      "/isApplicationForRecertification": false
+    },
+    "entities": {
+      "/members": [
+        {
+          "/members/*/age": 35,
+          "/members/*/isMigrantFarmWorker": true,
+          "/members/*/isHeadOfHousehold": true,
+          "/members/*/isCitizen": true,
+          "/members/*/preparesFoodWithHousehold": true,
+          "/members/*/isSeparateAndApart": false
+        }
+      ],
+      "/incomes": [
+        {
+          "/incomes/*/memberId": 0,
+          "/incomes/*/type": "WagesAndSalaries",
+          "/incomes/*/amount": 500,
+          "/incomes/*/frequency": "Monthly",
+          "/incomes/*/targetPayDate": "2025-01-10",
+          "/incomes/*/isFromTerminatedSourceForDestituteIncome": true,
+          "/incomes/*/isFromNewSourceForDestituteIncome": false,
+          "/incomes/*/receivedBeforeSnapParticipation": false
+        }
+      ]
+    },
+    "expect": {
+      "/isDestituteOfIncome": true,
+      "/hasMigrantFarmWorker": true,
+      "/isFirstMonthOfCertificationPeriod": true
+    },
+    "overrides": {
+      "/destituteIncomeSourceCriteriaMet": true
+    }
+  },
+  {
+    "id": "0f9d23a7-e382-4c82-9587-703709db9b4c",
+    "name": "Destitute: Not first month of certification → false",
+    "description": "Migrant farm worker with terminated income, but benefit month is NOT the first month of the certification period. Should not be destitute.",
+    "inputs": {
+      "/applicationFilingDate": "2025-01-15",
+      "/certificationPeriodStartDate": "2025-01-01",
+      "/benefitMonth": "2025-02-01",
+      "/isApplicationForRecertification": false
+    },
+    "entities": {
+      "/members": [
+        {
+          "/members/*/age": 35,
+          "/members/*/isMigrantFarmWorker": true,
+          "/members/*/isHeadOfHousehold": true,
+          "/members/*/isCitizen": true,
+          "/members/*/preparesFoodWithHousehold": true,
+          "/members/*/isSeparateAndApart": false
+        }
+      ],
+      "/incomes": [
+        {
+          "/incomes/*/memberId": 0,
+          "/incomes/*/type": "WagesAndSalaries",
+          "/incomes/*/amount": 500,
+          "/incomes/*/frequency": "Monthly",
+          "/incomes/*/targetPayDate": "2025-01-10",
+          "/incomes/*/isFromTerminatedSourceForDestituteIncome": true,
+          "/incomes/*/isFromNewSourceForDestituteIncome": false,
+          "/incomes/*/receivedBeforeSnapParticipation": false
+        }
+      ]
+    },
+    "expect": {
+      "/isDestituteOfIncome": false,
+      "/isFirstMonthOfCertificationPeriod": false
+    }
+  },
+  {
+    "id": "b08edf9d-3dd8-4767-8153-9d8f00331fc9",
+    "name": "Destitute: Non-migrant household → false",
+    "description": "Household in first month of certification with terminated income, but no migrant farm worker. Should not be destitute.",
+    "inputs": {
+      "/applicationFilingDate": "2025-01-15",
+      "/certificationPeriodStartDate": "2025-01-01",
+      "/benefitMonth": "2025-01-01",
+      "/isApplicationForRecertification": false
+    },
+    "entities": {
+      "/members": [
+        {
+          "/members/*/age": 35,
+          "/members/*/isMigrantFarmWorker": false,
+          "/members/*/isHeadOfHousehold": true,
+          "/members/*/isCitizen": true,
+          "/members/*/preparesFoodWithHousehold": true,
+          "/members/*/isSeparateAndApart": false
+        }
+      ],
+      "/incomes": [
+        {
+          "/incomes/*/memberId": 0,
+          "/incomes/*/type": "WagesAndSalaries",
+          "/incomes/*/amount": 500,
+          "/incomes/*/frequency": "Monthly",
+          "/incomes/*/targetPayDate": "2025-01-10",
+          "/incomes/*/isFromTerminatedSourceForDestituteIncome": true,
+          "/incomes/*/isFromNewSourceForDestituteIncome": false,
+          "/incomes/*/receivedBeforeSnapParticipation": false
+        }
+      ]
+    },
+    "expect": {
+      "/isDestituteOfIncome": false,
+      "/hasMigrantFarmWorker": false
+    }
+  },
+  {
+    "id": "0ff7cd36-6985-4120-ba2d-08eab8a2bbd5",
+    "name": "Destitute: New source income >$25 not received by deadline → true",
+    "description": "Migrant farm worker in first month, only income is from a new source, amount >$25, and pay date is after the 10-day deadline. Should be destitute.",
+    "inputs": {
+      "/applicationFilingDate": "2025-01-15",
+      "/certificationPeriodStartDate": "2025-01-01",
+      "/benefitMonth": "2025-01-01",
+      "/isApplicationForRecertification": false
+    },
+    "entities": {
+      "/members": [
+        {
+          "/members/*/age": 35,
+          "/members/*/isMigrantFarmWorker": true,
+          "/members/*/isHeadOfHousehold": true,
+          "/members/*/isCitizen": true,
+          "/members/*/preparesFoodWithHousehold": true,
+          "/members/*/isSeparateAndApart": false
+        }
+      ],
+      "/incomes": [
+        {
+          "/incomes/*/memberId": 0,
+          "/incomes/*/type": "WagesAndSalaries",
+          "/incomes/*/amount": 100,
+          "/incomes/*/frequency": "Monthly",
+          "/incomes/*/targetPayDate": "2025-01-28",
+          "/incomes/*/isFromTerminatedSourceForDestituteIncome": false,
+          "/incomes/*/isFromNewSourceForDestituteIncome": true,
+          "/incomes/*/receivedBeforeSnapParticipation": false
+        }
+      ]
+    },
+    "expect": {
+      "/isDestituteOfIncome": true
+    },
+    "overrides": {
+      "/destituteIncomeSourceCriteriaMet": true
+    }
+  },
+  {
+    "id": "c630a5d3-7a3b-4cfb-b233-65e3e64188dc",
+    "name": "Destitute: New source income ≤$25 → false",
+    "description": "Migrant farm worker in first month, only income from new source but amount is $25 (not more than $25). Should NOT be destitute because new source must exceed $25.",
+    "inputs": {
+      "/applicationFilingDate": "2025-01-15",
+      "/certificationPeriodStartDate": "2025-01-01",
+      "/benefitMonth": "2025-01-01",
+      "/isApplicationForRecertification": false
+    },
+    "entities": {
+      "/members": [
+        {
+          "/members/*/age": 35,
+          "/members/*/isMigrantFarmWorker": true,
+          "/members/*/isHeadOfHousehold": true,
+          "/members/*/isCitizen": true,
+          "/members/*/preparesFoodWithHousehold": true,
+          "/members/*/isSeparateAndApart": false
+        }
+      ],
+      "/incomes": [
+        {
+          "/incomes/*/memberId": 0,
+          "/incomes/*/type": "WagesAndSalaries",
+          "/incomes/*/amount": 25,
+          "/incomes/*/frequency": "Monthly",
+          "/incomes/*/targetPayDate": "2025-01-28",
+          "/incomes/*/isFromTerminatedSourceForDestituteIncome": false,
+          "/incomes/*/isFromNewSourceForDestituteIncome": true,
+          "/incomes/*/receivedBeforeSnapParticipation": false
+        }
+      ]
+    },
+    "expect": {
+      "/isDestituteOfIncome": false,
+      "/destituteIncomeSourceCriteriaMet": false
+    }
+  },
+  {
+    "id": "e6f45b28-fc7b-4d1a-9b1b-0699f208b867",
+    "name": "Destitute: New source received within deadline → false",
+    "description": "Migrant farm worker in first month, new source income >$25 but pay date is BEFORE the 10-day deadline (Jan 25). Should NOT be destitute.",
+    "inputs": {
+      "/applicationFilingDate": "2025-01-15",
+      "/certificationPeriodStartDate": "2025-01-01",
+      "/benefitMonth": "2025-01-01",
+      "/isApplicationForRecertification": false
+    },
+    "entities": {
+      "/members": [
+        {
+          "/members/*/age": 35,
+          "/members/*/isMigrantFarmWorker": true,
+          "/members/*/isHeadOfHousehold": true,
+          "/members/*/isCitizen": true,
+          "/members/*/preparesFoodWithHousehold": true,
+          "/members/*/isSeparateAndApart": false
+        }
+      ],
+      "/incomes": [
+        {
+          "/incomes/*/memberId": 0,
+          "/incomes/*/type": "WagesAndSalaries",
+          "/incomes/*/amount": 100,
+          "/incomes/*/frequency": "Monthly",
+          "/incomes/*/targetPayDate": "2025-01-24",
+          "/incomes/*/isFromTerminatedSourceForDestituteIncome": false,
+          "/incomes/*/isFromNewSourceForDestituteIncome": true,
+          "/incomes/*/receivedBeforeSnapParticipation": false
+        }
+      ]
+    },
+    "expect": {
+      "/isDestituteOfIncome": false,
+      "/destituteIncomeSourceCriteriaMet": false
+    }
+  },
+  {
+    "id": "ff3e04fd-8d16-4a19-8bf0-05581c061479",
+    "name": "Destitute: Mixed terminated + new source income → true",
+    "description": "Migrant farm worker in first month with a combination: one terminated source received before application AND one new source >$25 not received by deadline. Should be destitute per 4.406.A.3.",
+    "inputs": {
+      "/applicationFilingDate": "2025-01-15",
+      "/certificationPeriodStartDate": "2025-01-01",
+      "/benefitMonth": "2025-01-01",
+      "/isApplicationForRecertification": false
+    },
+    "entities": {
+      "/members": [
+        {
+          "/members/*/age": 35,
+          "/members/*/isMigrantFarmWorker": true,
+          "/members/*/isHeadOfHousehold": true,
+          "/members/*/isCitizen": true,
+          "/members/*/preparesFoodWithHousehold": true,
+          "/members/*/isSeparateAndApart": false
+        }
+      ],
+      "/incomes": [
+        {
+          "/incomes/*/memberId": 0,
+          "/incomes/*/type": "WagesAndSalaries",
+          "/incomes/*/amount": 300,
+          "/incomes/*/frequency": "Monthly",
+          "/incomes/*/targetPayDate": "2025-01-10",
+          "/incomes/*/isFromTerminatedSourceForDestituteIncome": true,
+          "/incomes/*/isFromNewSourceForDestituteIncome": false,
+          "/incomes/*/receivedBeforeSnapParticipation": false
+        },
+        {
+          "/incomes/*/memberId": 0,
+          "/incomes/*/type": "WagesAndSalaries",
+          "/incomes/*/amount": 200,
+          "/incomes/*/frequency": "Monthly",
+          "/incomes/*/targetPayDate": "2025-01-28",
+          "/incomes/*/isFromTerminatedSourceForDestituteIncome": false,
+          "/incomes/*/isFromNewSourceForDestituteIncome": true,
+          "/incomes/*/receivedBeforeSnapParticipation": false
+        }
+      ]
+    },
+    "expect": {
+      "/isDestituteOfIncome": true
+    },
+    "overrides": {
+      "/destituteIncomeSourceCriteriaMet": true
+    }
+  },
+  {
+    "id": "cd3e8d1b-8108-485d-95a5-1921b5677fde",
+    "name": "Destitute: Has non-qualifying income alongside terminated → false",
+    "description": "Migrant in first month with one terminated income AND one regular (neither terminated nor new source) income received this month. The regular income fails the destitute source test, so should NOT be destitute.",
+    "inputs": {
+      "/applicationFilingDate": "2025-01-15",
+      "/certificationPeriodStartDate": "2025-01-01",
+      "/benefitMonth": "2025-01-01",
+      "/isApplicationForRecertification": false
+    },
+    "entities": {
+      "/members": [
+        {
+          "/members/*/age": 35,
+          "/members/*/isMigrantFarmWorker": true,
+          "/members/*/isHeadOfHousehold": true,
+          "/members/*/isCitizen": true,
+          "/members/*/preparesFoodWithHousehold": true,
+          "/members/*/isSeparateAndApart": false
+        }
+      ],
+      "/incomes": [
+        {
+          "/incomes/*/memberId": 0,
+          "/incomes/*/type": "WagesAndSalaries",
+          "/incomes/*/amount": 300,
+          "/incomes/*/frequency": "Monthly",
+          "/incomes/*/targetPayDate": "2025-01-10",
+          "/incomes/*/isFromTerminatedSourceForDestituteIncome": true,
+          "/incomes/*/isFromNewSourceForDestituteIncome": false,
+          "/incomes/*/receivedBeforeSnapParticipation": false
+        },
+        {
+          "/incomes/*/memberId": 0,
+          "/incomes/*/type": "WagesAndSalaries",
+          "/incomes/*/amount": 400,
+          "/incomes/*/frequency": "Monthly",
+          "/incomes/*/targetPayDate": "2025-01-20",
+          "/incomes/*/isFromTerminatedSourceForDestituteIncome": false,
+          "/incomes/*/isFromNewSourceForDestituteIncome": false,
+          "/incomes/*/receivedBeforeSnapParticipation": false
+        }
+      ]
+    },
+    "expect": {
+      "/isDestituteOfIncome": false,
+      "/destituteIncomeSourceCriteriaMet": false
+    }
+  }
+]

@@ -117,6 +117,12 @@ Example for a /members collection with two members:
     { "/members/*/age": 30, "/members/*/isElderly": false }
   ]}
 
+CollectionItem fields link one collection row to a row in another collection.
+Use the target row sentinel as the value: #0 means the first row in the referenced
+collection, #1 means the second row, etc. Example: if /incomes/*/memberId links
+to /members, then { "/incomes/*/memberId": "#0" } links that income row to
+the first /members row.
+
 Scalar (non-collection) inputs go in the "inputs" parameter as usual. Never use numeric indexes like members/0/age — always use the /* wildcard path as the key within entity rows.
 
 When the user asks for a profile/scenario they want to see in the graph (e.g. "show me a profile where the user is eligible"), pass applyToUi=true on execute_graph — the resolved inputs will be written into their UI (replacing existing inputs) so the values appear directly on the nodes. Omit applyToUi for sandbox/what-if computations the user didn't ask to see.`,
