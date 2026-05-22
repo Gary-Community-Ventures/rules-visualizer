@@ -1,4 +1,5 @@
 import { Router } from 'express'
+import { z } from 'zod'
 import {
   getRuleset,
   getRawFacts,
@@ -9,33 +10,46 @@ import type { Model, ModelNode } from 'rules-visualizer-shared-types'
 const router = Router()
 
 // ---------------------------------------------------------------------------
-// Request / response types
+// Request schema (single source of truth — request type is derived from this)
 // ---------------------------------------------------------------------------
 
 /**
  * One row of a per-collection entity (e.g. a household member). The optional
- * `id` is the caller's stable handle for this row — surfaced back in the
+ * `id` is the caller's stable handle for this row, surfaced back in the
  * response on any per-member fact so the UI can correlate values to the
- * right member without relying on positional order.
+ * right member without relying on positional order. All other fields are
+ * arbitrary writable-path → value pairs.
  */
-type EntityRow = Record<string, unknown> & { id?: string }
+const EntityRowSchema = z
+  .object({ id: z.string().min(1).optional() })
+  .catchall(z.unknown())
 
-type QueryRequest = {
+const QueryRequestSchema = z.object({
   /** Fact paths to evaluate. Always plural; pass `["/eligible"]` for a
    *  single target. The response keys `values` (and missingInputs etc.)
    *  by these paths. */
-  targets: string[]
+  targets: z.array(z.string().min(1)).min(1),
+
   /** Scalar writable inputs, keyed by fact path. */
-  inputs?: Record<string, unknown>
+  inputs: z.record(z.string(), z.unknown()).optional(),
+
   /** Per-collection rows. Each row may include a caller-provided `id`. */
-  entities?: Record<string, EntityRow[]>
+  entities: z.record(z.string(), z.array(EntityRowSchema)).optional(),
+
   /** Opt-in response sections. Today: `"supportingFacts"`. Future:
    *  `"trace"`, `"counterfactuals"`. Unknown values are ignored. */
-  include?: string[]
+  include: z.array(z.string()).optional(),
+
   /** Opaque correlation context echoed back unchanged in the response.
    *  The server does not inspect, log, or transform this field. */
-  metadata?: unknown
-}
+  metadata: z.unknown().optional(),
+})
+
+type QueryRequest = z.infer<typeof QueryRequestSchema>
+
+// ---------------------------------------------------------------------------
+// Response types
+// ---------------------------------------------------------------------------
 
 /** A value for a per-member fact, one entry per row in the source collection.
  *  Mirrors the input shape (`entities[...][n].id`). */
@@ -125,22 +139,22 @@ router.post('/:rulesetId/query', (req, res) => {
     return
   }
 
-  const body = (req.body ?? {}) as Partial<QueryRequest>
-  const targets = body.targets
-  if (
-    !Array.isArray(targets) ||
-    targets.length === 0 ||
-    !targets.every((t) => typeof t === 'string' && t.length > 0)
-  ) {
+  const parsed = QueryRequestSchema.safeParse(req.body)
+  if (!parsed.success) {
     res.status(400).json({
       type: 'https://tools.ietf.org/html/rfc9457',
-      title: 'Invalid targets',
+      title: 'Invalid request body',
       status: 400,
-      detail:
-        'Request body must include a non-empty "targets" array of fact paths (e.g. ["/eligible"]).',
+      detail: formatZodIssues(parsed.error.issues),
+      errors: parsed.error.issues.map((i) => ({
+        path: i.path.join('.'),
+        message: i.message,
+      })),
     })
     return
   }
+  const body: QueryRequest = parsed.data
+  const targets = body.targets
 
   // Every requested target must exist in the ruleset. Surface the bad
   // ones in detail so the caller can fix the typo without a second
@@ -281,6 +295,21 @@ router.post('/:rulesetId/query', (req, res) => {
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
+
+/**
+ * Render a Zod ZodIssue[] as a single human-readable RFC 9457 `detail`
+ * string. The structured form is also surfaced via the `errors` field
+ * on the error response so machine consumers can branch on field paths.
+ */
+function formatZodIssues(issues: z.ZodIssue[]): string {
+  if (issues.length === 0) return 'Invalid request body.'
+  return issues
+    .map((i) => {
+      const path = i.path.length > 0 ? i.path.join('.') : '(root)'
+      return `${path}: ${i.message}`
+    })
+    .join('; ')
+}
 
 function findNodeByPath(model: Model, path: string): ModelNode | undefined {
   for (const node of Object.values(model.nodes)) {

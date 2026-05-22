@@ -16,7 +16,8 @@
     "cors": "^2.8.5",
     "express": "^5.1.0",
     "rules-visualizer-factgraph-core": "*",
-    "rules-visualizer-shared-types": "*"
+    "rules-visualizer-shared-types": "*",
+    "zod": "^3.25.0"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",

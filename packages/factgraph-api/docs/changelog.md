@@ -38,6 +38,11 @@ value}` objects so callers can correlate output to specific rows
 - Optional bearer-token auth (env-gated).
 - Permissive CORS by default; allowlist via `CORS_ALLOWED_ORIGINS`.
 - All error responses follow RFC 9457 Problem Details.
+- Request validation via Zod. Invalid request bodies return 400 with
+  both a human-readable `detail` string and a machine-readable
+  `errors[]` array identifying each failing field by path. The TypeScript
+  request type is derived from the Zod schema so the runtime check and
+  compile-time type are guaranteed to stay in sync.
 
 ### Known limitations
 
