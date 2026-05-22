@@ -28,8 +28,18 @@ understand what they're calling. That means:
 
 ## Tests
 
-There aren't any in this package yet. When you add a feature, add a
-matching test that hits the endpoint via `supertest` against `buildApp()`
-from `src/server.ts`. The visualizer's smoke test (in `factgraph-server`)
-covers core execution; this package should cover route shapes, auth, and
-error responses.
+Live in `tests/`. Run with `npm test` from this package (or
+`npm test --workspace=rules-visualizer-factgraph-api` from the repo root).
+
+The suite uses Node's built-in `node:test` runner plus `supertest`
+against `buildApp()` from `src/server.ts`. No port binding — supertest
+drives the app directly. Shared setup lives in `tests/helpers.ts`,
+including a canonical SNAP fixture (`APPLICANT_ROW`, `ZEROED_SCALARS`)
+so each test isn't 50 lines of boilerplate, and a `withEnv` utility for
+auth tests that need to toggle `API_BEARER_TOKEN` without leaking
+between tests.
+
+When adding a feature, add a matching test that exercises the wire
+shape (response body, status code, headers). The visualizer's smoke
+test (in `factgraph-server`) covers core execution; this package
+covers route shapes, validation, auth, and error responses.
