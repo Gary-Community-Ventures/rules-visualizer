@@ -219,6 +219,18 @@ export function parseFactGraphModules(
       for (const absolutePath of absolutePaths) {
         let depId = pathToId[absolutePath]
 
+        // Day facts expose virtual child paths like /applicationDate/month.
+        // Those children are not standalone facts, but the graph still
+        // depends on the owning Day fact.
+        if (!depId) {
+          const extractedDepId = resolveExtractedDayPath(
+            absolutePath,
+            pathToId,
+            nodes
+          )
+          if (extractedDepId) depId = extractedDepId
+        }
+
         // Fuzzy match: /primaryFiler/X or /secondaryFiler/X -> /filers/*/X
         if (!depId) {
           const segments = absolutePath.split('/').filter(Boolean)
@@ -639,6 +651,15 @@ function inferType(node: unknown): string | undefined {
     if (key === 'Rational') return 'Rational'
     if (key === 'True' || key === 'False') return 'Boolean'
     if (key === 'Enum') return 'Enum'
+    if (key === 'Days') return 'Days'
+    if (key === 'Today') return 'Day'
+
+    if (key === 'Dependency') {
+      const dep = obj[key] as Record<string, unknown> | undefined
+      const path = typeof dep?.['@_path'] === 'string' ? dep['@_path'] : ''
+      const segment = path.split('/').filter(Boolean).at(-1)
+      if (segment && DAY_EXTRACTORS.has(segment)) return 'Int'
+    }
 
     // Boolean operators
     if (key === 'All' || key === 'Any' || key === 'Not') return 'Boolean'
@@ -652,6 +673,9 @@ function inferType(node: unknown): string | undefined {
 
     // Round to int → Int
     if (key === 'RoundToInt') return 'Int'
+
+    // Date operators
+    if (key === 'LastDayOfMonth' || key === 'AddPayrollMonths') return 'Day'
 
     // Truncate cents → Dollar
     if (key === 'TruncateCents') return 'Dollar'
@@ -798,6 +822,27 @@ function resolvePaths(
     }
   }
   return edges
+}
+
+const DAY_EXTRACTORS = new Set(['year', 'month', 'day', 'ordinal'])
+
+function resolveExtractedDayPath(
+  path: string,
+  pathToId: Record<string, string>,
+  nodes: ModelNodes
+): string | undefined {
+  const segments = path.split('/').filter(Boolean)
+  const extractor = segments.at(-1)
+  if (!extractor || !DAY_EXTRACTORS.has(extractor)) return undefined
+
+  const basePath = '/' + segments.slice(0, -1).join('/')
+  const baseId = pathToId[basePath]
+  if (!baseId) return undefined
+
+  const content = nodes[baseId]?.content
+  if (content?.format !== 'factGraph') return undefined
+  const typeName = content.type === 'writable' ? content.typeName : content.dataType
+  return typeName === 'Day' ? baseId : undefined
 }
 
 /**

@@ -1,8 +1,11 @@
 import { useState, useCallback } from 'react'
 import type { NodeContent } from '@/lib/model'
 import { useMainContext } from '@/context'
-import { getNodePath } from '@/context/model-context'
 import { useNodeNavigation } from '@/lib/use-node-navigation'
+import {
+  findFactGraphNodeIdByPath,
+  resolveFactGraphPath,
+} from '@/lib/factgraph-paths'
 import { LogicHighlighter } from './logic-highlighter'
 
 type Props = {
@@ -15,41 +18,9 @@ export function FactGraphDerivedViewer({ content }: Props) {
 
   const navigateToPath = useCallback(
     (rawPath: string) => {
-      // Resolve relative paths against the current node's path.
-      //  - `../field`  → sibling in the same collection (pop field name, strip ../).
-      //  - `^/field`   → outside the surrounding Filter scope (= parent of host),
-      //                  same target as `../field` for a single Filter level.
-      //  - `^^/field`  → one more level out, etc.
-      let path = rawPath
-      if (path.startsWith('..') && content.path) {
-        const segments = content.path.split('/').filter(Boolean)
-        segments.pop() // remove current node's field name
-        let remaining = rawPath
-        while (remaining.startsWith('../')) {
-          remaining = remaining.slice(3)
-        }
-        path = '/' + segments.join('/') + '/' + remaining
-      } else if (/^\^+(\/|$)/.test(path) && content.path) {
-        const slashIdx = path.indexOf('/')
-        const head = slashIdx === -1 ? path : path.slice(0, slashIdx)
-        const tail = slashIdx === -1 ? '' : path.slice(slashIdx + 1)
-        const segments = content.path.split('/').filter(Boolean)
-        for (let i = 0; i < head.length; i++) segments.pop()
-        const base = segments.length === 0 ? '/' : '/' + segments.join('/')
-        path =
-          tail.length === 0
-            ? base
-            : base === '/'
-              ? '/' + tail
-              : base + '/' + tail
-      }
-
-      for (const [nodeId, node] of Object.entries(model.nodes)) {
-        if (getNodePath(node.content) === path) {
-          setOpenNode(nodeId)
-          return
-        }
-      }
+      const path = resolveFactGraphPath(rawPath, content.path)
+      const nodeId = findFactGraphNodeIdByPath(model.nodes, path)
+      if (nodeId) setOpenNode(nodeId)
     },
     [model.nodes, setOpenNode, content.path]
   )

@@ -49,6 +49,113 @@ function normalizeValue(value: unknown): unknown {
   return value
 }
 
+function getFactGraphWritableInfo(
+  model: Model,
+  path: string
+): { typeName?: string; collectionItemPath?: string } | undefined {
+  for (const node of Object.values(model.nodes)) {
+    const c = node.content
+    if (c.type === 'writable' && c.format === 'factGraph' && c.path === path) {
+      return {
+        typeName: c.typeName,
+        collectionItemPath: c.collectionItemPath,
+      }
+    }
+  }
+  return undefined
+}
+
+function normalizeValueForPath(
+  model: Model,
+  path: string,
+  value: unknown
+): unknown {
+  const info = getFactGraphWritableInfo(model, path)
+  if (info?.typeName === 'CollectionItem') {
+    // CollectionItem fields link one row to another collection row. The UI and
+    // executor use #0/#1/... sentinels; accept common AI variants too.
+    if (typeof value === 'string') {
+      const trimmed = value.trim()
+      if (/^#\d+$/.test(trimmed)) return trimmed
+      if (/^\d+$/.test(trimmed)) return `#${trimmed}`
+      return trimmed
+    }
+    if (typeof value === 'number' && Number.isInteger(value) && value >= 0) {
+      return `#${value}`
+    }
+  }
+  return normalizeValue(value)
+}
+
+function resolveCollectionItemValue(
+  model: Model,
+  path: string,
+  value: unknown,
+  entities: Record<string, Record<string, unknown>[]>
+): unknown {
+  const info = getFactGraphWritableInfo(model, path)
+  if (info?.typeName !== 'CollectionItem') {
+    return normalizeValueForPath(model, path, value)
+  }
+
+  const normalized = normalizeValueForPath(model, path, value)
+  if (typeof normalized !== 'string' || /^#\d+$/.test(normalized)) {
+    return normalized
+  }
+
+  const targetRows = info.collectionItemPath
+    ? (entities[info.collectionItemPath] ?? [])
+    : []
+  const wanted = normalized.toLowerCase().trim()
+  const matches = targetRows
+    .map((row, idx) => ({ row, idx }))
+    .filter(({ row, idx }) => {
+      if (wanted === String(idx).toLowerCase()) return true
+      if (wanted === String(idx + 1).toLowerCase()) return true
+      return Object.entries(row).some(([key, rowValue]) => {
+        if (key === 'id') return false
+        return String(rowValue).toLowerCase().trim() === wanted
+      })
+    })
+
+  return matches.length === 1 ? `#${matches[0].idx}` : normalized
+}
+
+function resolveCollectionPath(
+  model: Model,
+  nameOrPath: string
+): string | null {
+  const collections = new Set<string>()
+  for (const node of Object.values(model.nodes)) {
+    const c = node.content
+    if (c.type === 'entity') continue
+    if ('path' in c && c.path.includes('/*')) {
+      collections.add(c.path.replace(/\/\*\/.*$/, ''))
+    } else if (
+      c.type === 'writable' &&
+      c.format === 'factGraph' &&
+      c.typeName === 'Collection'
+    ) {
+      collections.add(c.path)
+    }
+  }
+
+  if (nameOrPath.startsWith('/')) {
+    return collections.has(nameOrPath) ? nameOrPath : null
+  }
+
+  const lower = nameOrPath.toLowerCase().replace(/^\/+/, '')
+  for (const path of collections) {
+    const display = path.replace(/^\//, '')
+    const last = display.split('/').at(-1) ?? display
+    if (display.toLowerCase() === lower || last.toLowerCase() === lower) {
+      return path
+    }
+  }
+
+  return null
+}
+
 export const listWritableInputs = tool(
   (input: { rulesetId: string }) => {
     const model = getModel(input.rulesetId)
@@ -59,9 +166,14 @@ export const listWritableInputs = tool(
       const c = node.content
       if (c.type !== 'writable' || c.format !== 'factGraph') continue
 
-      const parts = [node.name, `(${c.typeName})`]
+      const parts = [node.name, c.path, `(${c.typeName})`]
       if (c.enumOptions?.length) {
         parts.push(`options: [${c.enumOptions.join(', ')}]`)
+      }
+      if (c.typeName === 'CollectionItem' && c.collectionItemPath) {
+        parts.push(
+          `links to ${c.collectionItemPath} rows; use #0 for the first row, #1 for the second, etc.`
+        )
       }
       if (c.limits?.length) {
         const limitDescs = c.limits.map((l) => `${l.type}: ${l.value}`)
@@ -121,7 +233,7 @@ export const executeGraph = tool(
     for (const [key, value] of Object.entries(input.inputs)) {
       const path = resolvePathFromName(model, key)
       if (path) {
-        resolvedInputs[path] = normalizeValue(value)
+        resolvedInputs[path] = normalizeValueForPath(model, path, value)
       } else {
         unresolved.push(key)
       }
@@ -138,8 +250,14 @@ export const executeGraph = tool(
     let resolvedEntities: Record<string, Record<string, unknown>[]> | undefined
     if (input.entities) {
       resolvedEntities = {}
+      const unresolvedCollections: string[] = []
       for (const [collPath, rows] of Object.entries(input.entities)) {
-        resolvedEntities[collPath] = rows.map((row) => {
+        const resolvedCollectionPath = resolveCollectionPath(model, collPath)
+        if (!resolvedCollectionPath) {
+          unresolvedCollections.push(collPath)
+          continue
+        }
+        resolvedEntities[resolvedCollectionPath] = rows.map((row) => {
           const resolved: Record<string, unknown> = {}
           for (const [k, v] of Object.entries(row)) {
             if (k === 'id') {
@@ -147,10 +265,29 @@ export const executeGraph = tool(
               continue
             }
             const p = resolvePathFromName(model, k)
-            resolved[p ?? k] = normalizeValue(v)
+            resolved[p ?? k] = p ? v : normalizeValue(v)
           }
           return resolved
         })
+      }
+      if (unresolvedCollections.length > 0) {
+        return [
+          `Could not resolve these collection names/paths: ${unresolvedCollections.join(', ')}. Use list_writable_inputs to see available collection paths.`,
+          null,
+        ] as const
+      }
+      for (const rows of Object.values(resolvedEntities)) {
+        for (const row of rows) {
+          for (const [path, value] of Object.entries(row)) {
+            if (path === 'id') continue
+            row[path] = resolveCollectionItemValue(
+              model,
+              path,
+              value,
+              resolvedEntities
+            )
+          }
+        }
       }
     }
 
@@ -250,13 +387,13 @@ export const executeGraph = tool(
       inputs: z
         .record(z.string(), z.unknown())
         .describe(
-          'Map of node path or name → value. Dollar = plain number, Boolean = true/false, Enum = string option name.'
+          'Map of node path or name → value. Dollar = plain number, Boolean = true/false, Enum = string option name. Do not put collection-scoped /* fields here; use entities.'
         ),
       entities: z
         .record(z.string(), z.array(z.record(z.string(), z.unknown())))
         .optional()
         .describe(
-          'Collection entity data: collection path → array of row objects'
+          'Collection entity data: collection path → array of row objects. Row keys should be full wildcard paths like /members/*/age. For CollectionItem link fields, set the value to #0 for the first row in the referenced collection, #1 for the second, etc. A label/name value from the referenced row is also accepted when unambiguous.'
         ),
       outputNodes: z
         .array(z.string())
