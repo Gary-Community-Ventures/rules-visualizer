@@ -4634,7 +4634,7 @@
           </Case>
           <Case>
             <When><True /></When>
-            <Then><Int>1</Int></Then>
+            <Then><Rational>1/1</Rational></Then>
           </Case>
         </Switch>
       </Derived>
