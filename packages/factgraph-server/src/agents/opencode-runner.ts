@@ -81,27 +81,32 @@ async function spawnOpenCode(
 
   let stdoutBuf = ''
   let stderrBuf = ''
-  let rawStdout = ''
   let lastAssistantText = ''
   let providerSessionId = sessionId
 
+  const processStdoutLine = (line: string) => {
+    try {
+      const evt = JSON.parse(line) as Record<string, unknown>
+      providerSessionId = readSessionId(evt) ?? providerSessionId
+      lastAssistantText =
+        readAssistantText(evt) ?? readMarkerText(evt) ?? lastAssistantText
+    } catch {
+      // tolerate non-JSON lines even when --format=json is requested
+      lastAssistantText = line.includes(SUMMARY_MARKER_START)
+        ? line
+        : lastAssistantText
+    }
+  }
+
   proc.stdout?.on('data', (chunk: Buffer) => {
     const text = chunk.toString('utf-8')
-    rawStdout += text
     stdoutBuf += text
     let nl: number
     while ((nl = stdoutBuf.indexOf('\n')) >= 0) {
       const line = stdoutBuf.slice(0, nl).trim()
       stdoutBuf = stdoutBuf.slice(nl + 1)
       if (!line) continue
-      try {
-        const evt = JSON.parse(line) as Record<string, unknown>
-        providerSessionId = readSessionId(evt) ?? providerSessionId
-        lastAssistantText =
-          readAssistantText(evt) ?? readMarkerText(evt) ?? lastAssistantText
-      } catch {
-        // tolerate non-JSON lines even when --format=json is requested
-      }
+      processStdoutLine(line)
     }
   })
 
@@ -121,6 +126,8 @@ async function spawnOpenCode(
 
   proc.on('close', (code) => {
     inflight.delete(threadId)
+    const trailingLine = stdoutBuf.trim()
+    if (trailingLine) processStdoutLine(trailingLine)
     if (providerSessionId) {
       patchTask(ctx.rulesetId, threadId, { sessionId: providerSessionId })
     }
@@ -135,7 +142,7 @@ async function spawnOpenCode(
       return
     }
     if (code === 0) {
-      const output = lastAssistantText || rawStdout
+      const output = lastAssistantText
       const parsed = parseSummaryMarker(output)
       finishLastIteration(
         ctx.rulesetId,
@@ -220,6 +227,8 @@ function readAssistantText(evt: Record<string, unknown>): string | undefined {
   const type = String(evt.type ?? '')
   const message = evt.message
 
+  if (type === 'text') return collectText(evt).join('\n') || undefined
+
   if (role === 'assistant') return collectText(evt).join('\n') || undefined
   if (type === 'assistant') return collectText(evt).join('\n') || undefined
   if (message && typeof message === 'object') {
@@ -239,7 +248,7 @@ function collectText(value: unknown): string[] {
   const content = obj.content
   if (typeof content === 'string') return [content]
   const parts: string[] = []
-  for (const key of ['content', 'parts', 'message']) {
+  for (const key of ['content', 'parts', 'message', 'part']) {
     parts.push(...collectText(obj[key]))
   }
   return parts

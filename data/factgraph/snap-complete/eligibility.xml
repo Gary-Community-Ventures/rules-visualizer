@@ -95,12 +95,95 @@
 
     <Fact path="/expenseTypeOptions">
       <Name>Expense type options</Name>
-      <Description>Options describing the type of household expense. Legally obligated child support is captured separately because it is considered an income exclusion (10 CCR 2506-1, 4.405, D).</Description>
+      <Description>Options describing the type of household expense. Legally obligated child support is captured separately because it is considered an income exclusion (10 CCR 2506-1, 4.405, D). Dependent care expense options include care by an individual provider or care facility, transportation to and from the care facility, and activity or other fees associated with necessary dependent care. Shelter expense options are broken out by the allowable shelter-cost categories in 10 CCR 2506-1, 4.407.3, E, including cooling costs for air conditioning systems, room air conditioners, swamp coolers, or evaporative coolers; fans are not allowable cooling costs. Medical expense options include allowable and non-allowable medical cost categories listed for the excess medical deduction in 10 CCR 2506-1, 4.407.6.</Description>
       <Derived>
         <EnumOptions>
           <String>ChildSupport</String>
+          <String>DependentCareProviderOrFacility</String>
+          <String>DependentCareTransportation</String>
+          <String>DependentCareActivityOrOtherFees</String>
+          <String>Rent</String>
+          <String>Mortgage</String>
+          <String>CondoFees</String>
+          <String>AssociationFees</String>
+          <String>MobileHomePurchaseLoanRepayment</String>
+          <String>ReverseMortgageRepayment</String>
+          <String>SecondMortgageOrHomeEquityLoanPayment</String>
+          <String>PropertyTaxes</String>
+          <String>StateAndLocalAssessments</String>
+          <String>StructureInsurance</String>
+          <String>NaturalDisasterRepairOrRebuild</String>
+          <String>HeatingFuel</String>
+          <String>CoolingCosts</String>
+          <String>SpaceHeater</String>
+          <String>ElectricBlanket</String>
+          <String>HeatLamp</String>
+          <String>CookingStoveUsedForHeat</String>
+          <String>Electricity</String>
+          <String>CookingFuel</String>
+          <String>Water</String>
+          <String>Sewer</String>
+          <String>WellInstallationOrMaintenance</String>
+          <String>SepticTankInstallationOrMaintenance</String>
+          <String>GarbageOrTrashCollection</String>
+          <String>UtilityInitialInstallationFee</String>
+          <String>LandlineTelephoneService</String>
+          <String>CellularTelephoneService</String>
+          <String>DisposableCellPhoneService</String>
+          <String>VoiceOverInternetProtocolService</String>
+          <String>PetExpenseBilledSeparatelyFromRent</String>
+          <String>UnsecuredOrPersonalLoanPayment</String>
+          <String>FurnitureOrPersonalBelongingsInsurance</String>
+          <String>PayPhone</String>
+          <String>PhoneCardNotAssociatedWithSpecificDevice</String>
+          <String>OneTimeDeposit</String>
+          <String>InternetConnectivityFee</String>
+          <String>CableOrInternetFee</String>
+          <String>MedicalDentalCare</String>
+          <String>PsychotherapyRehabilitationServices</String>
+          <String>HospitalizationOutpatientTreatment</String>
+          <String>NursingCare</String>
+          <String>NursingHomeCare</String>
+          <String>PrescriptionDrug</String>
+          <String>PractitionerApprovedOverTheCounterMedication</String>
+          <String>MedicalSupplies</String>
+          <String>SickroomEquipment</String>
+          <String>PrescribedMedicalEquipment</String>
+          <String>HealthHospitalizationInsurancePremium</String>
+          <String>MedicarePremium</String>
+          <String>MedicalCostSharingExpense</String>
+          <String>Dentures</String>
+          <String>HearingAids</String>
+          <String>Prosthetics</String>
+          <String>Eyeglasses</String>
+          <String>ServiceAnimal</String>
+          <String>MedicalTransportation</String>
+          <String>MedicalLodging</String>
+          <String>AttendantCare</String>
+          <String>Homemaker</String>
+          <String>HomeHealthAide</String>
+          <String>MedicalChildCareServices</String>
+          <String>MedicalHousekeeper</String>
+          <String>AttendantMealAllowance</String>
+          <String>SpecialDietExpense</String>
+          <String>HealthAccidentPolicyPremium</String>
+          <String>IncomeMaintenancePolicyPremium</String>
+          <String>ReimbursableMedicalExpense</String>
+          <String>MedicalMarijuana</String>
+          <String>VitaminsOrSupplementsNotPrescribed</String>
+          <String>PastBillingPeriodMedicalExpense</String>
+          <String>PastMedicalExpensePendingReimbursementInformation</String>
+          <String>PastMedicalExpenseRenegotiatedInstallmentPlan</String>
+          <String>PureSsiHouseholdPastMedicalExpense</String>
+          <String>PreviouslyUnreportedMedicalExpense</String>
         </EnumOptions>
       </Derived>
+    </Fact>
+
+    <Fact path="/mileageRate">
+      <Name>Mileage rate</Name>
+      <Description>The per-mile rate used to calculate dependent care transportation expenses to and from the care facility and reasonable transportation expenses to obtain medical treatment or services, based on the prevailing IRS mileage rate. Effective rate modeled here is seventy cents ($0.70) per mile (10 CCR 2506-1, 4.407.4; 4.407.6).</Description>
+      <Derived><Dollar>0.70</Dollar></Derived>
     </Fact>
 
     <Fact path="/otherExcludedIncomeOptions">
@@ -237,11 +320,247 @@
       <Writable><Dollar /></Writable>
     </Fact>
 
+    <Fact path="/expenses/*/milesDrivenToDependentCareFacility">
+      <Name>Miles driven to dependent care facility</Name>
+      <Description>The miles driven to and from the dependent care facility at this expense's stated frequency. Mileage expenses are calculated at the stated frequency by multiplying these miles by the dependent care mileage rate, then converted to a monthly amount using the expense frequency (10 CCR 2506-1, 4.407.4).</Description>
+      <Writable><Int /></Writable>
+    </Fact>
+
+    <Fact path="/expenses/*/dependentCareTransportationMileageAmount">
+      <Name>Dependent care transportation mileage amount</Name>
+      <Description>The dependent care transportation mileage expense amount at the expense's stated frequency, calculated by multiplying miles driven to and from the care facility by the dependent care mileage rate (10 CCR 2506-1, 4.407.4).</Description>
+      <Derived>
+        <Multiply>
+          <Dependency path="../milesDrivenToDependentCareFacility" />
+          <Dependency path="/mileageRate" />
+        </Multiply>
+      </Derived>
+    </Fact>
+
+    <Fact path="/expenses/*/milesDrivenForMedicalTreatment">
+      <Name>Miles driven for medical treatment</Name>
+      <Description>The reasonable miles driven to obtain medical treatment or services at this expense's stated frequency. Mileage expenses are calculated at the stated frequency by multiplying these miles by the medical mileage rate, then converted to a monthly amount using the expense frequency (10 CCR 2506-1, 4.407.6).</Description>
+      <Writable><Int /></Writable>
+    </Fact>
+
+    <Fact path="/expenses/*/medicalTransportationMileageAmount">
+      <Name>Medical transportation mileage amount</Name>
+      <Description>The medical transportation expense amount at the expense's stated frequency, calculated by multiplying reasonable miles driven to obtain medical treatment or services by the medical mileage rate (10 CCR 2506-1, 4.407.6).</Description>
+      <Derived>
+        <Multiply>
+          <Dependency path="../milesDrivenForMedicalTreatment" />
+          <Dependency path="/mileageRate" />
+        </Multiply>
+      </Derived>
+    </Fact>
+
+    <Fact path="/expenses/*/amountForMonthlyConversion">
+      <Name>Amount for monthly conversion</Name>
+      <Description>The expense amount at the expense's stated frequency to use for monthly conversion. Dependent care transportation and medical transportation use the mileage amount calculated from miles driven and the applicable mileage rate; all other expenses use the entered amount (10 CCR 2506-1, 4.407, B; 4.407.4; 4.407.6).</Description>
+      <Derived>
+        <Switch>
+          <Case>
+            <When>
+              <Equal>
+                <Left><Dependency path="../type" /></Left>
+                <Right><Enum optionsPath="/expenseTypeOptions">DependentCareTransportation</Enum></Right>
+              </Equal>
+            </When>
+            <Then><Dependency path="../dependentCareTransportationMileageAmount" /></Then>
+          </Case>
+          <Case>
+            <When>
+              <Equal>
+                <Left><Dependency path="../type" /></Left>
+                <Right><Enum optionsPath="/expenseTypeOptions">MedicalTransportation</Enum></Right>
+              </Equal>
+            </When>
+            <Then><Dependency path="../medicalTransportationMileageAmount" /></Then>
+          </Case>
+          <Case>
+            <When><True /></When>
+            <Then><Dependency path="../amount" /></Then>
+          </Case>
+        </Switch>
+      </Derived>
+    </Fact>
+
+    <Fact path="/expenses/*/isNecessaryDependentCareForWorkTrainingOrEducation">
+      <Name>Is necessary dependent care for work, training, or education</Name>
+      <Description>Whether this dependent care expense is necessary for a household member to accept or continue employment, seek employment, or attend training or pursue education that is preparatory to employment (10 CCR 2506-1, 4.407.4).</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/expenses/*/isDirectMonetaryPaymentToAgencyOrPersonOutsideHousehold">
+      <Name>Is direct monetary payment outside household</Name>
+      <Description>Whether this dependent care expense is a direct monetary payment to an agency or a person outside of the household. Only direct monetary payments to an agency or a person outside the household are allowable for the dependent care deduction, and in-kind benefits paid to an attendant are not considered (10 CCR 2506-1, 4.407.4).</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
     <Fact path="/expenses/*/isCoveredByVendorPaymentOrReimbursement">
       <Name>Is covered by vendor payment or reimbursement</Name>
       <Description>Whether this allowable expense is covered by a vendor payment, reimbursement, or excluded vendor payment converted to a direct cash payment under a federally authorized demonstration project, making the expense not deductible (10 CCR 2506-1, 4.407, B).</Description>
       <Writable><Boolean /></Writable>
     </Fact>
+
+    <Fact path="/expenses/*/isForClaimableShelterResidence">
+      <Name>Is for claimable shelter residence</Name>
+      <Description>Whether this expense is for a residence whose shelter costs may be claimed by the household: either the household's actual residence, or a home not occupied by the household because of employment or training away from home, illness, natural disaster, or casualty loss where the household intends to return, current occupants are not claiming the shelter costs for SNAP, and the home is not leased or rented during the household's absence (10 CCR 2506-1, 4.407.3, D).</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/expenses/*/isNonUtilityShelterExpense">
+      <Name>Is non-utility shelter expense</Name>
+      <Description>Whether this expense is a claimable non-utility shelter expense: it must be for the household's actual residence or a qualifying unoccupied home, and it must be rent, mortgage, condo or association fees, another continuing ownership charge such as qualifying mobile-home purchase loan, reverse mortgage repayment, second mortgage or home-equity loan payment, property taxes, state or local assessments, structure insurance, or qualifying natural-disaster repair or rebuild costs (10 CCR 2506-1, 4.407.3, D-E).</Description>
+      <Derived>
+        <All>
+          <Any>
+            <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/expenseTypeOptions">Rent</Enum></Right></Equal>
+            <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/expenseTypeOptions">Mortgage</Enum></Right></Equal>
+            <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/expenseTypeOptions">CondoFees</Enum></Right></Equal>
+            <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/expenseTypeOptions">AssociationFees</Enum></Right></Equal>
+            <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/expenseTypeOptions">MobileHomePurchaseLoanRepayment</Enum></Right></Equal>
+            <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/expenseTypeOptions">ReverseMortgageRepayment</Enum></Right></Equal>
+            <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/expenseTypeOptions">SecondMortgageOrHomeEquityLoanPayment</Enum></Right></Equal>
+            <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/expenseTypeOptions">PropertyTaxes</Enum></Right></Equal>
+            <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/expenseTypeOptions">StateAndLocalAssessments</Enum></Right></Equal>
+            <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/expenseTypeOptions">StructureInsurance</Enum></Right></Equal>
+            <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/expenseTypeOptions">NaturalDisasterRepairOrRebuild</Enum></Right></Equal>
+          </Any>
+          <Dependency path="../isForClaimableShelterResidence" />
+        </All>
+      </Derived>
+    </Fact>
+
+    <Fact path="/expenses/*/isHeatingOrCoolingExpense">
+      <Name>Is heating or cooling expense</Name>
+      <Description>Whether this expense is for heating fuel or allowable cooling costs for the household's actual residence or another claimable shelter residence. Cooling costs are utility costs relating to the operation of air conditioning systems, room air conditioners, swamp coolers, or evaporative coolers; fans are not an allowable cooling cost (10 CCR 2506-1, 4.407.31).</Description>
+      <Derived>
+        <All>
+          <Dependency path="../isForClaimableShelterResidence" />
+          <Any>
+            <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/expenseTypeOptions">HeatingFuel</Enum></Right></Equal>
+            <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/expenseTypeOptions">CoolingCosts</Enum></Right></Equal>
+          </Any>
+        </All>
+      </Derived>
+    </Fact>
+
+    <Fact path="/expenses/*/incursOrAnticipatesSeparateHeatingCoolingCosts">
+      <Name>Incurs or anticipates separate heating/cooling costs</Name>
+      <Description>Whether this heating or cooling expense is incurred or anticipated separate and apart from the household's rent or mortgage (10 CCR 2506-1, 4.407.31).</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/expenses/*/privateRentalBilledForHeatingCooling">
+      <Name>Private rental billed for heating/cooling</Name>
+      <Description>Whether this heating or cooling expense is for private rental housing and is billed by the landlord on the basis of individual usage, or is charged as a flat rate separately from rent (10 CCR 2506-1, 4.407.31).</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/expenses/*/sharedResidencePaysHeatingCoolingPortion">
+      <Name>Shared residence pays heating/cooling portion</Name>
+      <Description>Whether this heating or cooling expense is for a shared residence where the household incurs at least a portion of the heating or cooling cost, entitling each household to the full Heating and Cooling Utility Allowance (HCUA) (10 CCR 2506-1, 4.407.31).</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/expenses/*/publicHousingResponsibleForExcessHeatingCoolingCosts">
+      <Name>Public housing responsible for excess heating/cooling costs</Name>
+      <Description>Whether this heating or cooling expense is for public housing where the household is responsible for excess heating or cooling costs (10 CCR 2506-1, 4.407.31).</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/expenses/*/qualifiesForHeatingCoolingUtilityAllowance">
+      <Name>Qualifies for Heating/Cooling Utility Allowance</Name>
+      <Description>Whether this is a heating or allowable cooling expense paid by or billed to a person in the SNAP household and satisfies at least one expense-specific HCUA qualifying condition: separate heating or cooling costs, private rental billing, shared-residence cost sharing, or public-housing excess heating or cooling costs (10 CCR 2506-1, 4.407.31).</Description>
+      <Derived>
+        <All>
+          <Dependency path="../memberId/isPartOfHousehold" />
+          <Dependency path="../isHeatingOrCoolingExpense" />
+          <Any>
+            <Dependency path="../incursOrAnticipatesSeparateHeatingCoolingCosts" />
+            <Dependency path="../privateRentalBilledForHeatingCooling" />
+            <Dependency path="../sharedResidencePaysHeatingCoolingPortion" />
+            <Dependency path="../publicHousingResponsibleForExcessHeatingCoolingCosts" />
+          </Any>
+        </All>
+      </Derived>
+    </Fact>
+
+    <Fact path="/expenses/*/isExcludedShelterExpense">
+      <Name>Is excluded shelter expense</Name>
+      <Description>Whether this expense is explicitly excluded from allowable shelter costs: separate pet expenses billed apart from rent; unsecured or personal loan payments; insurance for furniture or personal belongings; pay phones; phone cards not associated with a specific device; one-time deposits; internet connectivity fees; or monthly cable/internet fees, including charges bundled with VOIP other than the cost of VOIP itself (10 CCR 2506-1, 4.407.3, E).</Description>
+      <Derived>
+        <Any>
+          <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/expenseTypeOptions">PetExpenseBilledSeparatelyFromRent</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/expenseTypeOptions">UnsecuredOrPersonalLoanPayment</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/expenseTypeOptions">FurnitureOrPersonalBelongingsInsurance</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/expenseTypeOptions">PayPhone</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/expenseTypeOptions">PhoneCardNotAssociatedWithSpecificDevice</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/expenseTypeOptions">OneTimeDeposit</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/expenseTypeOptions">InternetConnectivityFee</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/expenseTypeOptions">CableOrInternetFee</Enum></Right></Equal>
+        </Any>
+      </Derived>
+    </Fact>
+
+    <Fact path="/expenses/*/isDependentCareExpense">
+      <Name>Is dependent care expense</Name>
+      <Description>Whether this expense is an allowable dependent care expense: it must be one of the dependent care expense types (care by an individual provider or care facility, transportation to and from the care facility, or activity or other fees associated with the care provided to the dependent), must be necessary for employment, job search, training, or education preparatory to employment, and must be a direct monetary payment to an agency or person outside the household (10 CCR 2506-1, 4.407.4).</Description>
+      <Derived>
+        <All>
+          <Any>
+            <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/expenseTypeOptions">DependentCareProviderOrFacility</Enum></Right></Equal>
+            <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/expenseTypeOptions">DependentCareTransportation</Enum></Right></Equal>
+            <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/expenseTypeOptions">DependentCareActivityOrOtherFees</Enum></Right></Equal>
+          </Any>
+          <Dependency path="../isNecessaryDependentCareForWorkTrainingOrEducation" />
+          <Dependency path="../isDirectMonetaryPaymentToAgencyOrPersonOutsideHousehold" />
+        </All>
+      </Derived>
+    </Fact>
+
+    <Fact path="/expenses/*/isAllowableMedicalExpense">
+      <Name>Is allowable medical expense</Name>
+      <Description>Whether this expense is an allowable medical cost for the excess medical deduction: the cost must be incurred by a household member who is eligible for the excess medical deduction, must not be covered by a vendor payment or reimbursement, and must be one of the allowed medical cost categories, including medical or dental care, psychotherapy or rehabilitation services, hospital or outpatient treatment, nursing or nursing-home care, prescription drugs, practitioner-approved over-the-counter medication, medical supplies or equipment, health or Medicare premiums and cost sharing, dentures, hearing aids, prosthetics, eyeglasses, service animal costs, reasonable transportation or lodging for medical treatment, or necessary attendant, homemaker, home health aide, child-care, housekeeper, or attendant-meal costs (10 CCR 2506-1, 4.407.6).</Description>
+      <Derived>
+        <All>
+          <Dependency path="../memberId/isPartOfHousehold" />
+          <Dependency path="../memberId/isEligibleForExcessMedicalDeduction" />
+          <Not><Dependency path="../isCoveredByVendorPaymentOrReimbursement" /></Not>
+          <Any>
+            <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/expenseTypeOptions">MedicalDentalCare</Enum></Right></Equal>
+            <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/expenseTypeOptions">PsychotherapyRehabilitationServices</Enum></Right></Equal>
+            <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/expenseTypeOptions">HospitalizationOutpatientTreatment</Enum></Right></Equal>
+            <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/expenseTypeOptions">NursingCare</Enum></Right></Equal>
+            <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/expenseTypeOptions">NursingHomeCare</Enum></Right></Equal>
+            <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/expenseTypeOptions">PrescriptionDrug</Enum></Right></Equal>
+            <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/expenseTypeOptions">PractitionerApprovedOverTheCounterMedication</Enum></Right></Equal>
+            <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/expenseTypeOptions">MedicalSupplies</Enum></Right></Equal>
+            <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/expenseTypeOptions">SickroomEquipment</Enum></Right></Equal>
+            <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/expenseTypeOptions">PrescribedMedicalEquipment</Enum></Right></Equal>
+            <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/expenseTypeOptions">HealthHospitalizationInsurancePremium</Enum></Right></Equal>
+            <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/expenseTypeOptions">MedicarePremium</Enum></Right></Equal>
+            <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/expenseTypeOptions">MedicalCostSharingExpense</Enum></Right></Equal>
+            <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/expenseTypeOptions">Dentures</Enum></Right></Equal>
+            <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/expenseTypeOptions">HearingAids</Enum></Right></Equal>
+            <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/expenseTypeOptions">Prosthetics</Enum></Right></Equal>
+            <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/expenseTypeOptions">Eyeglasses</Enum></Right></Equal>
+            <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/expenseTypeOptions">ServiceAnimal</Enum></Right></Equal>
+            <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/expenseTypeOptions">MedicalTransportation</Enum></Right></Equal>
+            <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/expenseTypeOptions">MedicalLodging</Enum></Right></Equal>
+            <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/expenseTypeOptions">AttendantCare</Enum></Right></Equal>
+            <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/expenseTypeOptions">Homemaker</Enum></Right></Equal>
+            <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/expenseTypeOptions">HomeHealthAide</Enum></Right></Equal>
+            <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/expenseTypeOptions">MedicalChildCareServices</Enum></Right></Equal>
+            <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/expenseTypeOptions">MedicalHousekeeper</Enum></Right></Equal>
+            <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/expenseTypeOptions">AttendantMealAllowance</Enum></Right></Equal>
+          </Any>
+        </All>
+      </Derived>
+    </Fact>
+
+    <!-- TODO: Check how the medical expense deduction should be applied to expenses incurred by disqualified members. -->
 
     <Fact path="/expenses/*/frequency">
       <Name>Expense frequency</Name>
@@ -263,7 +582,7 @@
 
     <Fact path="/expenses/*/monthlyAmount">
       <Name>Monthly amount</Name>
-      <Description>The monthly deductible amount of this expense. Expenses covered by vendor payments, reimbursements, or excluded vendor payments converted to direct cash payments under federally authorized demonstration projects are not deductible and are set to zero. Otherwise, weekly, bi-weekly, and semi-monthly expenses are converted to monthly amounts. For other non-monthly frequencies, the amount is converted using the selected frequency or divided by the number of intended months only when the household elects averaging; otherwise the stated amount is used without frequency conversion (10 CCR 2506-1, 4.407, B).</Description>
+      <Description>The monthly deductible amount of this expense. Expenses covered by vendor payments, reimbursements, or excluded vendor payments converted to direct cash payments under federally authorized demonstration projects are not deductible and are set to zero. Dependent care transportation mileage expenses first calculate an intermediate mileage amount at the stated frequency, then use the same monthly conversion rules as other expenses. Otherwise, weekly, bi-weekly, and semi-monthly expenses are converted to monthly amounts. For other non-monthly frequencies, the amount is converted using the selected frequency or divided by the number of intended months only when the household elects averaging; otherwise the stated amount is used without frequency conversion (10 CCR 2506-1, 4.407, B; 4.407.4).</Description>
       <Derived>
         <Switch>
           <Case>
@@ -277,7 +596,7 @@
                 <Right><Enum optionsPath="/expenseFrequencyOptions">Monthly</Enum></Right>
               </Equal>
             </When>
-            <Then><Dependency path="../amount" /></Then>
+            <Then><Dependency path="../amountForMonthlyConversion" /></Then>
           </Case>
           <Case>
             <When>
@@ -288,7 +607,7 @@
             </When>
             <Then>
               <Multiply>
-                <Dependency path="../amount" />
+                <Dependency path="../amountForMonthlyConversion" />
                 <Dependency path="/weeklyToMonthlyConversionMultiplier" />
               </Multiply>
             </Then>
@@ -302,7 +621,7 @@
             </When>
             <Then>
               <Multiply>
-                <Dependency path="../amount" />
+                <Dependency path="../amountForMonthlyConversion" />
                 <Dependency path="/biWeeklyToMonthlyConversionMultiplier" />
               </Multiply>
             </Then>
@@ -316,7 +635,7 @@
             </When>
             <Then>
               <Multiply>
-                <Dependency path="../amount" />
+                <Dependency path="../amountForMonthlyConversion" />
                 <Dependency path="/semiMonthlyToMonthlyConversionMultiplier" />
               </Multiply>
             </Then>
@@ -333,7 +652,7 @@
             </When>
             <Then>
               <Multiply>
-                <Dependency path="../amount" />
+                <Dependency path="../amountForMonthlyConversion" />
                 <Dependency path="/everyOtherMonthToMonthlyConversionMultiplier" />
               </Multiply>
             </Then>
@@ -350,7 +669,7 @@
             </When>
             <Then>
               <Multiply>
-                <Dependency path="../amount" />
+                <Dependency path="../amountForMonthlyConversion" />
                 <Dependency path="/quarterlyToMonthlyConversionMultiplier" />
               </Multiply>
             </Then>
@@ -367,7 +686,7 @@
             </When>
             <Then>
               <Multiply>
-                <Dependency path="../amount" />
+                <Dependency path="../amountForMonthlyConversion" />
                 <Dependency path="/twiceAYearToMonthlyConversionMultiplier" />
               </Multiply>
             </Then>
@@ -384,7 +703,7 @@
             </When>
             <Then>
               <Multiply>
-                <Dependency path="../amount" />
+                <Dependency path="../amountForMonthlyConversion" />
                 <Dependency path="/annualToMonthlyConversionMultiplier" />
               </Multiply>
             </Then>
@@ -401,14 +720,14 @@
             </When>
             <Then>
               <Divide>
-                <Dividend><Dependency path="../amount" /></Dividend>
+                <Dividend><Dependency path="../amountForMonthlyConversion" /></Dividend>
                 <Divisors><Dependency path="../intendedMonths" /></Divisors>
               </Divide>
             </Then>
           </Case>
           <Case>
             <When><True /></When>
-            <Then><Dependency path="../amount" /></Then>
+            <Then><Dependency path="../amountForMonthlyConversion" /></Then>
           </Case>
         </Switch>
       </Derived>
@@ -431,6 +750,32 @@
                 </All>
               </When>
               <Then><Dependency path="/expenses/*/monthlyAmount" /></Then>
+            </Case>
+            <Case>
+              <When><True /></When>
+              <Then><Dollar>0</Dollar></Then>
+            </Case>
+          </Switch>
+        </CollectionSum>
+      </Derived>
+    </Fact>
+
+    <Fact path="/dependentCareDeduction">
+      <Name>Dependent care deduction</Name>
+      <Description>The household's monthly dependent care deduction for allowable dependent care expenses that are necessary for employment, job search, training, or education preparatory to employment and paid directly to an agency or person outside the household. Expenses paid by or billed to a household member are included; expenses paid by or billed to a person disqualified for being an ineligible non-citizen or failing to provide or apply for an SSN are prorated using that person's inclusion ratio; expenses paid by or billed to a person disqualified for IPV/fraud are allowed in full. Reimbursed expenses are not included through /expenses/*/monthlyAmount (10 CCR 2506-1, 4.407.4).</Description>
+      <Derived>
+        <CollectionSum>
+          <Switch>
+            <Case>
+              <When>
+                <Dependency path="/expenses/*/isDependentCareExpense" />
+              </When>
+              <Then>
+                <Multiply>
+                  <Dependency path="/expenses/*/monthlyAmount" />
+                  <Dependency path="/expenses/*/memberId/ineligibleNonCitizenOrNoSsnIncomeInclusionRatio" />
+                </Multiply>
+              </Then>
             </Case>
             <Case>
               <When><True /></When>
@@ -2398,22 +2743,214 @@
       <Derived><Dollar>24</Dollar></Derived>
     </Fact>
 
+    <Fact path="/utilityAllowanceCategoryOptions">
+      <Name>Utility allowance category options</Name>
+      <Description>The standard utility allowance categories available for determining a household's excess shelter deduction under 10 CCR 2506-1, 4.407.31, including the telephone allowance for households whose only utility cost is telephone service, plus None when no utility allowance applies.</Description>
+      <Derived>
+        <EnumOptions>
+          <String>HeatingCooling</String>
+          <String>Basic</String>
+          <String>Telephone</String>
+          <String>OneUtility</String>
+          <String>NonTelephone</String>
+          <String>None</String>
+        </EnumOptions>
+      </Derived>
+    </Fact>
+
+    <Fact path="/utilityAllowanceCategory">
+      <Name>Utility allowance category</Name>
+      <Description>The one mandatory standard utility allowance category the household is entitled to use for utility costs; households cannot claim actual utility expenses and are entitled to only one allowance. HCUA applies first; BUA applies to households not entitled to HCUA that incur at least two non-heating or non-cooling utility costs; the telephone allowance applies when telephone service is the household's only utility cost category; and OUA applies to households not entitled to HCUA or BUA that are responsible for only one non-heating or non-cooling utility expense other than telephone (10 CCR 2506-1, 4.407.31).</Description>
+      <Derived>
+        <Switch>
+          <Case>
+            <When><Dependency path="/hasHeatingCoolingUtilityAllowance" /></When>
+            <Then><Enum optionsPath="/utilityAllowanceCategoryOptions">HeatingCooling</Enum></Then>
+          </Case>
+          <Case>
+            <When><Dependency path="/hasBasicUtilityAllowance" /></When>
+            <Then><Enum optionsPath="/utilityAllowanceCategoryOptions">Basic</Enum></Then>
+          </Case>
+          <Case>
+            <When><Dependency path="/hasTelephoneUtilityAllowance" /></When>
+            <Then><Enum optionsPath="/utilityAllowanceCategoryOptions">Telephone</Enum></Then>
+          </Case>
+          <Case>
+            <When><Dependency path="/hasOneUtilityAllowance" /></When>
+            <Then><Enum optionsPath="/utilityAllowanceCategoryOptions">OneUtility</Enum></Then>
+          </Case>
+          <Case>
+            <When><True /></When>
+            <Then><Enum optionsPath="/utilityAllowanceCategoryOptions">None</Enum></Then>
+          </Case>
+        </Switch>
+      </Derived>
+    </Fact>
+
     <Fact path="/basicUtilityAllowance">
       <Name>Basic Utility Allowance</Name>
-      <Description>A fixed deduction applied to a household that does not pay for heating or cooling and incurs at least two non-heating or non-cooling utility costs, such as electricity, water, sewer, trash, cooking fuel, or telephone (10 CCR 2506-1, 4.000.1). Placeholder.</Description>
-      <Writable><Dollar /></Writable>
+      <Description>The fixed Basic Utility Allowance (BUA) standard applied to households that are not entitled to the HCUA and that incur at least two non-heating or non-cooling utility costs, such as electricity, water, sewer, trash, cooking fuel, or telephone. Effective October 1, 2025, the BUA standard is $377 (10 CCR 2506-1, 4.407.31).</Description>
+      <Derived><Dollar>377</Dollar></Derived>
     </Fact>
 
     <Fact path="/heatingCoolingUtilityAllowance">
       <Name>Heating/Cooling Utility Allowance</Name>
-      <Description>A fixed deduction applied to any household that incurs a heating or cooling expense (10 CCR 2506-1, 4.000.1). Placeholder.</Description>
-      <Writable><Dollar /></Writable>
+      <Description>The fixed heating and cooling utility allowance (HCUA) standard applied to households that qualify for the HCUA. Effective October 1, 2025, the HCUA standard is $594 (10 CCR 2506-1, 4.407.31).</Description>
+      <Derived><Dollar>594</Dollar></Derived>
+    </Fact>
+
+    <Fact path="/hasHeatingCoolingUtilityAllowance">
+      <Name>Has Heating/Cooling Utility Allowance</Name>
+      <Description>Whether the household qualifies for the HCUA because it received a LEAP or E-EBT payment within the previous twelve (12) months, or because it has at least one heating or allowable cooling expense paid by or billed to a person in the SNAP household that satisfies an expense-specific HCUA qualifying condition: separate heating or cooling costs, private rental billing, shared-residence cost sharing, or public-housing excess heating or cooling costs (10 CCR 2506-1, 4.407.31).</Description>
+      <Derived>
+        <Any>
+          <Dependency path="/receivesLeapInLast12Months" />
+          <Dependency path="/hasEebtInLast12Months" />
+          <GreaterThan>
+            <Left>
+              <Count>
+                <Dependency path="/expenses/*/qualifiesForHeatingCoolingUtilityAllowance" />
+              </Count>
+            </Left>
+            <Right><Int>0</Int></Right>
+          </GreaterThan>
+        </Any>
+      </Derived>
+    </Fact>
+
+    <Fact path="/hasBasicUtilityElectricityExpense">
+      <Name>Has BUA electricity expense</Name>
+      <Description>Whether the household has at least one Basic Utility Allowance (BUA)-countable electricity expense for non-heating and non-cooling use (10 CCR 2506-1, 4.407.31).</Description>
+      <Derived><GreaterThan><Left><CollectionSize><Filter path="/expenses"><All><Dependency path="memberId/isPartOfHousehold" /><Dependency path="isForClaimableShelterResidence" /><Equal><Left><Dependency path="type" /></Left><Right><Enum optionsPath="/expenseTypeOptions">Electricity</Enum></Right></Equal></All></Filter></CollectionSize></Left><Right><Int>0</Int></Right></GreaterThan></Derived>
+    </Fact>
+
+    <Fact path="/hasBasicUtilityWaterExpense">
+      <Name>Has BUA water expense</Name>
+      <Description>Whether the household has at least one Basic Utility Allowance (BUA)-countable water expense (10 CCR 2506-1, 4.407.31).</Description>
+      <Derived><GreaterThan><Left><CollectionSize><Filter path="/expenses"><All><Dependency path="memberId/isPartOfHousehold" /><Dependency path="isForClaimableShelterResidence" /><Equal><Left><Dependency path="type" /></Left><Right><Enum optionsPath="/expenseTypeOptions">Water</Enum></Right></Equal></All></Filter></CollectionSize></Left><Right><Int>0</Int></Right></GreaterThan></Derived>
+    </Fact>
+
+    <Fact path="/hasBasicUtilitySewerExpense">
+      <Name>Has BUA sewer expense</Name>
+      <Description>Whether the household has at least one Basic Utility Allowance (BUA)-countable sewer expense (10 CCR 2506-1, 4.407.31).</Description>
+      <Derived><GreaterThan><Left><CollectionSize><Filter path="/expenses"><All><Dependency path="memberId/isPartOfHousehold" /><Dependency path="isForClaimableShelterResidence" /><Equal><Left><Dependency path="type" /></Left><Right><Enum optionsPath="/expenseTypeOptions">Sewer</Enum></Right></Equal></All></Filter></CollectionSize></Left><Right><Int>0</Int></Right></GreaterThan></Derived>
+    </Fact>
+
+    <Fact path="/hasBasicUtilityTrashExpense">
+      <Name>Has BUA trash expense</Name>
+      <Description>Whether the household has at least one Basic Utility Allowance (BUA)-countable garbage or trash collection expense (10 CCR 2506-1, 4.407.31).</Description>
+      <Derived><GreaterThan><Left><CollectionSize><Filter path="/expenses"><All><Dependency path="memberId/isPartOfHousehold" /><Dependency path="isForClaimableShelterResidence" /><Equal><Left><Dependency path="type" /></Left><Right><Enum optionsPath="/expenseTypeOptions">GarbageOrTrashCollection</Enum></Right></Equal></All></Filter></CollectionSize></Left><Right><Int>0</Int></Right></GreaterThan></Derived>
+    </Fact>
+
+    <Fact path="/hasBasicUtilityCookingFuelExpense">
+      <Name>Has BUA cooking fuel expense</Name>
+      <Description>Whether the household has at least one Basic Utility Allowance (BUA)-countable cooking fuel expense (10 CCR 2506-1, 4.407.31).</Description>
+      <Derived><GreaterThan><Left><CollectionSize><Filter path="/expenses"><All><Dependency path="memberId/isPartOfHousehold" /><Dependency path="isForClaimableShelterResidence" /><Equal><Left><Dependency path="type" /></Left><Right><Enum optionsPath="/expenseTypeOptions">CookingFuel</Enum></Right></Equal></All></Filter></CollectionSize></Left><Right><Int>0</Int></Right></GreaterThan></Derived>
+    </Fact>
+
+    <Fact path="/hasBasicUtilityTelephoneExpense">
+      <Name>Has BUA telephone expense</Name>
+      <Description>Whether the household has at least one Basic Utility Allowance (BUA)-countable telephone expense. Landline, cellular, disposable cell phone, and VOIP service are grouped as one telephone category (10 CCR 2506-1, 4.407.31).</Description>
+      <Derived><GreaterThan><Left><CollectionSize><Filter path="/expenses"><All><Dependency path="memberId/isPartOfHousehold" /><Dependency path="isForClaimableShelterResidence" /><Any><Equal><Left><Dependency path="type" /></Left><Right><Enum optionsPath="/expenseTypeOptions">LandlineTelephoneService</Enum></Right></Equal><Equal><Left><Dependency path="type" /></Left><Right><Enum optionsPath="/expenseTypeOptions">CellularTelephoneService</Enum></Right></Equal><Equal><Left><Dependency path="type" /></Left><Right><Enum optionsPath="/expenseTypeOptions">DisposableCellPhoneService</Enum></Right></Equal><Equal><Left><Dependency path="type" /></Left><Right><Enum optionsPath="/expenseTypeOptions">VoiceOverInternetProtocolService</Enum></Right></Equal></Any></All></Filter></CollectionSize></Left><Right><Int>0</Int></Right></GreaterThan></Derived>
+    </Fact>
+
+    <Fact path="/hasBasicUtilitySupplementalHeatingExpense">
+      <Name>Has BUA supplemental heating expense</Name>
+      <Description>Whether the household has at least one Basic Utility Allowance (BUA)-countable supplemental heating source expense. Space heaters, electric blankets, heat lamps, and cooking stoves used for heat are grouped as one supplemental-heating category and do not qualify the household for HCUA (10 CCR 2506-1, 4.407.31).</Description>
+      <Derived><GreaterThan><Left><CollectionSize><Filter path="/expenses"><All><Dependency path="memberId/isPartOfHousehold" /><Dependency path="isForClaimableShelterResidence" /><Any><Equal><Left><Dependency path="type" /></Left><Right><Enum optionsPath="/expenseTypeOptions">SpaceHeater</Enum></Right></Equal><Equal><Left><Dependency path="type" /></Left><Right><Enum optionsPath="/expenseTypeOptions">ElectricBlanket</Enum></Right></Equal><Equal><Left><Dependency path="type" /></Left><Right><Enum optionsPath="/expenseTypeOptions">HeatLamp</Enum></Right></Equal><Equal><Left><Dependency path="type" /></Left><Right><Enum optionsPath="/expenseTypeOptions">CookingStoveUsedForHeat</Enum></Right></Equal></Any></All></Filter></CollectionSize></Left><Right><Int>0</Int></Right></GreaterThan></Derived>
+    </Fact>
+
+    <Fact path="/hasBasicUtilityWellMaintenanceExpense">
+      <Name>Has BUA well installation or maintenance expense</Name>
+      <Description>Whether the household has at least one Basic Utility Allowance (BUA)-countable well installation or maintenance expense that is the household's responsibility (10 CCR 2506-1, 4.407.31).</Description>
+      <Derived><GreaterThan><Left><CollectionSize><Filter path="/expenses"><All><Dependency path="memberId/isPartOfHousehold" /><Dependency path="isForClaimableShelterResidence" /><Equal><Left><Dependency path="type" /></Left><Right><Enum optionsPath="/expenseTypeOptions">WellInstallationOrMaintenance</Enum></Right></Equal></All></Filter></CollectionSize></Left><Right><Int>0</Int></Right></GreaterThan></Derived>
+    </Fact>
+
+    <Fact path="/hasBasicUtilitySepticMaintenanceExpense">
+      <Name>Has BUA septic tank installation or maintenance expense</Name>
+      <Description>Whether the household has at least one Basic Utility Allowance (BUA)-countable septic tank installation or maintenance expense that is the household's responsibility (10 CCR 2506-1, 4.407.31).</Description>
+      <Derived><GreaterThan><Left><CollectionSize><Filter path="/expenses"><All><Dependency path="memberId/isPartOfHousehold" /><Dependency path="isForClaimableShelterResidence" /><Equal><Left><Dependency path="type" /></Left><Right><Enum optionsPath="/expenseTypeOptions">SepticTankInstallationOrMaintenance</Enum></Right></Equal></All></Filter></CollectionSize></Left><Right><Int>0</Int></Right></GreaterThan></Derived>
+    </Fact>
+
+    <Fact path="/hasBasicUtilityInitialInstallationFee">
+      <Name>Has BUA utility initial installation fee</Name>
+      <Description>Whether the household has at least one Basic Utility Allowance (BUA)-countable initial utility installation fee that is the household's responsibility (10 CCR 2506-1, 4.407.31).</Description>
+      <Derived><GreaterThan><Left><CollectionSize><Filter path="/expenses"><All><Dependency path="memberId/isPartOfHousehold" /><Dependency path="isForClaimableShelterResidence" /><Equal><Left><Dependency path="type" /></Left><Right><Enum optionsPath="/expenseTypeOptions">UtilityInitialInstallationFee</Enum></Right></Equal></All></Filter></CollectionSize></Left><Right><Int>0</Int></Right></GreaterThan></Derived>
+    </Fact>
+
+    <Fact path="/nonHeatingUtilityAllowanceCount">
+      <Name>Non-heating utility allowance count</Name>
+      <Description>The number of distinct household non-heating and non-cooling utility cost categories that can count toward the Basic Utility Allowance (BUA): electricity; water; sewer; trash; cooking fuel; telephone (landline, cellular, disposable cell phone, and VOIP grouped as one category); supplemental heating sources (space heater, electric blanket, heat lamp, and cooking stove used for heat grouped as one category); and infrastructure maintenance or installation costs that are the household's responsibility (well installation or maintenance, septic tank installation or maintenance, and utility initial installation fees each counted distinctly). Multiple expenses in the same category count only once (10 CCR 2506-1, 4.407.31).</Description>
+      <Derived>
+        <Add>
+          <Switch><Case><When><Dependency path="/hasBasicUtilityElectricityExpense" /></When><Then><Int>1</Int></Then></Case><Case><When><True /></When><Then><Int>0</Int></Then></Case></Switch>
+          <Switch><Case><When><Dependency path="/hasBasicUtilityWaterExpense" /></When><Then><Int>1</Int></Then></Case><Case><When><True /></When><Then><Int>0</Int></Then></Case></Switch>
+          <Switch><Case><When><Dependency path="/hasBasicUtilitySewerExpense" /></When><Then><Int>1</Int></Then></Case><Case><When><True /></When><Then><Int>0</Int></Then></Case></Switch>
+          <Switch><Case><When><Dependency path="/hasBasicUtilityTrashExpense" /></When><Then><Int>1</Int></Then></Case><Case><When><True /></When><Then><Int>0</Int></Then></Case></Switch>
+          <Switch><Case><When><Dependency path="/hasBasicUtilityCookingFuelExpense" /></When><Then><Int>1</Int></Then></Case><Case><When><True /></When><Then><Int>0</Int></Then></Case></Switch>
+          <Switch><Case><When><Dependency path="/hasBasicUtilityTelephoneExpense" /></When><Then><Int>1</Int></Then></Case><Case><When><True /></When><Then><Int>0</Int></Then></Case></Switch>
+          <Switch><Case><When><Dependency path="/hasBasicUtilitySupplementalHeatingExpense" /></When><Then><Int>1</Int></Then></Case><Case><When><True /></When><Then><Int>0</Int></Then></Case></Switch>
+          <Switch><Case><When><Dependency path="/hasBasicUtilityWellMaintenanceExpense" /></When><Then><Int>1</Int></Then></Case><Case><When><True /></When><Then><Int>0</Int></Then></Case></Switch>
+          <Switch><Case><When><Dependency path="/hasBasicUtilitySepticMaintenanceExpense" /></When><Then><Int>1</Int></Then></Case><Case><When><True /></When><Then><Int>0</Int></Then></Case></Switch>
+          <Switch><Case><When><Dependency path="/hasBasicUtilityInitialInstallationFee" /></When><Then><Int>1</Int></Then></Case><Case><When><True /></When><Then><Int>0</Int></Then></Case></Switch>
+        </Add>
+      </Derived>
+    </Fact>
+
+    <Fact path="/basicUtilityAllowanceMinimumUtilityCategoryCount">
+      <Name>Basic Utility Allowance minimum utility category count</Name>
+      <Description>The minimum number of distinct non-heating or non-cooling utility cost categories a household must incur to qualify for the Basic Utility Allowance (BUA): at least two (2) categories (10 CCR 2506-1, 4.407.31).</Description>
+      <Derived><Int>2</Int></Derived>
+    </Fact>
+
+    <Fact path="/hasBasicUtilityAllowance">
+      <Name>Has Basic Utility Allowance</Name>
+      <Description>Whether the household incurs at least two non-heating or non-cooling utility costs, such as electricity, water, sewer, trash, cooking fuel, or telephone, satisfying the expense-count criterion for the Basic Utility Allowance (BUA). HCUA priority over BUA is handled by the utility allowance category selection (10 CCR 2506-1, 4.407.31).</Description>
+      <Derived>
+        <GreaterThanOrEqual>
+          <Left><Dependency path="/nonHeatingUtilityAllowanceCount" /></Left>
+          <Right><Dependency path="/basicUtilityAllowanceMinimumUtilityCategoryCount" /></Right>
+        </GreaterThanOrEqual>
+      </Derived>
+    </Fact>
+
+    <Fact path="/hasTelephoneUtilityAllowance">
+      <Name>Has telephone utility allowance</Name>
+      <Description>Whether the household is entitled to the telephone allowance because its only utility cost category is telephone service. If more than one SNAP household shares in paying telephone costs and telephone is the only utility cost of the dwelling, each SNAP household sharing the telephone costs receives the full phone standard (10 CCR 2506-1, 4.407.31).</Description>
+      <Derived>
+        <All>
+          <Equal>
+            <Left><Dependency path="/nonHeatingUtilityAllowanceCount" /></Left>
+            <Right><Int>1</Int></Right>
+          </Equal>
+          <Dependency path="/hasBasicUtilityTelephoneExpense" />
+        </All>
+      </Derived>
+    </Fact>
+
+    <Fact path="/telephoneUtilityAllowance">
+      <Name>Telephone utility allowance</Name>
+      <Description>The full telephone standard allowed to a household whose only utility cost is telephone service. Effective October 1, 2025, the telephone standard is $97 (10 CCR 2506-1, 4.407.31).</Description>
+      <Derived><Dollar>97</Dollar></Derived>
+    </Fact>
+
+    <Fact path="/hasOneUtilityAllowance">
+      <Name>Has One Utility Allowance</Name>
+      <Description>Whether the household is responsible for exactly one non-heating or non-cooling utility expense category, making it eligible for the One Utility Allowance (OUA) when it is not entitled to the HCUA, BUA, or telephone allowance. OUA priority after the telephone-only allowance is handled by the utility allowance category selection (10 CCR 2506-1, 4.407.31).</Description>
+      <Derived>
+        <All>
+          <Equal>
+            <Left><Dependency path="/nonHeatingUtilityAllowanceCount" /></Left>
+            <Right><Int>1</Int></Right>
+          </Equal>
+        </All>
+      </Derived>
     </Fact>
 
     <Fact path="/oneUtilityAllowance">
       <Name>One Utility Allowance</Name>
-      <Description>A fixed deduction given to any household that is not eligible to receive the HCUA or BUA and incurs only one non-heating or non-cooling utility expense, such as electricity, water, sewer, trash, or cooking fuel. The OUA is not allowed if the household's only utility expense is a telephone (10 CCR 2506-1, 4.000.1). Placeholder.</Description>
-      <Writable><Dollar /></Writable>
+      <Description>The fixed One Utility Allowance (OUA) standard applied to households that are not entitled to the HCUA or BUA but are responsible for only one non-heating or one non-cooling utility expense other than telephone. If more than one SNAP household shares in paying one non-heating or non-cooling utility cost of the dwelling, each sharing household receives the full OUA. Effective October 1, 2025, the OUA standard is $71 (10 CCR 2506-1, 4.407.31).</Description>
+      <Derived><Dollar>71</Dollar></Derived>
     </Fact>
 
     <!-- TODO: get the actual fixed deduction amount from policy and make this a constant. -->
@@ -2423,9 +2960,72 @@
       <Writable><Dollar /></Writable>
     </Fact>
 
-    <Fact path="/receivesLeap">
-      <Name>Receives LEAP</Name>
-      <Description>Whether the household receives benefits from the Low-Income Home Energy Assistance Program (LEAP), the Colorado program designed to help low-income clients pay a portion of their winter heating costs (10 CCR 2506-1, 4.000.1)</Description>
+    <Fact path="/utilityCost">
+      <Name>Utility cost</Name>
+      <Description>The household's utility-cost amount for shelter budgeting, selected from the applicable standard utility allowance rather than actual utility expenses, including the telephone standard when telephone service is the household's only utility cost category (10 CCR 2506-1, 4.407.31).</Description>
+      <Derived>
+        <Switch>
+          <Case>
+            <When>
+              <Equal>
+                <Left><Dependency path="/utilityAllowanceCategory" /></Left>
+                <Right><Enum optionsPath="/utilityAllowanceCategoryOptions">None</Enum></Right>
+              </Equal>
+            </When>
+            <Then><Dollar>0</Dollar></Then>
+          </Case>
+          <Case>
+            <When>
+              <Equal>
+                <Left><Dependency path="/utilityAllowanceCategory" /></Left>
+                <Right><Enum optionsPath="/utilityAllowanceCategoryOptions">HeatingCooling</Enum></Right>
+              </Equal>
+            </When>
+            <Then><Dependency path="/heatingCoolingUtilityAllowance" /></Then>
+          </Case>
+          <Case>
+            <When>
+              <Equal>
+                <Left><Dependency path="/utilityAllowanceCategory" /></Left>
+                <Right><Enum optionsPath="/utilityAllowanceCategoryOptions">Basic</Enum></Right>
+              </Equal>
+            </When>
+            <Then><Dependency path="/basicUtilityAllowance" /></Then>
+          </Case>
+          <Case>
+            <When>
+              <Equal>
+                <Left><Dependency path="/utilityAllowanceCategory" /></Left>
+                <Right><Enum optionsPath="/utilityAllowanceCategoryOptions">Telephone</Enum></Right>
+              </Equal>
+            </When>
+            <Then><Dependency path="/telephoneUtilityAllowance" /></Then>
+          </Case>
+          <Case>
+            <When>
+              <Equal>
+                <Left><Dependency path="/utilityAllowanceCategory" /></Left>
+                <Right><Enum optionsPath="/utilityAllowanceCategoryOptions">OneUtility</Enum></Right>
+              </Equal>
+            </When>
+            <Then><Dependency path="/oneUtilityAllowance" /></Then>
+          </Case>
+          <Case>
+            <When>
+              <Equal>
+                <Left><Dependency path="/utilityAllowanceCategory" /></Left>
+                <Right><Enum optionsPath="/utilityAllowanceCategoryOptions">NonTelephone</Enum></Right>
+              </Equal>
+            </When>
+            <Then><Dependency path="/nonTelephoneUtilityAllowance" /></Then>
+          </Case>
+        </Switch>
+      </Derived>
+    </Fact>
+
+    <Fact path="/receivesLeapInLast12Months">
+      <Name>Receives LEAP in last 12 months</Name>
+      <Description>Whether the household received a Low-Income Energy Assistance Program (LEAP) payment within the previous twelve (12) month period, which qualifies the household for the Heating and Cooling Utility Allowance (HCUA) (10 CCR 2506-1, 4.407.31).</Description>
       <Writable><Boolean /></Writable>
     </Fact>
 
@@ -2650,6 +3250,14 @@
           <Dependency path="../isElderly" />
           <Dependency path="../isPersonWithDisability" />
         </Any>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/isEligibleForExcessMedicalDeduction">
+      <Name>Is eligible for excess medical deduction</Name>
+      <Description>Whether this member's medical expenses may be claimed for the excess medical deduction because the member is aged sixty (60) or older or is a person with disabilities; other household members, including spouses and dependents, cannot claim costs of their medical treatment and services for this deduction (10 CCR 2506-1, 4.407.6).</Description>
+      <Derived>
+        <Dependency path="../isElderlyOrPersonWithDisability" />
       </Derived>
     </Fact>
 
@@ -3909,16 +4517,290 @@
       </Derived>
     </Fact>
 
-    <Fact path="/eebtMinimumPayment">
-      <Name>E-EBT minimum payment</Name>
-      <Description>The minimum Energy Electronic Benefit Transfer (E-EBT) fuel assistance payment that qualifies a SNAP household for the heating and cooling standard utility allowance (10 CCR 2506-1, 4.000.1)</Description>
-      <Derived><Dollar>20.01</Dollar></Derived>
+    <Fact path="/hasEebtInLast12Months">
+      <Name>Has E-EBT in last 12 months</Name>
+      <Description>Whether the household received an Energy Electronic Benefit Transfer (E-EBT) payment within the previous twelve (12) month period, which qualifies the household for the Heating and Cooling Utility Allowance (HCUA) (10 CCR 2506-1, 4.407.31).</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/medicalExpenseDeductionMinimum">
+      <Name>Medical expense deduction minimum</Name>
+      <Description>The first thirty-five dollars ($35) of verified monthly medical expenses that is not deductible before applying either the Standard Medical Expense Deduction (SMED) or actual excess medical expenses (10 CCR 2506-1, 4.407.61).</Description>
+      <Derived><Dollar>35</Dollar></Derived>
+    </Fact>
+
+    <Fact path="/standardMedicalExpenseDeduction">
+      <Name>Standard Medical Expense Deduction</Name>
+      <Description>The Standard Medical Expense Deduction (SMED), used when total verified monthly medical expenses are greater than thirty-five dollars ($35) and the amount remaining after subtracting the first thirty-five dollars ($35) does not exceed the SMED. Effective amount modeled here is one hundred sixty-five dollars ($165) (10 CCR 2506-1, 4.407.61).</Description>
+      <Derived><Dollar>165</Dollar></Derived>
+    </Fact>
+
+    <Fact path="/allowableMedicalExpenses">
+      <Name>Allowable medical expenses</Name>
+      <Description>The household's total monthly allowable medical expenses before subtracting the first thirty-five dollars ($35), including monthly amounts for expenses marked as allowable medical expenses (10 CCR 2506-1, 4.407.6; 4.407.61).</Description>
+      <Derived>
+        <CollectionSum>
+          <Switch>
+            <Case>
+              <When><Dependency path="/expenses/*/isAllowableMedicalExpense" /></When>
+              <Then><Dependency path="/expenses/*/monthlyAmount" /></Then>
+            </Case>
+            <Case>
+              <When><True /></When>
+              <Then><Dollar>0</Dollar></Then>
+            </Case>
+          </Switch>
+        </CollectionSum>
+      </Derived>
+    </Fact>
+
+    <Fact path="/allowableMedicalExpensesAfterMinimum">
+      <Name>Allowable medical expenses after minimum</Name>
+      <Description>The household's total monthly allowable medical expenses after subtracting the first thirty-five dollars ($35), floored at zero (10 CCR 2506-1, 4.407.61).</Description>
+      <Derived>
+        <GreaterOf>
+          <Dollar>0</Dollar>
+          <Subtract>
+            <Minuend><Dependency path="/allowableMedicalExpenses" /></Minuend>
+            <Subtrahends><Dependency path="/medicalExpenseDeductionMinimum" /></Subtrahends>
+          </Subtract>
+        </GreaterOf>
+      </Derived>
     </Fact>
 
     <Fact path="/excessMedicalDeduction">
       <Name>Excess medical deduction</Name>
-      <Description>A deduction from a household's total gross income applied when a person with a disability or a person aged sixty (60) and older has medical expenses over a specified monthly amount (10 CCR 2506-1, 4.000.1). Placeholder.</Description>
-      <Derived><Dollar>0</Dollar></Derived>
+      <Description>The household's monthly excess medical deduction. If allowable monthly medical expenses exceed thirty-five dollars ($35) but the amount remaining after subtracting the first thirty-five dollars ($35) is less than or equal to the Standard Medical Expense Deduction (SMED), the SMED is allowed; if the amount remaining after subtracting the first thirty-five dollars ($35) exceeds the SMED, actual excess medical expenses are allowed (10 CCR 2506-1, 4.407.61).</Description>
+      <Derived>
+        <Switch>
+          <Case>
+            <When>
+              <LessThanOrEqual>
+                <Left><Dependency path="/allowableMedicalExpensesAfterMinimum" /></Left>
+                <Right><Dollar>0</Dollar></Right>
+              </LessThanOrEqual>
+            </When>
+            <Then><Dollar>0</Dollar></Then>
+          </Case>
+          <Case>
+            <When>
+              <LessThanOrEqual>
+                <Left><Dependency path="/allowableMedicalExpensesAfterMinimum" /></Left>
+                <Right><Dependency path="/standardMedicalExpenseDeduction" /></Right>
+              </LessThanOrEqual>
+            </When>
+            <Then><Dependency path="/standardMedicalExpenseDeduction" /></Then>
+          </Case>
+          <Case>
+            <When><True /></When>
+            <Then><Dependency path="/allowableMedicalExpensesAfterMinimum" /></Then>
+          </Case>
+        </Switch>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/ineligibleNonCitizenOrNoSsnIncomeInclusionRatio">
+      <Name>Ineligible non-citizen or no-SSN income inclusion ratio</Name>
+      <Description>The member-level inclusion ratio for income or expenses subject to ineligible non-citizen or missing-SSN proration. Members who are not ineligible non-citizens and have not failed to provide or obtain a Social Security Number are included in full. For a member who is an ineligible non-citizen or has failed to provide or obtain a Social Security Number, the includable share is the number of household members who are not ineligible non-citizens and have not failed to provide or obtain a Social Security Number divided by the total number of members in the household (10 CCR 2506-1, 4.407.3, A).</Description>
+      <Derived>
+        <Switch>
+          <Case>
+            <When>
+              <Any>
+                <Dependency path="../failedToProvideOrObtainSSN" />
+                <Dependency path="../isIneligibleNonCitizen" />
+              </Any>
+            </When>
+            <Then>
+              <Divide>
+                <Dividend>
+                  <Count>
+                    <All>
+                      <Dependency path="/members/*/isPartOfHousehold" />
+                      <Not>
+                        <Any>
+                          <Dependency path="/members/*/failedToProvideOrObtainSSN" />
+                          <Dependency path="/members/*/isIneligibleNonCitizen" />
+                        </Any>
+                      </Not>
+                    </All>
+                  </Count>
+                </Dividend>
+                <Divisors>
+                  <Count><Dependency path="/members/*/isPartOfHousehold" /></Count>
+                </Divisors>
+              </Divide>
+            </Then>
+          </Case>
+          <Case>
+            <When><True /></When>
+            <Then><Int>1</Int></Then>
+          </Case>
+        </Switch>
+      </Derived>
+    </Fact>
+
+    <Fact path="/allowableMonthlyShelterCosts">
+      <Name>Allowable monthly shelter costs</Name>
+      <Description>The household's allowable monthly shelter costs: the applicable standard utility allowance in full, plus non-utility shelter expenses paid or billed to eligible household members in full, and non-utility shelter expenses paid or billed to a person disqualified for being an ineligible non-citizen or for failure to provide a Social Security Number with all except that person's pro rata share counted (10 CCR 2506-1, 4.407.3, A).</Description>
+      <Derived>
+        <Add>
+          <Dependency path="/utilityCost" />
+          <CollectionSum>
+            <Switch>
+              <Case>
+                <When>
+                  <All>
+                    <Dependency path="/expenses/*/isNonUtilityShelterExpense" />
+                    <Dependency path="/expenses/*/memberId/isPartOfHousehold" />
+                  </All>
+                </When>
+                <Then>
+                  <Multiply>
+                    <Dependency path="/expenses/*/monthlyAmount" />
+                    <Dependency path="/expenses/*/memberId/ineligibleNonCitizenOrNoSsnIncomeInclusionRatio" />
+                  </Multiply>
+                </Then>
+              </Case>
+              <Case>
+                <When><True /></When>
+                <Then><Dollar>0</Dollar></Then>
+              </Case>
+            </Switch>
+          </CollectionSum>
+        </Add>
+      </Derived>
+    </Fact>
+
+    <Fact path="/hasOrExpectsShelterCosts">
+      <Name>Has or expects shelter costs</Name>
+      <Description>Whether the household incurs, or reasonably expects to incur, shelter costs during the month. Households experiencing homelessness that incur no shelter costs during the month are not eligible for the homeless shelter deduction estimate (10 CCR 2506-1, 4.407.3, C).</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
+    <Fact path="/homelessShelterDeductionEstimate">
+      <Name>Homeless shelter deduction estimate</Name>
+      <Description>The standard estimate of shelter expenses available to households in which all individuals are experiencing homelessness and that incur, or reasonably expect to incur, shelter costs during the month. Effective October 1, 2025, the estimate is one hundred ninety-eight dollars and ninety-nine cents ($198.99) (10 CCR 2506-1, 4.407.3, C).</Description>
+      <Derived><Dollar>198.99</Dollar></Derived>
+    </Fact>
+
+    <Fact path="/allHouseholdMembersExperiencingHomelessness">
+      <Name>All household members experiencing homelessness</Name>
+      <Description>Whether all individuals in the SNAP household are experiencing homelessness, used to determine eligibility for the homeless shelter deduction estimate (10 CCR 2506-1, 4.407.3, C).</Description>
+      <Derived>
+        <Equal>
+          <Left>
+            <Count>
+              <All>
+                <Dependency path="/members/*/isPartOfHousehold" />
+                <Dependency path="/members/*/isExperiencingHomelessness" />
+              </All>
+            </Count>
+          </Left>
+          <Right>
+            <Count><Dependency path="/members/*/isPartOfHousehold" /></Count>
+          </Right>
+        </Equal>
+      </Derived>
+    </Fact>
+
+    <Fact path="/monthlyShelterCostsForExcessShelterDeduction">
+      <Name>Monthly shelter costs for excess shelter deduction</Name>
+      <Description>The monthly shelter-cost amount used for the excess shelter deduction. Households in which all individuals are experiencing homelessness and that incur, or reasonably expect to incur, shelter costs may use the standard homeless shelter estimate unless higher actual shelter costs are verified; otherwise the household's allowable monthly shelter costs are used (10 CCR 2506-1, 4.407.3, C).</Description>
+      <Derived>
+        <Switch>
+          <Case>
+            <When>
+              <All>
+                <Dependency path="/allHouseholdMembersExperiencingHomelessness" />
+                <Dependency path="/hasOrExpectsShelterCosts" />
+              </All>
+            </When>
+            <Then>
+              <GreaterOf>
+                <Dependency path="/allowableMonthlyShelterCosts" />
+                <Dependency path="/homelessShelterDeductionEstimate" />
+              </GreaterOf>
+            </Then>
+          </Case>
+          <Case>
+            <When><True /></When>
+            <Then><Dependency path="/allowableMonthlyShelterCosts" /></Then>
+          </Case>
+        </Switch>
+      </Derived>
+    </Fact>
+
+    <Fact path="/incomeAfterDeductionsBeforeExcessShelterDeduction">
+      <Name>Income after deductions before excess shelter deduction</Name>
+      <Description>The household's monthly income after all currently modeled deductions other than the excess shelter deduction, used to determine the fifty percent (50%) shelter-cost threshold for the excess shelter deduction (10 CCR 2506-1, 4.407.3, A).</Description>
+      <Derived>
+        <GreaterOf>
+          <Dollar>0</Dollar>
+          <Subtract>
+            <Minuend><Dependency path="/grossIncome" /></Minuend>
+            <Subtrahends>
+              <Dependency path="/earnedIncomeDeduction" />
+              <Dependency path="/standardDeduction" />
+              <Dependency path="/dependentCareDeduction" />
+              <Dependency path="/excessMedicalDeduction" />
+            </Subtrahends>
+          </Subtract>
+        </GreaterOf>
+      </Derived>
+    </Fact>
+
+    <Fact path="/excessShelterDeductionIncomeRate">
+      <Name>Excess shelter deduction income rate</Name>
+      <Description>The fifty percent (50%) share of household income after all other deductions that allowable monthly shelter costs must exceed for the excess shelter deduction (10 CCR 2506-1, 4.407.3, A).</Description>
+      <Derived><Rational>1/2</Rational></Derived>
+    </Fact>
+
+    <Fact path="/excessShelterDeductionCap">
+      <Name>Excess shelter deduction cap</Name>
+      <Description>The maximum excess shelter deduction for households that do not contain a person aged sixty (60) or older or a person with a disability. Effective October 1, 2025, the cap is seven hundred forty-four dollars ($744) (10 CCR 2506-1, 4.407.3, B).</Description>
+      <Derived><Dollar>744</Dollar></Derived>
+    </Fact>
+
+    <Fact path="/uncappedExcessShelterDeduction">
+      <Name>Uncapped excess shelter deduction</Name>
+      <Description>The amount by which the household's monthly shelter costs for the excess shelter deduction exceed fifty percent (50%) of the household's income after all other currently modeled deductions, floored at zero and before applying the shelter deduction cap (10 CCR 2506-1, 4.407.3).</Description>
+      <Derived>
+        <GreaterOf>
+          <Dollar>0</Dollar>
+          <Subtract>
+            <Minuend><Dependency path="/monthlyShelterCostsForExcessShelterDeduction" /></Minuend>
+            <Subtrahends>
+              <Multiply>
+                <Dependency path="/incomeAfterDeductionsBeforeExcessShelterDeduction" />
+                <Dependency path="/excessShelterDeductionIncomeRate" />
+              </Multiply>
+            </Subtrahends>
+          </Subtract>
+        </GreaterOf>
+      </Derived>
+    </Fact>
+
+    <Fact path="/excessShelterDeduction">
+      <Name>Excess shelter deduction</Name>
+      <Description>The household's excess shelter deduction. Households containing a person aged sixty (60) or older or a person with a disability receive the full uncapped amount by which monthly shelter costs exceed fifty percent (50%) of income after all other deductions; other households are limited to the shelter deduction cap (10 CCR 2506-1, 4.407.3).</Description>
+      <Derived>
+        <Switch>
+          <Case>
+            <When><Dependency path="/hasMemberElderlyOrPersonWithDisability" /></When>
+            <Then><Dependency path="/uncappedExcessShelterDeduction" /></Then>
+          </Case>
+          <Case>
+            <When><True /></When>
+            <Then>
+              <LesserOf>
+                <Dependency path="/uncappedExcessShelterDeduction" />
+                <Dependency path="/excessShelterDeductionCap" />
+              </LesserOf>
+            </Then>
+          </Case>
+        </Switch>
+      </Derived>
     </Fact>
 
     <Fact path="/standardDeduction">
@@ -4286,7 +5168,9 @@
         <Add>
           <Dependency path="/earnedIncomeDeduction" />
           <Dependency path="/standardDeduction" />
+          <Dependency path="/dependentCareDeduction" />
           <Dependency path="/excessMedicalDeduction" />
+          <Dependency path="/excessShelterDeduction" />
         </Add>
       </Derived>
     </Fact>
