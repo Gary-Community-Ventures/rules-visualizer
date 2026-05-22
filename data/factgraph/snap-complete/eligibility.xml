@@ -180,6 +180,86 @@
       </Derived>
     </Fact>
 
+    <Fact path="/resourceItemTypeOptions">
+      <Name>Resource item type options</Name>
+      <Description>Options describing household resource items, including liquid resources such as cash on hand, money in checking or savings accounts, saving certificates, stocks or bonds, and exempt resources identified in 10 CCR 2506-1, 4.410.</Description>
+      <Derived>
+        <EnumOptions>
+          <String>CashOnHand</String>
+          <String>CheckingAccount</String>
+          <String>SavingsAccount</String>
+          <String>SavingCertificate</String>
+          <String>Stocks</String>
+          <String>Bonds</String>
+          <String>Automobile</String>
+          <String>Motorcycle</String>
+          <String>Vehicle</String>
+          <String>RecreationalVehicle</String>
+          <String>SeasonalVehicle</String>
+          <String>HomeAndSurroundingProperty</String>
+          <String>FutureHomeProperty</String>
+          <String>ProratedIncome</String>
+          <String>ProratedStudentIncome</String>
+          <String>ProratedSelfEmploymentIncome</String>
+          <String>HouseholdGoods</String>
+          <String>PersonalEffects</String>
+          <String>BurialPlot</String>
+          <String>LifeInsuranceCashValue</String>
+          <String>Livestock</String>
+          <String>FederalTaxPreferredRetirementAccount</String>
+          <String>PensionOrDefinedBenefitPlan</String>
+          <String>TraditionalDefinedBenefitPlan</String>
+          <String>Traditional401kPlan</String>
+          <String>Simple401kPlan</String>
+          <String>Section501c18Plan</String>
+          <String>Section403aPlan</String>
+          <String>Section403bPlan</String>
+          <String>Section408Plan</String>
+          <String>TraditionalIra</String>
+          <String>RothIra</String>
+          <String>SimpleIra</String>
+          <String>MyRa</String>
+          <String>TraditionalIndividualRetirementAnnuity</String>
+          <String>Section457Plan</String>
+          <String>FederalEmployeeThriftSavingsPlan</String>
+          <String>KeoghPlan</String>
+          <String>Section529aAbleProgramFunds</String>
+          <String>SimplifiedEmployerPlan</String>
+          <String>ProfitSharingPlan</String>
+          <String>CashBalancePlan</String>
+          <String>TaxDeferredEducationAccount</String>
+          <String>Section529QualifiedTuitionProgram</String>
+          <String>CoverdellEducationSavingsAccount</String>
+          <String>PrePurchasedFuneralAgreement</String>
+          <String>IncomeProducingProperty</String>
+          <String>Farmland</String>
+          <String>RentalHome</String>
+          <String>WorkRelatedEquipment</String>
+          <String>ToolsOfTradesman</String>
+          <String>FarmMachinery</String>
+          <String>IncomeProducingVehicle</String>
+          <String>InstallmentContractProducingFairMarketIncome</String>
+          <String>FormerFarmingSelfEmploymentEssentialProperty</String>
+          <String>InaccessibleResource</String>
+          <String>IrrevocableTrustFund</String>
+          <String>PropertyInProbate</String>
+          <String>PropertyProhibitedFromSaleByCreditorLien</String>
+          <String>RealPropertyGoodFaithEffortToSell</String>
+          <String>NonLiquidResourceNetReturn1500OrLess</String>
+          <String>QualifyingTrustFunds</String>
+          <String>NoSignificantReturnResource</String>
+          <String>BatteredShelterResidentInaccessibleResource</String>
+          <String>Other</String>
+        </EnumOptions>
+      </Derived>
+    </Fact>
+
+    <Fact path="/prePurchasedFuneralAgreementExclusionLimit">
+      <Name>Pre-purchased funeral agreement exclusion limit</Name>
+      <Description>The maximum equity value excluded for one bona fide pre-purchased funeral agreement per household member; only equity value over one thousand five hundred dollars ($1,500) is counted as a resource (10 CCR 2506-1, 4.410, D, 4).</Description>
+      <Derived><Dollar>1500</Dollar></Derived>
+    </Fact>
+
     <Fact path="/mileageRate">
       <Name>Mileage rate</Name>
       <Description>The per-mile rate used to calculate dependent care transportation expenses to and from the care facility and reasonable transportation expenses to obtain medical treatment or services, based on the prevailing IRS mileage rate. Effective rate modeled here is seventy cents ($0.70) per mile (10 CCR 2506-1, 4.407.4; 4.407.6).</Description>
@@ -248,6 +328,33 @@
       </Derived>
     </Fact>
 
+    <Fact path="/otherExcludedResourceOptions">
+      <Name>Other excluded resource options</Name>
+      <Description>Options for government payments received for a specific purpose or services that are excluded as resources for SNAP eligibility under 10 CCR 2506-1, 4.410, J.</Description>
+      <Derived>
+        <EnumOptions>
+          <String>ChildNutritionActAssistance</String>
+          <String>YouthIncentiveEntitlementOrYouthCommunityConservationOrYouthEmploymentTrainingPayment</String>
+          <String>DisasterHomeRestorationPaymentWithLegalSanction</String>
+          <String>PresidentialDisasterOrEmergencyAssistance</String>
+          <String>UniformRelocationActReimbursement</String>
+          <String>WicBenefit</String>
+          <String>FederalEnergyAssistanceWeatherizationOrEmergencyHeatingCoolingPayment</String>
+          <String>HudRentalRefundPayment</String>
+          <String>MandatoryMilitaryEducationDeduction</String>
+          <String>JapaneseAmericanOrAleutCivilLibertiesPayment</String>
+          <String>WicFarmersMarketDemonstrationProjectBenefit</String>
+          <String>AgentOrangeSettlementFundPayment</String>
+          <String>EarnedIncomeTaxCredit</String>
+          <String>RadiationExposureCompensationTrustFundPayment</String>
+          <String>NaziPersecutionVictimPayment</String>
+          <String>CrimeVictimCompensationPayment</String>
+          <String>VietnamVeteranChildSpinaBifidaAllowance</String>
+          <String>FederalIncomeTaxRefund</String>
+        </EnumOptions>
+      </Derived>
+    </Fact>
+
     <Fact path="/needBasedNonprofitCashDonationQuarterlyExclusionLimit">
       <Name>Need-based nonprofit cash donation quarterly exclusion limit</Name>
       <Description>Maximum aggregate amount of need-based cash donations from private nonprofit charitable organizations excluded per fiscal quarter under 10 CCR 2506-1, 4.405.2, A, 10.</Description>
@@ -296,6 +403,12 @@
       <Writable><Collection /></Writable>
     </Fact>
 
+    <Fact path="/resourceItems">
+      <Name>Resource items</Name>
+      <Description>List of household resource items whose values are determined as liquid or non-liquid resources at application filing (10 CCR 2506-1, 4.408.1).</Description>
+      <Writable><Collection /></Writable>
+    </Fact>
+
     <Fact path="/hasInadvertentHouseholdErrorClaimDueToEarnedIncomeCalculation">
       <Name>Has inadvertent household error claim due to earned income calculation</Name>
       <Description>Whether an Inadvertent Household Error (IHE) claim is due to earned income being reported in an untimely manner, so the claim is calculated without allowing the twenty percent (20%) earned income deduction (10 CCR 2506-1, 4.000.1).</Description>
@@ -306,6 +419,203 @@
       <Name>Member</Name>
       <Description>The household member who pays or is legally obligated to pay this expense.</Description>
       <Writable><CollectionItem collection="/members" /></Writable>
+    </Fact>
+
+    <Fact path="/resourceItems/*/memberId">
+      <Name>Member</Name>
+      <Description>The household member who owns this resource item.</Description>
+      <Writable><CollectionItem collection="/members" /></Writable>
+    </Fact>
+
+    <Fact path="/resourceItems/*/type">
+      <Name>Resource type</Name>
+      <Description>The type of household resource item, including liquid resources such as cash on hand, money in checking or savings accounts, saving certificates, stocks or bonds, and exempt resources identified in 10 CCR 2506-1, 4.410.</Description>
+      <Writable><Enum optionsPath="/resourceItemTypeOptions" /></Writable>
+    </Fact>
+
+    <Fact path="/resourceItems/*/otherExcludedResourceType">
+      <Name>Other excluded resource type</Name>
+      <Description>The specific type of other government payment received for a specific purpose or services and excluded as a resource under 10 CCR 2506-1, 4.410, J. Use when /resourceItems/*/type is Other and the resource matches one of the listed statutory exclusions.</Description>
+      <Writable><Enum optionsPath="/otherExcludedResourceOptions" /></Writable>
+    </Fact>
+
+    <Fact path="/resourceItems/*/isOtherExcludedResource">
+      <Name>Is other excluded resource</Name>
+      <Description>Whether this resource item is marked as Other and has a selected government payment type received for a specific purpose or services and excluded as a resource under 10 CCR 2506-1, 4.410, J.</Description>
+      <Derived>
+        <All>
+          <Equal>
+            <Left><Dependency path="../type" /></Left>
+            <Right><Enum optionsPath="/resourceItemTypeOptions">Other</Enum></Right>
+          </Equal>
+          <Any>
+            <Equal><Left><Dependency path="../otherExcludedResourceType" /></Left><Right><Enum optionsPath="/otherExcludedResourceOptions">ChildNutritionActAssistance</Enum></Right></Equal>
+            <Equal><Left><Dependency path="../otherExcludedResourceType" /></Left><Right><Enum optionsPath="/otherExcludedResourceOptions">YouthIncentiveEntitlementOrYouthCommunityConservationOrYouthEmploymentTrainingPayment</Enum></Right></Equal>
+            <Equal><Left><Dependency path="../otherExcludedResourceType" /></Left><Right><Enum optionsPath="/otherExcludedResourceOptions">DisasterHomeRestorationPaymentWithLegalSanction</Enum></Right></Equal>
+            <Equal><Left><Dependency path="../otherExcludedResourceType" /></Left><Right><Enum optionsPath="/otherExcludedResourceOptions">PresidentialDisasterOrEmergencyAssistance</Enum></Right></Equal>
+            <Equal><Left><Dependency path="../otherExcludedResourceType" /></Left><Right><Enum optionsPath="/otherExcludedResourceOptions">UniformRelocationActReimbursement</Enum></Right></Equal>
+            <Equal><Left><Dependency path="../otherExcludedResourceType" /></Left><Right><Enum optionsPath="/otherExcludedResourceOptions">WicBenefit</Enum></Right></Equal>
+            <Equal><Left><Dependency path="../otherExcludedResourceType" /></Left><Right><Enum optionsPath="/otherExcludedResourceOptions">FederalEnergyAssistanceWeatherizationOrEmergencyHeatingCoolingPayment</Enum></Right></Equal>
+            <Equal><Left><Dependency path="../otherExcludedResourceType" /></Left><Right><Enum optionsPath="/otherExcludedResourceOptions">HudRentalRefundPayment</Enum></Right></Equal>
+            <Equal><Left><Dependency path="../otherExcludedResourceType" /></Left><Right><Enum optionsPath="/otherExcludedResourceOptions">MandatoryMilitaryEducationDeduction</Enum></Right></Equal>
+            <Equal><Left><Dependency path="../otherExcludedResourceType" /></Left><Right><Enum optionsPath="/otherExcludedResourceOptions">JapaneseAmericanOrAleutCivilLibertiesPayment</Enum></Right></Equal>
+            <Equal><Left><Dependency path="../otherExcludedResourceType" /></Left><Right><Enum optionsPath="/otherExcludedResourceOptions">WicFarmersMarketDemonstrationProjectBenefit</Enum></Right></Equal>
+            <Equal><Left><Dependency path="../otherExcludedResourceType" /></Left><Right><Enum optionsPath="/otherExcludedResourceOptions">AgentOrangeSettlementFundPayment</Enum></Right></Equal>
+            <Equal><Left><Dependency path="../otherExcludedResourceType" /></Left><Right><Enum optionsPath="/otherExcludedResourceOptions">EarnedIncomeTaxCredit</Enum></Right></Equal>
+            <Equal><Left><Dependency path="../otherExcludedResourceType" /></Left><Right><Enum optionsPath="/otherExcludedResourceOptions">RadiationExposureCompensationTrustFundPayment</Enum></Right></Equal>
+            <Equal><Left><Dependency path="../otherExcludedResourceType" /></Left><Right><Enum optionsPath="/otherExcludedResourceOptions">NaziPersecutionVictimPayment</Enum></Right></Equal>
+            <Equal><Left><Dependency path="../otherExcludedResourceType" /></Left><Right><Enum optionsPath="/otherExcludedResourceOptions">CrimeVictimCompensationPayment</Enum></Right></Equal>
+            <Equal><Left><Dependency path="../otherExcludedResourceType" /></Left><Right><Enum optionsPath="/otherExcludedResourceOptions">VietnamVeteranChildSpinaBifidaAllowance</Enum></Right></Equal>
+            <Equal><Left><Dependency path="../otherExcludedResourceType" /></Left><Right><Enum optionsPath="/otherExcludedResourceOptions">FederalIncomeTaxRefund</Enum></Right></Equal>
+          </Any>
+        </All>
+      </Derived>
+    </Fact>
+
+    <Fact path="/resourceItems/*/value">
+      <Name>Resource value</Name>
+      <Description>The countable value of this resource item: for liquid resources, the current redemption rate less encumbrances; for non-liquid resources, the fair market value (or real property value) less verified encumbrances (10 CCR 2506-1, 4.408.1).</Description>
+      <Writable><Dollar /></Writable>
+    </Fact>
+
+    <Fact path="/resourceItems/*/calculatedAmount">
+      <Name>Calculated resource amount</Name>
+      <Description>The resource amount counted after applying resource exclusions. Fully exempt resources count as zero dollars ($0), while a bona fide pre-purchased funeral agreement counts only equity value over one thousand five hundred dollars ($1,500) (10 CCR 2506-1, 4.410).</Description>
+      <Derived>
+        <Switch>
+          <Case>
+            <When><Dependency path="../isExempt" /></When>
+            <Then><Dollar>0</Dollar></Then>
+          </Case>
+          <Case>
+            <When>
+              <Equal>
+                <Left><Dependency path="../type" /></Left>
+                <Right><Enum optionsPath="/resourceItemTypeOptions">PrePurchasedFuneralAgreement</Enum></Right>
+              </Equal>
+            </When>
+            <Then>
+              <GreaterOf>
+                <Dollar>0</Dollar>
+                <Subtract>
+                  <Minuend><Dependency path="../value" /></Minuend>
+                  <Subtrahends><Dependency path="/prePurchasedFuneralAgreementExclusionLimit" /></Subtrahends>
+                </Subtract>
+              </GreaterOf>
+            </Then>
+          </Case>
+          <Case>
+            <When><True /></When>
+            <Then><Dependency path="../value" /></Then>
+          </Case>
+        </Switch>
+      </Derived>
+    </Fact>
+
+    <Fact path="/resourceItems/*/isLiquid">
+      <Name>Is liquid resource</Name>
+      <Description>Whether this nonexempt resource item is a liquid resource, including cash on hand, money in checking or savings accounts, saving certificates, stocks or bonds.</Description>
+      <Derived>
+        <All>
+          <Not><Dependency path="../isExempt" /></Not>
+          <Any>
+            <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/resourceItemTypeOptions">CashOnHand</Enum></Right></Equal>
+            <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/resourceItemTypeOptions">CheckingAccount</Enum></Right></Equal>
+            <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/resourceItemTypeOptions">SavingsAccount</Enum></Right></Equal>
+            <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/resourceItemTypeOptions">SavingCertificate</Enum></Right></Equal>
+            <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/resourceItemTypeOptions">Stocks</Enum></Right></Equal>
+            <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/resourceItemTypeOptions">Bonds</Enum></Right></Equal>
+          </Any>
+        </All>
+      </Derived>
+    </Fact>
+
+    <Fact path="/resourceItems/*/isCountable">
+      <Name>Is countable resource</Name>
+      <Description>Whether this resource item is nonexempt and countable toward household resources after applying the exempt resource types in 10 CCR 2506-1, 4.410.</Description>
+      <Derived>
+        <Not>
+          <Dependency path="../isExempt" />
+        </Not>
+      </Derived>
+    </Fact>
+
+    <Fact path="/resourceItems/*/isExempt">
+      <Name>Is exempt resource</Name>
+      <Description>Whether this resource item is fully excluded from household resources because it is one of the exempt resource types in 10 CCR 2506-1, 4.410, including vehicles; the home and surrounding property; prorated income; household goods, personal effects, burial plots, life insurance cash value, livestock, retirement accounts, and education accounts; income-producing property; inaccessible resources; resources with no significant return; inaccessible resources of residents of shelters for battered women and children; resources used by or for household members, ineligible non-citizens, or disqualified persons; and specified government payments received for a specific purpose or services. Pre-purchased funeral agreements are handled by /resourceItems/*/calculatedAmount because only equity value over the exclusion limit is counted.</Description>
+      <Derived>
+        <Any>
+          <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/resourceItemTypeOptions">Automobile</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/resourceItemTypeOptions">Motorcycle</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/resourceItemTypeOptions">Vehicle</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/resourceItemTypeOptions">RecreationalVehicle</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/resourceItemTypeOptions">SeasonalVehicle</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/resourceItemTypeOptions">HomeAndSurroundingProperty</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/resourceItemTypeOptions">FutureHomeProperty</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/resourceItemTypeOptions">ProratedIncome</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/resourceItemTypeOptions">ProratedStudentIncome</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/resourceItemTypeOptions">ProratedSelfEmploymentIncome</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/resourceItemTypeOptions">HouseholdGoods</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/resourceItemTypeOptions">PersonalEffects</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/resourceItemTypeOptions">BurialPlot</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/resourceItemTypeOptions">LifeInsuranceCashValue</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/resourceItemTypeOptions">Livestock</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/resourceItemTypeOptions">FederalTaxPreferredRetirementAccount</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/resourceItemTypeOptions">PensionOrDefinedBenefitPlan</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/resourceItemTypeOptions">TraditionalDefinedBenefitPlan</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/resourceItemTypeOptions">Traditional401kPlan</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/resourceItemTypeOptions">Simple401kPlan</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/resourceItemTypeOptions">Section501c18Plan</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/resourceItemTypeOptions">Section403aPlan</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/resourceItemTypeOptions">Section403bPlan</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/resourceItemTypeOptions">Section408Plan</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/resourceItemTypeOptions">TraditionalIra</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/resourceItemTypeOptions">RothIra</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/resourceItemTypeOptions">SimpleIra</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/resourceItemTypeOptions">MyRa</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/resourceItemTypeOptions">TraditionalIndividualRetirementAnnuity</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/resourceItemTypeOptions">Section457Plan</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/resourceItemTypeOptions">FederalEmployeeThriftSavingsPlan</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/resourceItemTypeOptions">KeoghPlan</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/resourceItemTypeOptions">Section529aAbleProgramFunds</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/resourceItemTypeOptions">SimplifiedEmployerPlan</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/resourceItemTypeOptions">ProfitSharingPlan</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/resourceItemTypeOptions">CashBalancePlan</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/resourceItemTypeOptions">TaxDeferredEducationAccount</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/resourceItemTypeOptions">Section529QualifiedTuitionProgram</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/resourceItemTypeOptions">CoverdellEducationSavingsAccount</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/resourceItemTypeOptions">IncomeProducingProperty</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/resourceItemTypeOptions">Farmland</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/resourceItemTypeOptions">RentalHome</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/resourceItemTypeOptions">WorkRelatedEquipment</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/resourceItemTypeOptions">ToolsOfTradesman</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/resourceItemTypeOptions">FarmMachinery</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/resourceItemTypeOptions">IncomeProducingVehicle</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/resourceItemTypeOptions">InstallmentContractProducingFairMarketIncome</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/resourceItemTypeOptions">FormerFarmingSelfEmploymentEssentialProperty</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/resourceItemTypeOptions">InaccessibleResource</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/resourceItemTypeOptions">IrrevocableTrustFund</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/resourceItemTypeOptions">PropertyInProbate</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/resourceItemTypeOptions">PropertyProhibitedFromSaleByCreditorLien</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/resourceItemTypeOptions">RealPropertyGoodFaithEffortToSell</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/resourceItemTypeOptions">NonLiquidResourceNetReturn1500OrLess</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/resourceItemTypeOptions">QualifyingTrustFunds</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/resourceItemTypeOptions">NoSignificantReturnResource</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/resourceItemTypeOptions">BatteredShelterResidentInaccessibleResource</Enum></Right></Equal>
+          <Dependency path="../isOtherExcludedResource" />
+        </Any>
+      </Derived>
+    </Fact>
+
+    <Fact path="/resourceItems/*/isNonLiquid">
+      <Name>Is non-liquid resource</Name>
+      <Description>Whether this nonexempt resource item is a non-liquid resource, whose value is determined from the best source available or, for real property, from assessor-reported or assessed value less amounts owed (10 CCR 2506-1, 4.000.1; 4.408.1).</Description>
+      <Derived>
+        <All>
+          <Not><Dependency path="../isExempt" /></Not>
+          <Not><Dependency path="../isLiquid" /></Not>
+        </All>
+      </Derived>
     </Fact>
 
     <Fact path="/expenses/*/type">
@@ -356,7 +666,7 @@
 
     <Fact path="/expenses/*/amountForMonthlyConversion">
       <Name>Amount for monthly conversion</Name>
-      <Description>The expense amount at the expense's stated frequency to use for monthly conversion. Dependent care transportation and medical transportation use the mileage amount calculated from miles driven and the applicable mileage rate; all other expenses use the entered amount (10 CCR 2506-1, 4.407, B; 4.407.4; 4.407.6).</Description>
+      <Description>The expense amount at the expense's stated frequency to use for monthly conversion. Dependent care transportation and medical transportation use the mileage amount calculated from miles driven and the applicable mileage rate; other expenses use the entered amount. Reimbursements are subtracted and floored at zero only for allowable medical expenses (10 CCR 2506-1, 4.407, B; 4.407.4; 4.407.6).</Description>
       <Derived>
         <Switch>
           <Case>
@@ -375,7 +685,27 @@
                 <Right><Enum optionsPath="/expenseTypeOptions">MedicalTransportation</Enum></Right>
               </Equal>
             </When>
-            <Then><Dependency path="../medicalTransportationMileageAmount" /></Then>
+            <Then>
+              <GreaterOf>
+                <Dollar>0</Dollar>
+                <Subtract>
+                  <Minuend><Dependency path="../medicalTransportationMileageAmount" /></Minuend>
+                  <Subtrahends><Dependency path="../reimbursementAmount" /></Subtrahends>
+                </Subtract>
+              </GreaterOf>
+            </Then>
+          </Case>
+          <Case>
+            <When><Dependency path="../isAllowableMedicalExpense" /></When>
+            <Then>
+              <GreaterOf>
+                <Dollar>0</Dollar>
+                <Subtract>
+                  <Minuend><Dependency path="../amount" /></Minuend>
+                  <Subtrahends><Dependency path="../reimbursementAmount" /></Subtrahends>
+                </Subtract>
+              </GreaterOf>
+            </Then>
           </Case>
           <Case>
             <When><True /></When>
@@ -397,10 +727,10 @@
       <Writable><Boolean /></Writable>
     </Fact>
 
-    <Fact path="/expenses/*/isCoveredByVendorPaymentOrReimbursement">
-      <Name>Is covered by vendor payment or reimbursement</Name>
-      <Description>Whether this allowable expense is covered by a vendor payment, reimbursement, or excluded vendor payment converted to a direct cash payment under a federally authorized demonstration project, making the expense not deductible (10 CCR 2506-1, 4.407, B).</Description>
-      <Writable><Boolean /></Writable>
+    <Fact path="/expenses/*/reimbursementAmount">
+      <Name>Reimbursement amount</Name>
+      <Description>The amount of this expense reimbursed or expected to be reimbursed from another source at the expense's stated frequency. Allowable medical costs are reduced by reimbursements from another source (10 CCR 2506-1, 4.407.6).</Description>
+      <Writable><Dollar /></Writable>
     </Fact>
 
     <Fact path="/expenses/*/isForClaimableShelterResidence">
@@ -522,12 +852,11 @@
 
     <Fact path="/expenses/*/isAllowableMedicalExpense">
       <Name>Is allowable medical expense</Name>
-      <Description>Whether this expense is an allowable medical cost for the excess medical deduction: the cost must be incurred by a household member who is eligible for the excess medical deduction, must not be covered by a vendor payment or reimbursement, and must be one of the allowed medical cost categories, including medical or dental care, psychotherapy or rehabilitation services, hospital or outpatient treatment, nursing or nursing-home care, prescription drugs, practitioner-approved over-the-counter medication, medical supplies or equipment, health or Medicare premiums and cost sharing, dentures, hearing aids, prosthetics, eyeglasses, service animal costs, reasonable transportation or lodging for medical treatment, or necessary attendant, homemaker, home health aide, child-care, housekeeper, or attendant-meal costs (10 CCR 2506-1, 4.407.6).</Description>
+      <Description>Whether this expense is an allowable medical cost category for the excess medical deduction: the cost must be incurred by a household member who is eligible for the excess medical deduction and must be one of the allowed medical cost categories, including medical or dental care, psychotherapy or rehabilitation services, hospital or outpatient treatment, nursing or nursing-home care, prescription drugs, practitioner-approved over-the-counter medication, medical supplies or equipment, health or Medicare premiums and cost sharing, dentures, hearing aids, prosthetics, eyeglasses, service animal costs, reasonable transportation or lodging for medical treatment, or necessary attendant, homemaker, home health aide, child-care, housekeeper, or attendant-meal costs. Reimbursements are subtracted through the expense amount used for monthly conversion (10 CCR 2506-1, 4.407.6).</Description>
       <Derived>
         <All>
           <Dependency path="../memberId/isPartOfHousehold" />
           <Dependency path="../memberId/isEligibleForExcessMedicalDeduction" />
-          <Not><Dependency path="../isCoveredByVendorPaymentOrReimbursement" /></Not>
           <Any>
             <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/expenseTypeOptions">MedicalDentalCare</Enum></Right></Equal>
             <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/expenseTypeOptions">PsychotherapyRehabilitationServices</Enum></Right></Equal>
@@ -582,13 +911,9 @@
 
     <Fact path="/expenses/*/monthlyAmount">
       <Name>Monthly amount</Name>
-      <Description>The monthly deductible amount of this expense. Expenses covered by vendor payments, reimbursements, or excluded vendor payments converted to direct cash payments under federally authorized demonstration projects are not deductible and are set to zero. Dependent care transportation mileage expenses first calculate an intermediate mileage amount at the stated frequency, then use the same monthly conversion rules as other expenses. Otherwise, weekly, bi-weekly, and semi-monthly expenses are converted to monthly amounts. For other non-monthly frequencies, the amount is converted using the selected frequency or divided by the number of intended months only when the household elects averaging; otherwise the stated amount is used without frequency conversion (10 CCR 2506-1, 4.407, B; 4.407.4).</Description>
+      <Description>The monthly deductible amount of this expense. Dependent care and medical transportation mileage expenses first calculate an intermediate mileage amount at the stated frequency, then use the same monthly conversion rules as other expenses; reimbursements are subtracted only for allowable medical expenses through the amount used for monthly conversion. Otherwise, weekly, bi-weekly, and semi-monthly expenses are converted to monthly amounts. For other non-monthly frequencies, the amount is converted using the selected frequency or divided by the number of intended months only when the household elects averaging; otherwise the stated amount is used without frequency conversion (10 CCR 2506-1, 4.407, B; 4.407.4; 4.407.6).</Description>
       <Derived>
         <Switch>
-          <Case>
-            <When><Dependency path="../isCoveredByVendorPaymentOrReimbursement" /></When>
-            <Then><Dollar>0</Dollar></Then>
-          </Case>
           <Case>
             <When>
               <Equal>
@@ -733,9 +1058,9 @@
       </Derived>
     </Fact>
 
-    <Fact path="/legallyObligatedChildSupportIncomeExclusion">
+    <Fact path="/members/*/legallyObligatedChildSupportIncomeExclusion">
       <Name>Legally obligated child support income exclusion</Name>
-      <Description>The total monthly legally obligated child support expense paid by or legally obligated to members who are part of the SNAP household, excluded from gross income because legally obligated child support is considered an income exclusion (10 CCR 2506-1, 4.405, D).</Description>
+      <Description>This member's total monthly legally obligated child support expense, excluded from gross income because legally obligated child support is considered an income exclusion and deducted before applying any ineligible inclusion proration (10 CCR 2506-1, 4.405, D; 4.407.3, A).</Description>
       <Derived>
         <CollectionSum>
           <Switch>
@@ -743,10 +1068,14 @@
               <When>
                 <All>
                   <Equal>
+                    <Left><Dependency path="/expenses/*/memberId" /></Left>
+                    <Right><Dependency path=".." /></Right>
+                  </Equal>
+                  <Equal>
                     <Left><Dependency path="/expenses/*/type" /></Left>
                     <Right><Enum optionsPath="/expenseTypeOptions">ChildSupport</Enum></Right>
                   </Equal>
-                  <Dependency path="/expenses/*/memberId/isPartOfHousehold" />
+                  <Dependency path="../isPartOfHousehold" />
                 </All>
               </When>
               <Then><Dependency path="/expenses/*/monthlyAmount" /></Then>
@@ -773,7 +1102,7 @@
               <Then>
                 <Multiply>
                   <Dependency path="/expenses/*/monthlyAmount" />
-                  <Dependency path="/expenses/*/memberId/ineligibleNonCitizenOrNoSsnIncomeInclusionRatio" />
+                  <Dependency path="/expenses/*/memberId/ineligibleInclusionRatio" />
                 </Multiply>
               </Then>
             </Case>
@@ -2024,7 +2353,7 @@
 
     <Fact path="/members/*/isPartOfHousehold">
       <Name>Is part of household</Name>
-      <Description>Whether this member is part of the SNAP household — a group of individuals who live together and customarily purchase and prepare food together for home consumption. Mandatory household members are always considered part of the household regardless of food preparation. A member who would otherwise be part of the household but has established a residence separate and apart (/members/*/isSeparateAndApart) is excluded (10 CCR 2506-1, 4.304, 4.304.1).</Description>
+      <Description>Whether this member is part of the SNAP household — a group of individuals who live together and customarily purchase and prepare food together for home consumption. Mandatory household members are always considered part of the household regardless of food preparation. A member who would otherwise be part of the household but has established a residence separate and apart (/members/*/isSeparateAndApart) is excluded. A person who is an ineligible student for SNAP purposes is treated as a non-household member (10 CCR 2506-1, 4.304, 4.304.1, 4.306).</Description>
       <Derived>
         <All>
           <Any>
@@ -2032,6 +2361,7 @@
             <Dependency path="../preparesFoodWithHousehold" />
           </Any>
           <Not><Dependency path="../isSeparateAndApart" /></Not>
+          <Not><Dependency path="../isIneligibleStudent" /></Not>
         </All>
       </Derived>
     </Fact>
@@ -3329,12 +3659,33 @@
       </Derived>
     </Fact>
 
-    <!-- TODO: derive from the resource limit prescribed in Section 4.408 once
-         that policy is captured (10 CCR 2506-1, 4.000.1). -->
+    <Fact path="/resourceLimitForHouseholdsWithElderlyOrPersonWithDisability">
+      <Name>Resource limit for households with elderly or disabled member</Name>
+      <Description>The maximum allowable countable resources for a household that includes a member aged sixty (60) or older and/or a person with a disability, effective October 1, 2024 (10 CCR 2506-1, 4.408).</Description>
+      <Derived><Dollar>4500</Dollar></Derived>
+    </Fact>
+
+    <Fact path="/normalResourceLimit">
+      <Name>Normal resource limit</Name>
+      <Description>The maximum allowable countable resources for a household that does not include a member aged sixty (60) or older and/or a person with a disability, effective October 1, 2024 (10 CCR 2506-1, 4.408).</Description>
+      <Derived><Dollar>3000</Dollar></Derived>
+    </Fact>
+
     <Fact path="/resourceLimit">
       <Name>Resource limit</Name>
-      <Description>The maximum allowable countable resources for a household reviewed under Standard Eligibility rules, prescribed in Section 4.408 (10 CCR 2506-1, 4.000.1). Placeholder.</Description>
-      <Writable><Dollar /></Writable>
+      <Description>The maximum allowable countable resources for a household reviewed under Standard Eligibility rules: four thousand five hundred dollars ($4,500) if the household includes a member aged sixty (60) or older and/or a person with a disability, otherwise three thousand dollars ($3,000), effective October 1, 2024 (10 CCR 2506-1, 4.408).</Description>
+      <Derived>
+        <Switch>
+          <Case>
+            <When><Dependency path="/hasMemberElderlyOrPersonWithDisability" /></When>
+            <Then><Dependency path="/resourceLimitForHouseholdsWithElderlyOrPersonWithDisability" /></Then>
+          </Case>
+          <Case>
+            <When><True /></When>
+            <Then><Dependency path="/normalResourceLimit" /></Then>
+          </Case>
+        </Switch>
+      </Derived>
     </Fact>
 
     <Fact path="/meetsResourceTest">
@@ -4599,17 +4950,18 @@
       </Derived>
     </Fact>
 
-    <Fact path="/members/*/ineligibleNonCitizenOrNoSsnIncomeInclusionRatio">
-      <Name>Ineligible non-citizen or no-SSN income inclusion ratio</Name>
-      <Description>The member-level inclusion ratio for income or expenses subject to ineligible non-citizen or missing-SSN proration. Members who are not ineligible non-citizens and have not failed to provide or obtain a Social Security Number are included in full. For a member who is an ineligible non-citizen or has failed to provide or obtain a Social Security Number, the includable share is the number of household members who are not ineligible non-citizens and have not failed to provide or obtain a Social Security Number divided by the total number of members in the household (10 CCR 2506-1, 4.407.3, A).</Description>
+    <Fact path="/members/*/ineligibleInclusionRatio">
+      <Name>Ineligible inclusion ratio</Name>
+      <Description>The member-level inclusion ratio for income or expenses subject to ineligible non-citizen, missing-SSN, or ABAWD sanction proration. Members who are not ineligible non-citizens, have not failed to provide or obtain a Social Security Number, and are not sanctioned as ABAWDs who have received three months of SNAP benefits in a thirty-six month period are included in full. For a member who is an ineligible non-citizen, has failed to provide or obtain a Social Security Number, or is sanctioned as an ABAWD who has received three months of SNAP benefits in a thirty-six month period, the includable share is the number of household members who are not ineligible non-citizens, have not failed to provide or obtain a Social Security Number, and are not sanctioned as ABAWDs divided by the total number of members in the household (10 CCR 2506-1, 4.407.3, A).</Description>
       <Derived>
         <Switch>
           <Case>
             <When>
-              <Any>
-                <Dependency path="../failedToProvideOrObtainSSN" />
-                <Dependency path="../isIneligibleNonCitizen" />
-              </Any>
+                <Any>
+                  <Dependency path="../failedToProvideOrObtainSSN" />
+                  <Dependency path="../isIneligibleNonCitizen" />
+                  <Dependency path="../exceededAbawdCountableMonthsLimit" />
+                </Any>
             </When>
             <Then>
               <Divide>
@@ -4621,6 +4973,7 @@
                         <Any>
                           <Dependency path="/members/*/failedToProvideOrObtainSSN" />
                           <Dependency path="/members/*/isIneligibleNonCitizen" />
+                          <Dependency path="/members/*/exceededAbawdCountableMonthsLimit" />
                         </Any>
                       </Not>
                     </All>
@@ -4658,7 +5011,7 @@
                 <Then>
                   <Multiply>
                     <Dependency path="/expenses/*/monthlyAmount" />
-                    <Dependency path="/expenses/*/memberId/ineligibleNonCitizenOrNoSsnIncomeInclusionRatio" />
+                    <Dependency path="/expenses/*/memberId/ineligibleInclusionRatio" />
                   </Multiply>
                 </Then>
               </Case>
@@ -4950,29 +5303,32 @@
 
     <Fact path="/members/*/earnedIncomeDeductionEligibleIncome">
       <Name>Earned income deduction eligible income</Name>
-      <Description>This member's monthly gross nonexempt earned income eligible for the twenty percent (20%) earned income deduction, excluding any portion earned under a work supplementation or work support program that is attributable to a federal, state, or local public assistance program (10 CCR 2506-1, 4.407.2).</Description>
+      <Description>This member's monthly gross nonexempt earned income eligible for the twenty percent (20%) earned income deduction, excluding any portion earned under a work supplementation or work support program that is attributable to a federal, state, or local public assistance program. For a member subject to ineligible inclusion proration, the earned income deduction applies only to the prorated income attributed to the household (10 CCR 2506-1, 4.407.2; 4.407.3, A).</Description>
       <Derived>
-        <CollectionSum>
-          <Switch>
-            <Case>
-              <When>
-                <All>
-                  <Equal>
-                    <Left><Dependency path="/incomes/*/memberId" /></Left>
-                    <Right><Dependency path=".." /></Right>
-                  </Equal>
-                  <Dependency path="/incomes/*/isEarned" />
-                  <Not><Dependency path="/incomes/*/isWorkSupplementationOrWorkSupportPublicAssistancePortion" /></Not>
-                </All>
-              </When>
-              <Then><Dependency path="/incomes/*/monthlyAmount" /></Then>
-            </Case>
-            <Case>
-              <When><True /></When>
-              <Then><Dollar>0</Dollar></Then>
-            </Case>
-          </Switch>
-        </CollectionSum>
+        <Multiply>
+          <CollectionSum>
+            <Switch>
+              <Case>
+                <When>
+                  <All>
+                    <Equal>
+                      <Left><Dependency path="/incomes/*/memberId" /></Left>
+                      <Right><Dependency path=".." /></Right>
+                    </Equal>
+                    <Dependency path="/incomes/*/isEarned" />
+                    <Not><Dependency path="/incomes/*/isWorkSupplementationOrWorkSupportPublicAssistancePortion" /></Not>
+                  </All>
+                </When>
+                <Then><Dependency path="/incomes/*/monthlyAmount" /></Then>
+              </Case>
+              <Case>
+                <When><True /></When>
+                <Then><Dollar>0</Dollar></Then>
+              </Case>
+            </Switch>
+          </CollectionSum>
+          <Dependency path="../ineligibleInclusionRatio" />
+        </Multiply>
       </Derived>
     </Fact>
 
@@ -5055,20 +5411,88 @@
       <Writable><Dollar /></Writable>
     </Fact>
 
-    <!-- TODO: break out the components of liquid resources (cash on hand,
-         checking accounts, savings accounts, saving certificates, stocks,
-         bonds) as separate facts and derive liquidResources from their sum
-         (10 CCR 2506-1, 4.000.1). -->
     <Fact path="/members/*/liquidResources">
       <Name>Liquid resources</Name>
-      <Description>Assets such as cash on hand or assets that can be easily converted to cash such as money in checking or savings accounts, saving certificates, or stocks and bonds (10 CCR 2506-1, 4.000.1)</Description>
-      <Writable><Dollar /></Writable>
+      <Description>The sum of this household member's countable liquid resource item values, including cash on hand, money in checking or savings accounts, saving certificates, stocks or bonds, and non-recurring lump sum payments specified in 10 CCR 2506-1, 4.405, F.</Description>
+      <Derived>
+        <Add>
+          <CollectionSum>
+            <Switch>
+              <Case>
+                <When>
+                  <All>
+                    <Equal>
+                      <Left><Dependency path="/resourceItems/*/memberId" /></Left>
+                      <Right><Dependency path=".." /></Right>
+                    </Equal>
+                    <Dependency path="../isPartOfHousehold" />
+                    <Dependency path="/resourceItems/*/isCountable" />
+                    <Dependency path="/resourceItems/*/isLiquid" />
+                  </All>
+                </When>
+                <Then><Dependency path="/resourceItems/*/calculatedAmount" /></Then>
+              </Case>
+              <Case>
+                <When><True /></When>
+                <Then><Dollar>0</Dollar></Then>
+              </Case>
+            </Switch>
+          </CollectionSum>
+          <CollectionSum>
+            <Switch>
+              <Case>
+                <When>
+                  <All>
+                    <Equal>
+                      <Left><Dependency path="/incomes/*/memberId" /></Left>
+                      <Right><Dependency path=".." /></Right>
+                    </Equal>
+                    <Dependency path="../isPartOfHousehold" />
+                    <Equal>
+                      <Left><Dependency path="/incomes/*/type" /></Left>
+                      <Right><Enum optionsPath="/incomeSourceOptions">NonRecurringLumpSum</Enum></Right>
+                    </Equal>
+                  </All>
+                </When>
+                <Then><Dependency path="/incomes/*/amount" /></Then>
+              </Case>
+              <Case>
+                <When><True /></When>
+                <Then><Dollar>0</Dollar></Then>
+              </Case>
+            </Switch>
+          </CollectionSum>
+        </Add>
+      </Derived>
     </Fact>
 
     <Fact path="/members/*/nonLiquidResources">
       <Name>Non-liquid resources</Name>
-      <Description>The value of this member's non-liquid resources, such as personal effects, household goods, vehicles, buildings, land, and other real property (10 CCR 2506-1, 4.000.1)</Description>
-      <Writable><Dollar /></Writable>
+      <Description>The sum of this household member's countable non-liquid resource item values, such as personal effects, household goods, vehicles, buildings, land, and other real property (10 CCR 2506-1, 4.000.1; 4.408.1).</Description>
+      <Derived>
+        <CollectionSum>
+          <Switch>
+            <Case>
+              <When>
+                <All>
+                  <Equal>
+                    <Left><Dependency path="/resourceItems/*/memberId" /></Left>
+                    <Right><Dependency path=".." /></Right>
+                  </Equal>
+                  <Dependency path="../isPartOfHousehold" />
+                  <Dependency path="/resourceItems/*/isCountable" />
+                  <Dependency path="/resourceItems/*/isNonLiquid" />
+                </All>
+              </When>
+              <Then><Dependency path="/resourceItems/*/calculatedAmount" /></Then>
+            </Case>
+            <Case>
+              <When><True /></When>
+              <Then><Dollar>0</Dollar></Then>
+            </Case>
+          </Switch>
+        </CollectionSum>
+      </Derived>
     </Fact>
 
     <Fact path="/members/*/resources">
@@ -5085,12 +5509,23 @@
 
     <Fact path="/members/*/grossIncome">
       <Name>Gross income</Name>
-      <Description>The total of all non-exempt earned and unearned income added together before any deduction or disregard is considered (10 CCR 2506-1, 4.000.1)</Description>
+      <Description>The total of all non-exempt earned and unearned income after subtracting this member's legally obligated child support income exclusion, prorated by the member's ineligible inclusion ratio when the member is disqualified for being an ineligible non-citizen, for failure or refusal to obtain or provide a SSN, or as an ABAWD who has received three months of SNAP benefits in a thirty-six month period. Legally obligated child support is deducted before applying ineligible inclusion proration (10 CCR 2506-1, 4.000.1; 4.405, D; 4.407.3, A).</Description>
       <Derived>
-        <Add>
-          <Dependency path="../nonExemptEarnedIncome" />
-          <Dependency path="../unearnedIncome" />
-        </Add>
+        <GreaterOf>
+          <Dollar>0</Dollar>
+          <Multiply>
+            <Subtract>
+              <Minuend>
+                <Add>
+                  <Dependency path="../nonExemptEarnedIncome" />
+                  <Dependency path="../unearnedIncome" />
+                </Add>
+              </Minuend>
+              <Subtrahends><Dependency path="../legallyObligatedChildSupportIncomeExclusion" /></Subtrahends>
+            </Subtract>
+            <Dependency path="../ineligibleInclusionRatio" />
+          </Multiply>
+        </GreaterOf>
       </Derived>
     </Fact>
 
@@ -6336,28 +6771,20 @@
 
     <Fact path="/grossIncome">
       <Name>Gross income</Name>
-      <Description>The sum of gross income across members who are part of the SNAP household, less legally obligated child support because it is considered an income exclusion (10 CCR 2506-1, 4.000.1; 4.405, D).</Description>
+      <Description>The sum of gross income across members who are part of the SNAP household after member-level legally obligated child support income exclusions and any ineligible inclusion proration are applied (10 CCR 2506-1, 4.000.1; 4.405, D; 4.407.3, A).</Description>
       <Derived>
-        <GreaterOf>
-          <Dollar>0</Dollar>
-          <Subtract>
-            <Minuend>
-              <CollectionSum>
-                <Switch>
-                  <Case>
-                    <When><Dependency path="/members/*/isPartOfHousehold" /></When>
-                    <Then><Dependency path="/members/*/grossIncome" /></Then>
-                  </Case>
-                  <Case>
-                    <When><True /></When>
-                    <Then><Dollar>0</Dollar></Then>
-                  </Case>
-                </Switch>
-              </CollectionSum>
-            </Minuend>
-            <Subtrahends><Dependency path="/legallyObligatedChildSupportIncomeExclusion" /></Subtrahends>
-          </Subtract>
-        </GreaterOf>
+        <CollectionSum>
+          <Switch>
+            <Case>
+              <When><Dependency path="/members/*/isPartOfHousehold" /></When>
+              <Then><Dependency path="/members/*/grossIncome" /></Then>
+            </Case>
+            <Case>
+              <When><True /></When>
+              <Then><Dollar>0</Dollar></Then>
+            </Case>
+          </Switch>
+        </CollectionSum>
       </Derived>
     </Fact>
 
@@ -6553,7 +6980,7 @@
 
     <Fact path="/members/*/isDisqualified">
       <Name>Is disqualified individual</Name>
-      <Description>Whether this member is ineligible to receive SNAP benefits due to disqualification for an Intentional Program Violation/fraud, failure to provide or obtain a SSN, status as an ineligible non-citizen, failure to meet general work requirements, having a level sanction imposed, failure to cooperate with work requirements, failure to cooperate with the state quality assurance division, or as an ABAWD who has received three countable months of SNAP within thirty-six (36) months without meeting an exemption or ABAWD work requirements (10 CCR 2506-1, 4.000.1; 4.310; 4.310.8)</Description>
+      <Description>Whether this member is ineligible to receive SNAP benefits due to disqualification for an Intentional Program Violation/fraud, failure to provide or obtain a SSN, status as an ineligible non-citizen, failure to meet general work requirements, having a level sanction imposed, failure to cooperate with work requirements, failure to cooperate with the state quality assurance division, or as an ABAWD who has received three countable months of SNAP within thirty-six (36) months without meeting an exemption or ABAWD work requirements. Ineligible students are treated as non-household members through /members/*/isPartOfHousehold rather than as disqualified individuals (10 CCR 2506-1, 4.000.1; 4.306; 4.310; 4.310.8)</Description>
       <Derived>
         <Any>
           <Dependency path="../disqualifiedForIPV" />
@@ -6568,7 +6995,6 @@
           <Dependency path="../disqualifiedForFelonyNonCompliance" />
           <Dependency path="../disqualifiedForParoleOrProbationViolation" />
           <Dependency path="../disqualifiedForBoardingHouseOrInstitutionResidence" />
-          <Dependency path="../isIneligibleStudent" />
           <Dependency path="../isIneligibleStriker" />
         </Any>
       </Derived>

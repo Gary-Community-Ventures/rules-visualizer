@@ -11164,6 +11164,810 @@
         }
       ],
       "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__mph5sn8f-hde7",
+      "documentId": "10-ccr-2506-1",
+      "text": "4.408 RESOURCE ELIGIBILITY STANDARDS A. The local office shall consider households eligible under either expanded or basic categorical eligibility exempt from the resource eligibility criteria of this section. B. Households that do not meet expanded or basic categorical eligibility criteria shall have their nonexempt resources, as anticipated to be available in the issuance month, used to determine household eligibility.",
+      "page": 118,
+      "rects": [
+        {
+          "x": 0.1021433738150531,
+          "y": 0.10065455615209237,
+          "w": 0.7748125023794115,
+          "h": 0.12896962565271752
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mph5suau-wgbf",
+      "documentId": "10-ccr-2506-1",
+      "text": "The resources of a sponsor and spouse considered toward a non-citizen household shall be the sponsor's total resources less two thousand dollars ($2,000).",
+      "page": 118,
+      "rects": [
+        {
+          "x": 0.16549282369513077,
+          "y": 0.2371552548356255,
+          "w": 0.7163360871054936,
+          "h": 0.033889828638670294
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mph5ttpt-ofk0",
+      "documentId": "10-ccr-2506-1",
+      "text": "C. The value of liquid resources, as declared by the household, shall be utilized in the determination of expedited eligibility for all applicant households.",
+      "page": 118,
+      "rects": [
+        {
+          "x": 0.11067118437583279,
+          "y": 0.27575200411855555,
+          "w": 0.7760307610309514,
+          "h": 0.040479517540634
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mph5urwa-dg56",
+      "documentId": "10-ccr-2506-1",
+      "text": "D. As a result of the Food, Conservation and Energy Act of 2008, adjustments to the SNAP resource limit will be subject to change annually according to the Consumer Price Index. There are currently two (2) resource limits: 1. One established for households that do contain a member who is aged sixty (60) and older and/or a person with a disability; and, 2. Another established for households that do not contain a member who is aged sixty (60) and older and/or a person with a disability.",
+      "page": 118,
+      "rects": [
+        {
+          "x": 0.10701640842121293,
+          "y": 0.3247039788188571,
+          "w": 0.784558571591731,
+          "h": 0.13650069868353315
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mph5v9w2-e79i",
+      "documentId": "10-ccr-2506-1",
+      "text": "E. The resource limits are as follows: Effective October 1, 2024, the resource limit for households that include a member who is aged sixty (60) and older and/or a person with a disability is four thousand and five hundred dollars ($4,500). The resource limit for households that do not include a member who is aged sixty (60) and older and/or a person with a disability is three thousand dollars ($3,000).",
+      "page": 118,
+      "rects": [
+        {
+          "x": 0.11067118437583279,
+          "y": 0.47061851879090977,
+          "w": 0.7699394677732516,
+          "h": 0.09696256527175107
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1779468973934",
+      "documentId": "10-ccr-2506-1",
+      "text": "118",
+      "page": 118,
+      "rects": [
+        {
+          "x": 0.10579814976967297,
+          "y": 0.9431933514745899,
+          "w": 0.7918681235009708,
+          "h": 0.03765536515407819
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1779468977839",
+      "documentId": "10-ccr-2506-1",
+      "text": "CODE OF COLORADO REGULATIONS 10 CCR 2506-1 Supplemental Nutrition Assistance Program (SNAP)",
+      "page": 119,
+      "rects": [
+        {
+          "x": 0.09727033920889329,
+          "y": 0.03168345958667353,
+          "w": 0.7955228994555906,
+          "h": 0.04424505405604177
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__mph5xg78-7kqs",
+      "documentId": "10-ccr-2506-1",
+      "text": "4.408.1 Determining the Value of Resources The value of nonexempt household resources at the application filing date must be determined from applicant statements, documents, and/or from collateral contacts when household assessment is uncertain or questionable. A. Valuation of Liquid Resources The value of liquid resources is the current redemption rate less encumbrances. B. Valuation of Non-Liquid Resources Except for real property, non-exempt non-liquid resources shall have a fair market value as determined from the best source available (such as, but not limited to, blue book, local dealer, or equivalent verifiable Internet web site) less verified encumbrances. If warranted, the eligibility technician worker should adjust the market value for poor or unusable condition of the property before assigning a resource value. The eligibility technician worker shall annotate the case record to show source and computation used to determine resource value.",
+      "page": 118,
+      "rects": [
+        {
+          "x": 0.10945292572429284,
+          "y": 0.5722880047069206,
+          "w": 0.7796855369855712,
+          "h": 0.2786497021401779
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mph5y5i8-emim",
+      "documentId": "10-ccr-2506-1",
+      "text": "The value of real property, such as buildings, land, or vacation property, unless exempt as income producing, may be obtained by using the actual value reported by a county assessor or, if not reported, the current assessed valuation, accomplished in accordance with state law, and dividing the value by the appropriate percentage rate of assessment for real property to derive fair market value and subtracting the amount the household currently owes on the property.",
+      "page": 119,
+      "rects": [
+        {
+          "x": 0.1021433738150531,
+          "y": 0.08345958667353093,
+          "w": 0.7955228994555906,
+          "h": 0.08472457159667574
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1779469345292",
+      "documentId": "10-ccr-2506-1",
+      "text": "4.408.2 Transfer of Resources At the time of application, households not eligible under expanded or basic categorical eligibility rules shall be asked to provide information regarding any resources which any household member, ineligible non-citizen, or disqualified person whose resources are being considered available to the household has transferred within the three (3) month period immediately preceding the date of application. Households that have transferred resources knowingly for the purpose of qualifying or attempting to qualify for SNAP benefits shall be disqualified from participation in the program for up to one (1) year from the date of discovery of the transfer. This disqualification period shall be applied if the resources are transferred knowingly in the three (3) month period prior to application, or if they are transferred knowingly after the household is determined eligible for benefits. A. Eligibility for the program shall not be affected by the following transfers: 1. Resources that would not otherwise affect eligibility, such as resources consisting of excluded person property such as furniture, or of money that when added to other household resources, totaled less at the time of the transfer than the allowable resource limits. 2. Resources that are sold or traded at, or near, fair market value. 3. Resources that are transferred between members of the same household including ineligible non-citizens or disqualified individuals whose resources are being considered available to the household. 4. Resources that are transferred for reasons other than qualifying or attempting to qualify for SNAP benefits, for example a parent placing funds into an educational trust fund. B. In the event the local office establishes that an applicant household knowingly transferred resources for the purpose of qualifying or attempting to qualify for SNAP, the household shall be sent a notice of denial explaining the reason for and length of disqualification. The period of disqualification shall begin in the month of application. If the household is participating at the time of the discovery of the transfer, a notice of adverse action explaining the reason for and the length of disqualification shall be sent. The period of disqualification shall be made effective with the first allotment to be issued after the notice of adverse action has expired unless the household has requested a fair hearing and continued benefits. The length of the disqualification period shall be based on the amount by which nonexempt transferred resources, when added to other countable resources, exceed the allowable resource limits. C. The following chart shall be used to determine the period of disqualification for transfer of resources.",
+      "page": 119,
+      "rects": [
+        {
+          "x": 0.10579814976967297,
+          "y": 0.17759799955872618,
+          "w": 0.7991776754102106,
+          "h": 0.6401412076193278
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1779469351169",
+      "documentId": "10-ccr-2506-1",
+      "text": "119",
+      "page": 119,
+      "rects": [
+        {
+          "x": 0.10701640842121293,
+          "y": 0.9476502169596235,
+          "w": 0.7918681235009708,
+          "h": 0.02635875560785461
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1779469372291",
+      "documentId": "10-ccr-2506-1",
+      "text": "CODE OF COLORADO REGULATIONS 10 CCR 2506-1 Supplemental Nutrition Assistance Program (SNAP)",
+      "page": 120,
+      "rects": [
+        {
+          "x": 0.10718998604984353,
+          "y": 0.03867612568648302,
+          "w": 0.7914640123666252,
+          "h": 0.03635992832898743
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1779469377530",
+      "documentId": "10-ccr-2506-1",
+      "text": "Amount in Excess of the Resource Limit Period of Disqualification $1 to $249 1 month $250 to $999 3 months $1,000 to $2,999 6 months $3,000 to $4,999 9 months $5,000 12 months",
+      "page": 120,
+      "rects": [
+        {
+          "x": 0.18078648719978888,
+          "y": 0.08529141841595408,
+          "w": 0.5972175093315236,
+          "h": 0.12586129036957186
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1779469402094",
+      "documentId": "10-ccr-2506-1",
+      "text": "120",
+      "page": 120,
+      "rects": [
+        {
+          "x": 0.10718998604984353,
+          "y": 0.9467420280565794,
+          "w": 0.7854315122723674,
+          "h": 0.03356301076521906
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1779469408729",
+      "documentId": "10-ccr-2506-1",
+      "text": "CODE OF COLORADO REGULATIONS 10 CCR 2506-1 Supplemental Nutrition Assistance Program (SNAP)",
+      "page": 121,
+      "rects": [
+        {
+          "x": 0.09633148588017947,
+          "y": 0.03437877838798491,
+          "w": 0.8023225125362893,
+          "h": 0.042886069311113384
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__mph6n1ag-nju6",
+      "documentId": "10-ccr-2506-1",
+      "text": "C. Jointly Owned Resources Nonexempt liquid and non-liquid resources owned jointly by separate households shall be considered available in their entirety to each household, unless it can be demonstrated by the applicant household that it does not have access to such resources. If only a portion of the resource is accessible, that portion which is available to the household is considered as a resource. The resource shall be considered totally inaccessible to the household if the resource cannot practically be subdivided and the household's access to the value of the resource is dependent on the agreement of a joint owner who refuses to comply. For the purpose of this provision, ineligible non-citizens or disqualified individuals residing with the household shall be considered household members. D. Co-Mingled Resources Exempt monies that are kept in a separate account and that are not commingled in an account with non-excluded funds shall retain their resource exclusion for an unlimited period of time. Those excluded shall retain their exemption for six (6) months from the date they are commingled. After six (6) months from the date of commingling, all funds in the commingled account shall be counted as a resource.",
+      "page": 120,
+      "rects": [
+        {
+          "x": 0.10357048599328884,
+          "y": 0.434906113886987,
+          "w": 0.7757795121215548,
+          "h": 0.29367634419566774
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mph6noeo-l6zr",
+      "documentId": "10-ccr-2506-1",
+      "text": "4.409 COUNTABLE RESOURCES A. Liquid Resources Liquid resources are assets such as cash on hand, money in checking or savings accounts, saving certificates stocks or bonds, or lump sum payments as specified in Section 4.405, F.",
+      "page": 120,
+      "rects": [
+        {
+          "x": 0.10236398597443729,
+          "y": 0.21488193220388363,
+          "w": 0.7468235116691173,
+          "h": 0.09975672644106809
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mph6u83p-3401",
+      "documentId": "10-ccr-2506-1",
+      "text": "B. Non-Liquid Resources A non-liquid resource is any tangible real property such as buildings, land, and vacation homes. The value of non-liquid resources, unless exempt under Section 4.410 or specified under Section 4.408.1 shall be the equity value. The equity value is the fair market value minus the verified amount owed.",
+      "page": 120,
+      "rects": [
+        {
+          "x": 0.104384040123595,
+          "y": 0.32079519698254233,
+          "w": 0.7738121893332139,
+          "h": 0.10630309531636589
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mph701se-wusz",
+      "documentId": "10-ccr-2506-1",
+      "text": "4.410 EXEMPT RESOURCES In determining the resources for a household, the following shall be excluded from consideration. A. Vehicles All of a household's licensed and unlicensed automobiles, motorcycles and vehicles, including recreational vehicles and seasonal vehicles, shall be totally exempt as a resource.",
+      "page": 120,
+      "rects": [
+        {
+          "x": 0.1072500111951995,
+          "y": 0.7316123674239148,
+          "w": 0.7867090591554341,
+          "h": 0.13730816478363927
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mph70edd-xqos",
+      "documentId": "10-ccr-2506-1",
+      "text": "B. Home and Property The home and surrounding property, which is not separate from the home by intervening property owned by others, will be an exempt resource. Public rights of way, such as roads that run through the surrounding property and separate it from the home, will not affect the exemption of the property. The home and surrounding property shall remain exempt when temporarily unoccupied for reasons of employment, training for future employment, illness, or not habitable as a result of casualty or natural disaster, if the household intends to return. The property owned or being purchased by households that currently do not own a home and on which the household intends to build or is building a permanent home shall be exempt. C. Prorated Income Monies that have been prorated and considered as income for eligibility purposes will be an exempt resource. Prorated student and self-employment income is exempt as a resource as long as a portion is still being counted as income. D. Household Goods, Personal Effects, and Retirement Accounts 1. Household goods, personal effects, including one burial plot per household member, the cash value of life insurance policies, and livestock not excluded as income producing property are exempt resources. 2. All retirement accounts with Federal tax preferred retirement status are exempt resources. The following retirement accounts are exempt: a. Pension or traditional defined benefit plan; b. 401(K) plan and simple 401(K); c. 501C(18); d. 403(A) and 403(B) plans; e. 408 plans including traditional individual retirement accounts (Roth IRA, SIMPLE IRA, and myRA), traditional Individual Retirement Annuities f. 457 plan; g. Federal employee thrift savings plan; h. Keogh plan; i. 529A funds including funds in a qualified ABLE program j. Simplified employer plan; k. Profit sharing plan; and, l. Cash balance plans. 3. All tax deferred education accounts are exempt resources. The two types of tax deferred education savings accounts are:",
+      "page": 121,
+      "rects": [
+        {
+          "x": 0.09865209798038602,
+          "y": 0.08152672284028582,
+          "w": 0.7953069723702476,
+          "h": 0.8039171583300171
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mph70pm4-zoz5",
+      "documentId": "10-ccr-2506-1",
+      "text": "a. Section 529 qualified tuition programs, which allow owners to prepay a student’s education expenses or to contribute to an account to pay those expenses. b. Coverdell education savings accounts and IRA type of account designed to pay a student’s education expense. 4. One bona fide pre-purchased funeral agreement per household member, which may include one burial plot per household member, shall be excluded provided that the agreement does not exceed one thousand five hundred dollars ($1,500) in equity value; the equity value over one thousand five hundred dollars ($1,500) is counted as a resource. If a burial plot is included in the agreement, the burial plot portion will be exempted prior to determining the equity value of the funeral agreement. E. Income-Producing Property, Including Vehicles 1. Any property that is producing an annual income consistent with its fair market value in the community, even if it is used only on a seasonal basis, shall be an exempt resource. Such property includes farmland and rental homes, or work- related equipment, such as the tools of a tradesman or the machinery of a farmer, and vehicles which are essential to the employment or self-employment of a household member such as semi-tractor/trailer, boat, motor home, utility trailer, or seasonal or recreation vehicles used for income- producing purposes. Such property also includes livestock. 2. Installment contracts for the sale of land or buildings if the contract or agreement is producing income consistent with its fair market value shall be an exempt resource. The exclusion shall also apply to the value of the property sold under the installment contract or held as security in exchange for a purchase price consistent with the fair market value of that property retained by the seller. 3. Income-producing vehicles such as, but not limited to, a taxi, tractor, fishing boat, a vehicle used for deliveries, motor home, snowmobile, or camper is an exempt resource if it annually produces income consistent with its fair market value, even if only used on a seasonal basis. The exemption will apply when the vehicle is not in use because of temporary unemployment. This exemption also applies to ineligible non-citizens or disqualified persons whose resources are being considered available to the household. 4. Property essential to the self-employment of a household member engaged in farming (including land, machinery, equipment, and supplies) shall be excluded for one (1) year from the date the household member terminates his or her self-employment from farming. F. Inaccessible Resources 1. Resources having a cash value which is not accessible to the household include, but are not limited to, irrevocable trust funds, property in probate, or property prohibited from sale by a creditor holding a lien, and real property which the household is making a good faith effort to sell at a reasonable price, and which has not been sold. In such cases, the local office shall establish that the property is for sale and that the household will accept a reasonable offer. 2. Non-exempt, non-liquid resource, as defined in Section 4.408.1, B, that would have a net return of one thousand five hundred dollars ($1,500) or less if sold, shall be considered an inaccessible resource. The equity value shall be used to determine this amount. The equity value is fair market value less verified encumbrances (amount owed).",
+      "page": 122,
+      "rects": [
+        {
+          "x": 0.08718821369396802,
+          "y": 0.07701091752167068,
+          "w": 0.8067708566566656,
+          "h": 0.8061318061491081
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mph7105o-og1m",
+      "documentId": "10-ccr-2506-1",
+      "text": "3. Any funds in a trust or transferred to a trust, and the income produced by that trust shall be considered inaccessible to the household if: a. The trust arrangement will not likely cease during the certification period, and no household member has the power to revoke the trust arrangement or change the name of the beneficiary during the certification period; or b. The trustee administering the funds is either a court, an institution, corporation, or organization which is not under the direction or leadership of any household member; or an individual appointed by the court who has court-imposed limitation placed on his/her use of funds which meet requirements of this section; or c. The trust investments made on behalf of the trust do not directly involve or assist any business or corporation under the control, direction, or influence of a household member; or d. The funds held in irrevocable trust are either established from household's own funds and are used solely to make investments on behalf of the trust or to pay educational or medical expenses of persons named by the household creating the trust; or established from non-household funds by a non-household member; or e. Monies which are withdrawn from trust and dividends that are or could be received by the household shall be considered as income. G. Resources with No Significant Return Resources that, as a practical matter, the household is unlikely to be able to sell for any significant return because the household's interest is relatively slight or because the cost of selling the household's interest would be relatively great and shall be considered inaccessible. A resource shall be so identified if its sale or other disposition is unlikely to produce any significant amount of funds for the support of the household. Verification of the value of a resource to be excluded shall not be required unless the eligibility worker determines that the information provided by the household is insufficient to permit a determination of the resource value or the technician believes that the information is questionable. This provision regarding no significant return does not apply to negotiable financial instruments (as defined in C.R.S section 4-3-104). A significant return or a significant amount of funds shall be any return/funds after estimated costs of sale or disposition and considering the ownership interest of the household. A significant return or a significant amount of funds is an amount that is estimated to be more than one thousand five hundred dollars ($1,500). H. Resources of Battered Women in Shelters Residents of shelters for battered women and children may not have been able to retain access to all the resources of their former household. Therefore, in cases where access to a resource, such as jointly held bank accounts requiring both signatures, vehicles, and property, is dependent upon the agreement of a person who still resides in the household where the woman was abused, the resource shall be considered inaccessible to the applicant. I. Resources Used by Household Members Where an exclusion applies because of use of a resource by or for a household member, the exclusion shall also apply when the resource is being used by or for an ineligible non-citizen or disqualified person whose resources are being counted as part of the household's resources.",
+      "page": 123,
+      "rects": [
+        {
+          "x": 0.09005418476557252,
+          "y": 0.08578299911760126,
+          "w": 0.8053378711208634,
+          "h": 0.8349222277972905
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1779471023452",
+      "documentId": "10-ccr-2506-1",
+      "text": "121",
+      "page": 121,
+      "rects": [
+        {
+          "x": 0.10581702565939725,
+          "y": 0.9441320483762133,
+          "w": 0.7924410012986431,
+          "h": 0.04097098465318261
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1779471027774",
+      "documentId": "10-ccr-2506-1",
+      "text": "CODE OF COLORADO REGULATIONS 10 CCR 2506-1 Supplemental Nutrition Assistance Program (SNAP)",
+      "page": 122,
+      "rects": [
+        {
+          "x": 0.09865209798038602,
+          "y": 0.034932608958942506,
+          "w": 0.7953069723702476,
+          "h": 0.038756336834091736
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1779471034275",
+      "documentId": "10-ccr-2506-1",
+      "text": "122",
+      "page": 122,
+      "rects": [
+        {
+          "x": 0.10295105458779276,
+          "y": 0.9451528626053255,
+          "w": 0.7895750302270387,
+          "h": 0.02989774555772795
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1779471037596",
+      "documentId": "10-ccr-2506-1",
+      "text": "CODE OF COLORADO REGULATIONS 10 CCR 2506-1 Supplemental Nutrition Assistance Program (SNAP)",
+      "page": 123,
+      "rects": [
+        {
+          "x": 0.11441493887421074,
+          "y": 0.03263145145941831,
+          "w": 0.7781111459406207,
+          "h": 0.043185632472273645
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1779471043069",
+      "documentId": "10-ccr-2506-1",
+      "text": "123",
+      "page": 123,
+      "rects": [
+        {
+          "x": 0.104384040123595,
+          "y": 0.9494956485630742,
+          "w": 0.7852760736196319,
+          "h": 0.032112393376818815
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1779471048005",
+      "documentId": "10-ccr-2506-1",
+      "text": "CODE OF COLORADO REGULATIONS 10 CCR 2506-1 Supplemental Nutrition Assistance Program (SNAP)",
+      "page": 124,
+      "rects": [
+        {
+          "x": 0.10295105458779276,
+          "y": 0.04140353305534889,
+          "w": 0.7895750302270387,
+          "h": 0.0354343651054553
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__mpha2kbp-9kla",
+      "documentId": "10-ccr-2506-1",
+      "text": "J. Government Payments The following government payments are received for a specific purpose or services and shall be excluded as a resource for SNAP eligibility. 1. P.L. No. 89-642. Section (11b) of the Child Nutrition Act of 1966 excludes the value of assistance to children under this Act from resources for SNAP purposes. 2. Payments received from the youth incentive entitlement pilot projects, the youth community conservation and improvement projects, and the youth employment and training programs under Youth Employment and Demonstration Act of 1977 (P.L. No. 95- 93) and extended under Title IV of the Comprehensive Employment and Training Amendments of 1978 (P.L. No. 95-524). (Note: Does not include other payments under the Comprehensive Employment and Training Act (CETA) or payments under the Youth Adults Conservation Corps.) 3. Any governmental payments which are designated for the restoration of a home damaged in a disaster, if the household is subject to a legal sanction if the funds are not used as intended: for example, payments made by the Department of Housing and Urban Development through the individual and family grant program or disaster loans or grants made by the Small Business Administration, Section 312(d) of Disaster Relief Act of 1974. The Disaster Relief Act of 1974. P.L. No 93-288 as amended by P.L. No. 100-707, Section 105(i). the Disaster Relief and Emergency Assistance Amendments of 1988. Payments precipitated by an emergency or major disaster as defined in this Act, as amended, are not counted as income or resources for SNAP purposes. This exclusion applies to Federal assistance provided to persons directly affected and to comparable disaster assistance provided by states, local governments, and disaster assistance organizations. 4. Reimbursements from the Uniform Relocation Assistance and Real Property Acquisition Policy Act of 1970 (P.L. No. 91-646. section 216). 5. Benefits received from the special supplemental food program for women, infants and children (WIC) (P.L. No. 92-443). This payment is excluded as an in-kind benefit. 6. Payments or allowances made under any federal laws for the purpose of energy assistance, other than Part A of Title IV of the Social Security Act (42 U.S.C. 601 through 42 U.S.C. 619), or a one-time payment or allowance made under federal or state law for the cost of weatherization or emergency repair or replacement of an unsafe or inoperative furnace or other heating or cooling device is exempt as a resource. 7. HUD rental refund payments made pursuant to settlement of a series of class action lawsuits such as Underwood v. Harris, originally brought in the District of Columbia Federal District Court, are excluded in the month received and the following month. 8. Mandatory deductions from military pay for educational purposes while the participant is enlisted. (P.L. No. 99-576, Veterans' Benefits Improvement and Health-Care Authorization Act of 1986, Section 303(a) (1)) Section 216 of P.L. No. 99-576 authorizes stipends for participation in study of Vietnam-Era veterans’ psychological problems that are not excluded from income.",
+      "page": 124,
+      "rects": [
+        {
+          "x": 0.10703544840506829,
+          "y": 0.08817646722669867,
+          "w": 0.7856825913326431,
+          "h": 0.7802350610511076
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mpha2sjt-hm7s",
+      "documentId": "10-ccr-2506-1",
+      "text": "9. Payments to U.S. citizens of Japanese ancestry and resident Japanese non-citizens for up to twenty thousand dollars ($20,000) each and payments to certain eligible Aleuts of up to twelve thousand dollars ($12,000) each. P.L. No. 100-383. Section 105(f)(2) Civil Liberties Act of 1988. 10. P.L. No. 100-435, Section 501, amended Child Nutrition Act to allow under WIC demonstration projects, benefits that may be exchanged for food at farmers' markets. 11. Payments made from the Agent Orange Settlement Fund (P.L. No. 101-201). All payments from the Agent Orange Settlement fund or any other fund established pursuant to the settlement in the Agent Orange product liability litigation are excluded from income retroactive to January 1, 1989. The veteran with disabilities will receive yearly payments. Survivors of deceased veterans with disabilities will receive a lump-sum payment. These payments were disbursed by the AETNA insurance company. 12. A federal earned income tax credit received either as a lump sum or as payments under Section 3507 of the Internal Revenue code for the month of receipt and the following month for the individual and that individual's spouse (P.L. No. 101-508). A federal, state, or local Earned Income Tax Credit (EITC) would be exempted for twelve (12) months from receipt for any household member if the individual receiving the EITC was participating in SNAP when the EITC was received and participation continues for twelve (12) months. Temporary non-participation due to administrative reasons, such as a delayed recertification, shall not affect the twelfth (12th) month participation requirement (P.L. No. 103-66, Mickey Leland Childhood Hunger Relief Act of 1993). 13. Any money received from the Radiation Exposure Compensation Trust Fund, pursuant to P.L. No. 101-426 as amended by P.L. No. 101-510. 14. P.L. No. 103-286, Section 1(a) provides, in part, that payments made to individuals because of their status as victims of Nazi persecution shall be disregarded in determining eligibility for, and the amount of, benefits or services to be provided under any federal or federally assisted program which provides benefits or services based, in whole or in part, on need. 15. Amendments to Section 1403 of the Crime Act of 1984 (42 U.S.C. 10602) provide in part that, notwithstanding any other law, if the compensation paid by an eligible crime victim compensation program would cover costs that a federal program or a federally financed state or local program would otherwise pay: a. Such crime victim compensation program shall not pay that compensation; b. The other program shall make its payments without regard to the existence of the crime victim compensation program. Based on this language, payments received under this program must be excluded from income for SNAP purposes. 16. P.L. No. 104-204 requires that allowances paid under this law to children of Vietnam veterans who were born with spina bifida be excluded from resources. 17. P.L. No. 111-312 and The American Taxpayer Relief Act of 2012 requires that Federal income tax refunds received beginning January 1, 2010 must be disregarded as a resource for twelve (12) months from the date of receipt by the client.",
+      "page": 125,
+      "rects": [
+        {
+          "x": 0.16225410442242272,
+          "y": 0.07688058365239918,
+          "w": 0.735196962973919,
+          "h": 0.8216850486694478
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1779476085341",
+      "documentId": "10-ccr-2506-1",
+      "text": "124",
+      "page": 124,
+      "rects": [
+        {
+          "x": 0.11019080017748854,
+          "y": 0.9500923862315942,
+          "w": 0.7777942119015925,
+          "h": 0.0292588147894165
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1779476089879",
+      "documentId": "10-ccr-2506-1",
+      "text": "CODE OF COLORADO REGULATIONS 10 CCR 2506-1 Supplemental Nutrition Assistance Program (SNAP)",
+      "page": 125,
+      "rects": [
+        {
+          "x": 0.09914706897401765,
+          "y": 0.032992361468274375,
+          "w": 0.7935709707636938,
+          "h": 0.04266910490123245
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1779476097018",
+      "documentId": "10-ccr-2506-1",
+      "text": "125",
+      "page": 125,
+      "rects": [
+        {
+          "x": 0.10388009663264804,
+          "y": 0.949768558203326,
+          "w": 0.7888379431050633,
+          "h": 0.03413528392098586
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1779476100562",
+      "documentId": "10-ccr-2506-1",
+      "text": "CODE OF COLORADO REGULATIONS 10 CCR 2506-1 Supplemental Nutrition Assistance Program (SNAP)",
+      "page": 126,
+      "rects": [
+        {
+          "x": 0.09914706897401765,
+          "y": 0.032668533440006094,
+          "w": 0.7967263225361141,
+          "h": 0.04632645674990952
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__mpha9z36-rmnn",
+      "documentId": "10-ccr-2506-1",
+      "text": "A. Individual household members may be disqualified for being ineligible non-citizens, for failure or refusal to obtain or provide a Social Security Number (SSN), for Intentional Program Violation (IPV)/fraud, for being a fleeing felon, for failing to comply with a work requirement, or for being a sanctioned ABAWD (Able Bodied Adult Without Dependents) who has received three (3) months of SNAP benefits within a thirty-six (36) month period.",
+      "page": 126,
+      "rects": [
+        {
+          "x": 0.11034373403336915,
+          "y": 0.15863421009638948,
+          "w": 0.7791539667717895,
+          "h": 0.08887436693350759
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1779476449942",
+      "documentId": "10-ccr-2506-1",
+      "text": "4.411 TREATMENT OF INCOME AND RESOURCES OF DISQUALIFIED, SANCTIONED, AND NON- HOUSEHOLD MEMBERS 4.411.1 Treatment of Income and Resources of Disqualified and/or Sanctioned Members",
+      "page": 126,
+      "rects": [
+        {
+          "x": 0.10470586162546909,
+          "y": 0.0871861896204324,
+          "w": 0.7870469881428496,
+          "h": 0.06622011653869192
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1779477396845",
+      "documentId": "10-ccr-2506-1",
+      "text": "126",
+      "page": 126,
+      "rects": [
+        {
+          "x": 0.10583343610704911,
+          "y": 0.9489190219463051,
+          "w": 0.7893021371060096,
+          "h": 0.023525567717693208
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1779477401373",
+      "documentId": "10-ccr-2506-1",
+      "text": "CODE OF COLORADO REGULATIONS 10 CCR 2506-1 Supplemental Nutrition Assistance Program (SNAP)",
+      "page": 127,
+      "rects": [
+        {
+          "x": 0.10696101058862911,
+          "y": 0.040407340848445245,
+          "w": 0.7847918391796895,
+          "h": 0.03659532756085607
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__mphazn5j-7gv6",
+      "documentId": "10-ccr-2506-1",
+      "text": "2. Households containing members disqualified for being an ineligible non-citizen, for failure or refusal to obtain or provide a SSN, or sanctioned as an ABAWD who has received three (3) months of SNAP benefits in a thirty-six (36) month period: a. Resources The resources of the disqualified and/or sanctioned member(s) shall be counted in their entirety to the remaining household members if the household is required to meet the resource standard. b. Income A pro rata share of the nonexempt income of the disqualified and/or sanctioned member(s) shall be counted as income to the remaining members. This pro rata share is calculated by dividing the income evenly among the household members, including the disqualified member. All but the disqualified member's share is counted as income to the remaining household members. If an ineligible non-citizen is also an ineligible student and purchases and prepares food with the household, the individual’s income shall be prorated under the ineligible non- citizen provisions.",
+      "page": 126,
+      "rects": [
+        {
+          "x": 0.16559488363078984,
+          "y": 0.5716386211403366,
+          "w": 0.7261579661375288,
+          "h": 0.3049610630071339
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mphb0coe-y4o7",
+      "documentId": "10-ccr-2506-1",
+      "text": "c. Deductible Expenses The earned income deduction shall apply to the prorated income earned by the disqualified and/or sanctioned member that is attributed to the household. That portion of the household's allowable shelter and dependent care expenses which are either paid by or billed to the disqualified member shall be divided evenly among the household members, including the disqualified member. Legally obligated child support payments are deducted before prorating income. The shelter expense will be prorated except for the standard utility allowance (SUA). The full SUA will be added to the other prorated shelter components if the household qualifies for the SUA. All but the disqualified member's share is counted as a deductible expense for the remaining household members. d. Eligibility and Benefit Level The disqualified and/or sanctioned member shall not be included when determining the household's size for purposes of assigning a benefit level to the household. The disqualified or sanctioned household member will not be included when determining the household size for comparison against any eligibility standard, which includes the gross income, the net income eligibility limits, and the resource eligibility limits.",
+      "page": 127,
+      "rects": [
+        {
+          "x": 0.1624929391828281,
+          "y": 0.08456278190018915,
+          "w": 0.7278478629260026,
+          "h": 0.3203259129928706
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__mphc0m2l-ox1j",
+      "documentId": "10-ccr-2506-1",
+      "text": "B. During the period in which a household member is disqualified, the eligibility and benefit level of any remaining members shall be determined as follows: 1. Households containing members disqualified for IPV or fraud, or a work requirement sanction, or classified as a fleeing felon: a. Income, Resources, and Deductible Expenses The income and resources of the disqualified household member(s) shall be counted in their entirety. Resources shall only be considered if the household is required to meet the resource standard. The allowable earned income, standard, medical, dependent care, and shelter deductions shall be allowed in their entirety. b. Eligibility and Benefit Level The disqualified member shall not be included when determining the household's size for purposes of assigning a benefit level to the household. The disqualified household member will not be included when determining the household size for comparison against any eligibility standard; this includes the gross income and net income eligibility limits, or the resource eligibility limits.",
+      "page": 126,
+      "rects": [
+        {
+          "x": 0.1116582934530074,
+          "y": 0.2502685284640172,
+          "w": 0.781588196747354,
+          "h": 0.316219119226638
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1779479734136",
+      "documentId": "10-ccr-2506-1",
+      "text": "4.411.2 Treatment of Income and Resources of Other Non-Household Members A. For those non-household members that have not been disqualified, such as live-in attendants and ineligible students, the income and resources of the non-household member shall not be considered available to the household. Cash payments from the non-household member to the household will be considered as income to the household. Vendor payments, as defined in Sections 4.405, H and 4.405, I, shall be excluded as income. Except for the mandatory telephone allowance, if the household shares deductible expenses with the non-household member, only the amount actually paid or contributed by the household shall be deducted as a household expense. If the payments or contributions cannot be differentiated, the expenses shall be prorated evenly among persons actually paying or contributing to the expenses and only the household's pro rata share deducted. If an ineligible non-citizen is also an ineligible student and purchases and prepares food with the household, the individual’s income shall be prorated under the ineligible non-citizen provisions. B. When the earned income of one or more household members and the earned income of a non- household member are combined into one wage, the income of the household members shall be determined as follows: 1. If the household's share can be identified, the local office shall count that portion due to the household as earned income. 2. If the household's share cannot be identified, the local office shall prorate the earned income among all those whom it was intended to cover and count that prorated portion to the household.",
+      "page": 127,
+      "rects": [
+        {
+          "x": 0.11121783327330212,
+          "y": 0.40771895101434935,
+          "w": 0.7812062272381638,
+          "h": 0.39485403265710045
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1779479794013",
+      "documentId": "10-ccr-2506-1",
+      "text": "127",
+      "page": 127,
+      "rects": [
+        {
+          "x": 0.10865650138071797,
+          "y": 0.9490351311232064,
+          "w": 0.7799255612918718,
+          "h": 0.02572983671449769
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1779479800386",
+      "documentId": "10-ccr-2506-1",
+      "text": "CODE OF COLORADO REGULATIONS 10 CCR 2506-1 Supplemental Nutrition Assistance Program (SNAP)",
+      "page": 128,
+      "rects": [
+        {
+          "x": 0.1073758354344259,
+          "y": 0.03809995051954478,
+          "w": 0.7850482250770401,
+          "h": 0.03958436417615042
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__mphcfubz-72ed",
+      "documentId": "10-ccr-2506-1",
+      "text": "C. A person who is an ineligible student for SNAP purposes shall be treated as a non-household member. The other members of a household containing the ineligible student may be certified. The income and resources of the ineligible student shall not be considered available to the other household members for determining the household's income resources and deductions nor shall the student be considered in determining the household's allotment.",
+      "page": 127,
+      "rects": [
+        {
+          "x": 0.10865650138071797,
+          "y": 0.805541810984661,
+          "w": 0.7850482250770401,
+          "h": 0.08708560118753095
+        }
+      ]
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1779480729811",
+      "documentId": "10-ccr-2506-1",
+      "text": "4.500 VERIFICATION AND DOCUMENTATION A. Verification is the use of documentary evidence or a contact with a third party to confirm information and to establish the accuracy of statements provided by the household. B. The case record shall consist of statements and documentation regarding the sources and results of verification used to determine a household’s eligibility. Such statements must be sufficiently detailed to support the determination of eligibility or ineligibility and to permit a reviewer to determine the reasonableness of the eligibility technician’s determination. When ineligibility is determined, the case record must clearly indicate the reason for denial or termination of SNAP benefits and the verification used in making the decision. If information is considered questionable or if an alternate source of verification was requested, the reason for additional verification shall be documented in the case record. The case record shall also contain all correspondence pertaining to fair hearings and administrative disqualification hearings (ADH). Information to retain in the case record for fair hearings shall include, at a minimum, the household’s request for a fair hearing, the scheduling notice with the hearing date and time, all decisions pertaining to the fair hearing, an any formal objections to the court’s ruling (known as exceptions) filed by the local office or the household. Information to retain in the case record for an ADH shall include, at a minimum, the notice to the individual of the alleged intentional program violation (IPV)/fraud, any notice given to the household waiving the household’s right to an ADH, the scheduling notice of the ADH if the waiver is not signed and returned, all decisions issued regarding the outcome of the ADH hearing, and the disqualification notice sent to the household notifying the individual of the disqualification period. C. The local office shall provide each household at the time of application for initial certification, recertification, and periodic report form with a notice that informs the household of verification requirements that the household must meet as part of the application, recertification, or periodic report process. The notice will inform the household that the local office will assist the household in obtaining verification, provided the household is cooperating with the office. The notice shall be written in clear and simple language and shall meet bilingual requirements. D. The household has the primary responsibility for providing documentary evidence for required verification and to resolve questionable information. The local office shall assist the household to obtain the necessary documentation provided the household is cooperating with the local office. E. The household shall also be determined ineligible if it refused to cooperate in any subsequent review of its eligibility, including reviews generated by reported changes, recertifications, or as part of a quality control review.",
+      "page": 128,
+      "rects": [
+        {
+          "x": 0.10225317164925761,
+          "y": 0.09648688767936665,
+          "w": 0.8004162164325449,
+          "h": 0.6461627906976745
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1779480755319",
+      "documentId": "10-ccr-2506-1",
+      "text": "128",
+      "page": 128,
+      "rects": [
+        {
+          "x": 0.10225317164925761,
+          "y": 0.946561108362197,
+          "w": 0.7888902229159163,
+          "h": 0.033646709549727816
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1779480762884",
+      "documentId": "10-ccr-2506-1",
+      "text": "CODE OF COLORADO REGULATIONS 10 CCR 2506-1 Supplemental Nutrition Assistance Program (SNAP)",
+      "page": 129,
+      "rects": [
+        {
+          "x": 0.10481450354184176,
+          "y": 0.034636318654131616,
+          "w": 0.7888902229159163,
+          "h": 0.0425531914893617
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1779481126724",
+      "documentId": "10-ccr-2506-1",
+      "text": "4.501 Prudent Person Principle The rules contained herein are intended to be sufficiently flexible to allow the eligibility technician to exercise reasonable judgment, also known as PPP, in executing his/her responsibilities when determining SNAP eligibility. In making an eligibility decision, the eligibility technician should consider whether their judgment is reasonable, based on their experience with and knowledge of SNAP.",
+      "page": 128,
+      "rects": [
+        {
+          "x": 0.11121783327330212,
+          "y": 0.7476496783770411,
+          "w": 0.7824868931844559,
+          "h": 0.1365660564077189
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1779481250986",
+      "documentId": "10-ccr-2506-1",
+      "text": "4.502 VERIFICATION REQUIREMENTS AT APPLICATION, RECERTIFICATION, AND PERIODIC REPORT A. Verification Requirements at Application 1. Expedited Service Requirements Only verification of the identity of the head of household is required. When an authorized representative applies on behalf of a household, the identity of both the authorized representative and the head of household shall be verified. No requirement for a specific document may be imposed. Client declaration of Social Security Number(s) (SSNS) and residency shall be accepted. Client declaration of other household circumstances shall be accepted when determining eligibility for expedited service, and verification of any client- declared information shall be postponed and verified prior to certification. 2. The following information shall be verified prior to certification: a. Identity of the head of household; b. Household's gross nonexempt income; c. Information available through IEVS, including SSNs for all household members; d. Non-citizen status of persons identified as non-citizens on the application; e. Residency, except for homeless households, or households newly arrived in the state or county for whom third-party verification cannot reasonably be obtained. 3. The household shall be given a reasonable opportunity to submit verification of certain expenses to receive expense deductions and exclusions. If a deductible expense must be verified and obtaining verification may delay the household's certification, the local office shall advise the household that the household's eligibility and benefit level will be determined without providing a deduction or exclusion for the claimed but unverified expense. If the expense cannot be verified within thirty (30) calendar days of the date of application, the local office shall determine the household's eligibility and benefit level without providing a deduction or exclusion for the unverified expense. These expenses are: a. Allowable medical expenses less reimbursement; b. Legally obligated child support payments; c. Dependet care expenses; and, d. Shelter expenses, if questionable and verification has been requested.",
+      "page": 129,
+      "rects": [
+        {
+          "x": 0.10225317164925761,
+          "y": 0.08411677387431965,
+          "w": 0.7927322207547924,
+          "h": 0.7471548738248392
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1779481256435",
+      "documentId": "10-ccr-2506-1",
+      "text": "129",
+      "page": 129,
+      "rects": [
+        {
+          "x": 0.10353383759554968,
+          "y": 0.946066303809995,
+          "w": 0.7850482250770401,
+          "h": 0.03364670954972793
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1779481260951",
+      "documentId": "10-ccr-2506-1",
+      "text": "CODE OF COLORADO REGULATIONS 10 CCR 2506-1 Supplemental Nutrition Assistance Program (SNAP)",
+      "page": 130,
+      "rects": [
+        {
+          "x": 0.10353383759554968,
+          "y": 0.03414151410192974,
+          "w": 0.7940128867010846,
+          "h": 0.046511627906976744
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1779481383796",
+      "documentId": "10-ccr-2506-1",
+      "text": "130",
+      "page": 130,
+      "rects": [
+        {
+          "x": 0.10609516948813383,
+          "y": 0.9475507174666007,
+          "w": 0.7863288910233321,
+          "h": 0.030677882236516574
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1779481401235",
+      "documentId": "10-ccr-2506-1",
+      "text": "CODE OF COLORADO REGULATIONS 10 CCR 2506-1 Supplemental Nutrition Assistance Program (SNAP)",
+      "page": 131,
+      "rects": [
+        {
+          "x": 0.10609516948813383,
+          "y": 0.0376051459673429,
+          "w": 0.7914515548085005,
+          "h": 0.0425531914893617
+        }
+      ],
+      "status": "skipped"
+    },
+    {
+      "id": "10-ccr-2506-1__skip-1779481413790",
+      "documentId": "10-ccr-2506-1",
+      "text": "4. For households eligible under basic or expanded categorical eligibility rules, verification of resources, gross and net income, SSN information, sponsored non-citizen information, and residency beyond that gathered by the Public Assistance (PA) program that confers eligibility shall not be required unless these eligibility factors are not already collected and verified by the other PA program, are considered questionable, or are unavailable to SNAP. The local office shall verify that each member receives benefits or services from the program that confers basic or expanded categorical eligibility. 5. For households subject to an asset test, the household's written declaration of resources that declares more than the resource limit is an acceptable form of verification. B. Verification Requirements at Recertification 1. Eligibility factors not verified by the Income and Eligibility Verification System (IEVS) should be verified at recertification only if they are incomplete, inaccurate, questionable, inconsistent, or outdated and would affect a household's eligibility or benefit level. Unchanged information shall not be verified unless the information is outdated. 2 A change in total monthly income of fifty ($50) or more for each member must be verified at recertification. If the source of income has not changed and if the amount is unchanged or has changed by fifty dollars ($50) or less, verification is not required unless the information is unclear, questionable, or outdated. 3. At recertification, all households shall verify the following information if the source has changed, or the amount has changed by more than twenty-five dollars ($25) since the last time they were verified: a. Dependent care expenses; and b. Allowable medical expenses; and c. Legally obligated child support. 4. A reported SSN not verified at initial certification and newly obtained SSNs shall be verified through the IEVS or State On-Line Query Internet (SOLQ-I). 5. For households subject to an asset test, the household's written declaration of resources that declares more than the resource limit is an acceptable form of verification. 6. If there has been a change in a deductible expense that must be verified and obtaining verification delays the household's redetermination processing, the local office shall advise the household that the household's eligibility and benefit level will be determined without providing a deduction for the claimed but unverified expense. C. Verification Requirements at Periodic Report 1. The household shall verify the following changes in circumstances at the time of periodic report: a. A change of more than $100 in the amount of unearned income. b. A change in the source of income, including starting a job. c. Acquisition of a licensed vehicle that is not fully excludable, if resource limits apply.",
+      "page": 130,
+      "rects": [
+        {
+          "x": 0.10481450354184176,
+          "y": 0.08560118753092529,
+          "w": 0.8119422099491735,
+          "h": 0.8322612568035626
+        }
+      ],
+      "status": "skipped"
     }
   ],
   "mappings": [
@@ -11562,6 +12366,30 @@
     {
       "nodePath": "/resourceLimit",
       "sectionId": "10-ccr-2506-1__mp31ntyq-iwdw"
+    },
+    {
+      "nodePath": "/resourceLimit",
+      "sectionId": "10-ccr-2506-1__mph5urwa-dg56"
+    },
+    {
+      "nodePath": "/resourceLimit",
+      "sectionId": "10-ccr-2506-1__mph5v9w2-e79i"
+    },
+    {
+      "nodePath": "/resourceLimitForHouseholdsWithElderlyOrPersonWithDisability",
+      "sectionId": "10-ccr-2506-1__mph5urwa-dg56"
+    },
+    {
+      "nodePath": "/resourceLimitForHouseholdsWithElderlyOrPersonWithDisability",
+      "sectionId": "10-ccr-2506-1__mph5v9w2-e79i"
+    },
+    {
+      "nodePath": "/normalResourceLimit",
+      "sectionId": "10-ccr-2506-1__mph5urwa-dg56"
+    },
+    {
+      "nodePath": "/normalResourceLimit",
+      "sectionId": "10-ccr-2506-1__mph5v9w2-e79i"
     },
     {
       "nodePath": "/meetsResourceTest",
@@ -14032,7 +14860,7 @@
       "sectionId": "10-ccr-2506-1__mpfq4s3b-8u2j"
     },
     {
-      "nodePath": "/legallyObligatedChildSupportIncomeExclusion",
+      "nodePath": "/members/*/legallyObligatedChildSupportIncomeExclusion",
       "sectionId": "10-ccr-2506-1__mpfq4s3b-8u2j"
     },
     {
@@ -14050,14 +14878,6 @@
     {
       "nodePath": "/deductions",
       "sectionId": "10-ccr-2506-1__mpfqyuam-uez7"
-    },
-    {
-      "nodePath": "/expenses/*/isCoveredByVendorPaymentOrReimbursement",
-      "sectionId": "10-ccr-2506-1__mpfqvdcr-59ms"
-    },
-    {
-      "nodePath": "/expenses/*/monthlyAmount",
-      "sectionId": "10-ccr-2506-1__mpfqvdcr-59ms"
     },
     {
       "nodePath": "/standardDeductionForSize1To3",
@@ -14092,6 +14912,10 @@
       "sectionId": "10-ccr-2506-1__mpfrbgl0-qwzk"
     },
     {
+      "nodePath": "/members/*/earnedIncomeDeductionEligibleIncome",
+      "sectionId": "10-ccr-2506-1__mphb0coe-y4o7"
+    },
+    {
       "nodePath": "/earnedIncomeDeductionRate",
       "sectionId": "10-ccr-2506-1__mpfrbgl0-qwzk"
     },
@@ -14112,7 +14936,7 @@
       "sectionId": "10-ccr-2506-1__mpfsv59t-7cam"
     },
     {
-      "nodePath": "/members/*/ineligibleNonCitizenOrNoSsnIncomeInclusionRatio",
+      "nodePath": "/members/*/ineligibleInclusionRatio",
       "sectionId": "10-ccr-2506-1__mpfxxwq1-a6uf"
     },
     {
@@ -14380,8 +15204,20 @@
       "sectionId": "10-ccr-2506-1__mpftvqtx-e3w9"
     },
     {
-      "nodePath": "/members/*/ineligibleNonCitizenOrNoSsnIncomeInclusionRatio",
+      "nodePath": "/members/*/ineligibleInclusionRatio",
       "sectionId": "10-ccr-2506-1__mpg2evg4-wlb6"
+    },
+    {
+      "nodePath": "/members/*/ineligibleInclusionRatio",
+      "sectionId": "10-ccr-2506-1__mphazn5j-7gv6"
+    },
+    {
+      "nodePath": "/members/*/ineligibleInclusionRatio",
+      "sectionId": "10-ccr-2506-1__mphb0coe-y4o7"
+    },
+    {
+      "nodePath": "/members/*/grossIncome",
+      "sectionId": "10-ccr-2506-1__mphazn5j-7gv6"
     },
     {
       "nodePath": "/expenseTypeOptions",
@@ -14468,6 +15304,18 @@
       "sectionId": "10-ccr-2506-1__mpghrg0o-mqfm"
     },
     {
+      "nodePath": "/expenses/*/reimbursementAmount",
+      "sectionId": "10-ccr-2506-1__mpghw1jw-1y6b"
+    },
+    {
+      "nodePath": "/expenses/*/amountForMonthlyConversion",
+      "sectionId": "10-ccr-2506-1__mpghw1jw-1y6b"
+    },
+    {
+      "nodePath": "/expenses/*/monthlyAmount",
+      "sectionId": "10-ccr-2506-1__mpghw1jw-1y6b"
+    },
+    {
       "nodePath": "/medicalExpenseDeductionMinimum",
       "sectionId": "10-ccr-2506-1__mpgivs1n-yf33"
     },
@@ -14518,6 +15366,290 @@
     {
       "nodePath": "/expenses/*/monthlyAmount",
       "sectionId": "10-ccr-2506-1__mpgj2vnx-5ba2"
+    },
+    {
+      "nodePath": "/expenses/*/monthlyAmount",
+      "sectionId": "10-ccr-2506-1__mpfqvdcr-59ms"
+    },
+    {
+      "nodePath": "/meetsResourceTest",
+      "sectionId": "10-ccr-2506-1__mph5sn8f-hde7"
+    },
+    {
+      "nodePath": "/members/*/sponsorResources",
+      "sectionId": "10-ccr-2506-1__mph5suau-wgbf"
+    },
+    {
+      "nodePath": "/sponsorResourceDeduction",
+      "sectionId": "10-ccr-2506-1__mph5suau-wgbf"
+    },
+    {
+      "nodePath": "/liquidResources",
+      "sectionId": "10-ccr-2506-1__mph5ttpt-ofk0"
+    },
+    {
+      "nodePath": "/resourceItems",
+      "sectionId": "10-ccr-2506-1__mph5xg78-7kqs"
+    },
+    {
+      "nodePath": "/resourceItems/*/value",
+      "sectionId": "10-ccr-2506-1__mph5xg78-7kqs"
+    },
+    {
+      "nodePath": "/resourceItems/*/value",
+      "sectionId": "10-ccr-2506-1__mph5y5i8-emim"
+    },
+    {
+      "nodePath": "/resourceItems/*/isLiquid",
+      "sectionId": "10-ccr-2506-1__movz6kgd-pvsb"
+    },
+    {
+      "nodePath": "/resourceItems/*/isLiquid",
+      "sectionId": "10-ccr-2506-1__mph5xg78-7kqs"
+    },
+    {
+      "nodePath": "/resourceItems/*/isNonLiquid",
+      "sectionId": "10-ccr-2506-1__mow0f83o-4cbf"
+    },
+    {
+      "nodePath": "/resourceItems/*/isNonLiquid",
+      "sectionId": "10-ccr-2506-1__mph5xg78-7kqs"
+    },
+    {
+      "nodePath": "/resourceItems/*/isNonLiquid",
+      "sectionId": "10-ccr-2506-1__mph5y5i8-emim"
+    },
+    {
+      "nodePath": "/members/*/liquidResources",
+      "sectionId": "10-ccr-2506-1__mph5xg78-7kqs"
+    },
+    {
+      "nodePath": "/members/*/nonLiquidResources",
+      "sectionId": "10-ccr-2506-1__mph5xg78-7kqs"
+    },
+    {
+      "nodePath": "/members/*/nonLiquidResources",
+      "sectionId": "10-ccr-2506-1__mph5y5i8-emim"
+    },
+    {
+      "nodePath": "/resourceItems/*/isCountable",
+      "sectionId": "10-ccr-2506-1__mph5xg78-7kqs"
+    },
+    {
+      "nodePath": "/members/*/liquidResources",
+      "sectionId": "10-ccr-2506-1__mp3enjyp-mayx"
+    },
+    {
+      "nodePath": "/members/*/nonLiquidResources",
+      "sectionId": "10-ccr-2506-1__mp3enjyp-mayx"
+    },
+    {
+      "nodePath": "/isExpedited",
+      "sectionId": "10-ccr-2506-1__mph5ttpt-ofk0"
+    },
+    {
+      "nodePath": "/resourceItems/*/value",
+      "sectionId": "10-ccr-2506-1__mph6n1ag-nju6"
+    },
+    {
+      "nodePath": "/resourceItemTypeOptions",
+      "sectionId": "10-ccr-2506-1__mph6noeo-l6zr"
+    },
+    {
+      "nodePath": "/resourceItems/*/type",
+      "sectionId": "10-ccr-2506-1__mph6noeo-l6zr"
+    },
+    {
+      "nodePath": "/resourceItems/*/isLiquid",
+      "sectionId": "10-ccr-2506-1__mph6noeo-l6zr"
+    },
+    {
+      "nodePath": "/members/*/liquidResources",
+      "sectionId": "10-ccr-2506-1__mph6noeo-l6zr"
+    },
+    {
+      "nodePath": "/liquidResources",
+      "sectionId": "10-ccr-2506-1__mph6noeo-l6zr"
+    },
+    {
+      "nodePath": "/nonLiquidResources",
+      "sectionId": "10-ccr-2506-1__mph6u83p-3401"
+    },
+    {
+      "nodePath": "/resourceItems/*/isNonLiquid",
+      "sectionId": "10-ccr-2506-1__mph6u83p-3401"
+    },
+    {
+      "nodePath": "/members/*/nonLiquidResources",
+      "sectionId": "10-ccr-2506-1__mph6u83p-3401"
+    },
+    {
+      "nodePath": "/resourceItemTypeOptions",
+      "sectionId": "10-ccr-2506-1__mph6u83p-3401"
+    },
+    {
+      "nodePath": "/resourceItems/*/type",
+      "sectionId": "10-ccr-2506-1__mph6u83p-3401"
+    },
+    {
+      "nodePath": "/resourceItemTypeOptions",
+      "sectionId": "10-ccr-2506-1__mph701se-wusz"
+    },
+    {
+      "nodePath": "/resourceItemTypeOptions",
+      "sectionId": "10-ccr-2506-1__mph70edd-xqos"
+    },
+    {
+      "nodePath": "/resourceItemTypeOptions",
+      "sectionId": "10-ccr-2506-1__mph70pm4-zoz5"
+    },
+    {
+      "nodePath": "/resourceItemTypeOptions",
+      "sectionId": "10-ccr-2506-1__mph7105o-og1m"
+    },
+    {
+      "nodePath": "/resourceItems/*/type",
+      "sectionId": "10-ccr-2506-1__mph701se-wusz"
+    },
+    {
+      "nodePath": "/resourceItems/*/type",
+      "sectionId": "10-ccr-2506-1__mph70edd-xqos"
+    },
+    {
+      "nodePath": "/resourceItems/*/type",
+      "sectionId": "10-ccr-2506-1__mph70pm4-zoz5"
+    },
+    {
+      "nodePath": "/resourceItems/*/type",
+      "sectionId": "10-ccr-2506-1__mph7105o-og1m"
+    },
+    {
+      "nodePath": "/resourceItems/*/isCountable",
+      "sectionId": "10-ccr-2506-1__mph701se-wusz"
+    },
+    {
+      "nodePath": "/resourceItems/*/isCountable",
+      "sectionId": "10-ccr-2506-1__mph70edd-xqos"
+    },
+    {
+      "nodePath": "/resourceItems/*/isCountable",
+      "sectionId": "10-ccr-2506-1__mph70pm4-zoz5"
+    },
+    {
+      "nodePath": "/resourceItems/*/isCountable",
+      "sectionId": "10-ccr-2506-1__mph7105o-og1m"
+    },
+    {
+      "nodePath": "/resourceItems/*/isExempt",
+      "sectionId": "10-ccr-2506-1__mph701se-wusz"
+    },
+    {
+      "nodePath": "/resourceItems/*/isExempt",
+      "sectionId": "10-ccr-2506-1__mph70edd-xqos"
+    },
+    {
+      "nodePath": "/resourceItems/*/isExempt",
+      "sectionId": "10-ccr-2506-1__mph70pm4-zoz5"
+    },
+    {
+      "nodePath": "/resourceItems/*/isExempt",
+      "sectionId": "10-ccr-2506-1__mph7105o-og1m"
+    },
+    {
+      "nodePath": "/resourceItems/*/isLiquid",
+      "sectionId": "10-ccr-2506-1__mph701se-wusz"
+    },
+    {
+      "nodePath": "/resourceItems/*/isLiquid",
+      "sectionId": "10-ccr-2506-1__mph70edd-xqos"
+    },
+    {
+      "nodePath": "/resourceItems/*/isLiquid",
+      "sectionId": "10-ccr-2506-1__mph70pm4-zoz5"
+    },
+    {
+      "nodePath": "/resourceItems/*/isLiquid",
+      "sectionId": "10-ccr-2506-1__mph7105o-og1m"
+    },
+    {
+      "nodePath": "/resourceItems/*/isNonLiquid",
+      "sectionId": "10-ccr-2506-1__mph701se-wusz"
+    },
+    {
+      "nodePath": "/resourceItems/*/isNonLiquid",
+      "sectionId": "10-ccr-2506-1__mph70edd-xqos"
+    },
+    {
+      "nodePath": "/resourceItems/*/isNonLiquid",
+      "sectionId": "10-ccr-2506-1__mph70pm4-zoz5"
+    },
+    {
+      "nodePath": "/resourceItems/*/isNonLiquid",
+      "sectionId": "10-ccr-2506-1__mph7105o-og1m"
+    },
+    {
+      "nodePath": "/prePurchasedFuneralAgreementExclusionLimit",
+      "sectionId": "10-ccr-2506-1__mph70pm4-zoz5"
+    },
+    {
+      "nodePath": "/resourceItems/*/calculatedAmount",
+      "sectionId": "10-ccr-2506-1__mph70pm4-zoz5"
+    },
+    {
+      "nodePath": "/members/*/liquidResources",
+      "sectionId": "10-ccr-2506-1__mph70pm4-zoz5"
+    },
+    {
+      "nodePath": "/members/*/nonLiquidResources",
+      "sectionId": "10-ccr-2506-1__mph70pm4-zoz5"
+    },
+    {
+      "nodePath": "/otherExcludedResourceOptions",
+      "sectionId": "10-ccr-2506-1__mpha2kbp-9kla"
+    },
+    {
+      "nodePath": "/otherExcludedResourceOptions",
+      "sectionId": "10-ccr-2506-1__mpha2sjt-hm7s"
+    },
+    {
+      "nodePath": "/resourceItems/*/otherExcludedResourceType",
+      "sectionId": "10-ccr-2506-1__mpha2kbp-9kla"
+    },
+    {
+      "nodePath": "/resourceItems/*/otherExcludedResourceType",
+      "sectionId": "10-ccr-2506-1__mpha2sjt-hm7s"
+    },
+    {
+      "nodePath": "/resourceItems/*/isExempt",
+      "sectionId": "10-ccr-2506-1__mpha2kbp-9kla"
+    },
+    {
+      "nodePath": "/resourceItems/*/isExempt",
+      "sectionId": "10-ccr-2506-1__mpha2sjt-hm7s"
+    },
+    {
+      "nodePath": "/members/*/isDisqualified",
+      "sectionId": "10-ccr-2506-1__mpha9z36-rmnn"
+    },
+    {
+      "nodePath": "/resourceItems/*/isOtherExcludedResource",
+      "sectionId": "10-ccr-2506-1__mpha2kbp-9kla"
+    },
+    {
+      "nodePath": "/resourceItems/*/isOtherExcludedResource",
+      "sectionId": "10-ccr-2506-1__mpha2sjt-hm7s"
+    },
+    {
+      "nodePath": "/members/*/ineligibleInclusionRatio",
+      "sectionId": "10-ccr-2506-1__mphc0m2l-ox1j"
+    },
+    {
+      "nodePath": "/members/*/grossIncome",
+      "sectionId": "10-ccr-2506-1__mphc0m2l-ox1j"
+    },
+    {
+      "nodePath": "/members/*/isPartOfHousehold",
+      "sectionId": "10-ccr-2506-1__mphcfubz-72ed"
     }
   ]
 }
