@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import { getRuleset } from '../store.js'
+import { getRuleset } from 'rules-visualizer-factgraph-core'
 import { readProfiles, writeProfiles, type Profile } from '../profileStore.js'
 
 const router = Router()

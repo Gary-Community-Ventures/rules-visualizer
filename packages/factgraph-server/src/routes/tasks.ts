@@ -12,7 +12,7 @@ import {
   setStatus,
   writeTask,
 } from '../agents/store.js'
-import { getDataDir } from '../store.js'
+import { getDataDir } from 'rules-visualizer-factgraph-core'
 import type {
   AgentContext,
   AgentRunnerName,

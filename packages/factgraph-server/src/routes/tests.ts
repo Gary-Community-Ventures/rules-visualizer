@@ -1,6 +1,9 @@
 import { Router } from 'express'
-import { getRuleset, getRawFacts } from '../store.js'
-import { executeFactGraph } from '../executor.js'
+import {
+  getRuleset,
+  getRawFacts,
+  executeFactGraph,
+} from 'rules-visualizer-factgraph-core'
 import {
   readTests,
   writeTests,

@@ -4,7 +4,7 @@
 
 import fs from 'node:fs'
 import path from 'node:path'
-import { getDataDir } from '../store.js'
+import { getDataDir } from 'rules-visualizer-factgraph-core'
 import type { SimulationRun, CaseResult } from './types.js'
 
 // In-memory store for active (running) simulations — tracks progress

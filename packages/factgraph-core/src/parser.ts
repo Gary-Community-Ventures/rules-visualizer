@@ -7,7 +7,7 @@ import type {
   FactGraphDerived,
   WritableTypeName,
   Limit,
-} from '../types.js'
+} from 'rules-visualizer-shared-types'
 
 const WRITABLE_TYPE_NAMES = new Set<string>([
   'String',

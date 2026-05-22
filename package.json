@@ -5,6 +5,7 @@
   "license": "MPL-2.0",
   "workspaces": [
     "frontend",
+    "packages/factgraph-core",
     "packages/factgraph-server",
     "packages/shared-types"
   ],

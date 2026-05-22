@@ -1,7 +1,7 @@
 import path from 'node:path'
 import fs from 'node:fs'
 import chokidar from 'chokidar'
-import { reloadRuleset } from './store.js'
+import { reloadRuleset } from 'rules-visualizer-factgraph-core'
 import { broadcastReload } from './server.js'
 
 /**

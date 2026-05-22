@@ -1,6 +1,10 @@
 import { Router } from 'express'
-import { listRulesets, getRuleset, getRawFacts } from '../store.js'
-import { executeFactGraph } from '../executor.js'
+import {
+  listRulesets,
+  getRuleset,
+  getRawFacts,
+  executeFactGraph,
+} from 'rules-visualizer-factgraph-core'
 
 const router = Router()
 

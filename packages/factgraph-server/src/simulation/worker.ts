@@ -11,10 +11,9 @@
  * `require`; that cost (~1-2s) happens once per worker, in parallel.
  */
 import { parentPort, workerData } from 'node:worker_threads'
-import { executeFactGraph } from '../executor.js'
+import { executeFactGraph, type RawFact } from 'rules-visualizer-factgraph-core'
 import { compareValues } from '../testStore.js'
 import type { CaseResult, CaseDiff, GeneratedScenario } from './types.js'
-import type { RawFact } from '../store.js'
 
 type WorkerInit = {
   baseRulesetId: string
