@@ -1,0 +1,17 @@
+meta {
+  name: 09 Error — unknown ruleset (404)
+  type: http
+  seq: 9
+}
+
+get {
+  url: {{base_url}}/v1/factgraph/no-such-ruleset/schema
+}
+
+docs {
+  Request a ruleset ID that doesn't exist on the server. Returns
+  HTTP 404 with an RFC 9457 Problem Details body. The `detail` field
+  echoes the bad ID so clients can surface a useful error to the user.
+
+  Use `02 List rulesets` to see which IDs are valid.
+}

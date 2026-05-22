@@ -1,0 +1,28 @@
+{
+  "name": "rules-visualizer-factgraph-api",
+  "version": "0.1.0",
+  "description": "Partner-facing HTTP adapter API for Fact Graph rulesets — generic query, missing-input discovery, and (later) structured explanations. Built on top of rules-visualizer-factgraph-core.",
+  "license": "MPL-2.0",
+  "type": "module",
+  "bin": {
+    "rules-visualizer-factgraph-api": "./dist/index.js"
+  },
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "rules-visualizer-factgraph-core": "*",
+    "rules-visualizer-shared-types": "*"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.2",
+    "@types/node": "^24.0.11",
+    "tsx": "^4.19.4",
+    "typescript": "~5.8.3"
+  }
+}

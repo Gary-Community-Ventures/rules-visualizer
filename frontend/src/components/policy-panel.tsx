@@ -1467,7 +1467,9 @@ export function PolicyPanel() {
               className="text-[10px] text-muted-foreground shrink-0 tabular-nums"
               title={`${sourceCoverage.covered} of ${sourceCoverage.total} words covered by skip/link boxes`}
             >
-              {Math.round((sourceCoverage.covered / sourceCoverage.total) * 100)}
+              {Math.round(
+                (sourceCoverage.covered / sourceCoverage.total) * 100
+              )}
               % covered
             </span>
           )}

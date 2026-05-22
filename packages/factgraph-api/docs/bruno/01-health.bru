@@ -1,0 +1,15 @@
+meta {
+  name: 01 Health
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{base_url}}/health
+}
+
+docs {
+  Liveness probe. Unauthenticated. Returns `{"status":"ok"}` when the
+  server is up. Used by deployment tooling and any partner who wants
+  to confirm the API is reachable before issuing a real call.
+}

@@ -1,0 +1,29 @@
+meta {
+  name: 10 Error — unknown target (404)
+  type: http
+  seq: 10
+}
+
+post {
+  url: {{base_url}}/v1/factgraph/{{ruleset_id}}/query
+  body: json
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "targets": ["/eligible", "/doesNotExist"]
+  }
+}
+
+docs {
+  POST a query containing one or more target paths that don't exist in
+  the requested ruleset. Returns HTTP 404 with an RFC 9457 Problem
+  Details body that lists every unknown target so the client can fix
+  them all in one shot rather than discovering them one at a time.
+
+  Use `03 Get schema` to inspect the available paths in a ruleset.
+}

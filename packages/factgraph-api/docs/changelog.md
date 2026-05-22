@@ -1,0 +1,50 @@
+# Changelog
+
+Public-facing changes to the Fact Graph adapter API. Internal refactors
+without surface impact aren't logged here; see git history for those.
+
+## Unreleased
+
+### Added
+
+- Initial server scaffold (`packages/factgraph-api`).
+- `GET /health` — liveness probe.
+- `GET /v1/factgraph/rulesets` — list loaded rulesets.
+- `GET /v1/factgraph/:rulesetId/schema` — node definitions, types, citations.
+- `POST /v1/factgraph/:rulesetId/query` — generic query endpoint.
+- **Multi-target queries.** Request body takes `targets` (array of fact
+  paths). Response carries a `values` object keyed by target. Resolve
+  multiple facts in one engine run.
+- **`include` opt-in for response sections.** Pass `include:
+["supportingFacts"]` to receive the dependency trace; default response
+  is lean (just the requested values). Room for `"trace"`,
+  `"counterfactuals"` later without changing the contract.
+- **`metadata` passthrough.** Opaque correlation context echoed back
+  unchanged. Never inspected, transformed, or logged. Matches the
+  partner team's `AdapterRequest`/`AdapterResponse` contract.
+- **Caller-provided member IDs.** Each entity row may carry an `id`
+  field. Per-member response values come back as arrays of `{memberId,
+value}` objects so callers can correlate output to specific rows
+  without depending on order. Auto-generates `member-0`, `member-1`,
+  ... when callers don't supply IDs.
+- **Smart `missingInputs`.** The walker uses the partial execution
+  result to prune subtrees that already resolved, so short-circuit
+  operators (e.g. `Any` over `meetsCategoricalEligibility`) correctly
+  shrink the asked set. Unprovided collections propagate "still needed"
+  backward through the reverse-dependency graph so per-member writables
+  surface even when the executor would otherwise default them to
+  zero-row values. Missing inputs are unioned across all unresolved
+  targets in multi-target requests, deduped by path.
+- Optional bearer-token auth (env-gated).
+- Permissive CORS by default; allowlist via `CORS_ALLOWED_ORIGINS`.
+- All error responses follow RFC 9457 Problem Details.
+
+### Known limitations
+
+- The smart walker doesn't yet model **alternation** — when an `Any`
+  needs _one of_ N branches, both branches appear in `missingInputs`
+  without indicating "either of these would do." Requires a richer
+  response shape; tracked for future work.
+- No structured explanation/trace yet (beyond the flat
+  `supportingFacts` list).
+- No published OpenAPI spec yet.

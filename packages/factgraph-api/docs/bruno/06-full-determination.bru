@@ -1,0 +1,79 @@
+meta {
+  name: 06 Full SNAP determination (benefit amount)
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{base_url}}/v1/factgraph/{{ruleset_id}}/query
+  body: json
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "targets": ["/snap"],
+    "inputs": {
+      "/grossEarnedIncome": 0,
+      "/unearnedIncome": 0,
+      "/dependentCareExpenses": 0,
+      "/rent": 0,
+      "/realEstateTaxes": 0,
+      "/homeownersAssociationFees": 0,
+      "/mortgagePayments": 0,
+      "/homeownersInsurance": 0,
+      "/meetsCategoricalEligibility": false,
+      "/childSupportPaid": 0,
+      "/isHomeless": false
+    },
+    "entities": {
+      "/members": [
+        {
+          "id": "applicant",
+          "/members/*/isElderly": false,
+          "/members/*/isDisabled": false,
+          "/members/*/medicalExpenses": 0,
+          "/members/*/age": 30,
+          "/members/*/isHigherEdStudent": false,
+          "/members/*/weeklyWorkHours": 40,
+          "/members/*/isWorkStudy": false,
+          "/members/*/isParent": false,
+          "/members/*/isFullTimeCollegeStudent": false,
+          "/members/*/receivesTanf": false,
+          "/members/*/isImmigrationEligible": true,
+          "/members/*/isPregnant": false,
+          "/members/*/isIncapableOfSelfCare": false,
+          "/members/*/abawdCountableMonthsUsed": 0,
+          "/members/*/cashOnHand": 0,
+          "/members/*/bankAccountAssets": 0,
+          "/members/*/stockAssets": 0,
+          "/members/*/bondAssets": 0
+        }
+      ]
+    },
+    "include": ["supportingFacts"]
+  }
+}
+
+docs {
+  Target `/snap` to get the monthly benefit amount (not just the
+  eligibility boolean).
+
+  Single-person household, zero income, zero assets → FY2026 maximum
+  allotment of $298. The `supportingFacts` section shows how the engine
+  got there: `/eligible` is true, `/maxAllotment` is 298, deductions
+  are 0, benefit = max allotment.
+
+  Useful tweaks to try:
+    - `/grossEarnedIncome`: 1500
+    - `/rent`: 800
+    - `/members/*/age`: 65 + `/members/*/isElderly`: true
+
+  Each will produce a different benefit amount and different
+  `supportingFacts` showing which deductions applied.
+
+  The benefit calculation is documented in 7 CFR §273.10.
+}

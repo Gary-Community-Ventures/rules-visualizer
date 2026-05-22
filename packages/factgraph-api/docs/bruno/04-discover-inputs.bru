@@ -1,0 +1,35 @@
+meta {
+  name: 04 Discover inputs (smart walker — empty body)
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{base_url}}/v1/factgraph/{{ruleset_id}}/query
+  body: json
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "targets": ["/eligible"]
+  }
+}
+
+docs {
+  Send a query with nothing but a target. The server runs the engine
+  with empty inputs, walks the dependency graph, propagates "still
+  needed" back through any unprovided collections, and returns the
+  full set of writables required to determine `/eligible`.
+
+  Expect `status: "incomplete"`, `values: { "/eligible": null }`, and
+  `missingInputs` listing all required writables: 11 scalars + 18
+  per-member fields.
+
+  This is the call a partner UI makes on first load to render an empty
+  intake form. As the user fills in fields and the UI re-POSTs with
+  the partial values, `missingInputs` shrinks (see request 05).
+}

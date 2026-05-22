@@ -1,0 +1,37 @@
+meta {
+  name: 08 Error — missing targets (400)
+  type: http
+  seq: 8
+}
+
+post {
+  url: {{base_url}}/v1/factgraph/{{ruleset_id}}/query
+  body: json
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {}
+}
+
+docs {
+  POST a query with no `targets`. The API responds with HTTP 400 and an
+  RFC 9457 Problem Details body:
+
+      {
+        "type":   "https://tools.ietf.org/html/rfc9457",
+        "title":  "Invalid targets",
+        "status": 400,
+        "detail": "Request body must include a non-empty \"targets\" array..."
+      }
+
+  All error responses in this API follow the same shape (`type`, `title`,
+  `status`, `detail`). Clients can render `detail` directly to the user
+  or branch on `status`/`title` for typed handling.
+
+  Also fails the same way: targets that's not an array, an empty array,
+  or an array containing non-string / empty-string entries.
+}

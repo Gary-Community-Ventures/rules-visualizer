@@ -1,0 +1,25 @@
+meta {
+  name: 03 Get schema
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{base_url}}/v1/factgraph/{{ruleset_id}}/schema
+}
+
+docs {
+  Return the full node index for a ruleset: every fact's path, name,
+  description, dependencies, data type, and policy citations.
+
+  This response is large — for SNAP-FY2026 there are ~130 nodes. Use
+  it sparingly (or filter client-side) once you know which nodes you
+  care about. For day-one discovery, the smarter call is the next one
+  (`04 Discover inputs`) which only returns what's actually needed for
+  a specific target.
+
+  Useful subsets to look at in the response:
+    - `.nodes[*].content.path` — all queryable paths
+    - `.nodes[*].content.type === "writable"` — the inputs
+    - `.nodes[*].references` — policy citations (where mapped)
+}

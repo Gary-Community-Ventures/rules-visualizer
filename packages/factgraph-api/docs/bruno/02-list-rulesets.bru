@@ -1,0 +1,18 @@
+meta {
+  name: 02 List rulesets
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{base_url}}/v1/factgraph/rulesets
+}
+
+docs {
+  Return every ruleset the server has loaded. Use the `id` field of
+  each entry as the `:rulesetId` URL parameter in subsequent calls.
+
+  Today the server loads everything under `data/factgraph/` at startup —
+  expect a mix of SNAP fiscal years, Medicaid, child-care subsidy, and
+  smaller demo rulesets.
+}

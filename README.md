@@ -7,6 +7,12 @@ A read-only visualizer for rule systems, supporting two formats:
 
 Displays rules as an interactive node graph with dependency arrows, pan/zoom, expand/collapse, rule execution with live results, and an AI assistant for exploring rules.
 
+> **Integrating with our Fact Graph rulesets from another system?**
+> The visualizer in this repo is a developer tool; the public HTTP API for
+> consuming these rulesets lives in
+> [`packages/factgraph-api/`](packages/factgraph-api/README.md). Start there
+> for endpoint reference, concepts, and a worked SNAP example.
+
 ## Quick Start
 
 ```bash
@@ -101,14 +107,23 @@ rules-visualizer/
 │   └── axiom-rules-engine/           # Vendored upstream Rust crate (built locally)
 ├── frontend/                         # React 19 + Vite + TypeScript
 ├── packages/
-│   ├── factgraph-server/             # Node.js backend (Express + WebSocket)
+│   ├── factgraph-core/               # Shared Fact Graph library
 │   │   ├── src/
-│   │   │   ├── parsers/factgraph.ts  # XML → Model parser
+│   │   │   ├── parser.ts             # XML → Model parser
 │   │   │   ├── executor.ts           # Scala.js execution engine
-│   │   │   ├── routes/               # REST API + AI chat
-│   │   │   └── ai/                   # LangChain agent configuration
+│   │   │   ├── store.ts              # Ruleset loader
+│   │   │   ├── references.ts         # Policy-doc citation resolver
+│   │   │   └── index.ts              # Curated public surface
 │   │   └── vendor/
 │   │       └── factgraph-scala.cjs   # Scala.js bundle (6MB, from Direct File)
+│   ├── factgraph-server/             # Visualizer backend (Express + WebSocket)
+│   │   └── src/
+│   │       ├── routes/               # REST API + AI chat
+│   │       └── ai/                   # LangChain agent configuration
+│   ├── factgraph-api/                # Partner-facing HTTP adapter API
+│   │   └── src/
+│   │       ├── routes/               # v1 endpoints
+│   │       └── middleware/           # Auth, CORS
 │   ├── rac-server/                   # Python backend (aiohttp + WebSocket)
 │   │   └── rules_visualizer_rac/
 │   │       ├── rulespec_parser.py    # RuleSpec YAML → Model parser (walks imports)

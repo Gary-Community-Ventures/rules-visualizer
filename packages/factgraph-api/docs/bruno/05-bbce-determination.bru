@@ -1,0 +1,83 @@
+meta {
+  name: 05 BBCE determination (smart walker — short-circuit)
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{base_url}}/v1/factgraph/{{ruleset_id}}/query
+  body: json
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "targets": ["/eligible", "/snap"],
+    "inputs": {
+      "/grossEarnedIncome": 0,
+      "/unearnedIncome": 0,
+      "/dependentCareExpenses": 0,
+      "/rent": 0,
+      "/realEstateTaxes": 0,
+      "/homeownersAssociationFees": 0,
+      "/mortgagePayments": 0,
+      "/homeownersInsurance": 0,
+      "/meetsCategoricalEligibility": true,
+      "/childSupportPaid": 0,
+      "/isHomeless": false
+    },
+    "entities": {
+      "/members": [
+        {
+          "id": "applicant",
+          "/members/*/isElderly": false,
+          "/members/*/isDisabled": false,
+          "/members/*/medicalExpenses": 0,
+          "/members/*/age": 30,
+          "/members/*/isHigherEdStudent": false,
+          "/members/*/weeklyWorkHours": 40,
+          "/members/*/isWorkStudy": false,
+          "/members/*/isParent": false,
+          "/members/*/isFullTimeCollegeStudent": false,
+          "/members/*/receivesTanf": false,
+          "/members/*/isImmigrationEligible": true,
+          "/members/*/isPregnant": false,
+          "/members/*/isIncapableOfSelfCare": false,
+          "/members/*/abawdCountableMonthsUsed": 0,
+          "/members/*/cashOnHand": 0,
+          "/members/*/bankAccountAssets": 0,
+          "/members/*/stockAssets": 0,
+          "/members/*/bondAssets": 0
+        }
+      ]
+    },
+    "include": ["supportingFacts"],
+    "metadata": {
+      "applicationId": "demo-application-001",
+      "traceId": "demo-trace-xyz"
+    }
+  }
+}
+
+docs {
+  A household flagged with `meetsCategoricalEligibility: true` bypasses
+  the income and asset tests under 7 CFR §273.2(j).
+
+  This request demonstrates four things at once:
+    - Multi-target — asking for both /eligible (boolean) and /snap (benefit).
+    - Caller-provided member IDs — the row has `id: "applicant"`.
+    - Opt-in supporting facts — `include: ["supportingFacts"]`.
+    - Metadata passthrough — `metadata` is echoed back unchanged.
+
+  Expect `status: "complete"`, both values resolved, and supportingFacts
+  containing the intermediate gates. Per-member facts in supportingFacts
+  appear as arrays of `{memberId, value}` pairs.
+
+  Try flipping `meetsCategoricalEligibility` to false: the engine still
+  resolves both values (zero income passes the income test trivially)
+  but supportingFacts now shows the income/asset gates carried the
+  decision instead of the BBCE short-circuit.
+}
