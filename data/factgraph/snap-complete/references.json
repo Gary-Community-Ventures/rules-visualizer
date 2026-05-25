@@ -3433,7 +3433,7 @@
           "h": 0.10056743780008726
         }
       ],
-      "comment": "TODO: might also apply to more nodes in the future."
+      "comment": "Supports excluding ineligible individuals from eligible household size while still considering their income/resources; calculation details are covered by more specific references."
     },
     {
       "id": "10-ccr-2506-1__skip-1778560531914",
@@ -18543,6 +18543,10 @@
       "sectionId": "10-ccr-2506-1__mp36gq9g-7khm"
     },
     {
+      "nodePath": "/allotment",
+      "sectionId": "10-ccr-2506-1__mp2xb5ex-aubt"
+    },
+    {
       "nodePath": "/unflooredAllotment",
       "sectionId": "10-ccr-2506-1__mp361e9z-vnun"
     },
@@ -18703,6 +18707,10 @@
       "sectionId": "10-ccr-2506-1__mp2xjpjm-98ja"
     },
     {
+      "nodePath": "/members/*/receivesFamilyPreservationServices",
+      "sectionId": "10-ccr-2506-1__mp2xjpjm-98ja"
+    },
+    {
       "nodePath": "/members/*/isBoarder",
       "sectionId": "10-ccr-2506-1__moki8its-agta"
     },
@@ -18789,10 +18797,6 @@
     {
       "nodePath": "/hasEebtInLast12Months",
       "sectionId": "10-ccr-2506-1__movtppnp-7caj"
-    },
-    {
-      "nodePath": "/members/*/exemptIncome",
-      "sectionId": "10-ccr-2506-1__movtrqa2-fxaj"
     },
     {
       "nodePath": "/members/*/nonExemptEarnedIncome",
@@ -19183,7 +19187,7 @@
       "sectionId": "10-ccr-2506-1__mox42o33-u5ue"
     },
     {
-      "nodePath": "/members/*/isEnrolledInPostHighSchoolEducation",
+      "nodePath": "/members/*/studentEnrollmentStatus",
       "sectionId": "10-ccr-2506-1__mox4ctqu-nlvi"
     },
     {
@@ -19195,10 +19199,6 @@
       "sectionId": "10-ccr-2506-1__moxbo7fw-7ene"
     },
     {
-      "nodePath": "/totalSelfEmploymentIncome",
-      "sectionId": "10-ccr-2506-1__moxbw0lx-vpak"
-    },
-    {
       "nodePath": "/members/*/sponsorId",
       "sectionId": "10-ccr-2506-1__movyhwbe-3hew"
     },
@@ -19207,11 +19207,15 @@
       "sectionId": "10-ccr-2506-1__moxcdmw0-zxp3"
     },
     {
+      "nodePath": "/substantialLotteryOrGamblingWinningsThreshold",
+      "sectionId": "10-ccr-2506-1__mph5v9w2-e79i"
+    },
+    {
       "nodePath": "/members/*/isStriker",
       "sectionId": "10-ccr-2506-1__moxccqjc-cbta"
     },
     {
-      "nodePath": "/nonTelephoneUtilityAllowance",
+      "nodePath": "/oneUtilityAllowance",
       "sectionId": "10-ccr-2506-1__moxd6p2p-w3lf"
     },
     {
@@ -19243,15 +19247,11 @@
       "sectionId": "10-ccr-2506-1__moxbw0lx-vpak"
     },
     {
-      "nodePath": "/members/*/publicAssistanceAmount",
+      "nodePath": "/members/*/isPaMember",
       "sectionId": "10-ccr-2506-1__mox55b5n-5y57"
     },
     {
       "nodePath": "/members/*/isPaMember",
-      "sectionId": "10-ccr-2506-1__mox3m3am-6fkv"
-    },
-    {
-      "nodePath": "/isPaHousehold",
       "sectionId": "10-ccr-2506-1__mox3m3am-6fkv"
     },
     {
@@ -19307,6 +19307,30 @@
       "sectionId": "10-ccr-2506-1__mp24wtvw-qphi"
     },
     {
+      "nodePath": "/householdSize",
+      "sectionId": "10-ccr-2506-1__mp24wtvw-qphi"
+    },
+    {
+      "nodePath": "/resources",
+      "sectionId": "10-ccr-2506-1__mp24wtvw-qphi"
+    },
+    {
+      "nodePath": "/members/*/resources",
+      "sectionId": "10-ccr-2506-1__mp24wtvw-qphi"
+    },
+    {
+      "nodePath": "/members/*/grossIncome",
+      "sectionId": "10-ccr-2506-1__mp24wtvw-qphi"
+    },
+    {
+      "nodePath": "/members/*/ineligibleInclusionRatio",
+      "sectionId": "10-ccr-2506-1__mp24wtvw-qphi"
+    },
+    {
+      "nodePath": "/allowableMonthlyShelterCosts",
+      "sectionId": "10-ccr-2506-1__mp24wtvw-qphi"
+    },
+    {
       "nodePath": "/isExpedited",
       "sectionId": "10-ccr-2506-1__mp2uvxrm-4xio"
     },
@@ -19351,8 +19375,8 @@
       "sectionId": "10-ccr-2506-1__mp30ona4-mqbe"
     },
     {
-      "nodePath": "/largestLotteryOrGamblingWinningsThisMonth",
-      "sectionId": "10-ccr-2506-1__mp31qnhv-lu1f"
+      "nodePath": "/eligibilityCategory",
+      "sectionId": "10-ccr-2506-1__mp24wtvw-qphi"
     },
     {
       "nodePath": "/hasSubstantialLotteryOrGamblingWinningsThisMonth",
@@ -19447,11 +19471,11 @@
       "sectionId": "10-ccr-2506-1__mp36swlx-8zgs"
     },
     {
-      "nodePath": "/isPaHousehold",
+      "nodePath": "/members/*/isPaMember",
       "sectionId": "10-ccr-2506-1__mp37ykqo-2ue2"
     },
     {
-      "nodePath": "/isNonPaHousehold",
+      "nodePath": "/members/*/isPaMember",
       "sectionId": "10-ccr-2506-1__mp37zngp-15at"
     },
     {
@@ -19644,6 +19668,10 @@
     },
     {
       "nodePath": "/members/*/isLiveInAttendant",
+      "sectionId": "10-ccr-2506-1__mp5onsgd-grb3"
+    },
+    {
+      "nodePath": "/members/*/isPartOfHousehold",
       "sectionId": "10-ccr-2506-1__mp5onsgd-grb3"
     },
     {
@@ -19851,12 +19879,8 @@
       "sectionId": "10-ccr-2506-1__mp75e82t-974j"
     },
     {
-      "nodePath": "/members/*/isSponsor",
+      "nodePath": "/members/*/sponsorId",
       "sectionId": "10-ccr-2506-1__mp75elf0-vhr4"
-    },
-    {
-      "nodePath": "/members/*/isSponsor",
-      "sectionId": "10-ccr-2506-1__mp75id2l-9jfn"
     },
     {
       "nodePath": "/members/*/sponsorId",
@@ -19868,10 +19892,6 @@
     },
     {
       "nodePath": "/members/*/sponsorId",
-      "sectionId": "10-ccr-2506-1__moxc1no4-3ypt"
-    },
-    {
-      "nodePath": "/members/*/isSponsor",
       "sectionId": "10-ccr-2506-1__moxc1no4-3ypt"
     },
     {
@@ -19921,6 +19941,10 @@
     {
       "nodePath": "/members/*/sponsorHouseholdFpl",
       "sectionId": "10-ccr-2506-1__mp7998ow-8xk2"
+    },
+    {
+      "nodePath": "/members/*/sponsorHouseholdFpl",
+      "sectionId": "10-ccr-2506-1__mpd1r48z-1772"
     },
     {
       "nodePath": "/members/*/sponsorAndSpouseDeemedIncome",
@@ -20135,6 +20159,14 @@
       "sectionId": "10-ccr-2506-1__mp8wmz93-lmgp"
     },
     {
+      "nodePath": "/members/*/isOnlyHouseholdParentOfDependentChild",
+      "sectionId": "10-ccr-2506-1__mp8wmz93-lmgp"
+    },
+    {
+      "nodePath": "/members/*/hasNonparentParentalControlOfDependentChildWithoutHouseholdParentOrSpouse",
+      "sectionId": "10-ccr-2506-1__mp8wmz93-lmgp"
+    },
+    {
       "nodePath": "/members/*/isInOnTheJobTraining",
       "sectionId": "10-ccr-2506-1__mp8x00bl-jw4v"
     },
@@ -20280,10 +20312,6 @@
     },
     {
       "nodePath": "/members/*/workRequirementsTotalJobHoursPerWeek",
-      "sectionId": "10-ccr-2506-1__mpbjsipi-en7z"
-    },
-    {
-      "nodePath": "/members/*/workRequirementsFederalMinimumWageJobHoursPerWeek",
       "sectionId": "10-ccr-2506-1__mpbjsipi-en7z"
     },
     {
@@ -20835,7 +20863,11 @@
       "sectionId": "10-ccr-2506-1__mpd64zkr-5nnr"
     },
     {
-      "nodePath": "/largestLotteryOrGamblingWinningsThisMonth",
+      "nodePath": "/hasSubstantialLotteryOrGamblingWinningsThisMonth",
+      "sectionId": "10-ccr-2506-1__mpd64zkr-5nnr"
+    },
+    {
+      "nodePath": "/incomes/*/isSubstantialLotteryOrGamblingWinnings",
       "sectionId": "10-ccr-2506-1__mpd64zkr-5nnr"
     },
     {
@@ -21081,6 +21113,10 @@
     {
       "nodePath": "/incomes/*/exemptAmount",
       "sectionId": "10-ccr-2506-1__mpecejeb-mxks"
+    },
+    {
+      "nodePath": "/incomes/*/isExempt",
+      "sectionId": "10-ccr-2506-1__movtrqa2-fxaj"
     },
     {
       "nodePath": "/incomes/*/exemptAmount",
@@ -22313,6 +22349,186 @@
     {
       "nodePath": "/incomes/*/isExempt",
       "sectionId": "10-ccr-2506-1__mpd4pjah-9mv2"
+    },
+    {
+      "nodePath": "/jobs/*/isOnTheJobTraining",
+      "sectionId": "10-ccr-2506-1__mow0li62-x2m6"
+    },
+    {
+      "nodePath": "/members/*/citizenshipImmigrationStatus",
+      "sectionId": "10-ccr-2506-1__mp5y94ur-lwr8"
+    },
+    {
+      "nodePath": "/members/*/citizenshipImmigrationStatus",
+      "sectionId": "10-ccr-2506-1__mp5yxsg6-qlzm"
+    },
+    {
+      "nodePath": "/members/*/citizenshipImmigrationStatus",
+      "sectionId": "10-ccr-2506-1__mp5zsc78-2nvs"
+    },
+    {
+      "nodePath": "/members/*/citizenshipImmigrationStatus",
+      "sectionId": "10-ccr-2506-1__mp5yyq9w-frv9"
+    },
+    {
+      "nodePath": "/members/*/citizenshipImmigrationStatus",
+      "sectionId": "10-ccr-2506-1__mp5yz0s8-0r5j"
+    },
+    {
+      "nodePath": "/members/*/citizenshipImmigrationStatus",
+      "sectionId": "10-ccr-2506-1__mp5yzhyw-ri6q"
+    },
+    {
+      "nodePath": "/members/*/citizenshipImmigrationStatus",
+      "sectionId": "10-ccr-2506-1__mp5yzrus-jiev"
+    },
+    {
+      "nodePath": "/members/*/citizenshipImmigrationStatus",
+      "sectionId": "10-ccr-2506-1__mp5z0452-ftho"
+    },
+    {
+      "nodePath": "/members/*/citizenshipImmigrationStatus",
+      "sectionId": "10-ccr-2506-1__mp5z0k0h-rhz2"
+    },
+    {
+      "nodePath": "/members/*/citizenshipImmigrationStatus",
+      "sectionId": "10-ccr-2506-1__mp5ze2rl-baqr"
+    },
+    {
+      "nodePath": "/members/*/citizenshipImmigrationStatus",
+      "sectionId": "10-ccr-2506-1__moxepyrj-8trh"
+    },
+    {
+      "nodePath": "/members/*/citizenshipImmigrationStatus",
+      "sectionId": "10-ccr-2506-1__mp5ztjff-ktzz"
+    },
+    {
+      "nodePath": "/members/*/citizenshipImmigrationStatus",
+      "sectionId": "10-ccr-2506-1__mp5zhojo-b2nd"
+    },
+    {
+      "nodePath": "/members/*/citizenshipImmigrationStatus",
+      "sectionId": "10-ccr-2506-1__mp5zhyha-v246"
+    },
+    {
+      "nodePath": "/members/*/citizenshipImmigrationStatus",
+      "sectionId": "10-ccr-2506-1__mp5ziag3-s1zi"
+    },
+    {
+      "nodePath": "/members/*/citizenshipImmigrationStatus",
+      "sectionId": "10-ccr-2506-1__mp5zpk3q-c155"
+    },
+    {
+      "nodePath": "/members/*/citizenshipImmigrationStatus",
+      "sectionId": "10-ccr-2506-1__mp5zpsjg-lffh"
+    },
+    {
+      "nodePath": "/members/*/citizenshipImmigrationStatus",
+      "sectionId": "10-ccr-2506-1__mp6018al-mdoc"
+    },
+    {
+      "nodePath": "/members/*/citizenshipImmigrationStatus",
+      "sectionId": "10-ccr-2506-1__mp602a73-r8e5"
+    },
+    {
+      "nodePath": "/members/*/citizenshipImmigrationStatus",
+      "sectionId": "10-ccr-2506-1__mp602i9b-dze2"
+    },
+    {
+      "nodePath": "/members/*/citizenshipImmigrationStatus",
+      "sectionId": "10-ccr-2506-1__mp607a2g-sxkc"
+    },
+    {
+      "nodePath": "/members/*/citizenshipImmigrationStatus",
+      "sectionId": "10-ccr-2506-1__moxbhp3l-ntpf"
+    },
+    {
+      "nodePath": "/citizenshipImmigrationStatusOptions",
+      "sectionId": "10-ccr-2506-1__mp5y94ur-lwr8"
+    },
+    {
+      "nodePath": "/citizenshipImmigrationStatusOptions",
+      "sectionId": "10-ccr-2506-1__mp5yxsg6-qlzm"
+    },
+    {
+      "nodePath": "/citizenshipImmigrationStatusOptions",
+      "sectionId": "10-ccr-2506-1__mp5zsc78-2nvs"
+    },
+    {
+      "nodePath": "/citizenshipImmigrationStatusOptions",
+      "sectionId": "10-ccr-2506-1__mp5yyq9w-frv9"
+    },
+    {
+      "nodePath": "/citizenshipImmigrationStatusOptions",
+      "sectionId": "10-ccr-2506-1__mp5yz0s8-0r5j"
+    },
+    {
+      "nodePath": "/citizenshipImmigrationStatusOptions",
+      "sectionId": "10-ccr-2506-1__mp5yzhyw-ri6q"
+    },
+    {
+      "nodePath": "/citizenshipImmigrationStatusOptions",
+      "sectionId": "10-ccr-2506-1__mp5yzrus-jiev"
+    },
+    {
+      "nodePath": "/citizenshipImmigrationStatusOptions",
+      "sectionId": "10-ccr-2506-1__mp5z0452-ftho"
+    },
+    {
+      "nodePath": "/citizenshipImmigrationStatusOptions",
+      "sectionId": "10-ccr-2506-1__mp5z0k0h-rhz2"
+    },
+    {
+      "nodePath": "/citizenshipImmigrationStatusOptions",
+      "sectionId": "10-ccr-2506-1__mp5ze2rl-baqr"
+    },
+    {
+      "nodePath": "/citizenshipImmigrationStatusOptions",
+      "sectionId": "10-ccr-2506-1__moxepyrj-8trh"
+    },
+    {
+      "nodePath": "/citizenshipImmigrationStatusOptions",
+      "sectionId": "10-ccr-2506-1__mp5ztjff-ktzz"
+    },
+    {
+      "nodePath": "/citizenshipImmigrationStatusOptions",
+      "sectionId": "10-ccr-2506-1__mp5zhojo-b2nd"
+    },
+    {
+      "nodePath": "/citizenshipImmigrationStatusOptions",
+      "sectionId": "10-ccr-2506-1__mp5zhyha-v246"
+    },
+    {
+      "nodePath": "/citizenshipImmigrationStatusOptions",
+      "sectionId": "10-ccr-2506-1__mp5ziag3-s1zi"
+    },
+    {
+      "nodePath": "/citizenshipImmigrationStatusOptions",
+      "sectionId": "10-ccr-2506-1__mp5zpk3q-c155"
+    },
+    {
+      "nodePath": "/citizenshipImmigrationStatusOptions",
+      "sectionId": "10-ccr-2506-1__mp5zpsjg-lffh"
+    },
+    {
+      "nodePath": "/citizenshipImmigrationStatusOptions",
+      "sectionId": "10-ccr-2506-1__mp6018al-mdoc"
+    },
+    {
+      "nodePath": "/citizenshipImmigrationStatusOptions",
+      "sectionId": "10-ccr-2506-1__mp602a73-r8e5"
+    },
+    {
+      "nodePath": "/citizenshipImmigrationStatusOptions",
+      "sectionId": "10-ccr-2506-1__mp602i9b-dze2"
+    },
+    {
+      "nodePath": "/citizenshipImmigrationStatusOptions",
+      "sectionId": "10-ccr-2506-1__mp607a2g-sxkc"
+    },
+    {
+      "nodePath": "/citizenshipImmigrationStatusOptions",
+      "sectionId": "10-ccr-2506-1__moxbhp3l-ntpf"
     }
   ]
 }

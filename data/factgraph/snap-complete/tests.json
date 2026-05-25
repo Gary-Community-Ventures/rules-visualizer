@@ -338,5 +338,281 @@
       "/isDestituteOfIncome": false,
       "/destituteIncomeSourceCriteriaMet": false
     }
+  },
+  {
+    "id": "1f7a37ef-127d-4594-be25-21aa8938e3fc",
+    "name": "Circularity: isOnlyHouseholdParentOfDependentChild inner parent count",
+    "description": "A 20-year-old full-time college student is the sole parent of a 7-year-old child. Both prepare food with the household (so they are part of it via food-prep, not mandatory membership). The child is older than the under-six care exemption, so the student must qualify through the single-parent student exemption via isOnlyHouseholdParentOfDependentChild. That should make them not an ineligible student, which should make isPartOfHousehold true. However, the inner parent-count filter in isOnlyHouseholdParentOfDependentChild requires caregiverId/isPartOfHousehold — which for the student depends on not being an ineligible student, which depends on this very exemption. This creates a circularity that causes null propagation. The fix is to count the current candidate student in the inner parent count even before their isPartOfHousehold is resolved.",
+    "inputs": {
+      "/applicationFilingDate": "2025-01-15",
+      "/benefitMonth": "2025-02-01",
+      "/certificationPeriodStartDate": "2025-02-01",
+      "/livesInApplicationCounty": true
+    },
+    "entities": {
+      "/members": [
+        {
+          "/members/*/age": 20,
+          "/members/*/isHeadOfHousehold": true,
+          "/members/*/preparesFoodWithHousehold": true,
+          "/members/*/studentEnrollmentStatus": "FullTime",
+          "/members/*/citizenshipImmigrationStatus": "Citizen",
+          "/members/*/isSeparateAndApart": false,
+          "/members/*/isInK12": false,
+          "/members/*/isEnrolledInEmploymentTrainingProgram": false,
+          "/members/*/isFosterChild": false,
+          "/members/*/isEmancipated": false,
+          "/members/*/isPhysicallyOrMentallyUnfitForEmploymentForStudentEligibility": false,
+          "/members/*/isParticipatingInWorkStudy": false,
+          "/members/*/receivesTanf": false,
+          "/members/*/isAssignedToHigherEducationThroughEmploymentTrainingProgram": false,
+          "/members/*/isIncapacitated": false,
+          "/members/*/hasPhysicalDisability": false,
+          "/members/*/hasMentalDisability": false,
+          "/members/*/isVeteranWithDisability": false,
+          "/members/*/isVeteranNeedingAidAndAttendance": false,
+          "/members/*/isVeteranSurvivorNeedingAidAndAttendance": false,
+          "/members/*/isVeteranSurvivorWithDisability": false,
+          "/members/*/receivesPublicDisabilityRetirementPension": false,
+          "/members/*/receivesRailroadRetirementDisability": false,
+          "/members/*/receivesInterimAssistanceForDisability": false,
+          "/members/*/disqualifiedForIPV": false,
+          "/members/*/convictedOfDrugRelatedFelonyWithSnap": false,
+          "/members/*/failedToProvideOrObtainSSN": false,
+          "/members/*/isParticipatingInAnotherHousehold": false,
+          "/members/*/isBoarder": false,
+          "/members/*/isRoomer": false,
+          "/members/*/livesInBoardingHouse": false,
+          "/members/*/livesInInstitution": false,
+          "/members/*/livesInGroupLivingArrangement": false,
+          "/members/*/isLiveInAttendant": false,
+          "/members/*/disqualifiedForWorkRequirementsCooperation": false,
+          "/members/*/disqualifiedForQualityAssuranceCooperation": false,
+          "/members/*/disqualifiedForFelonyNonCompliance": false,
+          "/members/*/disqualifiedForParoleOrProbationViolation": false,
+          "/members/*/isFleeingFelon": false,
+          "/members/*/isStriker": false,
+          "/members/*/voluntarilyQuitOrReducedWorkEffort": false
+        },
+        {
+          "/members/*/age": 7,
+          "/members/*/isHeadOfHousehold": false,
+          "/members/*/preparesFoodWithHousehold": true,
+          "/members/*/citizenshipImmigrationStatus": "Citizen",
+          "/members/*/studentEnrollmentStatus": "LessThanHalfTimeOrNotEnrolled",
+          "/members/*/isSeparateAndApart": false,
+          "/members/*/isInK12": false,
+          "/members/*/isEnrolledInEmploymentTrainingProgram": false,
+          "/members/*/isFosterChild": false,
+          "/members/*/isEmancipated": false,
+          "/members/*/isPhysicallyOrMentallyUnfitForEmploymentForStudentEligibility": false,
+          "/members/*/isParticipatingInWorkStudy": false,
+          "/members/*/receivesTanf": false,
+          "/members/*/isAssignedToHigherEducationThroughEmploymentTrainingProgram": false,
+          "/members/*/isIncapacitated": false,
+          "/members/*/hasPhysicalDisability": false,
+          "/members/*/hasMentalDisability": false,
+          "/members/*/isVeteranWithDisability": false,
+          "/members/*/isVeteranNeedingAidAndAttendance": false,
+          "/members/*/isVeteranSurvivorNeedingAidAndAttendance": false,
+          "/members/*/isVeteranSurvivorWithDisability": false,
+          "/members/*/receivesPublicDisabilityRetirementPension": false,
+          "/members/*/receivesRailroadRetirementDisability": false,
+          "/members/*/receivesInterimAssistanceForDisability": false,
+          "/members/*/disqualifiedForIPV": false,
+          "/members/*/convictedOfDrugRelatedFelonyWithSnap": false,
+          "/members/*/failedToProvideOrObtainSSN": false,
+          "/members/*/isParticipatingInAnotherHousehold": false,
+          "/members/*/isBoarder": false,
+          "/members/*/isRoomer": false,
+          "/members/*/livesInBoardingHouse": false,
+          "/members/*/livesInInstitution": false,
+          "/members/*/livesInGroupLivingArrangement": false,
+          "/members/*/isLiveInAttendant": false,
+          "/members/*/disqualifiedForWorkRequirementsCooperation": false,
+          "/members/*/disqualifiedForQualityAssuranceCooperation": false,
+          "/members/*/disqualifiedForFelonyNonCompliance": false,
+          "/members/*/disqualifiedForParoleOrProbationViolation": false,
+          "/members/*/isFleeingFelon": false,
+          "/members/*/isStriker": false,
+          "/members/*/voluntarilyQuitOrReducedWorkEffort": false
+        }
+      ],
+      "/caregiverRelationships": [
+        {
+          "/caregiverRelationships/*/caregiverId": "#0",
+          "/caregiverRelationships/*/dependentId": "#1",
+          "/caregiverRelationships/*/isParent": true,
+          "/caregiverRelationships/*/isNonparentParentalControl": false,
+          "/caregiverRelationships/*/caregiverProvidesMoreThanHalfOfPhysicalCare": true,
+          "/caregiverRelationships/*/adequateChildcareUnavailable": false,
+          "/caregiverRelationships/*/claimedForWorkRequirementsCareExemption": false
+        }
+      ]
+    },
+    "expect": {
+      "/members/*/isOnlyHouseholdParentOfDependentChild": [
+        true,
+        false
+      ],
+      "/members/*/isSingleParentOfDependentChild": [
+        true,
+        false
+      ],
+      "/members/*/isStudentResponsibleForDependentChild": [
+        true,
+        false
+      ],
+      "/members/*/meetsStudentEligibilityExemption": [
+        true,
+        false
+      ],
+      "/members/*/isIneligibleStudent": [
+        false,
+        false
+      ],
+      "/members/*/isPartOfHousehold": [
+        true,
+        true
+      ]
+    }
+  },
+  {
+    "id": "56f1f993-55aa-4a74-a0ff-ff2f64642ac4",
+    "name": "Circularity: hasNonparentParentalControlOfDependentChildWithoutHouseholdParentOrSpouse inner parent count",
+    "description": "A 20-year-old full-time college student has non-parent parental control over a 7-year-old child (e.g., aunt or grandparent). No natural/adoptive/stepparent is in the household and the caregiver has no spouse. The child is older than the under-six care exemption, so the student must qualify through the parental-control branch of the single-parent student exemption via hasNonparentParentalControlOfDependentChildWithoutHouseholdParentOrSpouse. The inner parent-count filter checks caregiverId/isPartOfHousehold for any parent of the child — if a parent were also a student, this would create a circularity. This test verifies the non-parent parental control path resolves correctly.",
+    "inputs": {
+      "/applicationFilingDate": "2025-01-15",
+      "/benefitMonth": "2025-02-01",
+      "/certificationPeriodStartDate": "2025-02-01",
+      "/livesInApplicationCounty": true
+    },
+    "entities": {
+      "/members": [
+        {
+          "/members/*/age": 20,
+          "/members/*/isHeadOfHousehold": true,
+          "/members/*/preparesFoodWithHousehold": true,
+          "/members/*/studentEnrollmentStatus": "FullTime",
+          "/members/*/citizenshipImmigrationStatus": "Citizen",
+          "/members/*/isSeparateAndApart": false,
+          "/members/*/isInK12": false,
+          "/members/*/isEnrolledInEmploymentTrainingProgram": false,
+          "/members/*/isFosterChild": false,
+          "/members/*/isEmancipated": false,
+          "/members/*/isPhysicallyOrMentallyUnfitForEmploymentForStudentEligibility": false,
+          "/members/*/isParticipatingInWorkStudy": false,
+          "/members/*/receivesTanf": false,
+          "/members/*/isAssignedToHigherEducationThroughEmploymentTrainingProgram": false,
+          "/members/*/isIncapacitated": false,
+          "/members/*/hasPhysicalDisability": false,
+          "/members/*/hasMentalDisability": false,
+          "/members/*/isVeteranWithDisability": false,
+          "/members/*/isVeteranNeedingAidAndAttendance": false,
+          "/members/*/isVeteranSurvivorNeedingAidAndAttendance": false,
+          "/members/*/isVeteranSurvivorWithDisability": false,
+          "/members/*/receivesPublicDisabilityRetirementPension": false,
+          "/members/*/receivesRailroadRetirementDisability": false,
+          "/members/*/receivesInterimAssistanceForDisability": false,
+          "/members/*/disqualifiedForIPV": false,
+          "/members/*/convictedOfDrugRelatedFelonyWithSnap": false,
+          "/members/*/failedToProvideOrObtainSSN": false,
+          "/members/*/isParticipatingInAnotherHousehold": false,
+          "/members/*/isBoarder": false,
+          "/members/*/isRoomer": false,
+          "/members/*/livesInBoardingHouse": false,
+          "/members/*/livesInInstitution": false,
+          "/members/*/livesInGroupLivingArrangement": false,
+          "/members/*/isLiveInAttendant": false,
+          "/members/*/disqualifiedForWorkRequirementsCooperation": false,
+          "/members/*/disqualifiedForQualityAssuranceCooperation": false,
+          "/members/*/disqualifiedForFelonyNonCompliance": false,
+          "/members/*/disqualifiedForParoleOrProbationViolation": false,
+          "/members/*/isFleeingFelon": false,
+          "/members/*/isStriker": false,
+          "/members/*/voluntarilyQuitOrReducedWorkEffort": false
+        },
+        {
+          "/members/*/age": 7,
+          "/members/*/isHeadOfHousehold": false,
+          "/members/*/preparesFoodWithHousehold": true,
+          "/members/*/citizenshipImmigrationStatus": "Citizen",
+          "/members/*/studentEnrollmentStatus": "LessThanHalfTimeOrNotEnrolled",
+          "/members/*/isSeparateAndApart": false,
+          "/members/*/isInK12": false,
+          "/members/*/isEnrolledInEmploymentTrainingProgram": false,
+          "/members/*/isFosterChild": false,
+          "/members/*/isEmancipated": false,
+          "/members/*/isPhysicallyOrMentallyUnfitForEmploymentForStudentEligibility": false,
+          "/members/*/isParticipatingInWorkStudy": false,
+          "/members/*/receivesTanf": false,
+          "/members/*/isAssignedToHigherEducationThroughEmploymentTrainingProgram": false,
+          "/members/*/isIncapacitated": false,
+          "/members/*/hasPhysicalDisability": false,
+          "/members/*/hasMentalDisability": false,
+          "/members/*/isVeteranWithDisability": false,
+          "/members/*/isVeteranNeedingAidAndAttendance": false,
+          "/members/*/isVeteranSurvivorNeedingAidAndAttendance": false,
+          "/members/*/isVeteranSurvivorWithDisability": false,
+          "/members/*/receivesPublicDisabilityRetirementPension": false,
+          "/members/*/receivesRailroadRetirementDisability": false,
+          "/members/*/receivesInterimAssistanceForDisability": false,
+          "/members/*/disqualifiedForIPV": false,
+          "/members/*/convictedOfDrugRelatedFelonyWithSnap": false,
+          "/members/*/failedToProvideOrObtainSSN": false,
+          "/members/*/isParticipatingInAnotherHousehold": false,
+          "/members/*/isBoarder": false,
+          "/members/*/isRoomer": false,
+          "/members/*/livesInBoardingHouse": false,
+          "/members/*/livesInInstitution": false,
+          "/members/*/livesInGroupLivingArrangement": false,
+          "/members/*/isLiveInAttendant": false,
+          "/members/*/disqualifiedForWorkRequirementsCooperation": false,
+          "/members/*/disqualifiedForQualityAssuranceCooperation": false,
+          "/members/*/disqualifiedForFelonyNonCompliance": false,
+          "/members/*/disqualifiedForParoleOrProbationViolation": false,
+          "/members/*/isFleeingFelon": false,
+          "/members/*/isStriker": false,
+          "/members/*/voluntarilyQuitOrReducedWorkEffort": false
+        }
+      ],
+      "/caregiverRelationships": [
+        {
+          "/caregiverRelationships/*/caregiverId": "#0",
+          "/caregiverRelationships/*/dependentId": "#1",
+          "/caregiverRelationships/*/isParent": false,
+          "/caregiverRelationships/*/isNonparentParentalControl": true,
+          "/caregiverRelationships/*/caregiverProvidesMoreThanHalfOfPhysicalCare": true,
+          "/caregiverRelationships/*/adequateChildcareUnavailable": false,
+          "/caregiverRelationships/*/claimedForWorkRequirementsCareExemption": false
+        }
+      ]
+    },
+    "expect": {
+      "/members/*/hasNonparentParentalControlOfDependentChildWithoutHouseholdParentOrSpouse": [
+        true,
+        false
+      ],
+      "/members/*/isSingleParentOfDependentChild": [
+        true,
+        false
+      ],
+      "/members/*/isStudentResponsibleForDependentChild": [
+        true,
+        false
+      ],
+      "/members/*/meetsStudentEligibilityExemption": [
+        true,
+        false
+      ],
+      "/members/*/isIneligibleStudent": [
+        false,
+        false
+      ],
+      "/members/*/isPartOfHousehold": [
+        true,
+        true
+      ]
+    }
   }
 ]

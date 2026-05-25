@@ -1,10 +1,4 @@
 <FactDictionaryModule>
-  <!-- TODO: Replace `<CollectionSize><Dependency path="/members"/></CollectionSize>`
-       with a calculation that returns the count of *eligible* members rather than
-       the raw size of /members. Related: improve the logic so non-members are not
-       counted toward household totals at all. Both will be resolved once we
-       define who counts as being "in the household" and what that means for
-       inclusion in SNAP totals. -->
   <Facts>
     <Fact path="/incomeSourceOptions">
       <Name>Income source options</Name>
@@ -758,6 +752,7 @@
             <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/expenseTypeOptions">NaturalDisasterRepairOrRebuild</Enum></Right></Equal>
           </Any>
           <Dependency path="../isForClaimableShelterResidence" />
+          <Not><Dependency path="../isExcludedShelterExpense" /></Not>
         </All>
       </Derived>
     </Fact>
@@ -1962,6 +1957,12 @@
       <Writable><Boolean /></Writable>
     </Fact>
 
+    <Fact path="/jobs/*/isOnTheJobTraining">
+      <Name>Is on-the-job training</Name>
+      <Description>Whether this job is on-the-job training (OJT), meaning training provided to an employee after they are hired and designed for individuals who do not have the necessary work experience required for the job (10 CCR 2506-1, 4.000.1).</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
     <Fact path="/jobs/*/employmentIsSuitable">
       <Name>Employment is suitable</Name>
       <Description>Whether this offered employment is suitable for the member. Employment is considered suitable unless wages are below the applicable federal or state minimum wage (or eighty percent of the federal minimum wage if neither applies), piece-rate expected hourly yield is below that wage, the job requires joining, resigning from, or refraining from joining a legitimate labor organization, the worksite is subject to a strike or lockout that has not been enjoined, health and safety risk is unreasonable, the member is physically or mentally unfit for the job, the job is outside the member's major field of experience during the first thirty (30) days after registration while opportunities in that field have not been offered, distance is unreasonable considering wage and commute time/cost, daily commuting time exceeds two (2) hours excluding child-care transportation, the distance prohibits walking and no public or private transportation is available, or the working hours or nature of employment interferes with the member's religious observances, convictions, or beliefs (10 CCR 2506-1, 4.310.7).</Description>
@@ -2353,7 +2354,7 @@
 
     <Fact path="/members/*/isPartOfHousehold">
       <Name>Is part of household</Name>
-      <Description>Whether this member is part of the SNAP household — a group of individuals who live together and customarily purchase and prepare food together for home consumption. Mandatory household members are always considered part of the household regardless of food preparation. A member who would otherwise be part of the household but has established a residence separate and apart (/members/*/isSeparateAndApart) is excluded. A person who is an ineligible student for SNAP purposes is treated as a non-household member (10 CCR 2506-1, 4.304, 4.304.1, 4.306).</Description>
+      <Description>Whether this member is part of the SNAP household — a group of individuals who live together and customarily purchase and prepare food together for home consumption. Mandatory household members are always considered part of the household regardless of food preparation. A member who would otherwise be part of the household but has established a residence separate and apart (/members/*/isSeparateAndApart) is excluded. A person who is a non-household member under /members/*/isNonHouseholdMember, or who is an ineligible student for SNAP purposes, is treated as outside the household (10 CCR 2506-1, 4.304, 4.304.1, 4.304.31, 4.306).</Description>
       <Derived>
         <All>
           <Any>
@@ -2361,6 +2362,7 @@
             <Dependency path="../preparesFoodWithHousehold" />
           </Any>
           <Not><Dependency path="../isSeparateAndApart" /></Not>
+          <Not><Dependency path="../isNonHouseholdMember" /></Not>
           <Not><Dependency path="../isIneligibleStudent" /></Not>
         </All>
       </Derived>
@@ -2740,6 +2742,15 @@
           <Switch>
             <Case>
               <When>
+                <Equal>
+                  <Left><Dependency path="/eligibilityCategory" /></Left>
+                  <Right><Enum optionsPath="/eligibilityCategoryOptions">Ineligible</Enum></Right>
+                </Equal>
+              </When>
+              <Then><Dollar>0</Dollar></Then>
+            </Case>
+            <Case>
+              <When>
                 <LessThanOrEqual>
                   <Left><Dependency path="/householdSize" /></Left>
                   <Right><Int>2</Int></Right>
@@ -3082,7 +3093,6 @@
           <String>Basic</String>
           <String>Telephone</String>
           <String>OneUtility</String>
-          <String>NonTelephone</String>
           <String>None</String>
         </EnumOptions>
       </Derived>
@@ -3279,15 +3289,8 @@
 
     <Fact path="/oneUtilityAllowance">
       <Name>One Utility Allowance</Name>
-      <Description>The fixed One Utility Allowance (OUA) standard applied to households that are not entitled to the HCUA or BUA but are responsible for only one non-heating or one non-cooling utility expense other than telephone. If more than one SNAP household shares in paying one non-heating or non-cooling utility cost of the dwelling, each sharing household receives the full OUA. Effective October 1, 2025, the OUA standard is $71 (10 CCR 2506-1, 4.407.31).</Description>
+      <Description>The fixed One Utility Allowance (OUA) standard, also described as the fixed deduction for households whose only utility expense is something other than telephone, applied to households that are not entitled to the HCUA or BUA but are responsible for only one non-heating or one non-cooling utility expense other than telephone. If more than one SNAP household shares in paying one non-heating or non-cooling utility cost of the dwelling, each sharing household receives the full OUA. Effective October 1, 2025, the OUA standard is $71 (10 CCR 2506-1, 4.000.1; 4.407.31).</Description>
       <Derived><Dollar>71</Dollar></Derived>
-    </Fact>
-
-    <!-- TODO: get the actual fixed deduction amount from policy and make this a constant. -->
-    <Fact path="/nonTelephoneUtilityAllowance">
-      <Name>Non-telephone utility allowance</Name>
-      <Description>The fixed deduction amount applied to a household whose only utility expense is something other than the expense for a telephone (10 CCR 2506-1, 4.000.1). Placeholder.</Description>
-      <Writable><Dollar /></Writable>
     </Fact>
 
     <Fact path="/utilityCost">
@@ -3340,15 +3343,6 @@
             </When>
             <Then><Dependency path="/oneUtilityAllowance" /></Then>
           </Case>
-          <Case>
-            <When>
-              <Equal>
-                <Left><Dependency path="/utilityAllowanceCategory" /></Left>
-                <Right><Enum optionsPath="/utilityAllowanceCategoryOptions">NonTelephone</Enum></Right>
-              </Equal>
-            </When>
-            <Then><Dependency path="/nonTelephoneUtilityAllowance" /></Then>
-          </Case>
         </Switch>
       </Derived>
     </Fact>
@@ -3371,22 +3365,32 @@
       </Derived>
     </Fact>
 
-    <!-- TODO: exclude members not in the SNAP household (e.g., disqualified/ineligible
-         members) from both the Count and CollectionSize so the comparison only considers
-         counted household members. -->
+    <Fact path="/members/*/receivesFamilyPreservationServices">
+      <Name>Receives Family Preservation services</Name>
+      <Description>Whether this member receives services from the Family Preservation Program. This determination must be documented in the case record (10 CCR 2506-1, 4.206).</Description>
+      <Writable><Boolean /></Writable>
+    </Fact>
+
     <Fact path="/allMembersReceiveBceQualifyingBenefits">
       <Name>All members receive BCE-qualifying benefits</Name>
       <Description>Whether every household member receives, or is authorized to receive, SSI, Colorado Works (CW), Old Age Pension (OAP), Aid to the Needy Disabled (AND), Aid to the Blind (AB), or a combination of these benefits. The CW, SSI, OAP, and/or AB program(s) need only to authorize benefits for the household to be considered for BCE. Clients who are authorized to receive a benefit from one or more of these programs, but who are not paid such benefits because the grant is less than a minimum benefit or the benefits are suspended or are being recouped, are still considered eligible. Households entitled to Medicaid only are not considered SSI or Title IV-A participants (10 CCR 2506-1, 4.206).</Description>
       <Derived>
         <Equal>
           <Left>
-            <Count>
-              <Dependency path="/members/*/receivesBceQualifyingBenefits" />
-            </Count>
+            <CollectionSize>
+              <Filter path="/members">
+                <All>
+                  <Dependency path="isPartOfHousehold" />
+                  <Dependency path="receivesBceQualifyingBenefits" />
+                </All>
+              </Filter>
+            </CollectionSize>
           </Left>
           <Right>
             <CollectionSize>
-              <Dependency path="/members" />
+              <Filter path="/members">
+                <Dependency path="isPartOfHousehold" />
+              </Filter>
             </CollectionSize>
           </Right>
         </Equal>
@@ -3395,8 +3399,22 @@
 
     <Fact path="/hasMemberReceivingFamilyPreservation">
       <Name>Has member receiving Family Preservation services</Name>
-      <Description>Whether at least one household member receives services from the Family Preservation Program. This determination must be documented in the case record (10 CCR 2506-1, 4.206). Placeholder.</Description>
-      <Writable><Boolean /></Writable>
+      <Description>Whether at least one member who is part of the household receives services from the Family Preservation Program. This determination must be documented in the case record (10 CCR 2506-1, 4.206).</Description>
+      <Derived>
+        <GreaterThan>
+          <Left>
+            <CollectionSize>
+              <Filter path="/members">
+                <All>
+                  <Dependency path="isPartOfHousehold" />
+                  <Dependency path="receivesFamilyPreservationServices" />
+                </All>
+              </Filter>
+            </CollectionSize>
+          </Left>
+          <Right><Int>0</Int></Right>
+        </GreaterThan>
+      </Derived>
     </Fact>
 
     <Fact path="/disqualifiedForBCE">
@@ -3766,6 +3784,15 @@
       <Derived>
         <Switch>
           <Case>
+            <When>
+              <Equal>
+                <Left><Dependency path="/householdSize" /></Left>
+                <Right><Int>0</Int></Right>
+              </Equal>
+            </When>
+            <Then><Enum optionsPath="/eligibilityCategoryOptions">Ineligible</Enum></Then>
+          </Case>
+          <Case>
             <When><Dependency path="/hasBasicCategoricalEligibility" /></When>
             <Then><Enum optionsPath="/eligibilityCategoryOptions">Bce</Enum></Then>
           </Case>
@@ -3798,9 +3825,7 @@
     </Fact>
 
     <!-- TODO: ensure self-employment income flows into /members/*/nonExemptEarnedIncome
-         so the "no earned income" check below covers it; once that's done, the
-         /totalSelfEmploymentIncome household total can stay out of this derivation
-         (10 CCR 2506-1, 4.208.1). -->
+         so the "no earned income" check below covers it (10 CCR 2506-1, 4.208.1). -->
     <Fact path="/certificationPeriod">
       <Name>Certification period</Name>
       <Description>The length, in months, of the period of time for which a household has been certified to receive benefits. A twenty-four (24) month certification period is assigned to households that contain only members aged sixty (60) and older and/or with a disability and have no earned income at the time of certification; all other households are assigned a six (6) month certification period (10 CCR 2506-1, 4.208.1).</Description>
@@ -3811,13 +3836,20 @@
               <All>
                 <Equal>
                   <Left>
-                    <Count>
-                      <Dependency path="/members/*/isElderlyOrPersonWithDisability" />
-                    </Count>
+                    <CollectionSize>
+                      <Filter path="/members">
+                        <All>
+                          <Dependency path="isPartOfHousehold" />
+                          <Dependency path="isElderlyOrPersonWithDisability" />
+                        </All>
+                      </Filter>
+                    </CollectionSize>
                   </Left>
                   <Right>
                     <CollectionSize>
-                      <Dependency path="/members" />
+                      <Filter path="/members">
+                        <Dependency path="isPartOfHousehold" />
+                      </Filter>
                     </CollectionSize>
                   </Right>
                 </Equal>
@@ -4055,7 +4087,7 @@
 
     <Fact path="/members/*/hasCareOfDependentHouseholdMember">
       <Name>Has care of a dependent household member</Name>
-      <Description>Whether this member has at least one /caregiverRelationships entry whose dependent-side member is part of the SNAP household and is under the age of six (6). This captures responsibility for the care of a dependent household member under age six for the SNAP full-time-student exemption (10 CCR 2506-1, 4.306.1).</Description>
+      <Description>Whether this member has at least one /caregiverRelationships entry where the caregiver-side member provides more than half of the dependent-side member's physical care, and the dependent-side member is under the age of six (6). This captures responsibility for the care of a dependent household member under age six for the SNAP full-time-student exemption without prechecking the dependent's household membership, which follows from the caregiver relationship when the student is in the SNAP household (10 CCR 2506-1, 4.306.1).</Description>
       <Derived>
         <GreaterThan>
           <Left>
@@ -4066,7 +4098,7 @@
                     <Left><Dependency path="caregiverId" /></Left>
                     <Right><Dependency path="^" /></Right>
                   </Equal>
-                  <Dependency path="dependentId/isPartOfHousehold" />
+                  <Dependency path="caregiverProvidesMoreThanHalfOfPhysicalCare" />
                   <LessThan>
                     <Left><Dependency path="dependentId/age" /></Left>
                     <Right><Dependency path="/studentExemptionDependentMemberAgeLimit" /></Right>
@@ -4080,13 +4112,9 @@
       </Derived>
     </Fact>
 
-    <Fact path="/members/*/isSingleParentOfDependentChild">
-      <Name>Is single parent of a dependent child</Name>
-      <Description>Whether this member has at least one /caregiverRelationships entry to a household child under age twelve (12) for whom this member is the only parent of any kind (natural, adoptive, stepparent, or non-parent caregiver) in the same SNAP household. Captures the single-parent provision of the SNAP full-time-student exemption (10 CCR 2506-1, 4.306.1).</Description>
-      <!-- TODO: Confirm whether third-type caregiver relationships (neither
-           isParent nor isNonparentParentalControl) should count for this
-           single-parent student exemption, or whether this should filter to
-           parent / parental-control relationships only. -->
+    <Fact path="/members/*/isOnlyHouseholdParentOfDependentChild">
+      <Name>Is only household parent of a dependent child</Name>
+      <Description>Whether this member has at least one parent-type /caregiverRelationships entry to a child under age twelve (12) where exactly one natural, adoptive, or stepparent relationship for that child is in the same SNAP household. Captures the parent branch of the single-parent full-time-student exemption without prechecking the child's household membership, which follows from the parent relationship when the student-parent is in the SNAP household (10 CCR 2506-1, 4.306.1).</Description>
       <Derived>
         <GreaterThan>
           <Left>
@@ -4097,11 +4125,11 @@
                     <Left><Dependency path="caregiverId" /></Left>
                     <Right><Dependency path="^" /></Right>
                   </Equal>
-                  <Dependency path="dependentId/isPartOfHousehold" />
                   <LessThan>
                     <Left><Dependency path="dependentId/age" /></Left>
                     <Right><Dependency path="/studentExemptionDependentChildAgeLimit" /></Right>
                   </LessThan>
+                  <Dependency path="isParent" />
                   <Equal>
                     <Left>
                       <CollectionSize>
@@ -4111,7 +4139,14 @@
                               <Left><Dependency path="dependentId" /></Left>
                               <Right><Dependency path="^/dependentId" /></Right>
                             </Equal>
-                            <Dependency path="caregiverId/isPartOfHousehold" />
+                            <Dependency path="isParent" />
+                            <Any>
+                              <Equal>
+                                <Left><Dependency path="caregiverId" /></Left>
+                                <Right><Dependency path="^/caregiverId" /></Right>
+                              </Equal>
+                              <Dependency path="caregiverId/isPartOfHousehold" />
+                            </Any>
                           </All>
                         </Filter>
                       </CollectionSize>
@@ -4127,9 +4162,74 @@
       </Derived>
     </Fact>
 
+    <Fact path="/members/*/hasNonparentParentalControlOfDependentChildWithoutHouseholdParentOrSpouse">
+      <Name>Has non-parent parental control of a dependent child without household parent or spouse</Name>
+      <Description>Whether this member has at least one non-parent parental-control /caregiverRelationships entry to a child under age twelve (12), exactly one natural/adoptive/stepparent relationship for that child is in the SNAP household, and the member does not reside with their spouse. Captures the parental-control branch of the single-parent full-time-student exemption without prechecking the child's household membership (10 CCR 2506-1, 4.306.1).</Description>
+      <Derived>
+        <GreaterThan>
+          <Left>
+            <CollectionSize>
+              <Filter path="/caregiverRelationships">
+                <All>
+                  <Equal>
+                    <Left><Dependency path="caregiverId" /></Left>
+                    <Right><Dependency path="^" /></Right>
+                  </Equal>
+                  <LessThan>
+                    <Left><Dependency path="dependentId/age" /></Left>
+                    <Right><Dependency path="/studentExemptionDependentChildAgeLimit" /></Right>
+                  </LessThan>
+                  <Dependency path="isNonparentParentalControl" />
+                  <Not><IsComplete><Dependency path="^/spouseId" /></IsComplete></Not>
+                  <Equal>
+                    <Left>
+                      <CollectionSize>
+                        <Filter path="/caregiverRelationships">
+                          <All>
+                            <Equal>
+                              <Left><Dependency path="dependentId" /></Left>
+                              <Right><Dependency path="^/dependentId" /></Right>
+                            </Equal>
+                            <Any>
+                              <Equal>
+                                <Left><Dependency path="caregiverId" /></Left>
+                                <Right><Dependency path="^/caregiverId" /></Right>
+                              </Equal>
+                              <Dependency path="caregiverId/isPartOfHousehold" />
+                            </Any>
+                            <Any>
+                              <Dependency path="isParent" />
+                              <Dependency path="isNonparentParentalControl" />
+                            </Any>
+                          </All>
+                        </Filter>
+                      </CollectionSize>
+                    </Left>
+                    <Right><Int>1</Int></Right>
+                  </Equal>
+                </All>
+              </Filter>
+            </CollectionSize>
+          </Left>
+          <Right><Int>0</Int></Right>
+        </GreaterThan>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/isSingleParentOfDependentChild">
+      <Name>Is single parent of a dependent child</Name>
+      <Description>Whether this member satisfies either branch of the SNAP single-parent full-time-student exemption for a dependent household child under age twelve (12): the member is the child's only natural/adoptive/stepparent in the SNAP household, or the member has non-parent parental control while no natural/adoptive/stepparent is in the SNAP household and the member does not reside with their spouse (10 CCR 2506-1, 4.306.1).</Description>
+      <Derived>
+        <Any>
+          <Dependency path="../isOnlyHouseholdParentOfDependentChild" />
+          <Dependency path="../hasNonparentParentalControlOfDependentChildWithoutHouseholdParentOrSpouse" />
+        </Any>
+      </Derived>
+    </Fact>
+
     <Fact path="/members/*/isStudentResponsibleForDependentChild">
       <Name>Is student responsible for a dependent child</Name>
-      <Description>Whether this member qualifies for the SNAP student eligibility exemption as a student who has responsibility for the care of a dependent household member under the age of six (6); or as a full-time student who is a single parent with responsibility for the care of a dependent child under age twelve (12). The full-time requirement only applies to the single-parent leg; the under-six leg applies to any student. The single-parent provision applies in those situations where only one parent of any kind (natural, adoptive, stepparent, or non-parent caregiver) — regardless of marital status — is in the same SNAP household as the child; this subsumes the policy's separate parental-control branch (10 CCR 2506-1, 4.306.1).</Description>
+      <Description>Whether this member qualifies for the SNAP student eligibility exemption as a student who has responsibility for the care of a dependent household member under the age of six (6); or as a full-time student who is a single parent with responsibility for the care of a dependent child under age twelve (12). The full-time requirement only applies to the single-parent leg; the under-six leg applies to any student. The single-parent provision requires either exactly one natural/adoptive/stepparent relationship for the child in the SNAP household, or a non-parent parental-control relationship where no parent relationship is in the SNAP household and the student does not reside with their spouse (10 CCR 2506-1, 4.306.1).</Description>
       <Derived>
         <Any>
           <Dependency path="../hasCareOfDependentHouseholdMember" />
@@ -4517,33 +4617,6 @@
       </Derived>
     </Fact>
 
-    <Fact path="/members/*/workRequirementsFederalMinimumWageJobHoursPerWeek">
-      <Name>Work-requirements federal-minimum-wage job hours per week</Name>
-      <Description>The total average hours per week this member works across jobs paid at least the federal minimum wage, including self-employment jobs where earnings after allowable business expenses are deducted are at least equal to the federal minimum wage for the hours worked. These hours are added together to determine whether weekly earnings meet the thirty (30) hour federal-minimum-wage threshold for the SNAP work-requirement employment exemption (10 CCR 2506-1, 4.310).</Description>
-      <Derived>
-        <CollectionSum>
-          <Switch>
-            <Case>
-              <When>
-                <All>
-                  <Equal>
-                    <Left><Dependency path="/jobs/*/memberId" /></Left>
-                    <Right><Dependency path=".." /></Right>
-                  </Equal>
-                  <Dependency path="/jobs/*/isAtFederalMinimumWage" />
-                </All>
-              </When>
-              <Then><Dependency path="/jobs/*/hoursPerWeek" /></Then>
-            </Case>
-            <Case>
-              <When><True /></When>
-              <Then><Int>0</Int></Then>
-            </Case>
-          </Switch>
-        </CollectionSum>
-      </Derived>
-    </Fact>
-
     <Fact path="/members/*/disqualifiedForQualityAssuranceCooperation">
       <Name>Disqualified for failure to cooperate with QA division</Name>
       <Description>Whether this member has been disqualified for failure to cooperate with the state quality assurance division (10 CCR 2506-1, 4.000.1)</Description>
@@ -4640,13 +4713,27 @@
       <Writable><Boolean /></Writable>
     </Fact>
 
-    <!-- TODO: we may need more details about OJT in the future as we
-         implement more of this (eligibility impacts, wages treated as
-         earned income, interaction with work requirements, etc.). -->
     <Fact path="/members/*/isInOnTheJobTraining">
       <Name>In on-the-job training</Name>
-      <Description>Whether this member is receiving on-the-job training (OJT), training provided to an employee after he or she is hired, designed for individuals who do not have the necessary work experience required for the job (10 CCR 2506-1, 4.000.1)</Description>
-      <Writable><Boolean /></Writable>
+      <Description>Whether this member has any job marked as on-the-job training (OJT), meaning training provided to an employee after they are hired and designed for individuals who do not have the necessary work experience required for the job (10 CCR 2506-1, 4.000.1).</Description>
+      <Derived>
+        <GreaterThan>
+          <Left>
+            <CollectionSize>
+              <Filter path="/jobs">
+                <All>
+                  <Equal>
+                    <Left><Dependency path="memberId" /></Left>
+                    <Right><Dependency path="^" /></Right>
+                  </Equal>
+                  <Dependency path="isOnTheJobTraining" />
+                </All>
+              </Filter>
+            </CollectionSize>
+          </Left>
+          <Right><Int>0</Int></Right>
+        </GreaterThan>
+      </Derived>
     </Fact>
 
     <Fact path="/members/*/isParticipatingInAnotherHousehold">
@@ -5234,19 +5321,12 @@
       <Derived><Dollar>299</Dollar></Derived>
     </Fact>
 
-    <!-- TODO: derive from the resource limit applicable to households
-         containing a person aged sixty (60) or older or a person with
-         disabilities (10 CCR 2506-1, 4.000.1). -->
     <Fact path="/substantialLotteryOrGamblingWinningsThreshold">
       <Name>Substantial lottery or gambling winnings threshold</Name>
-      <Description>A cash prize won in a single game, before taxes or other amounts are withheld, that is equal to or greater than this threshold counts as substantial lottery or gambling winnings. The threshold equals the resource limit for persons aged sixty (60) and older and persons with disabilities (10 CCR 2506-1, 4.000.1). Placeholder.</Description>
-      <Writable><Dollar /></Writable>
-    </Fact>
-
-    <Fact path="/largestLotteryOrGamblingWinningsThisMonth">
-      <Name>Largest lottery or gambling winnings this month</Name>
-      <Description>The largest portion of substantial lottery or gambling winnings allocated to any member who is part of the SNAP household in a single lottery or gambling game during the month received; those winnings are counted as unearned income in that month (10 CCR 2506-1). Placeholder because the factgraph engine does not currently support collection maximum aggregation.</Description>
-      <Writable><Dollar /></Writable>
+      <Description>A cash prize won in a single game, before taxes or other amounts are withheld, that is equal to or greater than this threshold counts as substantial lottery or gambling winnings. The threshold equals the resource limit for persons aged sixty (60) and older and persons with disabilities (10 CCR 2506-1, 4.000.1; 4.408).</Description>
+      <Derived>
+        <Dependency path="/resourceLimitForHouseholdsWithElderlyOrPersonWithDisability" />
+      </Derived>
     </Fact>
 
     <Fact path="/hasSubstantialLotteryOrGamblingWinningsThisMonth">
@@ -5271,12 +5351,6 @@
       <Name>Had previous substantial lottery or gambling winnings</Name>
       <Description>Whether the SNAP household previously lost eligibility because a member received substantial lottery or gambling winnings. The next time such a household reapplies and is certified for SNAP after losing eligibility, the household must be considered under Standard Eligibility (SE) guidelines; after receiving SNAP as an SE household, the household will be re-evaluated for categorical eligibility at the next eligible certification period (10 CCR 2506-1, 4.206).</Description>
       <Writable><Boolean /></Writable>
-    </Fact>
-
-    <Fact path="/members/*/exemptIncome">
-      <Name>Exempt income</Name>
-      <Description>Income that is exempt from consideration when determining eligibility for SNAP (10 CCR 2506-1, 4.000.1). Placeholder.</Description>
-      <Derived><Dollar>0</Dollar></Derived>
     </Fact>
 
     <Fact path="/members/*/nonExemptEarnedIncome">
@@ -5408,14 +5482,6 @@
         </Add>
       </Derived>
     </Fact>
-    <!-- TODO: Check whether total self-employment income should be calculated
-         from modeled income sources instead of collected as a writable value. -->
-    <Fact path="/totalSelfEmploymentIncome">
-      <Name>Total self-employment income</Name>
-      <Description>The household's total income received from self-operated businesses or enterprises in which the individual retains control over work or services offered and assumes the necessary business risks and expenses connected with the operation of the business (10 CCR 2506-1, 4.000.1)</Description>
-      <Writable><Dollar /></Writable>
-    </Fact>
-
     <Fact path="/members/*/liquidResources">
       <Name>Liquid resources</Name>
       <Description>The sum of this household member's countable liquid resource item values, including cash on hand, money in checking or savings accounts, saving certificates, stocks or bonds, and non-recurring lump sum payments specified in 10 CCR 2506-1, 4.405, F.</Description>
@@ -5748,12 +5814,6 @@
       <Writable><Enum optionsPath="/studentEnrollmentStatusOptions" /></Writable>
     </Fact>
 
-    <Fact path="/members/*/isEnrolledInPostHighSchoolEducation">
-      <Name>Enrolled in post high school education</Name>
-      <Description>Whether this member is enrolled in a college, university, or post-high school level technical or vocational school (10 CCR 2506-1, 4.000.1)</Description>
-      <Writable><Boolean /></Writable>
-    </Fact>
-
     <Fact path="/citizenshipImmigrationStatusOptions">
       <Name>Citizenship/immigration status options</Name>
       <Description>Options describing a member's citizenship or immigration status for SNAP citizenship and non-citizenship eligibility: U.S. citizen; non-citizen national; qualified non-citizen statuses including lawful permanent resident, parolee, asylee, refugee, withholding of deportation or removal, conditional entrant, Cuban or Haitian entrant, battered immigrant, victim of severe trafficking, Amerasian, or Iraqi/Afghan special immigrant; eligible non-qualified non-citizen statuses including American Indian born abroad or Hmong/Highland Laotian Tribal Member; and other non-citizen statuses (10 CCR 2506-1, 4.305).</Description>
@@ -6039,14 +6099,100 @@
       </Derived>
     </Fact>
 
-    <!-- TODO: derive /members/*/sponsorHouseholdFpl from a per-size FPL
-         schedule keyed off ../sponsorHouseholdSize (mirroring the
-         /maxAllotment per-size lookup). Currently a writable placeholder;
-         revisit when the size-indexed FPL numbers are wired up. -->
     <Fact path="/members/*/sponsorHouseholdFpl">
       <Name>Sponsor household federal poverty level</Name>
-      <Description>The federal poverty level for a household equal in size to ../sponsorHouseholdSize (this sponsored non-citizen's sponsor's tax household), used in computing the sponsor gross income eligibility limit (10 CCR 2506-1, 4.000.1, D, 2, b). Placeholder writable until the per-size FPL schedule is wired up.</Description>
-      <Writable><Dollar /></Writable>
+      <Description>One hundred percent (100%) of the federal poverty level for a household equal in size to ../sponsorHouseholdSize (this sponsored non-citizen's sponsor's tax household), effective October 1, 2025, used in computing the sponsor gross income eligibility limit (10 CCR 2506-1, 4.000.1, D, 2, b; 4.401.2). Looked up from the household-size schedule, with /fplPerAdditionalPerson added for each sponsor household member beyond eight.</Description>
+      <Derived>
+        <Switch>
+          <Case>
+            <When>
+              <Equal>
+                <Left><Dependency path="../sponsorHouseholdSize" /></Left>
+                <Right><Int>1</Int></Right>
+              </Equal>
+            </When>
+            <Then><Dependency path="/fplForSize1" /></Then>
+          </Case>
+          <Case>
+            <When>
+              <Equal>
+                <Left><Dependency path="../sponsorHouseholdSize" /></Left>
+                <Right><Int>2</Int></Right>
+              </Equal>
+            </When>
+            <Then><Dependency path="/fplForSize2" /></Then>
+          </Case>
+          <Case>
+            <When>
+              <Equal>
+                <Left><Dependency path="../sponsorHouseholdSize" /></Left>
+                <Right><Int>3</Int></Right>
+              </Equal>
+            </When>
+            <Then><Dependency path="/fplForSize3" /></Then>
+          </Case>
+          <Case>
+            <When>
+              <Equal>
+                <Left><Dependency path="../sponsorHouseholdSize" /></Left>
+                <Right><Int>4</Int></Right>
+              </Equal>
+            </When>
+            <Then><Dependency path="/fplForSize4" /></Then>
+          </Case>
+          <Case>
+            <When>
+              <Equal>
+                <Left><Dependency path="../sponsorHouseholdSize" /></Left>
+                <Right><Int>5</Int></Right>
+              </Equal>
+            </When>
+            <Then><Dependency path="/fplForSize5" /></Then>
+          </Case>
+          <Case>
+            <When>
+              <Equal>
+                <Left><Dependency path="../sponsorHouseholdSize" /></Left>
+                <Right><Int>6</Int></Right>
+              </Equal>
+            </When>
+            <Then><Dependency path="/fplForSize6" /></Then>
+          </Case>
+          <Case>
+            <When>
+              <Equal>
+                <Left><Dependency path="../sponsorHouseholdSize" /></Left>
+                <Right><Int>7</Int></Right>
+              </Equal>
+            </When>
+            <Then><Dependency path="/fplForSize7" /></Then>
+          </Case>
+          <Case>
+            <When>
+              <Equal>
+                <Left><Dependency path="../sponsorHouseholdSize" /></Left>
+                <Right><Int>8</Int></Right>
+              </Equal>
+            </When>
+            <Then><Dependency path="/fplForSize8" /></Then>
+          </Case>
+          <Case>
+            <When><True /></When>
+            <Then>
+              <Add>
+                <Dependency path="/fplForSize8" />
+                <Multiply>
+                  <Subtract>
+                    <Minuend><Dependency path="../sponsorHouseholdSize" /></Minuend>
+                    <Subtrahends><Int>8</Int></Subtrahends>
+                  </Subtract>
+                  <Dependency path="/fplPerAdditionalPerson" />
+                </Multiply>
+              </Add>
+            </Then>
+          </Case>
+        </Switch>
+      </Derived>
     </Fact>
 
     <Fact path="/members/*/sponsorGrossIncomeEligibilityLimit">
@@ -6272,26 +6418,6 @@
       <Writable><CollectionItem collection="/members" /></Writable>
     </Fact>
 
-    <Fact path="/members/*/isSponsor">
-      <Name>Is sponsor</Name>
-      <Description>Whether this member is a sponsor — a person who executed an affidavit(s) of support (INS Form I-864 or I-864A) or another form deemed legally binding by the Department of Homeland Security on behalf of a non-citizen as a condition of the non-citizen's entry or admission to the United States as a permanent resident (10 CCR 2506-1, 4.000.1)</Description>
-      <Derived>
-        <GreaterThan>
-          <Left>
-            <CollectionSize>
-              <Filter path="/members">
-                <Equal>
-                  <Left><Dependency path="sponsorId" /></Left>
-                  <Right><Dependency path="^" /></Right>
-                </Equal>
-              </Filter>
-            </CollectionSize>
-          </Left>
-          <Right><Int>0</Int></Right>
-        </GreaterThan>
-      </Derived>
-    </Fact>
-
     <Fact path="/fplForSize1">
       <Name>Federal poverty level for 1-person household</Name>
       <Description>One hundred percent (100%) of the federal poverty level for a 1-person household, effective October 1, 2025 (10 CCR 2506-1, 4.401.1).</Description>
@@ -6499,12 +6625,6 @@
       </Derived>
     </Fact>
 
-    <!-- TODO: condition 5 covers a non-citizen whose battered status is
-         relational (battered spouse, parent of a battered child, child of
-         a battered parent or non-citizen). This currently exempts only
-         the host when they are themselves in battered immigrant status;
-         extend to walk /caregiverRelationships and spouseId once those
-         relational battered flags are modeled. -->
     <Fact path="/members/*/sponsorIncomeAndResourcesDoNotApply">
       <Name>Sponsor income and resources do not apply</Name>
       <Description>Whether the SNAP sponsor income and resource deeming provisions do not apply to this sponsored non-citizen (10 CCR 2506-1, 4.000.1, E). True when any of the modeled statutory exemptions holds: 1) the non-citizen is a member of the sponsor's SNAP household, 2) sponsored by an organization or group rather than an individual, 3) not required to have a sponsor under the INA (see ../isNotRequiredToHaveSponsorUnderIna), 4) is an indigent non-citizen, 5) is a battered non-citizen, 6) had been sponsored but has since obtained citizenship, or 8) has worked or can receive credit for forty (40) qualifying work quarters. Condition 7 (sponsor has died) is not yet modeled.</Description>
@@ -6647,12 +6767,6 @@
       </Derived>
     </Fact>
 
-    <Fact path="/members/*/publicAssistanceAmount">
-      <Name>Public assistance amount</Name>
-      <Description>The amount of public assistance (PA) this member receives, as defined in section 26-2-103(7), C.R.S. (10 CCR 2506-1, 4.000.1)</Description>
-      <Writable><Dollar /></Writable>
-    </Fact>
-
     <Fact path="/members/*/isPaMember">
       <Name>Is PA member</Name>
       <Description>Whether this member receives TANF/Colorado Works or Adult Financial cash grants (10 CCR 2506-1, 4.000.1)</Description>
@@ -6661,35 +6775,6 @@
           <Dependency path="../receivesTanf" />
           <Dependency path="../receivesAdultFinancial" />
         </Any>
-      </Derived>
-    </Fact>
-
-    <Fact path="/isPaHousehold">
-      <Name>Is PA household</Name>
-      <Description>A household that contains only persons who receive TANF/Colorado Works or Adult Financial cash grants (10 CCR 2506-1, 4.000.1)</Description>
-      <Derived>
-        <Equal>
-          <Left>
-            <Count>
-              <Dependency path="/members/*/isPaMember" />
-            </Count>
-          </Left>
-          <Right>
-            <CollectionSize>
-              <Dependency path="/members" />
-            </CollectionSize>
-          </Right>
-        </Equal>
-      </Derived>
-    </Fact>
-
-    <Fact path="/isNonPaHousehold">
-      <Name>Is Non-PA household</Name>
-      <Description>A household that is not a PA household. County General Assistance (GA), SSI with no Colorado Supplemental payment, and medical-only programs are not considered PA benefits (10 CCR 2506-1, 4.000.1).</Description>
-      <Derived>
-        <Not>
-          <Dependency path="/isPaHousehold" />
-        </Not>
       </Derived>
     </Fact>
 
@@ -6874,15 +6959,6 @@
       </Derived>
     </Fact>
 
-    <!-- TODO: derive from rent/mortgage and utility cost facts once housing
-         cost logic is added; should use the appropriate utility standard from
-         Section 4.407.31 (10 CCR 2506-1, 4.000.1). -->
-    <Fact path="/anticipatedHousingCosts">
-      <Name>Anticipated monthly rent/mortgage and utilities</Name>
-      <Description>The household's anticipated monthly rent or mortgage plus utility costs, using the appropriate utility standard as defined in Section 4.407.31 (10 CCR 2506-1, 4.000.1). Placeholder.</Description>
-      <Writable><Dollar /></Writable>
-    </Fact>
-
     <Fact path="/isExpedited">
       <Name>Is expedited</Name>
       <Description>Whether the household qualifies for expedited service: (1) liquid resources do not exceed $100 and the household is destitute of income as defined in Section 4.406; (2) liquid resources do not exceed $100 and the household reasonably expects less than $150 of gross monthly income in the calendar month of application; or (3) combined monthly gross income and liquid resources are less than the household's anticipated monthly rent/mortgage and utilities (10 CCR 2506-1, 4.000.1)</Description>
@@ -6912,7 +6988,7 @@
                 <Dependency path="/liquidResources" />
               </Add>
             </Left>
-            <Right><Dependency path="/anticipatedHousingCosts" /></Right>
+            <Right><Dependency path="/allowableMonthlyShelterCosts" /></Right>
           </LessThan>
         </Any>
       </Derived>
@@ -6920,7 +6996,7 @@
 
     <Fact path="/members/*/isDisqualified">
       <Name>Is disqualified individual</Name>
-      <Description>Whether this member is ineligible to receive SNAP benefits due to disqualification for an Intentional Program Violation/fraud, failure to provide or obtain a SSN, status as an ineligible non-citizen, failure to meet general work requirements, having a level sanction imposed, failure to cooperate with work requirements, failure to cooperate with the state quality assurance division, or as an ABAWD who has received three countable months of SNAP within thirty-six (36) months without meeting an exemption or ABAWD work requirements. Ineligible students are treated as non-household members through /members/*/isPartOfHousehold rather than as disqualified individuals (10 CCR 2506-1, 4.000.1; 4.306; 4.310; 4.310.8)</Description>
+      <Description>Whether this member is ineligible to receive SNAP benefits due to disqualification for an Intentional Program Violation/fraud, failure to provide or obtain a SSN, status as an ineligible non-citizen, failure to meet general work requirements, having a level sanction imposed, failure to cooperate with work requirements, failure to cooperate with the state quality assurance division, as an ABAWD who has received three countable months of SNAP within thirty-six (36) months without meeting an exemption or ABAWD work requirements, or being a fleeing felon. Ineligible students are treated as non-household members through /members/*/isPartOfHousehold rather than as disqualified individuals (10 CCR 2506-1, 4.000.1; 4.306; 4.310; 4.310.8)</Description>
       <Derived>
         <Any>
           <Dependency path="../disqualifiedForIPV" />
@@ -6936,6 +7012,7 @@
           <Dependency path="../disqualifiedForParoleOrProbationViolation" />
           <Dependency path="../disqualifiedForBoardingHouseOrInstitutionResidence" />
           <Dependency path="../isIneligibleStriker" />
+          <Dependency path="../isFleeingFelon" />
         </Any>
       </Derived>
     </Fact>
