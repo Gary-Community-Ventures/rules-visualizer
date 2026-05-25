@@ -3847,6 +3847,11 @@
       <Writable><Int /></Writable>
     </Fact>
 
+    <!-- TODO: Implement emergency SNAP allotment authorization and disaster-victim
+         certification rules for Presidentially declared disasters, including
+         Governor and USDA/FNS authorization, affected-county distribution,
+         special certification materials/forms, disrupted commercial food
+         channels, temporary SNAP need, and restored commercial food availability. -->
     <Fact path="/dSnapActive">
       <Name>D-SNAP active</Name>
       <Description>Whether the Disaster Supplemental Nutrition Assistance Program (D-SNAP) is active for the affected county, following a Presidential disaster declaration for individual assistance and at the county's discretion in coordination with the state SNAP office and FNS (10 CCR 2506-1, 4.000.1).</Description>
@@ -3882,8 +3887,8 @@
       <Description>Whether this member is an ineligible non-citizen. Citizens and non-citizen nationals are potentially eligible for SNAP; other non-citizens are ineligible unless they are a qualified non-citizen who is exempt from the additional-condition requirement, a qualified non-citizen who meets one of the additional conditions, or fall in one of the classes of non-qualified non-citizens eligible for participation (10 CCR 2506-1, 4.305).</Description>
       <Derived>
         <All>
-          <Not><Dependency path="../isCitizen" /></Not>
-          <Not><Dependency path="../isNonCitizenNational" /></Not>
+          <Not><Equal><Left><Dependency path="../citizenshipImmigrationStatus" /></Left><Right><Enum optionsPath="/citizenshipImmigrationStatusOptions">Citizen</Enum></Right></Equal></Not>
+          <Not><Equal><Left><Dependency path="../citizenshipImmigrationStatus" /></Left><Right><Enum optionsPath="/citizenshipImmigrationStatusOptions">NonCitizenNational</Enum></Right></Equal></Not>
           <Not><Dependency path="../isEligibleNonCitizen" /></Not>
         </All>
       </Derived>
@@ -5749,88 +5754,35 @@
       <Writable><Boolean /></Writable>
     </Fact>
 
-    <Fact path="/members/*/isCitizen">
-      <Name>Is U.S. citizen</Name>
-      <Description>Whether this member is considered a U.S. citizen for SNAP: a person born in the United States or in the District of Columbia, Puerto Rico, Guam, the U.S. Virgin Islands, or the Mariana Islands; a person who has become a citizen through the naturalization process; a person born outside the United States to at least one (1) U.S. citizen parent; or a child under eighteen (18) years of age adopted or born outside the U.S. with a parent who is a U.S. citizen, who has been admitted as a lawful permanent resident, and is in the legal and physical custody of a parent who is a U.S. citizen (10 CCR 2506-1, 4.305).</Description>
-      <Writable><Boolean /></Writable>
+    <Fact path="/citizenshipImmigrationStatusOptions">
+      <Name>Citizenship/immigration status options</Name>
+      <Description>Options describing a member's citizenship or immigration status for SNAP citizenship and non-citizenship eligibility: U.S. citizen; non-citizen national; qualified non-citizen statuses including lawful permanent resident, parolee, asylee, refugee, withholding of deportation or removal, conditional entrant, Cuban or Haitian entrant, battered immigrant, victim of severe trafficking, Amerasian, or Iraqi/Afghan special immigrant; eligible non-qualified non-citizen statuses including American Indian born abroad or Hmong/Highland Laotian Tribal Member; and other non-citizen statuses (10 CCR 2506-1, 4.305).</Description>
+      <Derived>
+        <EnumOptions>
+          <String>Citizen</String>
+          <String>NonCitizenNational</String>
+          <String>LawfulPermanentResident</String>
+          <String>Parolee</String>
+          <String>Asylee</String>
+          <String>Refugee</String>
+          <String>WithholdingOfDeportationOrRemoval</String>
+          <String>ConditionalEntrant</String>
+          <String>CubanOrHaitianEntrant</String>
+          <String>BatteredImmigrant</String>
+          <String>VictimOfTrafficking</String>
+          <String>Amerasian</String>
+          <String>IraqiOrAfghanSpecialImmigrant</String>
+          <String>AmericanIndianBornAbroad</String>
+          <String>HmongOrHighlandLaotianTribalMember</String>
+          <String>OtherNonCitizen</String>
+        </EnumOptions>
+      </Derived>
     </Fact>
 
-    <Fact path="/members/*/isNonCitizen">
-      <Name>Is non-citizen</Name>
-      <Description>Whether this member is a non-citizen — anyone who is not a U.S. citizen. Qualified non-citizens and certain groups of non-citizens who are not qualified are eligible for SNAP participation under certain conditions; some qualified non-citizens must also meet an additional condition to be eligible. Each category of qualified non-citizen stands alone for purposes of determining eligibility (10 CCR 2506-1, 4.305, B).</Description>
-      <Writable><Boolean /></Writable>
-    </Fact>
-
-    <Fact path="/members/*/isNonCitizenNational">
-      <Name>Is non-citizen national</Name>
-      <Description>Whether this member is a non-citizen national of the United States — an individual born in an outlying possession of the United States (either American Samoa or Swain's Island) on or after the date the U.S. acquired the possession, or a person whose parents are U.S. non-citizen nationals. Non-citizen nationals have eligibility for SNAP as U.S. citizens (10 CCR 2506-1, 4.305)</Description>
-      <Writable><Boolean /></Writable>
-    </Fact>
-
-    <Fact path="/members/*/isLawfulPermanentResident">
-      <Name>Is lawful permanent resident</Name>
-      <Description>Whether this member is a non-citizen legally admitted into the United States to reside on a permanent basis (10 CCR 2506-1, 4.000.1)</Description>
-      <Writable><Boolean /></Writable>
-    </Fact>
-
-    <Fact path="/members/*/isParolee">
-      <Name>Is parolee</Name>
-      <Description>Whether this member is a non-citizen granted parole into the United States, as described in 8 U.S.C. 1182(d)(5) and 8 C.F.R. 212.5 (2019). Parole does not constitute a formal admission to the United States and confers temporary status only, requiring parolees to leave when the conditions supporting their parole cease to exist (10 CCR 2506-1, 4.000.1)</Description>
-      <Writable><Boolean /></Writable>
-    </Fact>
-
-    <Fact path="/members/*/isAsylee">
-      <Name>Is asylee</Name>
-      <Description>Whether this member is a non-citizen granted asylum, included as a qualified non-citizen for SNAP under 7 C.F.R. 273.4(a)(5), (6)(1) (2019) (10 CCR 2506-1, 4.000.1)</Description>
-      <Writable><Boolean /></Writable>
-    </Fact>
-
-    <Fact path="/members/*/isRefugee">
-      <Name>Is refugee</Name>
-      <Description>Whether this member is a non-citizen admitted as a refugee, included as a qualified non-citizen for SNAP under 7 C.F.R. 273.4(a)(5), (6)(1) (2019) (10 CCR 2506-1, 4.000.1)</Description>
-      <Writable><Boolean /></Writable>
-    </Fact>
-
-    <Fact path="/members/*/hasWithholdingOfDeportationOrRemoval">
-      <Name>Has withholding of deportation or removal</Name>
-      <Description>Whether this member is a non-citizen granted withholding of deportation or removal, included as a qualified non-citizen for SNAP under 7 C.F.R. 273.4(a)(5), (6)(1) (2019) (10 CCR 2506-1, 4.000.1)</Description>
-      <Writable><Boolean /></Writable>
-    </Fact>
-
-    <Fact path="/members/*/isConditionalEntrant">
-      <Name>Is conditional entrant</Name>
-      <Description>Whether this member is a non-citizen admitted as a conditional entrant, included as a qualified non-citizen for SNAP under 7 C.F.R. 273.4(a)(5), (6)(1) (2019) (10 CCR 2506-1, 4.000.1)</Description>
-      <Writable><Boolean /></Writable>
-    </Fact>
-
-    <Fact path="/members/*/isCubanOrHaitianEntrant">
-      <Name>Is Cuban or Haitian entrant</Name>
-      <Description>Whether this member is a Cuban or Haitian entrant, included as a qualified non-citizen for SNAP under 7 C.F.R. 273.4(a)(5), (6)(1) (2019) (10 CCR 2506-1, 4.000.1)</Description>
-      <Writable><Boolean /></Writable>
-    </Fact>
-
-    <Fact path="/members/*/isBatteredImmigrant">
-      <Name>Is battered immigrant</Name>
-      <Description>Whether this member is a battered immigrant, included as a qualified non-citizen for SNAP under 7 C.F.R. 273.4(a)(5), (6)(1) (2019) (10 CCR 2506-1, 4.000.1)</Description>
-      <Writable><Boolean /></Writable>
-    </Fact>
-
-    <Fact path="/members/*/isVictimOfTrafficking">
-      <Name>Is victim of severe trafficking</Name>
-      <Description>Whether this member is a non-citizen victim of a severe form of trafficking, included as a qualified non-citizen for SNAP under 7 C.F.R. 273.4(a)(5), (6)(1) (2019) (10 CCR 2506-1, 4.000.1)</Description>
-      <Writable><Boolean /></Writable>
-    </Fact>
-
-    <Fact path="/members/*/isAmerasian">
-      <Name>Is Amerasian</Name>
-      <Description>Whether this member is an Amerasian eligible for SNAP under 8 U.S.C. 1612, retroactive to August 22, 1996 (10 CCR 2506-1, 4.305, B).</Description>
-      <Writable><Boolean /></Writable>
-    </Fact>
-
-    <Fact path="/members/*/isIraqiOrAfghanSpecialImmigrant">
-      <Name>Is Iraqi or Afghan special immigrant</Name>
-      <Description>Whether this member is an Iraqi or Afghan national granted special immigrant status under 8 U.S.C. 1101(a)(27) for having worked on behalf of the U.S. Government in Iraq or Afghanistan. Under the Department of Defense Appropriations Act of 2010 (P.L. 111-118, Section 8120), Special Immigrant Visa holders are eligible for SNAP to the same extent and for the same period as refugees (10 CCR 2506-1, 4.305, B).</Description>
-      <Writable><Boolean /></Writable>
+    <Fact path="/members/*/citizenshipImmigrationStatus">
+      <Name>Citizenship/immigration status</Name>
+      <Description>This member's selected citizenship or immigration status for SNAP citizenship and non-citizenship eligibility (10 CCR 2506-1, 4.305).</Description>
+      <Writable><Enum optionsPath="/citizenshipImmigrationStatusOptions" /></Writable>
     </Fact>
 
     <Fact path="/members/*/isQualifiedNonCitizenWithoutAdditionalCondition">
@@ -5838,13 +5790,13 @@
       <Description>Whether this member is in a qualified non-citizen status that is eligible for SNAP participation indefinitely from the date the non-citizen obtains qualified non-citizen status or enters the U.S. in a qualifying status, without having to meet an additional condition: refugees admitted under 8 U.S.C. 1157, victims of trafficking under the Trafficking Victims Protection Act of 2000, asylees granted asylum under Section 208 of the INA, non-citizens whose deportation or removal is being withheld under 8 U.S.C. 1224(H) or 8 U.S.C. 1231(B)(3), Cuban or Haitian entrants under 8 U.S.C. 1522(E), Amerasians under 8 U.S.C. 1612, and Iraqi or Afghan Special Immigrants under 8 U.S.C. 1101(A)(27) (10 CCR 2506-1, 4.305, B, 2, a).</Description>
       <Derived>
         <Any>
-          <Dependency path="../isRefugee" />
-          <Dependency path="../isVictimOfTrafficking" />
-          <Dependency path="../isAsylee" />
-          <Dependency path="../hasWithholdingOfDeportationOrRemoval" />
-          <Dependency path="../isCubanOrHaitianEntrant" />
-          <Dependency path="../isAmerasian" />
-          <Dependency path="../isIraqiOrAfghanSpecialImmigrant" />
+          <Equal><Left><Dependency path="../citizenshipImmigrationStatus" /></Left><Right><Enum optionsPath="/citizenshipImmigrationStatusOptions">Refugee</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../citizenshipImmigrationStatus" /></Left><Right><Enum optionsPath="/citizenshipImmigrationStatusOptions">VictimOfTrafficking</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../citizenshipImmigrationStatus" /></Left><Right><Enum optionsPath="/citizenshipImmigrationStatusOptions">Asylee</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../citizenshipImmigrationStatus" /></Left><Right><Enum optionsPath="/citizenshipImmigrationStatusOptions">WithholdingOfDeportationOrRemoval</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../citizenshipImmigrationStatus" /></Left><Right><Enum optionsPath="/citizenshipImmigrationStatusOptions">CubanOrHaitianEntrant</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../citizenshipImmigrationStatus" /></Left><Right><Enum optionsPath="/citizenshipImmigrationStatusOptions">Amerasian</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../citizenshipImmigrationStatus" /></Left><Right><Enum optionsPath="/citizenshipImmigrationStatusOptions">IraqiOrAfghanSpecialImmigrant</Enum></Right></Equal>
         </Any>
       </Derived>
     </Fact>
@@ -5854,10 +5806,10 @@
       <Description>Whether this member is in a qualified non-citizen status that is required to meet an additional condition (see Section 4.305, B, 3) to be eligible for participation in the Program: Lawfully Admitted for Permanent Residence (LPRs) under the Immigration and Nationality Act, non-citizens paroled into the United States under 8 U.S.C. 1182(d)(5) for at least one (1) year, non-citizens granted conditional entry pursuant to 8 U.S.C. 1153(a)(7) as in effect before April 1, 1980, and non-citizens who have been battered or subjected to extreme cruelty in the U.S. by a family member with whom the non-citizen resides (10 CCR 2506-1, 4.305, B, 2, b).</Description>
       <Derived>
         <Any>
-          <Dependency path="../isLawfulPermanentResident" />
-          <Dependency path="../isParolee" />
-          <Dependency path="../isConditionalEntrant" />
-          <Dependency path="../isBatteredImmigrant" />
+          <Equal><Left><Dependency path="../citizenshipImmigrationStatus" /></Left><Right><Enum optionsPath="/citizenshipImmigrationStatusOptions">LawfulPermanentResident</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../citizenshipImmigrationStatus" /></Left><Right><Enum optionsPath="/citizenshipImmigrationStatusOptions">Parolee</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../citizenshipImmigrationStatus" /></Left><Right><Enum optionsPath="/citizenshipImmigrationStatusOptions">ConditionalEntrant</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../citizenshipImmigrationStatus" /></Left><Right><Enum optionsPath="/citizenshipImmigrationStatusOptions">BatteredImmigrant</Enum></Right></Equal>
         </Any>
       </Derived>
     </Fact>
@@ -5873,25 +5825,13 @@
       </Derived>
     </Fact>
 
-    <Fact path="/members/*/isAmericanIndianBornAbroad">
-      <Name>Is American Indian born abroad</Name>
-      <Description>Whether this member is an American Indian born abroad in Canada living in the U.S. under Section 289 of the INA, or a non-citizen member of a federally recognized Indian tribe under Section 4(e) of the Indian Self-Determination and Education Assistance Act (25 U.S.C. 450(B)(E)) who is recognized as eligible for the special programs and services provided by the U.S. to Indians because of their status as Indians. This provision covers Native Americans entitled to cross the U.S. border between Canada and/or Mexico, including but not limited to the St. Regis Band of the Mohawk in New York State, the Micmac (also known as Mi'kmaq) in Maine, the Abenaki in Vermont, and the Kickapoo in Texas (10 CCR 2506-1, 4.305, B).</Description>
-      <Writable><Boolean /></Writable>
-    </Fact>
-
-    <Fact path="/members/*/isHmongOrHighlandLaotianTribalMember">
-      <Name>Is Hmong or Highland Laotian Tribal Member</Name>
-      <Description>Whether this member is an individual lawfully residing in the U.S. who was a member of a Hmong or Highland Laotian tribe that rendered assistance to U.S. personnel by taking part in a military or rescue operation during the Vietnam era (August 5, 1964 – May 7, 1975); the spouse or surviving (not remarried) spouse of such a tribal member; an unmarried dependent child of such a tribal member who is under the age of eighteen (18) or a full-time student under the age of twenty-two (22); an unmarried child under the age of eighteen (18) or a full-time student under the age of twenty-two (22) of a deceased Hmong or Highland Laotian Tribal Member, provided the child was dependent upon them at the time of the tribal member's death; or an unmarried child with disabilities age eighteen (18) or older if the child had a disability and was dependent on the tribal member prior to the child's eighteenth (18th) birthday. For purposes of this category, "child" means the legally adopted or biological child of the Hmong or Highland Laotian Tribal Member (10 CCR 2506-1, 4.305, B).</Description>
-      <Writable><Boolean /></Writable>
-    </Fact>
-
     <Fact path="/members/*/isEligibleNonQualifiedNonCitizen">
       <Name>Is eligible non-qualified non-citizen</Name>
       <Description>Whether this member is in a class of non-citizens that is not defined as a qualified non-citizen status but is potentially eligible for SNAP participation without having to meet an additional condition (see Section 4.305, B, 3): certain American Indians born abroad, and Hmong or Highland Laotian Tribal Members. All other classes of non-citizens that are not in a qualified status are not eligible for participation in SNAP (10 CCR 2506-1, 4.305, B, 2).</Description>
       <Derived>
         <Any>
-          <Dependency path="../isAmericanIndianBornAbroad" />
-          <Dependency path="../isHmongOrHighlandLaotianTribalMember" />
+          <Equal><Left><Dependency path="../citizenshipImmigrationStatus" /></Left><Right><Enum optionsPath="/citizenshipImmigrationStatusOptions">AmericanIndianBornAbroad</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../citizenshipImmigrationStatus" /></Left><Right><Enum optionsPath="/citizenshipImmigrationStatusOptions">HmongOrHighlandLaotianTribalMember</Enum></Right></Equal>
         </Any>
       </Derived>
     </Fact>
@@ -6544,17 +6484,17 @@
       <Description>Whether this non-citizen falls into a class that is not required to have a sponsor under the Immigration and Nationality Act, which exempts them from SNAP sponsor income and resource deeming (10 CCR 2506-1, 4.000.1, E, 3). Covers refugees (INA § 207), asylees (INA § 208), parolees (INA § 212), Cuban or Haitian entrants (Refugee Education Assistance Act), individuals whose deportation or removal is withheld (INA §§ 243, 241), victims of severe trafficking (Trafficking Victims Protection Act T-visas), Iraqi/Afghan special immigrants (SIV), conditional entrants (INA § 203, pre-April 1, 1980), American Indians born abroad with treaty border-crossing rights, Hmong or Highland Laotian Tribal members, and Amerasian immigrants.</Description>
       <Derived>
         <Any>
-          <Dependency path="../isRefugee" />
-          <Dependency path="../isAsylee" />
-          <Dependency path="../isParolee" />
-          <Dependency path="../isCubanOrHaitianEntrant" />
-          <Dependency path="../hasWithholdingOfDeportationOrRemoval" />
-          <Dependency path="../isVictimOfTrafficking" />
-          <Dependency path="../isIraqiOrAfghanSpecialImmigrant" />
-          <Dependency path="../isConditionalEntrant" />
-          <Dependency path="../isAmericanIndianBornAbroad" />
-          <Dependency path="../isHmongOrHighlandLaotianTribalMember" />
-          <Dependency path="../isAmerasian" />
+          <Equal><Left><Dependency path="../citizenshipImmigrationStatus" /></Left><Right><Enum optionsPath="/citizenshipImmigrationStatusOptions">Refugee</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../citizenshipImmigrationStatus" /></Left><Right><Enum optionsPath="/citizenshipImmigrationStatusOptions">Asylee</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../citizenshipImmigrationStatus" /></Left><Right><Enum optionsPath="/citizenshipImmigrationStatusOptions">Parolee</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../citizenshipImmigrationStatus" /></Left><Right><Enum optionsPath="/citizenshipImmigrationStatusOptions">CubanOrHaitianEntrant</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../citizenshipImmigrationStatus" /></Left><Right><Enum optionsPath="/citizenshipImmigrationStatusOptions">WithholdingOfDeportationOrRemoval</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../citizenshipImmigrationStatus" /></Left><Right><Enum optionsPath="/citizenshipImmigrationStatusOptions">VictimOfTrafficking</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../citizenshipImmigrationStatus" /></Left><Right><Enum optionsPath="/citizenshipImmigrationStatusOptions">IraqiOrAfghanSpecialImmigrant</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../citizenshipImmigrationStatus" /></Left><Right><Enum optionsPath="/citizenshipImmigrationStatusOptions">ConditionalEntrant</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../citizenshipImmigrationStatus" /></Left><Right><Enum optionsPath="/citizenshipImmigrationStatusOptions">AmericanIndianBornAbroad</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../citizenshipImmigrationStatus" /></Left><Right><Enum optionsPath="/citizenshipImmigrationStatusOptions">HmongOrHighlandLaotianTribalMember</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../citizenshipImmigrationStatus" /></Left><Right><Enum optionsPath="/citizenshipImmigrationStatusOptions">Amerasian</Enum></Right></Equal>
         </Any>
       </Derived>
     </Fact>
@@ -6562,7 +6502,7 @@
     <!-- TODO: condition 5 covers a non-citizen whose battered status is
          relational (battered spouse, parent of a battered child, child of
          a battered parent or non-citizen). This currently exempts only
-         the host when they are themselves /members/*/isBatteredImmigrant;
+         the host when they are themselves in battered immigrant status;
          extend to walk /caregiverRelationships and spouseId once those
          relational battered flags are modeled. -->
     <Fact path="/members/*/sponsorIncomeAndResourcesDoNotApply">
@@ -6577,8 +6517,8 @@
           <Dependency path="../isSponsoredByOrganization" />
           <Dependency path="../isNotRequiredToHaveSponsorUnderIna" />
           <Dependency path="../isIndigentNonCitizen" />
-          <Dependency path="../isBatteredImmigrant" />
-          <Dependency path="../isCitizen" />
+          <Equal><Left><Dependency path="../citizenshipImmigrationStatus" /></Left><Right><Enum optionsPath="/citizenshipImmigrationStatusOptions">BatteredImmigrant</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../citizenshipImmigrationStatus" /></Left><Right><Enum optionsPath="/citizenshipImmigrationStatusOptions">Citizen</Enum></Right></Equal>
           <Dependency path="../hasFortyQualifyingWorkQuarters" />
         </Any>
       </Derived>

@@ -25,7 +25,14 @@ import { cn } from '@/lib/utils'
 import { ALLOW_WRITES } from '@/lib/allow-writes'
 import { usePolicyNavigation } from '@/lib/use-policy-navigation'
 import { useNodeNavigation } from '@/lib/use-node-navigation'
-import { FileText, X, Search, ChevronLeft, ChevronRight } from 'lucide-react'
+import {
+  FileText,
+  X,
+  Search,
+  ChevronLeft,
+  ChevronRight,
+  Unlink,
+} from 'lucide-react'
 
 // Configure pdf.js worker
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
@@ -171,11 +178,16 @@ async function countWordsCoveredByBoxes(
   pageNum: number,
   pdfDim: { width: number; height: number },
   boxes: { x: number; y: number; w: number; h: number }[]
-): Promise<{ covered: number; total: number }> {
+): Promise<{
+  covered: number
+  total: number
+  firstUncovered?: { page: number; x: number; y: number }
+}> {
   const page = await pdfDoc.getPage(pageNum)
   const content = await page.getTextContent()
   let covered = 0
   let total = 0
+  let firstUncovered: { page: number; x: number; y: number } | undefined
   for (const item of content.items) {
     if (!('str' in item)) continue
     const str = item.str
@@ -200,20 +212,21 @@ async function countWordsCoveredByBoxes(
         (transform[4] + (wordStart / len) * itemWidth) / pdfDim.width
       const wordRight =
         (transform[4] + (wordEnd / len) * itemWidth) / pdfDim.width
-      if (
-        boxes.some(
-          (box) =>
-            bottom >= box.y &&
-            top <= box.y + box.h &&
-            wordRight >= box.x &&
-            wordLeft <= box.x + box.w
-        )
-      ) {
+      const isCovered = boxes.some(
+        (box) =>
+          bottom >= box.y &&
+          top <= box.y + box.h &&
+          wordRight >= box.x &&
+          wordLeft <= box.x + box.w
+      )
+      if (isCovered) {
         covered++
+      } else if (!firstUncovered) {
+        firstUncovered = { page: pageNum, x: wordLeft, y: top }
       }
     }
   }
-  return { covered, total }
+  return { covered, total, firstUncovered }
 }
 
 export function PolicyPanel() {
@@ -262,6 +275,7 @@ export function PolicyPanel() {
   const [sourceCoverage, setSourceCoverage] = useState<{
     covered: number
     total: number
+    firstUncovered?: { page: number; x: number; y: number }
   } | null>(null)
   const pdfDocRef = useRef<pdfjs.PDFDocumentProxy | null>(null)
 
@@ -316,6 +330,20 @@ export function PolicyPanel() {
     if (!wrapper || !container) return
     container.scrollTo({ top: wrapper.offsetTop - 8, behavior: 'auto' })
   }, [])
+
+  const scrollToPagePoint = useCallback(
+    (point: { page: number; x: number; y: number }) => {
+      const wrapper = pageRefs.current.get(point.page)
+      const container = containerRef.current
+      if (!wrapper || !container) {
+        scrollToPage(point.page)
+        return
+      }
+      const top = wrapper.offsetTop + point.y * wrapper.offsetHeight - 24
+      container.scrollTo({ top: Math.max(0, top), behavior: 'auto' })
+    },
+    [scrollToPage]
+  )
 
   // Open a section's popover and scroll its page into view. Used by the
   // popover's prev/next arrows so the user can step through the doc.
@@ -551,6 +579,7 @@ export function PolicyPanel() {
     ;(async () => {
       let covered = 0
       let total = 0
+      let firstUncovered: { page: number; x: number; y: number } | undefined
       for (let pageNum = 1; pageNum <= numPages; pageNum++) {
         const dim = pageDimensions[pageNum - 1]
         if (!dim) continue
@@ -570,8 +599,9 @@ export function PolicyPanel() {
         )
         covered += pageCounts.covered
         total += pageCounts.total
+        firstUncovered ??= pageCounts.firstUncovered
       }
-      if (!cancelled) setSourceCoverage({ covered, total })
+      if (!cancelled) setSourceCoverage({ covered, total, firstUncovered })
     })().catch(() => {
       if (!cancelled) setSourceCoverage(null)
     })
@@ -1358,6 +1388,24 @@ export function PolicyPanel() {
       ? orderedSections[(currentSectionIndex + 1) % orderedSections.length]
       : null
 
+  const orphanSections = orderedSections.filter(
+    (s) => !linkedSectionIds.has(s.id)
+  )
+  const currentOrphanIndex = clickedSectionId
+    ? orphanSections.findIndex((s) => s.id === clickedSectionId)
+    : -1
+  const prevOrphanSection =
+    currentOrphanIndex >= 0 && orphanSections.length > 0
+      ? orphanSections[
+          (currentOrphanIndex - 1 + orphanSections.length) %
+            orphanSections.length
+        ]
+      : null
+  const nextOrphanSection =
+    currentOrphanIndex >= 0 && orphanSections.length > 0
+      ? orphanSections[(currentOrphanIndex + 1) % orphanSections.length]
+      : null
+
   return (
     <div className="flex flex-col h-full bg-background">
       {/* Header — title, doc picker, close */}
@@ -1462,14 +1510,74 @@ export function PolicyPanel() {
               </Button>
             </div>
           )}
+          {orphanSections.length > 0 && !searchOpen && (
+            <div className="flex items-center gap-0.5 shrink-0 text-rose-700">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 shrink-0 text-rose-700 hover:text-rose-800 hover:bg-rose-50"
+                onClick={() => {
+                  const target =
+                    currentOrphanIndex < 0
+                      ? orphanSections[orphanSections.length - 1]
+                      : prevOrphanSection
+                  if (target) goToSection(target)
+                }}
+                title="Previous unlinked box"
+              >
+                <ChevronLeft className="size-3" />
+              </Button>
+              <button
+                type="button"
+                className="flex items-center gap-1 text-[10px] tabular-nums px-1 h-6 rounded hover:bg-rose-50 hover:text-rose-800"
+                onClick={() => {
+                  const target =
+                    currentOrphanIndex < 0
+                      ? orphanSections[0]
+                      : orphanSections[currentOrphanIndex]
+                  if (target) goToSection(target)
+                }}
+                title="Jump to unlinked red box"
+              >
+                <Unlink className="size-3" />
+                {currentOrphanIndex >= 0
+                  ? `${currentOrphanIndex + 1}/${orphanSections.length}`
+                  : `${orphanSections.length}`}
+              </button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 shrink-0 text-rose-700 hover:text-rose-800 hover:bg-rose-50"
+                onClick={() => {
+                  const target =
+                    currentOrphanIndex < 0 ? orphanSections[0] : nextOrphanSection
+                  if (target) goToSection(target)
+                }}
+                title="Next unlinked box"
+              >
+                <ChevronRight className="size-3" />
+              </Button>
+            </div>
+          )}
           {sourceCoverage && sourceCoverage.total > 0 && !searchOpen && (
-            <span
-              className="text-[10px] text-muted-foreground shrink-0 tabular-nums"
-              title={`${sourceCoverage.covered} of ${sourceCoverage.total} words covered by skip/link boxes`}
+            <button
+              type="button"
+              className="text-[10px] text-muted-foreground hover:text-foreground hover:underline shrink-0 tabular-nums disabled:hover:no-underline disabled:hover:text-muted-foreground"
+              title={
+                sourceCoverage.firstUncovered
+                  ? `${sourceCoverage.covered} of ${sourceCoverage.total} words covered by skip/link boxes. Jump to first uncovered word.`
+                  : `${sourceCoverage.covered} of ${sourceCoverage.total} words covered by skip/link boxes`
+              }
+              disabled={!sourceCoverage.firstUncovered}
+              onClick={() => {
+                if (sourceCoverage.firstUncovered) {
+                  scrollToPagePoint(sourceCoverage.firstUncovered)
+                }
+              }}
             >
               {Math.round((sourceCoverage.covered / sourceCoverage.total) * 100)}
               % covered
-            </span>
+            </button>
           )}
           {searchOpen ? (
             <div className="flex items-center gap-1 flex-1 min-w-0">
