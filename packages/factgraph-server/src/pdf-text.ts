@@ -1,6 +1,6 @@
 import fs from 'node:fs'
 import path from 'node:path'
-import { getDataDir } from './store.js'
+import { getDataDir } from 'rules-visualizer-factgraph-core'
 
 // pdfjs-dist v5 ships an ESM build that runs in Node via the legacy bundle
 // (no Worker, no DOM). Loaded lazily so the AI tools don't pay the cost

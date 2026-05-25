@@ -7,7 +7,7 @@ import type {
   FactGraphDerived,
   WritableTypeName,
   Limit,
-} from '../types.js'
+} from 'rules-visualizer-shared-types'
 
 const WRITABLE_TYPE_NAMES = new Set<string>([
   'String',
@@ -841,7 +841,8 @@ function resolveExtractedDayPath(
 
   const content = nodes[baseId]?.content
   if (content?.format !== 'factGraph') return undefined
-  const typeName = content.type === 'writable' ? content.typeName : content.dataType
+  const typeName =
+    content.type === 'writable' ? content.typeName : content.dataType
   return typeName === 'Day' ? baseId : undefined
 }
 

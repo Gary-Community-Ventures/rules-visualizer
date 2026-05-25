@@ -5,7 +5,7 @@ import './load-env.js'
 
 import path from 'node:path'
 import fs from 'node:fs'
-import { loadFactGraphData } from './store.js'
+import { loadFactGraphData } from 'rules-visualizer-factgraph-core'
 import { createServer } from './server.js'
 import { startWatcher } from './watcher.js'
 

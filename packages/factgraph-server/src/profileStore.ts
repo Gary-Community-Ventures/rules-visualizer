@@ -1,6 +1,6 @@
 import fs from 'node:fs'
 import path from 'node:path'
-import { getDataDir } from './store.js'
+import { getDataDir } from 'rules-visualizer-factgraph-core'
 
 export type Profile = {
   id: string

@@ -1,7 +1,7 @@
 import { tool } from '@langchain/core/tools'
 import { z } from 'zod'
-import { getRuleset } from '../../store.js'
-import type { Model, ModelNode } from '../../types.js'
+import { getRuleset } from 'rules-visualizer-factgraph-core'
+import type { Model, ModelNode } from 'rules-visualizer-shared-types'
 
 function getModel(rulesetId: string): Model {
   const model = getRuleset(rulesetId)

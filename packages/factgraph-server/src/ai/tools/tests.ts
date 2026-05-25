@@ -1,8 +1,11 @@
 import { tool } from '@langchain/core/tools'
 import { z } from 'zod'
 import crypto from 'node:crypto'
-import { getRuleset, getRawFacts } from '../../store.js'
-import { executeFactGraph } from '../../executor.js'
+import {
+  getRuleset,
+  getRawFacts,
+  executeFactGraph,
+} from 'rules-visualizer-factgraph-core'
 import {
   readTests,
   writeTests,
@@ -10,7 +13,7 @@ import {
   type TestCase,
 } from '../../testStore.js'
 import { resolvePathFromName } from './execution.js'
-import type { Model } from '../../types.js'
+import type { Model } from 'rules-visualizer-shared-types'
 
 function getModel(rulesetId: string): Model {
   const model = getRuleset(rulesetId)

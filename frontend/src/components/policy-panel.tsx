@@ -1575,7 +1575,9 @@ export function PolicyPanel() {
                 }
               }}
             >
-              {Math.round((sourceCoverage.covered / sourceCoverage.total) * 100)}
+              {Math.round(
+                (sourceCoverage.covered / sourceCoverage.total) * 100
+              )}
               % covered
             </button>
           )}

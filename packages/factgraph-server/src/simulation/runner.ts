@@ -5,8 +5,11 @@
 
 import os from 'node:os'
 import { Worker } from 'node:worker_threads'
-import { getRuleset, getRawFacts } from '../store.js'
-import { executeFactGraph } from '../executor.js'
+import {
+  getRuleset,
+  getRawFacts,
+  executeFactGraph,
+} from 'rules-visualizer-factgraph-core'
 import { compareValues } from '../testStore.js'
 import { generateScenarios } from './generator.js'
 import type {

@@ -1,7 +1,11 @@
 import { Router } from 'express'
 import fs from 'node:fs'
 import path from 'node:path'
-import { getRuleset, getDataDir, reloadRuleset } from '../store.js'
+import {
+  getRuleset,
+  getDataDir,
+  reloadRuleset,
+} from 'rules-visualizer-factgraph-core'
 import type { PolicyReferences } from 'rules-visualizer-shared-types'
 
 const router = Router()

@@ -3,7 +3,7 @@
  * schema. Uses a seeded PRNG for reproducibility.
  */
 
-import type { Model, ModelNode } from '../types.js'
+import type { Model, ModelNode } from 'rules-visualizer-shared-types'
 import type {
   SimulationConfig,
   FieldConfig,

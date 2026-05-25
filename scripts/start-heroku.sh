@@ -6,6 +6,12 @@ case "$APP_TYPE" in
   factgraph)
     exec node packages/factgraph-server/dist/index.js data/factgraph
     ;;
+  factgraph-api)
+    # Partner-facing Fact Graph adapter API. Deploys to its own Heroku app
+    # so the visualizer and the integration target can scale and roll
+    # independently (see packages/factgraph-api/README.md).
+    exec node packages/factgraph-api/dist/index.js data/factgraph
+    ;;
   rac)
     # The "rac" name is kept for backwards-compat with existing Heroku
     # configs, but the backend now serves RuleSpec YAML (formerly the
@@ -13,7 +19,7 @@ case "$APP_TYPE" in
     exec python -m rules_visualizer_rac.cli data/rulespec --no-open --port "$PORT"
     ;;
   *)
-    echo "APP_TYPE must be 'factgraph' or 'rac' (got: '$APP_TYPE')" >&2
+    echo "APP_TYPE must be 'factgraph', 'factgraph-api', or 'rac' (got: '$APP_TYPE')" >&2
     exit 1
     ;;
 esac

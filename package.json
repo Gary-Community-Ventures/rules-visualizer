@@ -5,6 +5,8 @@
   "license": "MPL-2.0",
   "workspaces": [
     "frontend",
+    "packages/factgraph-api",
+    "packages/factgraph-core",
     "packages/factgraph-server",
     "packages/shared-types"
   ],
@@ -15,11 +17,13 @@
     "dev:frontend": "PROXY_TARGET=http://localhost:5000 npm run dev --workspace=rules-visualizer-frontend -- --port 5173",
     "dev:frontend:axiom": "PROXY_TARGET=http://localhost:5001 npm run dev --workspace=rules-visualizer-frontend -- --port 5174",
     "dev:factgraph": "NO_OPEN=1 npm run dev --workspace=rules-visualizer-factgraph -- ../../data/factgraph",
+    "dev:api": "PORT=5002 npm run dev --workspace=rules-visualizer-factgraph-api -- ../../data/factgraph",
     "dev:axiom-backend": ".venv/bin/python3 -m rules_visualizer_rac.cli data/rulespec --no-open --port 5001",
     "setup:axiom-engine": "bash scripts/build-axiom-engine.sh",
     "start": "./bin/rules-visualizer",
     "build:frontend": "npm run build --workspace=rules-visualizer-frontend",
     "build:factgraph": "npm run build:frontend && npm run bundle-frontend --workspace=rules-visualizer-factgraph && npm run build --workspace=rules-visualizer-factgraph",
+    "build:factgraph-api": "npm run build --workspace=rules-visualizer-factgraph-core && npm run build --workspace=rules-visualizer-factgraph-api",
     "format": "prettier --write .",
     "lint": "npm run lint --workspace=rules-visualizer-frontend",
     "heroku-postbuild": "./scripts/build-heroku.sh"

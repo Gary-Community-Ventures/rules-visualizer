@@ -1,0 +1,53 @@
+meta {
+  name: 07 Query an intermediate gate
+  type: http
+  seq: 7
+}
+
+post {
+  url: {{base_url}}/v1/factgraph/{{ruleset_id}}/query
+  body: json
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "targets": ["/grossIncomeLimit"],
+    "entities": {
+      "/members": [
+        {
+          "id": "applicant",
+          "/members/*/age": 30,
+          "/members/*/isImmigrationEligible": true,
+          "/members/*/isElderly": false,
+          "/members/*/isDisabled": false,
+          "/members/*/isHigherEdStudent": false
+        }
+      ]
+    }
+  }
+}
+
+docs {
+  You don't have to target the top-level answer. Any fact in the graph
+  is queryable.
+
+  Here we ask for `/grossIncomeLimit` — the dollar threshold this
+  household would have to stay under to pass the gross income test —
+  with just enough member info to compute household size. Useful for
+  diagnostic UIs ("what threshold am I being compared against?")
+  without having to feed the full intake.
+
+  Other intermediate gates worth trying as targets:
+    - `/meetsAssetTest`
+    - `/grossIncomeEligible`
+    - `/netMonthlyIncome`
+    - `/standardDeduction`
+    - `/members/*/isEligibleMember` (returns per-member array)
+
+  Per-member targets return values as an array of {memberId, value}
+  objects so callers can correlate to specific rows in their input.
+}

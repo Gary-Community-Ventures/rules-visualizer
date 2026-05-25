@@ -1,6 +1,9 @@
 import { Router } from 'express'
-import { getRuleset } from '../store.js'
-import { cacheStats, timings } from '../executor.js'
+import {
+  getRuleset,
+  cacheStats,
+  timings,
+} from 'rules-visualizer-factgraph-core'
 import { autoConfigFromModel } from '../simulation/generator.js'
 import { runSimulation } from '../simulation/runner.js'
 import {

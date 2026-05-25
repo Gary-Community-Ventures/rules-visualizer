@@ -20,7 +20,8 @@ export function resolveFactGraphPath(rawPath: string, currentPath?: string) {
     const segments = currentPath.split('/').filter(Boolean)
     for (let i = 0; i < head.length; i++) segments.pop()
     const base = segments.length === 0 ? '/' : '/' + segments.join('/')
-    path = tail.length === 0 ? base : base === '/' ? '/' + tail : base + '/' + tail
+    path =
+      tail.length === 0 ? base : base === '/' ? '/' + tail : base + '/' + tail
   }
   return path
 }
@@ -39,7 +40,8 @@ export function findFactGraphNodeIdByPath(nodes: ModelNodes, path: string) {
     if (getNodePath(node.content) !== basePath) continue
     const content = node.content
     if (content.format !== 'factGraph') continue
-    const typeName = content.type === 'writable' ? content.typeName : content.dataType
+    const typeName =
+      content.type === 'writable' ? content.typeName : content.dataType
     if (typeName === 'Day') return nodeId
   }
   return undefined
