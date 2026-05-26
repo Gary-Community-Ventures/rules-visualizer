@@ -22569,6 +22569,14 @@
     {
       "nodePath": "/members/*/otherFoodPrepGroupIncomeThresholdForSeparateElderlyDisabledHousehold",
       "sectionId": "10-ccr-2506-1__mpllcpen-5fpo"
+    },
+    {
+      "nodePath": "/members/*/isIneligibleStriker",
+      "sectionId": "10-ccr-2506-1__mplle4re-3k78"
+    },
+    {
+      "nodePath": "/members/*/wasEligibleForSnapDayBeforeStrike",
+      "sectionId": "10-ccr-2506-1__mplle4re-3k78"
     }
   ]
 }
