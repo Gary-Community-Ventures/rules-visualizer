@@ -4,9 +4,24 @@ const API_BASE = import.meta.env.VITE_API_URL ?? ''
 
 export type FieldConfig = {
   path: string
-  type: 'Dollar' | 'Int' | 'Short' | 'Byte' | 'Boolean' | 'Enum' | 'String'
+  type:
+    | 'Dollar'
+    | 'Int'
+    | 'Short'
+    | 'Byte'
+    | 'Boolean'
+    | 'Enum'
+    | 'MultiEnum'
+    | 'String'
+    | 'Day'
+    | 'Rational'
+    | 'CollectionItem'
+    | string
   min?: number
   max?: number
+  minDate?: string
+  maxDate?: string
+  stringOptions?: string[]
   enumOptions?: string[]
   trueProbability?: number
 }
