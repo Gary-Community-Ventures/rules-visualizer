@@ -2382,30 +2382,12 @@
 
     <Fact path="/members/*/isMandatorySpouse">
       <Name>Is mandatory spouse</Name>
-      <Description>Whether this member is in a spouse relationship with another member of the household who is themselves part of the SNAP household. True when this member's spouseId references a household member who is part of the household, or when another member who is part of the household identifies this member as their spouse. Spouses must always be considered part of the same SNAP household regardless of whether they purchase and prepare food together (10 CCR 2506-1, 4.304.1).</Description>
+      <Description>Whether this member is in a spouse relationship with another member of the household who is themselves part of the SNAP household. True when this member's spouseId references a household member who is part of the household. Spouses must always be considered part of the same SNAP household regardless of whether they purchase and prepare food together (10 CCR 2506-1, 4.304.1).</Description>
       <Derived>
-        <Any>
-          <All>
-            <IsComplete><Dependency path="../spouseId" /></IsComplete>
-            <Dependency path="../spouseId/isPartOfHousehold" />
-          </All>
-          <GreaterThan>
-            <Left>
-              <CollectionSize>
-                <Filter path="/members">
-                  <All>
-                    <Equal>
-                      <Left><Dependency path="spouseId" /></Left>
-                      <Right><Dependency path="^" /></Right>
-                    </Equal>
-                    <Dependency path="isPartOfHousehold" />
-                  </All>
-                </Filter>
-              </CollectionSize>
-            </Left>
-            <Right><Int>0</Int></Right>
-          </GreaterThan>
-        </Any>
+        <All>
+          <IsComplete><Dependency path="../spouseId" /></IsComplete>
+          <Dependency path="../spouseId/isPartOfHousehold" />
+        </All>
       </Derived>
     </Fact>
 
@@ -2577,45 +2559,238 @@
 
     <Fact path="/members/*/isUnableToPurchaseAndPrepareOwnMealsDueToDisability">
       <Name>Is unable to purchase and prepare own meals due to a disability</Name>
-      <Description>Whether this member is experiencing a disability and, as a result of that disability, is unable to purchase and prepare their own meals. Used together with age sixty (60) or older to determine when the member must be considered part of the same SNAP household as the others they live with (10 CCR 2506-1, 4.304.1).</Description>
+      <Description>Whether this member is experiencing a disability and, as a result of that disability, is unable to purchase and prepare their own meals. This captures the functional disability condition for the elderly/disabled household-composition rule and is distinct from the broader disability definition used elsewhere in SNAP eligibility (10 CCR 2506-1, 4.304.1).</Description>
       <Writable><Boolean /></Writable>
     </Fact>
 
-    <!-- TODO: derive this from the combined income of every household member
-         in the food-preparation group other than this elderly member with a
-         disability, compared to 165% of the FPL for a household size equal to
-         (food-prep-group size − 1, excluding this member). Currently a
-         writable placeholder so the mandatory-elderly-with-disability rule is
-         structurally complete; wire it up once household income and a
-         size-keyed FPL lookup are available (10 CCR 2506-1, 4.304.1). -->
-    <Fact path="/members/*/othersInFoodPrepGroupIncomeExceeds165PercentFpl">
-      <Name>Others in food-prep group have income exceeding 165% FPL</Name>
-      <Description>Whether the combined income of every other member of this member's food-preparation group exceeds 165% of the federal poverty level for a household size equal to the food-preparation group's size minus this member (10 CCR 2506-1, 4.304.1). Placeholder pending the income calculation work.</Description>
-      <Writable><Boolean /></Writable>
+    <!-- TODO: Confirm whether the 165% FPL separate-household test for elderly
+         members with disabilities should use SNAP gross income as modeled by
+         /members/*/grossIncome, including the legally obligated child-support
+         income exclusion and ineligible-member inclusion proration, or a less
+         adjusted income measure. -->
+    <Fact path="/separateElderlyDisabledHouseholdFplRate">
+      <Name>Separate elderly/disabled household FPL rate</Name>
+      <Description>The one hundred sixty-five percent (165%) of federal poverty level rate used to determine whether an elderly or disabled member who is unable to purchase and prepare meals may be a separate household from the others with whom the member lives (10 CCR 2506-1, 4.304.1).</Description>
+      <Derived><Rational>33/20</Rational></Derived>
+    </Fact>
+
+    <Fact path="/members/*/otherFoodPrepGroupIncomeForSeparateElderlyDisabledHousehold">
+      <Name>Other food-prep group income for separate elderly/disabled household</Name>
+      <Description>The combined gross income of the people in this elderly or disabled member's food-preparation group, excluding this member and excluding this member's spouse when that spouse is in the food-preparation group, for the 165% FPL separate-household test (10 CCR 2506-1, 4.304.1).</Description>
+      <Derived>
+        <CollectionSum>
+          <Switch>
+            <Case>
+              <When>
+                <All>
+                  <Dependency path="/members/*/preparesFoodWithHousehold" />
+                  <Not>
+                    <Equal>
+                      <Left><Dependency path="/members/*" /></Left>
+                      <Right><Dependency path=".." /></Right>
+                    </Equal>
+                  </Not>
+                  <Not>
+                    <All>
+                      <IsComplete><Dependency path="../spouseId" /></IsComplete>
+                      <Equal>
+                        <Left><Dependency path="/members/*" /></Left>
+                        <Right><Dependency path="../spouseId" /></Right>
+                      </Equal>
+                    </All>
+                  </Not>
+                </All>
+              </When>
+              <Then><Dependency path="/members/*/grossIncome" /></Then>
+            </Case>
+            <Case>
+              <When><True /></When>
+              <Then><Dollar>0</Dollar></Then>
+            </Case>
+          </Switch>
+        </CollectionSum>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/otherFoodPrepGroupSizeForSeparateElderlyDisabledHousehold">
+      <Name>Other food-prep group size for separate elderly/disabled household</Name>
+      <Description>The number of people in this elderly or disabled member's food-preparation group, excluding this member and excluding this member's spouse when that spouse is in the food-preparation group, used to size the 165% FPL separate-household test (10 CCR 2506-1, 4.304.1).</Description>
+      <Derived>
+        <CollectionSum>
+          <Switch>
+            <Case>
+              <When>
+                <All>
+                  <Dependency path="/members/*/preparesFoodWithHousehold" />
+                  <Not>
+                    <Equal>
+                      <Left><Dependency path="/members/*" /></Left>
+                      <Right><Dependency path=".." /></Right>
+                    </Equal>
+                  </Not>
+                  <Not>
+                    <All>
+                      <IsComplete><Dependency path="../spouseId" /></IsComplete>
+                      <Equal>
+                        <Left><Dependency path="/members/*" /></Left>
+                        <Right><Dependency path="../spouseId" /></Right>
+                      </Equal>
+                    </All>
+                  </Not>
+                </All>
+              </When>
+              <Then><Int>1</Int></Then>
+            </Case>
+            <Case>
+              <When><True /></When>
+              <Then><Int>0</Int></Then>
+            </Case>
+          </Switch>
+        </CollectionSum>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/otherFoodPrepGroupIncomeThresholdForSeparateElderlyDisabledHousehold">
+      <Name>Other food-prep group income threshold for separate elderly/disabled household</Name>
+      <Description>One hundred sixty-five percent (165%) of the federal poverty level for the count of people included in this member's other food-preparation group income calculation, used as the income threshold for the elderly/disabled separate-household test (10 CCR 2506-1, 4.304.1).</Description>
+      <Derived>
+        <Multiply>
+          <Switch>
+            <Case>
+              <When>
+                <LessThanOrEqual>
+                  <Left><Dependency path="../otherFoodPrepGroupSizeForSeparateElderlyDisabledHousehold" /></Left>
+                  <Right><Int>0</Int></Right>
+                </LessThanOrEqual>
+              </When>
+              <Then><Dollar>0</Dollar></Then>
+            </Case>
+            <Case>
+              <When>
+                <Equal>
+                  <Left><Dependency path="../otherFoodPrepGroupSizeForSeparateElderlyDisabledHousehold" /></Left>
+                  <Right><Int>1</Int></Right>
+                </Equal>
+              </When>
+              <Then><Dependency path="/fplForSize1" /></Then>
+            </Case>
+            <Case>
+              <When>
+                <Equal>
+                  <Left><Dependency path="../otherFoodPrepGroupSizeForSeparateElderlyDisabledHousehold" /></Left>
+                  <Right><Int>2</Int></Right>
+                </Equal>
+              </When>
+              <Then><Dependency path="/fplForSize2" /></Then>
+            </Case>
+            <Case>
+              <When>
+                <Equal>
+                  <Left><Dependency path="../otherFoodPrepGroupSizeForSeparateElderlyDisabledHousehold" /></Left>
+                  <Right><Int>3</Int></Right>
+                </Equal>
+              </When>
+              <Then><Dependency path="/fplForSize3" /></Then>
+            </Case>
+            <Case>
+              <When>
+                <Equal>
+                  <Left><Dependency path="../otherFoodPrepGroupSizeForSeparateElderlyDisabledHousehold" /></Left>
+                  <Right><Int>4</Int></Right>
+                </Equal>
+              </When>
+              <Then><Dependency path="/fplForSize4" /></Then>
+            </Case>
+            <Case>
+              <When>
+                <Equal>
+                  <Left><Dependency path="../otherFoodPrepGroupSizeForSeparateElderlyDisabledHousehold" /></Left>
+                  <Right><Int>5</Int></Right>
+                </Equal>
+              </When>
+              <Then><Dependency path="/fplForSize5" /></Then>
+            </Case>
+            <Case>
+              <When>
+                <Equal>
+                  <Left><Dependency path="../otherFoodPrepGroupSizeForSeparateElderlyDisabledHousehold" /></Left>
+                  <Right><Int>6</Int></Right>
+                </Equal>
+              </When>
+              <Then><Dependency path="/fplForSize6" /></Then>
+            </Case>
+            <Case>
+              <When>
+                <Equal>
+                  <Left><Dependency path="../otherFoodPrepGroupSizeForSeparateElderlyDisabledHousehold" /></Left>
+                  <Right><Int>7</Int></Right>
+                </Equal>
+              </When>
+              <Then><Dependency path="/fplForSize7" /></Then>
+            </Case>
+            <Case>
+              <When>
+                <Equal>
+                  <Left><Dependency path="../otherFoodPrepGroupSizeForSeparateElderlyDisabledHousehold" /></Left>
+                  <Right><Int>8</Int></Right>
+                </Equal>
+              </When>
+              <Then><Dependency path="/fplForSize8" /></Then>
+            </Case>
+            <Case>
+              <When><True /></When>
+              <Then>
+                <Add>
+                  <Dependency path="/fplForSize8" />
+                  <Multiply>
+                    <Subtract>
+                      <Minuend><Dependency path="../otherFoodPrepGroupSizeForSeparateElderlyDisabledHousehold" /></Minuend>
+                      <Subtrahends><Int>8</Int></Subtrahends>
+                    </Subtract>
+                    <Dependency path="/fplPerAdditionalPerson" />
+                  </Multiply>
+                </Add>
+              </Then>
+            </Case>
+          </Switch>
+          <Dependency path="/separateElderlyDisabledHouseholdFplRate" />
+        </Multiply>
+      </Derived>
+    </Fact>
+
+    <Fact path="/members/*/otherFoodPrepGroupIncomeExceedsSeparateElderlyDisabledHouseholdThreshold">
+      <Name>Other food-prep group income exceeds separate elderly/disabled household threshold</Name>
+      <Description>Whether the combined gross income of the other people in this member's food-preparation group exceeds 165% of the federal poverty level for the count of those same other people, excluding this elderly or disabled member and excluding this member's spouse when that spouse is in the group (10 CCR 2506-1, 4.304.1).</Description>
+      <Derived>
+        <GreaterThan>
+          <Left><Dependency path="../otherFoodPrepGroupIncomeForSeparateElderlyDisabledHousehold" /></Left>
+          <Right><Dependency path="../otherFoodPrepGroupIncomeThresholdForSeparateElderlyDisabledHousehold" /></Right>
+        </GreaterThan>
+      </Derived>
     </Fact>
 
     <Fact path="/members/*/isMandatoryElderlyWithDisability">
       <Name>Is mandatory elderly member with disability</Name>
-      <Description>Whether this member must be included in the SNAP household under the rule that a person aged sixty (60) or older who is also experiencing a disability, is unable to purchase and prepare their own meals, prepares food with the rest of the household, and is residing with other individuals whose combined income exceeds 165% of the federal poverty line (for the food-preparation group's size excluding this member) must be in the same household (10 CCR 2506-1, 4.304.1).</Description>
+      <Description>Whether this member must be included in the SNAP household under the rule that a person aged sixty (60) or older who is unable to purchase and prepare their own meals because of a disability, prepares food with the rest of the household, and is residing with other individuals whose combined income exceeds 165% of the federal poverty line (for the food-preparation group's size excluding this member) must be in the same household. The disability condition is this functional inability, not the broader disability definition used elsewhere in SNAP eligibility (10 CCR 2506-1, 4.304.1).</Description>
       <Derived>
         <All>
           <Dependency path="../isElderly" />
           <Dependency path="../isUnableToPurchaseAndPrepareOwnMealsDueToDisability" />
           <Dependency path="../preparesFoodWithHousehold" />
-          <Dependency path="../othersInFoodPrepGroupIncomeExceeds165PercentFpl" />
+          <Dependency path="../otherFoodPrepGroupIncomeExceedsSeparateElderlyDisabledHouseholdThreshold" />
         </All>
       </Derived>
     </Fact>
 
     <Fact path="/members/*/canBeSeparateElderlyWithDisabilityHousehold">
       <Name>Can be separate elderly-with-disability household</Name>
-      <Description>Whether this member is eligible to be considered a separate SNAP household under the rule that a person aged sixty (60) or older who is also experiencing a disability, is unable to purchase and prepare their own meals, and is residing with other individuals whose combined income does not exceed 165% of the federal poverty line (for the food-preparation group's size excluding this member) can be in a separate household (10 CCR 2506-1, 4.304.1).</Description>
+      <Description>Whether this member is eligible to be considered a separate SNAP household under the rule that a person aged sixty (60) or older who is unable to purchase and prepare their own meals because of a disability and is residing with other individuals whose combined income does not exceed 165% of the federal poverty line (for the food-preparation group's size excluding this member) can be in a separate household. The disability condition is this functional inability, not the broader disability definition used elsewhere in SNAP eligibility (10 CCR 2506-1, 4.304.1).</Description>
       <Derived>
         <All>
           <Dependency path="../isElderly" />
           <Dependency path="../isUnableToPurchaseAndPrepareOwnMealsDueToDisability" />
           <Not>
-            <Dependency path="../othersInFoodPrepGroupIncomeExceeds165PercentFpl" />
+            <Dependency path="../otherFoodPrepGroupIncomeExceedsSeparateElderlyDisabledHouseholdThreshold" />
           </Not>
         </All>
       </Derived>
@@ -3662,11 +3837,6 @@
       </Derived>
     </Fact>
 
-    <!-- TODO: revisit once Section 4.408 (resources) is captured — that
-         section defines which resources are countable, exclusions, vehicle
-         treatment, and the household resource limit. /resources here may
-         need to exclude non-countable items and pull in additional resource
-         categories beyond liquid + non-liquid (10 CCR 2506-1, 4.408). -->
     <Fact path="/resources">
       <Name>Resources</Name>
       <Description>The household's total countable resources, the sum of each member's total resources (liquid plus non-liquid) (10 CCR 2506-1, 4.000.1)</Description>
@@ -3824,8 +3994,6 @@
       <Derived><Int>6</Int></Derived>
     </Fact>
 
-    <!-- TODO: ensure self-employment income flows into /members/*/nonExemptEarnedIncome
-         so the "no earned income" check below covers it (10 CCR 2506-1, 4.208.1). -->
     <Fact path="/certificationPeriod">
       <Name>Certification period</Name>
       <Description>The length, in months, of the period of time for which a household has been certified to receive benefits. A twenty-four (24) month certification period is assigned to households that contain only members aged sixty (60) and older and/or with a disability and have no earned income at the time of certification; all other households are assigned a six (6) month certification period (10 CCR 2506-1, 4.208.1).</Description>

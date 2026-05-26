@@ -19639,7 +19639,7 @@
       "sectionId": "10-ccr-2506-1__mp4k8ynz-sz5d"
     },
     {
-      "nodePath": "/members/*/othersInFoodPrepGroupIncomeExceeds165PercentFpl",
+      "nodePath": "/members/*/otherFoodPrepGroupIncomeExceedsSeparateElderlyDisabledHouseholdThreshold",
       "sectionId": "10-ccr-2506-1__mp4k8ynz-sz5d"
     },
     {
@@ -20675,7 +20675,7 @@
       "sectionId": "10-ccr-2506-1__mpd1dxta-vjx4"
     },
     {
-      "nodePath": "/members/*/othersInFoodPrepGroupIncomeExceeds165PercentFpl",
+      "nodePath": "/members/*/otherFoodPrepGroupIncomeExceedsSeparateElderlyDisabledHouseholdThreshold",
       "sectionId": "10-ccr-2506-1__mpd1dxta-vjx4"
     },
     {
@@ -22529,6 +22529,26 @@
     {
       "nodePath": "/citizenshipImmigrationStatusOptions",
       "sectionId": "10-ccr-2506-1__moxbhp3l-ntpf"
+    },
+    {
+      "nodePath": "/members/*/otherFoodPrepGroupIncomeForSeparateElderlyDisabledHousehold",
+      "sectionId": "10-ccr-2506-1__mplld55g-yrlk"
+    },
+    {
+      "nodePath": "/members/*/otherFoodPrepGroupSizeForSeparateElderlyDisabledHousehold",
+      "sectionId": "10-ccr-2506-1__mplld55g-yrlk"
+    },
+    {
+      "nodePath": "/members/*/otherFoodPrepGroupIncomeExceedsSeparateElderlyDisabledHouseholdThreshold",
+      "sectionId": "10-ccr-2506-1__mplld55g-yrlk"
+    },
+    {
+      "nodePath": "/separateElderlyDisabledHouseholdFplRate",
+      "sectionId": "10-ccr-2506-1__mplld55g-yrlk"
+    },
+    {
+      "nodePath": "/members/*/otherFoodPrepGroupIncomeThresholdForSeparateElderlyDisabledHousehold",
+      "sectionId": "10-ccr-2506-1__mplld55g-yrlk"
     }
   ]
 }
