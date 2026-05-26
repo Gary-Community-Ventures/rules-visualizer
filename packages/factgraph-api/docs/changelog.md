@@ -43,6 +43,17 @@ value}` objects so callers can correlate output to specific rows
   `errors[]` array identifying each failing field by path. The TypeScript
   request type is derived from the Zod schema so the runtime check and
   compile-time type are guaranteed to stay in sync.
+- **OpenAPI 3.1 spec.** Generated from the same Zod schemas that
+  validate runtime requests, plus hand-written component schemas for the
+  response shapes. Served at:
+    - `GET /v1/factgraph/openapi.json` — machine-readable spec, feed to
+      `openapi-typescript`, `openapi-generator`, etc.
+    - `GET /v1/factgraph/openapi.yaml` — same spec, YAML flavor.
+    - `GET /v1/factgraph/docs` — interactive Swagger UI with an
+      Authorize dialog where partners paste their bearer token for live
+      "Try it" calls.
+  All three are unauthenticated (mounted before the bearer-auth
+  middleware) so partners can read the contract without credentials.
 
 ### Known limitations
 

@@ -3,6 +3,7 @@ import cors from 'cors'
 import type { Server } from 'node:http'
 
 import { bearerAuth } from './middleware/auth.js'
+import openapiRouter from './routes/openapi.js'
 import rulesetsRouter from './routes/rulesets.js'
 import queryRouter from './routes/query.js'
 
@@ -32,6 +33,12 @@ export function buildApp() {
   app.get('/health', (_req, res) => {
     res.json({ status: 'ok' })
   })
+
+  // OpenAPI spec + Swagger UI. Mounted before bearerAuth so docs are
+  // public — partners shouldn't need credentials to read the contract.
+  // The Swagger UI's own Authorize dialog handles the bearer token for
+  // "Try it" calls.
+  app.use('/v1/factgraph', openapiRouter)
 
   // Versioned API surface. Auth applies to everything under /v1.
   app.use('/v1/factgraph', bearerAuth, rulesetsRouter)

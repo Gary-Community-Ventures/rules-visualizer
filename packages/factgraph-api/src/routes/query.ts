@@ -24,7 +24,7 @@ const EntityRowSchema = z
   .object({ id: z.string().min(1).optional() })
   .catchall(z.unknown())
 
-const QueryRequestSchema = z.object({
+export const QueryRequestSchema = z.object({
   /** Fact paths to evaluate. Always plural; pass `["/eligible"]` for a
    *  single target. The response keys `values` (and missingInputs etc.)
    *  by these paths. */
