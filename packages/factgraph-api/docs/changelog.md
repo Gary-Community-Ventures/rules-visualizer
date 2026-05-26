@@ -61,6 +61,15 @@ value}` objects so callers can correlate output to specific rows
   package (`.github/workflows/docs.yml`). Doesn't require the API to be
   up — handy for sharing contract links or browsing from a phone.
 
+### Internal
+
+- Per-model lookup cache (`src/model-index.ts`). The path → node map,
+  reverse-dependency index, and collection-root seed buckets are now
+  computed once per parsed Model and stored in a WeakMap. Previous
+  behavior rebuilt them on every `/query` request, which on big rulesets
+  (tax-withholding-estimator has 948 nodes) meant multiple O(n) scans
+  per multi-target request. No behavior change.
+
 ### Known limitations
 
 - The smart walker doesn't yet model **alternation** — when an `Any`

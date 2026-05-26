@@ -7,6 +7,8 @@ import {
 } from 'rules-visualizer-factgraph-core'
 import type { Model, ModelNode } from 'rules-visualizer-shared-types'
 
+import { getModelIndex } from '../model-index.js'
+
 const router = Router()
 
 // ---------------------------------------------------------------------------
@@ -312,12 +314,7 @@ function formatZodIssues(issues: z.ZodIssue[]): string {
 }
 
 function findNodeByPath(model: Model, path: string): ModelNode | undefined {
-  for (const node of Object.values(model.nodes)) {
-    const content = node.content
-    if (content.type === 'entity') continue
-    if ('path' in content && content.path === path) return node
-  }
-  return undefined
+  return getModelIndex(model).pathToNode.get(path)
 }
 
 /**
@@ -370,49 +367,26 @@ function clearUnprovidedCollectionSubtrees(
   results: Record<string, unknown>,
   providedCollectionPaths: Set<string>
 ): Record<string, unknown> {
-  // Discover collection roots from per-member fact paths. The Fact Graph
-  // parser does not surface the collection writable itself as a separate
-  // model node — only the per-member facts — so we derive the root by
-  // splitting at the `/*/` segment. A path like `/members/*/age` yields
-  // root `/members`. Multiple per-member paths under the same root
-  // collapse into one entry via the set.
-  const allCollectionRoots = new Set<string>()
-  for (const node of Object.values(model.nodes)) {
-    const c = node.content
-    if (c.type === 'entity' || !('path' in c)) continue
-    const match = c.path.match(/^(\/[^*]+?)\/\*\//)
-    if (match) allCollectionRoots.add(match[1])
-  }
-  const unprovidedCollectionRoots = [...allCollectionRoots].filter(
-    (root) => !providedCollectionPaths.has(root)
-  )
-  if (unprovidedCollectionRoots.length === 0) return results
+  const index = getModelIndex(model)
 
-  // Seed: every model node whose path lives under an unprovided
-  // collection root (`/<root>/*/...` or `/<root>/#<uuid>/...`).
+  // Roots the caller didn't fill in. If they filled them all (or the
+  // ruleset has none), nothing to clear.
+  const unprovidedRoots: string[] = []
+  for (const root of index.collectionRoots) {
+    if (!providedCollectionPaths.has(root)) unprovidedRoots.push(root)
+  }
+  if (unprovidedRoots.length === 0) return results
+
+  // Seed set: every node under an unprovided root. Pre-grouped on the
+  // index so we just concat the relevant buckets — no full re-scan.
   const seeds: ModelNode[] = []
-  for (const node of Object.values(model.nodes)) {
-    const c = node.content
-    if (c.type === 'entity' || !('path' in c)) continue
-    for (const root of unprovidedCollectionRoots) {
-      if (c.path === root || c.path.startsWith(root + '/')) {
-        seeds.push(node)
-        break
-      }
-    }
+  for (const root of unprovidedRoots) {
+    const bucket = index.collectionRootSeeds.get(root)
+    if (bucket) seeds.push(...bucket)
   }
 
-  // Reverse-dependency index built once per request.
-  const reverse = new Map<string, string[]>()
-  for (const node of Object.values(model.nodes)) {
-    for (const depId of node.dependencies) {
-      const list = reverse.get(depId) ?? []
-      list.push(node.id)
-      reverse.set(depId, list)
-    }
-  }
-
-  // BFS outward, deleting each visited path.
+  // BFS outward through the cached reverse-dependency graph, deleting
+  // each visited path from the working results copy.
   const cleaned = { ...results }
   const visited = new Set<string>()
   const queue: ModelNode[] = [...seeds]
@@ -426,7 +400,7 @@ function clearUnprovidedCollectionSubtrees(
       delete cleaned[c.path]
     }
 
-    for (const consId of reverse.get(node.id) ?? []) {
+    for (const consId of index.reverseDeps.get(node.id) ?? []) {
       const consNode = model.nodes[consId]
       if (consNode) queue.push(consNode)
     }
