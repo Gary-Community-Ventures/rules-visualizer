@@ -34,5 +34,9 @@
   "dependencies": {
     "chokidar": "^5.0.0",
     "react-pdf": "^10.4.1"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.4",
+    "yaml": "^2.8.0"
   }
 }

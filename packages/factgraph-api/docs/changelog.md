@@ -54,6 +54,12 @@ value}` objects so callers can correlate output to specific rows
       "Try it" calls.
   All three are unauthenticated (mounted before the bearer-auth
   middleware) so partners can read the contract without credentials.
+- **Public docs site on GitHub Pages.** Same OpenAPI spec, rendered by
+  Redoc, deployed at
+  [gary-community-ventures.github.io/rules-visualizer](https://gary-community-ventures.github.io/rules-visualizer/).
+  Rebuilds automatically on every push to main that touches the API
+  package (`.github/workflows/docs.yml`). Doesn't require the API to be
+  up — handy for sharing contract links or browsing from a phone.
 
 ### Known limitations
 

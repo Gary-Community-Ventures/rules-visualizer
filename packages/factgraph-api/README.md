@@ -55,6 +55,12 @@ every endpoint is "Try it"-able from the browser. For codegen, point
 `openapi-typescript`, `openapi-generator`, or any OpenAPI-aware client
 at `/v1/factgraph/openapi.yaml`.
 
+There's also a public Redoc-rendered version at
+[gary-community-ventures.github.io/rules-visualizer](https://gary-community-ventures.github.io/rules-visualizer/)
+that doesn't require the API to be up — handy for browsing the contract
+from a phone or sharing a link. The Pages site rebuilds automatically
+on every push that touches the API package.
+
 ## Authentication
 
 Set `API_BEARER_TOKEN` to require `Authorization: Bearer <token>` on every
@@ -117,6 +123,7 @@ before we land them.
 | ✅     | Health probe                                                                                                                                  |
 | ✅     | Optional bearer-token auth                                                                                                                    |
 | ✅     | OpenAPI 3.1 spec at `/v1/factgraph/openapi.yaml` + Swagger UI at `/v1/factgraph/docs` (both unauthenticated)                                   |
+| ✅     | Public docs site on GitHub Pages (Redoc renderer, auto-rebuilt on every push that touches the API)                                            |
 | ⏳     | Alternation in `missingInputs` (express "one-of" relationships when an `Any` could be satisfied by any of several inputs)                     |
 | ⏳     | Structured explanation/trace on the query response (beyond flat supportingFacts list)                                                         |
 | ⏳     | Typed client packages (`@npm` consumer) generated from the OpenAPI                                                                            |
