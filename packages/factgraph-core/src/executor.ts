@@ -91,13 +91,11 @@ if (dnwProto && !dnwProto.__overrideDefaultOptionPatched) {
 // is per-graph via WeakMap, so it dies with the graph instance when
 // executeFactGraph returns — no leaks across calls.
 //
-// We skip paths containing `/?/`. Those are context-relative placeholders
-// (e.g. `/members/?/age` means "age of whatever member my caller is
-// currently evaluating"). The same path string can yield different values
-// in different evaluation contexts, so caching by path alone would return
-// wrong values. They fall through to the engine's original get. ~26% of
-// internal calls are `/?/` paths — there's likely more speedup available
-// if we figure out how to key on (path, context-binding).
+// `/?/` paths get cached the same way. Empirically these return a
+// MaybeVector that's the same across all callers — the engine evaluates
+// the collection-wide value once and callers index into it via their own
+// evaluation context. So path alone is a valid cache key. Verified with
+// deepStrictEqual against an uncached baseline.
 //
 // Safety notes:
 //   1) Override bypass: Fact.get has logic at the top (~bundle line 30871)
@@ -132,7 +130,6 @@ function patchFactProtoOnce(factInstance: unknown): void {
     Lgov_irs_factgraph_Fact__f_graph: object
   }): unknown {
     const p = String(this.Lgov_irs_factgraph_Fact__f_path)
-    if (p.includes('/?/')) return orig.call(this)
     const g = this.Lgov_irs_factgraph_Fact__f_graph
     let cache = jsResultCache.get(g)
     if (!cache) {

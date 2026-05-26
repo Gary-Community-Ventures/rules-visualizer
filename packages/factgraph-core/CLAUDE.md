@@ -56,9 +56,11 @@ calls — mostly cache hits cascading through recursive expression
 evaluation. The JS-side cache returns hits at ~50ns, cutting per-execute
 time by ~5.8× and 1000-case simulation time by ~2.7×.
 
-Skips paths containing `/?/` (context-relative placeholders where the
-same path string yields different values per evaluation context). Those
-fall through to the engine's original `.get`.
+Caches all paths including `/?/` placeholders. These looked unsafe at
+first ("same path, different value per caller context") but empirically
+the engine evaluates the collection-wide value once and callers index
+into the returned `MaybeVector`. Path alone is sufficient as a cache
+key — verified deepStrictEqual against uncached baseline.
 
 Safety: the wrapper short-circuits before the engine's override-bypass
 check (~bundle line 30871). Safe within `executeFactGraph` because all
