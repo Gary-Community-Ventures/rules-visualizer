@@ -316,29 +316,39 @@ function walkBoolean(
   const parentValue =
     parentPath != null ? results[parentPath] : undefined
 
-  // Special-case Not: walk the single child and report the inversion.
+  // Special-case Not: walk the single child and report the inversion
+  // factually — no value judgment about whether the result is desirable.
   if (logic.op === 'Not') {
     const child = logic.children[0]
     if (!child) {
-      return { op: 'Not', value: parentValue ?? null, reason: 'NOT with no operand' }
+      return { op: 'Not', value: parentValue ?? null, reason: 'NOT with no operand.' }
     }
     const childTrace = walkLogic(child, parentNode, model, index, results, stack, depth)
     return {
       op: 'Not',
       value: parentValue ?? null,
-      reason: parentValue === true
-        ? `Negated false: the underlying condition did not hold.`
-        : parentValue === false
-        ? `Negated true: the underlying condition held.`
-        : 'Negation pending — underlying condition not yet evaluated.',
+      reason:
+        parentValue === true
+          ? 'Operand did not hold, so Not held.'
+          : parentValue === false
+            ? 'Operand held, so Not did not hold.'
+            : 'Operand has not yet evaluated.',
       children: [childTrace],
     }
   }
 
   // All / Any: evaluate each child's contribution by looking at its
-  // computed value.  Boolean values are resolved either through a
+  // computed value. Boolean values are resolved either through a
   // Dependency reference (recurse and read the child fact's value) or
   // through a True/False/Boolean literal.
+  //
+  // Reason phrasing is intentionally neutral: "held" / "did not hold"
+  // describe the truth value of the operator without judging whether
+  // that's a desirable outcome. Whether `true` is "good" depends on the
+  // caller's domain — `/eligible = false` is a denial, but
+  // `/isStriker = true` or `/isDisqualified = true` are also bad
+  // outcomes despite their boolean polarity flipping. The walker reports
+  // the math; the UI interprets it.
   const childTraces: TraceNode[] = logic.children.map((c) =>
     walkLogic(c, parentNode, model, index, results, stack, depth)
   )
@@ -348,42 +358,43 @@ function walkBoolean(
       return {
         op: 'All',
         value: true,
-        reason: 'All required conditions held.',
+        reason:
+          childTraces.length === 1
+            ? 'The single operand held.'
+            : `All ${childTraces.length} operands held.`,
         children: childTraces,
       }
     }
     if (parentValue === false) {
-      // First false child is the deciding one. Surface every child but
-      // mark the deciding one's reason in the parent.
-      const failingIdx = childTraces.findIndex((c) => c.value === false)
-      const failing = failingIdx >= 0 ? childTraces[failingIdx] : undefined
+      // First false child is the deciding one — surface it in the
+      // parent reason, but keep every child in `children` for context.
+      const failing = childTraces.find((c) => c.value === false)
       return {
         op: 'All',
         value: false,
         reason: failing
-          ? `Failed because ${failing.name ?? failing.op} did not hold.`
-          : 'Failed: at least one required condition did not hold.',
+          ? `${describeOperand(failing)} did not hold.`
+          : 'At least one operand did not hold.',
         children: childTraces,
       }
     }
     return {
       op: 'All',
       value: null,
-      reason: 'Pending — at least one required condition has not yet been evaluated.',
+      reason: 'At least one operand has not yet evaluated.',
       children: childTraces,
     }
   }
 
   // Any
   if (parentValue === true) {
-    const passingIdx = childTraces.findIndex((c) => c.value === true)
-    const passing = passingIdx >= 0 ? childTraces[passingIdx] : undefined
+    const passing = childTraces.find((c) => c.value === true)
     return {
       op: 'Any',
       value: true,
       reason: passing
-        ? `Satisfied because ${passing.name ?? passing.op} held.`
-        : 'Satisfied: at least one alternative held.',
+        ? `${describeOperand(passing)} held.`
+        : 'At least one operand held.',
       children: childTraces,
     }
   }
@@ -391,14 +402,17 @@ function walkBoolean(
     return {
       op: 'Any',
       value: false,
-      reason: 'Failed: none of the alternatives held.',
+      reason:
+        childTraces.length === 1
+          ? 'The single operand did not hold.'
+          : `None of the ${childTraces.length} operands held.`,
       children: childTraces,
     }
   }
   return {
     op: 'Any',
     value: null,
-    reason: 'Pending — none of the alternatives have resolved yet.',
+    reason: 'No operand has held yet, and others have not evaluated.',
     children: childTraces,
   }
 }
