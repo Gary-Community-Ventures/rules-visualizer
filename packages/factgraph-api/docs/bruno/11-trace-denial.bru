@@ -1,0 +1,92 @@
+meta {
+  name: 11 Trace — SNAP denial with structured explanation
+  type: http
+  seq: 11
+}
+
+post {
+  url: {{base_url}}/v1/factgraph/{{ruleset_id}}/query
+  body: json
+  auth: bearer
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{api_token}}
+}
+
+body:json {
+  {
+    "targets": ["/eligible"],
+    "inputs": {
+      "/grossEarnedIncome": 3500,
+      "/unearnedIncome": 0,
+      "/dependentCareExpenses": 0,
+      "/rent": 0,
+      "/realEstateTaxes": 0,
+      "/homeownersAssociationFees": 0,
+      "/mortgagePayments": 0,
+      "/homeownersInsurance": 0,
+      "/meetsCategoricalEligibility": false,
+      "/childSupportPaid": 0,
+      "/isHomeless": false
+    },
+    "entities": {
+      "/members": [
+        {
+          "id": "applicant",
+          "/members/*/isElderly": false,
+          "/members/*/isDisabled": false,
+          "/members/*/medicalExpenses": 0,
+          "/members/*/age": 30,
+          "/members/*/isHigherEdStudent": false,
+          "/members/*/weeklyWorkHours": 40,
+          "/members/*/isWorkStudy": false,
+          "/members/*/isParent": false,
+          "/members/*/isFullTimeCollegeStudent": false,
+          "/members/*/receivesTanf": false,
+          "/members/*/isImmigrationEligible": true,
+          "/members/*/isPregnant": false,
+          "/members/*/isIncapableOfSelfCare": false,
+          "/members/*/abawdCountableMonthsUsed": 0,
+          "/members/*/cashOnHand": 0,
+          "/members/*/bankAccountAssets": 0,
+          "/members/*/stockAssets": 0,
+          "/members/*/bondAssets": 0
+        }
+      ]
+    },
+    "include": ["trace"]
+  }
+}
+
+docs {
+  This scenario walks the structured explanation API.
+
+  Same household as request 06 but with $3,500 of monthly earned income
+  — over the gross-income threshold for a single-person household, no
+  BBCE, no elderly/disabled members, so the engine resolves /eligible
+  to false.
+
+  Setting include: ["trace"] makes the response carry a `traces` map
+  keyed by target path. Each entry is a recursive tree showing how
+  the target's value was derived:
+
+    - At each `All` that's false, the deciding (first-false) branch is
+      called out in the `reason`. The other branches still appear in
+      `children` so the caller can see the full picture.
+    - At each `Any` that's true, the satisfying branch is called out.
+    - Leaf comparisons surface the concrete operand values in `reason`
+      — "Gross monthly income (3500) ≤ Gross income limit (1695.2) —
+      did not hold."
+    - Policy citations from references.json flow through inline on
+      facts that have them.
+
+  Arithmetic operators (Multiply, Subtract, etc.) and Switch are
+  surfaced as "opaque" — value is present but the walker doesn't
+  descend into them. Issue a follow-up query against the intermediate
+  fact (e.g. /grossIncomeLimit) to see its breakdown.
+}

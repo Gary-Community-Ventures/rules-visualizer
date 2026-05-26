@@ -132,6 +132,34 @@ explanations and audit trails; skip it when you only need the answer.
 The supporting-facts list is capped at 200 entries per response so it
 doesn't return the entire graph for shallow targets.
 
+## Opting into the structured trace
+
+Pass `"include": ["trace"]` to additionally receive a `traces` map
+keyed by target path. Each entry is a recursive `TraceNode` tree
+walking how the target's value was derived from its inputs. Unlike
+`supportingFacts` (a flat list), `traces` preserves the operator
+structure of the rules:
+
+- `All` that's false → `reason` calls out the first-false child by
+  display name; all branches appear in `children` so the caller can
+  see both the deciding gate and the alternatives that did hold.
+- `Any` that's true → `reason` calls out the satisfying branch.
+- Comparisons (`LessThanOrEqual`, `GreaterThan`, etc.) → `reason`
+  includes the concrete operand values: *"Gross monthly income (3500)
+  ≤ Gross income limit (1695.2) — did not hold."*
+- Dependency references recursively walk into the target fact.
+- Policy citations from `references.json` flow through on the
+  corresponding `TraceNode`s.
+
+V1 walks booleans, comparisons, dependency references, and the common
+literal types (Int, Dollar, Boolean, etc.). Arithmetic operators
+(`Multiply`, `Add`, `Subtract`, ...) and `Switch` report the computed
+value but don't recurse — query those facts directly for their
+breakdown. Per-member trace for collection-scoped targets is planned;
+ask for a scalar parent instead today.
+
+Both `supportingFacts` and `trace` can be requested at once.
+
 ## Metadata passthrough
 
 Anything you put in `metadata` comes back unchanged in the response.

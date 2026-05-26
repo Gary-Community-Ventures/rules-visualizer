@@ -156,6 +156,67 @@ export function buildOpenApiDocument() {
       })
   )
 
+  // TraceCitation and TraceNode are response-only — never inbound, never
+  // validated by Zod at runtime — so we register them as raw OpenAPI
+  // component schemas. This sidesteps zod-to-openapi's lack of z.lazy()
+  // support and lets TraceNode cleanly $ref itself for the recursive
+  // children property.
+  registry.registerComponent('schemas', 'TraceCitation', {
+    type: 'object',
+    description:
+      "A policy citation resolved from the ruleset's references.json. Surfaced inline on trace nodes whose underlying fact has policy mappings.",
+    required: ['sectionId', 'documentTitle'],
+    properties: {
+      sectionId: { type: 'string' },
+      documentTitle: { type: 'string' },
+      documentUrl: { type: 'string' },
+      comment: { type: 'string' },
+      page: { type: 'integer' },
+    },
+  })
+
+  registry.registerComponent('schemas', 'TraceNode', {
+    type: 'object',
+    description:
+      "One step in the explanation tree for a queried fact. The walker produces a recursive structure: the top-level node is the queried target; children are the operands or dependencies that contributed to its value. For boolean operators (All/Any) the walker visits every operand so the caller sees both the deciding branch and the alternatives. Arithmetic and Switch operators currently report the computed value but don't recurse — query those facts directly to drill in.",
+    required: ['op', 'value', 'reason'],
+    properties: {
+      path: {
+        type: 'string',
+        description:
+          'Fact path when this node corresponds to a model node. Anonymous sub-expressions omit this.',
+      },
+      name: { type: 'string' },
+      description: { type: 'string' },
+      op: {
+        type: 'string',
+        description:
+          'Operator tag — All, Any, Not, GreaterThan, LessThanOrEqual, Dependency, Int, Dollar, True, False, Writable, Opaque, etc.',
+      },
+      value: {
+        description: 'Computed value at this node, or null if unresolved.',
+      },
+      reason: {
+        type: 'string',
+        description:
+          'One-sentence summary of how this value was decided. Safe to render directly in a caseworker UI.',
+      },
+      children: {
+        type: 'array',
+        items: { $ref: '#/components/schemas/TraceNode' },
+      },
+      citations: {
+        type: 'array',
+        items: { $ref: '#/components/schemas/TraceCitation' },
+      },
+    },
+  })
+
+  // A Zod-side handle pointing at the TraceNode component we registered
+  // above. Using `.openapi('TraceNode')` makes downstream consumers
+  // (`QueryResponse.traces`) emit a $ref instead of inlining unknown.
+  const TraceNode = z.any().openapi('TraceNode')
+
   const QueryResponse = registry.register(
     'QueryResponse',
     z
@@ -186,6 +247,10 @@ export function buildOpenApiDocument() {
         supportingFacts: z.array(SupportingFact).optional().openapi({
           description:
             'Present iff request.include contained "supportingFacts". Every fact in the targets\' dependency trees that resolved.',
+        }),
+        traces: z.record(z.string(), TraceNode).optional().openapi({
+          description:
+            'Present iff request.include contained "trace". Keyed by target path; each entry is a recursive TraceNode tree explaining how that target\'s value was derived.',
         }),
       })
       .openapi({

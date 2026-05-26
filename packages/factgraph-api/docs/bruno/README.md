@@ -31,6 +31,7 @@ any request — no copy-paste, no JSON formatting.
 | 08  | `08-error-missing-target.bru`  | 400 Problem Details                                                |
 | 09  | `09-error-unknown-ruleset.bru` | 404 Problem Details                                                |
 | 10  | `10-error-unknown-target.bru`  | 404 Problem Details, multiple bad targets surfaced together        |
+| 11  | `11-trace-denial.bru`          | Structured trace/explanation tree via `include: ["trace"]`         |
 
 Run them in order on the first session — each one builds on the previous
 one as documentation of the API surface.
