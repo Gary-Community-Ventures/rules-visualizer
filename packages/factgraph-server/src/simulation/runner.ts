@@ -225,9 +225,44 @@ await tsImport(${JSON.stringify(workerUrl)}, ${JSON.stringify(here)})
   return { source: shim, options: { eval: true } }
 }
 
+/** Engine-timing snapshot reported by each worker at end of its slice. */
+export type EngineTimingsSnapshot = {
+  dict: number
+  graphInit: number
+  collections: number
+  scalarInputs: number
+  read: number
+  total: number
+  count: number
+}
 type WorkerProgressMsg = { type: 'progress'; count: number }
-type WorkerDoneMsg = { type: 'done'; results: CaseResult[] }
+type WorkerDoneMsg = {
+  type: 'done'
+  results: CaseResult[]
+  timings: EngineTimingsSnapshot
+}
 type WorkerMsg = WorkerProgressMsg | WorkerDoneMsg
+
+/**
+ * Aggregated engine timings from the most-recent parallel simulation
+ * (workers don't share the main thread's `timings` singleton, so we sum
+ * their slices into here at the end of runParallel). Inspected via the
+ * /api/simulations/cache-stats endpoint for profiling.
+ */
+export const lastParallelTimings: EngineTimingsSnapshot & {
+  workerCount: number
+  runId: string | null
+} = {
+  dict: 0,
+  graphInit: 0,
+  collections: 0,
+  scalarInputs: 0,
+  read: 0,
+  total: 0,
+  count: 0,
+  workerCount: 0,
+  runId: null,
+}
 
 /**
  * Fan a scenario list out across N worker threads. Each worker gets a
@@ -235,6 +270,7 @@ type WorkerMsg = WorkerProgressMsg | WorkerDoneMsg
  * array matches scenario order (case-detail navigation relies on that).
  */
 async function runParallel(
+  runId: string,
   baseRulesetId: string,
   comparedRulesetId: string,
   baseFacts: ReturnType<typeof getRawFacts>,
@@ -263,6 +299,7 @@ async function runParallel(
   const PROGRESS_REPORT_EVERY = 50
 
   const { source, options } = workerSpawnArgs()
+  const workerTimings: EngineTimingsSnapshot[] = []
 
   const chunkResults: CaseResult[][] = await Promise.all(
     chunks.map(
@@ -297,6 +334,7 @@ async function runParallel(
                 const sum = perWorkerCompleted.reduce((a, b) => a + b, 0)
                 onProgress(sum, total)
               }
+              workerTimings.push(msg.timings)
               resolve(msg.results)
               worker.terminate()
             }
@@ -310,6 +348,29 @@ async function runParallel(
         })
     )
   )
+
+  // Sum worker timings and stash for /api/simulations/cache-stats. This
+  // makes parallel runs visible to the same profiling endpoint as inline
+  // runs (which mutate factgraph-core's `timings` directly on the main
+  // thread).
+  lastParallelTimings.dict = 0
+  lastParallelTimings.graphInit = 0
+  lastParallelTimings.collections = 0
+  lastParallelTimings.scalarInputs = 0
+  lastParallelTimings.read = 0
+  lastParallelTimings.total = 0
+  lastParallelTimings.count = 0
+  for (const t of workerTimings) {
+    lastParallelTimings.dict += t.dict
+    lastParallelTimings.graphInit += t.graphInit
+    lastParallelTimings.collections += t.collections
+    lastParallelTimings.scalarInputs += t.scalarInputs
+    lastParallelTimings.read += t.read
+    lastParallelTimings.total += t.total
+    lastParallelTimings.count += t.count
+  }
+  lastParallelTimings.workerCount = workerTimings.length
+  lastParallelTimings.runId = runId
 
   return chunkResults.flat()
 }
@@ -362,6 +423,7 @@ export async function runSimulation(
   // pinned worker count to 1 for benchmarking.
   if (WORKER_COUNT > 1 && scenarios.length >= PARALLEL_THRESHOLD) {
     const results = await runParallel(
+      config.id,
       baseRulesetId,
       comparedRulesetId,
       baseFacts,

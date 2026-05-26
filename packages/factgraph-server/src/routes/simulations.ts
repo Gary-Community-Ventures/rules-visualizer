@@ -5,7 +5,7 @@ import {
   timings,
 } from 'rules-visualizer-factgraph-core'
 import { autoConfigFromModel } from '../simulation/generator.js'
-import { runSimulation } from '../simulation/runner.js'
+import { runSimulation, lastParallelTimings } from '../simulation/runner.js'
 import {
   saveSimulationRun,
   listSimulationRuns,
@@ -247,19 +247,56 @@ router.delete('/rulesets/:id/simulations/:runId', (req, res) => {
 
 /** GET /api/simulations/cache-stats — debug: dictionary cache hit/miss counts. */
 router.get('/simulations/cache-stats', (_req, res) => {
-  const avg = (n: number) =>
-    timings.count === 0 ? 0 : Math.round((n / timings.count) * 1000) / 1000
+  const avg = (count: number, n: number) =>
+    count === 0 ? 0 : Math.round((n / count) * 1000) / 1000
+  // Inline executes mutate factgraph-core's `timings` directly. Parallel
+  // executes run in worker threads with their own heaps, so the runner
+  // sums their reported timings into `lastParallelTimings` at end-of-run.
+  // We surface both: callers profiling a parallel sim should look at
+  // `parallel`; inline runs (e.g. tiny test sims) show up in `inline`.
   res.json({
     cache: cacheStats,
+    inline: {
+      raw: timings,
+      avgMs: {
+        dict: avg(timings.count, timings.dict),
+        graphInit: avg(timings.count, timings.graphInit),
+        collections: avg(timings.count, timings.collections),
+        scalarInputs: avg(timings.count, timings.scalarInputs),
+        read: avg(timings.count, timings.read),
+        total: avg(timings.count, timings.total),
+      },
+    },
+    parallel: {
+      raw: lastParallelTimings,
+      avgMs: {
+        dict: avg(lastParallelTimings.count, lastParallelTimings.dict),
+        graphInit: avg(
+          lastParallelTimings.count,
+          lastParallelTimings.graphInit
+        ),
+        collections: avg(
+          lastParallelTimings.count,
+          lastParallelTimings.collections
+        ),
+        scalarInputs: avg(
+          lastParallelTimings.count,
+          lastParallelTimings.scalarInputs
+        ),
+        read: avg(lastParallelTimings.count, lastParallelTimings.read),
+        total: avg(lastParallelTimings.count, lastParallelTimings.total),
+      },
+    },
+    // Back-compat shim — older clients read `.timings`. Same as inline.
     timings: {
       raw: timings,
       avgMs: {
-        dict: avg(timings.dict),
-        graphInit: avg(timings.graphInit),
-        collections: avg(timings.collections),
-        scalarInputs: avg(timings.scalarInputs),
-        read: avg(timings.read),
-        total: avg(timings.total),
+        dict: avg(timings.count, timings.dict),
+        graphInit: avg(timings.count, timings.graphInit),
+        collections: avg(timings.count, timings.collections),
+        scalarInputs: avg(timings.count, timings.scalarInputs),
+        read: avg(timings.count, timings.read),
+        total: avg(timings.count, timings.total),
       },
     },
   })

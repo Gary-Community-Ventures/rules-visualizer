@@ -11,7 +11,11 @@
  * `require`; that cost (~1-2s) happens once per worker, in parallel.
  */
 import { parentPort, workerData } from 'node:worker_threads'
-import { executeFactGraph, type RawFact } from 'rules-visualizer-factgraph-core'
+import {
+  executeFactGraph,
+  timings,
+  type RawFact,
+} from 'rules-visualizer-factgraph-core'
 import { compareValues } from '../testStore.js'
 import { sidesAreIdentical } from './runner.js'
 import type { CaseResult, CaseDiff, GeneratedScenario } from './types.js'
@@ -157,4 +161,20 @@ for (let i = 0; i < data.scenarios.length; i++) {
   }
 }
 
-parentPort?.postMessage({ type: 'done', results })
+// Send our slice of engine timings back so the runner can aggregate across
+// workers — the `timings` object is a module-level singleton inside
+// factgraph-core, but each worker has its own JS heap so each one is
+// scoped to that worker's slice of executes.
+parentPort?.postMessage({
+  type: 'done',
+  results,
+  timings: {
+    dict: timings.dict,
+    graphInit: timings.graphInit,
+    collections: timings.collections,
+    scalarInputs: timings.scalarInputs,
+    read: timings.read,
+    total: timings.total,
+    count: timings.count,
+  },
+})
