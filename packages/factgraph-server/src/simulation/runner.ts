@@ -170,6 +170,28 @@ function yieldEventLoop(): Promise<void> {
 }
 
 /**
+ * True when base and compared sides will produce identical results for every
+ * scenario — same ruleset and same overrides. Lets the runner skip the
+ * second execute (~2× wall time savings for same-vs-same comparisons,
+ * which is the common case while iterating on a single ruleset).
+ *
+ * Overrides are flat path→primitive maps, so stringify-compare is fine and
+ * cheaper than a custom deep-equal. `??{}` normalizes undefined and {} to
+ * the same string so e.g. (undefined, {}) compares equal.
+ */
+export function sidesAreIdentical(
+  baseRulesetId: string,
+  comparedRulesetId: string,
+  baseOverrides: Record<string, unknown> | undefined,
+  comparedOverrides: Record<string, unknown> | undefined
+): boolean {
+  if (baseRulesetId !== comparedRulesetId) return false
+  const a = JSON.stringify(baseOverrides ?? {}, Object.keys(baseOverrides ?? {}).sort())
+  const b = JSON.stringify(comparedOverrides ?? {}, Object.keys(comparedOverrides ?? {}).sort())
+  return a === b
+}
+
+/**
  * Resolve how to spawn the worker. There's an asymmetry between dev and
  * prod that bites us: under `tsx watch` we want the worker to run the
  * .ts source (because there's no compiled .js on disk), but Node's
@@ -373,6 +395,12 @@ export async function runSimulation(
   // when the worker pool is disabled.
   // Narrow the engine's read pass to outcomes (see worker.ts for rationale).
   const readPaths = outcomeSet
+  const skipSecondExecute = sidesAreIdentical(
+    baseRulesetId,
+    comparedRulesetId,
+    baseOverrides,
+    comparedOverrides
+  )
   const results: CaseResult[] = []
   for (let i = 0; i < scenarios.length; i++) {
     const scenario = scenarios[i]
@@ -393,20 +421,22 @@ export async function runSimulation(
         readPaths
       )
 
-      const editedResults = executeFactGraph(
-        comparedRulesetId,
-        editedFacts,
-        comparedInputs,
-        editedModel.nodes as Record<string, { content: { dataType?: string } }>,
-        scenario.entities,
-        readPaths
-      )
+      // Same ruleset, same overrides → second execute is wasted work.
+      // Reuse the base result map; diff against itself produces zero diffs.
+      const editedResults = skipSecondExecute
+        ? baseResults
+        : executeFactGraph(
+            comparedRulesetId,
+            editedFacts,
+            comparedInputs,
+            editedModel.nodes as Record<string, { content: { dataType?: string } }>,
+            scenario.entities,
+            readPaths
+          )
 
-      const { outcomeDiffs, allDiffs } = diffResults(
-        baseResults,
-        editedResults,
-        outcomeSet
-      )
+      const { outcomeDiffs, allDiffs } = skipSecondExecute
+        ? { outcomeDiffs: [], allDiffs: [] }
+        : diffResults(baseResults, editedResults, outcomeSet)
 
       results.push({
         scenarioId: scenario.id,

@@ -13,6 +13,7 @@
 import { parentPort, workerData } from 'node:worker_threads'
 import { executeFactGraph, type RawFact } from 'rules-visualizer-factgraph-core'
 import { compareValues } from '../testStore.js'
+import { sidesAreIdentical } from './runner.js'
 import type { CaseResult, CaseDiff, GeneratedScenario } from './types.js'
 
 type WorkerInit = {
@@ -42,6 +43,15 @@ const hasBaseOverrides =
   data.baseOverrides && Object.keys(data.baseOverrides).length > 0
 const hasComparedOverrides =
   data.comparedOverrides && Object.keys(data.comparedOverrides).length > 0
+// Same ruleset + same overrides on both sides → results are guaranteed
+// identical, so the second execute is wasted work. Skip it and reuse the
+// base result map. Halves wall time for same-vs-same comparisons.
+const skipSecondExecute = sidesAreIdentical(
+  data.baseRulesetId,
+  data.comparedRulesetId,
+  data.baseOverrides,
+  data.comparedOverrides
+)
 
 function diffResults(
   base: Record<string, unknown>,
@@ -103,16 +113,20 @@ for (let i = 0; i < data.scenarios.length; i++) {
       scenario.entities,
       readPaths
     )
-    const editedResults = executeFactGraph(
-      data.comparedRulesetId,
-      data.comparedFacts,
-      comparedInputs,
-      data.comparedModelNodes,
-      scenario.entities,
-      readPaths
-    )
+    const editedResults = skipSecondExecute
+      ? baseResults
+      : executeFactGraph(
+          data.comparedRulesetId,
+          data.comparedFacts,
+          comparedInputs,
+          data.comparedModelNodes,
+          scenario.entities,
+          readPaths
+        )
 
-    const { outcomeDiffs, allDiffs } = diffResults(baseResults, editedResults)
+    const { outcomeDiffs, allDiffs } = skipSecondExecute
+      ? { outcomeDiffs: [] as CaseDiff[], allDiffs: [] as CaseDiff[] }
+      : diffResults(baseResults, editedResults)
 
     results.push({
       scenarioId: scenario.id,
