@@ -43,6 +43,14 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # The docs generator imports from rules-visualizer-factgraph-api,
+      # which in turn imports from rules-visualizer-factgraph-core. The
+      # core package exports through its compiled dist (production
+      # Node consumers can't load TypeScript directly), so we have to
+      # build core before the generator can resolve it.
+      - name: Build factgraph-core
+        run: npm run build --workspace=rules-visualizer-factgraph-core
+
       - name: Generate docs site
         run: node --import tsx scripts/gen-docs-site.ts build
 
