@@ -19,6 +19,10 @@ import { HomePage } from './pages/home'
 import { RulesetListPage } from './pages/ruleset-list'
 import { SimulatePage } from './pages/simulate'
 import { PopulationPage } from './pages/population'
+import {
+  FactGraphInterfacePage,
+  FactGraphInterfaceSettingsPage,
+} from './pages/fact-graph-interface'
 import { TabBar } from './components/tab-bar'
 
 function RootLayout() {
@@ -36,9 +40,19 @@ function RootLayout() {
     from: '/populations/$populationId',
     shouldThrow: false,
   })
+  const matchInterface = useMatch({
+    from: '/interface/$rulesetId',
+    shouldThrow: false,
+  })
+  const matchInterfaceSettings = useMatch({
+    from: '/interface/$rulesetId/settings',
+    shouldThrow: false,
+  })
   const activeRulesetId = matchRuleset?.params.rulesetId ?? null
   const isSimulatePage = matchSimulate !== undefined
   const isPopulationPage = matchPopulation !== undefined
+  const isInterfacePage = matchInterface !== undefined
+  const isInterfaceSettingsPage = matchInterfaceSettings !== undefined
   // Hide the tab bar when opened from a simulation preview (new browser tab)
   const isSimulationPreview =
     typeof window !== 'undefined' &&
@@ -86,6 +100,8 @@ function RootLayout() {
       {tabs.length > 0 &&
         !isSimulatePage &&
         !isPopulationPage &&
+        !isInterfacePage &&
+        !isInterfaceSettingsPage &&
         !isSimulationPreview && <TabBar activeRulesetId={activeRulesetId} />}
       {isSimulationPreview && activeRulesetId ? (
         // Simulation preview: standalone ModelProvider, no tab system
@@ -150,7 +166,7 @@ function RulesetActivator() {
       didOpen.current = true
       openTab(rulesetId, 'Loading...')
     }
-  }, [rulesetId, openTab, closedTabs, navigate])
+  }, [rulesetId, openTab, closedTabs, navigate, isSimPreview])
 
   return null
 }
@@ -187,11 +203,25 @@ const populationRoute = createRoute({
   component: PopulationPage,
 })
 
+const interfaceRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/interface/$rulesetId',
+  component: FactGraphInterfacePage,
+})
+
+const interfaceSettingsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/interface/$rulesetId/settings',
+  component: FactGraphInterfaceSettingsPage,
+})
+
 export const routeTree = rootRoute.addChildren([
   rulesetListRoute,
   rulesetRoute,
   simulateRoute,
   populationRoute,
+  interfaceRoute,
+  interfaceSettingsRoute,
 ])
 
 export const router = new Router({ routeTree })

@@ -72,3 +72,6 @@ pnpm-lock.yaml
 
 # Claude Code tasks panel — per-thread persistence
 .claude-tasks/
+
+# Generated simulation run output
+data/factgraph/*/simulations/

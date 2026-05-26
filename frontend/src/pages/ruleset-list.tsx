@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate, Link } from '@tanstack/react-router'
 import { useAppContext } from '@/context'
 import { listRulesets, type RulesetSummary } from '@/lib/api/rules-api'
-import { FlaskConical } from 'lucide-react'
+import { FlaskConical, LayoutTemplate } from 'lucide-react'
 
 export function RulesetListPage() {
   const [rulesets, setRulesets] = useState<RulesetSummary[]>([])
@@ -47,15 +47,26 @@ export function RulesetListPage() {
                   {r.format === 'rac' ? 'Rules as Code' : 'Fact Graph'}
                 </p>
                 {r.format === 'factGraph' && (
-                  <Link
-                    to="/simulate/$rulesetId"
-                    params={{ rulesetId: r.id }}
-                    className="text-[10px] text-blue-600 hover:underline flex items-center gap-0.5"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <FlaskConical className="size-2.5" />
-                    Simulate
-                  </Link>
+                  <>
+                    <Link
+                      to="/simulate/$rulesetId"
+                      params={{ rulesetId: r.id }}
+                      className="text-[10px] text-blue-600 hover:underline flex items-center gap-0.5"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <FlaskConical className="size-2.5" />
+                      Simulate
+                    </Link>
+                    <Link
+                      to="/interface/$rulesetId"
+                      params={{ rulesetId: r.id }}
+                      className="text-[10px] text-emerald-700 hover:underline flex items-center gap-0.5"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <LayoutTemplate className="size-2.5" />
+                      Interface
+                    </Link>
+                  </>
                 )}
               </div>
             </button>
