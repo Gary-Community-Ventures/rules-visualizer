@@ -41,10 +41,25 @@ click Send.
 | `GET`  | `/v1/factgraph/rulesets`          | List loaded rulesets                       |
 | `GET`  | `/v1/factgraph/:rulesetId/schema` | Node definitions, types, citations         |
 | `POST` | `/v1/factgraph/:rulesetId/query`  | Evaluate a target node with partial inputs |
+| `GET`  | `/v1/factgraph/openapi.json`      | OpenAPI 3.1 spec (machine-readable) — public |
+| `GET`  | `/v1/factgraph/openapi.yaml`      | OpenAPI 3.1 spec (YAML) — public           |
+| `GET`  | `/v1/factgraph/docs`              | Interactive Swagger UI — public            |
 
 The query endpoint is the centerpiece — see `docs/concepts.md` for the
 incompleteness model and `docs/examples-snap.md` for a worked SNAP
 walkthrough.
+
+The `/v1/factgraph/docs` URL is the easiest way to browse the API
+interactively — paste your bearer token via the Authorize dialog and
+every endpoint is "Try it"-able from the browser. For codegen, point
+`openapi-typescript`, `openapi-generator`, or any OpenAPI-aware client
+at `/v1/factgraph/openapi.yaml`.
+
+There's also a public Redoc-rendered version at
+[gary-community-ventures.github.io/rules-visualizer](https://gary-community-ventures.github.io/rules-visualizer/)
+that doesn't require the API to be up — handy for browsing the contract
+from a phone or sharing a link. The Pages site rebuilds automatically
+on every push that touches the API package.
 
 ## Authentication
 
@@ -107,9 +122,10 @@ before we land them.
 | ✅     | Caller-provided member IDs surfaced as `{memberId, value}` arrays                                                                             |
 | ✅     | Health probe                                                                                                                                  |
 | ✅     | Optional bearer-token auth                                                                                                                    |
+| ✅     | OpenAPI 3.1 spec at `/v1/factgraph/openapi.yaml` + Swagger UI at `/v1/factgraph/docs` (both unauthenticated)                                   |
+| ✅     | Public docs site on GitHub Pages (Redoc renderer, auto-rebuilt on every push that touches the API)                                            |
 | ⏳     | Alternation in `missingInputs` (express "one-of" relationships when an `Any` could be satisfied by any of several inputs)                     |
 | ⏳     | Structured explanation/trace on the query response (beyond flat supportingFacts list)                                                         |
-| ⏳     | OpenAPI 3.1 spec served at `/v1/factgraph/openapi.yaml` + Swagger UI at `/v1/factgraph/docs`                                                  |
 | ⏳     | Typed client packages (`@npm` consumer) generated from the OpenAPI                                                                            |
 | ⏳     | SNAP-shaped convenience endpoints (`/evaluate/expedited-screening`, `/evaluate/determination`) layered over the generic query                 |
 | ⏳     | Rate limiting                                                                                                                                 |

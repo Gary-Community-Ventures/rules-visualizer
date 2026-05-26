@@ -1,0 +1,69 @@
+# Build the API docs site (OpenAPI YAML + Redoc renderer) and publish
+# it to GitHub Pages. The site refreshes on every push to main that
+# could affect the API contract.
+#
+# To enable: in repo Settings → Pages, set "Source" to "GitHub Actions".
+
+name: API docs
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'packages/factgraph-api/**'
+      - 'packages/factgraph-core/**'
+      - 'packages/shared-types/**'
+      - 'scripts/gen-docs-site.ts'
+      - '.github/workflows/docs.yml'
+  workflow_dispatch:
+
+# Pages deploy requires these permissions on the workflow run.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Only one Pages deploy at a time; cancel queued runs if a newer commit
+# lands while one is still building.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      # The docs generator imports from rules-visualizer-factgraph-api,
+      # which in turn imports from rules-visualizer-factgraph-core. The
+      # core package exports through its compiled dist (production
+      # Node consumers can't load TypeScript directly), so we have to
+      # build core before the generator can resolve it.
+      - name: Build factgraph-core
+        run: npm run build --workspace=rules-visualizer-factgraph-core
+
+      - name: Generate docs site
+        run: node --import tsx scripts/gen-docs-site.ts build
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: build
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

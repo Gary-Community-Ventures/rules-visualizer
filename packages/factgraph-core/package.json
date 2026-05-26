@@ -4,7 +4,16 @@
   "description": "Fact Graph parser, executor, and ruleset store extracted from the rules-visualizer for reuse across the visualizer and the partner-facing API.",
   "license": "MPL-2.0",
   "type": "module",
-  "main": "src/index.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "tsx": "./src/index.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
   "scripts": {
     "build": "tsc"
   },

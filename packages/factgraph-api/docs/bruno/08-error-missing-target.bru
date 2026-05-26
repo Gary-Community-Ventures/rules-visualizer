@@ -7,10 +7,15 @@ meta {
 post {
   url: {{base_url}}/v1/factgraph/{{ruleset_id}}/query
   body: json
+  auth: bearer
 }
 
 headers {
   Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{api_token}}
 }
 
 body:json {

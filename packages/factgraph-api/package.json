@@ -14,17 +14,21 @@
     "test": "node --import tsx --test tests/*.test.ts"
   },
   "dependencies": {
+    "@asteasolutions/zod-to-openapi": "^7.3.0",
     "cors": "^2.8.5",
     "express": "^5.1.0",
     "rules-visualizer-factgraph-core": "*",
     "rules-visualizer-shared-types": "*",
-    "zod": "^3.25.0"
+    "swagger-ui-express": "^5.0.1",
+    "yaml": "^2.8.0",
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.2",
     "@types/node": "^24.0.11",
     "@types/supertest": "^6.0.2",
+    "@types/swagger-ui-express": "^4.1.7",
     "supertest": "^7.0.0",
     "tsx": "^4.19.4",
     "typescript": "~5.8.3"
