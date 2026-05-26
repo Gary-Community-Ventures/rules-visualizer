@@ -151,6 +151,13 @@ function patchFactProtoOnce(factInstance: unknown): void {
 // factCallCounts; reset with resetFactCallCounts().
 export const factCallCounts = new Map<string, number>()
 export function resetFactCallCounts(): void { factCallCounts.clear() }
+
+/** EXEC_TIME_SETS=1 populates this with total graph.set time + call count. */
+export const graphSetTimings = { elapsedMs: 0, count: 0 }
+export function resetGraphSetTimings(): void {
+  graphSetTimings.elapsedMs = 0
+  graphSetTimings.count = 0
+}
 let traceWrapperInstalled = false
 function maybeInstallTraceWrapper(factInstance: unknown): void {
   if (traceWrapperInstalled || process.env.FACTGRAPH_TRACE_GETS !== '1') return
@@ -759,6 +766,20 @@ export function executeFactGraph(
     }
     getVect: (path: string) => unknown
     save: () => { valid: boolean }
+  }
+  // Diagnostic: when EXEC_TIME_SETS=1, wrap graph.set with a perf timer
+  // so callers can read graphSetTimings to find out how much of the
+  // collections phase is the Scala-side graph.set call vs JS-side
+  // factory/loop work. Earlier profiling showed ~99% of collections
+  // phase time is in graph.set itself.
+  if (process.env.EXEC_TIME_SETS === '1') {
+    const origSet = graph.set.bind(graph)
+    graph.set = (path: string, value: unknown) => {
+      const t = performance.now()
+      origSet(path, value)
+      graphSetTimings.elapsedMs += performance.now() - t
+      graphSetTimings.count += 1
+    }
   }
 
   const t1b = Date.now()
