@@ -243,6 +243,68 @@ type WorkerDoneMsg = {
 }
 type WorkerMsg = WorkerProgressMsg | WorkerDoneMsg
 
+// --- Persistent worker pool ----------------------------------------------
+// Workers carry a ~6MB Scala.js bundle (loaded at spawn) plus a JS-side
+// dictionary build that runs on first execute. Spawning a fresh pool per
+// simulation paid both costs every time. Keeping workers alive amortizes:
+// the first sim pays the bundle load + dict build; subsequent sims see
+// workers already booted with the bundle resident and (when facts didn't
+// change) the dictionary cached.
+//
+// Measured impact is modest — wall-time win is ~2-3s per sim (4-6%) on
+// 1000-case snap-complete because workers spawn in parallel, so the
+// pre-pool spawn cost was bounded by the slowest single worker (~2s),
+// not the sum across 8. The clearer signal shows in per-execute `dict`
+// time: drops from ~2.2ms (cold worker) to ~0.6ms (warm worker reusing
+// the cached FactDictionary across sims with the same facts array).
+//
+// Each worker sits in a message loop in pool mode (see worker.ts). The
+// runner sends an `assign` message per chunk, the worker processes it,
+// posts `done`, and goes back to waiting. `shutdownWorkerPool` is exposed
+// for callers that want to force a fresh pool (e.g., after re-vendoring
+// the Scala.js bundle in a dev session). File-watcher ruleset reloads do
+// NOT need to kill the pool because facts arrive fresh on each assignment.
+//
+// Concurrency limitation: this V1 supports only one in-flight simulation
+// at a time. If a second `runSimulation` is invoked while another is
+// still claiming workers, `runParallel` throws. The UI prevents this
+// (Run button is disabled while a sim is running), but API consumers
+// firing two sims back-to-back from a script could trip it. A follow-up
+// could queue the second request or spawn overflow workers; left out
+// here to keep V1 small.
+type PoolWorker = {
+  worker: Worker
+  /** True between postMessage('assign') and the matching 'done' reply. */
+  busy: boolean
+}
+let workerPool: PoolWorker[] | null = null
+
+function getOrCreatePool(): PoolWorker[] {
+  if (workerPool) return workerPool
+  const { source, options } = workerSpawnArgs()
+  workerPool = []
+  for (let i = 0; i < WORKER_COUNT; i++) {
+    const worker = new Worker(source as never, {
+      ...options,
+      workerData: { mode: 'pool' },
+    })
+    // Surface worker errors so a crash doesn't silently leave us with a
+    // dead slot. The runner's per-assignment promise also rejects on
+    // error, but that one only sees errors during an active assignment.
+    worker.on('error', (err) => {
+      console.error('[sim-worker] unhandled error', err)
+    })
+    workerPool.push({ worker, busy: false })
+  }
+  return workerPool
+}
+
+export function shutdownWorkerPool(): void {
+  if (!workerPool) return
+  for (const w of workerPool) w.worker.postMessage({ type: 'shutdown' })
+  workerPool = null
+}
+
 /**
  * Aggregated engine timings from the most-recent parallel simulation
  * (workers don't share the main thread's `timings` singleton, so we sum
@@ -298,30 +360,34 @@ async function runParallel(
   // Throttle progress emission to avoid spamming the active-runs map.
   const PROGRESS_REPORT_EVERY = 50
 
-  const { source, options } = workerSpawnArgs()
+  const pool = getOrCreatePool()
+  // Pool may be larger than chunk count for tiny runs — claim only what we
+  // need. Also: if a previous sim left a slot "busy" due to an error path,
+  // skip it; the slot will be reclaimed on next pool creation.
+  const slots: PoolWorker[] = []
+  for (const slot of pool) {
+    if (slots.length >= chunks.length) break
+    if (slot.busy) continue
+    slots.push(slot)
+  }
+  if (slots.length < chunks.length) {
+    throw new Error(
+      `Not enough free workers (need ${chunks.length}, have ${slots.length}). ` +
+        'Concurrent simulations on the same pool are not supported yet.'
+    )
+  }
+
   const workerTimings: EngineTimingsSnapshot[] = []
 
   const chunkResults: CaseResult[][] = await Promise.all(
     chunks.map(
       (chunk, idx) =>
         new Promise<CaseResult[]>((resolve, reject) => {
-          const worker = new Worker(source as never, {
-            ...options,
-            workerData: {
-              baseRulesetId,
-              comparedRulesetId,
-              baseFacts,
-              comparedFacts,
-              baseModelNodes,
-              comparedModelNodes,
-              scenarios: chunk,
-              outcomeNodes,
-              baseOverrides,
-              comparedOverrides,
-              progressInterval: PROGRESS_REPORT_EVERY,
-            },
-          })
-          worker.on('message', (msg: WorkerMsg) => {
+          const slot = slots[idx]
+          slot.busy = true
+          // Per-assignment message handler; detached when this chunk finishes
+          // so the next assignment on the same worker doesn't see our state.
+          const onMessage = (msg: WorkerMsg) => {
             if (msg.type === 'progress') {
               perWorkerCompleted[idx] = msg.count
               if (onProgress) {
@@ -335,15 +401,36 @@ async function runParallel(
                 onProgress(sum, total)
               }
               workerTimings.push(msg.timings)
+              slot.worker.off('message', onMessage)
+              slot.worker.off('error', onError)
+              slot.busy = false
               resolve(msg.results)
-              worker.terminate()
             }
-          })
-          worker.on('error', reject)
-          worker.on('exit', (code) => {
-            if (code !== 0) {
-              reject(new Error(`Worker exited with code ${code}`))
-            }
+          }
+          const onError = (err: Error) => {
+            slot.worker.off('message', onMessage)
+            slot.worker.off('error', onError)
+            slot.busy = false
+            reject(err)
+          }
+          slot.worker.on('message', onMessage)
+          slot.worker.on('error', onError)
+
+          slot.worker.postMessage({
+            type: 'assign',
+            assignment: {
+              baseRulesetId,
+              comparedRulesetId,
+              baseFacts,
+              comparedFacts,
+              baseModelNodes,
+              comparedModelNodes,
+              scenarios: chunk,
+              outcomeNodes,
+              baseOverrides,
+              comparedOverrides,
+              progressInterval: PROGRESS_REPORT_EVERY,
+            },
           })
         })
     )
