@@ -371,6 +371,8 @@ export async function runSimulation(
 
   // Inline path: execute in the main thread. Used for small runs and
   // when the worker pool is disabled.
+  // Narrow the engine's read pass to outcomes (see worker.ts for rationale).
+  const readPaths = outcomeSet
   const results: CaseResult[] = []
   for (let i = 0; i < scenarios.length; i++) {
     const scenario = scenarios[i]
@@ -387,7 +389,8 @@ export async function runSimulation(
         baseFacts,
         baseInputs,
         baseModel.nodes as Record<string, { content: { dataType?: string } }>,
-        scenario.entities
+        scenario.entities,
+        readPaths
       )
 
       const editedResults = executeFactGraph(
@@ -395,7 +398,8 @@ export async function runSimulation(
         editedFacts,
         comparedInputs,
         editedModel.nodes as Record<string, { content: { dataType?: string } }>,
-        scenario.entities
+        scenario.entities,
+        readPaths
       )
 
       const { outcomeDiffs, allDiffs } = diffResults(

@@ -587,7 +587,13 @@ export function executeFactGraph(
   facts: ParsedFact[],
   inputs: Record<string, unknown>,
   modelNodes?: Record<string, { content: { dataType?: string } }>,
-  entities?: Record<string, Record<string, unknown>[]>
+  entities?: Record<string, Record<string, unknown>[]>,
+  // Narrow the final read pass to only these fact paths. Use the template
+  // form for collection fields (e.g. "/members/*/isEligible") to match
+  // fact.path. Dictionary is always built from the full facts list so
+  // dependencies still resolve; this only filters what gets read back.
+  // Empty/undefined = read everything (legacy behavior).
+  readPaths?: Set<string>
 ): Record<string, unknown> {
   void rulesetId
 
@@ -752,7 +758,9 @@ export function executeFactGraph(
   // In factgraph 3.1, graph.get()/getVect()/save() were removed.
   // Instead, use getFact(path) and read via the Scala-mangled get method.
   const results: Record<string, unknown> = {}
+  const filterReads = readPaths && readPaths.size > 0
   for (const fact of facts) {
+    if (filterReads && !readPaths.has(fact.path)) continue
     // For collection item facts (with /*), read per-instance values
     const collMatch = fact.path.match(/^(\/[^*]+)\/\*\/(.+)$/)
     if (collMatch) {
