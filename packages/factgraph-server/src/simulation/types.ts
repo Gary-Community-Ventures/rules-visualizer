@@ -1,10 +1,31 @@
 /** Configuration for a single input field in scenario generation */
 export type FieldConfig = {
   path: string
-  type: 'Dollar' | 'Int' | 'Short' | 'Byte' | 'Boolean' | 'Enum' | 'String'
+  type:
+    | 'Dollar'
+    | 'Int'
+    | 'Short'
+    | 'Byte'
+    | 'Boolean'
+    | 'Enum'
+    | 'MultiEnum'
+    | 'String'
+    | 'Day'
+    | 'Rational'
+    | 'CollectionItem'
+    | string
+  /** Numeric min for Dollar/Int/Short/Byte/Rational. */
   min?: number
+  /** Numeric max for Dollar/Int/Short/Byte/Rational. */
   max?: number
+  /** ISO YYYY-MM-DD min for Day. Defaults to 2000-01-01. */
+  minDate?: string
+  /** ISO YYYY-MM-DD max for Day. Defaults to today. */
+  maxDate?: string
+  /** Options for Enum / MultiEnum. */
   enumOptions?: string[]
+  /** Options for String picker, if you want to constrain the generated values. */
+  stringOptions?: string[]
   /** Probability a Boolean field generates `true` (0–1). Default 0.5. */
   trueProbability?: number
 }
@@ -14,6 +35,14 @@ export type CollectionConfig = {
   collectionPath: string
   minMembers: number
   maxMembers: number
+  /**
+   * If true, bias collection size toward smaller values via a power-law
+   * distribution (closer to real-world household sizes). Default false =
+   * uniform sampling between min and max. autoConfigFromModel turns this
+   * on for `/members` since SNAP/Medicaid-style household sizes follow a
+   * roughly 1.5-power decay.
+   */
+  weighted?: boolean
   fields: FieldConfig[]
 }
 

@@ -22,6 +22,7 @@ import {
   type NodeChangeStats,
   type Population,
   type PopulationCase,
+  type FieldConfig,
 } from '@/lib/api/simulation-api'
 import {
   listRulesets,
@@ -32,7 +33,6 @@ import {
 import type { Model } from '@/lib/model'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { SimulationSettings } from '@/components/simulation-settings'
 import { cn } from '@/lib/utils'
 import {
   Play,
@@ -621,15 +621,115 @@ function ConfigView({
         <OutcomeNodeEditor config={config} setConfig={setConfig} />
 
         {caseSource === 'generate' && (
-          <section className="rounded-xl border bg-background p-4 shadow-sm">
-            <h2 className="text-sm font-semibold">Simulation Settings</h2>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Controls the values generated for each random case.
-            </p>
-            <div className="mt-4">
-              <SimulationSettings config={config} setConfig={setConfig} />
-            </div>
-          </section>
+          <>
+            <details className="text-xs">
+              <summary className="cursor-pointer text-muted-foreground hover:text-foreground">
+                Scalar fields ({config.scalarFields.length})
+              </summary>
+              <div className="mt-2 space-y-1.5 pl-4">
+                {config.scalarFields.map((f, idx) => (
+                  <div
+                    key={f.path}
+                    className="flex items-center gap-2 font-mono"
+                  >
+                    <span className="w-48 truncate shrink-0" title={f.path}>
+                      {f.path}
+                    </span>
+                    <span className="text-muted-foreground shrink-0">
+                      ({f.type})
+                    </span>
+                    <FieldGenInputs
+                      field={f}
+                      onChange={(next) => {
+                        const fields = [...config.scalarFields]
+                        fields[idx] = next
+                        setConfig({ ...config, scalarFields: fields })
+                      }}
+                    />
+                  </div>
+                ))}
+              </div>
+            </details>
+
+            <details className="text-xs">
+              <summary className="cursor-pointer text-muted-foreground hover:text-foreground">
+                Collections ({config.collections.length})
+              </summary>
+              <div className="mt-2 space-y-3 pl-4">
+                {config.collections.map((coll, collIdx) => (
+                  <div key={coll.collectionPath} className="space-y-1.5">
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono font-medium">
+                        {coll.collectionPath}
+                      </span>
+                      <NumberInput
+                        className="h-6 w-12 text-[11px] font-mono"
+                        parser={parseInt}
+                        value={coll.minMembers}
+                        onChange={(v) => {
+                          const colls = [...config.collections]
+                          colls[collIdx] = { ...coll, minMembers: v }
+                          setConfig({ ...config, collections: colls })
+                        }}
+                      />
+                      <span className="text-muted-foreground">–</span>
+                      <NumberInput
+                        className="h-6 w-12 text-[11px] font-mono"
+                        parser={parseInt}
+                        value={coll.maxMembers}
+                        onChange={(v) => {
+                          const colls = [...config.collections]
+                          colls[collIdx] = { ...coll, maxMembers: v }
+                          setConfig({ ...config, collections: colls })
+                        }}
+                      />
+                      <span className="text-muted-foreground">members</span>
+                      <label className="ml-3 inline-flex items-center gap-1 text-[10px] text-muted-foreground cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={coll.weighted ?? false}
+                          onChange={(e) => {
+                            const colls = [...config.collections]
+                            colls[collIdx] = {
+                              ...coll,
+                              weighted: e.target.checked,
+                            }
+                            setConfig({ ...config, collections: colls })
+                          }}
+                          className="size-3"
+                          title="Bias toward smaller sizes (realistic household distribution)"
+                        />
+                        weighted
+                      </label>
+                    </div>
+                    {coll.fields.map((f, fIdx) => (
+                      <div
+                        key={f.path}
+                        className="flex items-center gap-2 font-mono pl-4"
+                      >
+                        <span className="w-44 truncate shrink-0" title={f.path}>
+                          {f.path}
+                        </span>
+                        <span className="text-muted-foreground shrink-0">
+                          ({f.type})
+                        </span>
+                        <FieldGenInputs
+                          field={f}
+                          onChange={(next) => {
+                            const colls = [...config.collections]
+                            const fields = [...coll.fields]
+                            fields[fIdx] = next
+                            colls[collIdx] = { ...coll, fields }
+                            setConfig({ ...config, collections: colls })
+                          }}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            </details>
+          </>
         )}
 
         <Button
@@ -2315,6 +2415,137 @@ function NumberInput({
       }}
     />
   )
+}
+
+/**
+ * Slider + numeric input for a Boolean scenario-gen field's `true`
+ * probability. Range 0–100, displayed as a %. Slider for fast exploration,
+ * number input for precise values.
+ */
+function BooleanProbabilitySlider({
+  value,
+  onChange,
+}: {
+  value: number | undefined // 0–1
+  onChange: (v: number | undefined) => void
+}) {
+  const pct = Math.round(((value ?? 0.5) * 100 + Number.EPSILON) * 10) / 10
+  const setPct = (next: number) => {
+    const clamped = Math.max(0, Math.min(100, next))
+    // Treat 50% as "default" — clear the field so it's not persisted as 0.5.
+    if (Math.abs(clamped - 50) < 0.05) onChange(undefined)
+    else onChange(clamped / 100)
+  }
+  return (
+    <div className="inline-flex items-center gap-1.5">
+      <input
+        type="range"
+        min={0}
+        max={100}
+        step={1}
+        value={pct}
+        onChange={(e) => setPct(Number(e.target.value))}
+        className="w-24 accent-foreground"
+        title="% true"
+      />
+      <input
+        type="number"
+        min={0}
+        max={100}
+        step={1}
+        value={pct}
+        onChange={(e) => setPct(Number(e.target.value))}
+        className="h-6 w-12 text-[11px] font-mono border rounded px-1 bg-background"
+      />
+      <span className="text-[10px] text-muted-foreground">% true</span>
+    </div>
+  )
+}
+
+/**
+ * Right-hand inputs for a single scenario-gen field row. Type-specific:
+ *   - Dollar / Int / Short / Byte / Rational: min/max number inputs
+ *   - Boolean: true-probability slider
+ *   - Day: min/max date pickers
+ *   - Enum / MultiEnum / CollectionItem / String: no-op label (auto-picked
+ *     uniformly at generate time; controls would be added here if anyone
+ *     wants to bias the distribution)
+ * Used by both the scalar-fields and collection-fields editors so they
+ * stay in sync as new types come online.
+ */
+function FieldGenInputs({
+  field,
+  onChange,
+}: {
+  field: FieldConfig
+  onChange: (next: FieldConfig) => void
+}) {
+  switch (field.type) {
+    case 'Dollar':
+    case 'Int':
+    case 'Short':
+    case 'Byte':
+    case 'Rational':
+      return (
+        <>
+          <NumberInput
+            className="h-6 w-20 text-[11px] font-mono"
+            value={field.min ?? 0}
+            onChange={(v) => onChange({ ...field, min: v })}
+          />
+          <span className="text-muted-foreground">–</span>
+          <NumberInput
+            className="h-6 w-20 text-[11px] font-mono"
+            value={field.max ?? 0}
+            onChange={(v) => onChange({ ...field, max: v })}
+          />
+        </>
+      )
+    case 'Boolean':
+      return (
+        <BooleanProbabilitySlider
+          value={field.trueProbability}
+          onChange={(v) => onChange({ ...field, trueProbability: v })}
+        />
+      )
+    case 'Day':
+      return (
+        <>
+          <input
+            type="date"
+            className="h-6 text-[11px] font-mono border rounded px-1 bg-background"
+            value={field.minDate ?? ''}
+            onChange={(e) =>
+              onChange({ ...field, minDate: e.target.value || undefined })
+            }
+          />
+          <span className="text-muted-foreground">–</span>
+          <input
+            type="date"
+            className="h-6 text-[11px] font-mono border rounded px-1 bg-background"
+            value={field.maxDate ?? ''}
+            onChange={(e) =>
+              onChange({ ...field, maxDate: e.target.value || undefined })
+            }
+          />
+        </>
+      )
+    case 'Enum':
+    case 'MultiEnum':
+      return (
+        <span className="text-[10px] text-muted-foreground">
+          {field.enumOptions?.length ?? 0} options
+        </span>
+      )
+    case 'CollectionItem':
+      return (
+        <span className="text-[10px] text-muted-foreground">
+          random reference
+        </span>
+      )
+    default:
+      return null
+  }
 }
 
 function OverrideValueInput({
