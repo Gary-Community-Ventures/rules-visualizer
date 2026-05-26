@@ -7,6 +7,7 @@ import {
 } from 'rules-visualizer-factgraph-core'
 import type { Model, ModelNode } from 'rules-visualizer-shared-types'
 
+import { buildTrace, type TraceNode } from '../explain.js'
 import { getModelIndex } from '../model-index.js'
 
 const router = Router()
@@ -90,6 +91,9 @@ type QueryResponse = {
   missingInputs?: MissingInput[]
   /** Present iff request.include contains "supportingFacts". */
   supportingFacts?: SupportingFact[]
+  /** Present iff request.include contains "trace". One entry per
+   *  requested target, keyed by target path. */
+  traces?: Record<string, TraceNode>
 }
 
 // ---------------------------------------------------------------------------
@@ -177,6 +181,7 @@ router.post('/:rulesetId/query', (req, res) => {
   const entitiesRaw = body.entities ?? {}
   const includeSet = new Set(body.include ?? [])
   const wantSupportingFacts = includeSet.has('supportingFacts')
+  const wantTraces = includeSet.has('trace')
 
   // Capture caller-provided member IDs per collection and strip the id
   // field before forwarding to the executor (which doesn't use it). If a
@@ -270,6 +275,16 @@ router.post('/:rulesetId/query', (req, res) => {
       effectiveResults,
       memberIdsByCollection
     )
+  }
+
+  if (wantTraces) {
+    const index = getModelIndex(model)
+    const traces: Record<string, TraceNode> = {}
+    for (const target of targets) {
+      const t = buildTrace(model, index, effectiveResults, target)
+      if (t) traces[target] = t
+    }
+    response.traces = traces
   }
 
   if (!allResolved) {
