@@ -150,10 +150,13 @@ function generateValue(field: FieldConfig, rng: () => number): unknown {
     }
 
     case 'Enum':
-      if (field.enumOptions && field.enumOptions.length > 0) {
-        return field.enumOptions[Math.floor(rng() * field.enumOptions.length)]
-      }
-      return null
+      return pickEnumOption(field, rng)
+
+    case 'MultiEnum':
+      if (!field.enumOptions || field.enumOptions.length === 0) return []
+      return field.enumOptions.filter(
+        (option) => rng() < (field.enumProbabilities?.[option] ?? 0.35)
+      )
 
     case 'String':
       return ''
@@ -161,6 +164,21 @@ function generateValue(field: FieldConfig, rng: () => number): unknown {
     default:
       return null
   }
+}
+
+function pickEnumOption(field: FieldConfig, rng: () => number): string | null {
+  if (!field.enumOptions || field.enumOptions.length === 0) return null
+  const weights = field.enumOptions.map((option) =>
+    Math.max(0, field.enumProbabilities?.[option] ?? 1)
+  )
+  const total = weights.reduce((sum, weight) => sum + weight, 0)
+  if (total <= 0) return field.enumOptions[0]
+  let cursor = rng() * total
+  for (let i = 0; i < field.enumOptions.length; i++) {
+    cursor -= weights[i]
+    if (cursor <= 0) return field.enumOptions[i]
+  }
+  return field.enumOptions[field.enumOptions.length - 1]
 }
 
 /**

@@ -262,6 +262,19 @@ type DictionaryCacheEntry = {
   collectionPrefixes: Set<string>
 }
 
+type ProfileBucket = { count: number; ms: number }
+
+function addProfileTime(
+  buckets: Record<string, ProfileBucket>,
+  key: string,
+  ms: number
+): void {
+  const bucket = buckets[key] ?? { count: 0, ms: 0 }
+  bucket.count++
+  bucket.ms += ms
+  buckets[key] = bucket
+}
+
 // Per-facts caches. WeakMap keys give us free invalidation on file-watcher
 // reloads — a new ParsedFact[] array misses the cache, the old one's
 // WeakMap entry is GC'd once nothing references it.
@@ -656,6 +669,20 @@ export function executeFactGraph(
   }
 
   const t1b = Date.now()
+  const profile =
+    process.env.FACTGRAPH_EXECUTOR_PROFILE === '1'
+      ? {
+          collectionCreate: {} as Record<string, ProfileBucket>,
+          collectionSet: {} as Record<string, ProfileBucket>,
+          collectionTypedValue: {} as Record<string, ProfileBucket>,
+          collectionGraphSet: {} as Record<string, ProfileBucket>,
+          scalarSet: {} as Record<string, ProfileBucket>,
+          scalarTypedValue: {} as Record<string, ProfileBucket>,
+          scalarGraphSet: {} as Record<string, ProfileBucket>,
+          read: {} as Record<string, ProfileBucket>,
+          slowReads: [] as Array<{ path: string; ms: number }>,
+        }
+      : undefined
   // Two-pass collection setup: (1) generate UUIDs and create every
   // collection up front, (2) set per-item field values. The first pass
   // has to complete before the second so CollectionItem-typed fields
@@ -669,8 +696,16 @@ export function executeFactGraph(
     const uuids = entityRows.map(() => crypto.randomUUID())
     collectionUuids[prefix] = uuids
     try {
+      const profileStart = Date.now()
       const collection = sfg.CollectionFactory(uuids)
       graph.set(prefix, collection)
+      if (profile) {
+        addProfileTime(
+          profile.collectionCreate,
+          prefix,
+          Date.now() - profileStart
+        )
+      }
     } catch (e) {
       console.warn(
         `Failed to create collection ${prefix}:`,
@@ -694,14 +729,38 @@ export function executeFactGraph(
         if (fieldPath === 'id') continue
         const itemPath = fieldPath.replace('/*/', `/#${uuid}/`)
         try {
+          const profileStart = Date.now()
+          const typedStart = Date.now()
           const typedValue = createTypedValue(
             fieldPath,
             value,
             effectiveLookup,
             collectionUuids
           )
+          if (profile) {
+            addProfileTime(
+              profile.collectionTypedValue,
+              prefix,
+              Date.now() - typedStart
+            )
+          }
           if (typedValue !== undefined) {
+            const setStart = Date.now()
             graph.set(itemPath, typedValue)
+            if (profile) {
+              addProfileTime(
+                profile.collectionGraphSet,
+                prefix,
+                Date.now() - setStart
+              )
+            }
+          }
+          if (profile) {
+            addProfileTime(
+              profile.collectionSet,
+              prefix,
+              Date.now() - profileStart
+            )
           }
         } catch (e) {
           console.warn(`Failed to set ${itemPath}:`, (e as Error).message)
@@ -716,14 +775,34 @@ export function executeFactGraph(
     // Skip collection items — already handled above
     if (path.includes('/*')) continue
     try {
+      const profileStart = Date.now()
+      const typedStart = Date.now()
       const typedValue = createTypedValue(
         path,
         value,
         effectiveLookup,
         collectionUuids
       )
+      if (profile) {
+        addProfileTime(
+          profile.scalarTypedValue,
+          'scalar',
+          Date.now() - typedStart
+        )
+      }
       if (typedValue !== undefined) {
+        const setStart = Date.now()
         graph.set(path, typedValue)
+        if (profile) {
+          addProfileTime(
+            profile.scalarGraphSet,
+            'scalar',
+            Date.now() - setStart
+          )
+        }
+      }
+      if (profile) {
+        addProfileTime(profile.scalarSet, 'scalar', Date.now() - profileStart)
       }
     } catch (e) {
       console.warn(`Failed to set ${path}:`, (e as Error).message)
@@ -763,7 +842,15 @@ export function executeFactGraph(
         for (const uuid of uuids) {
           const itemPath = `${prefix}/#${uuid}/${fieldSuffix}`
           try {
+            const profileStart = Date.now()
             const value = readFactValue(graph, itemPath)
+            if (profile) {
+              const elapsed = Date.now() - profileStart
+              addProfileTime(profile.read, prefix, elapsed)
+              if (elapsed >= 5) {
+                profile.slowReads.push({ path: itemPath, ms: elapsed })
+              }
+            }
             perInstanceValues.push(value)
           } catch {
             perInstanceValues.push(null)
@@ -783,7 +870,15 @@ export function executeFactGraph(
 
     // Scalar facts
     try {
+      const profileStart = Date.now()
       const value = readFactValue(graph, fact.path)
+      if (profile) {
+        const elapsed = Date.now() - profileStart
+        addProfileTime(profile.read, 'scalar', elapsed)
+        if (elapsed >= 5) {
+          profile.slowReads.push({ path: fact.path, ms: elapsed })
+        }
+      }
       if (value !== undefined) {
         results[fact.path] = value
       }
@@ -800,6 +895,14 @@ export function executeFactGraph(
   timings.read += t3 - t2
   timings.total += t3 - t0
   timings.count++
+
+  if (profile) {
+    profile.slowReads.sort((a, b) => b.ms - a.ms)
+    profile.slowReads = profile.slowReads.slice(0, 25)
+    console.error(
+      JSON.stringify({ type: 'factgraph-executor-profile', profile }, null, 2)
+    )
+  }
 
   return results
 }

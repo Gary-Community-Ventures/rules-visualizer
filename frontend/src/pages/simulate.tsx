@@ -15,6 +15,7 @@ import {
   addCasesToPopulation,
   addCasesToPopulationFromRun,
   deletePopulationApi,
+  type FieldConfig,
   type SimulationConfig,
   type SimulationRun,
   type CaseResult,
@@ -32,7 +33,6 @@ import {
 import type { Model } from '@/lib/model'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { SimulationSettings } from '@/components/simulation-settings'
 import { cn } from '@/lib/utils'
 import {
   Play,
@@ -621,15 +621,180 @@ function ConfigView({
         <OutcomeNodeEditor config={config} setConfig={setConfig} />
 
         {caseSource === 'generate' && (
-          <section className="rounded-xl border bg-background p-4 shadow-sm">
-            <h2 className="text-sm font-semibold">Simulation Settings</h2>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Controls the values generated for each random case.
-            </p>
-            <div className="mt-4">
-              <SimulationSettings config={config} setConfig={setConfig} />
-            </div>
-          </section>
+          <>
+            <details className="text-xs">
+              <summary className="cursor-pointer text-muted-foreground hover:text-foreground">
+                Scalar fields ({config.scalarFields.length})
+              </summary>
+              <div className="mt-2 space-y-1.5 pl-4">
+                {config.scalarFields.map((f, idx) => (
+                  <div
+                    key={f.path}
+                    className="flex items-center gap-2 font-mono"
+                  >
+                    <span className="w-48 truncate shrink-0" title={f.path}>
+                      {f.path}
+                    </span>
+                    <span className="text-muted-foreground shrink-0">
+                      ({f.type})
+                    </span>
+                    {(f.type === 'Dollar' ||
+                      f.type === 'Int' ||
+                      f.type === 'Short' ||
+                      f.type === 'Byte') && (
+                      <>
+                        <NumberInput
+                          className="h-6 w-20 text-[11px] font-mono"
+                          value={f.min ?? 0}
+                          onChange={(v) => {
+                            const fields = [...config.scalarFields]
+                            fields[idx] = { ...f, min: v }
+                            setConfig({ ...config, scalarFields: fields })
+                          }}
+                        />
+                        <span className="text-muted-foreground">–</span>
+                        <NumberInput
+                          className="h-6 w-20 text-[11px] font-mono"
+                          value={f.max ?? 0}
+                          onChange={(v) => {
+                            const fields = [...config.scalarFields]
+                            fields[idx] = { ...f, max: v }
+                            setConfig({ ...config, scalarFields: fields })
+                          }}
+                        />
+                      </>
+                    )}
+                    {f.type === 'Boolean' && (
+                      <BooleanProbabilitySlider
+                        value={f.trueProbability}
+                        onChange={(v) => {
+                          const fields = [...config.scalarFields]
+                          fields[idx] = { ...f, trueProbability: v }
+                          setConfig({ ...config, scalarFields: fields })
+                        }}
+                      />
+                    )}
+                    {(f.type === 'Enum' || f.type === 'MultiEnum') && (
+                      <EnumProbabilityEditor
+                        field={f}
+                        onChange={(next) => {
+                          const fields = [...config.scalarFields]
+                          fields[idx] = next
+                          setConfig({ ...config, scalarFields: fields })
+                        }}
+                      />
+                    )}
+                  </div>
+                ))}
+              </div>
+            </details>
+
+            <details className="text-xs">
+              <summary className="cursor-pointer text-muted-foreground hover:text-foreground">
+                Collections ({config.collections.length})
+              </summary>
+              <div className="mt-2 space-y-3 pl-4">
+                {config.collections.map((coll, collIdx) => (
+                  <div key={coll.collectionPath} className="space-y-1.5">
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono font-medium">
+                        {coll.collectionPath}
+                      </span>
+                      <NumberInput
+                        className="h-6 w-12 text-[11px] font-mono"
+                        parser={parseInt}
+                        value={coll.minMembers}
+                        onChange={(v) => {
+                          const colls = [...config.collections]
+                          colls[collIdx] = { ...coll, minMembers: v }
+                          setConfig({ ...config, collections: colls })
+                        }}
+                      />
+                      <span className="text-muted-foreground">–</span>
+                      <NumberInput
+                        className="h-6 w-12 text-[11px] font-mono"
+                        parser={parseInt}
+                        value={coll.maxMembers}
+                        onChange={(v) => {
+                          const colls = [...config.collections]
+                          colls[collIdx] = { ...coll, maxMembers: v }
+                          setConfig({ ...config, collections: colls })
+                        }}
+                      />
+                      <span className="text-muted-foreground">members</span>
+                    </div>
+                    {coll.fields.map((f, fIdx) => (
+                      <div
+                        key={f.path}
+                        className="flex items-center gap-2 font-mono pl-4"
+                      >
+                        <span className="w-44 truncate shrink-0" title={f.path}>
+                          {f.path}
+                        </span>
+                        <span className="text-muted-foreground shrink-0">
+                          ({f.type})
+                        </span>
+                        {(f.type === 'Dollar' ||
+                          f.type === 'Int' ||
+                          f.type === 'Short' ||
+                          f.type === 'Byte') && (
+                          <>
+                            <NumberInput
+                              className="h-6 w-20 text-[11px] font-mono"
+                              value={f.min ?? 0}
+                              onChange={(v) => {
+                                const colls = [...config.collections]
+                                const fields = [...coll.fields]
+                                fields[fIdx] = { ...f, min: v }
+                                colls[collIdx] = { ...coll, fields }
+                                setConfig({ ...config, collections: colls })
+                              }}
+                            />
+                            <span className="text-muted-foreground">–</span>
+                            <NumberInput
+                              className="h-6 w-20 text-[11px] font-mono"
+                              value={f.max ?? 0}
+                              onChange={(v) => {
+                                const colls = [...config.collections]
+                                const fields = [...coll.fields]
+                                fields[fIdx] = { ...f, max: v }
+                                colls[collIdx] = { ...coll, fields }
+                                setConfig({ ...config, collections: colls })
+                              }}
+                            />
+                          </>
+                        )}
+                        {f.type === 'Boolean' && (
+                          <BooleanProbabilitySlider
+                            value={f.trueProbability}
+                            onChange={(v) => {
+                              const colls = [...config.collections]
+                              const fields = [...coll.fields]
+                              fields[fIdx] = { ...f, trueProbability: v }
+                              colls[collIdx] = { ...coll, fields }
+                              setConfig({ ...config, collections: colls })
+                            }}
+                          />
+                        )}
+                        {(f.type === 'Enum' || f.type === 'MultiEnum') && (
+                          <EnumProbabilityEditor
+                            field={f}
+                            onChange={(next) => {
+                              const colls = [...config.collections]
+                              const fields = [...coll.fields]
+                              fields[fIdx] = next
+                              colls[collIdx] = { ...coll, fields }
+                              setConfig({ ...config, collections: colls })
+                            }}
+                          />
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            </details>
+          </>
         )}
 
         <Button
@@ -2315,6 +2480,110 @@ function NumberInput({
       }}
     />
   )
+}
+
+/**
+ * Slider + numeric input for a Boolean scenario-gen field's `true`
+ * probability. Range 0–100, displayed as a %. Slider for fast exploration,
+ * number input for precise values.
+ */
+function BooleanProbabilitySlider({
+  value,
+  onChange,
+}: {
+  value: number | undefined // 0–1
+  onChange: (v: number | undefined) => void
+}) {
+  const pct = Math.round(((value ?? 0.5) * 100 + Number.EPSILON) * 10) / 10
+  const setPct = (next: number) => {
+    const clamped = Math.max(0, Math.min(100, next))
+    // Treat 50% as "default" — clear the field so it's not persisted as 0.5.
+    if (Math.abs(clamped - 50) < 0.05) onChange(undefined)
+    else onChange(clamped / 100)
+  }
+  return (
+    <div className="inline-flex items-center gap-1.5">
+      <input
+        type="range"
+        min={0}
+        max={100}
+        step={1}
+        value={pct}
+        onChange={(e) => setPct(Number(e.target.value))}
+        className="w-24 accent-foreground"
+        title="% true"
+      />
+      <input
+        type="number"
+        min={0}
+        max={100}
+        step={1}
+        value={pct}
+        onChange={(e) => setPct(Number(e.target.value))}
+        className="h-6 w-12 text-[11px] font-mono border rounded px-1 bg-background"
+      />
+      <span className="text-[10px] text-muted-foreground">% true</span>
+    </div>
+  )
+}
+
+function EnumProbabilityEditor({
+  field,
+  onChange,
+}: {
+  field: FieldConfig
+  onChange: (field: FieldConfig) => void
+}) {
+  if (!field.enumOptions?.length) {
+    return <span className="text-muted-foreground">no static options</span>
+  }
+  const probabilities = field.enumProbabilities ?? {}
+  return (
+    <details className="min-w-64">
+      <summary className="cursor-pointer text-muted-foreground hover:text-foreground">
+        option percentages
+      </summary>
+      <div className="mt-1 space-y-1 rounded border bg-background p-2">
+        {field.enumOptions.map((option) => {
+          const pct = Math.round(
+            (probabilities[option] ?? defaultEnumProbability(field)) * 100
+          )
+          return (
+            <label key={option} className="flex items-center gap-2">
+              <span className="w-32 truncate" title={option}>
+                {option}
+              </span>
+              <input
+                className="h-6 w-14 rounded border bg-background px-1 text-[11px] font-mono"
+                type="number"
+                min={0}
+                max={100}
+                value={pct}
+                onChange={(e) => {
+                  const next =
+                    Math.max(0, Math.min(100, Number(e.target.value) || 0)) /
+                    100
+                  onChange({
+                    ...field,
+                    enumProbabilities: {
+                      ...probabilities,
+                      [option]: next,
+                    },
+                  })
+                }}
+              />
+              <span className="text-muted-foreground">%</span>
+            </label>
+          )
+        })}
+      </div>
+    </details>
+  )
+}
+
+function defaultEnumProbability(field: FieldConfig) {
+  if (field.type === 'MultiEnum') return 0.35
+  return field.enumOptions?.length ? 1 / field.enumOptions.length : 0
 }
 
 function OverrideValueInput({

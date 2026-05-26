@@ -1,10 +1,24 @@
 /** Configuration for a single input field in scenario generation */
 export type FieldConfig = {
   path: string
-  type: 'Dollar' | 'Int' | 'Short' | 'Byte' | 'Boolean' | 'Enum' | 'String'
+  type:
+    | 'Dollar'
+    | 'Int'
+    | 'Short'
+    | 'Byte'
+    | 'Boolean'
+    | 'Enum'
+    | 'MultiEnum'
+    | 'String'
+    | 'Day'
+    | 'Rational'
+    | 'CollectionItem'
+    | string
   min?: number
   max?: number
   enumOptions?: string[]
+  /** Per-option generation probabilities (0–1), keyed by enum option. */
+  enumProbabilities?: Record<string, number>
   /** Probability a Boolean field generates `true` (0–1). Default 0.5. */
   trueProbability?: number
 }
