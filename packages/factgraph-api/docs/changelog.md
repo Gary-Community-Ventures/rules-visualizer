@@ -61,6 +61,19 @@ value}` objects so callers can correlate output to specific rows
   package (`.github/workflows/docs.yml`). Doesn't require the API to be
   up — handy for sharing contract links or browsing from a phone.
 
+- **Structured trace / explanation API.** Opt in via
+  `include: ["trace"]` on a `/query` request. The response gains a
+  `traces` map keyed by target path. Each entry is a recursive
+  `TraceNode` tree showing how the target's value was derived: every
+  All/Any walks its operands with deciding-branch semantics, every
+  comparison surfaces the concrete operand values in its `reason`
+  string, and policy citations from `references.json` flow through
+  inline on facts that have them. V1 understands All, Any, Not, the six
+  comparisons, Dependency references, and the common literal types
+  (Int, Dollar, Boolean, etc.). Arithmetic and Switch operators are
+  reported with the computed value but not yet broken down — query
+  them directly to drill in.
+
 ### Internal
 
 - Per-model lookup cache (`src/model-index.ts`). The path → node map,

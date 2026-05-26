@@ -124,8 +124,9 @@ before we land them.
 | ✅     | Optional bearer-token auth                                                                                                                    |
 | ✅     | OpenAPI 3.1 spec at `/v1/factgraph/openapi.yaml` + Swagger UI at `/v1/factgraph/docs` (both unauthenticated)                                   |
 | ✅     | Public docs site on GitHub Pages (Redoc renderer, auto-rebuilt on every push that touches the API)                                            |
+| ✅     | Structured trace/explanation API via `include: ["trace"]` (recursive TraceNode tree with deciding-branch semantics + inline citations)        |
 | ⏳     | Alternation in `missingInputs` (express "one-of" relationships when an `Any` could be satisfied by any of several inputs)                     |
-| ⏳     | Structured explanation/trace on the query response (beyond flat supportingFacts list)                                                         |
+| ⏳     | Trace v2: walk arithmetic + Switch ops, per-member traces for collection-scoped targets                                                       |
 | ⏳     | Typed client packages (`@npm` consumer) generated from the OpenAPI                                                                            |
 | ⏳     | SNAP-shaped convenience endpoints (`/evaluate/expedited-screening`, `/evaluate/determination`) layered over the generic query                 |
 | ⏳     | Rate limiting                                                                                                                                 |
