@@ -5952,6 +5952,12 @@
       <Writable><Boolean /></Writable>
     </Fact>
 
+    <!-- TODO: Figure out striker eligibility more precisely. The current logic
+         applies the restriction at the member level and uses a writable prior-day
+         household eligibility flag, but the policy is phrased as a household
+         eligibility rule for any household containing a striker and may require
+         checking current household eligibility, prior-day eligibility, and the
+         work-registration exemption exception at the household level. -->
     <Fact path="/members/*/isIneligibleStriker">
       <Name>Is ineligible striker</Name>
       <Description>Whether this member is an ineligible striker. A household containing a striking member shall not be eligible for SNAP unless the household was eligible for the Program the day before the strike and is otherwise eligible at the time of the strike. Households where the striking member was exempt from work registration the day before the strike (other than persons exempt solely on the ground that they were employed) are not subject to these provisions (10 CCR 2506-1, 4.305).</Description>

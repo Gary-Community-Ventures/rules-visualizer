@@ -22549,6 +22549,26 @@
     {
       "nodePath": "/members/*/otherFoodPrepGroupIncomeThresholdForSeparateElderlyDisabledHousehold",
       "sectionId": "10-ccr-2506-1__mplld55g-yrlk"
+    },
+    {
+      "nodePath": "/members/*/otherFoodPrepGroupIncomeForSeparateElderlyDisabledHousehold",
+      "sectionId": "10-ccr-2506-1__mpllcpen-5fpo"
+    },
+    {
+      "nodePath": "/members/*/otherFoodPrepGroupSizeForSeparateElderlyDisabledHousehold",
+      "sectionId": "10-ccr-2506-1__mpllcpen-5fpo"
+    },
+    {
+      "nodePath": "/members/*/otherFoodPrepGroupIncomeExceedsSeparateElderlyDisabledHouseholdThreshold",
+      "sectionId": "10-ccr-2506-1__mpllcpen-5fpo"
+    },
+    {
+      "nodePath": "/separateElderlyDisabledHouseholdFplRate",
+      "sectionId": "10-ccr-2506-1__mpllcpen-5fpo"
+    },
+    {
+      "nodePath": "/members/*/otherFoodPrepGroupIncomeThresholdForSeparateElderlyDisabledHousehold",
+      "sectionId": "10-ccr-2506-1__mpllcpen-5fpo"
     }
   ]
 }
