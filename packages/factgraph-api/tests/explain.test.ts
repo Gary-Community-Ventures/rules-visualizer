@@ -155,8 +155,8 @@ test('eligible household: trace shows Any-true short-circuit through meetsCatego
   assert.equal(anyChild!.value, true)
   assert.match(
     anyChild!.reason,
-    /Satisfied/,
-    'Any-true should describe the satisfying branch'
+    /held\.?$/,
+    'Any-true should describe the operand that held without value judgment'
   )
 })
 
@@ -199,6 +199,39 @@ test('multi-target requests get one trace per target', async () => {
   assert.ok(res.body.traces['/grossIncomeEligible'])
   assert.equal(res.body.traces['/eligible'].path, '/eligible')
   assert.equal(res.body.traces['/grossIncomeEligible'].path, '/grossIncomeEligible')
+})
+
+test('trace prose is value-neutral — no "failed" / "satisfied" words for boolean ops', async () => {
+  // The walker has no way to know if false means "denied" or just "this
+  // boolean happened to be false." Prose should describe the math
+  // (held / did not hold) without smuggling in good/bad judgment.
+  const res = await request(app)
+    .post(QUERY_URL)
+    .send({
+      targets: ['/eligible'],
+      inputs: { ...ZEROED_SCALARS, '/grossEarnedIncome': 3500 },
+      entities: { '/members': [APPLICANT_ROW] },
+      include: ['trace'],
+    })
+  const root = res.body.traces['/eligible'] as TraceNode
+
+  // Collect every reason in the tree.
+  const reasons: string[] = []
+  const visit = (n: TraceNode) => {
+    reasons.push(n.reason)
+    for (const c of n.children ?? []) visit(c)
+  }
+  visit(root)
+
+  // None of the reasons should use value-laden words. "Held" is OK —
+  // it's standard logical/mathematical phrasing for "evaluated true".
+  for (const r of reasons) {
+    assert.doesNotMatch(
+      r,
+      /\b(failed|satisfied)\b/i,
+      `reason "${r}" should not use value-laden wording`
+    )
+  }
 })
 
 test('writable input target reports a Writable trace', async () => {
