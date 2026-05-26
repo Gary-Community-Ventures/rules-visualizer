@@ -6,6 +6,11 @@ meta {
 
 get {
   url: {{base_url}}/v1/factgraph/{{ruleset_id}}/schema
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{api_token}}
 }
 
 docs {

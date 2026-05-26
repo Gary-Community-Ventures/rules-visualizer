@@ -10,11 +10,12 @@ any request — no copy-paste, no JSON formatting.
    [usebruno.com](https://www.usebruno.com/downloads).
 2. **Open this folder** — File → Open Collection, point at
    `packages/factgraph-api/docs/bruno/`.
-3. **Pick an environment** — top-right dropdown in Bruno. `local` is the
-   default and points at `http://localhost:5002`. `prod` is a placeholder
-   you'll edit once a real URL exists.
-4. **Start the API** — `npm run dev:api` from the repo root.
-5. **Click Send** on any request.
+3. **Pick an environment** — top-right dropdown in Bruno. `local` points at
+   `http://localhost:5002`; `prod` points at the deployed Heroku URL.
+4. **Set the bearer token** — open the env editor in Bruno and paste the
+   token into the `api_token` secret. See "Bearer-token auth" below.
+5. **For `local`**: start the API with `npm run dev:api` from the repo root.
+6. **Click Send** on any request.
 
 ## What's in here
 
@@ -53,18 +54,36 @@ one as documentation of the API surface.
 All fields except `targets` are optional. `id` on entity rows lets you
 correlate per-member response values back to specific rows.
 
-## Adding bearer-token auth
+## Environments
 
-The API is open by default in `local`. To exercise the auth path:
+| Env | `base_url` | Notes |
+| --- | --- | --- |
+| `local` | `http://localhost:5002` | Run `npm run dev:api` from the repo root. Auth is off by default. |
+| `prod` | The deployed Heroku URL | Bearer token required. Get the token from the team. |
 
-1. Set `API_BEARER_TOKEN` in your `.env` (or shell) before starting the
-   API: `API_BEARER_TOKEN=dev-token-please-rotate npm run dev:api`.
-2. Edit `environments/local.bru` and set `api_token` to the same value.
-3. Edit any `.bru` file you want to authenticate and add an `auth:bearer`
-   block (or `headers { Authorization: Bearer {{api_token}} }`).
+Pick the environment in Bruno's top-right dropdown before clicking Send.
 
-The collection ships without auth headers so the first-time experience
-"just works" against an open dev server.
+## Bearer-token auth
+
+Every `/v1/*` request in the collection uses `auth: bearer` with the
+`{{api_token}}` variable. The token is declared as a **secret variable**
+in each environment file, which means Bruno stores its actual value in a
+gitignored local file (`environments/local.env.local`, etc.) — never in
+the committed `.bru`.
+
+**Setting the token in Bruno:**
+
+1. Pick the environment (top-right dropdown).
+2. Click the environment name → opens the env editor.
+3. Find `api_token` in the secrets list, paste the value, save.
+
+The value is stored locally and gets sent on every request via the
+`auth:bearer` block.
+
+**Don't have a token?** Ask whoever set up the deploy. For `local`, the
+API is open by default (server reads `API_BEARER_TOKEN` from its env
+and skips auth when unset), so you can leave `api_token` empty and
+requests still succeed.
 
 ## Editing or extending the collection
 
