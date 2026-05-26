@@ -23,6 +23,7 @@ export type FieldConfig = {
   maxDate?: string
   stringOptions?: string[]
   enumOptions?: string[]
+  enumProbabilities?: Record<string, number>
   trueProbability?: number
 }
 

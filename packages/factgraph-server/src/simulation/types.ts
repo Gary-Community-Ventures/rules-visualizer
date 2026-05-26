@@ -26,6 +26,14 @@ export type FieldConfig = {
   enumOptions?: string[]
   /** Options for String picker, if you want to constrain the generated values. */
   stringOptions?: string[]
+  /**
+   * Per-option generation probabilities (0–1), keyed by enum option name.
+   * For Enum fields: relative weights for weighted sampling (normalized).
+   * For MultiEnum: independent probability of including each option.
+   * Default behavior when missing: uniform sampling (Enum) or 35% include
+   * (MultiEnum).
+   */
+  enumProbabilities?: Record<string, number>
   /** Probability a Boolean field generates `true` (0–1). Default 0.5. */
   trueProbability?: number
 }

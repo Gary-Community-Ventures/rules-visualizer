@@ -15,6 +15,7 @@ import {
   addCasesToPopulation,
   addCasesToPopulationFromRun,
   deletePopulationApi,
+  type FieldConfig,
   type SimulationConfig,
   type SimulationRun,
   type CaseResult,
@@ -22,7 +23,6 @@ import {
   type NodeChangeStats,
   type Population,
   type PopulationCase,
-  type FieldConfig,
 } from '@/lib/api/simulation-api'
 import {
   listRulesets,
@@ -2467,9 +2467,8 @@ function BooleanProbabilitySlider({
  *   - Dollar / Int / Short / Byte / Rational: min/max number inputs
  *   - Boolean: true-probability slider
  *   - Day: min/max date pickers
- *   - Enum / MultiEnum / CollectionItem / String: no-op label (auto-picked
- *     uniformly at generate time; controls would be added here if anyone
- *     wants to bias the distribution)
+ *   - Enum / MultiEnum: per-option probability editor
+ *   - CollectionItem / String: no-op label
  * Used by both the scalar-fields and collection-fields editors so they
  * stay in sync as new types come online.
  */
@@ -2532,11 +2531,7 @@ function FieldGenInputs({
       )
     case 'Enum':
     case 'MultiEnum':
-      return (
-        <span className="text-[10px] text-muted-foreground">
-          {field.enumOptions?.length ?? 0} options
-        </span>
-      )
+      return <EnumProbabilityEditor field={field} onChange={onChange} />
     case 'CollectionItem':
       return (
         <span className="text-[10px] text-muted-foreground">
@@ -2546,6 +2541,65 @@ function FieldGenInputs({
     default:
       return null
   }
+}
+
+function EnumProbabilityEditor({
+  field,
+  onChange,
+}: {
+  field: FieldConfig
+  onChange: (field: FieldConfig) => void
+}) {
+  if (!field.enumOptions?.length) {
+    return <span className="text-muted-foreground">no static options</span>
+  }
+  const probabilities = field.enumProbabilities ?? {}
+  return (
+    <details className="min-w-64">
+      <summary className="cursor-pointer text-muted-foreground hover:text-foreground">
+        option percentages
+      </summary>
+      <div className="mt-1 space-y-1 rounded border bg-background p-2">
+        {field.enumOptions.map((option) => {
+          const pct = Math.round(
+            (probabilities[option] ?? defaultEnumProbability(field)) * 100
+          )
+          return (
+            <label key={option} className="flex items-center gap-2">
+              <span className="w-32 truncate" title={option}>
+                {option}
+              </span>
+              <input
+                className="h-6 w-14 rounded border bg-background px-1 text-[11px] font-mono"
+                type="number"
+                min={0}
+                max={100}
+                value={pct}
+                onChange={(e) => {
+                  const next =
+                    Math.max(0, Math.min(100, Number(e.target.value) || 0)) /
+                    100
+                  onChange({
+                    ...field,
+                    enumProbabilities: {
+                      ...probabilities,
+                      [option]: next,
+                    },
+                  })
+                }}
+              />
+              <span className="text-muted-foreground">%</span>
+            </label>
+          )
+        })}
+      </div>
+    </details>
+  )
+}
+
+function defaultEnumProbability(field: FieldConfig) {
+  if (field.type === 'MultiEnum') return 0.35
+  return field.enumOptions?.length ? 1 / field.enumOptions.length : 0
 }
 
 function OverrideValueInput({

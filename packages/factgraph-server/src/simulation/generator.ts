@@ -163,22 +163,13 @@ function generateValue(field: FieldConfig, rng: () => number): unknown {
     }
 
     case 'Enum':
-      if (field.enumOptions && field.enumOptions.length > 0) {
-        return field.enumOptions[Math.floor(rng() * field.enumOptions.length)]
-      }
-      return null
+      return pickEnumOption(field, rng)
 
-    case 'MultiEnum': {
-      // Pick a random non-empty subset of the options.
+    case 'MultiEnum':
       if (!field.enumOptions || field.enumOptions.length === 0) return []
-      const picked: string[] = []
-      for (const opt of field.enumOptions) {
-        if (rng() < 0.3) picked.push(opt)
-      }
-      if (picked.length === 0)
-        picked.push(field.enumOptions[Math.floor(rng() * field.enumOptions.length)])
-      return picked
-    }
+      return field.enumOptions.filter(
+        (option) => rng() < (field.enumProbabilities?.[option] ?? 0.35)
+      )
 
     case 'Day': {
       // Default range: 2000-01-01 through today. Sample a random day in
@@ -223,6 +214,21 @@ function generateValue(field: FieldConfig, rng: () => number): unknown {
     default:
       return null
   }
+}
+
+function pickEnumOption(field: FieldConfig, rng: () => number): string | null {
+  if (!field.enumOptions || field.enumOptions.length === 0) return null
+  const weights = field.enumOptions.map((option) =>
+    Math.max(0, field.enumProbabilities?.[option] ?? 1)
+  )
+  const total = weights.reduce((sum, weight) => sum + weight, 0)
+  if (total <= 0) return field.enumOptions[0]
+  let cursor = rng() * total
+  for (let i = 0; i < field.enumOptions.length; i++) {
+    cursor -= weights[i]
+    if (cursor <= 0) return field.enumOptions[i]
+  }
+  return field.enumOptions[field.enumOptions.length - 1]
 }
 
 /**
