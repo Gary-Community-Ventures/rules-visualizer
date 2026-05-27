@@ -73,6 +73,14 @@ value}` objects so callers can correlate output to specific rows
   Rebuilds automatically on every push to main that touches the API
   package (`.github/workflows/docs.yml`). Doesn't require the API to be
   up — handy for sharing contract links or browsing from a phone.
+- **Target explorer** at
+  [gary-community-ventures.github.io/rules-visualizer/explore.html](https://gary-community-ventures.github.io/rules-visualizer/explore.html).
+  Interactive browser for the API surface: pick a ruleset, pick a
+  derived fact target, see the inputs required to determine it (with
+  types, descriptions, and enum options), generate a starter request
+  body. Drives off the live API; token is pasted by the user and stays
+  in their browser. Complements Redoc (schema browse) and Swagger UI
+  (endpoint try-it) with a target-oriented view.
 
 - **Structured trace / explanation API.** Opt in via
   `include: ["trace"]` on a `/query` request. The response gains a

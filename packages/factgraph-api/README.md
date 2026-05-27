@@ -19,6 +19,7 @@ this repo without binding to the visualizer's internals.
 | **API base** | `https://rules-visualizer-factgraph-api-f0c14673cf3a.herokuapp.com` |
 | **Interactive docs (Swagger UI, paste-token-and-try)** | [`/v1/factgraph/docs`](https://rules-visualizer-factgraph-api-f0c14673cf3a.herokuapp.com/v1/factgraph/docs) |
 | **Static docs site (Redoc, doesn't need API up)** | [gary-community-ventures.github.io/rules-visualizer](https://gary-community-ventures.github.io/rules-visualizer/) |
+| **Target explorer (pick a fact, see its required inputs)** | [gary-community-ventures.github.io/rules-visualizer/explore.html](https://gary-community-ventures.github.io/rules-visualizer/explore.html) |
 | **OpenAPI 3.1 spec (for codegen)** | [`/v1/factgraph/openapi.yaml`](https://rules-visualizer-factgraph-api-f0c14673cf3a.herokuapp.com/v1/factgraph/openapi.yaml) |
 
 Every `/v1/*` request needs `Authorization: Bearer <token>`. Get the token from
