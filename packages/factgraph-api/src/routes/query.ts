@@ -33,7 +33,8 @@ const EntityRowSchema = z
   .object({ id: z.string().min(1).optional() })
   .catchall(z.unknown())
 
-export const QueryRequestSchema = z.object({
+export const QueryRequestSchema = z
+  .object({
   /** Fact paths to evaluate. Always plural; pass `["/eligible"]` for a
    *  single target. The response keys `values` (and missingInputs etc.)
    *  by these paths. */
@@ -63,7 +64,12 @@ export const QueryRequestSchema = z.object({
   /** Opaque correlation context echoed back unchanged in the response.
    *  The server does not inspect, log, or transform this field. */
   metadata: z.unknown().optional(),
-})
+  })
+  // Reject unknown top-level fields so a caller using a stale shape
+  // (e.g. the pre-merge `entities` field) gets a clear 400 with the
+  // offending key, rather than a silent ignore and a confusing
+  // "incomplete" response.
+  .strict()
 
 type QueryRequest = z.infer<typeof QueryRequestSchema>
 
