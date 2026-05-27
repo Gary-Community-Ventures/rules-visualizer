@@ -12,7 +12,35 @@ this repo without binding to the visualizer's internals.
 > **Prototype.** The API is under active development and not yet a production
 > service. See `docs/changelog.md` for what's stable and what's still moving.
 
-## Quick start (local)
+## Live URLs
+
+| | |
+| --- | --- |
+| **API base** | `https://rules-visualizer-factgraph-api-f0c14673cf3a.herokuapp.com` |
+| **Interactive docs (Swagger UI, paste-token-and-try)** | [`/v1/factgraph/docs`](https://rules-visualizer-factgraph-api-f0c14673cf3a.herokuapp.com/v1/factgraph/docs) |
+| **Static docs site (Redoc, doesn't need API up)** | [gary-community-ventures.github.io/rules-visualizer](https://gary-community-ventures.github.io/rules-visualizer/) |
+| **OpenAPI 3.1 spec (for codegen)** | [`/v1/factgraph/openapi.yaml`](https://rules-visualizer-factgraph-api-f0c14673cf3a.herokuapp.com/v1/factgraph/openapi.yaml) |
+
+Every `/v1/*` request needs `Authorization: Bearer <token>`. Get the token from
+whoever set up your access. `/health`, `/v1/factgraph/openapi.{json,yaml}`,
+and `/v1/factgraph/docs` are unauthenticated.
+
+```sh
+# Sanity check
+curl https://rules-visualizer-factgraph-api-f0c14673cf3a.herokuapp.com/health
+
+# Real call
+curl -X POST \
+  -H 'Authorization: Bearer <your-token>' \
+  -H 'Content-Type: application/json' \
+  -d '{"targets":["/eligible"]}' \
+  https://rules-visualizer-factgraph-api-f0c14673cf3a.herokuapp.com/v1/factgraph/snap-fy2026/query
+```
+
+## Quick start (local development)
+
+If you need to run the API yourself — e.g. to iterate on rule changes against
+a local dataset, or to develop against the API offline:
 
 ```sh
 npm install
@@ -30,8 +58,8 @@ curl http://localhost:5002/v1/factgraph/rulesets
 
 Prefer a clickable UI? A [Bruno](https://www.usebruno.com/) collection
 with working requests for every endpoint lives at
-[`docs/bruno/`](docs/bruno/README.md). Install Bruno, open that folder,
-click Send.
+[`docs/bruno/`](docs/bruno/README.md) — environment-switchable between local
+and prod. Install Bruno, open that folder, click Send.
 
 ## Endpoints
 
