@@ -33,6 +33,12 @@ export type CollectionConfig = {
   collectionPath: string
   minMembers: number
   maxMembers: number
+  /**
+   * If true, bias collection size toward smaller values (closer to
+   * real-world household sizes). Defaults to false (uniform sampling).
+   * The server auto-config sets this on for `/members`.
+   */
+  weighted?: boolean
   fields: FieldConfig[]
 }
 

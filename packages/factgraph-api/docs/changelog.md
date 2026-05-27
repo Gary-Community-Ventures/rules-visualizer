@@ -73,6 +73,19 @@ value}` objects so callers can correlate output to specific rows
   (Int, Dollar, Boolean, etc.). Arithmetic and Switch operators are
   reported with the computed value but not yet broken down — query
   them directly to drill in.
+- **`decisive: true` markers** on each `TraceNode.children` entry that
+  contributed to its parent's value (All-false → only the first false
+  child; All-true → every child; Any-true → only the first true child;
+  Any-false → every child; single-operand structures → always).
+  Lets UIs grey out non-contributing siblings without having to
+  re-derive the operator semantics.
+- **`decidingPaths`** at the response top level (sibling to `traces`).
+  Keyed by target path; each entry is a compact ordered chain of
+  path-bearing nodes from the target down to the deepest single-leaf
+  cause. Powers headline rendering. Stops at branch points
+  (All-true with multiple operands, Any-false where every operand
+  failed) since beyond that the causation fans out — the full
+  TraceNode tree remains the source of truth for branched chains.
 
 ### Internal
 
@@ -82,6 +95,18 @@ value}` objects so callers can correlate output to specific rows
   behavior rebuilt them on every `/query` request, which on big rulesets
   (tax-withholding-estimator has 948 nodes) meant multiple O(n) scans
   per multi-target request. No behavior change.
+
+### Docs
+
+- **Real-world walkthrough in `docs/examples-snap.md`** showing how a
+  partner integrating against the `eligibility-adapter-openapi.yaml`
+  contract maps a `HouseholdDeterminationRequest` onto our generic
+  `/query` API and back to a `ProgramDecision`. Lead example is
+  `snap-complete` (the team's full SNAP modelling); a simpler
+  `snap-fy2026` walkthrough precedes it for onboarding. Concrete
+  values for the snap-complete scenario are lifted from
+  `data/factgraph/snap-complete/profiles.json` and verified end-to-end
+  against prod.
 
 ### Known limitations
 

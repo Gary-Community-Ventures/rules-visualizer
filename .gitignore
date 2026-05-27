@@ -44,6 +44,9 @@ venv/
 .env.development.local
 .env.test.local
 .env.production.local
+# Bruno stores secret-var values (e.g. api_token) in per-environment
+# .env.local files alongside the .bru env config. Keep them out of git.
+*.env.local
 
 # IDEs and editors
 .idea/

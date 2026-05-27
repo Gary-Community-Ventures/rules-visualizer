@@ -1,0 +1,246 @@
+meta {
+  name: 12 snap-complete — eligible single applicant
+  type: http
+  seq: 12
+}
+
+post {
+  url: {{base_url}}/v1/factgraph/snap-complete/query
+  body: json
+  auth: bearer
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{api_token}}
+}
+
+body:json {
+  {
+    "targets": [
+      "/isExpedited",
+      "/eligibilityCategory",
+      "/allotment",
+      "/proratedAllotment"
+    ],
+    "metadata": {
+      "applicationId": "demo-case-eligible",
+      "traceId": "req-001"
+    },
+    "inputs": {
+      "/applicationFilingDate": "2025-01-05",
+      "/isApplicationForRecertification": false,
+      "/normalIssuanceCycleDate": "2025-01-15",
+      "/receivedSnapInLast30Days": false,
+      "/receivesLeapInLast12Months": false,
+      "/dSnapActive": false,
+      "/temporaryEmergencyActive": false,
+      "/hasEebtInLast12Months": false,
+      "/hasOrExpectsShelterCosts": true,
+      "/hadPreviousSubstantialLotteryOrGamblingWinnings": false,
+      "/participatesInCommodityFoodDistributionProgram": false,
+      "/livesInApplicationCounty": true,
+      "/hasNearbyCountyArrangement": false,
+      "/isPresidentiallyDeclaredDisasterOrEmergency": false,
+      "/hasInadvertentHouseholdErrorClaimDueToEarnedIncomeCalculation": false,
+      "/benefitMonth": "2025-01-01",
+      "/certificationPeriodStartDate": "2025-01-01"
+    },
+    "entities": {
+      "/members": [
+        {
+          "/members/*/age": 35,
+          "/members/*/hasPhysicalDisability": false,
+          "/members/*/hasMentalDisability": false,
+          "/members/*/isIncapacitated": false,
+          "/members/*/isVeteranWithDisability": false,
+          "/members/*/isVeteranNeedingAidAndAttendance": false,
+          "/members/*/isVeteranSurvivorNeedingAidAndAttendance": false,
+          "/members/*/isVeteranSurvivorWithDisability": false,
+          "/members/*/receivesPublicDisabilityRetirementPension": false,
+          "/members/*/receivesRailroadRetirementDisability": false,
+          "/members/*/receivesInterimAssistanceForDisability": false,
+          "/members/*/isBoarder": false,
+          "/members/*/isRoomer": false,
+          "/members/*/livesInBoardingHouse": false,
+          "/members/*/livesInInstitution": false,
+          "/members/*/livesInFederallySubsidizedElderlyHousing": false,
+          "/members/*/residesAtSubstanceAbuseTreatmentFacility": false,
+          "/members/*/livesInHomelessShelter": false,
+          "/members/*/preparesFoodWithHousehold": true,
+          "/members/*/livesInGroupLivingArrangement": false,
+          "/members/*/isLiveInAttendant": false,
+          "/members/*/isSeparateAndApart": false,
+          "/members/*/isHeadOfHousehold": true,
+          "/members/*/isEmancipated": false,
+          "/members/*/isFosterChild": false,
+          "/members/*/isUnableToPurchaseAndPrepareOwnMealsDueToDisability": false,
+          "/members/*/isMigrantFarmWorker": false,
+          "/members/*/receivesFamilyPreservationServices": false,
+          "/members/*/countableMonths": 0,
+          "/members/*/disqualifiedForIPV": false,
+          "/members/*/convictedOfDrugRelatedFelonyWithSnap": false,
+          "/members/*/failedToProvideOrObtainSSN": false,
+          "/members/*/isParticipatingInWorkStudy": false,
+          "/members/*/isAssignedToHigherEducationThroughEmploymentTrainingProgram": false,
+          "/members/*/isInK12": false,
+          "/members/*/disqualifiedForWorkRequirementsCooperation": false,
+          "/members/*/voluntarilyQuitOrReducedWorkEffort": false,
+          "/members/*/registeredForWork": true,
+          "/members/*/providedEmploymentStatusOrAvailabilityInfo": true,
+          "/members/*/reportedToReferredSuitableEmployer": true,
+          "/members/*/isApplyingForOrReceivingUnemploymentInsuranceBenefits": false,
+          "/members/*/isRegularParticipantInDrugOrAlcoholTreatment": false,
+          "/members/*/isComplyingWithColoradoWorksOrRefugeeServicesWorkProgram": false,
+          "/members/*/disqualifiedForQualityAssuranceCooperation": false,
+          "/members/*/isPhysicallyOrMentallyUnfitForEmploymentForStudentEligibility": false,
+          "/members/*/recentlyReleasedFromInstitution": false,
+          "/members/*/hasSelfDeclaredTemporaryConditionPreventingWorkActivities": false,
+          "/members/*/receivesTemporaryOrPermanentDisabilityBenefits": false,
+          "/members/*/isParticipatingInVocationalRehabilitation": false,
+          "/members/*/isApplyingForOrAppealingSsiBenefits": false,
+          "/members/*/isUnableToMaintainEmployment": false,
+          "/members/*/isImpactedByDomesticViolence": false,
+          "/members/*/hasOtherValidReasonForWorkRequirementsUnfitness": false,
+          "/members/*/isEnrolledInEmploymentTrainingProgram": false,
+          "/members/*/isParticipatingInAnotherHousehold": false,
+          "/members/*/isResidentOfBatteredWomensShelter": false,
+          "/members/*/disqualifiedForFelonyNonCompliance": false,
+          "/members/*/disqualifiedForParoleOrProbationViolation": false,
+          "/members/*/isPregnant": false,
+          "/members/*/isVeteran": false,
+          "/members/*/wasInFosterCareOn18thBirthday": false,
+          "/members/*/isExemptUnderAbawdWaiver": false,
+          "/members/*/isExemptUnderColoradoAbawdStateExemption": false,
+          "/members/*/abawdWorkProgramHoursPerWeek": 0,
+          "/members/*/participatesInColoradoWorkfare": false,
+          "/members/*/isExperiencingHomelessness": false,
+          "/members/*/isFleeingFelon": false,
+          "/members/*/isStriker": false,
+          "/members/*/wasEligibleForSnapDayBeforeStrike": false,
+          "/members/*/wasExemptFromWorkRegistrationDayBeforeStrike": false,
+          "/members/*/studentEnrollmentStatus": "LessThanHalfTimeOrNotEnrolled",
+          "/members/*/citizenshipImmigrationStatus": "Citizen",
+          "/members/*/qualifiedYearsInUs": 0,
+          "/members/*/qualifyingWorkQuarters": 0,
+          "/members/*/wasBornOnOrBeforeAug221931AndLawfullyResidedAug221996": false,
+          "/members/*/hasQualifyingMilitaryConnection": false,
+          "/members/*/sponsorAndSpouseDependentCount": 0,
+          "/members/*/sponsoredNonCitizenCountOutsideHousehold": 0,
+          "/members/*/isSponsoredByOrganization": false,
+          "/members/*/receivesTanf": false,
+          "/members/*/hasLevelSanctionImposed": false,
+          "id": "head"
+        }
+      ],
+      "/incomes": [
+        {
+          "/incomes/*/memberId": "#0",
+          "/incomes/*/type": "WagesAndSalaries",
+          "/incomes/*/amount": 1200,
+          "/incomes/*/frequency": "Monthly",
+          "/incomes/*/receivedBeforeSnapParticipation": false,
+          "/incomes/*/isWorkSupplementationOrWorkSupportPublicAssistancePortion": false,
+          "/incomes/*/isFromTerminatedSourceForDestituteIncome": false,
+          "/incomes/*/isFromNewSourceForDestituteIncome": false
+        }
+      ],
+      "/jobs": [
+        {
+          "/jobs/*/memberId": "#0",
+          "/jobs/*/hoursPerWeek": 30,
+          "/jobs/*/abawdWorkType": "CompensatedWork",
+          "/jobs/*/isSelfEmployed": false,
+          "/jobs/*/isAtFederalMinimumWage": false,
+          "/jobs/*/isOnTheJobTraining": false,
+          "/jobs/*/offerAccepted": true,
+          "/jobs/*/wagesBelowApplicableMinimum": false,
+          "/jobs/*/pieceRateYieldBelowApplicableWage": false,
+          "/jobs/*/requiresLaborOrganizationAction": false,
+          "/jobs/*/worksiteSubjectToStrikeOrLockout": false,
+          "/jobs/*/unreasonableHealthSafetyRisk": false,
+          "/jobs/*/memberPhysicallyOrMentallyUnfit": false,
+          "/jobs/*/outsideMajorFieldDuringInitialThirtyDays": false,
+          "/jobs/*/unreasonableDistance": false,
+          "/jobs/*/dailyCommuteExceedsTwoHours": false,
+          "/jobs/*/noTransportationForNonWalkingDistance": false,
+          "/jobs/*/interferesWithReligiousObservance": false
+        }
+      ],
+      "/expenses": [
+        {
+          "/expenses/*/memberId": "#0",
+          "/expenses/*/type": "Rent",
+          "/expenses/*/amount": 800,
+          "/expenses/*/frequency": "Monthly",
+          "/expenses/*/isForClaimableShelterResidence": true,
+          "/expenses/*/isNecessaryDependentCareForWorkTrainingOrEducation": false,
+          "/expenses/*/isDirectMonetaryPaymentToAgencyOrPersonOutsideHousehold": false,
+          "/expenses/*/reimbursementAmount": 0,
+          "/expenses/*/incursOrAnticipatesSeparateHeatingCoolingCosts": false,
+          "/expenses/*/privateRentalBilledForHeatingCooling": false,
+          "/expenses/*/sharedResidencePaysHeatingCoolingPortion": false,
+          "/expenses/*/publicHousingResponsibleForExcessHeatingCoolingCosts": false,
+          "/expenses/*/shouldAverage": false
+        },
+        {
+          "/expenses/*/memberId": "#0",
+          "/expenses/*/type": "Electricity",
+          "/expenses/*/amount": 75,
+          "/expenses/*/frequency": "Monthly",
+          "/expenses/*/isForClaimableShelterResidence": true,
+          "/expenses/*/isNecessaryDependentCareForWorkTrainingOrEducation": false,
+          "/expenses/*/isDirectMonetaryPaymentToAgencyOrPersonOutsideHousehold": false,
+          "/expenses/*/reimbursementAmount": 0,
+          "/expenses/*/incursOrAnticipatesSeparateHeatingCoolingCosts": false,
+          "/expenses/*/privateRentalBilledForHeatingCooling": false,
+          "/expenses/*/sharedResidencePaysHeatingCoolingPortion": false,
+          "/expenses/*/publicHousingResponsibleForExcessHeatingCoolingCosts": false,
+          "/expenses/*/shouldAverage": false
+        }
+      ],
+      "/resourceItems": [
+        {
+          "/resourceItems/*/memberId": "#0",
+          "/resourceItems/*/type": "CheckingAccount",
+          "/resourceItems/*/value": 500
+        }
+      ],
+      "/caregiverRelationships": []
+    }
+  }
+}
+
+docs {
+  Real-world snap-complete query, mirroring a HouseholdDeterminationRequest
+  from the partner team's eligibility-adapter contract.
+
+  Body lifted verbatim from data/factgraph/snap-complete/profiles.json
+  ("Default" profile) with the member id set to "head" — that's our
+  canonical working scenario. Single applicant, 35 years old, US
+  citizen, head of household, $1,200/month wages from a 30-hour-per-week
+  compensated job, $800/month rent, $500 in a checking account.
+
+  Verified response (against prod 2026-05-27):
+
+      "status": "complete",
+      "values": {
+        "/isExpedited":         false,
+        "/eligibilityCategory": "Ece",
+        "/allotment":           221,
+        "/proratedAllotment":   192
+      }
+
+  Maps to ProgramDecision:
+    - status: "approved"     (Ece is one of three eligible categories;
+                              see Bce, Ece, Se)
+    - path:   "auto"
+
+  See packages/factgraph-api/docs/examples-snap.md for the
+  field-by-field mapping from a HouseholdDeterminationRequest to
+  this body, plus variations (expedited screening, denial with
+  denialReasonCode, multi-member).
+}

@@ -661,52 +661,14 @@ function ConfigView({
                     <span className="text-muted-foreground shrink-0">
                       ({f.type})
                     </span>
-                    {(f.type === 'Dollar' ||
-                      f.type === 'Int' ||
-                      f.type === 'Short' ||
-                      f.type === 'Byte') && (
-                      <>
-                        <NumberInput
-                          className="h-6 w-20 text-[11px] font-mono"
-                          value={f.min ?? 0}
-                          onChange={(v) => {
-                            const fields = [...config.scalarFields]
-                            fields[idx] = { ...f, min: v }
-                            setConfig({ ...config, scalarFields: fields })
-                          }}
-                        />
-                        <span className="text-muted-foreground">–</span>
-                        <NumberInput
-                          className="h-6 w-20 text-[11px] font-mono"
-                          value={f.max ?? 0}
-                          onChange={(v) => {
-                            const fields = [...config.scalarFields]
-                            fields[idx] = { ...f, max: v }
-                            setConfig({ ...config, scalarFields: fields })
-                          }}
-                        />
-                      </>
-                    )}
-                    {f.type === 'Boolean' && (
-                      <BooleanProbabilitySlider
-                        value={f.trueProbability}
-                        onChange={(v) => {
-                          const fields = [...config.scalarFields]
-                          fields[idx] = { ...f, trueProbability: v }
-                          setConfig({ ...config, scalarFields: fields })
-                        }}
-                      />
-                    )}
-                    {(f.type === 'Enum' || f.type === 'MultiEnum') && (
-                      <EnumProbabilityEditor
-                        field={f}
-                        onChange={(next) => {
-                          const fields = [...config.scalarFields]
-                          fields[idx] = next
-                          setConfig({ ...config, scalarFields: fields })
-                        }}
-                      />
-                    )}
+                    <FieldGenInputs
+                      field={f}
+                      onChange={(next) => {
+                        const fields = [...config.scalarFields]
+                        fields[idx] = next
+                        setConfig({ ...config, scalarFields: fields })
+                      }}
+                    />
                   </div>
                 ))}
               </div>
@@ -745,6 +707,23 @@ function ConfigView({
                         }}
                       />
                       <span className="text-muted-foreground">members</span>
+                      <label className="ml-3 inline-flex items-center gap-1 text-[10px] text-muted-foreground cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={coll.weighted ?? false}
+                          onChange={(e) => {
+                            const colls = [...config.collections]
+                            colls[collIdx] = {
+                              ...coll,
+                              weighted: e.target.checked,
+                            }
+                            setConfig({ ...config, collections: colls })
+                          }}
+                          className="size-3"
+                          title="Bias toward smaller sizes (realistic household distribution)"
+                        />
+                        weighted
+                      </label>
                     </div>
                     {coll.fields.map((f, fIdx) => (
                       <div
@@ -757,60 +736,16 @@ function ConfigView({
                         <span className="text-muted-foreground shrink-0">
                           ({f.type})
                         </span>
-                        {(f.type === 'Dollar' ||
-                          f.type === 'Int' ||
-                          f.type === 'Short' ||
-                          f.type === 'Byte') && (
-                          <>
-                            <NumberInput
-                              className="h-6 w-20 text-[11px] font-mono"
-                              value={f.min ?? 0}
-                              onChange={(v) => {
-                                const colls = [...config.collections]
-                                const fields = [...coll.fields]
-                                fields[fIdx] = { ...f, min: v }
-                                colls[collIdx] = { ...coll, fields }
-                                setConfig({ ...config, collections: colls })
-                              }}
-                            />
-                            <span className="text-muted-foreground">–</span>
-                            <NumberInput
-                              className="h-6 w-20 text-[11px] font-mono"
-                              value={f.max ?? 0}
-                              onChange={(v) => {
-                                const colls = [...config.collections]
-                                const fields = [...coll.fields]
-                                fields[fIdx] = { ...f, max: v }
-                                colls[collIdx] = { ...coll, fields }
-                                setConfig({ ...config, collections: colls })
-                              }}
-                            />
-                          </>
-                        )}
-                        {f.type === 'Boolean' && (
-                          <BooleanProbabilitySlider
-                            value={f.trueProbability}
-                            onChange={(v) => {
-                              const colls = [...config.collections]
-                              const fields = [...coll.fields]
-                              fields[fIdx] = { ...f, trueProbability: v }
-                              colls[collIdx] = { ...coll, fields }
-                              setConfig({ ...config, collections: colls })
-                            }}
-                          />
-                        )}
-                        {(f.type === 'Enum' || f.type === 'MultiEnum') && (
-                          <EnumProbabilityEditor
-                            field={f}
-                            onChange={(next) => {
-                              const colls = [...config.collections]
-                              const fields = [...coll.fields]
-                              fields[fIdx] = next
-                              colls[collIdx] = { ...coll, fields }
-                              setConfig({ ...config, collections: colls })
-                            }}
-                          />
-                        )}
+                        <FieldGenInputs
+                          field={f}
+                          onChange={(next) => {
+                            const colls = [...config.collections]
+                            const fields = [...coll.fields]
+                            fields[fIdx] = next
+                            colls[collIdx] = { ...coll, fields }
+                            setConfig({ ...config, collections: colls })
+                          }}
+                        />
                       </div>
                     ))}
                   </div>
@@ -2548,6 +2483,87 @@ function BooleanProbabilitySlider({
       <span className="text-[10px] text-muted-foreground">% true</span>
     </div>
   )
+}
+
+/**
+ * Right-hand inputs for a single scenario-gen field row. Type-specific:
+ *   - Dollar / Int / Short / Byte / Rational: min/max number inputs
+ *   - Boolean: true-probability slider
+ *   - Day: min/max date pickers
+ *   - Enum / MultiEnum: per-option probability editor
+ *   - CollectionItem / String: no-op label
+ * Used by both the scalar-fields and collection-fields editors so they
+ * stay in sync as new types come online.
+ */
+function FieldGenInputs({
+  field,
+  onChange,
+}: {
+  field: FieldConfig
+  onChange: (next: FieldConfig) => void
+}) {
+  switch (field.type) {
+    case 'Dollar':
+    case 'Int':
+    case 'Short':
+    case 'Byte':
+    case 'Rational':
+      return (
+        <>
+          <NumberInput
+            className="h-6 w-20 text-[11px] font-mono"
+            value={field.min ?? 0}
+            onChange={(v) => onChange({ ...field, min: v })}
+          />
+          <span className="text-muted-foreground">–</span>
+          <NumberInput
+            className="h-6 w-20 text-[11px] font-mono"
+            value={field.max ?? 0}
+            onChange={(v) => onChange({ ...field, max: v })}
+          />
+        </>
+      )
+    case 'Boolean':
+      return (
+        <BooleanProbabilitySlider
+          value={field.trueProbability}
+          onChange={(v) => onChange({ ...field, trueProbability: v })}
+        />
+      )
+    case 'Day':
+      return (
+        <>
+          <input
+            type="date"
+            className="h-6 text-[11px] font-mono border rounded px-1 bg-background"
+            value={field.minDate ?? ''}
+            onChange={(e) =>
+              onChange({ ...field, minDate: e.target.value || undefined })
+            }
+          />
+          <span className="text-muted-foreground">–</span>
+          <input
+            type="date"
+            className="h-6 text-[11px] font-mono border rounded px-1 bg-background"
+            value={field.maxDate ?? ''}
+            onChange={(e) =>
+              onChange({ ...field, maxDate: e.target.value || undefined })
+            }
+          />
+        </>
+      )
+    case 'Enum':
+    case 'MultiEnum':
+      return <EnumProbabilityEditor field={field} onChange={onChange} />
+    case 'CollectionItem':
+      return (
+        <span className="text-[10px] text-muted-foreground">
+          random reference
+        </span>
+      )
+    default:
+      return null
+  }
 }
 
 function EnumProbabilityEditor({

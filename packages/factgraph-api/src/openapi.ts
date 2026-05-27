@@ -178,7 +178,7 @@ export function buildOpenApiDocument() {
   registry.registerComponent('schemas', 'TraceNode', {
     type: 'object',
     description:
-      "One step in the explanation tree for a queried fact. The walker produces a recursive structure: the top-level node is the queried target; children are the operands or dependencies that contributed to its value. For boolean operators (All/Any) the walker visits every operand so the caller sees both the deciding branch and the alternatives. Arithmetic and Switch operators currently report the computed value but don't recurse — query those facts directly to drill in.",
+      "One step in the explanation tree for a queried fact. The walker produces a recursive structure: the top-level node is the queried target; children are the operands or dependencies that contributed to its value. For boolean operators (All/Any) the walker visits every operand so the caller sees both the deciding branch and the alternatives — use `decisive` on each child to tell them apart. Arithmetic and Switch operators currently report the computed value but don't recurse — query those facts directly to drill in.",
     required: ['op', 'value', 'reason'],
     properties: {
       path: {
@@ -201,6 +201,11 @@ export function buildOpenApiDocument() {
         description:
           'One-sentence summary of how this value was decided. Safe to render directly in a caseworker UI.',
       },
+      decisive: {
+        type: 'boolean',
+        description:
+          "When this node appears inside its parent's `children` array, indicates whether it contributed to the parent's value. For an `All` that's false, only the first false child is decisive. For an `Any` that's true, only the first true child is. For `All`-true and `Any`-false every operand contributed equally and they all carry decisive=true. Always omitted on the root of a trace.",
+      },
       children: {
         type: 'array',
         items: { $ref: '#/components/schemas/TraceNode' },
@@ -211,6 +216,32 @@ export function buildOpenApiDocument() {
       },
     },
   })
+
+  registry.registerComponent('schemas', 'DecidingPathStep', {
+    type: 'object',
+    description:
+      "One step in the deciding chain for a queried target. Path-bearing nodes only — anonymous sub-expressions are skipped in favor of the surrounding fact they live under.",
+    required: ['path', 'value', 'op'],
+    properties: {
+      path: { type: 'string' },
+      name: { type: 'string' },
+      value: {},
+      op: {
+        type: 'string',
+        description:
+          'Operator at this point in the chain — useful for picking icons or color in a UI.',
+      },
+    },
+  })
+
+  registry.registerComponent('schemas', 'DecidingPath', {
+    type: 'array',
+    description:
+      "Compact summary of the path-bearing nodes that drove a trace's outcome — [target, deciding child, …, deepest single-leaf cause]. Stops at the first branch point (All-true with multiple operands, Any-false where every operand failed) since beyond that the causation fans out and a flat list misrepresents it. The full trace is still available via `traces[<path>]` for callers that want to drill into branched chains.",
+    items: { $ref: '#/components/schemas/DecidingPathStep' },
+  })
+
+  const DecidingPathRef = z.any().openapi('DecidingPath')
 
   // A Zod-side handle pointing at the TraceNode component we registered
   // above. Using `.openapi('TraceNode')` makes downstream consumers
@@ -252,6 +283,13 @@ export function buildOpenApiDocument() {
           description:
             'Present iff request.include contained "trace". Keyed by target path; each entry is a recursive TraceNode tree explaining how that target\'s value was derived.',
         }),
+        decidingPaths: z
+          .record(z.string(), DecidingPathRef)
+          .optional()
+          .openapi({
+            description:
+              'Present iff request.include contained "trace". For each requested target, a compact ordered chain of path-bearing nodes from the target down to the deepest single-leaf cause. Powers one-line headline rendering — no need to walk the full TraceNode tree for the simple "this is why" sentence.',
+          }),
       })
       .openapi({
         description:

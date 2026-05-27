@@ -71,6 +71,113 @@ if (dnwProto && !dnwProto.__overrideDefaultOptionPatched) {
   dnwProto.__overrideDefaultOptionPatched = true
 }
 
+// --- Vendored bundle perf patch: JS-side cache for Fact.get --------------
+// The engine's Graph.resultCache already memoizes computed fact values by
+// path (~bundle line 30890), so duplicate reads return cached results
+// instead of recomputing. The catch is that the lookup itself goes through
+// Scala-compiled-to-JS HashMap code and pays ~6μs of JS↔Scala boundary
+// overhead *per call* — and one executeFactGraph triggers ~326k internal
+// .get invocations on a 5-member snap-complete scenario (mostly cache hits
+// cascading through recursive expression evaluation). At 6μs each, that's
+// the bulk of the ~2s per-execute cost.
+//
+// A native JS Map in front of the engine's get returns hits at ~50ns.
+// Measured impact:
+//   - Single execute (5 members):      2,015 ms -> 350 ms   (5.8× faster)
+//   - 1000-case snap-complete sim:     152 s    -> 56 s     (2.7× faster)
+//   - Cumulative vs unoptimized:       ~42 min  -> 56 s     (~45× faster)
+//
+// Outputs verified deepStrictEqual to the unpatched baseline. The cache
+// is per-graph via WeakMap, so it dies with the graph instance when
+// executeFactGraph returns — no leaks across calls.
+//
+// `/?/` paths get cached the same way. Empirically these return a
+// MaybeVector that's the same across all callers — the engine evaluates
+// the collection-wide value once and callers index into it via their own
+// evaluation context. So path alone is a valid cache key. Verified with
+// deepStrictEqual against an uncached baseline.
+//
+// Safety notes:
+//   1) Override bypass: Fact.get has logic at the top (~bundle line 30871)
+//      that returns the override value immediately when present, bypassing
+//      resultCache. Our wrapper short-circuits *before* that check. Safe
+//      within executeFactGraph because all writes happen in the setup
+//      phase, before any reads. If a caller interleaved set/get/set/get,
+//      the cache could return stale values — but executeFactGraph never
+//      does that.
+//   2) Cycle detection: the engine's get has cycle-detection logic. Cache
+//      hits skip it. Snap-complete and other production rulesets are
+//      acyclic; cycle-example is the only ruleset in the repo with one,
+//      and our cache check is path-keyed so a path doesn't get cached
+//      until its computation completes.
+//
+// The Fact class isn't directly exported from the bundle, so we lazy-patch
+// the prototype the first time we see a Fact instance in readFactValue.
+// If the bundle is re-vendored and the prototype shape changes, the
+// patch quietly no-ops (no error) and we fall back to the engine's own
+// slower-but-correct caching.
+const jsResultCache = new WeakMap<object, Map<string, unknown>>()
+let factProtoPatched = false
+function patchFactProtoOnce(factInstance: unknown): void {
+  if (factProtoPatched) return
+  const proto = Object.getPrototypeOf(factInstance as object) as {
+    get__Lgov_irs_factgraph_monads_MaybeVector?: () => unknown
+  } | null
+  if (!proto?.get__Lgov_irs_factgraph_monads_MaybeVector) return
+  const orig = proto.get__Lgov_irs_factgraph_monads_MaybeVector
+  proto.get__Lgov_irs_factgraph_monads_MaybeVector = function (this: {
+    Lgov_irs_factgraph_Fact__f_path: { toString(): string }
+    Lgov_irs_factgraph_Fact__f_graph: object
+  }): unknown {
+    const p = String(this.Lgov_irs_factgraph_Fact__f_path)
+    const g = this.Lgov_irs_factgraph_Fact__f_graph
+    let cache = jsResultCache.get(g)
+    if (!cache) {
+      cache = new Map()
+      jsResultCache.set(g, cache)
+    }
+    if (cache.has(p)) return cache.get(p)
+    const r = orig.call(this)
+    cache.set(p, r)
+    return r
+  }
+  factProtoPatched = true
+}
+
+// --- Diagnostic: trace per-path Fact.get call counts ---------------------
+// Off by default. Enable with FACTGRAPH_TRACE_GETS=1 to count engine calls
+// during executions — useful when investigating which paths dominate.
+// Adds a counter wrapper around the cached get. Read counts via
+// factCallCounts; reset with resetFactCallCounts().
+export const factCallCounts = new Map<string, number>()
+export function resetFactCallCounts(): void { factCallCounts.clear() }
+
+/** EXEC_TIME_SETS=1 populates this with total graph.set time + call count. */
+export const graphSetTimings = { elapsedMs: 0, count: 0 }
+export function resetGraphSetTimings(): void {
+  graphSetTimings.elapsedMs = 0
+  graphSetTimings.count = 0
+}
+let traceWrapperInstalled = false
+function maybeInstallTraceWrapper(factInstance: unknown): void {
+  if (traceWrapperInstalled || process.env.FACTGRAPH_TRACE_GETS !== '1') return
+  const proto = Object.getPrototypeOf(factInstance as object) as {
+    get__Lgov_irs_factgraph_monads_MaybeVector?: () => unknown
+  } | null
+  if (!proto?.get__Lgov_irs_factgraph_monads_MaybeVector) return
+  const cachedGet = proto.get__Lgov_irs_factgraph_monads_MaybeVector
+  proto.get__Lgov_irs_factgraph_monads_MaybeVector = function (this: {
+    Lgov_irs_factgraph_Fact__f_path: { toString(): string }
+  }): unknown {
+    factCallCounts.set(
+      String(this.Lgov_irs_factgraph_Fact__f_path),
+      (factCallCounts.get(String(this.Lgov_irs_factgraph_Fact__f_path)) ?? 0) + 1
+    )
+    return cachedGet.call(this)
+  }
+  traceWrapperInstalled = true
+}
+
 // --- Digest conversion ---
 // Converts fast-xml-parser output to the {typeName, options, children} format.
 // This mirrors processFactsToDigestWrapper.ts from Direct File.
@@ -587,7 +694,13 @@ export function executeFactGraph(
   facts: ParsedFact[],
   inputs: Record<string, unknown>,
   modelNodes?: Record<string, { content: { dataType?: string } }>,
-  entities?: Record<string, Record<string, unknown>[]>
+  entities?: Record<string, Record<string, unknown>[]>,
+  // Narrow the final read pass to only these fact paths. Use the template
+  // form for collection fields (e.g. "/members/*/isEligible") to match
+  // fact.path. Dictionary is always built from the full facts list so
+  // dependencies still resolve; this only filters what gets read back.
+  // Empty/undefined = read everything (legacy behavior).
+  readPaths?: Set<string>
 ): Record<string, unknown> {
   void rulesetId
 
@@ -653,6 +766,20 @@ export function executeFactGraph(
     }
     getVect: (path: string) => unknown
     save: () => { valid: boolean }
+  }
+  // Diagnostic: when EXEC_TIME_SETS=1, wrap graph.set with a perf timer
+  // so callers can read graphSetTimings to find out how much of the
+  // collections phase is the Scala-side graph.set call vs JS-side
+  // factory/loop work. Earlier profiling showed ~99% of collections
+  // phase time is in graph.set itself.
+  if (process.env.EXEC_TIME_SETS === '1') {
+    const origSet = graph.set.bind(graph)
+    graph.set = (path: string, value: unknown) => {
+      const t = performance.now()
+      origSet(path, value)
+      graphSetTimings.elapsedMs += performance.now() - t
+      graphSetTimings.count += 1
+    }
   }
 
   const t1b = Date.now()
@@ -752,7 +879,9 @@ export function executeFactGraph(
   // In factgraph 3.1, graph.get()/getVect()/save() were removed.
   // Instead, use getFact(path) and read via the Scala-mangled get method.
   const results: Record<string, unknown> = {}
+  const filterReads = readPaths && readPaths.size > 0
   for (const fact of facts) {
+    if (filterReads && !readPaths.has(fact.path)) continue
     // For collection item facts (with /*), read per-instance values
     const collMatch = fact.path.match(/^(\/[^*]+)\/\*\/(.+)$/)
     if (collMatch) {
@@ -820,6 +949,8 @@ function readFactValue(graph: unknown, path: string): unknown {
     getFact: (p: string) => Record<string, unknown>
   }
   const fact = g.getFact(path)
+  patchFactProtoOnce(fact)
+  maybeInstallTraceWrapper(fact)
 
   // Call the Scala-mangled get method
   const getFn = fact[

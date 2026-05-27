@@ -170,6 +170,28 @@ function yieldEventLoop(): Promise<void> {
 }
 
 /**
+ * True when base and compared sides will produce identical results for every
+ * scenario — same ruleset and same overrides. Lets the runner skip the
+ * second execute (~2× wall time savings for same-vs-same comparisons,
+ * which is the common case while iterating on a single ruleset).
+ *
+ * Overrides are flat path→primitive maps, so stringify-compare is fine and
+ * cheaper than a custom deep-equal. `??{}` normalizes undefined and {} to
+ * the same string so e.g. (undefined, {}) compares equal.
+ */
+export function sidesAreIdentical(
+  baseRulesetId: string,
+  comparedRulesetId: string,
+  baseOverrides: Record<string, unknown> | undefined,
+  comparedOverrides: Record<string, unknown> | undefined
+): boolean {
+  if (baseRulesetId !== comparedRulesetId) return false
+  const a = JSON.stringify(baseOverrides ?? {}, Object.keys(baseOverrides ?? {}).sort())
+  const b = JSON.stringify(comparedOverrides ?? {}, Object.keys(comparedOverrides ?? {}).sort())
+  return a === b
+}
+
+/**
  * Resolve how to spawn the worker. There's an asymmetry between dev and
  * prod that bites us: under `tsx watch` we want the worker to run the
  * .ts source (because there's no compiled .js on disk), but Node's
@@ -203,9 +225,106 @@ await tsImport(${JSON.stringify(workerUrl)}, ${JSON.stringify(here)})
   return { source: shim, options: { eval: true } }
 }
 
+/** Engine-timing snapshot reported by each worker at end of its slice. */
+export type EngineTimingsSnapshot = {
+  dict: number
+  graphInit: number
+  collections: number
+  scalarInputs: number
+  read: number
+  total: number
+  count: number
+}
 type WorkerProgressMsg = { type: 'progress'; count: number }
-type WorkerDoneMsg = { type: 'done'; results: CaseResult[] }
+type WorkerDoneMsg = {
+  type: 'done'
+  results: CaseResult[]
+  timings: EngineTimingsSnapshot
+}
 type WorkerMsg = WorkerProgressMsg | WorkerDoneMsg
+
+// --- Persistent worker pool ----------------------------------------------
+// Workers carry a ~6MB Scala.js bundle (loaded at spawn) plus a JS-side
+// dictionary build that runs on first execute. Spawning a fresh pool per
+// simulation paid both costs every time. Keeping workers alive amortizes:
+// the first sim pays the bundle load + dict build; subsequent sims see
+// workers already booted with the bundle resident and (when facts didn't
+// change) the dictionary cached.
+//
+// Measured impact is modest — wall-time win is ~2-3s per sim (4-6%) on
+// 1000-case snap-complete because workers spawn in parallel, so the
+// pre-pool spawn cost was bounded by the slowest single worker (~2s),
+// not the sum across 8. The clearer signal shows in per-execute `dict`
+// time: drops from ~2.2ms (cold worker) to ~0.6ms (warm worker reusing
+// the cached FactDictionary across sims with the same facts array).
+//
+// Each worker sits in a message loop in pool mode (see worker.ts). The
+// runner sends an `assign` message per chunk, the worker processes it,
+// posts `done`, and goes back to waiting. `shutdownWorkerPool` is exposed
+// for callers that want to force a fresh pool (e.g., after re-vendoring
+// the Scala.js bundle in a dev session). File-watcher ruleset reloads do
+// NOT need to kill the pool because facts arrive fresh on each assignment.
+//
+// Concurrency limitation: this V1 supports only one in-flight simulation
+// at a time. If a second `runSimulation` is invoked while another is
+// still claiming workers, `runParallel` throws. The UI prevents this
+// (Run button is disabled while a sim is running), but API consumers
+// firing two sims back-to-back from a script could trip it. A follow-up
+// could queue the second request or spawn overflow workers; left out
+// here to keep V1 small.
+type PoolWorker = {
+  worker: Worker
+  /** True between postMessage('assign') and the matching 'done' reply. */
+  busy: boolean
+}
+let workerPool: PoolWorker[] | null = null
+
+function getOrCreatePool(): PoolWorker[] {
+  if (workerPool) return workerPool
+  const { source, options } = workerSpawnArgs()
+  workerPool = []
+  for (let i = 0; i < WORKER_COUNT; i++) {
+    const worker = new Worker(source as never, {
+      ...options,
+      workerData: { mode: 'pool' },
+    })
+    // Surface worker errors so a crash doesn't silently leave us with a
+    // dead slot. The runner's per-assignment promise also rejects on
+    // error, but that one only sees errors during an active assignment.
+    worker.on('error', (err) => {
+      console.error('[sim-worker] unhandled error', err)
+    })
+    workerPool.push({ worker, busy: false })
+  }
+  return workerPool
+}
+
+export function shutdownWorkerPool(): void {
+  if (!workerPool) return
+  for (const w of workerPool) w.worker.postMessage({ type: 'shutdown' })
+  workerPool = null
+}
+
+/**
+ * Aggregated engine timings from the most-recent parallel simulation
+ * (workers don't share the main thread's `timings` singleton, so we sum
+ * their slices into here at the end of runParallel). Inspected via the
+ * /api/simulations/cache-stats endpoint for profiling.
+ */
+export const lastParallelTimings: EngineTimingsSnapshot & {
+  workerCount: number
+  runId: string | null
+} = {
+  dict: 0,
+  graphInit: 0,
+  collections: 0,
+  scalarInputs: 0,
+  read: 0,
+  total: 0,
+  count: 0,
+  workerCount: 0,
+  runId: null,
+}
 
 /**
  * Fan a scenario list out across N worker threads. Each worker gets a
@@ -213,6 +332,7 @@ type WorkerMsg = WorkerProgressMsg | WorkerDoneMsg
  * array matches scenario order (case-detail navigation relies on that).
  */
 async function runParallel(
+  runId: string,
   baseRulesetId: string,
   comparedRulesetId: string,
   baseFacts: ReturnType<typeof getRawFacts>,
@@ -240,15 +360,65 @@ async function runParallel(
   // Throttle progress emission to avoid spamming the active-runs map.
   const PROGRESS_REPORT_EVERY = 50
 
-  const { source, options } = workerSpawnArgs()
+  const pool = getOrCreatePool()
+  // Pool may be larger than chunk count for tiny runs — claim only what we
+  // need. Also: if a previous sim left a slot "busy" due to an error path,
+  // skip it; the slot will be reclaimed on next pool creation.
+  const slots: PoolWorker[] = []
+  for (const slot of pool) {
+    if (slots.length >= chunks.length) break
+    if (slot.busy) continue
+    slots.push(slot)
+  }
+  if (slots.length < chunks.length) {
+    throw new Error(
+      `Not enough free workers (need ${chunks.length}, have ${slots.length}). ` +
+        'Concurrent simulations on the same pool are not supported yet.'
+    )
+  }
+
+  const workerTimings: EngineTimingsSnapshot[] = []
 
   const chunkResults: CaseResult[][] = await Promise.all(
     chunks.map(
       (chunk, idx) =>
         new Promise<CaseResult[]>((resolve, reject) => {
-          const worker = new Worker(source as never, {
-            ...options,
-            workerData: {
+          const slot = slots[idx]
+          slot.busy = true
+          // Per-assignment message handler; detached when this chunk finishes
+          // so the next assignment on the same worker doesn't see our state.
+          const onMessage = (msg: WorkerMsg) => {
+            if (msg.type === 'progress') {
+              perWorkerCompleted[idx] = msg.count
+              if (onProgress) {
+                const sum = perWorkerCompleted.reduce((a, b) => a + b, 0)
+                onProgress(sum, total)
+              }
+            } else if (msg.type === 'done') {
+              perWorkerCompleted[idx] = chunk.length
+              if (onProgress) {
+                const sum = perWorkerCompleted.reduce((a, b) => a + b, 0)
+                onProgress(sum, total)
+              }
+              workerTimings.push(msg.timings)
+              slot.worker.off('message', onMessage)
+              slot.worker.off('error', onError)
+              slot.busy = false
+              resolve(msg.results)
+            }
+          }
+          const onError = (err: Error) => {
+            slot.worker.off('message', onMessage)
+            slot.worker.off('error', onError)
+            slot.busy = false
+            reject(err)
+          }
+          slot.worker.on('message', onMessage)
+          slot.worker.on('error', onError)
+
+          slot.worker.postMessage({
+            type: 'assign',
+            assignment: {
               baseRulesetId,
               comparedRulesetId,
               baseFacts,
@@ -262,32 +432,32 @@ async function runParallel(
               progressInterval: PROGRESS_REPORT_EVERY,
             },
           })
-          worker.on('message', (msg: WorkerMsg) => {
-            if (msg.type === 'progress') {
-              perWorkerCompleted[idx] = msg.count
-              if (onProgress) {
-                const sum = perWorkerCompleted.reduce((a, b) => a + b, 0)
-                onProgress(sum, total)
-              }
-            } else if (msg.type === 'done') {
-              perWorkerCompleted[idx] = chunk.length
-              if (onProgress) {
-                const sum = perWorkerCompleted.reduce((a, b) => a + b, 0)
-                onProgress(sum, total)
-              }
-              resolve(msg.results)
-              worker.terminate()
-            }
-          })
-          worker.on('error', reject)
-          worker.on('exit', (code) => {
-            if (code !== 0) {
-              reject(new Error(`Worker exited with code ${code}`))
-            }
-          })
         })
     )
   )
+
+  // Sum worker timings and stash for /api/simulations/cache-stats. This
+  // makes parallel runs visible to the same profiling endpoint as inline
+  // runs (which mutate factgraph-core's `timings` directly on the main
+  // thread).
+  lastParallelTimings.dict = 0
+  lastParallelTimings.graphInit = 0
+  lastParallelTimings.collections = 0
+  lastParallelTimings.scalarInputs = 0
+  lastParallelTimings.read = 0
+  lastParallelTimings.total = 0
+  lastParallelTimings.count = 0
+  for (const t of workerTimings) {
+    lastParallelTimings.dict += t.dict
+    lastParallelTimings.graphInit += t.graphInit
+    lastParallelTimings.collections += t.collections
+    lastParallelTimings.scalarInputs += t.scalarInputs
+    lastParallelTimings.read += t.read
+    lastParallelTimings.total += t.total
+    lastParallelTimings.count += t.count
+  }
+  lastParallelTimings.workerCount = workerTimings.length
+  lastParallelTimings.runId = runId
 
   return chunkResults.flat()
 }
@@ -340,6 +510,7 @@ export async function runSimulation(
   // pinned worker count to 1 for benchmarking.
   if (WORKER_COUNT > 1 && scenarios.length >= PARALLEL_THRESHOLD) {
     const results = await runParallel(
+      config.id,
       baseRulesetId,
       comparedRulesetId,
       baseFacts,
@@ -371,6 +542,14 @@ export async function runSimulation(
 
   // Inline path: execute in the main thread. Used for small runs and
   // when the worker pool is disabled.
+  // Narrow the engine's read pass to outcomes (see worker.ts for rationale).
+  const readPaths = outcomeSet
+  const skipSecondExecute = sidesAreIdentical(
+    baseRulesetId,
+    comparedRulesetId,
+    baseOverrides,
+    comparedOverrides
+  )
   const results: CaseResult[] = []
   for (let i = 0; i < scenarios.length; i++) {
     const scenario = scenarios[i]
@@ -387,22 +566,26 @@ export async function runSimulation(
         baseFacts,
         baseInputs,
         baseModel.nodes as Record<string, { content: { dataType?: string } }>,
-        scenario.entities
+        scenario.entities,
+        readPaths
       )
 
-      const editedResults = executeFactGraph(
-        comparedRulesetId,
-        editedFacts,
-        comparedInputs,
-        editedModel.nodes as Record<string, { content: { dataType?: string } }>,
-        scenario.entities
-      )
+      // Same ruleset, same overrides → second execute is wasted work.
+      // Reuse the base result map; diff against itself produces zero diffs.
+      const editedResults = skipSecondExecute
+        ? baseResults
+        : executeFactGraph(
+            comparedRulesetId,
+            editedFacts,
+            comparedInputs,
+            editedModel.nodes as Record<string, { content: { dataType?: string } }>,
+            scenario.entities,
+            readPaths
+          )
 
-      const { outcomeDiffs, allDiffs } = diffResults(
-        baseResults,
-        editedResults,
-        outcomeSet
-      )
+      const { outcomeDiffs, allDiffs } = skipSecondExecute
+        ? { outcomeDiffs: [], allDiffs: [] }
+        : diffResults(baseResults, editedResults, outcomeSet)
 
       results.push({
         scenarioId: scenario.id,

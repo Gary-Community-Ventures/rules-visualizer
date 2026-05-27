@@ -20,8 +20,16 @@ type TraceNode = {
   op: string
   value: unknown
   reason: string
+  decisive?: boolean
   children?: TraceNode[]
   citations?: { sectionId: string; documentTitle: string }[]
+}
+
+type DecidingPathStep = {
+  path: string
+  name?: string
+  value: unknown
+  op: string
 }
 
 const QUERY_URL = `/v1/factgraph/${RULESET_ID}/query`
@@ -247,4 +255,157 @@ test('writable input target reports a Writable trace', async () => {
   assert.equal(t.op, 'Writable')
   assert.equal(t.value, 1500)
   assert.match(t.reason, /Input value/)
+})
+
+// ---------------------------------------------------------------------------
+// decisive markers + decidingPath
+// ---------------------------------------------------------------------------
+
+test('All-false marks only the first false child decisive; All-true marks all children decisive', async () => {
+  // Eligible scenario: /eligible = All(Any(normal, BBCE), hasEligiblePerson) = true
+  // → both children of /eligible should be decisive.
+  const eligible = await request(app)
+    .post(QUERY_URL)
+    .send({
+      targets: ['/eligible'],
+      inputs: { ...ZEROED_SCALARS, '/meetsCategoricalEligibility': true },
+      entities: { '/members': [APPLICANT_ROW] },
+      include: ['trace'],
+    })
+  const root = eligible.body.traces['/eligible'] as TraceNode
+  assert.equal(root.value, true)
+  const decisiveChildren = (root.children ?? []).filter((c) => c.decisive)
+  assert.equal(
+    decisiveChildren.length,
+    root.children!.length,
+    'All-true: every child should be decisive'
+  )
+
+  // Denial: /normalEligibility = All(...) = false → exactly one decisive child.
+  const denial = await request(app)
+    .post(QUERY_URL)
+    .send({
+      targets: ['/eligible'],
+      inputs: { ...ZEROED_SCALARS, '/grossEarnedIncome': 3500 },
+      entities: { '/members': [APPLICANT_ROW] },
+      include: ['trace'],
+    })
+  const denialRoot = denial.body.traces['/eligible'] as TraceNode
+  const normal = findByPath(denialRoot, '/normalEligibility')
+  assert.ok(normal)
+  assert.equal(normal!.value, false)
+  const decisiveOfNormal = (normal!.children ?? []).filter((c) => c.decisive)
+  assert.equal(
+    decisiveOfNormal.length,
+    1,
+    'All-false: exactly one child (the first false one) should be decisive'
+  )
+  assert.equal(decisiveOfNormal[0].path, '/grossIncomeEligible')
+})
+
+test('Any-true marks one child decisive; Any-false marks all decisive', async () => {
+  // BBCE eligible: Any(normalEligibility, meetsCategoricalEligibility) = true
+  // because meetsCategoricalEligibility is true → exactly one decisive.
+  const res = await request(app)
+    .post(QUERY_URL)
+    .send({
+      targets: ['/eligible'],
+      inputs: { ...ZEROED_SCALARS, '/meetsCategoricalEligibility': true },
+      entities: { '/members': [APPLICANT_ROW] },
+      include: ['trace'],
+    })
+  const root = res.body.traces['/eligible'] as TraceNode
+  const innerAny = root.children?.find((c) => c.op === 'Any')
+  assert.ok(innerAny)
+  const decisiveOfAny = (innerAny!.children ?? []).filter((c) => c.decisive)
+  assert.equal(decisiveOfAny.length, 1, 'Any-true: one decisive child')
+
+  // Denial: same Any but both branches false → all decisive.
+  const denial = await request(app)
+    .post(QUERY_URL)
+    .send({
+      targets: ['/eligible'],
+      inputs: { ...ZEROED_SCALARS, '/grossEarnedIncome': 3500 },
+      entities: { '/members': [APPLICANT_ROW] },
+      include: ['trace'],
+    })
+  const denialAny = denial.body.traces['/eligible'].children?.find(
+    (c: TraceNode) => c.op === 'Any'
+  )
+  assert.ok(denialAny)
+  const decisiveDenial = (denialAny.children ?? []).filter(
+    (c: TraceNode) => c.decisive
+  )
+  assert.equal(
+    decisiveDenial.length,
+    denialAny.children!.length,
+    'Any-false: every operand decisive'
+  )
+})
+
+test('decidingPaths summarizes the dominant chain from target to deepest leaf', async () => {
+  const res = await request(app)
+    .post(QUERY_URL)
+    .send({
+      targets: ['/eligible'],
+      inputs: { ...ZEROED_SCALARS, '/grossEarnedIncome': 3500 },
+      entities: { '/members': [APPLICANT_ROW] },
+      include: ['trace'],
+    })
+  assert.ok(res.body.decidingPaths, 'decidingPaths should be present')
+  const path = res.body.decidingPaths['/eligible'] as DecidingPathStep[]
+  assert.ok(Array.isArray(path))
+  assert.ok(path.length > 0, 'deciding path should have entries')
+
+  // First step is the queried target.
+  assert.equal(path[0].path, '/eligible')
+  assert.equal(path[0].value, false)
+
+  // Chain stops at a branch point. With this denial, /eligible → All-false
+  // descends into the inner Any (no path), then Any-false branches (every
+  // operand decisive) so the chain stops. We should see /eligible plus the
+  // /hasEligiblePerson-style branch only when there's a single-decider.
+  // Verify it's strictly a chain by checking every step is path-bearing.
+  for (const step of path) {
+    assert.equal(typeof step.path, 'string')
+    assert.equal(typeof step.op, 'string')
+  }
+})
+
+test('decidingPaths absent when trace not requested', async () => {
+  const res = await request(app)
+    .post(QUERY_URL)
+    .send({
+      targets: ['/eligible'],
+      inputs: ZEROED_SCALARS,
+      entities: { '/members': [APPLICANT_ROW] },
+    })
+  assert.equal(res.body.decidingPaths, undefined)
+  assert.equal(res.body.traces, undefined)
+})
+
+test('comparison leaves mark both operands decisive', async () => {
+  const res = await request(app)
+    .post(QUERY_URL)
+    .send({
+      targets: ['/eligible'],
+      inputs: { ...ZEROED_SCALARS, '/grossEarnedIncome': 3500 },
+      entities: { '/members': [APPLICANT_ROW] },
+      include: ['trace'],
+    })
+  const root = res.body.traces['/eligible'] as TraceNode
+  // Find any comparison node in the trace and verify its operands.
+  const findComparison = (n: TraceNode): TraceNode | undefined => {
+    if (n.op === 'LessThanOrEqual' || n.op === 'GreaterThan') return n
+    for (const c of n.children ?? []) {
+      const f = findComparison(c)
+      if (f) return f
+    }
+    return undefined
+  }
+  const cmp = findComparison(root)
+  assert.ok(cmp)
+  for (const operand of cmp!.children ?? []) {
+    assert.equal(operand.decisive, true)
+  }
 })

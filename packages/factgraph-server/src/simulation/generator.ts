@@ -109,6 +109,11 @@ export function autoConfigFromModel(
     collectionPath,
     minMembers: 1,
     maxMembers: 5,
+    // Bias /members toward smaller sizes — real SNAP/Medicaid household
+    // sizes cluster around 1-3 people. Other collections (incomes,
+    // expenses, etc.) stay uniform since their natural distribution isn't
+    // well-defined here.
+    weighted: collectionPath === '/members',
     fields,
   }))
 
@@ -206,6 +211,14 @@ function mergeCollections(
 
 // --- Scenario generation ---
 
+/** ISO YYYY-MM-DD from a JS Date. */
+function isoDate(d: Date): string {
+  const y = d.getUTCFullYear()
+  const m = String(d.getUTCMonth() + 1).padStart(2, '0')
+  const day = String(d.getUTCDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
+
 function generateValue(
   field: FieldConfig,
   rng: () => number,
@@ -259,7 +272,36 @@ function generateValue(
         (option) => rng() < (field.enumProbabilities?.[option] ?? 0.35)
       )
 
+    case 'Day': {
+      // Default range: 2000-01-01 through today. Sample a random day in
+      // the interval. Engine accepts ISO YYYY-MM-DD strings.
+      const minMs = field.minDate
+        ? Date.parse(field.minDate)
+        : Date.parse('2000-01-01')
+      const maxMs = field.maxDate ? Date.parse(field.maxDate) : Date.now()
+      if (!Number.isFinite(minMs) || !Number.isFinite(maxMs) || maxMs < minMs) {
+        return null
+      }
+      const ms = minMs + Math.floor(rng() * (maxMs - minMs + 1))
+      return isoDate(new Date(ms))
+    }
+
+    case 'Rational': {
+      // Engine wants "num/denom" string. Numerator from [min, max] (default
+      // 0–100), denominator a small positive int so the value stays sane.
+      const min = field.min ?? 0
+      const max = field.max ?? 100
+      const num = Math.floor(min + rng() * (max - min + 1))
+      const denom = 1 + Math.floor(rng() * 10)
+      return `${num}/${denom}`
+    }
+
     case 'String':
+      if (field.stringOptions && field.stringOptions.length > 0) {
+        return field.stringOptions[
+          Math.floor(rng() * field.stringOptions.length)
+        ]
+      }
       return ''
 
     default:
@@ -280,6 +322,25 @@ function pickEnumOption(field: FieldConfig, rng: () => number): string | null {
     if (cursor <= 0) return field.enumOptions[i]
   }
   return field.enumOptions[field.enumOptions.length - 1]
+}
+
+/**
+ * Sample a collection size for one scenario. Uniform by default; when
+ * weighted is set, bias toward smaller sizes via a cubic power-law
+ * (rng()^3). For (min=1, max=5, weighted) this yields roughly:
+ *   1: 58%, 2: 15%, 3: 11%, 4: 8%, 5: 7%
+ * matching the published USDA SNAP household-size distribution (~50/22/14/9/5
+ * across 1/2/3/4/5+) far better than uniform 1-in-5.
+ */
+function sampleCollectionSize(
+  min: number,
+  max: number,
+  weighted: boolean,
+  rng: () => number
+): number {
+  if (max <= min) return min
+  const r = weighted ? Math.pow(rng(), 3) : rng()
+  return min + Math.floor(r * (max - min + 1))
 }
 
 /**
@@ -331,9 +392,12 @@ export function generateScenarios(
     const entities: Record<string, Record<string, unknown>[]> = {}
 
     for (const coll of config.collections) {
-      const memberCount =
-        coll.minMembers +
-        Math.floor(rng() * (coll.maxMembers - coll.minMembers + 1))
+      const memberCount = sampleCollectionSize(
+        coll.minMembers,
+        coll.maxMembers,
+        coll.weighted ?? false,
+        rng
+      )
       entities[coll.collectionPath] = Array.from(
         { length: memberCount },
         () => ({})

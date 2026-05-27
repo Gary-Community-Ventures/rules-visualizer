@@ -7,7 +7,17 @@
  */
 
 // Execution
-export { executeFactGraph, cacheStats, timings } from './executor.js'
+export {
+  executeFactGraph,
+  cacheStats,
+  timings,
+  // Diagnostic only — populated when FACTGRAPH_TRACE_GETS=1
+  factCallCounts,
+  resetFactCallCounts,
+  // Diagnostic only — populated when EXEC_TIME_SETS=1
+  graphSetTimings,
+  resetGraphSetTimings,
+} from './executor.js'
 
 // Ruleset store
 export {

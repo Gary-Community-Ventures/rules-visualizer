@@ -14,16 +14,29 @@ export type FieldConfig = {
     | 'Rational'
     | 'CollectionItem'
     | string
+  /** Numeric min for Dollar/Int/Short/Byte/Rational. */
   min?: number
+  /** Numeric max for Dollar/Int/Short/Byte/Rational. */
   max?: number
+  /** ISO YYYY-MM-DD min for Day. Defaults to 2000-01-01. */
   minDate?: string
+  /** ISO YYYY-MM-DD max for Day. Defaults to today. */
   maxDate?: string
-  stringOptions?: string[]
+  /** Options for Enum / MultiEnum. */
   enumOptions?: string[]
+  /** Options for String picker, if you want to constrain the generated values. */
+  stringOptions?: string[]
+  /** Target collection path for CollectionItem links. */
   collectionItemPath?: string
   /** Probability a CollectionItem link is populated (0–1). Default 1. */
   linkProbability?: number
-  /** Per-option generation probabilities (0–1), keyed by enum option. */
+  /**
+   * Per-option generation probabilities (0–1), keyed by enum option name.
+   * For Enum fields: relative weights for weighted sampling (normalized).
+   * For MultiEnum: independent probability of including each option.
+   * Default behavior when missing: uniform sampling (Enum) or 35% include
+   * (MultiEnum).
+   */
   enumProbabilities?: Record<string, number>
   /** Probability a Boolean field generates `true` (0–1). Default 0.5. */
   trueProbability?: number
@@ -34,6 +47,14 @@ export type CollectionConfig = {
   collectionPath: string
   minMembers: number
   maxMembers: number
+  /**
+   * If true, bias collection size toward smaller values via a power-law
+   * distribution (closer to real-world household sizes). Default false =
+   * uniform sampling between min and max. autoConfigFromModel turns this
+   * on for `/members` since SNAP/Medicaid-style household sizes follow a
+   * roughly 1.5-power decay.
+   */
+  weighted?: boolean
   fields: FieldConfig[]
 }
 
