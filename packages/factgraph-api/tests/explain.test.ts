@@ -50,8 +50,7 @@ test('trace is omitted by default', async () => {
     .post(QUERY_URL)
     .send({
       targets: ['/eligible'],
-      inputs: ZEROED_SCALARS,
-      entities: { '/members': [APPLICANT_ROW] },
+      inputs: { ...ZEROED_SCALARS, '/members': [APPLICANT_ROW] },
     })
   assert.equal(res.status, 200)
   assert.equal(res.body.traces, undefined)
@@ -62,8 +61,7 @@ test('trace is present when include: ["trace"]', async () => {
     .post(QUERY_URL)
     .send({
       targets: ['/eligible'],
-      inputs: ZEROED_SCALARS,
-      entities: { '/members': [APPLICANT_ROW] },
+      inputs: { ...ZEROED_SCALARS, '/members': [APPLICANT_ROW] },
       include: ['trace'],
     })
   assert.equal(res.status, 200)
@@ -84,8 +82,8 @@ test('SNAP denial: over the gross income limit produces a failing-branch trace d
       inputs: {
         ...ZEROED_SCALARS,
         '/grossEarnedIncome': 3500,
+        '/members': [APPLICANT_ROW],
       },
-      entities: { '/members': [APPLICANT_ROW] },
       include: ['trace'],
     })
   assert.equal(res.status, 200)
@@ -118,8 +116,7 @@ test('trace exposes citations from references.json on facts that have policy map
     .post(QUERY_URL)
     .send({
       targets: ['/eligible'],
-      inputs: { ...ZEROED_SCALARS, '/grossEarnedIncome': 3500 },
-      entities: { '/members': [APPLICANT_ROW] },
+      inputs: {  ...ZEROED_SCALARS, '/grossEarnedIncome': 3500, '/members': [APPLICANT_ROW] },
       include: ['trace'],
     })
   assert.equal(res.status, 200)
@@ -146,8 +143,8 @@ test('eligible household: trace shows Any-true short-circuit through meetsCatego
       inputs: {
         ...ZEROED_SCALARS,
         '/meetsCategoricalEligibility': true,
+        '/members': [APPLICANT_ROW],
       },
-      entities: { '/members': [APPLICANT_ROW] },
       include: ['trace'],
     })
   assert.equal(res.status, 200)
@@ -173,8 +170,7 @@ test('opaque ops (Multiply, Subtract, etc.) report the computed value without ch
     .post(QUERY_URL)
     .send({
       targets: ['/eligible'],
-      inputs: ZEROED_SCALARS,
-      entities: { '/members': [APPLICANT_ROW] },
+      inputs: { ...ZEROED_SCALARS, '/members': [APPLICANT_ROW] },
       include: ['trace'],
     })
   const root = res.body.traces['/eligible'] as TraceNode
@@ -198,8 +194,7 @@ test('multi-target requests get one trace per target', async () => {
     .post(QUERY_URL)
     .send({
       targets: ['/eligible', '/grossIncomeEligible'],
-      inputs: ZEROED_SCALARS,
-      entities: { '/members': [APPLICANT_ROW] },
+      inputs: { ...ZEROED_SCALARS, '/members': [APPLICANT_ROW] },
       include: ['trace'],
     })
   assert.equal(res.status, 200)
@@ -217,8 +212,7 @@ test('trace prose is value-neutral — no "failed" / "satisfied" words for boole
     .post(QUERY_URL)
     .send({
       targets: ['/eligible'],
-      inputs: { ...ZEROED_SCALARS, '/grossEarnedIncome': 3500 },
-      entities: { '/members': [APPLICANT_ROW] },
+      inputs: {  ...ZEROED_SCALARS, '/grossEarnedIncome': 3500, '/members': [APPLICANT_ROW] },
       include: ['trace'],
     })
   const root = res.body.traces['/eligible'] as TraceNode
@@ -268,8 +262,7 @@ test('All-false marks only the first false child decisive; All-true marks all ch
     .post(QUERY_URL)
     .send({
       targets: ['/eligible'],
-      inputs: { ...ZEROED_SCALARS, '/meetsCategoricalEligibility': true },
-      entities: { '/members': [APPLICANT_ROW] },
+      inputs: {  ...ZEROED_SCALARS, '/meetsCategoricalEligibility': true, '/members': [APPLICANT_ROW] },
       include: ['trace'],
     })
   const root = eligible.body.traces['/eligible'] as TraceNode
@@ -286,8 +279,7 @@ test('All-false marks only the first false child decisive; All-true marks all ch
     .post(QUERY_URL)
     .send({
       targets: ['/eligible'],
-      inputs: { ...ZEROED_SCALARS, '/grossEarnedIncome': 3500 },
-      entities: { '/members': [APPLICANT_ROW] },
+      inputs: {  ...ZEROED_SCALARS, '/grossEarnedIncome': 3500, '/members': [APPLICANT_ROW] },
       include: ['trace'],
     })
   const denialRoot = denial.body.traces['/eligible'] as TraceNode
@@ -310,8 +302,7 @@ test('Any-true marks one child decisive; Any-false marks all decisive', async ()
     .post(QUERY_URL)
     .send({
       targets: ['/eligible'],
-      inputs: { ...ZEROED_SCALARS, '/meetsCategoricalEligibility': true },
-      entities: { '/members': [APPLICANT_ROW] },
+      inputs: {  ...ZEROED_SCALARS, '/meetsCategoricalEligibility': true, '/members': [APPLICANT_ROW] },
       include: ['trace'],
     })
   const root = res.body.traces['/eligible'] as TraceNode
@@ -325,8 +316,7 @@ test('Any-true marks one child decisive; Any-false marks all decisive', async ()
     .post(QUERY_URL)
     .send({
       targets: ['/eligible'],
-      inputs: { ...ZEROED_SCALARS, '/grossEarnedIncome': 3500 },
-      entities: { '/members': [APPLICANT_ROW] },
+      inputs: {  ...ZEROED_SCALARS, '/grossEarnedIncome': 3500, '/members': [APPLICANT_ROW] },
       include: ['trace'],
     })
   const denialAny = denial.body.traces['/eligible'].children?.find(
@@ -348,8 +338,7 @@ test('decidingPaths summarizes the dominant chain from target to deepest leaf', 
     .post(QUERY_URL)
     .send({
       targets: ['/eligible'],
-      inputs: { ...ZEROED_SCALARS, '/grossEarnedIncome': 3500 },
-      entities: { '/members': [APPLICANT_ROW] },
+      inputs: {  ...ZEROED_SCALARS, '/grossEarnedIncome': 3500, '/members': [APPLICANT_ROW] },
       include: ['trace'],
     })
   assert.ok(res.body.decidingPaths, 'decidingPaths should be present')
@@ -377,8 +366,7 @@ test('decidingPaths absent when trace not requested', async () => {
     .post(QUERY_URL)
     .send({
       targets: ['/eligible'],
-      inputs: ZEROED_SCALARS,
-      entities: { '/members': [APPLICANT_ROW] },
+      inputs: { ...ZEROED_SCALARS, '/members': [APPLICANT_ROW] },
     })
   assert.equal(res.body.decidingPaths, undefined)
   assert.equal(res.body.traces, undefined)
@@ -389,8 +377,7 @@ test('comparison leaves mark both operands decisive', async () => {
     .post(QUERY_URL)
     .send({
       targets: ['/eligible'],
-      inputs: { ...ZEROED_SCALARS, '/grossEarnedIncome': 3500 },
-      entities: { '/members': [APPLICANT_ROW] },
+      inputs: {  ...ZEROED_SCALARS, '/grossEarnedIncome': 3500, '/members': [APPLICANT_ROW] },
       include: ['trace'],
     })
   const root = res.body.traces['/eligible'] as TraceNode

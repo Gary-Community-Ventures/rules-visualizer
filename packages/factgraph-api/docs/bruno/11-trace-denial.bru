@@ -20,7 +20,9 @@ auth:bearer {
 
 body:json {
   {
-    "targets": ["/eligible"],
+    "targets": [
+      "/eligible"
+    ],
     "inputs": {
       "/grossEarnedIncome": 3500,
       "/unearnedIncome": 0,
@@ -32,9 +34,7 @@ body:json {
       "/homeownersInsurance": 0,
       "/meetsCategoricalEligibility": false,
       "/childSupportPaid": 0,
-      "/isHomeless": false
-    },
-    "entities": {
+      "/isHomeless": false,
       "/members": [
         {
           "id": "applicant",
@@ -59,10 +59,11 @@ body:json {
         }
       ]
     },
-    "include": ["trace"]
+    "include": [
+      "trace"
+    ]
   }
 }
-
 docs {
   This scenario walks the structured explanation API.
 

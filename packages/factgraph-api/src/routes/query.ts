@@ -22,11 +22,12 @@ const router = Router()
 // ---------------------------------------------------------------------------
 
 /**
- * One row of a per-collection entity (e.g. a household member). The optional
- * `id` is the caller's stable handle for this row, surfaced back in the
- * response on any per-member fact so the UI can correlate values to the
- * right member without relying on positional order. All other fields are
- * arbitrary writable-path → value pairs.
+ * One row of a collection (e.g. a household member). The optional `id`
+ * is the caller's stable handle for this row, surfaced back in the
+ * response on any per-member fact so the UI can correlate values to
+ * the right member without relying on positional order. All other
+ * fields are arbitrary writable-path → value pairs (e.g.
+ * `/members/*\/age`).
  */
 const EntityRowSchema = z
   .object({ id: z.string().min(1).optional() })
@@ -38,14 +39,25 @@ export const QueryRequestSchema = z.object({
    *  by these paths. */
   targets: z.array(z.string().min(1)).min(1),
 
-  /** Scalar writable inputs, keyed by fact path. */
-  inputs: z.record(z.string(), z.unknown()).optional(),
+  /** Caller-provided values for the rules engine, keyed by fact path.
+   *
+   *  Scalar facts (`/grossEarnedIncome`, `/isHomeless`, `/meetsCategoricalEligibility`)
+   *  take a primitive value: number, boolean, string, or date string.
+   *
+   *  Collection roots (`/members`, `/incomes`, `/expenses`, …) take an
+   *  array of row objects. Each row supplies that row's per-member
+   *  field values (keyed by their full wildcard paths,
+   *  e.g. `/members/*\/age`) and an optional caller-provided `id` for
+   *  correlation with per-member values in the response.
+   *
+   *  This single field is symmetric with the response's `values` map —
+   *  same keying, same heterogeneous value shapes by path. */
+  inputs: z
+    .record(z.string(), z.union([z.array(EntityRowSchema), z.unknown()]))
+    .optional(),
 
-  /** Per-collection rows. Each row may include a caller-provided `id`. */
-  entities: z.record(z.string(), z.array(EntityRowSchema)).optional(),
-
-  /** Opt-in response sections. Today: `"supportingFacts"`. Future:
-   *  `"trace"`, `"counterfactuals"`. Unknown values are ignored. */
+  /** Opt-in response sections. Today: `"supportingFacts"`, `"trace"`.
+   *  Unknown values are ignored. */
   include: z.array(z.string()).optional(),
 
   /** Opaque correlation context echoed back unchanged in the response.
@@ -54,6 +66,36 @@ export const QueryRequestSchema = z.object({
 })
 
 type QueryRequest = z.infer<typeof QueryRequestSchema>
+
+/**
+ * Split a unified `inputs` map into the {scalars, collections} shape
+ * the executor expects internally. A value that's a JSON array becomes
+ * a collection row-set; anything else is a scalar.
+ */
+function splitInputs(
+  unified: Record<string, unknown> | undefined
+): {
+  scalars: Record<string, unknown>
+  collections: Record<string, Array<Record<string, unknown>>>
+} {
+  const scalars: Record<string, unknown> = {}
+  const collections: Record<string, Array<Record<string, unknown>>> = {}
+  if (!unified) return { scalars, collections }
+  for (const [key, value] of Object.entries(unified)) {
+    if (Array.isArray(value)) {
+      // Defensive: ensure every element is an object so downstream
+      // logic doesn't blow up on arrays of primitives at a collection key.
+      const rows = value.filter(
+        (r): r is Record<string, unknown> =>
+          typeof r === 'object' && r !== null && !Array.isArray(r)
+      )
+      collections[key] = rows
+    } else {
+      scalars[key] = value
+    }
+  }
+  return { scalars, collections }
+}
 
 // ---------------------------------------------------------------------------
 // Response types
@@ -188,8 +230,10 @@ router.post('/:rulesetId/query', (req, res) => {
     return
   }
 
-  const inputs = body.inputs ?? {}
-  const entitiesRaw = body.entities ?? {}
+  // The wire shape uses a single unified `inputs` map keyed by path.
+  // The executor still wants scalars and collections separated, so we
+  // split here at the API boundary.
+  const { scalars, collections } = splitInputs(body.inputs)
   const includeSet = new Set(body.include ?? [])
   const wantSupportingFacts = includeSet.has('supportingFacts')
   const wantTraces = includeSet.has('trace')
@@ -200,12 +244,11 @@ router.post('/:rulesetId/query', (req, res) => {
   // is still addressable in the response.
   const memberIdsByCollection: Record<string, string[]> = {}
   const entitiesForExecutor: Record<string, Array<Record<string, unknown>>> = {}
-  for (const [collPath, rows] of Object.entries(entitiesRaw)) {
-    if (!Array.isArray(rows)) continue
+  for (const [collPath, rows] of Object.entries(collections)) {
     const ids: string[] = []
     const cleaned: Array<Record<string, unknown>> = []
     rows.forEach((row, idx) => {
-      const rawId = row && typeof row.id === 'string' ? row.id : ''
+      const rawId = typeof row.id === 'string' ? row.id : ''
       const memberId = rawId.length > 0 ? rawId : 'member-' + idx
       ids.push(memberId)
       const { id: _discard, ...rest } = row
@@ -221,7 +264,7 @@ router.post('/:rulesetId/query', (req, res) => {
     executionResults = executeFactGraph(
       rulesetId,
       facts,
-      inputs,
+      scalars,
       model.nodes as Record<string, { content: { dataType?: string } }>,
       entitiesForExecutor
     )
@@ -257,11 +300,9 @@ router.post('/:rulesetId/query', (req, res) => {
 
   // Set of paths the caller explicitly supplied — used by the missing-
   // inputs walker so we don't list inputs the caller already provided.
-  const providedInputPaths = new Set<string>(Object.keys(inputs))
-  for (const rows of Object.values(entitiesRaw)) {
-    if (!Array.isArray(rows)) continue
+  const providedInputPaths = new Set<string>(Object.keys(scalars))
+  for (const rows of Object.values(collections)) {
     for (const row of rows) {
-      if (!row) continue
       for (const key of Object.keys(row)) {
         if (key === 'id') continue
         providedInputPaths.add(key)

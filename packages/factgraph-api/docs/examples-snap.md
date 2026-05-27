@@ -101,9 +101,7 @@ curl -X POST .../v1/factgraph/snap-fy2026/query \
       "/homeownersInsurance": 0,
       "/meetsCategoricalEligibility": false,
       "/childSupportPaid": 0,
-      "/isHomeless": false
-    },
-    "entities": {
+      "/isHomeless": false,
       "/members": [{
         "id": "applicant",
         "/members/*/isElderly": false,
@@ -202,9 +200,13 @@ A `ProgramDecision`:
 
 ## Step 1 — translate the request
 
-The translation has three moving parts: scalar context, the `/members`
-collection, and the per-member arrays (income / expenses / assets)
-which fan out into **separate** top-level collections in the query body.
+Inputs of every kind live in the single `inputs` map, keyed by fact
+path or collection root. Scalar facts take a primitive value;
+collection roots (`/members`, `/incomes`, `/expenses`, `/jobs`,
+`/resourceItems`) take an array of row objects. The translation has
+three moving parts: scalar context, the `/members` collection, and the
+per-member arrays (income / expenses / assets) which fan out into
+**separate** top-level collections in the query body.
 
 ```jsonc
 {
@@ -219,11 +221,11 @@ which fan out into **separate** top-level collections in the query body.
   // Echoed unchanged in the response — use for correlation.
   "metadata": { "applicationId": "case-1234", "traceId": "req-abc" },
 
-  // Operational context for the determination. These don't come from
-  // the HouseholdDeterminationRequest body — they're administrative
-  // facts about the application itself ("when did this case file?",
-  // "is this a recertification?") that your integration sets.
   "inputs": {
+    // Operational context. These don't come from the
+    // HouseholdDeterminationRequest body — they're administrative
+    // facts about the application itself ("when did this case file?",
+    // "is this a recertification?") that your integration sets.
     "/applicationFilingDate":          "2025-01-05",
     "/benefitMonth":                   "2025-01-01",
     "/certificationPeriodStartDate":   "2025-01-01",
@@ -233,11 +235,9 @@ which fan out into **separate** top-level collections in the query body.
     "/dSnapActive":                    false,
     "/temporaryEmergencyActive":       false,
     "/hasOrExpectsShelterCosts":       false,
-    "/normalIssuanceCycleDate":        "2025-01-15"
+    "/normalIssuanceCycleDate":        "2025-01-15",
     // ... 7 more operational booleans, all defaulting to false
-  },
 
-  "entities": {
     // Each member from the adapter request becomes one row here. Reuse
     // the adapter `id` as the row id so the response can refer back to
     // the same handle.
@@ -327,9 +327,11 @@ that the adapter request doesn't currently carry.
 
 A ready-to-use full request body lives at
 [`data/factgraph/snap-complete/profiles.json`](../../../data/factgraph/snap-complete/profiles.json)
-under the "Default" profile — copy the `inputs` and `entities` blocks
-verbatim as a starting template, then patch in the applicant data
-from your `HouseholdDeterminationRequest`.
+under the "Default" profile — copy its `inputs` block and merge in the
+collections from the same profile's `entities` block (the profile file
+still uses the older two-field shape; combine them under `inputs` when
+building the query body), then patch in the applicant data from your
+`HouseholdDeterminationRequest`.
 
 ## Step 2 — call the API
 
@@ -436,8 +438,10 @@ expedited fact and skip the heavier context:
 ```jsonc
 {
   "targets": ["/isExpedited"],
-  "inputs":   { /* caseworker context */ },
-  "entities": { /* members + incomes + resourceItems */ }
+  "inputs": {
+    /* operational context */
+    /* "/members": [...], "/incomes": [...], "/resourceItems": [...] */
+  }
 }
 ```
 

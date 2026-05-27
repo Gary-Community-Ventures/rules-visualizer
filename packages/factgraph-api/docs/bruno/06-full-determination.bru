@@ -20,7 +20,9 @@ auth:bearer {
 
 body:json {
   {
-    "targets": ["/snap"],
+    "targets": [
+      "/snap"
+    ],
     "inputs": {
       "/grossEarnedIncome": 0,
       "/unearnedIncome": 0,
@@ -32,9 +34,7 @@ body:json {
       "/homeownersInsurance": 0,
       "/meetsCategoricalEligibility": false,
       "/childSupportPaid": 0,
-      "/isHomeless": false
-    },
-    "entities": {
+      "/isHomeless": false,
       "/members": [
         {
           "id": "applicant",
@@ -59,10 +59,11 @@ body:json {
         }
       ]
     },
-    "include": ["supportingFacts"]
+    "include": [
+      "supportingFacts"
+    ]
   }
 }
-
 docs {
   Target `/snap` to get the monthly benefit amount (not just the
   eligibility boolean).

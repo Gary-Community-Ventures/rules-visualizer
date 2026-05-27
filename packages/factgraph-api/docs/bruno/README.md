@@ -42,8 +42,8 @@ one as documentation of the API surface.
 ```json
 {
   "targets":  ["/eligible"],
-  "inputs":   { "/grossEarnedIncome": 1500 },
-  "entities": {
+  "inputs": {
+    "/grossEarnedIncome": 1500,
     "/members": [
       { "id": "applicant", "/members/*/age": 30, ... }
     ]
@@ -52,6 +52,10 @@ one as documentation of the API surface.
   "metadata": { "applicationId": "abc-123" }
 }
 ```
+
+Scalar facts and collection rows live in the same `inputs` map. The
+key shape (path vs collection root) tells you which is which; the
+value shape mirrors that on the response side too.
 
 All fields except `targets` are optional. `id` on entity rows lets you
 correlate per-member response values back to specific rows.

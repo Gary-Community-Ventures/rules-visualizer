@@ -50,8 +50,7 @@ test('full single-person determination resolves to FY2026 max allotment', async 
     .post(QUERY_URL)
     .send({
       targets: ['/snap'],
-      inputs: ZEROED_SCALARS,
-      entities: { '/members': [APPLICANT_ROW] },
+      inputs: { ...ZEROED_SCALARS, '/members': [APPLICANT_ROW] },
     })
   assert.equal(res.status, 200)
   assert.equal(res.body.status, 'complete')
@@ -64,8 +63,7 @@ test('multi-target resolves multiple values in one engine run', async () => {
     .post(QUERY_URL)
     .send({
       targets: ['/eligible', '/snap', '/grossIncomeLimit'],
-      inputs: ZEROED_SCALARS,
-      entities: { '/members': [APPLICANT_ROW] },
+      inputs: { ...ZEROED_SCALARS, '/members': [APPLICANT_ROW] },
     })
   assert.equal(res.status, 200)
   assert.equal(res.body.status, 'complete')
@@ -84,8 +82,7 @@ test('BBCE short-circuit (smart walker prunes income/asset subtree)', async () =
     .post(QUERY_URL)
     .send({
       targets: ['/eligible'],
-      inputs: { ...ZEROED_SCALARS, '/meetsCategoricalEligibility': true },
-      entities: { '/members': [APPLICANT_ROW] },
+      inputs: {  ...ZEROED_SCALARS, '/meetsCategoricalEligibility': true, '/members': [APPLICANT_ROW] },
     })
   assert.equal(res.status, 200)
   assert.equal(res.body.status, 'complete')
@@ -97,8 +94,7 @@ test('include: ["supportingFacts"] populates the trace', async () => {
     .post(QUERY_URL)
     .send({
       targets: ['/eligible'],
-      inputs: ZEROED_SCALARS,
-      entities: { '/members': [APPLICANT_ROW] },
+      inputs: { ...ZEROED_SCALARS, '/members': [APPLICANT_ROW] },
       include: ['supportingFacts'],
     })
   assert.equal(res.status, 200)
@@ -145,10 +141,7 @@ test('per-member target returns array of {memberId, value} correlated to caller-
     .post(QUERY_URL)
     .send({
       targets: ['/members/*/isEligibleMember'],
-      inputs: ZEROED_SCALARS,
-      entities: {
-        '/members': [APPLICANT_ROW, CHILD_ROW],
-      },
+      inputs: { ...ZEROED_SCALARS, '/members': [APPLICANT_ROW, CHILD_ROW] },
     })
   assert.equal(res.status, 200)
   assert.equal(res.body.status, 'complete')
@@ -170,8 +163,7 @@ test('per-member target auto-generates member-N ids when caller omits them', asy
     .post(QUERY_URL)
     .send({
       targets: ['/members/*/isEligibleMember'],
-      inputs: ZEROED_SCALARS,
-      entities: { '/members': [anonymous] },
+      inputs: { ...ZEROED_SCALARS, '/members': [anonymous] },
     })
   assert.equal(res.status, 200)
   const value = res.body.values['/members/*/isEligibleMember']
@@ -188,7 +180,7 @@ test('intermediate gates are queryable directly', async () => {
     .post(QUERY_URL)
     .send({
       targets: ['/grossIncomeLimit'],
-      entities: { '/members': [APPLICANT_ROW] },
+      inputs: { '/members': [APPLICANT_ROW] },
     })
   assert.equal(res.status, 200)
   assert.equal(res.body.status, 'complete')
@@ -204,15 +196,13 @@ test('intermediate gate that lacks inputs returns incomplete with useful missing
     .post(QUERY_URL)
     .send({
       targets: ['/grossIncomeLimit'],
-      entities: {
-        '/members': [
+      inputs: { '/members': [
           {
             id: 'applicant',
             '/members/*/age': 30,
             '/members/*/isImmigrationEligible': true,
           },
-        ],
-      },
+        ] },
     })
   assert.equal(res.status, 200)
   assert.equal(res.body.status, 'incomplete')
