@@ -158,6 +158,33 @@ value but don't recurse — query those facts directly for their
 breakdown. Per-member trace for collection-scoped targets is planned;
 ask for a scalar parent instead today.
 
+### Finding the deciding nodes
+
+The trace gives you two affordances to find the nodes that drove an
+outcome without having to derive that logic yourself:
+
+- **`decisive: true`** on every child in a `TraceNode.children` array,
+  indicating whether that child contributed to the parent's value:
+  - `All`-true → every child is decisive
+  - `All`-false → only the first false child is decisive
+  - `Any`-true → only the first true child is decisive
+  - `Any`-false → every child is decisive
+  - `Not`, leaf comparisons → the (single) operand is decisive
+
+  Use this to grey out non-contributing siblings in a tree UI, or to
+  walk the deciding chain client-side.
+
+- **`decidingPaths`** at the top level of the response (sibling to
+  `traces`), keyed by target path. Each entry is a compact ordered
+  chain of path-bearing nodes `[target, deciding child, …]` powering
+  one-line headline rendering — *"Denied because gross income test
+  failed."* The chain stops at the first branch point (`All`-true with
+  multiple operands, `Any`-false where every operand failed) since
+  beyond that the causation fans out and a flat list would misrepresent
+  it. For branchy outcomes the chain may be short; the full
+  `TraceNode` tree is always available for callers that want to
+  enumerate every contributor.
+
 Both `supportingFacts` and `trace` can be requested at once.
 
 ## Metadata passthrough

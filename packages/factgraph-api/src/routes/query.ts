@@ -7,7 +7,12 @@ import {
 } from 'rules-visualizer-factgraph-core'
 import type { Model, ModelNode } from 'rules-visualizer-shared-types'
 
-import { buildTrace, type TraceNode } from '../explain.js'
+import {
+  buildTrace,
+  buildDecidingPath,
+  type TraceNode,
+  type DecidingPath,
+} from '../explain.js'
 import { getModelIndex } from '../model-index.js'
 
 const router = Router()
@@ -94,6 +99,12 @@ type QueryResponse = {
   /** Present iff request.include contains "trace". One entry per
    *  requested target, keyed by target path. */
   traces?: Record<string, TraceNode>
+  /** Present iff request.include contains "trace". For each target, a
+   *  compact array of path-bearing nodes from the target down to the
+   *  single deciding leaf (stops at branch points where multiple
+   *  operands contributed equally). Powers headline rendering without
+   *  re-walking the full TraceNode tree. */
+  decidingPaths?: Record<string, DecidingPath>
 }
 
 // ---------------------------------------------------------------------------
@@ -280,11 +291,16 @@ router.post('/:rulesetId/query', (req, res) => {
   if (wantTraces) {
     const index = getModelIndex(model)
     const traces: Record<string, TraceNode> = {}
+    const decidingPaths: Record<string, DecidingPath> = {}
     for (const target of targets) {
       const t = buildTrace(model, index, effectiveResults, target)
-      if (t) traces[target] = t
+      if (t) {
+        traces[target] = t
+        decidingPaths[target] = buildDecidingPath(t)
+      }
     }
     response.traces = traces
+    response.decidingPaths = decidingPaths
   }
 
   if (!allResolved) {

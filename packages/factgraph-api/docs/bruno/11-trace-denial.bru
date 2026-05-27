@@ -71,19 +71,24 @@ docs {
   BBCE, no elderly/disabled members, so the engine resolves /eligible
   to false.
 
-  Setting include: ["trace"] makes the response carry a `traces` map
-  keyed by target path. Each entry is a recursive tree showing how
-  the target's value was derived:
+  Setting include: ["trace"] makes the response carry:
 
-    - At each `All` that's false, the deciding (first-false) branch is
-      called out in the `reason`. The other branches still appear in
-      `children` so the caller can see the full picture.
-    - At each `Any` that's true, the satisfying branch is called out.
-    - Leaf comparisons surface the concrete operand values in `reason`
-      — "Gross monthly income (3500) ≤ Gross income limit (1695.2) —
-      did not hold."
-    - Policy citations from references.json flow through inline on
-      facts that have them.
+    - `traces[<target>]` — a recursive tree showing how the value
+      was derived. At each All, the first false child is called out
+      in `reason`; at each Any, the first true child is called out.
+      Every child carries `decisive: true|false` so the caller can
+      tell which contributed to the parent's value without deriving
+      it themselves. Leaf comparisons surface the concrete operand
+      values: "Gross monthly income (3500) ≤ Gross income limit
+      (1695.2) — did not hold." Policy citations from
+      references.json flow through inline.
+
+    - `decidingPaths[<target>]` — a compact flat chain of
+      path-bearing nodes from the target down to the deepest
+      single-leaf cause. Powers a one-line "denied because…"
+      headline. For branchy denials (where multiple operands all
+      contributed) the chain stops at the branch point — drill into
+      `traces` for the full picture.
 
   Arithmetic operators (Multiply, Subtract, etc.) and Switch are
   surfaced as "opaque" — value is present but the walker doesn't

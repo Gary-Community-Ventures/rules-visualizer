@@ -61,12 +61,40 @@ export type TraceNode = {
   value: unknown
   /** One-sentence summary of how this value was decided. */
   reason: string
-  /** Sub-nodes that contributed. For All/Any, only the deciding branches.
-   *  Empty/undefined on terminals. */
+  /** When this node appears inside its parent's `children` array, indicates
+   *  whether it contributed to the parent's value. For an `All` that's
+   *  false, only the first false child is decisive. For an `Any` that's
+   *  true, only the first true child is. For `All`-true and `Any`-false,
+   *  every operand contributed equally and they all carry decisive=true.
+   *  Single-operand structures (Not, leaf comparisons) are always
+   *  decisive. Always undefined on the root of a trace. */
+  decisive?: boolean
+  /** Sub-nodes that contributed or sat alongside. For All/Any, every
+   *  operand appears regardless of whether it was decisive — use the
+   *  `decisive` flag to filter. Empty/undefined on terminals. */
   children?: TraceNode[]
   /** Policy citations resolved from references.json. */
   citations?: TraceCitation[]
 }
+
+/**
+ * Compact summary of the path-bearing nodes that drove a trace's
+ * outcome — `[target, deciding child, …, deepest single-leaf cause]`.
+ * Stops at the first branch point (`All`-true with multiple operands,
+ * `Any`-false where every operand failed) since beyond that the
+ * causation fans out and a flat list misrepresents it. The full trace
+ * is still available via `TraceNode.children` for callers that want to
+ * drill into branched chains.
+ */
+export type DecidingPathStep = {
+  path: string
+  name?: string
+  value: unknown
+  /** Operator at this point — useful for picking icons or color in a UI. */
+  op: string
+}
+
+export type DecidingPath = DecidingPathStep[]
 
 // ---------------------------------------------------------------------------
 // Internal AST
@@ -178,6 +206,39 @@ export function buildTrace(
   // Guard runaway recursion (cycles, deeply-nested rulesets).
   const stack = new Set<string>()
   return walkFact(node, model, index, results, stack, 0)
+}
+
+/**
+ * Extract the deciding chain from a trace. Walks down following the
+ * single decisive child at each step; stops as soon as a node has
+ * either zero children or multiple decisive children (the latter is
+ * the All-true / Any-false branch point — both sides contributed
+ * equally, so a linear path would misrepresent the causation).
+ *
+ * Returns only path-bearing nodes — anonymous sub-expressions like an
+ * inline comparison or arithmetic node are skipped in favor of the
+ * surrounding fact they live under.
+ */
+export function buildDecidingPath(root: TraceNode): DecidingPath {
+  const out: DecidingPath = []
+  let cursor: TraceNode | undefined = root
+  const visited = new Set<TraceNode>()
+  while (cursor && !visited.has(cursor)) {
+    visited.add(cursor)
+    if (cursor.path) {
+      out.push({
+        path: cursor.path,
+        name: cursor.name,
+        value: cursor.value,
+        op: cursor.op,
+      })
+    }
+    const deciders: TraceNode[] = (cursor.children ?? []).filter(
+      (c) => c.decisive === true
+    )
+    cursor = deciders.length === 1 ? deciders[0] : undefined
+  }
+  return out
 }
 
 const MAX_DEPTH = 24
@@ -324,6 +385,7 @@ function walkBoolean(
       return { op: 'Not', value: parentValue ?? null, reason: 'NOT with no operand.' }
     }
     const childTrace = walkLogic(child, parentNode, model, index, results, stack, depth)
+    childTrace.decisive = true
     return {
       op: 'Not',
       value: parentValue ?? null,
@@ -355,6 +417,8 @@ function walkBoolean(
 
   if (logic.op === 'All') {
     if (parentValue === true) {
+      // Every operand had to hold — they're all decisive.
+      markAllDecisive(childTraces)
       return {
         op: 'All',
         value: true,
@@ -366,9 +430,10 @@ function walkBoolean(
       }
     }
     if (parentValue === false) {
-      // First false child is the deciding one — surface it in the
-      // parent reason, but keep every child in `children` for context.
-      const failing = childTraces.find((c) => c.value === false)
+      // First false child is decisive; everything else is context.
+      const failingIdx = childTraces.findIndex((c) => c.value === false)
+      markOneDecisive(childTraces, failingIdx)
+      const failing = failingIdx >= 0 ? childTraces[failingIdx] : undefined
       return {
         op: 'All',
         value: false,
@@ -388,7 +453,11 @@ function walkBoolean(
 
   // Any
   if (parentValue === true) {
-    const passing = childTraces.find((c) => c.value === true)
+    // First true child is decisive; the others sat alongside but
+    // didn't drive the outcome.
+    const passingIdx = childTraces.findIndex((c) => c.value === true)
+    markOneDecisive(childTraces, passingIdx)
+    const passing = passingIdx >= 0 ? childTraces[passingIdx] : undefined
     return {
       op: 'Any',
       value: true,
@@ -399,6 +468,8 @@ function walkBoolean(
     }
   }
   if (parentValue === false) {
+    // Every operand had to fail — they're all decisive.
+    markAllDecisive(childTraces)
     return {
       op: 'Any',
       value: false,
@@ -415,6 +486,16 @@ function walkBoolean(
     reason: 'No operand has held yet, and others have not evaluated.',
     children: childTraces,
   }
+}
+
+function markAllDecisive(nodes: TraceNode[]): void {
+  for (const n of nodes) n.decisive = true
+}
+
+function markOneDecisive(nodes: TraceNode[], idx: number): void {
+  nodes.forEach((n, i) => {
+    n.decisive = i === idx
+  })
 }
 
 function walkComparison(
@@ -457,6 +538,9 @@ function walkComparison(
     reason = `${describeOperand(leftTrace)} ${symbol} ${describeOperand(rightTrace)} — pending.`
   }
 
+  // Both operands of a comparison contribute equally to the result.
+  leftTrace.decisive = true
+  rightTrace.decisive = true
   return {
     op: logic.op,
     value: parentValue ?? null,
