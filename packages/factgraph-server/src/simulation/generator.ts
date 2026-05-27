@@ -3,6 +3,9 @@
  * schema. Uses a seeded PRNG for reproducibility.
  */
 
+import fs from 'node:fs'
+import path from 'node:path'
+import { getDataDir } from 'rules-visualizer-factgraph-core'
 import type { Model, ModelNode } from 'rules-visualizer-shared-types'
 import type {
   SimulationConfig,
@@ -123,6 +126,78 @@ export function autoConfigFromModel(
     collections: overrides?.collections ?? collections,
     ...overrides,
   }
+}
+
+export function loadSimulationDefaults(
+  rulesetId: string
+): Partial<SimulationConfig> | undefined {
+  const dataDir = getDataDir()
+  if (!dataDir) return undefined
+  const filePath = path.join(dataDir, rulesetId, 'simulation-defaults.json')
+  if (!fs.existsSync(filePath)) return undefined
+  return JSON.parse(
+    fs.readFileSync(filePath, 'utf-8')
+  ) as Partial<SimulationConfig>
+}
+
+export function mergeSimulationConfig(
+  base: SimulationConfig,
+  ...overrides: (Partial<SimulationConfig> | undefined)[]
+): SimulationConfig {
+  let next = base
+  for (const override of overrides) {
+    if (!override) continue
+    next = {
+      ...next,
+      ...override,
+      scalarFields: mergeFields(next.scalarFields, override.scalarFields),
+      collections: mergeCollections(next.collections, override.collections),
+    }
+  }
+  return next
+}
+
+function mergeFields(
+  fields: FieldConfig[],
+  overrides?: FieldConfig[]
+): FieldConfig[] {
+  if (!overrides) return fields
+  const byPath = new Map(overrides.map((field) => [field.path, field]))
+  const seen = new Set<string>()
+  const merged = fields.map((field) => {
+    const override = byPath.get(field.path)
+    seen.add(field.path)
+    return override ? { ...field, ...override } : field
+  })
+  for (const override of overrides) {
+    if (!seen.has(override.path)) merged.push(override)
+  }
+  return merged
+}
+
+function mergeCollections(
+  collections: CollectionConfig[],
+  overrides?: CollectionConfig[]
+): CollectionConfig[] {
+  if (!overrides) return collections
+  const byPath = new Map(
+    overrides.map((collection) => [collection.collectionPath, collection])
+  )
+  const seen = new Set<string>()
+  const merged = collections.map((collection) => {
+    const override = byPath.get(collection.collectionPath)
+    seen.add(collection.collectionPath)
+    if (!override) return collection
+    return {
+      ...collection,
+      ...override,
+      fields: mergeFields(collection.fields, override.fields),
+    }
+  })
+  for (const override of overrides) {
+    if (!seen.has(override.collectionPath)) merged.push(override)
+  }
+  return merged
 }
 
 // --- Scenario generation ---

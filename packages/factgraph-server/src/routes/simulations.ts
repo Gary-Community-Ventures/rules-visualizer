@@ -4,7 +4,11 @@ import {
   cacheStats,
   timings,
 } from 'rules-visualizer-factgraph-core'
-import { autoConfigFromModel } from '../simulation/generator.js'
+import {
+  autoConfigFromModel,
+  loadSimulationDefaults,
+  mergeSimulationConfig,
+} from '../simulation/generator.js'
 import { runSimulation } from '../simulation/runner.js'
 import {
   saveSimulationRun,
@@ -45,8 +49,13 @@ router.post('/rulesets/:id/simulations/configure', (req, res) => {
     return
   }
 
+  const defaults = loadSimulationDefaults(req.params.id)
   const overrides = req.body ?? {}
-  const config = autoConfigFromModel(model, overrides)
+  const config = mergeSimulationConfig(
+    autoConfigFromModel(model),
+    defaults,
+    overrides
+  )
   res.json(config)
 })
 

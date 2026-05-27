@@ -16,6 +16,9 @@ export type FieldConfig = {
     | string
   min?: number
   max?: number
+  minDate?: string
+  maxDate?: string
+  stringOptions?: string[]
   enumOptions?: string[]
   /** Per-option generation probabilities (0–1), keyed by enum option. */
   enumProbabilities?: Record<string, number>

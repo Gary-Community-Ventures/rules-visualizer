@@ -27,7 +27,7 @@ import type { Model, ModelNode } from '@/lib/model'
 import { cn } from '@/lib/utils'
 
 type NodeCondition = {
-  op: 'always' | 'truthy' | 'equals' | 'gt' | 'lt'
+  op: 'always' | 'equals' | 'gt' | 'lt'
   value: string
 }
 
@@ -35,6 +35,13 @@ type InterfaceSettings = {
   selectedPaths: string[]
   conditions: Record<string, NodeCondition>
   config: SimulationConfig
+}
+
+type SimulationConfigWithInterfaceDefaults = SimulationConfig & {
+  interfaceDefaults?: {
+    selectedPaths?: string[]
+    conditions?: Record<string, NodeCondition>
+  }
 }
 
 export function FactGraphInterfacePage() {
@@ -295,6 +302,21 @@ export function FactGraphInterfaceSettingsPage() {
   const [search, setSearch] = useState('')
   const [error, setError] = useState<string | null>(null)
 
+  const resetToDefaults = async () => {
+    try {
+      localStorage.removeItem(settingsKey(rulesetId))
+      const nextConfig = await configureSimulation(rulesetId)
+      const settings = defaultInterfaceSettings(nextConfig)
+      setConfig(settings.config)
+      setSelectedPaths(settings.selectedPaths)
+      setConditions(settings.conditions)
+      setSearch('')
+      setError(null)
+    } catch (e) {
+      setError((e as Error).message)
+    }
+  }
+
   useEffect(() => {
     document.title = `Interface Settings ${rulesetId} - Rules Visualizer`
     Promise.all([getRuleset(rulesetId), configureSimulation(rulesetId)])
@@ -380,7 +402,11 @@ export function FactGraphInterfaceSettingsPage() {
           setSearch={setSearch}
         />
 
-        <GeneratorSettings config={config} setConfig={setConfig} />
+        <GeneratorSettings
+          config={config}
+          setConfig={setConfig}
+          onResetDefaults={resetToDefaults}
+        />
       </div>
     </div>
   )
@@ -528,6 +554,7 @@ function VisibleNodesSettings({
         {selectedPaths.map((path) => {
           const node = pathToNode.get(path)
           const condition = conditions[path] ?? { op: 'always', value: '' }
+          const conditionOptions = getConditionOptions(node)
           return (
             <div
               key={path}
@@ -567,30 +594,32 @@ function VisibleNodesSettings({
                 <select
                   className="h-7 rounded border bg-background px-2 text-xs"
                   value={condition.op}
-                  onChange={(e) =>
+                  onChange={(e) => {
+                    const op = e.target.value as NodeCondition['op']
                     setConditions({
                       ...conditions,
                       [path]: {
                         ...condition,
-                        op: e.target.value as NodeCondition['op'],
+                        op,
+                        value: op === 'always' ? '' : condition.value,
                       },
                     })
-                  }
+                  }}
                 >
-                  <option value="always">always</option>
-                  <option value="truthy">true / present</option>
-                  <option value="equals">equals</option>
-                  <option value="gt">greater than</option>
-                  <option value="lt">less than</option>
+                  {conditionOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
                 </select>
-                {condition.op !== 'always' && condition.op !== 'truthy' && (
-                  <Input
-                    className="h-7 w-24 text-xs"
-                    value={condition.value}
-                    onChange={(e) =>
+                {condition.op !== 'always' && (
+                  <ConditionValueInput
+                    node={node}
+                    condition={condition}
+                    onChange={(value) =>
                       setConditions({
                         ...conditions,
-                        [path]: { ...condition, value: e.target.value },
+                        [path]: { ...condition, value },
                       })
                     }
                   />
@@ -620,19 +649,123 @@ function VisibleNodesSettings({
   )
 }
 
+function ConditionValueInput({
+  node,
+  condition,
+  onChange,
+}: {
+  node?: ModelNode
+  condition: NodeCondition
+  onChange: (value: string) => void
+}) {
+  const typeName = getConditionTypeName(node)
+  const enumOptions = getConditionEnumOptions(node)
+  const isNumericComparison = condition.op === 'gt' || condition.op === 'lt'
+  return (
+    <TypedValueInput
+      className={cn('h-7 text-xs', isNumericComparison ? 'w-24' : 'w-40')}
+      typeName={isNumericComparison ? orderedConditionType(typeName) : typeName}
+      enumOptions={enumOptions}
+      value={condition.value}
+      onChange={onChange}
+    />
+  )
+}
+
+function getConditionOptions(
+  node?: ModelNode
+): { value: NodeCondition['op']; label: string }[] {
+  const typeName = getConditionTypeName(node)
+  const base: { value: NodeCondition['op']; label: string }[] = [
+    { value: 'always', label: 'always' },
+  ]
+
+  if (typeName !== 'Collection') {
+    base.push({ value: 'equals', label: 'equals' })
+  }
+
+  if (supportsOrderedComparison(typeName)) {
+    base.push(
+      { value: 'gt', label: 'greater than' },
+      { value: 'lt', label: 'less than' }
+    )
+  }
+
+  return base
+}
+
+function supportsOrderedComparison(typeName?: string) {
+  switch (typeName) {
+    case 'Dollar':
+    case 'Int':
+    case 'Short':
+    case 'Byte':
+    case 'Rational':
+    case 'Day':
+      return true
+    default:
+      return false
+  }
+}
+
+function getConditionTypeName(node?: ModelNode): string | undefined {
+  const content = node?.content
+  if (!content || content.type === 'entity') return undefined
+  if (content.format === 'factGraph') {
+    if (content.type === 'writable') return content.typeName
+    return content.dataType
+  }
+  return undefined
+}
+
+function getConditionEnumOptions(node?: ModelNode): string[] | undefined {
+  const content = node?.content
+  if (!content || content.type === 'entity') return undefined
+  if (content.format !== 'factGraph') return undefined
+  return content.enumOptions
+}
+
+function orderedConditionType(typeName?: string): string | undefined {
+  switch (typeName) {
+    case 'Day':
+    case 'Dollar':
+    case 'Int':
+    case 'Short':
+    case 'Byte':
+    case 'Rational':
+      return typeName
+    default:
+      return 'Dollar'
+  }
+}
+
 function GeneratorSettings({
   config,
   setConfig,
+  onResetDefaults,
 }: {
   config: SimulationConfig
   setConfig: (config: SimulationConfig) => void
+  onResetDefaults: () => void
 }) {
   return (
     <section className="rounded-xl border bg-background p-4 shadow-sm">
-      <h2 className="text-sm font-semibold">Simulation Settings</h2>
-      <p className="mt-1 text-xs text-muted-foreground">
-        Controls the values generated by the random input button.
-      </p>
+      <div className="flex items-start justify-between gap-2">
+        <div>
+          <h2 className="text-sm font-semibold">Simulation Settings</h2>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Controls the values generated by the random input button.
+          </p>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-7 text-xs"
+          onClick={onResetDefaults}
+        >
+          Reset to defaults
+        </Button>
+      </div>
 
       <div className="mt-4 space-y-3">
         <details className="text-xs">
@@ -1096,9 +1229,12 @@ function settingsKey(rulesetId: string) {
 }
 
 function defaultInterfaceSettings(config: SimulationConfig): InterfaceSettings {
+  const interfaceDefaults = (config as SimulationConfigWithInterfaceDefaults)
+    .interfaceDefaults
   return {
-    selectedPaths: config.outcomeNodes.slice(0, 8),
-    conditions: {},
+    selectedPaths:
+      interfaceDefaults?.selectedPaths ?? config.outcomeNodes.slice(0, 8),
+    conditions: interfaceDefaults?.conditions ?? {},
     config: { ...config, caseCount: 1 },
   }
 }
@@ -1243,13 +1379,19 @@ function parseValue(value: string): unknown {
 
 function passesCondition(value: unknown, condition: NodeCondition): boolean {
   if (condition.op === 'always') return true
-  if (condition.op === 'truthy') return Boolean(value)
-  if (condition.op === 'equals') return String(value) === condition.value
+  if (condition.op === 'equals') return valuesEqual(value, condition.value)
   const n = typeof value === 'number' ? value : Number(value)
   const target = Number(condition.value)
   if (Number.isNaN(n) || Number.isNaN(target)) return false
   if (condition.op === 'gt') return n > target
   return n < target
+}
+
+function valuesEqual(value: unknown, rawCondition: string): boolean {
+  if (typeof value === 'boolean') return rawCondition === String(value)
+  if (typeof value === 'number') return value === Number(rawCondition)
+  if (Array.isArray(value)) return value.map(String).includes(rawCondition)
+  return String(value) === rawCondition
 }
 
 function readablePath(path: string): string {

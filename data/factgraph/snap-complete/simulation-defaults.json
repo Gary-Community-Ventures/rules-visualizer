@@ -1,0 +1,319 @@
+{
+  "caseCount": 1000,
+  "outcomeNodes": [
+    "/eligibilityCategory",
+    "/allotment",
+    "/grossIncome",
+    "/deductions",
+    "/netIncome",
+    "/resources",
+    "/meetsGrossIncomeTest",
+    "/meetsNetIncomeTest",
+    "/meetsResourceTest"
+  ],
+  "scalarFields": [
+    {
+      "path": "/isPresidentiallyDeclaredDisasterOrEmergency",
+      "trueProbability": 0.02
+    },
+    {
+      "path": "/hasInadvertentHouseholdErrorClaimDueToEarnedIncomeCalculation",
+      "trueProbability": 0.03
+    }
+  ],
+  "collections": [
+    {
+      "collectionPath": "/members",
+      "minMembers": 1,
+      "maxMembers": 5,
+      "fields": [
+        { "path": "/members/*/age", "min": 0, "max": 85 },
+        { "path": "/members/*/hasPhysicalDisability", "trueProbability": 0.08 },
+        { "path": "/members/*/hasMentalDisability", "trueProbability": 0.06 },
+        { "path": "/members/*/isIncapacitated", "trueProbability": 0.03 },
+        {
+          "path": "/members/*/isVeteranWithDisability",
+          "trueProbability": 0.02
+        },
+        { "path": "/members/*/isBoarder", "trueProbability": 0.01 },
+        { "path": "/members/*/isRoomer", "trueProbability": 0.01 },
+        { "path": "/members/*/livesInInstitution", "trueProbability": 0.01 },
+        { "path": "/members/*/disqualifiedForIPV", "trueProbability": 0.005 },
+        {
+          "path": "/members/*/failedToProvideOrObtainSSN",
+          "trueProbability": 0.01
+        },
+        {
+          "path": "/members/*/hasLevelSanctionImposed",
+          "trueProbability": 0.01
+        },
+        {
+          "path": "/members/*/disqualifiedForWorkRequirementsCooperation",
+          "trueProbability": 0.015
+        },
+        {
+          "path": "/members/*/disqualifiedForQualityAssuranceCooperation",
+          "trueProbability": 0.005
+        },
+        {
+          "path": "/members/*/isParticipatingInAnotherHousehold",
+          "trueProbability": 0.01
+        },
+        {
+          "path": "/members/*/isResidentOfBatteredWomensShelter",
+          "trueProbability": 0.005
+        },
+        {
+          "path": "/members/*/disqualifiedForFelonyNonCompliance",
+          "trueProbability": 0.005
+        },
+        {
+          "path": "/members/*/disqualifiedForParoleOrProbationViolation",
+          "trueProbability": 0.005
+        },
+        { "path": "/members/*/countableMonths", "min": 0, "max": 2 },
+        { "path": "/members/*/isFleeingFelon", "trueProbability": 0.005 },
+        { "path": "/members/*/isStriker", "trueProbability": 0.005 },
+        {
+          "path": "/members/*/wasEligibleForSnapDayBeforeStrike",
+          "trueProbability": 0.9
+        },
+        {
+          "path": "/members/*/wasExemptFromWorkRegistrationDayBeforeStrike",
+          "trueProbability": 0.1
+        },
+        { "path": "/members/*/registeredForWork", "trueProbability": 0.96 },
+        {
+          "path": "/members/*/providedEmploymentStatusOrAvailabilityInfo",
+          "trueProbability": 0.96
+        },
+        {
+          "path": "/members/*/reportedToReferredSuitableEmployer",
+          "trueProbability": 0.96
+        },
+        {
+          "path": "/members/*/preparesFoodWithHousehold",
+          "trueProbability": 0.95
+        }
+      ]
+    },
+    {
+      "collectionPath": "/incomes",
+      "minMembers": 0,
+      "maxMembers": 4,
+      "fields": [
+        {
+          "path": "/incomes/*/type",
+          "enumProbabilities": {
+            "WagesAndSalaries": 0.45,
+            "SelfEmployment": 0.12,
+            "Ssi": 0.1,
+            "OldAgeSurvivorsSocialSecurityBenefits": 0.1,
+            "UnemploymentCompensation": 0.05,
+            "SupportAndAlimony": 0.05,
+            "DisabilityBenefits": 0.05,
+            "VeteransBenefits": 0.03,
+            "Other": 0.05
+          }
+        },
+        {
+          "path": "/incomes/*/frequency",
+          "enumProbabilities": {
+            "Monthly": 0.55,
+            "Weekly": 0.18,
+            "BiWeekly": 0.18,
+            "SemiMonthly": 0.07,
+            "Annual": 0.02
+          }
+        },
+        { "path": "/incomes/*/amount", "min": 0, "max": 2800 },
+        {
+          "path": "/incomes/*/targetPayDate",
+          "minDate": "2026-01-01",
+          "maxDate": "2026-12-31"
+        },
+        {
+          "path": "/incomes/*/receivedBeforeSnapParticipation",
+          "trueProbability": 0.08
+        },
+        { "path": "/incomes/*/receivedThisMonth", "trueProbability": 0.9 },
+        {
+          "path": "/incomes/*/isTerminatedSourceForDestituteIncome",
+          "trueProbability": 0.04
+        },
+        {
+          "path": "/incomes/*/isNewSourceNotReceivedWithinDestituteIncomeDeadline",
+          "trueProbability": 0.04
+        }
+      ]
+    },
+    {
+      "collectionPath": "/expenses",
+      "minMembers": 0,
+      "maxMembers": 4,
+      "fields": [
+        {
+          "path": "/expenses/*/type",
+          "enumProbabilities": {
+            "Rent": 0.35,
+            "Mortgage": 0.12,
+            "Electricity": 0.1,
+            "HeatingFuel": 0.08,
+            "CoolingCosts": 0.06,
+            "Water": 0.06,
+            "CellularTelephoneService": 0.06,
+            "DependentCareProviderOrFacility": 0.08,
+            "ChildSupport": 0.05,
+            "Other": 0.04
+          }
+        },
+        {
+          "path": "/expenses/*/frequency",
+          "enumProbabilities": {
+            "Monthly": 0.75,
+            "Weekly": 0.08,
+            "BiWeekly": 0.06,
+            "SemiMonthly": 0.06,
+            "Annual": 0.05
+          }
+        },
+        { "path": "/expenses/*/amount", "min": 25, "max": 1800 },
+        {
+          "path": "/expenses/*/milesDrivenToDependentCareFacility",
+          "min": 0,
+          "max": 30
+        },
+        {
+          "path": "/expenses/*/milesDrivenForMedicalTreatment",
+          "min": 0,
+          "max": 40
+        },
+        { "path": "/expenses/*/reimbursementAmount", "min": 0, "max": 250 },
+        {
+          "path": "/expenses/*/isForClaimableShelterResidence",
+          "trueProbability": 0.7
+        },
+        {
+          "path": "/expenses/*/isNecessaryDependentCareForWorkTrainingOrEducation",
+          "trueProbability": 0.25
+        },
+        {
+          "path": "/expenses/*/incursOrAnticipatesSeparateHeatingCoolingCosts",
+          "trueProbability": 0.45
+        },
+        { "path": "/expenses/*/shouldAverage", "trueProbability": 0.2 },
+        { "path": "/expenses/*/intendedMonths", "min": 1, "max": 12 }
+      ]
+    },
+    {
+      "collectionPath": "/resourceItems",
+      "minMembers": 0,
+      "maxMembers": 3,
+      "fields": [
+        {
+          "path": "/resourceItems/*/type",
+          "enumProbabilities": {
+            "CheckingAccount": 0.35,
+            "SavingsAccount": 0.2,
+            "CashOnHand": 0.15,
+            "Automobile": 0.15,
+            "HomeAndSurroundingProperty": 0.05,
+            "FederalTaxPreferredRetirementAccount": 0.04,
+            "PrePurchasedFuneralAgreement": 0.01,
+            "Other": 0.05
+          }
+        },
+        { "path": "/resourceItems/*/value", "min": 0, "max": 8000 }
+      ]
+    },
+    {
+      "collectionPath": "/jobs",
+      "minMembers": 0,
+      "maxMembers": 3,
+      "fields": [
+        { "path": "/jobs/*/hoursPerWeek", "min": 5, "max": 45 },
+        {
+          "path": "/jobs/*/abawdWorkType",
+          "enumProbabilities": {
+            "CompensatedWork": 0.8,
+            "InKindWork": 0.05,
+            "VerifiedUnpaidWork": 0.05,
+            "Other": 0.1
+          }
+        },
+        { "path": "/jobs/*/isSelfEmployed", "trueProbability": 0.12 },
+        { "path": "/jobs/*/isAtFederalMinimumWage", "trueProbability": 0.88 },
+        { "path": "/jobs/*/isOnTheJobTraining", "trueProbability": 0.04 },
+        { "path": "/jobs/*/offerAccepted", "trueProbability": 0.9 }
+      ]
+    }
+  ],
+  "interfaceDefaults": {
+    "selectedPaths": [
+      "/eligibilityCategory",
+      "/allotment",
+      "/grossIncome",
+      "/deductions",
+      "/netIncome",
+      "/members/*/isDisqualified",
+      "/members/*/disqualifiedForIPV",
+      "/members/*/failedToProvideOrObtainSSN",
+      "/members/*/isIneligibleNonCitizen",
+      "/members/*/hasLevelSanctionImposed",
+      "/members/*/disqualifiedForWorkRequirementsCooperation",
+      "/members/*/disqualifiedForQualityAssuranceCooperation",
+      "/members/*/exceededAbawdCountableMonthsLimit",
+      "/members/*/disqualifiedForMultiHouseholdParticipation",
+      "/members/*/disqualifiedForFelonyNonCompliance",
+      "/members/*/disqualifiedForParoleOrProbationViolation",
+      "/members/*/disqualifiedForBoardingHouseOrInstitutionResidence",
+      "/members/*/isIneligibleStriker",
+      "/members/*/isFleeingFelon",
+      "/members/*/meetsGeneralWorkRequirements"
+    ],
+    "conditions": {
+      "/members/*/isDisqualified": { "op": "equals", "value": "true" },
+      "/members/*/disqualifiedForIPV": { "op": "equals", "value": "true" },
+      "/members/*/failedToProvideOrObtainSSN": {
+        "op": "equals",
+        "value": "true"
+      },
+      "/members/*/isIneligibleNonCitizen": { "op": "equals", "value": "true" },
+      "/members/*/hasLevelSanctionImposed": { "op": "equals", "value": "true" },
+      "/members/*/disqualifiedForWorkRequirementsCooperation": {
+        "op": "equals",
+        "value": "true"
+      },
+      "/members/*/disqualifiedForQualityAssuranceCooperation": {
+        "op": "equals",
+        "value": "true"
+      },
+      "/members/*/exceededAbawdCountableMonthsLimit": {
+        "op": "equals",
+        "value": "true"
+      },
+      "/members/*/disqualifiedForMultiHouseholdParticipation": {
+        "op": "equals",
+        "value": "true"
+      },
+      "/members/*/disqualifiedForFelonyNonCompliance": {
+        "op": "equals",
+        "value": "true"
+      },
+      "/members/*/disqualifiedForParoleOrProbationViolation": {
+        "op": "equals",
+        "value": "true"
+      },
+      "/members/*/disqualifiedForBoardingHouseOrInstitutionResidence": {
+        "op": "equals",
+        "value": "true"
+      },
+      "/members/*/isIneligibleStriker": { "op": "equals", "value": "true" },
+      "/members/*/isFleeingFelon": { "op": "equals", "value": "true" },
+      "/members/*/meetsGeneralWorkRequirements": {
+        "op": "equals",
+        "value": "false"
+      }
+    }
+  }
+}

@@ -227,6 +227,15 @@ export function SimulatePage() {
     }
   }
 
+  const handleResetConfig = async () => {
+    try {
+      setConfig(await configureSimulation(rulesetId))
+      setToast('Simulation settings reset to defaults')
+    } catch (e) {
+      setError((e as Error).message)
+    }
+  }
+
   const handleLoadRun = (run: SimulationRun) => {
     setActiveRun(run)
     setResultsOffset(0)
@@ -338,6 +347,7 @@ export function SimulatePage() {
             isRunning={isRunning}
             progress={progress}
             onRun={handleRun}
+            onResetConfig={handleResetConfig}
             runs={runs}
             onLoadRun={handleLoadRun}
             onDeleteRun={handleDeleteRun}
@@ -468,6 +478,7 @@ function ConfigView({
   isRunning,
   progress,
   onRun,
+  onResetConfig,
   runs,
   onLoadRun,
   onDeleteRun,
@@ -494,6 +505,7 @@ function ConfigView({
   isRunning: boolean
   progress: { completed: number; total: number } | null
   onRun: () => void
+  onResetConfig: () => void
   runs: SimulationRun[]
   onLoadRun: (r: SimulationRun) => void
   onDeleteRun: (id: string) => void
@@ -523,7 +535,18 @@ function ConfigView({
   return (
     <div className="max-w-3xl mx-auto p-6 space-y-6">
       <div className="space-y-4">
-        <h2 className="text-sm font-semibold">Run Configuration</h2>
+        <div className="flex items-center justify-between gap-2">
+          <h2 className="text-sm font-semibold">Run Configuration</h2>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-7 text-xs"
+            onClick={onResetConfig}
+            disabled={isRunning}
+          >
+            Reset to defaults
+          </Button>
+        </div>
 
         <div className="grid grid-cols-2 gap-3">
           <SidePanel
