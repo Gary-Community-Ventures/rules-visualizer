@@ -219,9 +219,10 @@ which fan out into **separate** top-level collections in the query body.
   // Echoed unchanged in the response — use for correlation.
   "metadata": { "applicationId": "case-1234", "traceId": "req-abc" },
 
-  // Caseworker-side context. These don't come from the
-  // HouseholdDeterminationRequest body — they're operational facts
-  // ("when did this case file?") that your integration sets.
+  // Operational context for the determination. These don't come from
+  // the HouseholdDeterminationRequest body — they're administrative
+  // facts about the application itself ("when did this case file?",
+  // "is this a recertification?") that your integration sets.
   "inputs": {
     "/applicationFilingDate":          "2025-01-05",
     "/benefitMonth":                   "2025-01-01",
@@ -458,23 +459,43 @@ automatically.
 
 ## The fields the adapter request doesn't carry
 
-`snap-complete` has ~80 per-member Boolean disqualifier flags (drug
-felony, IPV disqualification, voluntary quit, work sanctions, ...)
-that the `HouseholdDeterminationRequest` schema doesn't include. These
-are treated as caseworker-known facts, not applicant-supplied.
+`snap-complete` has ~80 per-member Boolean disqualifier flags — drug
+felony convictions, IPV disqualifications, voluntary quit findings,
+striker status, fleeing felon, work-requirement sanctions, and so on.
+The `HouseholdDeterminationRequest` schema doesn't include these
+fields, so the values have to come from somewhere else when building
+the query body.
 
-A reasonable integration pattern:
+Some of these may map onto data you already collect (criminal records
+checks, employment history, labor-dispute status). Others are
+verification outcomes that don't exist until a caseworker has reviewed
+the case — for those, the value at intake is genuinely unknown.
 
-- **Default every disqualifier flag to `false`** on the initial query
-  call (the safe initial-application assumption).
-- When a caseworker reviews the case and discovers a disqualifier,
-  flip the relevant flag(s) and re-run the query. The trace will
-  surface the new failing gate.
+Because `snap-complete` expects every flag as a concrete Boolean (no
+native "unknown" representation), the practical choice is to pick a
+defaulting policy. Two common ones:
 
-To see the full list of flags, hit
-`/v1/factgraph/snap-complete/schema` and filter for writable nodes
-whose `path` starts with `/members/*/`, or browse the [interactive
-docs](https://rules-visualizer-factgraph-api-f0c14673cf3a.herokuapp.com/v1/factgraph/docs).
+- **Default unknown flags to `false`.** Equivalent to "assume the
+  applicant is not disqualified for this reason." Produces an
+  eligibility result based on the criteria you *do* have data for,
+  and surfaces a problem only if a caseworker later flips a flag and
+  re-queries. Be aware: a result computed this way is conditional on
+  those flags being false in reality. If most of your applicants
+  aren't actually disqualified for these reasons, this is fine; if
+  disqualifiers are common in your population, this will produce
+  false-positive eligibility.
+- **Front-load a verification step.** Don't call `snap-complete` until
+  your caseworker workflow has produced concrete values for the
+  disqualifier flags relevant to the case. Closer to a
+  verification-driven adapter model where the call to this API only
+  happens after the partner system has gathered enough information
+  for a real determination.
+
+Pick whichever matches your application's workflow. The schema
+endpoint (`/v1/factgraph/snap-complete/schema`, filtered to writable
+nodes under `/members/*/`) lists every flag with its description; the
+[interactive docs](https://rules-visualizer-factgraph-api-f0c14673cf3a.herokuapp.com/v1/factgraph/docs)
+are the easiest place to browse them.
 
 ## Mapping table — adapter fields → `/query` fields
 
@@ -494,7 +515,7 @@ Field-by-field translation for codegen or hand-rolled mapping:
 | `members[i].income[]` | `/incomes` rows with `/incomes/*/memberId` linking back | Each income type → an `/incomes/*/type` enum value. |
 | `members[i].expenses[]` | `/expenses` rows | Each expense category → an `/expenses/*/type` enum value. |
 | `members[i].assets[]` | `/resourceItems` rows | Each asset type → a `/resourceItems/*/type` enum value. |
-| (caseworker-only fields) | various scalar inputs | `applicationFilingDate`, `benefitMonth`, `livesInApplicationCounty`, etc. Default to safe values. |
+| (operational fields) | various scalar inputs | `applicationFilingDate`, `benefitMonth`, `livesInApplicationCounty`, etc. — administrative facts about the application itself, not about the applicant. Your integration sets these. |
 
 For the enum mappings (income types, expense categories, citizenship
 statuses), pull the option list from
@@ -530,8 +551,9 @@ statuses), pull the option list from
 - **No SNAP-shaped convenience endpoints yet.** Every call currently
   goes through `POST /v1/factgraph/{rulesetId}/query`. Wrapper
   endpoints matching the adapter contract's URL shape
-  (`/evaluate/expedited-screening`, `/evaluate/determination`) are on
-  the roadmap.
+  (`/evaluate/expedited-screening`, `/evaluate/determination`) can be
+  added if that's a cleaner fit for your client code than the generic
+  query shape — say the word.
 - **Per-member trace** for collection-scoped targets isn't built yet.
   Per-member outputs come back as `[{memberId, value}]` arrays in
   `values`, but `traces` only walks scalar targets today.
