@@ -96,6 +96,18 @@ value}` objects so callers can correlate output to specific rows
   (tax-withholding-estimator has 948 nodes) meant multiple O(n) scans
   per multi-target request. No behavior change.
 
+### Docs
+
+- **Real-world walkthrough in `docs/examples-snap.md`** showing how a
+  partner integrating against the `eligibility-adapter-openapi.yaml`
+  contract maps a `HouseholdDeterminationRequest` onto our generic
+  `/query` API and back to a `ProgramDecision`. Lead example is
+  `snap-complete` (the team's full SNAP modelling); a simpler
+  `snap-fy2026` walkthrough precedes it for onboarding. Concrete
+  values for the snap-complete scenario are lifted from
+  `data/factgraph/snap-complete/profiles.json` and verified end-to-end
+  against prod.
+
 ### Known limitations
 
 - The smart walker doesn't yet model **alternation** — when an `Any`
