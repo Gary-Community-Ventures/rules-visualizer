@@ -553,7 +553,7 @@ statuses), pull the option list from
   endpoints matching the adapter contract's URL shape
   (`/evaluate/expedited-screening`, `/evaluate/determination`) can be
   added if that's a cleaner fit for your client code than the generic
-  query shape — say the word.
+  query shape.
 - **Per-member trace** for collection-scoped targets isn't built yet.
   Per-member outputs come back as `[{memberId, value}]` arrays in
   `values`, but `traces` only walks scalar targets today.
