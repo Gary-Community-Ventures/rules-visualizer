@@ -19,6 +19,26 @@
     {
       "path": "/hasInadvertentHouseholdErrorClaimDueToEarnedIncomeCalculation",
       "trueProbability": 0.03
+    },
+    { "path": "/isApplicationForRecertification", "trueProbability": 0.35 },
+    { "path": "/receivedSnapInLast30Days", "trueProbability": 0.25 },
+    { "path": "/receivesLeapInLast12Months", "trueProbability": 0.12 },
+    { "path": "/dSnapActive", "trueProbability": 0.01 },
+    { "path": "/temporaryEmergencyActive", "trueProbability": 0.02 },
+    { "path": "/hasEebtInLast12Months", "trueProbability": 0.05 },
+    { "path": "/hasOrExpectsShelterCosts", "trueProbability": 0.85 },
+    {
+      "path": "/hadPreviousSubstantialLotteryOrGamblingWinnings",
+      "trueProbability": 0.002
+    },
+    {
+      "path": "/participatesInCommodityFoodDistributionProgram",
+      "trueProbability": 0.01
+    },
+    { "path": "/livesInApplicationCounty", "trueProbability": 0.96 },
+    {
+      "path": "/hasNearbyCountyArrangement",
+      "trueProbability": 0.05
     }
   ],
   "collections": [
@@ -35,9 +55,49 @@
           "path": "/members/*/isVeteranWithDisability",
           "trueProbability": 0.02
         },
+        {
+          "path": "/members/*/isVeteranNeedingAidAndAttendance",
+          "trueProbability": 0.01
+        },
+        {
+          "path": "/members/*/isVeteranSurvivorNeedingAidAndAttendance",
+          "trueProbability": 0.005
+        },
+        {
+          "path": "/members/*/isVeteranSurvivorWithDisability",
+          "trueProbability": 0.005
+        },
+        {
+          "path": "/members/*/receivesPublicDisabilityRetirementPension",
+          "trueProbability": 0.02
+        },
+        {
+          "path": "/members/*/receivesRailroadRetirementDisability",
+          "trueProbability": 0.005
+        },
+        {
+          "path": "/members/*/receivesInterimAssistanceForDisability",
+          "trueProbability": 0.01
+        },
         { "path": "/members/*/isBoarder", "trueProbability": 0.01 },
-        { "path": "/members/*/isRoomer", "trueProbability": 0.01 },
+        { "path": "/members/*/isRoomer", "trueProbability": 0.003 },
+        {
+          "path": "/members/*/livesInBoardingHouse",
+          "trueProbability": 0.005
+        },
         { "path": "/members/*/livesInInstitution", "trueProbability": 0.01 },
+        {
+          "path": "/members/*/livesInFederallySubsidizedElderlyHousing",
+          "trueProbability": 0.04
+        },
+        {
+          "path": "/members/*/residesAtSubstanceAbuseTreatmentFacility",
+          "trueProbability": 0.005
+        },
+        {
+          "path": "/members/*/livesInHomelessShelter",
+          "trueProbability": 0.02
+        },
         { "path": "/members/*/disqualifiedForIPV", "trueProbability": 0.005 },
         {
           "path": "/members/*/failedToProvideOrObtainSSN",
@@ -93,7 +153,164 @@
         },
         {
           "path": "/members/*/preparesFoodWithHousehold",
-          "trueProbability": 0.95
+          "trueProbability": 0.99
+        },
+        {
+          "path": "/members/*/isLiveInAttendant",
+          "trueProbability": 0.003
+        },
+        {
+          "path": "/members/*/isSeparateAndApart",
+          "trueProbability": 0.005
+        },
+        {
+          "path": "/members/*/livesInGroupLivingArrangement",
+          "trueProbability": 0.005
+        },
+        { "path": "/members/*/isHeadOfHousehold", "trueProbability": 0.25 },
+        { "path": "/members/*/isEmancipated", "trueProbability": 0.005 },
+        { "path": "/members/*/isFosterChild", "trueProbability": 0.01 },
+        {
+          "path": "/members/*/isUnableToPurchaseAndPrepareOwnMealsDueToDisability",
+          "trueProbability": 0.02
+        },
+        { "path": "/members/*/isMigrantFarmWorker", "trueProbability": 0.02 },
+        {
+          "path": "/members/*/receivesFamilyPreservationServices",
+          "trueProbability": 0.03
+        },
+        {
+          "path": "/members/*/convictedOfDrugRelatedFelonyWithSnap",
+          "trueProbability": 0.002
+        },
+        {
+          "path": "/members/*/isParticipatingInWorkStudy",
+          "trueProbability": 0.03
+        },
+        {
+          "path": "/members/*/isAssignedToHigherEducationThroughEmploymentTrainingProgram",
+          "trueProbability": 0.03
+        },
+        { "path": "/members/*/isInK12", "trueProbability": 0.18 },
+        {
+          "path": "/members/*/voluntarilyQuitOrReducedWorkEffort",
+          "trueProbability": 0.02
+        },
+        {
+          "path": "/members/*/isApplyingForOrReceivingUnemploymentInsuranceBenefits",
+          "trueProbability": 0.06
+        },
+        {
+          "path": "/members/*/isRegularParticipantInDrugOrAlcoholTreatment",
+          "trueProbability": 0.01
+        },
+        {
+          "path": "/members/*/isComplyingWithColoradoWorksOrRefugeeServicesWorkProgram",
+          "trueProbability": 0.08
+        },
+        {
+          "path": "/members/*/isPhysicallyOrMentallyUnfitForEmploymentForStudentEligibility",
+          "trueProbability": 0.04
+        },
+        {
+          "path": "/members/*/recentlyReleasedFromInstitution",
+          "trueProbability": 0.01
+        },
+        {
+          "path": "/members/*/hasSelfDeclaredTemporaryConditionPreventingWorkActivities",
+          "trueProbability": 0.04
+        },
+        {
+          "path": "/members/*/receivesTemporaryOrPermanentDisabilityBenefits",
+          "trueProbability": 0.06
+        },
+        {
+          "path": "/members/*/isParticipatingInVocationalRehabilitation",
+          "trueProbability": 0.015
+        },
+        {
+          "path": "/members/*/isApplyingForOrAppealingSsiBenefits",
+          "trueProbability": 0.03
+        },
+        {
+          "path": "/members/*/isUnableToMaintainEmployment",
+          "trueProbability": 0.04
+        },
+        {
+          "path": "/members/*/isImpactedByDomesticViolence",
+          "trueProbability": 0.01
+        },
+        {
+          "path": "/members/*/hasOtherValidReasonForWorkRequirementsUnfitness",
+          "trueProbability": 0.03
+        },
+        {
+          "path": "/members/*/isEnrolledInEmploymentTrainingProgram",
+          "trueProbability": 0.04
+        },
+        { "path": "/members/*/isPregnant", "trueProbability": 0.03 },
+        { "path": "/members/*/isVeteran", "trueProbability": 0.06 },
+        {
+          "path": "/members/*/wasInFosterCareOn18thBirthday",
+          "trueProbability": 0.01
+        },
+        {
+          "path": "/members/*/isExemptUnderAbawdWaiver",
+          "trueProbability": 0.08
+        },
+        {
+          "path": "/members/*/isExemptUnderColoradoAbawdStateExemption",
+          "trueProbability": 0.04
+        },
+        {
+          "path": "/members/*/participatesInColoradoWorkfare",
+          "trueProbability": 0.02
+        },
+        {
+          "path": "/members/*/isExperiencingHomelessness",
+          "trueProbability": 0.05
+        },
+        {
+          "path": "/members/*/wasBornOnOrBeforeAug221931AndLawfullyResidedAug221996",
+          "trueProbability": 0.002
+        },
+        {
+          "path": "/members/*/hasQualifyingMilitaryConnection",
+          "trueProbability": 0.04
+        },
+        {
+          "path": "/members/*/isSponsoredByOrganization",
+          "trueProbability": 0.01
+        },
+        { "path": "/members/*/receivesTanf", "trueProbability": 0.08 },
+        { "path": "/members/*/spouseId", "linkProbability": 0.35 },
+        { "path": "/members/*/sponsorId", "linkProbability": 0.03 }
+      ]
+    },
+    {
+      "collectionPath": "/caregiverRelationships",
+      "minMembers": 0,
+      "maxMembers": 4,
+      "fields": [
+        {
+          "path": "/caregiverRelationships/*/isParent",
+          "trueProbability": 0.75
+        },
+        {
+          "path": "/caregiverRelationships/*/isNonparentParentalControl",
+          "trueProbability": 0.08
+        },
+        {
+          "path": "/caregiverRelationships/*/caregiverProvidesMoreThanHalfOfPhysicalCare",
+          "trueProbability": 0.8
+        },
+        {
+          "path": "/caregiverRelationships/*/adequateChildcareUnavailable",
+          "trueProbability": 0.12
+        },
+        {
+          "path": "/caregiverRelationships/*/claimedForWorkRequirementsCareExemption",
+          "trueProbability": 0.25
         }
       ]
     },
@@ -136,13 +353,16 @@
           "path": "/incomes/*/receivedBeforeSnapParticipation",
           "trueProbability": 0.08
         },
-        { "path": "/incomes/*/receivedThisMonth", "trueProbability": 0.9 },
         {
-          "path": "/incomes/*/isTerminatedSourceForDestituteIncome",
+          "path": "/incomes/*/isWorkSupplementationOrWorkSupportPublicAssistancePortion",
+          "trueProbability": 0.03
+        },
+        {
+          "path": "/incomes/*/isFromTerminatedSourceForDestituteIncome",
           "trueProbability": 0.04
         },
         {
-          "path": "/incomes/*/isNewSourceNotReceivedWithinDestituteIncomeDeadline",
+          "path": "/incomes/*/isFromNewSourceForDestituteIncome",
           "trueProbability": 0.04
         }
       ]
@@ -194,12 +414,28 @@
           "trueProbability": 0.7
         },
         {
+          "path": "/expenses/*/isDirectMonetaryPaymentToAgencyOrPersonOutsideHousehold",
+          "trueProbability": 0.08
+        },
+        {
           "path": "/expenses/*/isNecessaryDependentCareForWorkTrainingOrEducation",
           "trueProbability": 0.25
         },
         {
           "path": "/expenses/*/incursOrAnticipatesSeparateHeatingCoolingCosts",
           "trueProbability": 0.45
+        },
+        {
+          "path": "/expenses/*/privateRentalBilledForHeatingCooling",
+          "trueProbability": 0.35
+        },
+        {
+          "path": "/expenses/*/sharedResidencePaysHeatingCoolingPortion",
+          "trueProbability": 0.18
+        },
+        {
+          "path": "/expenses/*/publicHousingResponsibleForExcessHeatingCoolingCosts",
+          "trueProbability": 0.08
         },
         { "path": "/expenses/*/shouldAverage", "trueProbability": 0.2 },
         { "path": "/expenses/*/intendedMonths", "min": 1, "max": 12 }
@@ -244,7 +480,48 @@
         { "path": "/jobs/*/isSelfEmployed", "trueProbability": 0.12 },
         { "path": "/jobs/*/isAtFederalMinimumWage", "trueProbability": 0.88 },
         { "path": "/jobs/*/isOnTheJobTraining", "trueProbability": 0.04 },
-        { "path": "/jobs/*/offerAccepted", "trueProbability": 0.9 }
+        { "path": "/jobs/*/offerAccepted", "trueProbability": 0.9 },
+        {
+          "path": "/jobs/*/wagesBelowApplicableMinimum",
+          "trueProbability": 0.03
+        },
+        {
+          "path": "/jobs/*/pieceRateYieldBelowApplicableWage",
+          "trueProbability": 0.02
+        },
+        {
+          "path": "/jobs/*/requiresLaborOrganizationAction",
+          "trueProbability": 0.05
+        },
+        {
+          "path": "/jobs/*/worksiteSubjectToStrikeOrLockout",
+          "trueProbability": 0.005
+        },
+        {
+          "path": "/jobs/*/unreasonableHealthSafetyRisk",
+          "trueProbability": 0.02
+        },
+        {
+          "path": "/jobs/*/memberPhysicallyOrMentallyUnfit",
+          "trueProbability": 0.04
+        },
+        {
+          "path": "/jobs/*/outsideMajorFieldDuringInitialThirtyDays",
+          "trueProbability": 0.08
+        },
+        { "path": "/jobs/*/unreasonableDistance", "trueProbability": 0.08 },
+        {
+          "path": "/jobs/*/dailyCommuteExceedsTwoHours",
+          "trueProbability": 0.04
+        },
+        {
+          "path": "/jobs/*/noTransportationForNonWalkingDistance",
+          "trueProbability": 0.08
+        },
+        {
+          "path": "/jobs/*/interferesWithReligiousObservance",
+          "trueProbability": 0.01
+        }
       ]
     }
   ],

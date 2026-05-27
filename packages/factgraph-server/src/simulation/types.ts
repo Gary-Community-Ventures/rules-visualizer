@@ -20,6 +20,9 @@ export type FieldConfig = {
   maxDate?: string
   stringOptions?: string[]
   enumOptions?: string[]
+  collectionItemPath?: string
+  /** Probability a CollectionItem link is populated (0–1). Default 1. */
+  linkProbability?: number
   /** Per-option generation probabilities (0–1), keyed by enum option. */
   enumProbabilities?: Record<string, number>
   /** Probability a Boolean field generates `true` (0–1). Default 0.5. */

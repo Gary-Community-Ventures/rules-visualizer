@@ -40,11 +40,15 @@ function fieldConfigFromNode(node: ModelNode): FieldConfig | null {
   if (c.format !== 'factGraph' || c.type !== 'writable') return null
 
   const type = c.typeName
-  if (type === 'Collection' || type === 'CollectionItem') return null
+  if (type === 'Collection') return null
 
   const config: FieldConfig = {
     path: c.path,
     type: type as FieldConfig['type'],
+  }
+
+  if (type === 'CollectionItem') {
+    config.collectionItemPath = c.collectionItemPath
   }
 
   // Apply limits from the XML if present
@@ -202,8 +206,30 @@ function mergeCollections(
 
 // --- Scenario generation ---
 
-function generateValue(field: FieldConfig, rng: () => number): unknown {
+function generateValue(
+  field: FieldConfig,
+  rng: () => number,
+  entities?: Record<string, Record<string, unknown>[]>,
+  currentCollectionPath?: string,
+  currentRowIndex?: number
+): unknown {
   switch (field.type) {
+    case 'CollectionItem': {
+      if (rng() >= (field.linkProbability ?? 1)) return undefined
+      const targetRows = field.collectionItemPath
+        ? (entities?.[field.collectionItemPath] ?? [])
+        : []
+      if (targetRows.length === 0) return undefined
+      const options = targetRows
+        .map((_, index) => index)
+        .filter(
+          (index) =>
+            field.collectionItemPath !== currentCollectionPath ||
+            index !== currentRowIndex
+        )
+      if (options.length === 0) return undefined
+      return `#${options[Math.floor(rng() * options.length)]}`
+    }
     case 'Boolean': {
       const p = field.trueProbability ?? 0.5
       return rng() < p
@@ -298,28 +324,39 @@ export function generateScenarios(
     const inputs: Record<string, unknown> = {}
 
     for (const field of config.scalarFields) {
-      inputs[field.path] = generateValue(field, rng)
+      const value = generateValue(field, rng)
+      if (value !== undefined) inputs[field.path] = value
     }
 
-    let entities: Record<string, Record<string, unknown>[]> | undefined
+    const entities: Record<string, Record<string, unknown>[]> = {}
 
     for (const coll of config.collections) {
       const memberCount =
         coll.minMembers +
         Math.floor(rng() * (coll.maxMembers - coll.minMembers + 1))
-      const rows: Record<string, unknown>[] = []
+      entities[coll.collectionPath] = Array.from(
+        { length: memberCount },
+        () => ({})
+      )
+    }
 
-      for (let m = 0; m < memberCount; m++) {
-        const row: Record<string, unknown> = {}
+    for (const coll of config.collections) {
+      const rows = entities[coll.collectionPath] ?? []
+
+      for (let index = 0; index < rows.length; index++) {
+        const row = rows[index]
         for (const field of coll.fields) {
-          row[field.path] = generateValue(field, rng)
+          const value = generateValue(
+            field,
+            rng,
+            entities,
+            coll.collectionPath,
+            index
+          )
+          if (value !== undefined) row[field.path] = value
         }
         applyConstraints(row, coll.fields)
-        rows.push(row)
       }
-
-      if (!entities) entities = {}
-      entities[coll.collectionPath] = rows
     }
 
     scenarios.push({ id: i, inputs, entities })

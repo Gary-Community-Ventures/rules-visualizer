@@ -2911,7 +2911,7 @@
 
     <Fact path="/allotment">
       <Name>Allotment</Name>
-      <Description>The total amount of SNAP benefits the household is authorized to receive in a particular month, computed by rounding the unfloored allotment down to the nearest dollar, then raising it up to the federal minimum allotment for one- and two-person households (10 CCR 2506-1, 4.207.3).</Description>
+      <Description>The total amount of SNAP benefits the household is authorized to receive in a particular month, computed by rounding the unfloored allotment down to the nearest dollar, then raising positive allotments up to the federal minimum allotment for one- and two-person households (10 CCR 2506-1, 4.207.3).</Description>
       <Derived>
         <Floor>
           <Switch>
@@ -2921,6 +2921,15 @@
                   <Left><Dependency path="/eligibilityCategory" /></Left>
                   <Right><Enum optionsPath="/eligibilityCategoryOptions">Ineligible</Enum></Right>
                 </Equal>
+              </When>
+              <Then><Dollar>0</Dollar></Then>
+            </Case>
+            <Case>
+              <When>
+                <LessThanOrEqual>
+                  <Left><Dependency path="/unflooredAllotment" /></Left>
+                  <Right><Dollar>0</Dollar></Right>
+                </LessThanOrEqual>
               </When>
               <Then><Dollar>0</Dollar></Then>
             </Case>

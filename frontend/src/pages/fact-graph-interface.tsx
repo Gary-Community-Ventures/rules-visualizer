@@ -3,6 +3,7 @@ import { flushSync } from 'react-dom'
 import { Link, useParams } from '@tanstack/react-router'
 import {
   ArrowLeft,
+  ExternalLink,
   GripVertical,
   Loader2,
   Play,
@@ -24,11 +25,29 @@ import {
   type SimulationConfig,
 } from '@/lib/api/simulation-api'
 import type { Model, ModelNode } from '@/lib/model'
+import { setPendingScenario } from '@/lib/simulation-bridge'
 import { cn } from '@/lib/utils'
 
 type NodeCondition = {
   op: 'always' | 'equals' | 'gt' | 'lt'
   value: string
+  effect?: ConditionEffect
+  color?: ConditionColor
+  dependsOn?: string
+  attached?: AttachedVisibilityCondition[]
+}
+
+type ConditionEffect = 'visibility' | 'color' | 'both'
+type ConditionColor = 'red' | 'yellow' | 'blue' | 'green'
+
+type AttachedVisibilityCondition = {
+  id: string
+  type: 'node-visible' | 'node-value'
+  path: string
+  op?: Exclude<NodeCondition['op'], 'always'>
+  value?: string
+  effect?: ConditionEffect
+  color?: ConditionColor
 }
 
 type InterfaceSettings = {
@@ -131,15 +150,25 @@ export function FactGraphInterfacePage() {
       const count = min + Math.floor(rng() * (max - min + 1))
       nextEntities[collection.collectionPath] = Array.from(
         { length: count },
-        () => {
-          const row: Record<string, string> = {}
-          for (const field of collection.fields) {
-            const value = generateValue(field, rng)
-            if (value !== null) row[field.path] = String(value)
-          }
-          return row
-        }
+        () => ({})
       )
+    }
+
+    for (const collection of config.collections) {
+      const rows = nextEntities[collection.collectionPath] ?? []
+      for (let index = 0; index < rows.length; index++) {
+        const row = rows[index]
+        for (const field of collection.fields) {
+          const value = generateValue(
+            field,
+            rng,
+            nextEntities,
+            collection.collectionPath,
+            index
+          )
+          if (value !== null) row[field.path] = String(value)
+        }
+      }
     }
 
     setInputs(nextInputs)
@@ -175,6 +204,16 @@ export function FactGraphInterfacePage() {
     return () => window.clearTimeout(timer)
   }, [inputVersion, run])
 
+  const openInVisualizer = () => {
+    setPendingScenario({
+      rulesetId,
+      inputs: parseRecord(inputs),
+      entities: parseEntities(entities),
+      label: 'Fact graph interface run',
+    })
+    window.open(`/ruleset/${rulesetId}?sim=1`, '_blank')
+  }
+
   if (!model || !config) {
     return (
       <div className="flex-1 p-8 text-sm text-muted-foreground">
@@ -202,6 +241,9 @@ export function FactGraphInterfacePage() {
             </p>
           </div>
           <div className="flex gap-2">
+            <Button variant="outline" onClick={openInVisualizer}>
+              <ExternalLink className="mr-2 size-4" /> Open in visualizer
+            </Button>
             <Button variant="outline" asChild>
               <Link to="/interface/$rulesetId/settings" params={{ rulesetId }}>
                 <Settings className="mr-2 size-4" /> Settings
@@ -251,15 +293,21 @@ export function FactGraphInterfacePage() {
               {selectedPaths.map((path) => {
                 const node = pathToNode.get(path)
                 const value = node ? results?.[node.id]?.value : undefined
-                const condition = conditions[path] ?? {
-                  op: 'always',
-                  value: '',
-                }
-                if (!passesCondition(value, condition)) return null
+                const presentation = getResultPresentation(
+                  path,
+                  selectedPaths,
+                  conditions,
+                  pathToNode,
+                  results
+                )
+                if (!presentation.visible) return null
                 return (
                   <div
                     key={path}
-                    className="grid gap-2 border-b px-3 py-2 last:border-b-0 sm:grid-cols-[1fr_auto] sm:items-center"
+                    className={cn(
+                      'grid gap-2 border-b px-3 py-2 last:border-b-0 sm:grid-cols-[minmax(0,1fr)_minmax(220px,45%)] sm:items-center',
+                      conditionColorClass(presentation.color)
+                    )}
                   >
                     <div className="min-w-0">
                       <div className="truncate text-sm font-medium">
@@ -271,8 +319,8 @@ export function FactGraphInterfacePage() {
                         {path}
                       </div>
                     </div>
-                    <div className="font-mono text-sm font-semibold sm:text-right">
-                      {formatValue(value)}
+                    <div className="min-w-0 font-mono text-sm font-semibold sm:text-right">
+                      <ResultValue value={value} />
                     </div>
                   </div>
                 )
@@ -304,12 +352,9 @@ export function FactGraphInterfaceSettingsPage() {
 
   const resetToDefaults = async () => {
     try {
-      localStorage.removeItem(settingsKey(rulesetId))
       const nextConfig = await configureSimulation(rulesetId)
       const settings = defaultInterfaceSettings(nextConfig)
       setConfig(settings.config)
-      setSelectedPaths(settings.selectedPaths)
-      setConditions(settings.conditions)
       setSearch('')
       setError(null)
     } catch (e) {
@@ -334,6 +379,20 @@ export function FactGraphInterfaceSettingsPage() {
     if (!config) return
     saveInterfaceSettings(rulesetId, { selectedPaths, conditions, config })
   }, [rulesetId, selectedPaths, conditions, config])
+
+  const updateConditions = useCallback(
+    (nextConditions: Record<string, NodeCondition>) => {
+      setConditions(nextConditions)
+      if (config) {
+        saveInterfaceSettings(rulesetId, {
+          selectedPaths,
+          conditions: nextConditions,
+          config,
+        })
+      }
+    },
+    [config, rulesetId, selectedPaths]
+  )
 
   const allPaths = useMemo(() => {
     if (!model) return []
@@ -396,7 +455,7 @@ export function FactGraphInterfaceSettingsPage() {
           selectedPaths={selectedPaths}
           setSelectedPaths={setSelectedPaths}
           conditions={conditions}
-          setConditions={setConditions}
+          setConditions={updateConditions}
           pathToNode={pathToNode}
           search={search}
           setSearch={setSearch}
@@ -432,6 +491,17 @@ function VisibleNodesSettings({
   setSearch: (search: string) => void
 }) {
   const [draggingPath, setDraggingPath] = useState<string | null>(null)
+  const [attachingPath, setAttachingPath] = useState<string | null>(null)
+  const [insertAfterPath, setInsertAfterPath] = useState<string | null>(null)
+  const [inlineSearch, setInlineSearch] = useState('')
+  const [draftCondition, setDraftCondition] = useState<{
+    path: string
+    type: 'node-value' | 'other-node'
+    op: Exclude<NodeCondition['op'], 'always'> | 'visible'
+    value: string
+    effect: ConditionEffect
+    color?: ConditionColor
+  } | null>(null)
   const draggingPathRef = useRef<string | null>(null)
   const dragPointerIdRef = useRef<number | null>(null)
   const selectedPathsRef = useRef(selectedPaths)
@@ -521,6 +591,18 @@ function VisibleNodesSettings({
       )
     : []
 
+  const addSelectedPath = (path: string, afterPath = insertAfterPath) => {
+    const insertAfterIndex = afterPath
+      ? selectedPaths.indexOf(afterPath)
+      : -1
+    const nextPaths = [...selectedPaths]
+    nextPaths.splice(insertAfterIndex + 1, 0, path)
+    setSelectedPaths(nextPaths)
+    setInsertAfterPath(null)
+    setInlineSearch('')
+    setSearch('')
+  }
+
   return (
     <section className="rounded-xl border bg-background p-4 shadow-sm">
       <h2 className="text-sm font-semibold">Visible Nodes</h2>
@@ -530,20 +612,34 @@ function VisibleNodesSettings({
       </p>
       <Input
         className="mt-3 h-8 text-xs font-mono"
-        placeholder="Search paths to add..."
+        placeholder={
+          insertAfterPath
+            ? `Search to add below ${readablePath(insertAfterPath)}...`
+            : 'Search paths to add...'
+        }
         value={search}
         onChange={(e) => setSearch(e.target.value)}
       />
+      {insertAfterPath && (
+        <div className="mt-2 flex items-center gap-2 rounded-md border border-blue-200 bg-blue-50 px-2 py-1.5 text-xs text-blue-900">
+          <span className="truncate">
+            Adding next node below {readablePath(insertAfterPath)}
+          </span>
+          <button
+            className="ml-auto rounded px-2 py-0.5 hover:bg-blue-100"
+            onClick={() => setInsertAfterPath(null)}
+          >
+            Cancel
+          </button>
+        </div>
+      )}
       {filteredPaths.length > 0 && (
         <div className="mt-2 max-h-56 overflow-y-auto rounded-md border bg-background">
           {filteredPaths.slice(0, 40).map((path) => (
             <button
               key={path}
               className="block w-full px-2 py-1.5 text-left font-mono text-xs hover:bg-muted"
-              onClick={() => {
-                setSelectedPaths([...selectedPaths, path])
-                setSearch('')
-              }}
+              onClick={() => addSelectedPath(path)}
             >
               {path}
             </button>
@@ -555,87 +651,526 @@ function VisibleNodesSettings({
           const node = pathToNode.get(path)
           const condition = conditions[path] ?? { op: 'always', value: '' }
           const conditionOptions = getConditionOptions(node)
+          const attachedConditions = getAttachedConditions(condition)
+          const hasValueCondition = condition.op !== 'always'
+          const inlineFilteredPaths =
+            insertAfterPath === path && inlineSearch
+              ? allPaths.filter(
+                  (candidatePath) =>
+                    !selectedPaths.includes(candidatePath) &&
+                    candidatePath
+                      .toLowerCase()
+                      .includes(inlineSearch.toLowerCase())
+                )
+              : []
           return (
             <div
               key={path}
               data-visible-node-row
               data-path={path}
               className={cn(
-                'grid gap-2 rounded-lg border p-3 transition-all duration-200 ease-out sm:grid-cols-[auto_1fr_auto_auto] sm:items-center',
+                'rounded-lg border p-3 transition-all duration-200 ease-out',
+                attachingPath && attachingPath !== path
+                  ? 'cursor-pointer border-blue-200 hover:border-blue-400 hover:bg-blue-50/50'
+                  : '',
+                attachingPath === path ? 'border-blue-400 bg-blue-50/70' : '',
                 draggingPath === path
                   ? 'scale-[0.99] border-blue-300 bg-blue-50/60 opacity-70 shadow-sm'
                   : 'hover:border-foreground/20 hover:shadow-sm'
               )}
-            >
-              <button
-                className="cursor-grab touch-none rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground active:cursor-grabbing"
-                onPointerDown={(e) => {
-                  e.preventDefault()
-                  draggingPathRef.current = path
-                  dragPointerIdRef.current = e.pointerId
-                  setDraggingPath(path)
-                }}
-                title="Drag to reorder"
-              >
-                <GripVertical className="size-4" />
-              </button>
-              <div className="min-w-0">
-                <div className="truncate text-sm font-medium">
-                  {node?.content.type !== 'entity' && node?.content.label
-                    ? node.content.label
-                    : readablePath(path)}
-                </div>
-                <div className="truncate font-mono text-[11px] text-muted-foreground">
-                  {path}
-                </div>
-              </div>
-              <div className="flex items-center gap-2 text-xs">
-                <span className="text-muted-foreground">Show when</span>
-                <select
-                  className="h-7 rounded border bg-background px-2 text-xs"
-                  value={condition.op}
-                  onChange={(e) => {
-                    const op = e.target.value as NodeCondition['op']
-                    setConditions({
-                      ...conditions,
-                      [path]: {
-                        ...condition,
-                        op,
-                        value: op === 'always' ? '' : condition.value,
+              onClick={() => {
+                if (!attachingPath || attachingPath === path) return
+                const sourceCondition = conditions[attachingPath] ?? {
+                  op: 'always',
+                  value: '',
+                }
+                const sourceAttached = getAttachedConditions(sourceCondition)
+                const sourceDraft = draftCondition?.path === attachingPath ? draftCondition : null
+                setConditions({
+                  ...conditions,
+                  [attachingPath]: {
+                    ...sourceCondition,
+                    dependsOn: undefined,
+                    attached: [
+                      ...sourceAttached,
+                      {
+                        id: createConditionId(),
+                        type:
+                          sourceDraft?.type === 'other-node' &&
+                          sourceDraft.op !== 'visible'
+                            ? 'node-value'
+                            : 'node-visible',
+                        path,
+                        op:
+                          sourceDraft?.op && sourceDraft.op !== 'visible'
+                            ? sourceDraft.op
+                            : undefined,
+                        value:
+                          sourceDraft?.op && sourceDraft.op !== 'visible'
+                            ? sourceDraft.value
+                            : undefined,
+                      effect: sourceDraft?.effect ?? 'both',
+                        color: sourceDraft?.color,
                       },
-                    })
+                    ],
+                  },
+                })
+                setAttachingPath(null)
+                if (draftCondition?.path === attachingPath) setDraftCondition(null)
+              }}
+            >
+              <div className="flex items-start gap-2">
+                <button
+                  className="cursor-grab touch-none rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground active:cursor-grabbing"
+                  onPointerDown={(e) => {
+                    e.preventDefault()
+                    draggingPathRef.current = path
+                    dragPointerIdRef.current = e.pointerId
+                    setDraggingPath(path)
+                  }}
+                  title="Drag to reorder"
+                >
+                  <GripVertical className="size-4" />
+                </button>
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-sm font-medium">
+                    {node?.content.type !== 'entity' && node?.content.label
+                      ? node.content.label
+                      : readablePath(path)}
+                  </div>
+                  <div className="truncate font-mono text-[11px] text-muted-foreground">
+                    {path}
+                  </div>
+                </div>
+                <button
+                  className="inline-flex items-center gap-1 rounded-full border bg-background px-2.5 py-1 text-xs font-medium text-foreground shadow-sm hover:bg-muted"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setInsertAfterPath(insertAfterPath === path ? null : path)
+                    setInlineSearch('')
                   }}
                 >
-                  {conditionOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-                {condition.op !== 'always' && (
-                  <ConditionValueInput
-                    node={node}
-                    condition={condition}
-                    onChange={(value) =>
-                      setConditions({
-                        ...conditions,
-                        [path]: { ...condition, value },
-                      })
+                  Add below
+                </button>
+                <button
+                  className="inline-flex items-center gap-1 rounded-full border bg-background px-2.5 py-1 text-xs font-medium text-foreground shadow-sm hover:bg-muted"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setDraftCondition({
+                      path,
+                      type: 'other-node',
+                      op: 'visible',
+                      value: condition.value,
+                      effect: 'both',
+                    })
+                    setAttachingPath(path)
+                  }}
+                >
+                  Add condition
+                </button>
+                <button
+                  className="inline-flex items-center gap-1 rounded px-2 py-1 text-xs text-muted-foreground hover:bg-muted hover:text-foreground"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setSelectedPaths(selectedPaths.filter((p) => p !== path))
+                    const nextConditions = { ...conditions }
+                    delete nextConditions[path]
+                    for (const selectedPath of selectedPaths) {
+                      const selectedCondition = nextConditions[selectedPath]
+                      if (!selectedCondition) continue
+                      nextConditions[selectedPath] = {
+                        ...selectedCondition,
+                        dependsOn:
+                          selectedCondition.dependsOn === path
+                            ? undefined
+                            : selectedCondition.dependsOn,
+                        attached: getAttachedConditions(selectedCondition).filter(
+                          (item) => item.path !== path
+                        ),
+                      }
                     }
-                  />
-                )}
+                    setConditions(nextConditions)
+                    if (attachingPath === path) setAttachingPath(null)
+                    if (draftCondition?.path === path) setDraftCondition(null)
+                  }}
+                >
+                  <X className="size-3" /> Remove
+                </button>
               </div>
-              <button
-                className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground sm:justify-self-end"
-                onClick={() => {
-                  setSelectedPaths(selectedPaths.filter((p) => p !== path))
-                  const nextConditions = { ...conditions }
-                  delete nextConditions[path]
-                  setConditions(nextConditions)
-                }}
-              >
-                <X className="size-3" /> Remove
-              </button>
+
+              {insertAfterPath === path && (
+                <div
+                  className="mt-2 rounded-lg border border-blue-200 bg-blue-50/60 p-2"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="flex items-center gap-2">
+                    <Input
+                      className="h-8 flex-1 bg-background font-mono text-xs"
+                      autoFocus
+                      placeholder="Search node to insert below..."
+                      value={inlineSearch}
+                      onChange={(e) => setInlineSearch(e.target.value)}
+                    />
+                    <button
+                      className="rounded px-2 py-1 text-xs text-muted-foreground hover:bg-blue-100 hover:text-foreground"
+                      onClick={() => {
+                        setInsertAfterPath(null)
+                        setInlineSearch('')
+                      }}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                  {inlineFilteredPaths.length > 0 && (
+                    <div className="mt-2 max-h-48 overflow-y-auto rounded-md border bg-background">
+                      {inlineFilteredPaths.slice(0, 30).map((candidatePath) => (
+                        <button
+                          key={candidatePath}
+                          className="block w-full px-2 py-1.5 text-left font-mono text-xs hover:bg-muted"
+                          onClick={() => addSelectedPath(candidatePath, path)}
+                        >
+                          {candidatePath}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {(draftCondition?.path === path ||
+                hasValueCondition ||
+                attachedConditions.length > 0) && (
+                <div
+                  className="mt-2 space-y-2"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                {draftCondition?.path === path && (
+                  <div className="flex flex-wrap items-center gap-2 rounded-lg border border-blue-200 bg-blue-50/70 px-2.5 py-2 text-xs shadow-sm">
+                    <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-blue-800">
+                      new
+                    </span>
+                    <select
+                      className="h-7 rounded border bg-background px-2 text-xs"
+                      value={draftCondition.type}
+                      onChange={(e) => {
+                        const type = e.target.value as typeof draftCondition.type
+                        if (type === 'node-value') {
+                          const nextAttached = [
+                            ...attachedConditions,
+                            {
+                              id: createConditionId(),
+                              type: 'node-value' as const,
+                              path,
+                              op: 'equals' as const,
+                              value: '',
+                              effect: 'both' as const,
+                            },
+                          ]
+                          setConditions({
+                            ...conditions,
+                            [path]: {
+                              ...condition,
+                              attached: nextAttached,
+                            },
+                          })
+                          setDraftCondition(null)
+                          setAttachingPath(null)
+                          return
+                        }
+                        setDraftCondition({
+                          ...draftCondition,
+                          type,
+                          op: type === 'other-node' ? 'visible' : 'equals',
+                        })
+                        setAttachingPath(type === 'other-node' ? path : null)
+                      }}
+                    >
+                      <option value="node-value">this node value</option>
+                      <option value="other-node">another node</option>
+                    </select>
+                    <select
+                      className="h-7 rounded border bg-background px-2 text-xs"
+                      value={draftCondition.op}
+                      onChange={(e) =>
+                        setDraftCondition({
+                          ...draftCondition,
+                          op: e.target.value as typeof draftCondition.op,
+                        })
+                      }
+                    >
+                      <option value="visible">is showing</option>
+                      <option value="equals">equals</option>
+                      <option value="gt">greater than</option>
+                      <option value="lt">less than</option>
+                    </select>
+                    {draftCondition.op !== 'visible' && (
+                      <Input
+                        className="h-7 w-32 text-xs"
+                        value={draftCondition.value}
+                        onChange={(e) =>
+                          setDraftCondition({
+                            ...draftCondition,
+                            value: e.target.value,
+                          })
+                        }
+                        placeholder="value"
+                      />
+                    )}
+                    <ColorOnlyCheckbox
+                      checked={draftCondition.effect === 'color'}
+                      onChange={(checked) =>
+                        setDraftCondition({
+                          ...draftCondition,
+                          effect: checked ? 'color' : 'both',
+                        })
+                      }
+                    />
+                    <ConditionColorSelect
+                      value={draftCondition.color}
+                      onChange={(color) =>
+                        setDraftCondition({ ...draftCondition, color })
+                      }
+                    />
+                    <span className="rounded-full bg-background px-2.5 py-1 text-xs text-blue-800 shadow-sm">
+                      Click target card
+                    </span>
+                    <button
+                      className="rounded px-2 py-1 text-xs text-muted-foreground hover:bg-background hover:text-foreground"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setDraftCondition(null)
+                        if (attachingPath === path) setAttachingPath(null)
+                      }}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                )}
+
+                {hasValueCondition || attachedConditions.length > 0 ? (
+                  <div className="space-y-2">
+                    {hasValueCondition && (
+                      <div className="flex flex-wrap items-center gap-2 rounded-lg border bg-background/90 px-2.5 py-2 text-xs shadow-sm">
+                        <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-700">
+                          condition
+                        </span>
+                        <span className="rounded border bg-background px-2 py-1.5 text-xs text-foreground">
+                          this node value
+                        </span>
+                        <select
+                          className="h-7 rounded border bg-background px-2 text-xs"
+                          value={condition.op}
+                          onChange={(e) => {
+                            const op = e.target.value as NodeCondition['op']
+                            setConditions({
+                              ...conditions,
+                              [path]: {
+                                ...condition,
+                                op,
+                                value: op === 'always' ? '' : condition.value,
+                              },
+                            })
+                          }}
+                        >
+                          {conditionOptions
+                            .filter((option) => option.value !== 'always')
+                            .map((option) => (
+                              <option key={option.value} value={option.value}>
+                                {option.label}
+                              </option>
+                            ))}
+                        </select>
+                        <ConditionValueInput
+                          node={node}
+                          condition={condition}
+                          onChange={(value) =>
+                            setConditions({
+                              ...conditions,
+                              [path]: { ...condition, value },
+                            })
+                          }
+                        />
+                        <ColorOnlyCheckbox
+                          checked={condition.effect === 'color'}
+                          onChange={(checked) =>
+                            setConditions({
+                              ...conditions,
+                              [path]: {
+                                ...condition,
+                                effect: checked ? 'color' : 'both',
+                              },
+                            })
+                          }
+                        />
+                        <ConditionColorSelect
+                          value={condition.color}
+                          onChange={(color) =>
+                            setConditions({
+                              ...conditions,
+                              [path]: { ...condition, color },
+                            })
+                          }
+                        />
+                        <button
+                          className="ml-auto rounded px-2 py-1 text-xs text-muted-foreground hover:bg-muted hover:text-foreground"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setConditions({
+                              ...conditions,
+                              [path]: { ...condition, op: 'always', value: '' },
+                            })
+                          }}
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    )}
+                    {attachedConditions.map((attachedCondition) => (
+                      <div
+                        key={attachedCondition.id}
+                        className="flex flex-wrap items-center gap-2 rounded-lg border bg-background/90 px-2.5 py-2 text-xs shadow-sm"
+                      >
+                        <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-700">
+                          condition
+                        </span>
+                        <span className="max-w-64 truncate rounded border bg-background px-2 py-1.5 font-mono text-[11px] text-foreground">
+                          {attachedCondition.path === path
+                            ? 'this node value'
+                            : attachedCondition.path}
+                        </span>
+                        <select
+                          className="h-7 rounded border bg-background px-2 text-xs"
+                          value={
+                            attachedCondition.type === 'node-visible'
+                              ? 'visible'
+                              : (attachedCondition.op ?? 'equals')
+                          }
+                          onChange={(e) => {
+                            const value = e.target.value
+                            const nextAttached = attachedConditions.map(
+                              (item) => {
+                                if (item.id !== attachedCondition.id) return item
+                                if (value === 'visible') {
+                                  return {
+                                    id: item.id,
+                                    type: 'node-visible' as const,
+                                    path: item.path,
+                                    effect: item.effect,
+                                    color: item.color,
+                                  }
+                                }
+                                return {
+                                  ...item,
+                                  type: 'node-value' as const,
+                                  op: value as Exclude<
+                                    NodeCondition['op'],
+                                    'always'
+                                  >,
+                                  value: item.value ?? '',
+                                }
+                              }
+                            )
+                            setConditions({
+                              ...conditions,
+                              [path]: {
+                                ...condition,
+                                attached: nextAttached,
+                              },
+                            })
+                          }}
+                        >
+                          <option value="visible">is showing</option>
+                          {getConditionOptions(pathToNode.get(attachedCondition.path))
+                            .filter((option) => option.value !== 'always')
+                            .map((option) => (
+                              <option key={option.value} value={option.value}>
+                                {option.label}
+                              </option>
+                            ))}
+                        </select>
+                        {attachedCondition.type === 'node-value' && (
+                          <ConditionValueInput
+                            node={pathToNode.get(attachedCondition.path)}
+                            condition={{
+                              op: attachedCondition.op ?? 'equals',
+                              value: attachedCondition.value ?? '',
+                            }}
+                            onChange={(value) => {
+                              const nextAttached = attachedConditions.map(
+                                (item) =>
+                                  item.id === attachedCondition.id
+                                    ? { ...item, value }
+                                    : item
+                              )
+                              setConditions({
+                                ...conditions,
+                                [path]: {
+                                  ...condition,
+                                  attached: nextAttached,
+                                },
+                              })
+                            }}
+                          />
+                        )}
+                        <ColorOnlyCheckbox
+                          checked={attachedCondition.effect === 'color'}
+                          onChange={(checked) => {
+                            const nextAttached = attachedConditions.map(
+                              (item) =>
+                                item.id === attachedCondition.id
+                                  ? {
+                                      ...item,
+                                      effect: (checked
+                                        ? 'color'
+                                        : 'both') as ConditionEffect,
+                                    }
+                                  : item
+                            )
+                            setConditions({
+                              ...conditions,
+                              [path]: { ...condition, attached: nextAttached },
+                            })
+                          }}
+                        />
+                        <ConditionColorSelect
+                          value={attachedCondition.color}
+                          onChange={(color) => {
+                            const nextAttached = attachedConditions.map(
+                              (item) =>
+                                item.id === attachedCondition.id
+                                  ? { ...item, color }
+                                  : item
+                            )
+                            setConditions({
+                              ...conditions,
+                              [path]: { ...condition, attached: nextAttached },
+                            })
+                          }}
+                        />
+                        <button
+                          className="ml-auto rounded px-2 py-1 text-xs text-muted-foreground hover:bg-muted hover:text-foreground"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setConditions({
+                              ...conditions,
+                              [path]: {
+                                ...condition,
+                                attached: attachedConditions.filter(
+                                  (item) => item.id !== attachedCondition.id
+                                ),
+                              },
+                            })
+                          }}
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
+
+                </div>
+              )}
             </div>
           )
         })}
@@ -669,6 +1204,52 @@ function ConditionValueInput({
       value={condition.value}
       onChange={onChange}
     />
+  )
+}
+
+function ColorOnlyCheckbox({
+  checked,
+  onChange,
+}: {
+  checked: boolean
+  onChange: (checked: boolean) => void
+}) {
+  return (
+    <label className="inline-flex h-7 items-center gap-1.5 rounded border bg-background px-2 text-xs text-muted-foreground">
+      <input
+        type="checkbox"
+        className="size-3 accent-foreground"
+        checked={checked}
+        onChange={(e) => onChange(e.target.checked)}
+      />
+      Color only
+    </label>
+  )
+}
+
+function ConditionColorSelect({
+  value,
+  onChange,
+}: {
+  value?: ConditionColor
+  onChange: (value: ConditionColor | undefined) => void
+}) {
+  return (
+    <select
+      className="h-7 rounded border bg-background px-2 text-xs"
+      value={value ?? ''}
+      onChange={(e) =>
+        onChange(
+          e.target.value ? (e.target.value as ConditionColor) : undefined
+        )
+      }
+    >
+      <option value="">no color</option>
+      <option value="red">red</option>
+      <option value="yellow">yellow</option>
+      <option value="blue">blue</option>
+      <option value="green">green</option>
+    </select>
   )
 }
 
@@ -1059,6 +1640,35 @@ function InputEditor({
   isExecuting: boolean
   onInputsChanged: () => void
 }) {
+  const [inputSearch, setInputSearch] = useState('')
+  const matchesInputSearch = (field: FieldConfig) => {
+    if (!inputSearch) return true
+    const query = inputSearch.toLowerCase()
+    const node = writableByPath.get(field.path)
+    const label =
+      node?.content.type !== 'entity' && node?.content.label
+        ? node.content.label
+        : ''
+    return (
+      field.path.toLowerCase().includes(query) ||
+      label.toLowerCase().includes(query) ||
+      field.type.toLowerCase().includes(query)
+    )
+  }
+  const visibleScalarFields = config.scalarFields.filter(matchesInputSearch)
+  const visibleCollections = config.collections
+    .map((collection) => ({
+      ...collection,
+      fields: collection.fields.filter(matchesInputSearch),
+    }))
+    .filter(
+      (collection) =>
+        collection.fields.length > 0 ||
+        collection.collectionPath
+          .toLowerCase()
+          .includes(inputSearch.toLowerCase())
+    )
+
   return (
     <section className="rounded-xl border bg-background p-4 shadow-sm">
       <div className="flex items-start justify-between gap-2">
@@ -1083,8 +1693,15 @@ function InputEditor({
         </div>
       </div>
 
+      <Input
+        className="mt-4 h-8 text-xs"
+        placeholder="Search inputs by label, path, or type..."
+        value={inputSearch}
+        onChange={(e) => setInputSearch(e.target.value)}
+      />
+
       <div className="mt-4 space-y-3">
-        {config.scalarFields.map((field) => (
+        {visibleScalarFields.map((field) => (
           <FieldValueRow
             key={field.path}
             field={field}
@@ -1098,7 +1715,7 @@ function InputEditor({
         ))}
       </div>
 
-      {config.collections.map((collection) => {
+      {visibleCollections.map((collection) => {
         const rows = entities[collection.collectionPath] ?? []
         return (
           <details
@@ -1279,7 +1896,13 @@ function mulberry32(seed: number): () => number {
   }
 }
 
-function generateValue(field: FieldConfig, rng: () => number): unknown {
+function generateValue(
+  field: FieldConfig,
+  rng: () => number,
+  entities?: Record<string, Record<string, string>[]>,
+  currentCollectionPath?: string,
+  currentRowIndex?: number
+): unknown {
   switch (field.type) {
     case 'Boolean':
       return rng() < (field.trueProbability ?? 0.5)
@@ -1311,8 +1934,22 @@ function generateValue(field: FieldConfig, rng: () => number): unknown {
       return `${Math.floor(1 + rng() * 5)}/${Math.floor(2 + rng() * 10)}`
     case 'String':
       return generateString(field, rng)
-    case 'CollectionItem':
-      return null
+    case 'CollectionItem': {
+      if (rng() >= (field.linkProbability ?? 1)) return null
+      const targetRows = field.collectionItemPath
+        ? (entities?.[field.collectionItemPath] ?? [])
+        : []
+      if (targetRows.length === 0) return null
+      const options = targetRows
+        .map((_, index) => index)
+        .filter(
+          (index) =>
+            field.collectionItemPath !== currentCollectionPath ||
+            index !== currentRowIndex
+        )
+      if (options.length === 0) return null
+      return `#${options[Math.floor(rng() * options.length)]}`
+    }
     default:
       return generateString(field, rng)
   }
@@ -1377,6 +2014,111 @@ function parseValue(value: string): unknown {
   return value
 }
 
+function createConditionId() {
+  return `condition-${Date.now()}-${Math.random().toString(36).slice(2)}`
+}
+
+function getAttachedConditions(
+  condition: NodeCondition
+): AttachedVisibilityCondition[] {
+  const attached = condition.attached ?? []
+  if (!condition.dependsOn) return attached
+  return [
+    ...attached,
+    {
+      id: `legacy-${condition.dependsOn}`,
+      type: 'node-visible',
+      path: condition.dependsOn,
+    },
+  ]
+}
+
+function getResultPresentation(
+  path: string,
+  selectedPaths: string[],
+  conditions: Record<string, NodeCondition>,
+  pathToNode: Map<string, ModelNode>,
+  results: ExecutionResults | null,
+  seen = new Set<string>()
+): { visible: boolean; color?: ConditionColor } {
+  if (!selectedPaths.includes(path)) return { visible: false }
+  if (seen.has(path)) return { visible: false }
+  seen.add(path)
+
+  const node = pathToNode.get(path)
+  const value = node ? results?.[node.id]?.value : undefined
+  const condition = conditions[path] ?? { op: 'always', value: '' }
+  let color: ConditionColor | undefined
+
+  if (condition.op !== 'always') {
+    const passed = passesCondition(value, condition)
+    if (!passed && conditionAffectsVisibility(condition)) {
+      return { visible: false }
+    }
+    if (passed && conditionAffectsColor(condition)) color = condition.color
+  }
+
+  for (const attachedCondition of getAttachedConditions(condition)) {
+    const passed = passesAttachedCondition(
+      attachedCondition,
+      selectedPaths,
+      conditions,
+      pathToNode,
+      results,
+      seen
+    )
+    if (!passed && conditionAffectsVisibility(attachedCondition)) {
+      return { visible: false }
+    }
+    if (passed && conditionAffectsColor(attachedCondition)) {
+      color = color ?? attachedCondition.color
+    }
+  }
+
+  return { visible: true, color }
+}
+
+function passesAttachedCondition(
+  condition: AttachedVisibilityCondition,
+  selectedPaths: string[],
+  conditions: Record<string, NodeCondition>,
+  pathToNode: Map<string, ModelNode>,
+  results: ExecutionResults | null,
+  seen: Set<string>
+): boolean {
+  if (condition.type === 'node-value') {
+    const node = pathToNode.get(condition.path)
+    const value = node ? results?.[node.id]?.value : undefined
+    return passesCondition(value, {
+      op: condition.op ?? 'equals',
+      value: condition.value ?? '',
+    })
+  }
+
+  return getResultPresentation(
+    condition.path,
+    selectedPaths,
+    conditions,
+    pathToNode,
+    results,
+    new Set(seen)
+  ).visible
+}
+
+function conditionAffectsVisibility(condition: {
+  effect?: ConditionEffect
+}): boolean {
+  return (condition.effect ?? 'both') !== 'color'
+}
+
+function conditionAffectsColor(condition: {
+  effect?: ConditionEffect
+  color?: ConditionColor
+}): boolean {
+  const effect = condition.effect ?? 'both'
+  return Boolean(condition.color) && (effect === 'color' || effect === 'both')
+}
+
 function passesCondition(value: unknown, condition: NodeCondition): boolean {
   if (condition.op === 'always') return true
   if (condition.op === 'equals') return valuesEqual(value, condition.value)
@@ -1392,6 +2134,39 @@ function valuesEqual(value: unknown, rawCondition: string): boolean {
   if (typeof value === 'number') return value === Number(rawCondition)
   if (Array.isArray(value)) return value.map(String).includes(rawCondition)
   return String(value) === rawCondition
+}
+
+function conditionColorClass(color?: ConditionColor): string {
+  switch (color) {
+    case 'red':
+      return 'bg-red-50 text-red-950'
+    case 'yellow':
+      return 'bg-amber-50 text-amber-950'
+    case 'blue':
+      return 'bg-blue-50 text-blue-950'
+    case 'green':
+      return 'bg-emerald-50 text-emerald-950'
+    default:
+      return ''
+  }
+}
+
+function ResultValue({ value }: { value: unknown }) {
+  if (Array.isArray(value)) {
+    return (
+      <div className="flex flex-wrap gap-1 sm:justify-end">
+        {value.map((item, index) => (
+          <span
+            key={index}
+            className="min-w-0 max-w-full break-words rounded bg-muted px-1.5 py-0.5 text-[11px] font-medium"
+          >
+            {formatValue(item)}
+          </span>
+        ))}
+      </div>
+    )
+  }
+  return <span className="break-words">{formatValue(value)}</span>
 }
 
 function readablePath(path: string): string {

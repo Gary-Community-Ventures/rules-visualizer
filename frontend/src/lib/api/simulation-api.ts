@@ -23,6 +23,8 @@ export type FieldConfig = {
   maxDate?: string
   stringOptions?: string[]
   enumOptions?: string[]
+  collectionItemPath?: string
+  linkProbability?: number
   enumProbabilities?: Record<string, number>
   trueProbability?: number
 }
