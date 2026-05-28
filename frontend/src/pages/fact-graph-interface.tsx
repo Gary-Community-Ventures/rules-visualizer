@@ -59,10 +59,12 @@ type InterfaceSettings = {
   selectedPaths: string[]
   conditions: Record<string, NodeCondition>
   config: SimulationConfig
+  defaultsVersion?: string | number
 }
 
 type SimulationConfigWithInterfaceDefaults = SimulationConfig & {
   interfaceDefaults?: {
+    version?: string | number
     selectedPaths?: string[]
     conditions?: Record<string, NodeCondition>
   }
@@ -2187,6 +2189,9 @@ function defaultInterfaceSettings(config: SimulationConfig): InterfaceSettings {
       interfaceDefaults?.selectedPaths ?? config.outcomeNodes.slice(0, 8),
     conditions: interfaceDefaults?.conditions ?? {},
     config: { ...config, caseCount: 1 },
+    defaultsVersion: interfaceDefaults
+      ? (interfaceDefaults.version ?? 1)
+      : undefined,
   }
 }
 
@@ -2199,6 +2204,15 @@ function loadInterfaceSettings(
     const stored = localStorage.getItem(settingsKey(rulesetId))
     if (!stored) return defaults
     const parsed = JSON.parse(stored) as Partial<InterfaceSettings>
+    const defaultsChanged = parsed.defaultsVersion !== defaults.defaultsVersion
+    if (defaultsChanged) {
+      return {
+        ...defaults,
+        config: parsed.config
+          ? { ...defaults.config, ...parsed.config }
+          : defaults.config,
+      }
+    }
     return {
       selectedPaths: Array.isArray(parsed.selectedPaths)
         ? parsed.selectedPaths
@@ -2210,6 +2224,7 @@ function loadInterfaceSettings(
       config: parsed.config
         ? { ...defaults.config, ...parsed.config }
         : defaults.config,
+      defaultsVersion: defaults.defaultsVersion,
     }
   } catch {
     return defaults

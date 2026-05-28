@@ -20,13 +20,34 @@
       "path": "/hasInadvertentHouseholdErrorClaimDueToEarnedIncomeCalculation",
       "trueProbability": 0.03
     },
-    { "path": "/isApplicationForRecertification", "trueProbability": 0.35 },
-    { "path": "/receivedSnapInLast30Days", "trueProbability": 0.25 },
-    { "path": "/receivesLeapInLast12Months", "trueProbability": 0.12 },
-    { "path": "/dSnapActive", "trueProbability": 0.01 },
-    { "path": "/temporaryEmergencyActive", "trueProbability": 0.02 },
-    { "path": "/hasEebtInLast12Months", "trueProbability": 0.05 },
-    { "path": "/hasOrExpectsShelterCosts", "trueProbability": 0.85 },
+    {
+      "path": "/isApplicationForRecertification",
+      "trueProbability": 0.35
+    },
+    {
+      "path": "/receivedSnapInLast30Days",
+      "trueProbability": 0.25
+    },
+    {
+      "path": "/receivesLeapInLast12Months",
+      "trueProbability": 0.12
+    },
+    {
+      "path": "/dSnapActive",
+      "trueProbability": 0.01
+    },
+    {
+      "path": "/temporaryEmergencyActive",
+      "trueProbability": 0.02
+    },
+    {
+      "path": "/hasEebtInLast12Months",
+      "trueProbability": 0.05
+    },
+    {
+      "path": "/hasOrExpectsShelterCosts",
+      "trueProbability": 0.85
+    },
     {
       "path": "/hadPreviousSubstantialLotteryOrGamblingWinnings",
       "trueProbability": 0.002
@@ -35,7 +56,10 @@
       "path": "/participatesInCommodityFoodDistributionProgram",
       "trueProbability": 0.01
     },
-    { "path": "/livesInApplicationCounty", "trueProbability": 0.96 },
+    {
+      "path": "/livesInApplicationCounty",
+      "trueProbability": 0.96
+    },
     {
       "path": "/hasNearbyCountyArrangement",
       "trueProbability": 0.05
@@ -47,10 +71,23 @@
       "minMembers": 1,
       "maxMembers": 5,
       "fields": [
-        { "path": "/members/*/age", "min": 0, "max": 85 },
-        { "path": "/members/*/hasPhysicalDisability", "trueProbability": 0.08 },
-        { "path": "/members/*/hasMentalDisability", "trueProbability": 0.06 },
-        { "path": "/members/*/isIncapacitated", "trueProbability": 0.03 },
+        {
+          "path": "/members/*/age",
+          "min": 0,
+          "max": 85
+        },
+        {
+          "path": "/members/*/hasPhysicalDisability",
+          "trueProbability": 0.08
+        },
+        {
+          "path": "/members/*/hasMentalDisability",
+          "trueProbability": 0.06
+        },
+        {
+          "path": "/members/*/isIncapacitated",
+          "trueProbability": 0.03
+        },
         {
           "path": "/members/*/isVeteranWithDisability",
           "trueProbability": 0.02
@@ -79,13 +116,22 @@
           "path": "/members/*/receivesInterimAssistanceForDisability",
           "trueProbability": 0.01
         },
-        { "path": "/members/*/isBoarder", "trueProbability": 0.01 },
-        { "path": "/members/*/isRoomer", "trueProbability": 0.003 },
+        {
+          "path": "/members/*/isBoarder",
+          "trueProbability": 0.01
+        },
+        {
+          "path": "/members/*/isRoomer",
+          "trueProbability": 0.003
+        },
         {
           "path": "/members/*/livesInBoardingHouse",
           "trueProbability": 0.005
         },
-        { "path": "/members/*/livesInInstitution", "trueProbability": 0.01 },
+        {
+          "path": "/members/*/livesInInstitution",
+          "trueProbability": 0.01
+        },
         {
           "path": "/members/*/livesInFederallySubsidizedElderlyHousing",
           "trueProbability": 0.04
@@ -98,7 +144,10 @@
           "path": "/members/*/livesInHomelessShelter",
           "trueProbability": 0.02
         },
-        { "path": "/members/*/disqualifiedForIPV", "trueProbability": 0.005 },
+        {
+          "path": "/members/*/disqualifiedForIPV",
+          "trueProbability": 0.005
+        },
         {
           "path": "/members/*/failedToProvideOrObtainSSN",
           "trueProbability": 0.01
@@ -131,9 +180,19 @@
           "path": "/members/*/disqualifiedForParoleOrProbationViolation",
           "trueProbability": 0.005
         },
-        { "path": "/members/*/countableMonths", "min": 0, "max": 2 },
-        { "path": "/members/*/isFleeingFelon", "trueProbability": 0.005 },
-        { "path": "/members/*/isStriker", "trueProbability": 0.005 },
+        {
+          "path": "/members/*/countableMonths",
+          "min": 0,
+          "max": 2
+        },
+        {
+          "path": "/members/*/isFleeingFelon",
+          "trueProbability": 0.005
+        },
+        {
+          "path": "/members/*/isStriker",
+          "trueProbability": 0.005
+        },
         {
           "path": "/members/*/wasEligibleForSnapDayBeforeStrike",
           "trueProbability": 0.9
@@ -142,7 +201,10 @@
           "path": "/members/*/wasExemptFromWorkRegistrationDayBeforeStrike",
           "trueProbability": 0.1
         },
-        { "path": "/members/*/registeredForWork", "trueProbability": 0.96 },
+        {
+          "path": "/members/*/registeredForWork",
+          "trueProbability": 0.96
+        },
         {
           "path": "/members/*/providedEmploymentStatusOrAvailabilityInfo",
           "trueProbability": 0.96
@@ -167,14 +229,26 @@
           "path": "/members/*/livesInGroupLivingArrangement",
           "trueProbability": 0.005
         },
-        { "path": "/members/*/isHeadOfHousehold", "trueProbability": 0.25 },
-        { "path": "/members/*/isEmancipated", "trueProbability": 0.005 },
-        { "path": "/members/*/isFosterChild", "trueProbability": 0.01 },
+        {
+          "path": "/members/*/isHeadOfHousehold",
+          "trueProbability": 0.25
+        },
+        {
+          "path": "/members/*/isEmancipated",
+          "trueProbability": 0.005
+        },
+        {
+          "path": "/members/*/isFosterChild",
+          "trueProbability": 0.01
+        },
         {
           "path": "/members/*/isUnableToPurchaseAndPrepareOwnMealsDueToDisability",
           "trueProbability": 0.02
         },
-        { "path": "/members/*/isMigrantFarmWorker", "trueProbability": 0.02 },
+        {
+          "path": "/members/*/isMigrantFarmWorker",
+          "trueProbability": 0.02
+        },
         {
           "path": "/members/*/receivesFamilyPreservationServices",
           "trueProbability": 0.03
@@ -191,7 +265,10 @@
           "path": "/members/*/isAssignedToHigherEducationThroughEmploymentTrainingProgram",
           "trueProbability": 0.03
         },
-        { "path": "/members/*/isInK12", "trueProbability": 0.18 },
+        {
+          "path": "/members/*/isInK12",
+          "trueProbability": 0.18
+        },
         {
           "path": "/members/*/voluntarilyQuitOrReducedWorkEffort",
           "trueProbability": 0.02
@@ -248,8 +325,14 @@
           "path": "/members/*/isEnrolledInEmploymentTrainingProgram",
           "trueProbability": 0.04
         },
-        { "path": "/members/*/isPregnant", "trueProbability": 0.03 },
-        { "path": "/members/*/isVeteran", "trueProbability": 0.06 },
+        {
+          "path": "/members/*/isPregnant",
+          "trueProbability": 0.03
+        },
+        {
+          "path": "/members/*/isVeteran",
+          "trueProbability": 0.06
+        },
         {
           "path": "/members/*/wasInFosterCareOn18thBirthday",
           "trueProbability": 0.01
@@ -282,9 +365,18 @@
           "path": "/members/*/isSponsoredByOrganization",
           "trueProbability": 0.01
         },
-        { "path": "/members/*/receivesTanf", "trueProbability": 0.08 },
-        { "path": "/members/*/spouseId", "linkProbability": 0.35 },
-        { "path": "/members/*/sponsorId", "linkProbability": 0.03 }
+        {
+          "path": "/members/*/receivesTanf",
+          "trueProbability": 0.08
+        },
+        {
+          "path": "/members/*/spouseId",
+          "linkProbability": 0.35
+        },
+        {
+          "path": "/members/*/sponsorId",
+          "linkProbability": 0.03
+        }
       ]
     },
     {
@@ -343,7 +435,11 @@
             "Annual": 0.02
           }
         },
-        { "path": "/incomes/*/amount", "min": 0, "max": 2800 },
+        {
+          "path": "/incomes/*/amount",
+          "min": 0,
+          "max": 2800
+        },
         {
           "path": "/incomes/*/targetPayDate",
           "minDate": "2026-01-01",
@@ -397,7 +493,11 @@
             "Annual": 0.05
           }
         },
-        { "path": "/expenses/*/amount", "min": 25, "max": 1800 },
+        {
+          "path": "/expenses/*/amount",
+          "min": 25,
+          "max": 1800
+        },
         {
           "path": "/expenses/*/milesDrivenToDependentCareFacility",
           "min": 0,
@@ -408,7 +508,11 @@
           "min": 0,
           "max": 40
         },
-        { "path": "/expenses/*/reimbursementAmount", "min": 0, "max": 250 },
+        {
+          "path": "/expenses/*/reimbursementAmount",
+          "min": 0,
+          "max": 250
+        },
         {
           "path": "/expenses/*/isForClaimableShelterResidence",
           "trueProbability": 0.7
@@ -437,8 +541,15 @@
           "path": "/expenses/*/publicHousingResponsibleForExcessHeatingCoolingCosts",
           "trueProbability": 0.08
         },
-        { "path": "/expenses/*/shouldAverage", "trueProbability": 0.2 },
-        { "path": "/expenses/*/intendedMonths", "min": 1, "max": 12 }
+        {
+          "path": "/expenses/*/shouldAverage",
+          "trueProbability": 0.2
+        },
+        {
+          "path": "/expenses/*/intendedMonths",
+          "min": 1,
+          "max": 12
+        }
       ]
     },
     {
@@ -459,7 +570,11 @@
             "Other": 0.05
           }
         },
-        { "path": "/resourceItems/*/value", "min": 0, "max": 8000 }
+        {
+          "path": "/resourceItems/*/value",
+          "min": 0,
+          "max": 8000
+        }
       ]
     },
     {
@@ -467,7 +582,11 @@
       "minMembers": 0,
       "maxMembers": 3,
       "fields": [
-        { "path": "/jobs/*/hoursPerWeek", "min": 5, "max": 45 },
+        {
+          "path": "/jobs/*/hoursPerWeek",
+          "min": 5,
+          "max": 45
+        },
         {
           "path": "/jobs/*/abawdWorkType",
           "enumProbabilities": {
@@ -477,10 +596,22 @@
             "Other": 0.1
           }
         },
-        { "path": "/jobs/*/isSelfEmployed", "trueProbability": 0.12 },
-        { "path": "/jobs/*/isAtFederalMinimumWage", "trueProbability": 0.88 },
-        { "path": "/jobs/*/isOnTheJobTraining", "trueProbability": 0.04 },
-        { "path": "/jobs/*/offerAccepted", "trueProbability": 0.9 },
+        {
+          "path": "/jobs/*/isSelfEmployed",
+          "trueProbability": 0.12
+        },
+        {
+          "path": "/jobs/*/isAtFederalMinimumWage",
+          "trueProbability": 0.88
+        },
+        {
+          "path": "/jobs/*/isOnTheJobTraining",
+          "trueProbability": 0.04
+        },
+        {
+          "path": "/jobs/*/offerAccepted",
+          "trueProbability": 0.9
+        },
         {
           "path": "/jobs/*/wagesBelowApplicableMinimum",
           "trueProbability": 0.03
@@ -509,7 +640,10 @@
           "path": "/jobs/*/outsideMajorFieldDuringInitialThirtyDays",
           "trueProbability": 0.08
         },
-        { "path": "/jobs/*/unreasonableDistance", "trueProbability": 0.08 },
+        {
+          "path": "/jobs/*/unreasonableDistance",
+          "trueProbability": 0.08
+        },
         {
           "path": "/jobs/*/dailyCommuteExceedsTwoHours",
           "trueProbability": 0.04
@@ -526,6 +660,7 @@
     }
   ],
   "interfaceDefaults": {
+    "version": 4,
     "selectedPaths": [
       "/eligibilityCategory",
       "/standardEligibilityApplies",
@@ -652,31 +787,31 @@
       "/disqualifiedForECE": {
         "op": "equals",
         "value": "true",
-        "effect": "color",
+        "effect": "both",
         "color": "yellow"
       },
       "/hasSubstantialLotteryOrGamblingWinningsThisMonth": {
         "op": "equals",
         "value": "true",
-        "effect": "color",
+        "effect": "both",
         "color": "red"
       },
       "/hadPreviousSubstantialLotteryOrGamblingWinnings": {
         "op": "equals",
         "value": "true",
-        "effect": "color",
+        "effect": "both",
         "color": "yellow"
       },
       "/disqualifiedForBCE": {
         "op": "equals",
         "value": "true",
-        "effect": "color",
+        "effect": "both",
         "color": "yellow"
       },
       "/allMembersReceiveBceQualifyingBenefits": {
         "op": "equals",
         "value": "true",
-        "effect": "color",
+        "effect": "both",
         "color": "green"
       },
       "/members/*/receivesBceQualifyingBenefits": {
@@ -748,25 +883,25 @@
       "/members/*/isDisqualified": {
         "op": "equals",
         "value": "true",
-        "effect": "color",
+        "effect": "both",
         "color": "red"
       },
       "/members/*/disqualifiedForIPV": {
         "op": "equals",
         "value": "true",
-        "effect": "color",
+        "effect": "both",
         "color": "red"
       },
       "/members/*/failedToProvideOrObtainSSN": {
         "op": "equals",
         "value": "true",
-        "effect": "color",
+        "effect": "both",
         "color": "red"
       },
       "/members/*/isIneligibleNonCitizen": {
         "op": "equals",
         "value": "true",
-        "effect": "color",
+        "effect": "both",
         "color": "red"
       },
       "/members/*/citizenshipImmigrationStatus": {
@@ -784,67 +919,67 @@
       "/members/*/hasLevelSanctionImposed": {
         "op": "equals",
         "value": "true",
-        "effect": "color",
+        "effect": "both",
         "color": "red"
       },
       "/members/*/disqualifiedForWorkRequirementsCooperation": {
         "op": "equals",
         "value": "true",
-        "effect": "color",
+        "effect": "both",
         "color": "red"
       },
       "/members/*/disqualifiedForQualityAssuranceCooperation": {
         "op": "equals",
         "value": "true",
-        "effect": "color",
+        "effect": "both",
         "color": "red"
       },
       "/members/*/exceededAbawdCountableMonthsLimit": {
         "op": "equals",
         "value": "true",
-        "effect": "color",
+        "effect": "both",
         "color": "red"
       },
       "/members/*/disqualifiedForMultiHouseholdParticipation": {
         "op": "equals",
         "value": "true",
-        "effect": "color",
+        "effect": "both",
         "color": "red"
       },
       "/members/*/disqualifiedForFelonyNonCompliance": {
         "op": "equals",
         "value": "true",
-        "effect": "color",
+        "effect": "both",
         "color": "red"
       },
       "/members/*/disqualifiedForParoleOrProbationViolation": {
         "op": "equals",
         "value": "true",
-        "effect": "color",
+        "effect": "both",
         "color": "red"
       },
       "/members/*/disqualifiedForBoardingHouseOrInstitutionResidence": {
         "op": "equals",
         "value": "true",
-        "effect": "color",
+        "effect": "both",
         "color": "red"
       },
       "/members/*/isIneligibleStriker": {
         "op": "equals",
         "value": "true",
-        "effect": "color",
+        "effect": "both",
         "color": "red"
       },
       "/members/*/isFleeingFelon": {
         "op": "equals",
         "value": "true",
-        "effect": "color",
+        "effect": "both",
         "color": "red"
       },
       "/members/*/meetsGeneralWorkRequirements": {
         "op": "equals",
         "value": "false",
-        "effect": "color",
+        "effect": "both",
         "color": "red"
       },
       "/members/*/meetsGeneralWorkRequirementException": {
@@ -862,7 +997,7 @@
       "/members/*/registeredForWork": {
         "op": "equals",
         "value": "false",
-        "effect": "color",
+        "effect": "both",
         "color": "red",
         "attached": [
           {
@@ -876,7 +1011,7 @@
       "/members/*/providedEmploymentStatusOrAvailabilityInfo": {
         "op": "equals",
         "value": "false",
-        "effect": "color",
+        "effect": "both",
         "color": "red",
         "attached": [
           {
@@ -890,7 +1025,7 @@
       "/members/*/acceptedSuitableEmploymentOffer": {
         "op": "equals",
         "value": "false",
-        "effect": "color",
+        "effect": "both",
         "color": "red",
         "attached": [
           {
@@ -904,7 +1039,7 @@
       "/members/*/reportedToReferredSuitableEmployer": {
         "op": "equals",
         "value": "false",
-        "effect": "color",
+        "effect": "both",
         "color": "red",
         "attached": [
           {
@@ -918,7 +1053,7 @@
       "/members/*/isIneligibleVoluntaryQuit": {
         "op": "equals",
         "value": "true",
-        "effect": "color",
+        "effect": "both",
         "color": "red",
         "attached": [
           {
