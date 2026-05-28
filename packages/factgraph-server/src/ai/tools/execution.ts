@@ -418,3 +418,4 @@ export const executeGraph = tool(
 )
 
 export const EXECUTION_TOOLS = [listWritableInputs, executeGraph]
+export const READ_ONLY_EXECUTION_TOOLS = [listWritableInputs]

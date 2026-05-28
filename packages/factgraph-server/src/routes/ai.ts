@@ -1,5 +1,6 @@
 import { createHash, timingSafeEqual } from 'node:crypto'
 import type { WebSocket } from 'ws'
+import { streamEligibilityInterfaceAgent } from '../ai/agents/eligibility-interface.js'
 import { streamAgent } from '../ai/agents/orchestrator.js'
 
 type AiChatRequest = {
@@ -7,6 +8,8 @@ type AiChatRequest = {
   requestId: string
   rulesetId: string
   message: string
+  mode?: 'interface-readonly'
+  interfaceContext?: unknown
   password?: string
   history?: { role: string; content: string }[]
 }
@@ -42,12 +45,18 @@ export async function handleAiChat(
   const threadId = requestId
 
   try {
-    for await (const event of streamAgent(
-      { rulesetId },
-      message,
-      threadId,
-      history
-    )) {
+    const stream =
+      data.mode === 'interface-readonly'
+        ? streamEligibilityInterfaceAgent(
+            { rulesetId },
+            message,
+            threadId,
+            data.interfaceContext,
+            history
+          )
+        : streamAgent({ rulesetId }, message, threadId, history)
+
+    for await (const event of stream) {
       switch (event.type) {
         case 'text':
           send(ws, { type: 'ai-chunk', requestId, content: event.content })

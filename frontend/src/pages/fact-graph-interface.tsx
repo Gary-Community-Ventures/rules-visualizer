@@ -1,12 +1,16 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { flushSync } from 'react-dom'
 import { Link, useParams } from '@tanstack/react-router'
+import Markdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import {
   ArrowLeft,
   ExternalLink,
   GripVertical,
   Loader2,
+  MessageCircle,
   Play,
+  Send,
   Settings,
   Shuffle,
   X,
@@ -25,6 +29,7 @@ import {
   type SimulationConfig,
 } from '@/lib/api/simulation-api'
 import type { Model, ModelNode } from '@/lib/model'
+import { onAiEvent, sendWsMessage, type AiEvent } from '@/lib/api/live-reload'
 import { setPendingScenario } from '@/lib/simulation-bridge'
 import { cn } from '@/lib/utils'
 
@@ -258,6 +263,18 @@ export function FactGraphInterfacePage() {
           </div>
         )}
 
+        {results && (
+          <EligibilityChat
+            rulesetId={rulesetId}
+            model={model}
+            selectedPaths={selectedPaths}
+            pathToNode={pathToNode}
+            results={results}
+            inputs={inputs}
+            entities={entities}
+          />
+        )}
+
         <div className="grid gap-4 lg:grid-cols-[380px_1fr]">
           <div className="space-y-4">
             <InputEditor
@@ -333,10 +350,292 @@ export function FactGraphInterfacePage() {
               )}
             </div>
           </section>
+
         </div>
       </div>
     </div>
   )
+}
+
+type ChatMessage = { role: 'user' | 'assistant'; content: string }
+
+const THINKING_PREFIXES = [
+  'let me ',
+  "i'll ",
+  'i will ',
+  'checking ',
+  'i need to ',
+]
+
+function EligibilityChat({
+  rulesetId,
+  model,
+  selectedPaths,
+  pathToNode,
+  results,
+  inputs,
+  entities,
+}: {
+  rulesetId: string
+  model: Model
+  selectedPaths: string[]
+  pathToNode: Map<string, ModelNode>
+  results: ExecutionResults | null
+  inputs: Record<string, string>
+  entities: Record<string, Record<string, string>[]>
+}) {
+  const [messages, setMessages] = useState<ChatMessage[]>([])
+  const [message, setMessage] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+  const requestIdRef = useRef(0)
+  const assistantBubbleStartRef = useRef<number | null>(null)
+
+  useEffect(() => {
+    return onAiEvent((event: AiEvent) => {
+      const currentRequestId = String(requestIdRef.current)
+      if (event.requestId !== currentRequestId) return
+
+      if (event.type === 'ai-chunk') {
+        setMessages((previous) => {
+          const next = [...previous]
+          let bubbleIndex = assistantBubbleStartRef.current
+          if (bubbleIndex === null || next[bubbleIndex]?.role !== 'assistant') {
+            next.push({ role: 'assistant', content: '' })
+            bubbleIndex = next.length - 1
+            assistantBubbleStartRef.current = bubbleIndex
+          }
+
+          const current = next[bubbleIndex].content
+          if (shouldStartNewAssistantBubble(current, event.content)) {
+            next.push({ role: 'assistant', content: event.content })
+            assistantBubbleStartRef.current = next.length - 1
+            return next
+          }
+
+          next[bubbleIndex] = {
+            role: 'assistant',
+            content: current + event.content,
+          }
+          return next
+        })
+      } else if (event.type === 'ai-done') {
+        setMessages((previous) => {
+          const next = [...previous]
+          const bubbleIndex = assistantBubbleStartRef.current
+          if (bubbleIndex !== null && next[bubbleIndex]?.role === 'assistant') {
+            next[bubbleIndex] = {
+              role: 'assistant',
+              content: next[bubbleIndex].content.trim(),
+            }
+          }
+          return next
+        })
+        assistantBubbleStartRef.current = null
+        setIsLoading(false)
+      } else if (event.type === 'ai-error') {
+        assistantBubbleStartRef.current = null
+        setMessages((previous) => {
+          const last = previous[previous.length - 1]
+          if (last?.role === 'assistant' && !last.content.trim()) {
+            return [
+              ...previous.slice(0, -1),
+              { role: 'assistant', content: `Error: ${event.content}` },
+            ]
+          }
+          return [
+            ...previous,
+            { role: 'assistant', content: `Error: ${event.content}` },
+          ]
+        })
+        setIsLoading(false)
+      }
+    })
+  }, [])
+
+  const handleSubmit = () => {
+    const trimmed = message.trim()
+    if (!trimmed || isLoading) return
+
+    const requestId = String(++requestIdRef.current)
+    assistantBubbleStartRef.current = null
+    setMessages((previous) => [...previous, { role: 'user', content: trimmed }])
+    setMessage('')
+    setIsLoading(true)
+
+    sendWsMessage({
+      type: 'ai-chat',
+      requestId,
+      rulesetId,
+      mode: 'interface-readonly',
+      password: localStorage.getItem('ai-password') ?? '',
+      history: messages.map((item) => ({
+        role: item.role,
+        content: item.content,
+      })),
+      interfaceContext: buildEligibilityChatContext({
+        model,
+        selectedPaths,
+        pathToNode,
+        results,
+        inputs,
+        entities,
+      }),
+      message: buildEligibilityChatPrompt({
+        question: trimmed,
+        model,
+        selectedPaths,
+        pathToNode,
+        results,
+        inputs,
+        entities,
+      }),
+    })
+  }
+
+  return (
+    <section className="rounded-xl border bg-background p-4 shadow-sm">
+      <div className="flex items-start gap-2">
+        <MessageCircle className="mt-0.5 size-4 text-muted-foreground" />
+        <div>
+          <h2 className="text-sm font-semibold">Eligibility Chat</h2>
+          <p className="text-xs text-muted-foreground">
+            Ask short questions about the current household and results.
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-3 max-h-[32rem] min-h-72 space-y-2 overflow-y-auto rounded-lg border bg-slate-50 p-2">
+        {messages.length === 0 ? (
+          <div className="px-2 py-6 text-center text-xs text-muted-foreground">
+            Try “Why is this household ineligible?” or “Which income test
+            applies?”
+          </div>
+        ) : (
+          messages.map((item, index) => (
+            <div
+              key={index}
+              className={cn(
+                'rounded-lg px-3 py-2 text-sm',
+                item.role === 'user'
+                  ? 'ml-4 bg-foreground text-background'
+                  : 'mr-4 max-w-none border bg-background text-foreground prose prose-sm prose-neutral dark:prose-invert prose-p:my-1 prose-pre:bg-muted prose-pre:text-foreground'
+              )}
+            >
+              {item.role === 'assistant' ? (
+                <Markdown remarkPlugins={[remarkGfm]}>{item.content}</Markdown>
+              ) : (
+                item.content
+              )}
+            </div>
+          ))
+        )}
+        {isLoading && (
+          <div className="mr-4 rounded-lg border bg-background px-3 py-2 text-sm text-muted-foreground">
+            Thinking...
+          </div>
+        )}
+      </div>
+
+      <form
+        className="mt-3 flex gap-2"
+        onSubmit={(event) => {
+          event.preventDefault()
+          handleSubmit()
+        }}
+      >
+        <Input
+          className="h-9 text-sm"
+          value={message}
+          onChange={(event) => setMessage(event.target.value)}
+          placeholder="Ask about eligibility..."
+        />
+        <Button type="submit" size="sm" disabled={!message.trim() || isLoading}>
+          <Send className="mr-1 size-4" /> Send
+        </Button>
+      </form>
+    </section>
+  )
+}
+
+function buildEligibilityChatPrompt({
+  question,
+  model,
+  selectedPaths,
+  pathToNode,
+  results,
+  inputs,
+  entities,
+}: {
+  question: string
+  model: Model
+  selectedPaths: string[]
+  pathToNode: Map<string, ModelNode>
+  results: ExecutionResults | null
+  inputs: Record<string, string>
+  entities: Record<string, Record<string, string>[]>
+}) {
+  const context = buildEligibilityChatContext({
+    model,
+    selectedPaths,
+    pathToNode,
+    results,
+    inputs,
+    entities,
+  })
+  return [
+    'Answer the user question about eligibility using the current interface context below.',
+    'Keep the answer to only a few sentences unless the user explicitly asks for more detail.',
+    'Prefer direct, plain-language answers using the fact labels/names, not raw paths. Only include raw paths if the user explicitly asks for them or if a label is unavailable.',
+    `Current context JSON: ${JSON.stringify(context)}`,
+    `User question: ${question}`,
+  ].join('\n\n')
+}
+
+function buildEligibilityChatContext({
+  model,
+  selectedPaths,
+  pathToNode,
+  results,
+  inputs,
+  entities,
+}: {
+  model: Model
+  selectedPaths: string[]
+  pathToNode: Map<string, ModelNode>
+  results: ExecutionResults | null
+  inputs: Record<string, string>
+  entities: Record<string, Record<string, string>[]>
+}) {
+  const visibleResults = selectedPaths.map((path) => {
+    const node = pathToNode.get(path)
+    return {
+      path,
+      label:
+        node?.content.type !== 'entity' && node?.content.label
+          ? node.content.label
+          : readablePath(path),
+      value: node ? results?.[node.id]?.value : undefined,
+    }
+  })
+
+  return {
+    ruleset: model.name,
+    visibleResults,
+    inputs: parseRecord(inputs),
+    entities: parseEntities(entities),
+  }
+}
+
+function shouldStartNewAssistantBubble(current: string, nextChunk: string) {
+  const trimmed = current.trim()
+  if (!trimmed) return false
+  const lower = trimmed.toLowerCase()
+  const looksLikeThinking = THINKING_PREFIXES.some((prefix) =>
+    lower.startsWith(prefix)
+  )
+  if (!looksLikeThinking) return false
+  if (!/[.!?]$/.test(trimmed)) return false
+  return !/^\s/.test(nextChunk) || /^\s{2,}/.test(nextChunk)
 }
 
 export function FactGraphInterfaceSettingsPage() {
