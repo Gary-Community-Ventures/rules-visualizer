@@ -90,7 +90,8 @@ test('QueryRequest schema in the spec matches the runtime Zod shape', async () =
   assert.deepEqual(schema.required, ['targets'])
   assert.equal(schema.properties.targets.type, 'array')
   assert.ok(schema.properties.inputs)
-  assert.ok(schema.properties.entities)
   assert.ok(schema.properties.include)
   assert.ok(schema.properties.metadata)
+  // entities was merged into inputs; should NOT be a top-level field.
+  assert.equal(schema.properties.entities, undefined)
 })

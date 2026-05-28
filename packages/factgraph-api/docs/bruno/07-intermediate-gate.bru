@@ -20,8 +20,10 @@ auth:bearer {
 
 body:json {
   {
-    "targets": ["/grossIncomeLimit"],
-    "entities": {
+    "targets": [
+      "/grossIncomeLimit"
+    ],
+    "inputs": {
       "/members": [
         {
           "id": "applicant",
@@ -35,7 +37,6 @@ body:json {
     }
   }
 }
-
 docs {
   You don't have to target the top-level answer. Any fact in the graph
   is queryable.

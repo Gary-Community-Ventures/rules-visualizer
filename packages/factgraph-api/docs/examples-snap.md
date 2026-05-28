@@ -1,30 +1,31 @@
 # Worked example: SNAP eligibility
 
-A walkthrough of how to drive `POST /v1/factgraph/{rulesetId}/query`
-from a real partner integration. Two parts:
+This doc walks through how to call this API from a system that already
+holds eligibility data in the
+[`HouseholdDeterminationRequest`](https://github.com/codeforamerica/safety-net-blueprint/blob/main/packages/contracts/eligibility-adapter-openapi.yaml)
+shape — translating your domain data into a query, running it, and
+mapping the response back to a `ProgramDecision`.
+
+Two parts:
 
 1. **Quick walkthrough** using the smaller `snap-fy2026` ruleset — a
    crisp introduction to the request/response shape.
-2. **Real-world walkthrough** using `snap-complete` and the
-   `HouseholdDeterminationRequest` shape from
-   [`eligibility-adapter-openapi.yaml`](https://github.com/codeforamerica/safety-net-blueprint/blob/main/packages/contracts/eligibility-adapter-openapi.yaml).
-   This is the integration the API was actually built for: take a
-   household + members + income/expense/asset arrays as a partner has
-   them, get back a `ProgramDecision`-shaped result.
+2. **Real-world walkthrough** using `snap-complete`, showing the
+   adapter-contract-to-query translation end to end.
 
 ## Which SNAP ruleset to use
 
-The repo ships two SNAP rulesets. They have different shapes and
-different purposes.
+This API serves two SNAP rulesets with different shapes and purposes.
 
 | Ruleset | Inputs | Source | When to use |
 | --- | --- | --- | --- |
-| **`snap-complete`** | ~17 scalar + ~142 per-member writables across five collections (`/members`, `/incomes`, `/expenses`, `/jobs`, `/resourceItems`) | Our team's modelling of the full Colorado SNAP rule (10 CCR 2506-1) | Production-grade determinations — eligibility category, expedited screening, allotment + prorated allotment, denial reasons |
+| **`snap-complete`** | ~17 scalar + ~142 per-member writables across five collections (`/members`, `/incomes`, `/expenses`, `/jobs`, `/resourceItems`) | Full modelling of the Colorado SNAP rule (10 CCR 2506-1) | Production-grade determinations — eligibility category, expedited screening, allotment + prorated allotment, denial reasons |
 | **`snap-fy2026`** | ~11 scalar + ~18 per-member writables, single `/members` collection | A subset modelled after PolicyEngine-US's `is_snap_eligible` covering the most common rules | Demos, quick experiments, prototypes where the full input surface would be a distraction |
 
-Most of this doc uses `snap-complete` because that's what a real partner
-integration will target. The quick walkthrough below uses `snap-fy2026`
-because it's simpler to read.
+The main walkthrough below uses `snap-complete` because that's the
+right target for a real integration. The quick walkthrough above it
+uses `snap-fy2026` because it's smaller and easier to read on a first
+pass.
 
 Throughout this doc the base URL is the live API:
 
@@ -100,9 +101,7 @@ curl -X POST .../v1/factgraph/snap-fy2026/query \
       "/homeownersInsurance": 0,
       "/meetsCategoricalEligibility": false,
       "/childSupportPaid": 0,
-      "/isHomeless": false
-    },
-    "entities": {
+      "/isHomeless": false,
       "/members": [{
         "id": "applicant",
         "/members/*/isElderly": false,
@@ -143,15 +142,14 @@ eligible, $298/month (FY2026 max allotment for one).
 
 # Real-world walkthrough (snap-complete)
 
-This is what a real integration looks like. We start with a
-`HouseholdDeterminationRequest` shaped like the partner team's
-`eligibility-adapter-openapi.yaml`, translate it into a call against
-`/v1/factgraph/snap-complete/query`, and translate the response back
-into a `ProgramDecision`.
+This is what an integration call looks like end to end. Start with a
+`HouseholdDeterminationRequest` matching your adapter contract,
+translate it into a call against `/v1/factgraph/snap-complete/query`,
+and translate the response back into a `ProgramDecision`.
 
 ## What you have to start with
 
-Per the partner adapter contract, you receive a request like:
+Your adapter receives a request like:
 
 ```json
 {
@@ -202,29 +200,32 @@ A `ProgramDecision`:
 
 ## Step 1 — translate the request
 
-The mapping from the adapter shape to our `/query` body has three
-moving parts: scalar context, the `/members` collection, and the
+Inputs of every kind live in the single `inputs` map, keyed by fact
+path or collection root. Scalar facts take a primitive value;
+collection roots (`/members`, `/incomes`, `/expenses`, `/jobs`,
+`/resourceItems`) take an array of row objects. The translation has
+three moving parts: scalar context, the `/members` collection, and the
 per-member arrays (income / expenses / assets) which fan out into
-**separate** top-level collections on our side.
+**separate** top-level collections in the query body.
 
 ```jsonc
 {
-  // Same target list every call. We'll read every output we need
-  // for the ProgramDecision from these four.
+  // The four outputs you'll read to build a ProgramDecision.
   "targets": [
-    "/isExpedited",         // for the expedited-screening endpoint
+    "/isExpedited",         // expedited-screening result
     "/eligibilityCategory", // Bce | Ece | Se | Ineligible
     "/allotment",           // full month allotment
     "/proratedAllotment"    // partial first-month allotment
   ],
 
-  // Echoed unchanged in the response.
+  // Echoed unchanged in the response — use for correlation.
   "metadata": { "applicationId": "case-1234", "traceId": "req-abc" },
 
-  // Caseworker-side context. These don't come from the adapter request
-  // body — they're operational ("when did this case file?") and your
-  // integration owns them.
   "inputs": {
+    // Operational context. These don't come from the
+    // HouseholdDeterminationRequest body — they're administrative
+    // facts about the application itself ("when did this case file?",
+    // "is this a recertification?") that your integration sets.
     "/applicationFilingDate":          "2025-01-05",
     "/benefitMonth":                   "2025-01-01",
     "/certificationPeriodStartDate":   "2025-01-01",
@@ -234,14 +235,12 @@ per-member arrays (income / expenses / assets) which fan out into
     "/dSnapActive":                    false,
     "/temporaryEmergencyActive":       false,
     "/hasOrExpectsShelterCosts":       false,
-    "/normalIssuanceCycleDate":        "2025-01-15"
+    "/normalIssuanceCycleDate":        "2025-01-15",
     // ... 7 more operational booleans, all defaulting to false
-  },
 
-  "entities": {
-    // Each member from the adapter request becomes one row here. The
-    // partner's `id` is reused as our row id so the response can use
-    // the same key.
+    // Each member from the adapter request becomes one row here. Reuse
+    // the adapter `id` as the row id so the response can refer back to
+    // the same handle.
     "/members": [
       {
         "id": "head",
@@ -257,8 +256,8 @@ per-member arrays (income / expenses / assets) which fan out into
     ],
 
     // Each member's income[] fans out into /incomes rows with a
-    // memberId pointing back at the member. Snap-complete also expects
-    // a sibling /jobs row for any earned income.
+    // memberId pointing back at the member. For earned income,
+    // snap-complete also expects a sibling /jobs row.
     "/incomes": [
       {
         "id": "head-wages",
@@ -286,8 +285,8 @@ per-member arrays (income / expenses / assets) which fan out into
 
     // expenses[] → /expenses rows. Each one declares its `type`
     // (Rent, Mortgage, Electricity, ChildSupport, …) from
-    // /expenseTypeOptions. Snap-complete uses these to compute the
-    // shelter deduction, dependent-care deduction, and similar.
+    // /expenseTypeOptions. snap-complete uses these to compute the
+    // shelter deduction, dependent-care deduction, etc.
     "/expenses": [
       {
         "id": "head-rent",
@@ -301,9 +300,11 @@ per-member arrays (income / expenses / assets) which fan out into
       }
     ],
 
-    // assets[] → /resourceItems rows. Asset categories map onto a
-    // richer enum on our side (CashOnHand, CheckingAccount,
-    // SavingsAccount, Stocks, ...) — see /resourceItemTypeOptions.
+    // assets[] → /resourceItems rows. The asset categories in your
+    // adapter (`liquid`, `vehicle`, ...) map onto a richer enum here
+    // (CashOnHand, CheckingAccount, SavingsAccount, Stocks, ...).
+    // See /resourceItemTypeOptions on the schema endpoint for the
+    // full list.
     "/resourceItems": [
       {
         "id": "head-checking",
@@ -316,19 +317,21 @@ per-member arrays (income / expenses / assets) which fan out into
 }
 ```
 
-The fan-out is the key insight: the partner's nested
-`members[i].income[]`, `expenses[]`, and `assets[]` arrays collapse
-out into separate top-level collections on our side
-(`/incomes`, `/expenses`, `/resourceItems`), each row carrying a
-`memberId` cross-reference. Snap-complete also expects a `/jobs` row
-per earned-income source to capture work-requirement data
-(hours per week, ABAWD work type, etc.) that the adapter request
-doesn't currently include.
+The fan-out is the key insight: the nested `members[i].income[]`,
+`expenses[]`, and `assets[]` arrays from your adapter request collapse
+into separate top-level collections here (`/incomes`, `/expenses`,
+`/resourceItems`), each row carrying a `memberId` cross-reference.
+snap-complete also expects a `/jobs` row per earned-income source to
+capture work-requirement data (hours per week, ABAWD work type, etc.)
+that the adapter request doesn't currently carry.
 
 A ready-to-use full request body lives at
 [`data/factgraph/snap-complete/profiles.json`](../../../data/factgraph/snap-complete/profiles.json)
-under the "Default" profile — copy the `inputs` and `entities` blocks
-verbatim as your starting template, then patch in the partner data.
+under the "Default" profile — copy its `inputs` block and merge in the
+collections from the same profile's `entities` block (the profile file
+still uses the older two-field shape; combine them under `inputs` when
+building the query body), then patch in the applicant data from your
+`HouseholdDeterminationRequest`.
 
 ## Step 2 — call the API
 
@@ -391,12 +394,12 @@ function toProgramDecision(query: QueryResponse): ProgramDecision {
 }
 ```
 
-For our applicant: `category === "Ece"` → `status: "approved"`.
+For this applicant, `category === "Ece"` → `status: "approved"`.
 
 ## Variations from this baseline
 
-Iterating from the working scenario above, you can model any of the
-common partner cases by patching a few fields and re-running.
+Starting from the working scenario above, the common cases reduce to
+patching a few fields and re-running.
 
 ### Higher income → potential denial
 
@@ -428,16 +431,17 @@ when you want to render the entire decision chain.
 
 ### Expedited screening
 
-The partner adapter spec has a separate
-`/evaluate/expedited-screening` endpoint. Same `/v1/factgraph/...`
-call, just target only the expedited fact and skip the heavier
-context:
+Your adapter contract has a separate `/evaluate/expedited-screening`
+endpoint. Same `/v1/factgraph/...` call, just target only the
+expedited fact and skip the heavier context:
 
 ```jsonc
 {
   "targets": ["/isExpedited"],
-  "inputs":   { /* caseworker context */ },
-  "entities": { /* members + incomes + resourceItems */ }
+  "inputs": {
+    /* operational context */
+    /* "/members": [...], "/incomes": [...], "/resourceItems": [...] */
+  }
 }
 ```
 
@@ -457,45 +461,65 @@ Add additional rows to `/members`, and add per-member rows to
 applies the right deduction limits and household-size lookups
 automatically.
 
-## The fields you don't have
+## The fields the adapter request doesn't carry
 
-The snap-complete ruleset has ~80 per-member Boolean disqualifier
-flags (drug felony, IPV disqualification, voluntary quit, work
-sanctions, ...) that a partner adapter request **doesn't carry**. The
-contract treats these as "caseworker-known", not applicant-supplied.
+`snap-complete` has ~80 per-member Boolean disqualifier flags — drug
+felony convictions, IPV disqualifications, voluntary quit findings,
+striker status, fleeing felon, work-requirement sanctions, and so on.
+The `HouseholdDeterminationRequest` schema doesn't include these
+fields, so the values have to come from somewhere else when building
+the query body.
 
-For an integration call:
+Some of these may map onto data you already collect (criminal records
+checks, employment history, labor-dispute status). Others are
+verification outcomes that don't exist until a caseworker has reviewed
+the case — for those, the value at intake is genuinely unknown.
 
-- **All flags default to `false`** in your request body (the safe
-  initial-application assumption).
-- When a caseworker reviews the case and discovers a disqualifier,
-  flip the relevant flag(s) and re-run the query. The trace will
-  show the new failing gate.
+Because `snap-complete` expects every flag as a concrete Boolean (no
+native "unknown" representation), the practical choice is to pick a
+defaulting policy. Two common ones:
 
-If you want to know which flags exist, hit
-`/v1/factgraph/snap-complete/schema` and filter for
-`writable, path.startsWith("/members/*/")` or browse the [interactive
-docs](https://rules-visualizer-factgraph-api-f0c14673cf3a.herokuapp.com/v1/factgraph/docs).
+- **Default unknown flags to `false`.** Equivalent to "assume the
+  applicant is not disqualified for this reason." Produces an
+  eligibility result based on the criteria you *do* have data for,
+  and surfaces a problem only if a caseworker later flips a flag and
+  re-queries. Be aware: a result computed this way is conditional on
+  those flags being false in reality. If most of your applicants
+  aren't actually disqualified for these reasons, this is fine; if
+  disqualifiers are common in your population, this will produce
+  false-positive eligibility.
+- **Front-load a verification step.** Don't call `snap-complete` until
+  your caseworker workflow has produced concrete values for the
+  disqualifier flags relevant to the case. Closer to a
+  verification-driven adapter model where the call to this API only
+  happens after the partner system has gathered enough information
+  for a real determination.
+
+Pick whichever matches your application's workflow. The schema
+endpoint (`/v1/factgraph/snap-complete/schema`, filtered to writable
+nodes under `/members/*/`) lists every flag with its description; the
+[interactive docs](https://rules-visualizer-factgraph-api-f0c14673cf3a.herokuapp.com/v1/factgraph/docs)
+are the easiest place to browse them.
 
 ## Mapping table — adapter fields → `/query` fields
 
-For partner-side codegen, here's the field-by-field translation.
+Field-by-field translation for codegen or hand-rolled mapping:
 
 | Adapter field | Query body location | Notes |
 | --- | --- | --- |
 | `metadata` | `metadata` | Echoed unchanged. |
 | `program` | (implicit in URL) | `snap-complete` is the ruleset path component. |
 | `household.size` | (derived from `/members[].length`) | Not provided directly; the engine counts non-disqualified `/members`. |
-| `household.housingCosts` | `/expenses[]` with `type: "Rent"` or `"Mortgage"` | Split by type in our model. |
+| `household.housingCosts` | `/expenses[]` with `type: "Rent"` or `"Mortgage"` | Split by type in this model. |
 | `household.utilityCosts` | `/expenses[]` with utility types | Heating/cooling, electric, water etc. are each separate `/expenses` entries with `type` set. |
-| `members[i].dateOfBirth` | (compute age) → `/members/*/age` | Engine uses age in years. |
-| `members[i].citizenshipStatus` | `/members/*/citizenshipImmigrationStatus` | Enum — see /citizenshipImmigrationStatusOptions on the schema for the full list. |
+| `members[i].dateOfBirth` | (compute age) → `/members/*/age` | The engine uses age in years. |
+| `members[i].citizenshipStatus` | `/members/*/citizenshipImmigrationStatus` | Enum — see `/citizenshipImmigrationStatusOptions` on the schema for the full list. |
 | `members[i].relationshipToHead` | `/members/*/isHeadOfHousehold` | Boolean only; head/non-head. |
 | `members[i].isDisabled` | `/members/*/hasPhysicalDisability` *or* `/hasMentalDisability` | One Boolean per type. |
 | `members[i].income[]` | `/incomes` rows with `/incomes/*/memberId` linking back | Each income type → an `/incomes/*/type` enum value. |
 | `members[i].expenses[]` | `/expenses` rows | Each expense category → an `/expenses/*/type` enum value. |
 | `members[i].assets[]` | `/resourceItems` rows | Each asset type → a `/resourceItems/*/type` enum value. |
-| (caseworker-only fields) | various scalar inputs | `applicationFilingDate`, `benefitMonth`, `livesInApplicationCounty`, etc. Default to safe values. |
+| (operational fields) | various scalar inputs | `applicationFilingDate`, `benefitMonth`, `livesInApplicationCounty`, etc. — administrative facts about the application itself, not about the applicant. Your integration sets these. |
 
 For the enum mappings (income types, expense categories, citizenship
 statuses), pull the option list from
@@ -506,39 +530,41 @@ statuses), pull the option list from
 
 ## Operational notes
 
-- **Frequency normalization is the engine's job.** Our `/incomes` and
-  `/expenses` have a `frequency` enum (Monthly, Weekly, BiWeekly, …).
-  The engine handles the math; you pass what the partner gave you.
+- **Frequency normalization happens server-side.** The `/incomes` and
+  `/expenses` collections each have a `frequency` enum (Monthly,
+  Weekly, BiWeekly, …). Pass through whatever frequency the source
+  data has; the engine handles the conversion to monthly internally.
 - **`memberId` cross-references.** When a row references a member
-  (e.g. `/incomes/*/memberId`, `/expenses/*/memberId`), supply the
-  partner's `id` string and we'll resolve it. You can also use the
-  positional `#N` form (e.g. `"#0"` = first member) — both work.
-- **Trace + `decidingPath` give you `denialReasonCode`.** Set
-  `include: ["trace"]` on calls that need a reason; the
-  `decidingPaths["/eligibilityCategory"]` chain shows you the deciding
-  gate. The `reason` field on each `TraceNode` is safe to render
-  directly in a caseworker UI.
-- **`/v1/factgraph/snap-complete/docs`** in your browser is the
+  (e.g. `/incomes/*/memberId`, `/expenses/*/memberId`), pass the
+  adapter row's `id` string and the server resolves it. The positional
+  `#N` form (e.g. `"#0"` = first member in the array) also works.
+- **`include: ["trace"]` gives you the `denialReasonCode` material.**
+  When set, the response includes
+  `decidingPaths["/eligibilityCategory"]` (a flat chain of the deciding
+  gates) and `traces["/eligibilityCategory"]` (the full tree). The
+  `reason` field on each `TraceNode` is safe to render directly in a
+  caseworker UI.
+- **`/v1/factgraph/snap-complete/docs`** in a browser is the
   interactive reference — click Authorize, paste your token, click
-  "Try it" against any of these scenarios. The
-  [GitHub Pages version](https://gary-community-ventures.github.io/rules-visualizer/)
+  "Try it" against any of these scenarios. The [public docs
+  site](https://gary-community-ventures.github.io/rules-visualizer/)
   has the same content statically, no token needed.
 
-## What's still rough
+## Known limitations
 
-A few things we know are honest gaps as of this write:
-
-- **No SNAP-shaped convenience endpoints yet.** Today every call goes
-  through `POST /v1/factgraph/{rulesetId}/query`. A future
-  `POST /evaluate/expedited-screening` and
-  `POST /evaluate/determination` matching your adapter contract's URL
-  shape is on the roadmap — when partners ask for it loudly enough.
+- **No SNAP-shaped convenience endpoints yet.** Every call currently
+  goes through `POST /v1/factgraph/{rulesetId}/query`. Wrapper
+  endpoints matching the adapter contract's URL shape
+  (`/evaluate/expedited-screening`, `/evaluate/determination`) can be
+  added if that's a cleaner fit for your client code than the generic
+  query shape.
 - **Per-member trace** for collection-scoped targets isn't built yet.
   Per-member outputs come back as `[{memberId, value}]` arrays in
   `values`, but `traces` only walks scalar targets today.
 - **Alternation** in `missingInputs`: when an `Any(...)` could be
   satisfied by *one of* several inputs, both branches' inputs appear
-  in the list without an explicit "one-of" relationship.
+  in the list without an explicit "one-of" relationship. Either input
+  unblocks the determination — the list just doesn't flag that yet.
 
 See [`docs/changelog.md`](./changelog.md) for the full current state
-and `docs/concepts.md` for the contract semantics.
+and [`docs/concepts.md`](./concepts.md) for the contract semantics.

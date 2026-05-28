@@ -106,7 +106,7 @@ export function buildOpenApiDocument() {
       )
       .openapi({
         description:
-          'Per-member fact value. Returned for any target path that is collection-scoped (contains the collection wildcard segment). Each entry corresponds to one row from the request\'s `entities[<collection>]` array.',
+          "Per-member fact value. Returned for any target path that is collection-scoped (contains the collection wildcard segment). Each entry corresponds to one row from the request's `inputs[<collection-root>]` array.",
       })
   )
 
@@ -412,7 +412,7 @@ export function buildOpenApiDocument() {
     path: '/v1/factgraph/{rulesetId}/query',
     summary: 'Evaluate one or more fact-graph targets.',
     description: [
-      'Pass any subset of inputs and entities. The engine resolves what it can; the response carries values for resolved targets, and (when anything is missing) a deduped list of writables the caller would have to supply.',
+      "Pass any subset of inputs (scalars and collection rows live in the same `inputs` map, keyed by fact path or collection root). The engine resolves what it can; the response carries values for resolved targets, and (when anything is missing) a deduped list of writables the caller would still need to supply.",
       '',
       'Targets can be top-level outputs (`/eligible`, `/snap`), intermediate gates (`/grossIncomeLimit`, `/meetsAssetTest`), or per-member facts. Per-member targets return arrays of `{memberId, value}` correlated to caller-provided `id` fields on entity rows.',
       '',

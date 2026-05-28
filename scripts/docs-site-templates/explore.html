@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Factgraph API — target explorer</title>
+    <meta
+      name="description"
+      content="Pick a fact-graph target, see what inputs you'd need to determine it. Drives off the live Factgraph API."
+    />
+    <style>
+      :root {
+        --bg:        #fdfdfd;
+        --fg:        #1f2937;
+        --muted:     #6b7280;
+        --border:    #e5e7eb;
+        --accent:    #2563eb;
+        --code-bg:   #f3f4f6;
+        --row-hover: #f9fafb;
+        --row-active:#eff6ff;
+        --warn:      #b45309;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg:        #111827;
+          --fg:        #e5e7eb;
+          --muted:     #9ca3af;
+          --border:    #374151;
+          --accent:    #60a5fa;
+          --code-bg:   #1f2937;
+          --row-hover: #1f2937;
+          --row-active:#1e3a8a;
+          --warn:      #fbbf24;
+        }
+      }
+      * { box-sizing: border-box; }
+      html, body {
+        margin: 0; padding: 0;
+        background: var(--bg); color: var(--fg);
+        font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+        font-size: 14px; line-height: 1.5;
+      }
+      code, .mono {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 0.9em;
+      }
+      a { color: var(--accent); }
+      header {
+        border-bottom: 1px solid var(--border);
+        padding: 1rem 1.5rem;
+        display: flex; align-items: center; gap: 1rem;
+        flex-wrap: wrap;
+      }
+      header h1 { margin: 0; font-size: 1.1rem; font-weight: 600; }
+      header nav { margin-left: auto; display: flex; gap: 1rem; font-size: 0.9rem; }
+      .config {
+        padding: 0.75rem 1.5rem;
+        display: flex; gap: 1rem; flex-wrap: wrap;
+        border-bottom: 1px solid var(--border);
+        background: var(--code-bg);
+        align-items: center;
+      }
+      .config label { display: flex; gap: 0.5rem; align-items: center; }
+      .config select, .config input {
+        font: inherit;
+        padding: 0.25rem 0.5rem;
+        border: 1px solid var(--border);
+        background: var(--bg); color: var(--fg);
+        border-radius: 4px;
+        min-width: 12rem;
+      }
+      .config-note {
+        font-size: 0.85em; color: var(--muted); flex-basis: 100%;
+      }
+      .layout {
+        display: grid; grid-template-columns: 22rem 1fr;
+        height: calc(100vh - 8.5rem);
+      }
+      @media (max-width: 720px) {
+        .layout { grid-template-columns: 1fr; height: auto; }
+      }
+      .targets-pane {
+        border-right: 1px solid var(--border);
+        overflow-y: auto;
+        padding: 0.75rem;
+      }
+      .targets-pane input[type=search] {
+        width: 100%; padding: 0.4rem 0.6rem;
+        font: inherit;
+        border: 1px solid var(--border); border-radius: 4px;
+        background: var(--bg); color: var(--fg);
+        margin-bottom: 0.5rem;
+      }
+      .targets-pane h2 {
+        font-size: 0.85rem; text-transform: uppercase;
+        color: var(--muted); margin: 0 0 0.5rem 0;
+        letter-spacing: 0.05em;
+      }
+      .target-list {
+        list-style: none; margin: 0; padding: 0;
+      }
+      .target-list li {
+        padding: 0.4rem 0.6rem;
+        border-radius: 4px;
+        cursor: pointer;
+        font-family: ui-monospace, monospace;
+        font-size: 0.85rem;
+      }
+      .target-list li:hover { background: var(--row-hover); }
+      .target-list li.active { background: var(--row-active); }
+      .target-list li .name {
+        display: block;
+        font-family: system-ui;
+        font-size: 0.8em;
+        color: var(--muted);
+        margin-top: 2px;
+      }
+      .detail-pane {
+        overflow-y: auto;
+        padding: 1.25rem 1.5rem;
+      }
+      .detail-pane h2 { margin-top: 0; }
+      .detail-pane h3 {
+        font-size: 0.85rem; text-transform: uppercase;
+        color: var(--muted); letter-spacing: 0.05em;
+        margin-top: 1.5rem; margin-bottom: 0.5rem;
+        border-top: 1px solid var(--border); padding-top: 1rem;
+      }
+      .detail-pane h3:first-of-type { border-top: none; padding-top: 0; }
+      .target-summary {
+        background: var(--code-bg);
+        padding: 0.75rem 1rem;
+        border-radius: 4px;
+        margin-bottom: 1rem;
+      }
+      .target-summary code { font-size: 0.95em; }
+      .target-summary .desc { color: var(--muted); margin-top: 0.5rem; }
+      .inputs-table {
+        width: 100%; border-collapse: collapse;
+      }
+      .inputs-table th, .inputs-table td {
+        text-align: left; padding: 0.4rem 0.6rem;
+        border-bottom: 1px solid var(--border);
+        vertical-align: top;
+      }
+      .inputs-table th {
+        font-size: 0.75rem; text-transform: uppercase;
+        color: var(--muted); font-weight: 600;
+      }
+      .inputs-table td.path code { font-size: 0.85em; }
+      .type-pill {
+        display: inline-block;
+        background: var(--code-bg);
+        border-radius: 3px;
+        padding: 1px 6px;
+        font-size: 0.75em;
+        font-family: ui-monospace, monospace;
+      }
+      .enum-options {
+        font-size: 0.8em; color: var(--muted);
+        margin-top: 2px;
+        font-family: ui-monospace, monospace;
+      }
+      .desc { color: var(--muted); font-size: 0.9em; }
+      .empty {
+        color: var(--muted); padding: 2rem 1rem;
+        text-align: center; font-style: italic;
+      }
+      .warn {
+        color: var(--warn); font-size: 0.9em;
+        margin-top: 0.5rem;
+      }
+      .copy-btn {
+        font: inherit;
+        background: var(--accent); color: white;
+        border: none; border-radius: 4px;
+        padding: 0.4rem 0.8rem;
+        cursor: pointer;
+        margin-top: 0.5rem;
+      }
+      .copy-btn:hover { opacity: 0.9; }
+      .copy-btn.copied { background: var(--muted); }
+      .group-heading {
+        font-weight: 600;
+        margin-top: 1.5rem; margin-bottom: 0.25rem;
+        font-family: ui-monospace, monospace;
+        font-size: 0.95rem;
+      }
+      .group-heading:first-of-type { margin-top: 0; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Factgraph API — target explorer</h1>
+      <nav>
+        <a href="./">API spec (Redoc)</a>
+      </nav>
+    </header>
+
+    <div class="config">
+      <label>
+        Ruleset
+        <select id="ruleset"></select>
+      </label>
+      <label>
+        Bearer token
+        <input id="token" type="password" placeholder="paste your token" autocomplete="off" />
+      </label>
+      <span id="status" class="desc"></span>
+      <p class="config-note">
+        Token is stored in your browser's <code>localStorage</code> and sent only to the API origin
+        — never to GitHub Pages. Get a token from whoever set up your access.
+      </p>
+    </div>
+
+    <div class="layout">
+      <aside class="targets-pane">
+        <h2>Targets <span id="target-count" class="desc"></span></h2>
+        <input id="filter" type="search" placeholder="Filter — path or name…" autocomplete="off" />
+        <ul id="target-list" class="target-list"></ul>
+      </aside>
+
+      <main class="detail-pane">
+        <div id="detail">
+          <p class="empty">Pick a target on the left to see what inputs it needs.</p>
+        </div>
+      </main>
+    </div>
+
+    <script>
+      // ---------------------------------------------------------------
+      // Config
+      // ---------------------------------------------------------------
+      const API_BASE = 'https://rules-visualizer-factgraph-api-f0c14673cf3a.herokuapp.com';
+      const TOKEN_KEY = 'factgraph-explorer-token';
+      const RULESET_KEY = 'factgraph-explorer-ruleset';
+
+      // ---------------------------------------------------------------
+      // State + DOM refs
+      // ---------------------------------------------------------------
+      const rulesetSel = document.getElementById('ruleset');
+      const tokenInput = document.getElementById('token');
+      const statusEl   = document.getElementById('status');
+      const filterEl   = document.getElementById('filter');
+      const listEl     = document.getElementById('target-list');
+      const countEl    = document.getElementById('target-count');
+      const detailEl   = document.getElementById('detail');
+
+      let schema = null;       // current ruleset's full schema
+      let targets = [];        // [{path, name, description, op}], sorted
+      let currentTarget = null;
+
+      tokenInput.value = localStorage.getItem(TOKEN_KEY) || '';
+      tokenInput.addEventListener('input', () => {
+        localStorage.setItem(TOKEN_KEY, tokenInput.value);
+      });
+
+      // ---------------------------------------------------------------
+      // API helpers
+      // ---------------------------------------------------------------
+      function authHeaders() {
+        const t = tokenInput.value.trim();
+        return t ? { Authorization: 'Bearer ' + t } : {};
+      }
+
+      async function getJSON(path) {
+        const res = await fetch(API_BASE + path, { headers: authHeaders() });
+        if (!res.ok) throw new Error('HTTP ' + res.status + ' on ' + path);
+        return res.json();
+      }
+
+      async function postJSON(path, body) {
+        const res = await fetch(API_BASE + path, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...authHeaders() },
+          body: JSON.stringify(body),
+        });
+        if (!res.ok) throw new Error('HTTP ' + res.status + ' on ' + path);
+        return res.json();
+      }
+
+      function setStatus(msg, isError) {
+        statusEl.textContent = msg;
+        statusEl.style.color = isError ? 'crimson' : '';
+      }
+
+      // ---------------------------------------------------------------
+      // Boot
+      // ---------------------------------------------------------------
+      async function boot() {
+        try {
+          const { rulesets } = await getJSON('/v1/factgraph/rulesets');
+          rulesetSel.innerHTML = '';
+          for (const r of rulesets) {
+            const opt = document.createElement('option');
+            opt.value = r.id; opt.textContent = r.name + ' (' + r.id + ')';
+            rulesetSel.appendChild(opt);
+          }
+          const saved = localStorage.getItem(RULESET_KEY);
+          if (saved && [...rulesetSel.options].some(o => o.value === saved)) {
+            rulesetSel.value = saved;
+          }
+          setStatus('');
+          await loadRuleset(rulesetSel.value);
+        } catch (e) {
+          setStatus('Failed to load rulesets: ' + e.message, true);
+        }
+      }
+
+      rulesetSel.addEventListener('change', () => {
+        localStorage.setItem(RULESET_KEY, rulesetSel.value);
+        loadRuleset(rulesetSel.value);
+      });
+
+      async function loadRuleset(rulesetId) {
+        listEl.innerHTML = '';
+        countEl.textContent = '';
+        detailEl.innerHTML = '<p class="empty">Loading…</p>';
+        try {
+          schema = await getJSON('/v1/factgraph/' + encodeURIComponent(rulesetId) + '/schema');
+        } catch (e) {
+          setStatus('Failed to load schema: ' + e.message, true);
+          detailEl.innerHTML =
+            '<p class="empty">Couldn’t load the schema. ' +
+            'Check that you’ve pasted a valid bearer token above.</p>';
+          return;
+        }
+        // Build target list: root-level derived facts only. Writables
+        // (caller-supplied inputs) and collection-scoped facts
+        // (containing /*) aren't useful as direct query targets —
+        // you'd just be asking "what's the value I'm about to give
+        // you?" or "what's one member's value in isolation?" The
+        // interesting questions are the derived outputs.
+        targets = [];
+        for (const node of Object.values(schema.nodes)) {
+          const c = node.content;
+          if (!c || c.type !== 'derived') continue;
+          if (!('path' in c)) continue;
+          if (c.path.includes('/*')) continue;
+          targets.push({
+            path: c.path,
+            name: c.label || node.name || c.path,
+            description: node.description || '',
+            kind: c.type,
+            typeName: c.typeName || c.dataType || '',
+          });
+        }
+        targets.sort((a, b) => a.path.localeCompare(b.path));
+        countEl.textContent = '(' + targets.length + ')';
+        renderTargets();
+        detailEl.innerHTML = '<p class="empty">Pick a target on the left.</p>';
+        currentTarget = null;
+      }
+
+      filterEl.addEventListener('input', renderTargets);
+
+      function renderTargets() {
+        const q = filterEl.value.trim().toLowerCase();
+        listEl.innerHTML = '';
+        let shown = 0;
+        for (const t of targets) {
+          if (q) {
+            const hay = (t.path + ' ' + t.name + ' ' + t.description).toLowerCase();
+            if (!hay.includes(q)) continue;
+          }
+          const li = document.createElement('li');
+          if (currentTarget === t.path) li.classList.add('active');
+          li.dataset.path = t.path;
+          li.innerHTML =
+            '<code>' + escapeHtml(t.path) + '</code>' +
+            (t.name && t.name !== t.path
+              ? '<span class="name">' + escapeHtml(t.name) + '</span>'
+              : '');
+          li.addEventListener('click', () => selectTarget(t.path));
+          listEl.appendChild(li);
+          shown++;
+        }
+        if (shown === 0) {
+          const li = document.createElement('li');
+          li.innerHTML = '<span class="desc">No matches</span>';
+          li.style.cursor = 'default';
+          listEl.appendChild(li);
+        }
+      }
+
+      async function selectTarget(path) {
+        currentTarget = path;
+        for (const li of listEl.querySelectorAll('li')) {
+          li.classList.toggle('active', li.dataset.path === path);
+        }
+        const target = targets.find(t => t.path === path);
+        if (!target) return;
+
+        detailEl.innerHTML = renderTargetSummary(target) + '<p class="empty">Querying…</p>';
+
+        let resp;
+        try {
+          resp = await postJSON(
+            '/v1/factgraph/' + encodeURIComponent(rulesetSel.value) + '/query',
+            { targets: [path] }
+          );
+        } catch (e) {
+          detailEl.innerHTML =
+            renderTargetSummary(target) +
+            '<p class="empty">Query failed: ' + escapeHtml(e.message) + '</p>';
+          return;
+        }
+        renderDetail(target, resp);
+      }
+
+      function renderTargetSummary(t) {
+        return (
+          '<div class="target-summary">' +
+            '<code>' + escapeHtml(t.path) + '</code> ' +
+            '<span class="type-pill">' + escapeHtml(t.kind) + (t.typeName ? ' · ' + t.typeName : '') + '</span>' +
+            (t.name && t.name !== t.path
+              ? '<div style="margin-top:0.25rem; font-weight:600;">' + escapeHtml(t.name) + '</div>'
+              : '') +
+            (t.description
+              ? '<div class="desc">' + escapeHtml(t.description) + '</div>'
+              : '') +
+          '</div>'
+        );
+      }
+
+      function renderDetail(target, resp) {
+        const status = resp.status;
+        const missing = resp.missingInputs || [];
+        const value = resp.values && resp.values[target.path];
+
+        let html = renderTargetSummary(target);
+
+        // If the engine could resolve the target with NO inputs (e.g.
+        // it's a constant), tell the user that — they don't need to
+        // supply anything for this one.
+        if (status === 'complete') {
+          html +=
+            '<h3>Resolved without inputs</h3>' +
+            '<p>This target evaluated to <code>' + escapeHtml(JSON.stringify(value)) + '</code> ' +
+            'with no inputs provided. It’s either a constant or a function of other constants.</p>';
+          html += renderCopyTemplate(target, missing);
+          detailEl.innerHTML = html;
+          return;
+        }
+
+        // Group missing inputs by collection (any path containing /*/).
+        const scalar = [];
+        const collections = new Map(); // root -> [missing inputs]
+        for (const m of missing) {
+          const match = m.path.match(/^(\/[^/*]+)\/\*\//);
+          if (match) {
+            const root = match[1];
+            if (!collections.has(root)) collections.set(root, []);
+            collections.get(root).push(m);
+          } else {
+            scalar.push(m);
+          }
+        }
+
+        html += '<h3>Inputs required (' + missing.length + ')</h3>';
+        html +=
+          '<p class="desc">Calling <code>POST /v1/factgraph/' +
+          escapeHtml(rulesetSel.value) +
+          '/query</code> with <code>{"targets": ["' +
+          escapeHtml(target.path) +
+          '"]}</code> returns these as <code>missingInputs</code>.</p>';
+
+        if (scalar.length > 0) {
+          html += '<div class="group-heading">Scalar inputs</div>';
+          html += renderInputsTable(scalar);
+        }
+
+        // Sort collections so /members comes first (it's the natural
+        // anchor for SNAP-style rulesets), then alphabetical.
+        const colRoots = [...collections.keys()].sort((a, b) => {
+          if (a === '/members') return -1;
+          if (b === '/members') return 1;
+          return a.localeCompare(b);
+        });
+        for (const root of colRoots) {
+          html +=
+            '<div class="group-heading">' + escapeHtml(root) +
+            ' <span class="desc">(per-row fields)</span></div>';
+          html += renderInputsTable(collections.get(root), root);
+        }
+
+        html += renderCopyTemplate(target, missing);
+        detailEl.innerHTML = html;
+        wireCopy();
+      }
+
+      function renderInputsTable(rows, collectionRoot) {
+        let html = '<table class="inputs-table"><thead><tr>' +
+          '<th>Path</th><th>Name</th><th>Type</th><th>Description</th>' +
+          '</tr></thead><tbody>';
+        for (const m of rows) {
+          const shortPath = collectionRoot
+            ? m.path.replace(collectionRoot + '/*/', '')
+            : m.path;
+          html += '<tr>' +
+            '<td class="path"><code>' + escapeHtml(shortPath) + '</code></td>' +
+            '<td>' + escapeHtml(m.name || '') + '</td>' +
+            '<td><span class="type-pill">' + escapeHtml(m.dataType || '') + '</span>' +
+              (m.enumOptions && m.enumOptions.length
+                ? '<div class="enum-options">[' + m.enumOptions.map(escapeHtml).join(', ') + ']</div>'
+                : '') +
+            '</td>' +
+            '<td class="desc">' + escapeHtml(m.description || '') + '</td>' +
+          '</tr>';
+        }
+        return html + '</tbody></table>';
+      }
+
+      function renderCopyTemplate(target, missing) {
+        // Build a starter request body the user can paste into Bruno/curl.
+        const scalars = {};
+        const collections = {};
+        for (const m of missing) {
+          const colMatch = m.path.match(/^(\/[^/*]+)\/\*\//);
+          if (colMatch) {
+            const root = colMatch[1];
+            const field = m.path;
+            if (!collections[root]) collections[root] = { id: root.replace(/^\//, '') + '-0' };
+            collections[root][field] = placeholder(m);
+          } else {
+            scalars[m.path] = placeholder(m);
+          }
+        }
+        const body = { targets: [target.path], inputs: { ...scalars } };
+        for (const [root, row] of Object.entries(collections)) {
+          body.inputs[root] = [row];
+        }
+        const json = JSON.stringify(body, null, 2);
+        return (
+          '<h3>Starter request body</h3>' +
+          '<p class="desc">Placeholder values, ready to fill in. Click to copy.</p>' +
+          '<pre class="mono" id="template-pre" style="background:var(--code-bg);' +
+          'padding:0.75rem 1rem;border-radius:4px;overflow:auto;white-space:pre-wrap;">' +
+          escapeHtml(json) + '</pre>' +
+          '<button class="copy-btn" id="copy-template">Copy</button>'
+        );
+      }
+
+      function placeholder(m) {
+        const t = (m.dataType || '').toLowerCase();
+        if (m.enumOptions && m.enumOptions.length) return m.enumOptions[0];
+        if (t === 'boolean') return false;
+        if (t === 'int' || t === 'short' || t === 'byte') return 0;
+        if (t === 'dollar' || t === 'rational') return 0;
+        if (t === 'day') return '2025-01-01';
+        if (t === 'string') return '';
+        return null;
+      }
+
+      function wireCopy() {
+        const btn = document.getElementById('copy-template');
+        const pre = document.getElementById('template-pre');
+        if (!btn || !pre) return;
+        btn.addEventListener('click', async () => {
+          try {
+            await navigator.clipboard.writeText(pre.textContent);
+            btn.textContent = 'Copied!';
+            btn.classList.add('copied');
+            setTimeout(() => {
+              btn.textContent = 'Copy';
+              btn.classList.remove('copied');
+            }, 1500);
+          } catch {
+            // Fall back to selecting the text for manual copy.
+            const range = document.createRange();
+            range.selectNodeContents(pre);
+            const sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(range);
+          }
+        });
+      }
+
+      function escapeHtml(s) {
+        if (s == null) return '';
+        return String(s)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+      }
+
+      boot();
+    </script>
+  </body>
+</html>

@@ -20,7 +20,10 @@ auth:bearer {
 
 body:json {
   {
-    "targets": ["/eligible", "/snap"],
+    "targets": [
+      "/eligible",
+      "/snap"
+    ],
     "inputs": {
       "/grossEarnedIncome": 0,
       "/unearnedIncome": 0,
@@ -32,9 +35,7 @@ body:json {
       "/homeownersInsurance": 0,
       "/meetsCategoricalEligibility": true,
       "/childSupportPaid": 0,
-      "/isHomeless": false
-    },
-    "entities": {
+      "/isHomeless": false,
       "/members": [
         {
           "id": "applicant",
@@ -59,14 +60,15 @@ body:json {
         }
       ]
     },
-    "include": ["supportingFacts"],
+    "include": [
+      "supportingFacts"
+    ],
     "metadata": {
       "applicationId": "demo-application-001",
       "traceId": "demo-trace-xyz"
     }
   }
 }
-
 docs {
   A household flagged with `meetsCategoricalEligibility: true` bypasses
   the income and asset tests under 7 CFR §273.2(j).

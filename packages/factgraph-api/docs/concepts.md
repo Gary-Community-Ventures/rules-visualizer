@@ -22,8 +22,8 @@ target facts?**
 POST /v1/factgraph/snap-fy2026/query
 {
   "targets": ["/eligible", "/snap"],
-  "inputs":  { "/grossEarnedIncome": 1500, ... },
-  "entities": {
+  "inputs": {
+    "/grossEarnedIncome": 1500,
     "/members": [
       { "id": "applicant", "/members/*/age": 30, ... },
       { "id": "spouse",    "/members/*/age": 32, ... }
@@ -34,13 +34,18 @@ POST /v1/factgraph/snap-fy2026/query
 }
 ```
 
-| Field      | Required | Purpose                                                                                                               |
-| ---------- | -------- | --------------------------------------------------------------------------------------------------------------------- |
-| `targets`  | yes      | Array of fact paths to evaluate. Single-value queries use a one-element array.                                        |
-| `inputs`   | no       | Scalar writable inputs, keyed by fact path.                                                                           |
-| `entities` | no       | Per-collection rows. Each row may carry a caller-provided `id`.                                                       |
-| `include`  | no       | Opt-in response sections. Today: `"supportingFacts"`. Future: `"trace"`, `"counterfactuals"`. Unknown values ignored. |
-| `metadata` | no       | Opaque correlation context. Echoed back unchanged; never inspected or logged.                                         |
+| Field      | Required | Purpose                                                                                                                                     |
+| ---------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `targets`  | yes      | Array of fact paths to evaluate. Single-value queries use a one-element array.                                                              |
+| `inputs`   | no       | Caller-provided values, keyed by fact path. Scalar facts take a primitive value; collection roots (e.g. `/members`) take an array of rows.  |
+| `include`  | no       | Opt-in response sections. Today: `"supportingFacts"`, `"trace"`. Unknown values ignored.                                                    |
+| `metadata` | no       | Opaque correlation context. Echoed back unchanged; never inspected or logged.                                                               |
+
+Scalar values and collection rows share the `inputs` map so the
+request shape mirrors the response shape — every key in `inputs` is a
+fact path, the value's structure depends on whether the path is scalar
+or a collection. The server splits them at the API boundary; you
+don't have to.
 
 The response shape is the same regardless of whether the engine fully
 resolves the targets or not:

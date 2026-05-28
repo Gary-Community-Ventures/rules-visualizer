@@ -5,6 +5,19 @@ without surface impact aren't logged here; see git history for those.
 
 ## Unreleased
 
+### Changed
+
+- **Unified `inputs` shape.** The request body's `inputs` field now
+  carries both scalar values and collection rows, keyed by fact path.
+  Previously, scalars lived in `inputs` and collection rows lived in a
+  separate top-level `entities` field. The two-field shape was
+  asymmetric with the response (which already puts scalar values and
+  per-member arrays both under `values` keyed by path); the new shape
+  mirrors that exactly. The server splits scalars from collection rows
+  at the API boundary based on the value's JSON shape (primitive vs
+  array). No callers existed when this changed; the previous shape was
+  never released.
+
 ### Added
 
 - Initial server scaffold (`packages/factgraph-api`).
@@ -60,6 +73,14 @@ value}` objects so callers can correlate output to specific rows
   Rebuilds automatically on every push to main that touches the API
   package (`.github/workflows/docs.yml`). Doesn't require the API to be
   up — handy for sharing contract links or browsing from a phone.
+- **Target explorer** at
+  [gary-community-ventures.github.io/rules-visualizer/explore.html](https://gary-community-ventures.github.io/rules-visualizer/explore.html).
+  Interactive browser for the API surface: pick a ruleset, pick a
+  derived fact target, see the inputs required to determine it (with
+  types, descriptions, and enum options), generate a starter request
+  body. Drives off the live API; token is pasted by the user and stays
+  in their browser. Complements Redoc (schema browse) and Swagger UI
+  (endpoint try-it) with a target-oriented view.
 
 - **Structured trace / explanation API.** Opt in via
   `include: ["trace"]` on a `/query` request. The response gains a
