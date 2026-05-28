@@ -50,7 +50,7 @@ function currentInterfaceExecutionTool(interfaceContext: unknown) {
   return tool(() => JSON.stringify(interfaceContext), {
     name: 'get_current_interface_execution',
     description:
-      'Return the current interface execution context: visible results, scalar inputs, and collection entities. This is read-only and reflects the page state when the user asked the question.',
+      'Return the current interface execution context: visible results, all computed result values, scalar inputs, and collection entities. This is read-only and reflects the page state when the user asked the question.',
     schema: z.object({}),
   })
 }
@@ -63,8 +63,8 @@ function systemPrompt(ctx: ChatContext): string {
 - Read the current interface execution (get_current_interface_execution)
 - Explore nodes in detail (get_nodes, search_nodes, get_dependencies)
 - List available writable inputs and their types (list_writable_inputs)`,
-    'Use get_current_interface_execution for the page state: visible results, scalar inputs, and collection rows. Entity rows use wildcard paths like /members/*/age. CollectionItem links use #0, #1, etc.',
-    'Start with the direct answer. Keep answers to a few sentences unless the user asks for more detail. Prefer readable fact labels/node names over raw paths.',
+    'Use get_current_interface_execution for the page state: visible results, all computed result values, scalar inputs, and collection rows. Entity rows use wildcard paths like /members/*/age. CollectionItem links use #0, #1, etc.',
+    'Start with the direct answer. Keep answers to a few sentences unless the user asks for more detail. Prefer readable fact labels/node names over raw paths. Use compact Markdown tables when comparing multiple facts, people, amounts, or eligibility factors.',
     `The rulesetId for tool calls is: "${ctx.rulesetId}"`,
     `Here is the node index for this ruleset. Use get_nodes to inspect specific logic.\n\n${buildNodeIndex(ctx.rulesetId)}`,
   ].join('\n\n')

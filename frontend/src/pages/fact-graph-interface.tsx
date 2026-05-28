@@ -389,6 +389,11 @@ function EligibilityChat({
   const [isLoading, setIsLoading] = useState(false)
   const requestIdRef = useRef(0)
   const assistantBubbleStartRef = useRef<number | null>(null)
+  const scrollAnchorRef = useRef<HTMLDivElement | null>(null)
+
+  useEffect(() => {
+    scrollAnchorRef.current?.scrollIntoView({ block: 'end' })
+  }, [messages, isLoading])
 
   useEffect(() => {
     return onAiEvent((event: AiEvent) => {
@@ -534,6 +539,7 @@ function EligibilityChat({
             Thinking...
           </div>
         )}
+        <div ref={scrollAnchorRef} />
       </div>
 
       <form
@@ -621,9 +627,38 @@ function buildEligibilityChatContext({
   return {
     ruleset: model.name,
     visibleResults,
+    computedResults: buildComputedResultContext(model, results),
     inputs: parseRecord(inputs),
     entities: parseEntities(entities),
   }
+}
+
+function buildComputedResultContext(
+  model: Model,
+  results: ExecutionResults | null
+) {
+  if (!results) return []
+
+  return Object.values(model.nodes)
+    .filter((node) => {
+      const content = node.content
+      if (content.type === 'entity' || content.type === 'writable') return false
+      return results[node.id]?.value !== undefined
+    })
+    .map((node) => {
+      const content = node.content
+      const path = 'path' in content ? content.path : node.name
+      return {
+        path,
+        name: node.name,
+        label:
+          content.type !== 'entity' && content.label
+            ? content.label
+            : readablePath(path),
+        value: results[node.id]?.value,
+        entity: results[node.id]?.entity,
+      }
+    })
 }
 
 function shouldStartNewAssistantBubble(current: string, nextChunk: string) {
