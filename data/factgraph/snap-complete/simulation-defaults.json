@@ -528,14 +528,36 @@
   "interfaceDefaults": {
     "selectedPaths": [
       "/eligibilityCategory",
+      "/standardEligibilityApplies",
+      "/meetsNonFinancialCriteria",
+      "/meetsFinancialCriteria",
+      "/meetsIncomeCriteria",
+      "/meetsResourceCriteria",
+      "/receivesNonCashTanfOrMoe",
+      "/disqualifiedForECE",
+      "/hasSubstantialLotteryOrGamblingWinningsThisMonth",
+      "/hadPreviousSubstantialLotteryOrGamblingWinnings",
+      "/disqualifiedForBCE",
+      "/allMembersReceiveBceQualifyingBenefits",
+      "/members/*/receivesBceQualifyingBenefits",
       "/allotment",
       "/grossIncome",
+      "/members/*/grossIncome",
+      "/eceGrossIncomeThreshold",
       "/deductions",
       "/netIncome",
+      "/grossIncomeThreshold",
+      "/netIncomeThreshold",
+      "/expectedContribution",
+      "/maxAllotment",
+      "/householdSize",
+      "/members/*/age",
+      "/members/*/isPartOfHousehold",
       "/members/*/isDisqualified",
       "/members/*/disqualifiedForIPV",
       "/members/*/failedToProvideOrObtainSSN",
       "/members/*/isIneligibleNonCitizen",
+      "/members/*/citizenshipImmigrationStatus",
       "/members/*/hasLevelSanctionImposed",
       "/members/*/disqualifiedForWorkRequirementsCooperation",
       "/members/*/disqualifiedForQualityAssuranceCooperation",
@@ -546,50 +568,366 @@
       "/members/*/disqualifiedForBoardingHouseOrInstitutionResidence",
       "/members/*/isIneligibleStriker",
       "/members/*/isFleeingFelon",
-      "/members/*/meetsGeneralWorkRequirements"
+      "/members/*/meetsGeneralWorkRequirements",
+      "/members/*/meetsGeneralWorkRequirementException",
+      "/members/*/registeredForWork",
+      "/members/*/providedEmploymentStatusOrAvailabilityInfo",
+      "/members/*/acceptedSuitableEmploymentOffer",
+      "/members/*/reportedToReferredSuitableEmployer",
+      "/members/*/isIneligibleVoluntaryQuit"
     ],
     "conditions": {
-      "/members/*/isDisqualified": { "op": "equals", "value": "true" },
-      "/members/*/disqualifiedForIPV": { "op": "equals", "value": "true" },
-      "/members/*/failedToProvideOrObtainSSN": {
+      "/standardEligibilityApplies": {
+        "op": "equals",
+        "value": "true",
+        "effect": "color",
+        "color": "blue"
+      },
+      "/meetsNonFinancialCriteria": {
+        "op": "equals",
+        "value": "true",
+        "effect": "color",
+        "color": "green",
+        "attached": [
+          {
+            "id": "default-standard-eligibility-applies-visible",
+            "type": "node-visible",
+            "path": "/standardEligibilityApplies",
+            "effect": "visibility"
+          }
+        ]
+      },
+      "/meetsFinancialCriteria": {
+        "op": "equals",
+        "value": "true",
+        "effect": "color",
+        "color": "green",
+        "attached": [
+          {
+            "id": "default-standard-eligibility-applies-visible",
+            "type": "node-visible",
+            "path": "/standardEligibilityApplies",
+            "effect": "visibility"
+          }
+        ]
+      },
+      "/meetsIncomeCriteria": {
+        "op": "always",
+        "value": "",
+        "attached": [
+          {
+            "id": "default-meets-financial-criteria-visible",
+            "type": "node-visible",
+            "path": "/meetsFinancialCriteria",
+            "effect": "visibility"
+          }
+        ]
+      },
+      "/meetsResourceCriteria": {
+        "op": "always",
+        "value": "",
+        "attached": [
+          {
+            "id": "default-meets-financial-criteria-visible",
+            "type": "node-visible",
+            "path": "/meetsFinancialCriteria",
+            "effect": "visibility"
+          }
+        ]
+      },
+      "/receivesNonCashTanfOrMoe": {
+        "op": "equals",
+        "value": "true",
+        "attached": [
+          {
+            "id": "default-eligibility-category-ece",
+            "type": "node-value",
+            "path": "/eligibilityCategory",
+            "op": "equals",
+            "value": "Ece",
+            "effect": "visibility"
+          }
+        ]
+      },
+      "/disqualifiedForECE": {
+        "op": "equals",
+        "value": "true",
+        "effect": "color",
+        "color": "yellow"
+      },
+      "/hasSubstantialLotteryOrGamblingWinningsThisMonth": {
+        "op": "equals",
+        "value": "true",
+        "effect": "color",
+        "color": "red"
+      },
+      "/hadPreviousSubstantialLotteryOrGamblingWinnings": {
+        "op": "equals",
+        "value": "true",
+        "effect": "color",
+        "color": "yellow"
+      },
+      "/disqualifiedForBCE": {
+        "op": "equals",
+        "value": "true",
+        "effect": "color",
+        "color": "yellow"
+      },
+      "/allMembersReceiveBceQualifyingBenefits": {
+        "op": "equals",
+        "value": "true",
+        "effect": "color",
+        "color": "green"
+      },
+      "/members/*/receivesBceQualifyingBenefits": {
         "op": "equals",
         "value": "true"
       },
-      "/members/*/isIneligibleNonCitizen": { "op": "equals", "value": "true" },
-      "/members/*/hasLevelSanctionImposed": { "op": "equals", "value": "true" },
+      "/allotment": {
+        "op": "always",
+        "value": "",
+        "attached": [
+          {
+            "id": "default-eligibility-category-visible",
+            "type": "node-visible",
+            "path": "/eligibilityCategory",
+            "effect": "visibility"
+          }
+        ]
+      },
+      "/members/*/grossIncome": {
+        "op": "gt",
+        "value": "0",
+        "attached": [
+          {
+            "id": "default-gross-income-visible",
+            "type": "node-visible",
+            "path": "/grossIncome",
+            "effect": "visibility"
+          }
+        ]
+      },
+      "/eceGrossIncomeThreshold": {
+        "op": "always",
+        "value": "",
+        "attached": [
+          {
+            "id": "default-eligibility-category-ece",
+            "type": "node-value",
+            "path": "/eligibilityCategory",
+            "op": "equals",
+            "value": "Ece",
+            "effect": "visibility"
+          }
+        ]
+      },
+      "/grossIncomeThreshold": {
+        "op": "always",
+        "value": "",
+        "attached": [
+          {
+            "id": "default-meets-income-criteria-visible",
+            "type": "node-visible",
+            "path": "/meetsIncomeCriteria",
+            "effect": "visibility"
+          }
+        ]
+      },
+      "/netIncomeThreshold": {
+        "op": "always",
+        "value": "",
+        "attached": [
+          {
+            "id": "default-meets-income-criteria-visible",
+            "type": "node-visible",
+            "path": "/meetsIncomeCriteria",
+            "effect": "visibility"
+          }
+        ]
+      },
+      "/members/*/isDisqualified": {
+        "op": "equals",
+        "value": "true",
+        "effect": "color",
+        "color": "red"
+      },
+      "/members/*/disqualifiedForIPV": {
+        "op": "equals",
+        "value": "true",
+        "effect": "color",
+        "color": "red"
+      },
+      "/members/*/failedToProvideOrObtainSSN": {
+        "op": "equals",
+        "value": "true",
+        "effect": "color",
+        "color": "red"
+      },
+      "/members/*/isIneligibleNonCitizen": {
+        "op": "equals",
+        "value": "true",
+        "effect": "color",
+        "color": "red"
+      },
+      "/members/*/citizenshipImmigrationStatus": {
+        "op": "always",
+        "value": "",
+        "attached": [
+          {
+            "id": "default-ineligible-noncitizen-visible",
+            "type": "node-visible",
+            "path": "/members/*/isIneligibleNonCitizen",
+            "effect": "visibility"
+          }
+        ]
+      },
+      "/members/*/hasLevelSanctionImposed": {
+        "op": "equals",
+        "value": "true",
+        "effect": "color",
+        "color": "red"
+      },
       "/members/*/disqualifiedForWorkRequirementsCooperation": {
         "op": "equals",
-        "value": "true"
+        "value": "true",
+        "effect": "color",
+        "color": "red"
       },
       "/members/*/disqualifiedForQualityAssuranceCooperation": {
         "op": "equals",
-        "value": "true"
+        "value": "true",
+        "effect": "color",
+        "color": "red"
       },
       "/members/*/exceededAbawdCountableMonthsLimit": {
         "op": "equals",
-        "value": "true"
+        "value": "true",
+        "effect": "color",
+        "color": "red"
       },
       "/members/*/disqualifiedForMultiHouseholdParticipation": {
         "op": "equals",
-        "value": "true"
+        "value": "true",
+        "effect": "color",
+        "color": "red"
       },
       "/members/*/disqualifiedForFelonyNonCompliance": {
         "op": "equals",
-        "value": "true"
+        "value": "true",
+        "effect": "color",
+        "color": "red"
       },
       "/members/*/disqualifiedForParoleOrProbationViolation": {
         "op": "equals",
-        "value": "true"
+        "value": "true",
+        "effect": "color",
+        "color": "red"
       },
       "/members/*/disqualifiedForBoardingHouseOrInstitutionResidence": {
         "op": "equals",
-        "value": "true"
+        "value": "true",
+        "effect": "color",
+        "color": "red"
       },
-      "/members/*/isIneligibleStriker": { "op": "equals", "value": "true" },
-      "/members/*/isFleeingFelon": { "op": "equals", "value": "true" },
+      "/members/*/isIneligibleStriker": {
+        "op": "equals",
+        "value": "true",
+        "effect": "color",
+        "color": "red"
+      },
+      "/members/*/isFleeingFelon": {
+        "op": "equals",
+        "value": "true",
+        "effect": "color",
+        "color": "red"
+      },
       "/members/*/meetsGeneralWorkRequirements": {
         "op": "equals",
-        "value": "false"
+        "value": "false",
+        "effect": "color",
+        "color": "red"
+      },
+      "/members/*/meetsGeneralWorkRequirementException": {
+        "op": "always",
+        "value": "",
+        "attached": [
+          {
+            "id": "default-general-work-requirements-visible",
+            "type": "node-visible",
+            "path": "/members/*/meetsGeneralWorkRequirements",
+            "effect": "visibility"
+          }
+        ]
+      },
+      "/members/*/registeredForWork": {
+        "op": "equals",
+        "value": "false",
+        "effect": "color",
+        "color": "red",
+        "attached": [
+          {
+            "id": "default-general-work-requirements-visible",
+            "type": "node-visible",
+            "path": "/members/*/meetsGeneralWorkRequirements",
+            "effect": "visibility"
+          }
+        ]
+      },
+      "/members/*/providedEmploymentStatusOrAvailabilityInfo": {
+        "op": "equals",
+        "value": "false",
+        "effect": "color",
+        "color": "red",
+        "attached": [
+          {
+            "id": "default-general-work-requirements-visible",
+            "type": "node-visible",
+            "path": "/members/*/meetsGeneralWorkRequirements",
+            "effect": "visibility"
+          }
+        ]
+      },
+      "/members/*/acceptedSuitableEmploymentOffer": {
+        "op": "equals",
+        "value": "false",
+        "effect": "color",
+        "color": "red",
+        "attached": [
+          {
+            "id": "default-general-work-requirements-visible",
+            "type": "node-visible",
+            "path": "/members/*/meetsGeneralWorkRequirements",
+            "effect": "visibility"
+          }
+        ]
+      },
+      "/members/*/reportedToReferredSuitableEmployer": {
+        "op": "equals",
+        "value": "false",
+        "effect": "color",
+        "color": "red",
+        "attached": [
+          {
+            "id": "default-general-work-requirements-visible",
+            "type": "node-visible",
+            "path": "/members/*/meetsGeneralWorkRequirements",
+            "effect": "visibility"
+          }
+        ]
+      },
+      "/members/*/isIneligibleVoluntaryQuit": {
+        "op": "equals",
+        "value": "true",
+        "effect": "color",
+        "color": "red",
+        "attached": [
+          {
+            "id": "default-general-work-requirements-visible",
+            "type": "node-visible",
+            "path": "/members/*/meetsGeneralWorkRequirements",
+            "effect": "visibility"
+          }
+        ]
       }
     }
   }
