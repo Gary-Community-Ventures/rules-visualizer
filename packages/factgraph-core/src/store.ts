@@ -2,6 +2,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { parseFactGraphModules } from './parser.js'
 import { resolveReferences } from './references.js'
+import { dropCachedHandle } from './executor-rs.js'
 import type { Model, RulesetSummary } from 'rules-visualizer-shared-types'
 
 export type RawFact = { path: string; raw: Record<string, unknown> }
@@ -27,6 +28,13 @@ export function getDataDir(): string | null {
 
 export function loadFactGraphData(dataDir: string): void {
   _dataDir = dataDir
+  // Stash on process.env so the factgraph-rs executor (and any spawned
+  // worker_threads that inherit env at spawn time) can read the XML
+  // files directly from disk without having to share an in-process
+  // cache. `globalThis` was unreliable under tsx + symlinked
+  // node_modules — the package could resolve via two different URLs,
+  // producing two module-state instances with separate maps.
+  process.env.RULES_VISUALIZER_DATA_DIR = dataDir
   const entries = fs.readdirSync(dataDir, { withFileTypes: true })
 
   // Check if this directory has XML files directly (flat layout)
@@ -75,8 +83,11 @@ function loadSingleRuleset(rulesetId: string, rulesetDir: string): void {
 
 /**
  * Reload a single ruleset from disk. Called by the file watcher.
+ * Drops any cached WASM `FactGraph` handle so the next execute picks
+ * up the new XML.
  */
 export function reloadRuleset(rulesetId: string, rulesetDir: string): void {
+  dropCachedHandle(rulesetId)
   loadSingleRuleset(rulesetId, rulesetDir)
 }
 

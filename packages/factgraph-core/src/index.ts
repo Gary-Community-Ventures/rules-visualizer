@@ -6,18 +6,19 @@
  * change without notice; treat this file as the package's API contract.
  */
 
-// Execution
+// Execution — backed by the factgraph-rs WASM module. The original
+// Scala.js-based executor stays available under `./executor.js` for
+// rollback. Same signature both ways; consumers don't need to change.
 export {
   executeFactGraph,
   cacheStats,
   timings,
-  // Diagnostic only — populated when FACTGRAPH_TRACE_GETS=1
   factCallCounts,
   resetFactCallCounts,
-  // Diagnostic only — populated when EXEC_TIME_SETS=1
   graphSetTimings,
   resetGraphSetTimings,
-} from './executor.js'
+  __debugBuildGraph,
+} from './executor-rs.js'
 
 // Ruleset store
 export {
