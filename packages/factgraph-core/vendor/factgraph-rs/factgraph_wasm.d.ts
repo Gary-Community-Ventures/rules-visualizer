@@ -17,6 +17,13 @@ export class FactGraph {
      */
     execute(request: any): any;
     /**
+     * Phase breakdown for the most recent `execute` call. Returns
+     * `{deserializeMs, engineMs, serializeMs}` — sum is the full WASM
+     * call time as the caller sees it. Lets a bench harness decompose
+     * WASM-call wall time into JS↔WASM serde cost vs. engine work.
+     */
+    lastExecuteTimings(): any;
+    /**
      * Parse a fact-graph XML module into a reusable handle.
      */
     constructor(xml: string);

@@ -119,8 +119,26 @@ What the gaps say:
 
 - **Scala.js → JVM** (~7×, same engine source): pure Scala.js↔JS bridge cost.
 - **Scala.js → WASM** (~10–155×): bridge cost plus the patched-vs-not-patched delta on snap-complete.
-- **WASM → native** (~1.5–2.1×): WASM's per-execute marshalling cost at the wasm-bindgen serde boundary. Smaller workloads amortize this less, so the snap-fy2026 ratio is larger than snap-complete's.
+- **WASM → native** (~1.5–2.1×): both the wasm-bindgen serde boundary AND wasm32 codegen being slightly slower than native. Decomposed by the WASM-internal timings below.
 - **Patched-sjs → JVM** is the cleanest "is the patched JS close to the engine's true ceiling?" comparison. JVM is still ~7× faster on snap-fy2026 — so even with the JS-side `Fact.get` cache we're paying a lot at the boundary, and a JVM-target deployment (or this Rust port) is the bigger lever.
+
+### WASM call decomposition
+
+The WASM module reports the per-phase breakdown of each execute via
+`FactGraph.lastExecuteTimings()`. The orchestrator surfaces it on the
+wasm row of every table; representative numbers:
+
+| ruleset | total wasm call | deserialize (JS→Rust) | engine | serialize (Rust→JS) |
+| --- | --- | --- | --- | --- |
+| snap-fy2026 | 0.30 ms | 0.02 ms (7%) | 0.22 ms (73%) | 0.06 ms (20%) |
+| snap-complete | 8.21 ms | 0.26 ms (3%) | 7.54 ms (92%) | 0.42 ms (5%) |
+
+What this says: **wasm-bindgen serde at the boundary is a small fraction
+of the WASM cost**. The dominant gap vs. native is the engine itself —
+wasm32 codegen is ~40% slower than native codegen for this interpreter
+(no auto-vectorization, less aggressive PGO, etc.). On a bigger workload
+that gap shrinks in relative terms because the serde boundary becomes
+proportionally smaller.
 
 ### direct-file-tax (native only, 20 executes)
 

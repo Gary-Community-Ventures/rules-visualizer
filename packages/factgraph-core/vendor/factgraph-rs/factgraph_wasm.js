@@ -48,6 +48,28 @@ class FactGraph {
         return ret >>> 0;
     }
     /**
+     * Phase breakdown for the most recent `execute` call. Returns
+     * `{deserializeMs, engineMs, serializeMs}` — sum is the full WASM
+     * call time as the caller sees it. Lets a bench harness decompose
+     * WASM-call wall time into JS↔WASM serde cost vs. engine work.
+     * @returns {any}
+     */
+    lastExecuteTimings() {
+        try {
+            const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
+            wasm.factgraph_lastExecuteTimings(retptr, this.__wbg_ptr);
+            var r0 = getDataViewMemory0().getInt32(retptr + 4 * 0, true);
+            var r1 = getDataViewMemory0().getInt32(retptr + 4 * 1, true);
+            var r2 = getDataViewMemory0().getInt32(retptr + 4 * 2, true);
+            if (r2) {
+                throw takeObject(r1);
+            }
+            return takeObject(r0);
+        } finally {
+            wasm.__wbindgen_add_to_stack_pointer(16);
+        }
+    }
+    /**
      * Parse a fact-graph XML module into a reusable handle.
      * @param {string} xml
      */
@@ -306,6 +328,10 @@ function __wbg_get_imports() {
             const ret = getObject(arg0).next();
             return addHeapObject(ret);
         }, arguments); },
+        __wbg_now_190933fa139cc119: function() {
+            const ret = Date.now();
+            return ret;
+        },
         __wbg_prototypesetcall_3249fc62a0fafa30: function(arg0, arg1, arg2) {
             Uint8Array.prototype.set.call(getArrayU8FromWasm0(arg0, arg1), getObject(arg2));
         },
@@ -316,6 +342,10 @@ function __wbg_get_imports() {
         __wbg_set_6be42768c690e380: function(arg0, arg1, arg2) {
             getObject(arg0)[takeObject(arg1)] = takeObject(arg2);
         },
+        __wbg_set_6e30c9374c26414c: function() { return handleError(function (arg0, arg1, arg2) {
+            const ret = Reflect.set(getObject(arg0), getObject(arg1), getObject(arg2));
+            return ret;
+        }, arguments); },
         __wbg_set_dca99999bba88a9a: function(arg0, arg1, arg2) {
             getObject(arg0)[arg1 >>> 0] = takeObject(arg2);
         },

@@ -400,6 +400,23 @@ export const timings = {
   count: 0,
 }
 
+// Symmetric with the WASM executor's exports so the index.ts re-export
+// works under both. The Scala.js path doesn't have a JS↔WASM boundary,
+// so these always read zero — meaningful only when running the
+// factgraph-rs (WASM) executor.
+export const wasmTimings = {
+  deserializeMs: 0,
+  engineMs: 0,
+  serializeMs: 0,
+  count: 0,
+}
+export function resetWasmTimings(): void {
+  wasmTimings.deserializeMs = 0
+  wasmTimings.engineMs = 0
+  wasmTimings.serializeMs = 0
+  wasmTimings.count = 0
+}
+
 function getFactsLookup(facts: ParsedFact[]): FactLookup {
   let m = factsLookupCache.get(facts)
   if (!m) {

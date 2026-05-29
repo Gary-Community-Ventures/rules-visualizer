@@ -32,6 +32,27 @@ import {
   type RawFact,
 } from 'rules-visualizer-factgraph-core'
 
+// wasmTimings + resetWasmTimings come from the SAME module instance that
+// the dynamic `loadExecutor` returns. Importing them from the package
+// alias resolves to a different module identity under tsx (the package's
+// index.ts re-export creates a fresh import-graph entry), so the
+// counters increment over there but stay at zero over here. We re-read
+// them from the dynamically-imported module to stay on the same
+// instance.
+type WasmTimings = {
+  deserializeMs: number
+  engineMs: number
+  serializeMs: number
+  count: number
+}
+let wasmTimings: WasmTimings = {
+  deserializeMs: 0,
+  engineMs: 0,
+  serializeMs: 0,
+  count: 0,
+}
+let resetWasmTimings: () => void = () => {}
+
 type ExecuteFn = (
   rulesetId: string,
   facts: RawFact[],
@@ -80,15 +101,14 @@ async function loadExecutor(
 ): Promise<ExecuteFn> {
   const here = path.dirname(fileURLToPath(import.meta.url))
   const corePath = path.resolve(here, '../../packages/factgraph-core/src')
-  if (engine === 'wasm') {
-    const mod = await import(path.join(corePath, 'executor-rs.ts'))
-    return mod.executeFactGraph as ExecuteFn
-  }
+  const file = engine === 'wasm' ? 'executor-rs.ts' : 'executor.ts'
   // vanilla-sjs and patched-sjs both load executor.ts; the env var
   // FACTGRAPH_DISABLE_PATCHES (set by the orchestrator before spawning
   // this process) is read at executor.ts module load and decides which
   // mode applies.
-  const mod = await import(path.join(corePath, 'executor.ts'))
+  const mod = await import(path.join(corePath, file))
+  wasmTimings = mod.wasmTimings as WasmTimings
+  resetWasmTimings = mod.resetWasmTimings as () => void
   return mod.executeFactGraph as ExecuteFn
 }
 
@@ -131,6 +151,10 @@ async function main() {
     executeFactGraph(opts.ruleset, facts, inputs, model.nodes, entities, readPaths)
   }
 
+  // Reset WASM-side per-phase counters AFTER warmup so they reflect
+  // only the measured run. Scala.js executors leave these at 0.
+  resetWasmTimings()
+
   // Phase 4: timed executes.
   const durations: number[] = []
   let firstOutputs: Record<string, unknown> | undefined
@@ -168,6 +192,23 @@ async function main() {
     minMs: Number(durations[0].toFixed(4)),
     maxMs: Number(durations[durations.length - 1].toFixed(4)),
     throughputPerSec: Number(((opts.count / totalMs) * 1000).toFixed(1)),
+    // WASM-only phase breakdown (zero under Scala.js executors). Lets
+    // the orchestrator decompose WASM overhead into JS↔WASM serde vs.
+    // engine work.
+    wasmInternal:
+      wasmTimings.count > 0
+        ? {
+            deserializeMs: Number(
+              (wasmTimings.deserializeMs / wasmTimings.count).toFixed(4)
+            ),
+            engineMs: Number(
+              (wasmTimings.engineMs / wasmTimings.count).toFixed(4)
+            ),
+            serializeMs: Number(
+              (wasmTimings.serializeMs / wasmTimings.count).toFixed(4)
+            ),
+          }
+        : null,
     // Sanity: a few output paths so the orchestrator can cross-check
     // engines returned the same answers on the same inputs.
     outputSample: firstOutputs

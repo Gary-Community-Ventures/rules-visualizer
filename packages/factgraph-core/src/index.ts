@@ -13,6 +13,8 @@ export {
   executeFactGraph,
   cacheStats,
   timings,
+  wasmTimings,
+  resetWasmTimings,
   factCallCounts,
   resetFactCallCounts,
   graphSetTimings,

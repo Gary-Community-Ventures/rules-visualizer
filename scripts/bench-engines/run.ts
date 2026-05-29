@@ -50,6 +50,12 @@ type WorkerResult = {
   minMs: number
   maxMs: number
   throughputPerSec: number
+  /** WASM only: phase breakdown of one execute call. */
+  wasmInternal?: {
+    deserializeMs: number
+    engineMs: number
+    serializeMs: number
+  } | null
   outputSample: Record<string, string>
 }
 
@@ -209,6 +215,17 @@ function tableFor(
     const rel = r.meanMs === fastestMean ? '1.00×' : `${(r.meanMs / fastestMean).toFixed(2)}×`
     lines.push(
       `| ${r.engine} | ${fmt(r.coldMs)} | ${fmt(r.meanMs)} | ${rel} | ${fmt(r.p50Ms)} | ${fmt(r.p95Ms)} | ${fmt(r.p99Ms)} | ${r.throughputPerSec.toFixed(0)}/s |`
+    )
+  }
+
+  // WASM-only: surface the inside-WASM phase breakdown so the overhead
+  // attribution is visible at a glance.
+  const wasm = rows.find((r) => r.engine === 'wasm' && r.wasmInternal)
+  if (wasm?.wasmInternal) {
+    const w = wasm.wasmInternal
+    lines.push('')
+    lines.push(
+      `_wasm internal: deserialize=${fmt(w.deserializeMs)} · engine=${fmt(w.engineMs)} · serialize=${fmt(w.serializeMs)}_`
     )
   }
   return lines.join('\n')

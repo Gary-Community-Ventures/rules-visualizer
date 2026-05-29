@@ -109,6 +109,26 @@ export const timings = {
   total: 0,
   count: 0,
 }
+
+/**
+ * WASM-side phase breakdown (per the `factgraph-rs` `lastExecuteTimings`
+ * getter). Lets a caller decompose total WASM-call time into JS↔WASM
+ * serde cost vs. actual engine work. Sum of the three fields is the
+ * inside-WASM total; the difference between that sum and `timings.total`
+ * is JS-side overhead (timer + function call dispatch).
+ */
+export const wasmTimings = {
+  deserializeMs: 0,
+  engineMs: 0,
+  serializeMs: 0,
+  count: 0,
+}
+export function resetWasmTimings(): void {
+  wasmTimings.deserializeMs = 0
+  wasmTimings.engineMs = 0
+  wasmTimings.serializeMs = 0
+  wasmTimings.count = 0
+}
 export const factCallCounts = new Map<string, number>()
 export function resetFactCallCounts(): void {
   factCallCounts.clear()
@@ -160,6 +180,25 @@ export function executeFactGraph(
   const result = handle.execute(request) as Record<string, unknown>
   timings.total += Date.now() - t0
   timings.count++
+  // Capture the per-execute phase breakdown from the WASM side. Cheap
+  // (one extra JS↔WASM call per execute that builds a 3-field object);
+  // surfaces engine-vs-boundary cost so a bench can attribute the WASM
+  // overhead we measure externally.
+  const lastTimings = (
+    handle as unknown as {
+      lastExecuteTimings?: () => {
+        deserializeMs: number
+        engineMs: number
+        serializeMs: number
+      }
+    }
+  ).lastExecuteTimings?.()
+  if (lastTimings) {
+    wasmTimings.deserializeMs += lastTimings.deserializeMs
+    wasmTimings.engineMs += lastTimings.engineMs
+    wasmTimings.serializeMs += lastTimings.serializeMs
+    wasmTimings.count++
+  }
   return result
 }
 
