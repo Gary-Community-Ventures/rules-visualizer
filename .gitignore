@@ -86,3 +86,8 @@ pnpm-lock.yaml
 
 # Generated simulation run output
 data/factgraph/*/simulations/
+
+# Per-machine engine-bench results (markdown + csv). The headline numbers
+# from the canonical run live in scripts/bench-engines/README.md; commit
+# fresh result files only when intentionally updating that baseline.
+scripts/bench-engines/results/

@@ -10,6 +10,15 @@ import { createRequire } from 'node:module'
 const require = createRequire(import.meta.url)
 const sfg = require('../vendor/factgraph-scala.cjs')
 
+// FACTGRAPH_DISABLE_PATCHES=1 skips both the correctness and the perf
+// monkey-patches below so the engine runs as the IRS Direct File Scala.js
+// bundle ships it. Used by the engine benchmark harness to measure the
+// patches' contribution; not for production use (the correctness patch is
+// a real bug fix and overrides will silently misbehave without it).
+// Read once at module load — the bench runs each engine mode in a fresh
+// Node subprocess so this is effectively immutable per process.
+const DISABLE_PATCHES = process.env.FACTGRAPH_DISABLE_PATCHES === '1'
+
 // --- Vendored bundle bug fix ------------------------------------------
 // factgraph-scala.cjs has a copy-paste defect in
 // DigestNodeWrapper.overrideDefaultOption (~line 77205): it null-checks
@@ -35,7 +44,7 @@ const sfg = require('../vendor/factgraph-scala.cjs')
 const dnwProto = sfg.DigestNodeWrapper?.prototype as
   | { __overrideDefaultOptionPatched?: boolean }
   | undefined
-if (dnwProto && !dnwProto.__overrideDefaultOptionPatched) {
+if (!DISABLE_PATCHES && dnwProto && !dnwProto.__overrideDefaultOptionPatched) {
   // Capture the buggy original so the null-overrideDefault short-circuit
   // can still hand back the bundle's None singleton without us having to
   // reach into non-exported internals.
@@ -119,6 +128,7 @@ if (dnwProto && !dnwProto.__overrideDefaultOptionPatched) {
 const jsResultCache = new WeakMap<object, Map<string, unknown>>()
 let factProtoPatched = false
 function patchFactProtoOnce(factInstance: unknown): void {
+  if (DISABLE_PATCHES) return
   if (factProtoPatched) return
   const proto = Object.getPrototypeOf(factInstance as object) as {
     get__Lgov_irs_factgraph_monads_MaybeVector?: () => unknown
