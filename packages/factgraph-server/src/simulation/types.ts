@@ -126,6 +126,15 @@ export type SimulationRun = {
   comparedRulesetId: string
   config: SimulationConfig
   status: 'running' | 'completed' | 'failed'
+  /** What the run is doing right now, while status === 'running'.
+   *  - generating: building the scenario list (CPU-bound, blocks the main
+   *    thread; user sees no progress events here, so the UI shows a label
+   *    rather than a percent).
+   *  - executing: scenarios are being processed by the worker pool;
+   *    progress.completed advances during this phase.
+   *  - finalizing: writing results to disk + computing summary.
+   *  Omitted on completed/failed runs. */
+  phase?: 'generating' | 'executing' | 'finalizing'
   progress?: { completed: number; total: number }
   summary?: SimulationSummary
   /** If the run used a saved population, its ID at run time. */

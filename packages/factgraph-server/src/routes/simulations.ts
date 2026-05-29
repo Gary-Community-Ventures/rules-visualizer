@@ -114,13 +114,18 @@ router.post('/rulesets/:id/simulations/run', (req, res) => {
 
   const totalCases = prebuiltScenarios?.length ?? config.caseCount
 
-  // Create a placeholder run and return immediately
+  // Create a placeholder run and return immediately. Phase starts at
+  // 'generating' for fresh runs (we're about to spend N×30us building
+  // the scenario list, which blocks the main thread and emits no
+  // progress events). Population-backed runs skip generation entirely
+  // and jump straight to 'executing'.
   const pendingRun: SimulationRun = {
     id: config.id,
     rulesetId,
     comparedRulesetId,
     config,
     status: 'running',
+    phase: prebuiltScenarios ? 'executing' : 'generating',
     progress: { completed: 0, total: totalCases },
     populationId,
     populationName,
@@ -139,7 +144,14 @@ router.post('/rulesets/:id/simulations/run', (req, res) => {
     config,
     (completed, total) => {
       const active = getActiveRun(config.id)
-      if (active) active.progress = { completed, total }
+      if (!active) return
+      // First progress event after generation finishes — flip phase
+      // to 'executing' so the UI can swap its label from
+      // "Generating cases…" to a live progress bar. When the worker
+      // pool reports the last case completed, advance to 'finalizing'
+      // so the UI shows "Finalizing results…" during the disk write.
+      active.progress = { completed, total }
+      active.phase = completed >= total ? 'finalizing' : 'executing'
     },
     prebuiltScenarios,
     baseOverrides,
@@ -150,6 +162,9 @@ router.post('/rulesets/:id/simulations/run', (req, res) => {
       run.populationName = populationName
       run.baseOverrides = baseOverrides
       run.comparedOverrides = comparedOverrides
+      // Status flips to 'completed' inside saveSimulationRun; clear
+      // the transient phase marker so the UI knows we're done.
+      delete run.phase
       saveSimulationRun(run, results)
       clearActiveRun(config.id)
     })
@@ -157,6 +172,7 @@ router.post('/rulesets/:id/simulations/run', (req, res) => {
       const active = getActiveRun(config.id)
       if (active) {
         active.status = 'failed'
+        delete active.phase
         active.error = (e as Error).message
       }
     })

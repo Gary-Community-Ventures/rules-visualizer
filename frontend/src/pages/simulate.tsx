@@ -169,12 +169,16 @@ export function SimulatePage() {
     completed: number
     total: number
   } | null>(null)
+  const [phase, setPhase] = useState<
+    'generating' | 'executing' | 'finalizing' | null
+  >(null)
 
   const handleRun = async () => {
     if (!config || !comparedRulesetId) return
     setIsRunning(true)
     setError(null)
     setProgress({ completed: 0, total: config.caseCount })
+    setPhase(caseSource === 'population' ? 'executing' : 'generating')
     try {
       // Start the run (returns immediately with status: 'running')
       const pendingRun = await runSimulation(
@@ -201,6 +205,9 @@ export function SimulatePage() {
         if (current.progress) {
           setProgress(current.progress)
         }
+        if (current.phase) {
+          setPhase(current.phase)
+        }
         if (current.status === 'running') {
           if (Date.now() - pollStart > MAX_POLL_MS) {
             throw new Error('Simulation timed out')
@@ -224,6 +231,7 @@ export function SimulatePage() {
     } finally {
       setIsRunning(false)
       setProgress(null)
+      setPhase(null)
     }
   }
 
@@ -346,6 +354,7 @@ export function SimulatePage() {
             availableRulesets={availableRulesets}
             isRunning={isRunning}
             progress={progress}
+            phase={phase}
             onRun={handleRun}
             onResetConfig={handleResetConfig}
             runs={runs}
@@ -477,6 +486,7 @@ function ConfigView({
   availableRulesets,
   isRunning,
   progress,
+  phase,
   onRun,
   onResetConfig,
   runs,
@@ -504,6 +514,7 @@ function ConfigView({
   availableRulesets: RulesetSummary[]
   isRunning: boolean
   progress: { completed: number; total: number } | null
+  phase: 'generating' | 'executing' | 'finalizing' | null
   onRun: () => void
   onResetConfig: () => void
   runs: SimulationRun[]
@@ -777,8 +788,22 @@ function ConfigView({
           )}
         </Button>
 
-        {/* Progress bar */}
-        {isRunning && progress && (
+        {/* Progress indicator. During 'generating' we have no completed-count
+            to plot (the scenario list is being built synchronously, no progress
+            events fire), so show an indeterminate label instead of a stuck
+            empty bar. Once execution starts, switch to the live progress bar.
+            'finalizing' is the brief tail when results are being persisted. */}
+        {isRunning && phase === 'generating' && (
+          <div className="space-y-1">
+            <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
+              <div className="h-full w-1/3 bg-blue-500 animate-pulse" />
+            </div>
+            <p className="text-[11px] text-muted-foreground text-center">
+              Generating {progress?.total.toLocaleString() ?? '…'} cases…
+            </p>
+          </div>
+        )}
+        {isRunning && phase !== 'generating' && progress && (
           <div className="space-y-1">
             <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
               <div
@@ -789,9 +814,9 @@ function ConfigView({
               />
             </div>
             <p className="text-[11px] text-muted-foreground text-center">
-              {progress.completed.toLocaleString()} /{' '}
-              {progress.total.toLocaleString()} cases (
-              {Math.round((progress.completed / progress.total) * 100)}%)
+              {phase === 'finalizing'
+                ? 'Finalizing results…'
+                : `${progress.completed.toLocaleString()} / ${progress.total.toLocaleString()} cases (${Math.round((progress.completed / progress.total) * 100)}%)`}
             </p>
           </div>
         )}

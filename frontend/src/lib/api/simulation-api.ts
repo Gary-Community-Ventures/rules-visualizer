@@ -94,6 +94,11 @@ export type SimulationRun = {
   comparedRulesetId: string
   config: SimulationConfig
   status: 'running' | 'completed' | 'failed'
+  /** What the run is doing right now while `status === 'running'`. The
+   *  UI uses this to show "Generating cases…" before the progress bar
+   *  becomes meaningful — for big runs (e.g. 1M cases) scenario
+   *  generation takes seconds and emits no progress events during it. */
+  phase?: 'generating' | 'executing' | 'finalizing'
   progress?: { completed: number; total: number }
   summary?: SimulationSummary
   populationId?: string

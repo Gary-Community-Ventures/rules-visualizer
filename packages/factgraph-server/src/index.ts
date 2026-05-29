@@ -8,6 +8,7 @@ import fs from 'node:fs'
 import { loadFactGraphData } from 'rules-visualizer-factgraph-core'
 import { createServer } from './server.js'
 import { startWatcher } from './watcher.js'
+import { preWarmWorkerPool } from './simulation/runner.js'
 
 const args = process.argv.slice(2)
 const dataDir = args[0] ? path.resolve(args[0]) : process.cwd()
@@ -29,6 +30,11 @@ loadFactGraphData(dataDir)
 
 // Start server
 createServer(port)
+
+// Pre-spawn the simulation worker pool so the first /simulations/run
+// request doesn't pay the ~1-2s pool-spawn cost on user click. No-op
+// when SIMULATION_WORKERS=1 (inline-execution path; no pool needed).
+preWarmWorkerPool()
 
 // Start file watcher (skip in production — filesystem is read-only/ephemeral)
 if (process.env.NODE_ENV !== 'production') {

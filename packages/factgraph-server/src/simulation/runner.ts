@@ -306,6 +306,17 @@ export function shutdownWorkerPool(): void {
 }
 
 /**
+ * Spawn the worker pool eagerly. Called from the server's startup so
+ * the first simulation doesn't pay the ~1-2s pool-spawn cost on click.
+ * Safe to call multiple times — second call no-ops.
+ */
+export function preWarmWorkerPool(): void {
+  if (WORKER_COUNT <= 1) return // inline path; no pool needed
+  if (workerPool) return
+  getOrCreatePool()
+}
+
+/**
  * Aggregated engine timings from the most-recent parallel simulation
  * (workers don't share the main thread's `timings` singleton, so we sum
  * their slices into here at the end of runParallel). Inspected via the

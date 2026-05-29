@@ -2,6 +2,13 @@
 # Start the appropriate server based on APP_TYPE env var.
 set -e
 
+# Heroku Standard-1X dynos give 1 vCPU. Multiple simulation worker
+# threads on that environment thrash against each other instead of
+# scaling — measured 8 workers running ~no faster than 1, with much
+# higher memory churn. Force single-worker mode here. On larger
+# performance dynos this can be overridden via Heroku config vars.
+export SIMULATION_WORKERS="${SIMULATION_WORKERS:-1}"
+
 case "$APP_TYPE" in
   factgraph)
     exec node packages/factgraph-server/dist/index.js data/factgraph

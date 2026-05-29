@@ -416,6 +416,21 @@ function getModelLookup(
   return m
 }
 
+/**
+ * Internal — exposed so experimental scripts can drive the engine
+ * directly (e.g. to call Fact.explain() and inspect the resulting
+ * Explanation tree). Not part of the package's public contract; can
+ * change without notice.
+ */
+export function __debugBuildGraph(facts: ParsedFact[]): {
+  graph: { getFact: (path: string) => Record<string, unknown> }
+} {
+  const dict = buildDictionary(facts)
+  const persister = sfg.JSPersister.create()
+  const graph = sfg.GraphFactory.apply(dict, persister)
+  return { graph }
+}
+
 function buildDictionary(effectiveFacts: ParsedFact[]): unknown {
   const digestFacts: DigestFact[] = effectiveFacts.map((fact) => {
     const raw = fact.raw
