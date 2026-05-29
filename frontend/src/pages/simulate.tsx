@@ -788,20 +788,15 @@ function ConfigView({
           )}
         </Button>
 
-        {/* Progress indicator. During 'generating' we have no completed-count
-            to plot (the scenario list is being built synchronously, no progress
-            events fire), so show an indeterminate label instead of a stuck
-            empty bar. Once execution starts, switch to the live progress bar.
-            'finalizing' is the brief tail when results are being persisted. */}
+        {/* Progress indicator. The 'generating' phase has no completed-count
+            to plot (the scenario list is built synchronously on the main
+            thread with no progress events), so we just show an animated
+            label there — no bar, to avoid the "0% stuck" look. Real
+            progress only shows once execution starts. */}
         {isRunning && phase === 'generating' && (
-          <div className="space-y-1">
-            <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
-              <div className="h-full w-1/3 bg-blue-500 animate-pulse" />
-            </div>
-            <p className="text-[11px] text-muted-foreground text-center">
-              Generating {progress?.total.toLocaleString() ?? '…'} cases…
-            </p>
-          </div>
+          <p className="text-[11px] text-muted-foreground text-center animate-pulse">
+            Generating {progress?.total.toLocaleString() ?? '…'} cases…
+          </p>
         )}
         {isRunning && phase !== 'generating' && progress && (
           <div className="space-y-1">

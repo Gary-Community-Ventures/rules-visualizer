@@ -112,6 +112,21 @@ router.post('/rulesets/:id/simulations/run', (req, res) => {
     populationName = population.name
   }
 
+  // Hard cap on caseCount. Each completed case carries the full
+  // baseResults/editedResults maps (~25KB for snap-fy2026, more for
+  // snap-complete), so the in-memory result array scales with N. At
+  // 1M cases the array is ~25GB, well past Node's default ~4GB heap
+  // — the process OOMs and every subsequent route returns 500.
+  // 250k keeps peak heap under 2GB and the on-disk JSONL under 7GB.
+  const MAX_CASE_COUNT = 250_000
+  const requestedCases = prebuiltScenarios?.length ?? config?.caseCount ?? 0
+  if (requestedCases > MAX_CASE_COUNT) {
+    res.status(400).json({
+      error: `caseCount ${requestedCases.toLocaleString()} exceeds the limit of ${MAX_CASE_COUNT.toLocaleString()}. The simulation stores the full result map for every case so the "All nodes" diff view works; that scales linearly with N and OOMs the server past ~300k cases. For bigger workloads, run multiple simulations of ${MAX_CASE_COUNT.toLocaleString()} cases each.`,
+    })
+    return
+  }
+
   const totalCases = prebuiltScenarios?.length ?? config.caseCount
 
   // Create a placeholder run and return immediately. Phase starts at
