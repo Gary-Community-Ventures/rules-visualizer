@@ -542,8 +542,12 @@ export async function runSimulation(
 
   // Inline path: execute in the main thread. Used for small runs and
   // when the worker pool is disabled.
-  // Narrow the engine's read pass to outcomes (see worker.ts for rationale).
-  const readPaths = outcomeSet
+  // Don't filter the engine's read pass — see worker.ts for rationale.
+  // baseResults/editedResults feed the simulation viewer's "All nodes"
+  // tab, and the factgraph-rs engine doesn't pay the O(N²) re-walk
+  // cost the Scala.js engine did when reading intermediate paths.
+  void outcomeSet
+  const readPaths: Set<string> | undefined = undefined
   const skipSecondExecute = sidesAreIdentical(
     baseRulesetId,
     comparedRulesetId,

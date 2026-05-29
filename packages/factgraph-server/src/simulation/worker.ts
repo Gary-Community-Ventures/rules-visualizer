@@ -67,11 +67,14 @@ function snapshotTimings() {
 
 function processAssignment(data: Assignment): CaseResult[] {
   const outcomeSet = new Set(data.outcomeNodes)
-  // Narrow the engine's read pass to outcome paths only. The diff is
-  // computed against outcomes, so reading hundreds of intermediate
-  // /members/*/* facts (which trigger O(N²) aggregate re-walks for
-  // snap-complete) is pure waste.
-  const readPaths = outcomeSet
+  // Don't filter the engine's read pass. baseResults/editedResults feed
+  // the simulation viewer's "All nodes" tab — restricting them to
+  // outcome paths only would collapse that view to a single row. The
+  // Scala.js engine paid an O(N²) re-walk cost for each
+  // /members/*/* read, which made the filter worthwhile there; the
+  // factgraph-rs engine caches per-fact and the additional reads
+  // amount to a JSON-serialize-cost only, which is well worth the UX.
+  const readPaths: Set<string> | undefined = undefined
   const hasBaseOverrides =
     data.baseOverrides && Object.keys(data.baseOverrides).length > 0
   const hasComparedOverrides =
