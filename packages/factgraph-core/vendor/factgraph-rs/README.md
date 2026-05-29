@@ -2,11 +2,13 @@
 
 A Rust reimplementation of the [IRS-Public/fact-graph](https://github.com/IRS-Public/fact-graph) rules engine — the engine that powers the IRS Direct File application. Parses `<FactDictionaryModule>` XML, walks the expression tree, returns results. Ships as a CLI, a Rust library, and a WebAssembly module.
 
+Originally built to back the [rules-visualizer](https://github.com/Gary-Community-Ventures/rules-visualizer) project's simulation runner (where the Scala.js bundle's per-execute boundary cost was the bottleneck), but the crate is self-contained — you can clone it, `cargo test`, and use the library or WASM module from any project that needs to evaluate fact-graph XML.
+
 ## Status, honestly
 
 This was built as an experiment over a couple of days — a "could we just rewrite this in Rust" proof of concept that turned out to actually work. It hasn't been battle-tested. **What that means in practice:**
 
-- **Tested against:** the rules-visualizer test corpus (37 cases across snap-fy2026 and snap-complete), a 1,000-case auto-generated simulation, and end-to-end against the rules-visualizer UI's full simulation worker pipeline. **Verified bit-equivalent to the JS engine** on every one of those — 0 output divergences on 1,000-of-1,000 cases.
+- **Tested against:** a frozen fixture corpus of 47 cases across 5 rulesets (snap-fy2026, snap-complete, child-care-subsidy, household-benefits, typed-inputs-demo — vendored under `crates/tests-corpus/fixtures/`), plus a 1,000-case auto-generated simulation run end-to-end through the rules-visualizer UI's worker pool. **Verified bit-equivalent to the JS engine** on every one of those — 0 output divergences on 1,000-of-1,000 cases. (The 3 snap-complete cases that fail are known-stale fixture expectations the upstream Scala.js engine also misses; see `crates/tests-corpus/fixtures/README.md`.)
 - **Not tested against:** production traffic, every operator the engine supports under every combination of inputs, untrusted XML, very large rulesets beyond what's in our corpus, multi-module rulesets beyond simple concatenation, the Trace/Explain feature, or any kind of security audit.
 - **You probably want to know:** there's a `__debugBuildGraph` stub that's not implemented — anything that calls `Fact.explain()` won't work yet. Today() is wall-clock and non-deterministic.
 
@@ -24,7 +26,7 @@ Numbers we measured (release build, M-series Mac):
 | snap-complete, 1 execute (5-member household) | 1.8 ms | ~350 ms (patched) / ~2,015 ms (upstream) | ~190× / ~1,100× |
 | snap-fy2026, 1,000-case simulation | 108 ms via worker pool | 2,684 ms recorded baseline | **~25×** |
 
-The 25× number is the apples-to-apples one: the recorded 1,000-case JS run is in `rules-visualizer/data/factgraph/snap-fy2026/simulations/bench-fy2026-1k-1779832123/summary.json`, and we re-ran the same 1,000 cases through the WASM backend in the same visualizer's worker pool.
+The 25× number is the apples-to-apples one: recorded against the rules-visualizer simulation runner's 1,000-case `snap-fy2026` workload, then re-run on the WASM backend through the same worker pool.
 
 ## Quick start
 
@@ -90,7 +92,7 @@ const handle = new FactGraph(xml)
 cargo build --release              # CLI + library
 cargo test --release               # all tests, all crates
 cargo test --test all_corpora --release -- --nocapture
-                                   # parity sweep across rules-visualizer corpus
+                                   # parity sweep across the in-crate fixture corpus
 cargo bench -p factgraph-core      # criterion bench against the 1k workload
 ```
 
@@ -110,12 +112,13 @@ factgraph-rs/
 │   ├── core/                  parser, AST, value types, interpreter
 │   ├── cli/                   factgraph-run binary
 │   ├── wasm/                  wasm-bindgen wrapper
-│   └── tests-corpus/          integration tests against rules-visualizer data
+│   └── tests-corpus/          integration tests + frozen fixture corpus
+│       └── fixtures/          per-ruleset XML + tests.json (see fixtures/README.md)
 ├── scripts/build-wasm.sh
 └── README.md
 ```
 
-The `tests-corpus` crate currently expects to find the rules-visualizer at `../rules-visualizer/` on disk. Outside that monorepo layout the integration tests just skip.
+The fixture corpus is vendored in-crate (no sibling-repo dependency); `cargo test` works from a fresh clone.
 
 ## Operators supported
 
@@ -125,7 +128,7 @@ Path features: `/X/*/Y` collection-field references, `/X/*` collection-item refe
 
 ## Compatibility scope
 
-The interpreter was developed against the upstream commit at the time of writing (mid-2026); the operator semantics match what the rules-visualizer's vendored Scala.js bundle returns. We **don't** track upstream releases — if `fact-graph` adds a new operator or changes existing semantics, this repo won't notice until someone files an issue.
+The interpreter was developed against the upstream commit at the time of writing (mid-2026); the operator semantics match what the IRS Direct File Scala.js bundle returns on the vendored fixture corpus. We **don't** track upstream releases — if `fact-graph` adds a new operator or changes existing semantics, this repo won't notice until someone files an issue.
 
 Known semantic deviations from upstream:
 

@@ -9,6 +9,7 @@ available in this repo:
 | `patched-sjs` | Scala.js bundle + `overrideDefault` correctness fix + `Fact.get` JS-side memoization |
 | `wasm` | `factgraph-rs` Rust→WASM (current default) |
 | `jvm` | `IRS-Public/fact-graph` 3.1.0-SNAPSHOT built and run on the JVM (the reference engine with no JS bridge) |
+| `native` | `factgraph-rs` compiled to a native `factgraph-bench` binary in the sibling repo. The Rust engine with no WASM boundary — the floor for what this implementation can do. |
 
 ## Running
 
@@ -76,6 +77,18 @@ Override with `--case-index=N` (applies to every ruleset in the run).
 - ⏳ Add a third workload from an IRS Direct File ruleset (e.g. EITC) so
   the bench isn't SNAP-only
 
+## Native binary setup
+
+Same shape as the JVM step. Builds a native `factgraph-bench` binary in the
+sibling `factgraph-rs/` repo:
+
+```sh
+cd ../factgraph-rs
+cargo build --release --bin factgraph-bench
+# the orchestrator finds it at ../factgraph-rs/target/release/factgraph-bench
+# (or set FACTGRAPH_BENCH_BIN=/abs/path to override)
+```
+
 ## Latest numbers
 
 See the most recent `.md` file in `results/` for the full table. Headlines
@@ -83,23 +96,27 @@ on an M-series Mac, 100 executes:
 
 ### snap-complete, case 10 (5-member household)
 
-| engine | mean/execute | vs. wasm |
+| engine | mean/execute | vs. native |
 | --- | --- | --- |
-| vanilla-sjs | ~1,250 ms | 129× slower |
-| patched-sjs | ~451 ms | 47× slower |
-| wasm | ~9.7 ms | 1× |
+| vanilla-sjs | ~1,260 ms | 229× slower |
+| patched-sjs | ~419 ms | 76× slower |
+| wasm | ~8.1 ms | 1.5× slower |
+| native | ~5.5 ms | 1× |
 | jvm | _(skipped — see above)_ | — |
 
 ### snap-fy2026, case 0 (single applicant)
 
-| engine | mean/execute | vs. wasm |
+| engine | mean/execute | vs. native |
 | --- | --- | --- |
-| vanilla-sjs | ~3.06 ms | 8.8× slower |
-| patched-sjs | ~3.20 ms | 9.2× slower |
-| wasm | ~0.35 ms | 1× |
-| jvm | ~0.44 ms | 1.3× slower |
+| vanilla-sjs | ~3.32 ms | 21.7× slower |
+| patched-sjs | ~3.16 ms | 20.6× slower |
+| jvm | ~0.445 ms | 2.9× slower |
+| wasm | ~0.318 ms | 2.1× slower |
+| native | ~0.153 ms | 1× |
 
-The JVM ↔ Scala.js gap (3.06 ms → 0.44 ms, ~7×) is purely the Scala.js↔JS
-bridge cost: same engine source, same dictionary, same operators. WASM
-sits within ~30% of the JVM number, which is the cleanest engine-vs-engine
-comparison the bench exposes.
+What the gaps say:
+
+- **Scala.js → JVM** (~7×, same engine source): pure Scala.js↔JS bridge cost.
+- **Scala.js → WASM** (~10–155×): bridge cost plus the patched-vs-not-patched delta on snap-complete.
+- **WASM → native** (~1.5–2.1×): WASM's per-execute marshalling cost at the wasm-bindgen serde boundary. Smaller workloads amortize this less, so the snap-fy2026 ratio is larger than snap-complete's.
+- **Patched-sjs → JVM** is the cleanest "is the patched JS close to the engine's true ceiling?" comparison. JVM is still ~7× faster on snap-fy2026 — so even with the JS-side `Fact.get` cache we're paying a lot at the boundary, and a JVM-target deployment (or this Rust port) is the bigger lever.

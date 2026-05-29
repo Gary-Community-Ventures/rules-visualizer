@@ -26,7 +26,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-type Engine = 'vanilla-sjs' | 'patched-sjs' | 'wasm' | 'jvm'
+type Engine = 'vanilla-sjs' | 'patched-sjs' | 'wasm' | 'jvm' | 'native'
 
 type Cell = {
   engine: Engine
@@ -53,7 +53,7 @@ type WorkerResult = {
   outputSample: Record<string, string>
 }
 
-const ENGINES: Engine[] = ['vanilla-sjs', 'patched-sjs', 'wasm', 'jvm']
+const ENGINES: Engine[] = ['vanilla-sjs', 'patched-sjs', 'wasm', 'jvm', 'native']
 
 // Rulesets that can't run on a given engine. The JVM engine ships from the
 // public IRS-Public/fact-graph 3.1.0-SNAPSHOT, which appears to be missing
@@ -99,23 +99,32 @@ function runWorker(cell: Cell): Promise<WorkerResult> {
   let cmd: string
   let args: string[]
 
-  if (cell.engine === 'jvm') {
-    // JVM path: a precompiled fat jar (built via scripts/bench-engines/jvm/build.sh)
-    // that depends on the locally published gov.irs:factgraph_3:3.1.0-SNAPSHOT.
-    const jvmDataDir = path.resolve(here, '../../data/factgraph')
-    const xmlPath = path.join(jvmDataDir, cell.ruleset, 'eligibility.xml')
-    const testsPath = path.join(jvmDataDir, cell.ruleset, 'tests.json')
-    cmd = process.env.JAVA_BIN ?? '/opt/homebrew/opt/openjdk@21/bin/java'
-    args = [
-      '-jar',
-      path.join(here, 'jvm', 'harness.jar'),
+  if (cell.engine === 'jvm' || cell.engine === 'native') {
+    // Both jvm and native invoke a precompiled subprocess that does its
+    // own warmup/timed loop and prints a JSON line. Inputs come from the
+    // ruleset's tests.json on disk.
+    const dataDir = path.resolve(here, '../../data/factgraph')
+    const xmlPath = path.join(dataDir, cell.ruleset, 'eligibility.xml')
+    const testsPath = path.join(dataDir, cell.ruleset, 'tests.json')
+    if (cell.engine === 'jvm') {
+      cmd = process.env.JAVA_BIN ?? '/opt/homebrew/opt/openjdk@21/bin/java'
+      args = ['-jar', path.join(here, 'jvm', 'harness.jar')]
+    } else {
+      // Native binary lives in the sibling factgraph-rs repo. Override
+      // via FACTGRAPH_BENCH_BIN when needed.
+      cmd =
+        process.env.FACTGRAPH_BENCH_BIN ??
+        path.resolve(here, '../..', '../factgraph-rs/target/release/factgraph-bench')
+      args = []
+    }
+    args.push(
       `--xml=${xmlPath}`,
       `--tests-json=${testsPath}`,
       `--ruleset=${cell.ruleset}`,
       `--count=${cell.count}`,
       `--warmup=${cell.warmup}`,
-      `--case-index=${cell.caseIndex}`,
-    ]
+      `--case-index=${cell.caseIndex}`
+    )
   } else {
     // JS/WASM path: the tsx worker.
     if (cell.engine === 'vanilla-sjs') env.FACTGRAPH_DISABLE_PATCHES = '1'
