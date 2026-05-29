@@ -49,7 +49,20 @@ export type SimulationConfig = {
   outcomeNodes: string[]
   scalarFields: FieldConfig[]
   collections: CollectionConfig[]
+  /** What to persist per case:
+   *   - 'all' (default): full result map. Powers the "All nodes" case-
+   *     detail view. Caps caseCount at ~250k.
+   *   - 'outcomes': only outcomeNodes values. Caps at ~5M, but the
+   *     "All nodes" tab shows only outcomes. */
+  resultsScope?: 'all' | 'outcomes'
 }
+
+/** Per-mode caseCount caps. Must mirror MAX_CASE_COUNT_BY_SCOPE in
+ *  packages/factgraph-server/src/simulation/types.ts. */
+export const MAX_CASE_COUNT_BY_SCOPE = {
+  all: 250_000,
+  outcomes: 5_000_000,
+} as const
 
 export type CaseDiff = {
   path: string

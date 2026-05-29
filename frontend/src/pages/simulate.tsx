@@ -23,6 +23,7 @@ import {
   type NodeChangeStats,
   type Population,
   type PopulationCase,
+  MAX_CASE_COUNT_BY_SCOPE,
 } from '@/lib/api/simulation-api'
 import {
   listRulesets,
@@ -641,7 +642,16 @@ function ConfigView({
               />
             </div>
             <div className="space-y-1">
-              <label className="text-xs font-medium">Case count</label>
+              <label className="text-xs font-medium">
+                Case count
+                <span className="ml-1.5 text-muted-foreground font-normal">
+                  (max{' '}
+                  {MAX_CASE_COUNT_BY_SCOPE[
+                    config.resultsScope ?? 'all'
+                  ].toLocaleString()}
+                  )
+                </span>
+              </label>
               <NumberInput
                 className="text-xs font-mono"
                 parser={parseInt}
@@ -651,6 +661,8 @@ function ConfigView({
             </div>
           </div>
         )}
+
+        <ResultsScopeToggle config={config} setConfig={setConfig} />
 
         <OutcomeNodeEditor config={config} setConfig={setConfig} />
 
@@ -2713,6 +2725,60 @@ function OverrideValueInput({
       value={value === undefined || value === null ? '' : String(value)}
       onChange={(e) => onChange(e.target.value)}
     />
+  )
+}
+
+/**
+ * Toggle between persisting the full result map per case ("all") vs
+ * only outcome paths ("outcomes"). The latter raises the case-count
+ * ceiling from ~250k to ~5M but trades away the per-case "All nodes"
+ * detail view.
+ */
+function ResultsScopeToggle({
+  config,
+  setConfig,
+}: {
+  config: SimulationConfig
+  setConfig: (c: SimulationConfig) => void
+}) {
+  const scope = config.resultsScope ?? 'all'
+  return (
+    <div className="space-y-1.5">
+      <label className="text-xs font-medium">Per-case storage</label>
+      <div className="grid grid-cols-2 gap-1.5 text-xs">
+        <button
+          type="button"
+          onClick={() => setConfig({ ...config, resultsScope: 'all' })}
+          className={`rounded border px-2 py-1.5 text-left ${
+            scope === 'all'
+              ? 'border-blue-500 bg-blue-50 dark:bg-blue-950'
+              : 'border-border hover:border-foreground/30'
+          }`}
+        >
+          <div className="font-medium">All nodes</div>
+          <div className="text-muted-foreground mt-0.5">
+            Full result map per case. Powers the "All nodes" tab in case
+            details. Max {MAX_CASE_COUNT_BY_SCOPE.all.toLocaleString()} cases.
+          </div>
+        </button>
+        <button
+          type="button"
+          onClick={() => setConfig({ ...config, resultsScope: 'outcomes' })}
+          className={`rounded border px-2 py-1.5 text-left ${
+            scope === 'outcomes'
+              ? 'border-blue-500 bg-blue-50 dark:bg-blue-950'
+              : 'border-border hover:border-foreground/30'
+          }`}
+        >
+          <div className="font-medium">Outcomes only</div>
+          <div className="text-muted-foreground mt-0.5">
+            Only outcome paths persisted per case. Lets you run up to{' '}
+            {MAX_CASE_COUNT_BY_SCOPE.outcomes.toLocaleString()} cases. The
+            "All nodes" tab will show only outcomes.
+          </div>
+        </button>
+      </div>
+    </div>
   )
 }
 

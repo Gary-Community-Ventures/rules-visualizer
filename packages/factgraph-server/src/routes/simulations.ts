@@ -35,6 +35,7 @@ import {
   type PopulationCase,
 } from '../simulation/populations.js'
 import type { SimulationConfig, SimulationRun } from '../simulation/types.js'
+import { MAX_CASE_COUNT_BY_SCOPE } from '../simulation/types.js'
 
 const router = Router()
 
@@ -112,17 +113,20 @@ router.post('/rulesets/:id/simulations/run', (req, res) => {
     populationName = population.name
   }
 
-  // Hard cap on caseCount. Each completed case carries the full
-  // baseResults/editedResults maps (~25KB for snap-fy2026, more for
-  // snap-complete), so the in-memory result array scales with N. At
-  // 1M cases the array is ~25GB, well past Node's default ~4GB heap
-  // — the process OOMs and every subsequent route returns 500.
-  // 250k keeps peak heap under 2GB and the on-disk JSONL under 7GB.
-  const MAX_CASE_COUNT = 250_000
+  // Per-mode cap on caseCount. Bigger limits in 'outcomes' mode because
+  // each persisted case carries only outcomeNodes values (~50B) instead
+  // of the full result map (~25KB). See SimulationConfig.resultsScope.
+  const resultsScope: 'all' | 'outcomes' = config?.resultsScope ?? 'all'
+  const maxCases = MAX_CASE_COUNT_BY_SCOPE[resultsScope]
   const requestedCases = prebuiltScenarios?.length ?? config?.caseCount ?? 0
-  if (requestedCases > MAX_CASE_COUNT) {
+  if (requestedCases > maxCases) {
+    const otherMode = resultsScope === 'all' ? 'outcomes' : 'all'
     res.status(400).json({
-      error: `caseCount ${requestedCases.toLocaleString()} exceeds the limit of ${MAX_CASE_COUNT.toLocaleString()}. The simulation stores the full result map for every case so the "All nodes" diff view works; that scales linearly with N and OOMs the server past ~300k cases. For bigger workloads, run multiple simulations of ${MAX_CASE_COUNT.toLocaleString()} cases each.`,
+      error: `caseCount ${requestedCases.toLocaleString()} exceeds the limit of ${maxCases.toLocaleString()} for results-scope "${resultsScope}". ${
+        resultsScope === 'all'
+          ? `Switch to "outcomes" mode (only outcome paths persisted per case) to allow up to ${MAX_CASE_COUNT_BY_SCOPE.outcomes.toLocaleString()} cases. The "All nodes" tab in the case-detail view will then show only outcomes.`
+          : `Even with outcomes-only persistence, ${MAX_CASE_COUNT_BY_SCOPE.outcomes.toLocaleString()} cases is the practical ceiling on a single server. Run multiple simulations and aggregate downstream.`
+      } (other mode "${otherMode}" caps at ${MAX_CASE_COUNT_BY_SCOPE[otherMode].toLocaleString()}.)`,
     })
     return
   }

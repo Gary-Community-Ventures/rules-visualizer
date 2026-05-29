@@ -354,6 +354,7 @@ async function runParallel(
   outcomeNodes: string[],
   baseOverrides: Record<string, unknown> | undefined,
   comparedOverrides: Record<string, unknown> | undefined,
+  resultsScope: 'all' | 'outcomes',
   onProgress?: (completed: number, total: number) => void
 ): Promise<CaseResult[]> {
   const workerCount = Math.min(WORKER_COUNT, scenarios.length)
@@ -441,6 +442,7 @@ async function runParallel(
               baseOverrides,
               comparedOverrides,
               progressInterval: PROGRESS_REPORT_EVERY,
+              resultsScope,
             },
           })
         })
@@ -510,6 +512,7 @@ export async function runSimulation(
   // Use prebuilt scenarios (saved population) or generate random ones
   const scenarios = prebuiltScenarios ?? generateScenarios(config)
   const outcomeSet = new Set(config.outcomeNodes)
+  const resultsScope: 'all' | 'outcomes' = config.resultsScope ?? 'all'
 
   const hasBaseOverrides =
     baseOverrides && Object.keys(baseOverrides).length > 0
@@ -532,6 +535,7 @@ export async function runSimulation(
       config.outcomeNodes,
       baseOverrides,
       comparedOverrides,
+      resultsScope,
       onProgress
     )
     const executionTimeMs = Date.now() - startTime
@@ -602,12 +606,24 @@ export async function runSimulation(
         ? { outcomeDiffs: [], allDiffs: [] }
         : diffResults(baseResults, editedResults, outcomeSet)
 
+      // In 'outcomes' scope, shrink the persisted result map to just the
+      // outcome paths. Diffs were already computed against the full
+      // result above, so this only affects what gets saved to disk.
+      const project = (full: Record<string, unknown>) => {
+        if (resultsScope === 'all') return full
+        const out: Record<string, unknown> = {}
+        for (const p of config.outcomeNodes) {
+          if (p in full) out[p] = full[p]
+        }
+        return out
+      }
+
       results.push({
         scenarioId: scenario.id,
         inputs: scenario.inputs,
         entities: scenario.entities,
-        baseResults,
-        editedResults,
+        baseResults: project(baseResults),
+        editedResults: project(editedResults),
         outcomeDiffs,
         allDiffs,
         changed: outcomeDiffs.length > 0,

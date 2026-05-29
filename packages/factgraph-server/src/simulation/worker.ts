@@ -37,6 +37,13 @@ type Assignment = {
   comparedOverrides?: Record<string, unknown>
   /** Emit a progress message every N completed scenarios. */
   progressInterval: number
+  /** Persistence mode for per-case results. 'all' keeps the full result
+   *  map per case (~25KB); 'outcomes' keeps only outcomeNodes values
+   *  (~50B), letting case counts scale to millions at the cost of the
+   *  "All nodes" diff view. Diffs are still computed against full
+   *  outputs — only the persisted CaseResult.baseResults/editedResults
+   *  shrink. */
+  resultsScope: 'all' | 'outcomes'
 }
 
 type AssignMessage = { type: 'assign'; assignment: Assignment }
@@ -114,6 +121,21 @@ function processAssignment(data: Assignment): CaseResult[] {
     return { outcomeDiffs, allDiffs }
   }
 
+  // In 'outcomes' mode we still compute the full graph (engine has to,
+  // to reach the outcome leaves), but we shrink the per-case persisted
+  // map down to the outcomeNodes set before pushing into the results
+  // array. That keeps the IPC payload back to the main thread small
+  // and lets the main thread accumulate millions of cases without
+  // blowing the heap.
+  const projectForStorage = (full: Record<string, unknown>) => {
+    if (data.resultsScope === 'all') return full
+    const out: Record<string, unknown> = {}
+    for (const p of data.outcomeNodes) {
+      if (p in full) out[p] = full[p]
+    }
+    return out
+  }
+
   const results: CaseResult[] = []
   for (let i = 0; i < data.scenarios.length; i++) {
     const scenario = data.scenarios[i]
@@ -152,8 +174,8 @@ function processAssignment(data: Assignment): CaseResult[] {
         scenarioId: scenario.id,
         inputs: scenario.inputs,
         entities: scenario.entities,
-        baseResults,
-        editedResults,
+        baseResults: projectForStorage(baseResults),
+        editedResults: projectForStorage(editedResults),
         outcomeDiffs,
         allDiffs,
         changed: outcomeDiffs.length > 0,

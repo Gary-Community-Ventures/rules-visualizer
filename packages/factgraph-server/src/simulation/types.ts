@@ -67,7 +67,23 @@ export type SimulationConfig = {
   outcomeNodes: string[]
   scalarFields: FieldConfig[]
   collections: CollectionConfig[]
+  /** Persistence mode for per-case results:
+   *   - 'all' (default): keep the full result map per case (~25KB/case for
+   *     snap-fy2026, more for snap-complete). Powers the "All nodes" tab
+   *     in the case-detail view but caps caseCount at ~250k before OOM.
+   *   - 'outcomes': keep only outcomeNodes paths per case (~50B/case).
+   *     The "All nodes" tab shows only outcomes, but caseCount can scale
+   *     to millions. Use for statistical sweeps over big populations. */
+  resultsScope?: 'all' | 'outcomes'
 }
+
+/** Per-mode caseCount caps. Keyed by SimulationConfig.resultsScope.
+ *  Centralized here so the route, the frontend config UI, and the
+ *  documentation can pull the same numbers. */
+export const MAX_CASE_COUNT_BY_SCOPE = {
+  all: 250_000,
+  outcomes: 5_000_000,
+} as const
 
 /** A single generated test scenario */
 export type GeneratedScenario = {
