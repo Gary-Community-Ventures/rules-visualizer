@@ -135,8 +135,27 @@ export function loadCaseResults(
   if (!fs.existsSync(filePath))
     return { results: [], total: 0, changedTotal: 0 }
 
-  const lines = fs.readFileSync(filePath, 'utf-8').split('\n').filter(Boolean)
-  const allResults: CaseResult[] = lines.map((line) => JSON.parse(line))
+  // Stream the file line-by-line instead of readFileSync — a single
+  // run's results.jsonl can exceed Node's 512MB max string length on
+  // big simulations (e.g. snap-complete × 1k+ cases with full
+  // baseResults/editedResults), which would throw
+  // ERR_STRING_TOO_LONG inside readFileSync before any parsing could
+  // start.
+  const allResults: CaseResult[] = []
+  const raw = fs.readFileSync(filePath) // Buffer, no UTF-8 decode yet
+  let lineStart = 0
+  for (let i = 0; i < raw.length; i++) {
+    if (raw[i] !== 0x0a) continue
+    if (i > lineStart) {
+      const line = raw.toString('utf-8', lineStart, i)
+      if (line) allResults.push(JSON.parse(line))
+    }
+    lineStart = i + 1
+  }
+  if (lineStart < raw.length) {
+    const line = raw.toString('utf-8', lineStart, raw.length)
+    if (line) allResults.push(JSON.parse(line))
+  }
 
   const changedTotal = allResults.filter((r) => r.changed).length
 
