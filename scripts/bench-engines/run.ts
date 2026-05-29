@@ -26,7 +26,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-type Engine = 'vanilla-sjs' | 'patched-sjs' | 'wasm'
+type Engine = 'vanilla-sjs' | 'patched-sjs' | 'wasm' | 'jvm'
 
 type Cell = {
   engine: Engine
@@ -53,7 +53,16 @@ type WorkerResult = {
   outputSample: Record<string, string>
 }
 
-const ENGINES: Engine[] = ['vanilla-sjs', 'patched-sjs', 'wasm']
+const ENGINES: Engine[] = ['vanilla-sjs', 'patched-sjs', 'wasm', 'jvm']
+
+// Rulesets that can't run on a given engine. The JVM engine ships from the
+// public IRS-Public/fact-graph 3.1.0-SNAPSHOT, which appears to be missing
+// at least one feature (caret-prefixed scope-escape refs from inside a
+// collection filter body) that snap-complete relies on. Our vendored
+// Scala.js bundle was built from a commit that supports it.
+const ENGINE_SKIPS: Partial<Record<Engine, Set<string>>> = {
+  jvm: new Set(['snap-complete']),
+}
 
 function parseList(s: string | undefined): string[] | undefined {
   if (!s) return undefined
@@ -85,24 +94,46 @@ const DEFAULT_CASE_INDEX: Record<string, number> = {
 
 function runWorker(cell: Cell): Promise<WorkerResult> {
   const here = path.dirname(fileURLToPath(import.meta.url))
-  const workerPath = path.join(here, 'worker.ts')
   const env = { ...process.env }
-  if (cell.engine === 'vanilla-sjs') env.FACTGRAPH_DISABLE_PATCHES = '1'
-  else delete env.FACTGRAPH_DISABLE_PATCHES
+
+  let cmd: string
+  let args: string[]
+
+  if (cell.engine === 'jvm') {
+    // JVM path: a precompiled fat jar (built via scripts/bench-engines/jvm/build.sh)
+    // that depends on the locally published gov.irs:factgraph_3:3.1.0-SNAPSHOT.
+    const jvmDataDir = path.resolve(here, '../../data/factgraph')
+    const xmlPath = path.join(jvmDataDir, cell.ruleset, 'eligibility.xml')
+    const testsPath = path.join(jvmDataDir, cell.ruleset, 'tests.json')
+    cmd = process.env.JAVA_BIN ?? '/opt/homebrew/opt/openjdk@21/bin/java'
+    args = [
+      '-jar',
+      path.join(here, 'jvm', 'harness.jar'),
+      `--xml=${xmlPath}`,
+      `--tests-json=${testsPath}`,
+      `--ruleset=${cell.ruleset}`,
+      `--count=${cell.count}`,
+      `--warmup=${cell.warmup}`,
+      `--case-index=${cell.caseIndex}`,
+    ]
+  } else {
+    // JS/WASM path: the tsx worker.
+    if (cell.engine === 'vanilla-sjs') env.FACTGRAPH_DISABLE_PATCHES = '1'
+    else delete env.FACTGRAPH_DISABLE_PATCHES
+    cmd = 'npx'
+    args = [
+      'tsx',
+      path.join(here, 'worker.ts'),
+      `--engine=${cell.engine}`,
+      `--ruleset=${cell.ruleset}`,
+      `--count=${cell.count}`,
+      `--warmup=${cell.warmup}`,
+      `--case-index=${cell.caseIndex}`,
+    ]
+  }
+
   return new Promise((resolve, reject) => {
-    const child = spawn(
-      'npx',
-      [
-        'tsx',
-        workerPath,
-        `--engine=${cell.engine}`,
-        `--ruleset=${cell.ruleset}`,
-        `--count=${cell.count}`,
-        `--warmup=${cell.warmup}`,
-        `--case-index=${cell.caseIndex}`,
-      ],
-      { env, stdio: ['ignore', 'pipe', 'pipe'] }
-    )
+    const child = spawn(cmd, args, { env, stdio: ['ignore', 'pipe', 'pipe'] })
     const out: Buffer[] = []
     const err: Buffer[] = []
     child.stdout.on('data', (d) => out.push(d))
@@ -167,6 +198,7 @@ async function main() {
     const caseIndex = opts.caseIndex ?? DEFAULT_CASE_INDEX[ruleset] ?? 0
     for (const count of opts.counts) {
       for (const engine of opts.engines) {
+        if (ENGINE_SKIPS[engine]?.has(ruleset)) continue
         cells.push({ engine, ruleset, count, warmup: opts.warmup, caseIndex })
       }
     }

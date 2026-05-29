@@ -91,3 +91,8 @@ data/factgraph/*/simulations/
 # from the canonical run live in scripts/bench-engines/README.md; commit
 # fresh result files only when intentionally updating that baseline.
 scripts/bench-engines/results/
+
+# JVM bench harness build artifacts — rebuilt locally via build.sh
+scripts/bench-engines/jvm/harness.jar
+scripts/bench-engines/jvm/.scala-build/
+scripts/bench-engines/jvm/.bsp/
