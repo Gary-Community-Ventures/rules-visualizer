@@ -1,0 +1,10 @@
+[
+  {
+    "id": "df-empty",
+    "name": "Empty inputs — engine walks the full graph and most facts surface as Incomplete",
+    "description": "Used as a bench workload. We don't claim correctness; the point is to exercise a large real-world ruleset (~3,000 facts from the IRS Direct File tax dictionary).",
+    "inputs": {},
+    "entities": {},
+    "expect": {}
+  }
+]

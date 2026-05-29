@@ -64,6 +64,7 @@ lookups, so a 1-member case under-represents the perf gap. Defaults:
 | --- | --- | --- |
 | `snap-fy2026` | 0 | single applicant, modest income |
 | `snap-complete` | **10** | 5-member household, multiple income sources, elderly + disabled members |
+| `direct-file-tax` | 0 | 2,354-fact aggregate of the IRS Direct File tax dictionary. Native-only (see [data/factgraph/direct-file-tax/README.md](../../data/factgraph/direct-file-tax/README.md) for the parser-gap explanation) |
 
 Override with `--case-index=N` (applies to every ruleset in the run).
 
@@ -120,3 +121,14 @@ What the gaps say:
 - **Scala.js → WASM** (~10–155×): bridge cost plus the patched-vs-not-patched delta on snap-complete.
 - **WASM → native** (~1.5–2.1×): WASM's per-execute marshalling cost at the wasm-bindgen serde boundary. Smaller workloads amortize this less, so the snap-fy2026 ratio is larger than snap-complete's.
 - **Patched-sjs → JVM** is the cleanest "is the patched JS close to the engine's true ceiling?" comparison. JVM is still ~7× faster on snap-fy2026 — so even with the JS-side `Fact.get` cache we're paying a lot at the boundary, and a JVM-target deployment (or this Rust port) is the bigger lever.
+
+### direct-file-tax (native only, 20 executes)
+
+| engine | cold | mean | throughput |
+| --- | --- | --- | --- |
+| native | 13.0 ms | 92.0 ms | 11/s |
+
+A 2,354-fact aggregate of the IRS Direct File tax dictionary — a meaningful
+non-SNAP workload, ~5× bigger than snap-complete. See the data dir's
+[README](../../data/factgraph/direct-file-tax/README.md) for why this is
+currently native-only.

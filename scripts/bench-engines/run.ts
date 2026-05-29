@@ -55,13 +55,27 @@ type WorkerResult = {
 
 const ENGINES: Engine[] = ['vanilla-sjs', 'patched-sjs', 'wasm', 'jvm', 'native']
 
-// Rulesets that can't run on a given engine. The JVM engine ships from the
-// public IRS-Public/fact-graph 3.1.0-SNAPSHOT, which appears to be missing
-// at least one feature (caret-prefixed scope-escape refs from inside a
-// collection filter body) that snap-complete relies on. Our vendored
-// Scala.js bundle was built from a commit that supports it.
+// Rulesets that can't run on a given engine.
+//
+// - JVM skips snap-complete: the public IRS-Public/fact-graph 3.1.0-SNAPSHOT
+//   is missing the caret-prefixed scope-escape ref handling that ruleset
+//   relies on. Our vendored Scala.js bundle was built from a commit that
+//   supports it.
+// - direct-file-tax (2354-fact aggregate of the IRS Direct File tax
+//   dictionary) is native-only:
+//     * vanilla-sjs / patched-sjs / jvm reject the partial aggregate
+//       (three files are skipped because factgraph-rs can't yet parse
+//       their `<IndexOf><Collection>…</Collection></IndexOf>` shape, and
+//       Scala-side engines validate path references at dictionary-build
+//       time and refuse to load with dangling refs);
+//     * wasm hits a stack-overflow on the deeper recursion. The native
+//       binary boosts the thread stack to 64MB; the WASM module is stuck
+//       with the default. Fixable but non-trivial.
 const ENGINE_SKIPS: Partial<Record<Engine, Set<string>>> = {
-  jvm: new Set(['snap-complete']),
+  jvm: new Set(['snap-complete', 'direct-file-tax']),
+  'vanilla-sjs': new Set(['direct-file-tax']),
+  'patched-sjs': new Set(['direct-file-tax']),
+  wasm: new Set(['direct-file-tax']),
 }
 
 function parseList(s: string | undefined): string[] | undefined {
