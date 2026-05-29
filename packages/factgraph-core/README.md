@@ -6,9 +6,14 @@ that owns Fact Graph parsing, execution, and ruleset storage. Consumed by:
 - `rules-visualizer-factgraph` — the visualizer/editor server
 - `rules-visualizer-factgraph-api` — the partner-facing adapter API _(in progress)_
 
-The package wraps the [IRS Direct File `factgraph`](https://github.com/IRS-Public/direct-file)
-Scala.js bundle (`vendor/factgraph-scala.cjs`) and exposes a small TypeScript
-surface for loading XML rulesets, evaluating them against household input, and
+The package wraps two interchangeable execution engines for the
+[IRS Direct File `factgraph`](https://github.com/IRS-Public/direct-file) XML
+schema — defaulting to a Rust→WASM build
+([`factgraph-rs`](https://github.com/Gary-Community-Ventures/factgraph-rs),
+vendored at `vendor/factgraph-rs/`) and falling back to the original
+Scala.js bundle (`vendor/factgraph-scala.cjs`) when the export in
+`src/index.ts` is flipped. It exposes a small TypeScript surface for
+loading XML rulesets, evaluating them against household input, and
 attaching policy citations from a per-ruleset `references.json`.
 
 ## Public surface

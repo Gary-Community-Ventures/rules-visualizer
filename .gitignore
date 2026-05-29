@@ -12,8 +12,16 @@ node_modules/
 bower_components/
 jspm_packages/
 
-# Vendored upstream — built per-machine, never committed
+# Vendored upstream — built per-machine, never committed by default.
 vendor/
+
+# Exceptions: un-ignore the factgraph-core vendor directory so we can
+# commit the factgraph-rs WASM module (rebuilding it requires the
+# sibling factgraph-rs repo + rustup + wasm-pack; checkouts and the
+# Heroku deploy path shouldn't have to). The Scala.js bundle next to
+# it is still ignored (large, built upstream).
+!packages/factgraph-core/vendor/
+packages/factgraph-core/vendor/factgraph-scala.cjs
 
 # Vite-specific
 .vite/

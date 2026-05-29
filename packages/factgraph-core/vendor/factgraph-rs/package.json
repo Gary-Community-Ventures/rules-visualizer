@@ -1,0 +1,20 @@
+{
+  "name": "factgraph-wasm",
+  "collaborators": [
+    "Tess Lillis"
+  ],
+  "description": "wasm-bindgen wrapper around factgraph-core for browser + Node.js use. Pre-alpha.",
+  "version": "0.1.0",
+  "license": "MIT OR Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Gary-Community-Ventures/factgraph-rs"
+  },
+  "files": [
+    "factgraph_wasm_bg.wasm",
+    "factgraph_wasm.js",
+    "factgraph_wasm.d.ts"
+  ],
+  "main": "factgraph_wasm.js",
+  "types": "factgraph_wasm.d.ts"
+}

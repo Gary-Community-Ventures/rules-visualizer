@@ -36,5 +36,7 @@ logic, use `getCollectionFieldKey(node)` in `frontend/src/context/model-context.
 — which just returns the node's path — or pass the path through unchanged. The
 only legitimate consumer of the short form is the executor boundary where it
 talks to the Scala factgraph API (`/members/#${uuid}/field`), and that
-conversion happens exactly once in `packages/factgraph-server/src/executor.ts`
-via `fieldPath.replace('/*/', '/#${uuid}/')`.
+conversion happens exactly once in `packages/factgraph-core/src/executor.ts`
+via `fieldPath.replace('/*/', '/#${uuid}/')`. (Only relevant under the
+Scala.js fallback engine; the default `factgraph-rs` WASM engine accepts
+the `/*/` form directly.)

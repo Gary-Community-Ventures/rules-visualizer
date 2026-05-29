@@ -2,7 +2,7 @@
 
 A read-only visualizer for rule systems, supporting two formats:
 
-- **Fact Graph** from IRS Direct File — XML-based decision dictionaries, executed via a Scala.js bundle.
+- **Fact Graph** from IRS Direct File — XML-based decision dictionaries, executed via a vendored Rust→WASM engine ([`factgraph-rs`](https://github.com/Gary-Community-Ventures/factgraph-rs)), with the original IRS Direct File Scala.js bundle kept available as a fallback.
 - **RuleSpec** from The Axiom Foundation — jurisdiction-scoped YAML rule libraries, executed via the upstream `axiom-rules-engine` Rust binary. (Previously this was a different format called "RAC"; that codebase was rebranded and rewritten upstream and we've migrated.)
 
 Displays rules as an interactive node graph with dependency arrows, pan/zoom, expand/collapse, rule execution with live results, and an AI assistant for exploring rules.
@@ -62,7 +62,7 @@ The script clones `TheAxiomFoundation/rac` into `vendor/axiom-rules-engine/` (gi
 - Override constants and computed nodes to simulate rule changes ("what if the income limit was $30k?")
 - Results displayed as colored badges on every node
 - Auto-runs on blur — results update as you fill in values
-- **Fact Graph:** executes via a Scala.js bundle (from IRS Direct File) running in Node.js
+- **Fact Graph:** executes via a vendored `factgraph-rs` WASM module (Rust tree-walking interpreter for the same XML schema; ~250× faster than the Scala.js bundle on `snap-complete`). The Scala.js bundle ships alongside the WASM artifact and can be re-enabled by toggling one export — see [`packages/factgraph-core/CLAUDE.md`](packages/factgraph-core/CLAUDE.md).
 - **RuleSpec:** compiles each composition to a JSON artifact, then pipes `ExecutionRequest` JSON to the `axiom-rules-engine` Rust binary via stdin/stdout. The wrapper enumerates inputs from the artifact, tags each by entity scope, auto-defaults from upstream `.test.yaml` fixtures (including per-member values from `#relation.member_of_household:` blocks), and falls back to AST type inference for anything fixtures don't cover. Person-scoped inputs route to a single `person-1` member with a `member_of_household: [person-1, h1]` relation tuple.
 
 ### Execution Panel
@@ -110,12 +110,14 @@ rules-visualizer/
 │   ├── factgraph-core/               # Shared Fact Graph library
 │   │   ├── src/
 │   │   │   ├── parser.ts             # XML → Model parser
-│   │   │   ├── executor.ts           # Scala.js execution engine
+│   │   │   ├── executor-rs.ts        # factgraph-rs WASM execution (default)
+│   │   │   ├── executor.ts           # Scala.js execution (fallback)
 │   │   │   ├── store.ts              # Ruleset loader
 │   │   │   ├── references.ts         # Policy-doc citation resolver
-│   │   │   └── index.ts              # Curated public surface
-│   │   └── vendor/
-│   │       └── factgraph-scala.cjs   # Scala.js bundle (6MB, from Direct File)
+│   │   │   └── index.ts              # Curated public surface (re-exports one executor)
+│   │   └── vendor/                   # Both engines committed; checkouts need no toolchain
+│   │       ├── factgraph-rs/         # Rust→WASM build (default, ~400KB)
+│   │       └── factgraph-scala.cjs   # Scala.js bundle (7.8MB, fallback)
 │   ├── factgraph-server/             # Visualizer backend (Express + WebSocket)
 │   │   └── src/
 │   │       ├── routes/               # REST API + AI chat
@@ -200,13 +202,15 @@ See `packages/rac-server/rules_visualizer_rac/axiom_engine.py`.
 
 ### Fact Graph
 
-**Scala.js bundle.** The `vendor/factgraph-scala.cjs` file is a 6MB Scala.js bundle compiled from the IRS Direct File project. Pinned copy — updating it requires rebuilding from Direct File source.
+**Default engine: `factgraph-rs` WASM.** `packages/factgraph-core/vendor/factgraph-rs/` holds a Rust tree-walking interpreter for the Fact Graph XML schema, built to a WASM module and loaded via `wasm-bindgen`. Source lives in the sibling [`factgraph-rs`](https://github.com/Gary-Community-Ventures/factgraph-rs) repo (private during initial review). The compiled `.wasm` is committed here so checkouts and the Heroku deploy don't need a Rust toolchain. To re-vendor, clone `factgraph-rs` next to this repo, run its `scripts/build-wasm.sh`, and copy `pkg-node/*` into `packages/factgraph-core/vendor/factgraph-rs/`.
 
-**Digest conversion.** The Scala.js engine doesn't accept raw XML. We convert `fast-xml-parser` output into a "digest" format that mirrors Direct File's `processFactsToDigestWrapper.ts`. See `executor.ts`.
+**Fallback engine: Scala.js bundle.** `vendor/factgraph-scala.cjs` is the original Direct File Scala.js engine. Switch by changing the export in `packages/factgraph-core/src/index.ts` from `./executor-rs.js` to `./executor.js`. Both engines pass the same visualizer smoke test (`packages/factgraph-server/tests/visualizer-smoke.test.ts`); use the fallback if the Rust engine ever diverges on a real ruleset.
 
-**Derived node overrides.** The Scala.js `graph.set()` only works on writable facts. To override a derived node, we rebuild the graph dictionary with that fact converted from `Derived` to `Writable`. The `inferWritableType()` function guesses the return type from the expression tree.
+**Digest conversion (Scala.js path only).** The Scala.js engine doesn't accept raw XML. We convert `fast-xml-parser` output into a "digest" format that mirrors Direct File's `processFactsToDigestWrapper.ts`. See `executor.ts`. The WASM engine parses the XML directly on the Rust side.
 
-**Dictionary cache.** Per-scenario dictionary rebuilds were the dominant cost in simulation runs. We now cache the FactDictionary keyed by `(facts identity, paths-to-promote signature)` so the simulation runner reuses a single dictionary across all scenarios with the same input shape.
+**Derived node overrides.** Both engines accept overrides via the same `executeFactGraph(rulesetId, facts, inputs, modelNodes, entities, readPaths)` signature. The Scala.js path rebuilds the graph dictionary with overridden facts promoted to writable; the WASM path applies overrides on the request side before evaluation.
+
+**Dictionary cache (Scala.js path only).** Per-scenario dictionary rebuilds were the dominant cost in simulation runs under the Scala.js engine. We cache the FactDictionary keyed by `(facts identity, paths-to-promote signature)` so the simulation runner reuses a single dictionary across scenarios with the same input shape. The WASM engine caches the parsed graph per ruleset directly and doesn't need this layer.
 
 ### RuleSpec
 
@@ -323,7 +327,7 @@ The RuleSpec loader scans `data/rulespec/rulespec-<jurisdiction>/policies/**/*.y
 
 **Frontend:** React 19, TypeScript, Vite, TanStack Router, Tailwind CSS, Radix UI
 
-**Fact Graph Backend:** Node.js, Express 5, TypeScript, fast-xml-parser, Scala.js (execution)
+**Fact Graph Backend:** Node.js, Express 5, TypeScript, fast-xml-parser, `factgraph-rs` Rust→WASM engine (with Scala.js fallback)
 
 **RuleSpec Backend:** Python 3.10+, aiohttp, [axiom-rules-engine](https://github.com/TheAxiomFoundation/rac) Rust binary (via subprocess), PyYAML
 
