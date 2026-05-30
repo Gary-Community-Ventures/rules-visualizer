@@ -140,30 +140,15 @@ Neither the upstream [`IRS-Public/fact-graph`](https://github.com/IRS-Public/fac
 
 Net effect: `snap-complete` runs on every engine except JVM. The harness's caret rewrite is kept (it's correct and necessary for any future ruleset with carets that doesn't ALSO have cycles), but the deeper fix would be either (a) restructuring the snap-complete ruleset to remove the cycle-inducing patterns, or (b) actually adding `^` to the upstream Scala engine's path resolver. Neither is in scope here.
 
-### `<IndexOf><Collection>…</Collection></IndexOf>` shape (used by IRS Direct File)
-
-`factgraph-rs`'s parser only handles the `<IndexOf path="..."><Index>…</Index></IndexOf>` shape. The Direct File tax XMLs use the wrapped-collection variant, e.g.:
-
-```xml
-<IndexOf>
-  <Collection>
-    <Filter path="/familyAndHousehold">
-      <Dependency path="contradictory8832Knockout" />
-    </Filter>
-  </Collection>
-  <Index><Int>0</Int></Index>
-</IndexOf>
-```
-
-Adding it would touch the AST (the collection becomes an expression rather than a path string), parser, and interpreter — a real ~couple-hour extension. As a result, `direct-file-full` runs on JVM and both Scala.js engines but not on `native` or `wasm`. The JVM result on this ruleset is the **cleanest reference comparison the bench can produce**: IRS's own engine running IRS's own ruleset.
-
 ### Summary table
 
 | ruleset | vanilla-sjs | patched-sjs | wasm | jvm | native |
 | --- | --- | --- | --- | --- | --- |
 | snap-fy2026 | ✓ | ✓ | ✓ | ✓ | ✓ |
 | snap-complete | ✓ | ✓ | ✓ | ⛔ (cycle in deps) | ✓ |
-| direct-file-full | ✓ | ✓ | ⛔ (parser gap) | ✓ | ⛔ (parser gap) |
+| direct-file-full | ✓ | ✓ | ✓ | ✓ | ✓ |
+
+(Earlier versions of this doc claimed `direct-file-full` was native-only — that was a `factgraph-rs` parser/runtime gap, not a fundamental incompatibility. Three things had to land: rewrite `IndexOf` to match upstream's `(Collection, Index) → CollectionItem` semantics; bump the WASM linker stack from the default 1MB to 16MB so the deeper recursion doesn't trap; and enable the `time` crate's `wasm-bindgen` feature so `<Today/>` works on wasm32. All shipped in factgraph-rs.)
 
 
 ### WASM call decomposition
@@ -184,19 +169,27 @@ wasm32 codegen is ~40% slower than native codegen for this interpreter
 that gap shrinks in relative terms because the serde boundary becomes
 proportionally smaller.
 
-### direct-file-full (IRS's own ruleset, 3,030 facts, 20 executes)
+### direct-file-full (IRS's own ruleset, 3,030 facts, 10 executes)
 
 | engine | cold | mean | vs. JVM |
 | --- | --- | --- | --- |
-| vanilla-sjs | 591 ms | 21.3 ms | 3.73× slower |
-| patched-sjs | 555 ms | 21.9 ms | 3.84× slower |
-| jvm | 925 ms | 5.71 ms | 1× |
+| vanilla-sjs | 564 ms | 31.2 ms | 4.90× slower |
+| patched-sjs | 563 ms | 21.7 ms | 3.40× slower |
+| jvm | 661 ms | **6.37 ms** | **1×** |
+| wasm | 314 ms | 115.0 ms | 18.1× slower |
+| native | 13 ms | 94.5 ms | 14.8× slower |
 
-The cleanest "reference engine on reference ruleset" comparison the bench
-can produce — IRS's JVM build of the engine running IRS's own tax
-dictionary. The JVM-vs-Scala.js gap (~3.7×) is smaller than on
-snap-fy2026 (~7×) because each Direct File execute has more engine work
-to amortize the Scala.js↔JS bridge cost over. Patched-sjs is essentially
-identical to vanilla-sjs here — the `Fact.get` memoization patch was
-tuned for SNAP's `/members/*/...` repeated-lookup pattern, which Direct
-File doesn't use, so the cache pays its overhead for nothing.
+A surprise: on Direct File's 3,030-fact dictionary, `factgraph-rs` (both
+native and wasm) is **dramatically slower than JVM** — opposite of the
+pattern on snap-fy2026 / snap-complete, where the Rust engine wins. The
+Rust tree-walking interpreter's per-fact cost scales worse than the
+JVM's compiled-and-JIT'd evaluator on a workload this large. A real
+finding worth digging into — likely candidates: missing memoization
+between top-level fact evaluations, redundant scope-stack work during
+graph-wide reads, or the read-loop iterating more entries than the JVM
+does. Not investigated yet.
+
+Patched-sjs is meaningfully faster than vanilla-sjs here (21.7 vs 31.2
+ms), unlike on snap-fy2026 where the patch is a wash — Direct File
+DOES have repeated-lookup patterns the `Fact.get` cache helps with,
+just not the `/members/*/...` shape SNAP uses.

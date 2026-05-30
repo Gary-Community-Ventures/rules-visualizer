@@ -234,6 +234,10 @@ function __wbg_get_imports() {
                 wasm.__wbindgen_export4(deferred0_0, deferred0_1, 1);
             }
         },
+        __wbg_getTime_00b3f7db575e4ef5: function(arg0) {
+            const ret = getObject(arg0).getTime();
+            return ret;
+        },
         __wbg_get_1f8f054ddbaa7db2: function() { return handleError(function (arg0, arg1) {
             const ret = Reflect.get(getObject(arg0), getObject(arg1));
             return addHeapObject(ret);
@@ -299,6 +303,10 @@ function __wbg_get_imports() {
         __wbg_length_66f1a4b2e9026940: function(arg0) {
             const ret = getObject(arg0).length;
             return ret;
+        },
+        __wbg_new_0_445c13a750296eb6: function() {
+            const ret = new Date();
+            return addHeapObject(ret);
         },
         __wbg_new_227d7c05414eb861: function() {
             const ret = new Error();

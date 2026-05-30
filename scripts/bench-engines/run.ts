@@ -69,13 +69,8 @@ const ENGINES: Engine[] = ['vanilla-sjs', 'patched-sjs', 'wasm', 'jvm', 'native'
 //   contains a dependency cycle that the JVM's multi-thread-safe lazy
 //   vals park on (Scala.js's single-threaded lazy vals silently tolerate
 //   the same cycle).
-// - wasm/native skip direct-file-full: factgraph-rs's parser doesn't
-//   yet handle the `<IndexOf><Collection>…</Collection></IndexOf>` shape
-//   Direct File uses. Real feature gap, not a config thing.
 const ENGINE_SKIPS: Partial<Record<Engine, Set<string>>> = {
   jvm: new Set(['snap-complete']),
-  wasm: new Set(['direct-file-full']),
-  native: new Set(['direct-file-full']),
 }
 
 function parseList(s: string | undefined): string[] | undefined {

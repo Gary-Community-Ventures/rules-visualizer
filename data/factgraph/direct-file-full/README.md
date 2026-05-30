@@ -18,25 +18,26 @@ bench can use it like any other ruleset.
 
 ## Engine compatibility
 
-| engine | runs direct-file-full? |
-| --- | --- |
-| vanilla-sjs | ✓ |
-| patched-sjs | ✓ |
-| jvm | ✓ |
-| wasm | ✗ (parse error) |
-| native | ✗ (parse error) |
+All five bench engines now run direct-file-full. Three `factgraph-rs`
+changes had to land to get there:
 
-The two Rust engines fail in `factgraph-rs`'s parser with *"IndexOf
-missing path"* — Direct File uses `<IndexOf><Collection>…</Collection><Index>…</Index></IndexOf>`,
-a shape the current Rust parser doesn't handle (it only accepts the
-`<IndexOf path="…"><Index>…</Index></IndexOf>` form used by our SNAP
-rulesets). Adding the Collection-wrapped form to the Rust parser would
-unlock both native and wasm here; that's a real (non-trivial) extension
-on the AST + interpreter side, not in scope yet.
+1. **Fix `IndexOf`**. The original Rust impl mis-implemented `IndexOf`
+   as a predicate-based "find first matching index" (returning Int).
+   Upstream is `IndexOf(Collection, Index) → CollectionItem` — pick the
+   i-th item from a collection. No fixtures exercised the old version
+   so it was safe to repurpose.
+2. **Bump the WASM linker stack** from the default 1MB to 16MB. Direct
+   File's deeper recursion blew the default. Native already had this
+   covered via `std::thread::Builder` with a 64MB stack; WASM had no
+   such option at runtime, so set it at link time (see
+   `factgraph-rs/.cargo/config.toml`).
+3. **Enable `time`'s `wasm-bindgen` feature**. `<Today/>` calls
+   `OffsetDateTime::now_utc()`, which on bare wasm32 panics with
+   *"time not implemented on this platform"*. The `wasm-bindgen`
+   feature on the `time` crate routes that through `js_sys::Date`.
 
-The JVM engine, since it's IRS's own reference implementation, naturally
-runs IRS's own ruleset cleanly. So this is the workload that gives the
-sharpest "reference engine vs. our forks" picture in the bench.
+JVM works without modification (IRS's own engine on IRS's own ruleset).
+Scala.js works through the same path it always has.
 
 ## tests.json
 
