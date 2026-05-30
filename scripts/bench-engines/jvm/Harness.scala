@@ -24,9 +24,70 @@ import gov.irs.factgraph.types.*
 
 import java.util.UUID
 import scala.io.Source
+import scala.util.matching.Regex
 import scala.xml.XML
 
 object Harness:
+  /** Resolve a caret-prefixed dependency path against its host fact's path.
+    *
+    * Mirrors `resolvePaths` in `packages/factgraph-core/src/parser.ts:757`:
+    *  - `^`         pops one path segment from the host
+    *  - `^^`        pops two
+    *  - `^/X`       pops one, then appends `/X`
+    *  - `^^/X`      pops two, then appends `/X`
+    *
+    * The caret syntax is a Gary-Community-Ventures extension to fact-graph
+    * (the upstream IRS engine doesn't know it). Our JS parser rewrites
+    * caret paths to absolute before handing the digest to the Scala.js
+    * bundle, and our Rust interpreter handles it natively via a scope
+    * stack. The JVM engine speaks raw fact-graph and fails freeze() on
+    * any unresolved caret path — so we pre-rewrite the XML here. */
+  private def resolveCaret(depPath: String, hostPath: String): String =
+    val slashIdx = depPath.indexOf('/')
+    val (head, tail) =
+      if slashIdx == -1 then (depPath, "")
+      else (depPath.substring(0, slashIdx), depPath.substring(slashIdx + 1))
+    val segs = scala.collection.mutable.ArrayBuffer.from(
+      hostPath.split('/').filter(_.nonEmpty)
+    )
+    for _ <- 0 until head.length do
+      if segs.nonEmpty then segs.remove(segs.length - 1)
+    val base = if segs.isEmpty then "" else "/" + segs.mkString("/")
+    if tail.isEmpty then (if base.isEmpty then "/" else base)
+    else (if base.isEmpty then "" else base) + "/" + tail
+
+  /** Rewrite every caret-prefixed `path="…"` in the XML to an absolute path,
+    * resolved against the enclosing `<Fact path="…">`. Operates at the
+    * string level because fact-graph XML doesn't nest `<Fact>` and the
+    * positions are easy to enumerate.
+    *
+    * Returns a new XML string with no caret paths; the upstream engine
+    * can then process it without modification. */
+  private def rewriteCaretPaths(xml: String): String =
+    val factOpenRe: Regex = """<Fact\s+[^>]*?path="([^"]+)"[^>]*>""".r
+    val caretAttrRe: Regex = """path="(\^[^"]*)"""".r
+    // Pair each <Fact path="..."> open with the next </Fact>. fact-graph
+    // doesn't nest Fact elements, so a single linear pass is sufficient.
+    val opens = factOpenRe.findAllMatchIn(xml).toList
+    val closes = "</Fact>".r.findAllMatchIn(xml).map(_.start).toList
+    if opens.length != closes.length then
+      sys.error(s"caret-rewrite: ${opens.length} <Fact> opens vs ${closes.length} </Fact> closes")
+    val sb = new StringBuilder(xml)
+    // Process in reverse so earlier offsets stay valid as we replace.
+    for ((open, closeStart) <- opens.zip(closes).reverse) do
+      val host = open.group(1)
+      val bodyStart = open.end
+      val bodyEnd = closeStart
+      val body = sb.substring(bodyStart, bodyEnd)
+      val newBody = caretAttrRe.replaceAllIn(
+        body,
+        m =>
+          val raw = m.group(1)
+          Regex.quoteReplacement(s"""path="${resolveCaret(raw, host)}"""")
+      )
+      if newBody != body then sb.replace(bodyStart, bodyEnd, newBody)
+    sb.toString
+
   private def coerce(dict: FactDictionary, path: String, v: ujson.Value): WritableType =
     val defn = dict.getDefinition(path)
     val nodeKind: Option[CompNode] = if defn == null then None else Some(defn.value)
@@ -57,7 +118,17 @@ object Harness:
 
     val coldT = System.nanoTime()
 
-    val xml = XML.loadFile(xmlPath)
+    val rawXml = Source.fromFile(xmlPath).getLines().mkString("\n")
+    // Rewrite `^` paths to absolute. Enough to get past freeze() on
+    // rulesets like snap-complete that the upstream engine would
+    // otherwise reject for "cannot find fact at path '^'". Note: the
+    // rewrite is a NECESSARY but NOT SUFFICIENT fix — see the bench
+    // README's compatibility section for why snap-complete still hangs
+    // the JVM build after the rewrite (Scala.js's single-threaded lazy
+    // vals silently tolerate a cycle in the dependency graph that the
+    // JVM's multi-thread-safe lazy vals park on).
+    val rewritten = rewriteCaretPaths(rawXml)
+    val xml = XML.loadString(rewritten)
     val dict = FactDictionary.fromXml(xml)
 
     val testsJson = ujson.read(Source.fromFile(testsJsonPath).getLines().mkString("\n"))

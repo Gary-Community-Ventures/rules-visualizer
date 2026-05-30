@@ -122,6 +122,41 @@ What the gaps say:
 - **WASM → native** (~1.5–2.1×): both the wasm-bindgen serde boundary AND wasm32 codegen being slightly slower than native. Decomposed by the WASM-internal timings below.
 - **Patched-sjs → JVM** is the cleanest "is the patched JS close to the engine's true ceiling?" comparison. JVM is still ~7× faster on snap-fy2026 — so even with the JS-side `Fact.get` cache we're paying a lot at the boundary, and a JVM-target deployment (or this Rust port) is the bigger lever.
 
+## Compatibility — what each engine actually supports
+
+The headline numbers above paper over a real finding: these engines aren't bug-different so much as **feature-different**. A given fact-graph XML may run on some engines and not others. The bench's `ENGINE_SKIPS` map captures known incompatibilities; the explanations:
+
+### `^/X` scope-escape paths (used heavily by snap-complete; not in upstream)
+
+The `^` prefix means "out of the current `<Filter>` scope, back to the host fact's iteration context" — e.g. `<Dependency path="^/memberId" />` inside `<Filter path="/caregiverRelationships">` from a host at `/members/*/X` means "the current outer-loop member's memberId".
+
+Neither the upstream [`IRS-Public/fact-graph`](https://github.com/IRS-Public/fact-graph) Scala source (commit `3c9c2a8`, current head) NOR our vendored Scala.js bundle has native `^` handling. Three engines deal with it differently:
+
+- **`patched-sjs`**: `executor.ts` builds a digest, NOT the XML loader path; the bundle's runtime path interpreter happens to silently tolerate the `^` token at digest-eval time. The result on cycles introduced by this is non-obvious — Scala.js's single-threaded lazy vals don't park, so the engine returns *something* (possibly wrong) rather than hanging.
+- **`wasm` / `native`**: `factgraph-rs` implements `^` natively in its scope stack — the way the rule author probably intended it to work.
+- **`jvm`**: The JVM Scala build can't run anything with `^` in the XML. Two layers of problem:
+  1. `FactDictionary.fromXml` validates paths at freeze-time → throws *"cannot find fact at path '^'"*. The JVM harness (`jvm/Harness.scala:rewriteCaretPaths`) preprocesses these into absolute paths to clear this layer.
+  2. Even with the rewrite, the absolute-path form changes the dependency-graph shape and exposes cycles that the JVM build's multi-thread-safe lazy vals (CountDownLatch-protected) park on, deadlocking the main thread. Scala.js doesn't hit this because its lazy vals are single-threaded. So `snap-complete` on JVM gets past freeze, then hangs in `Filter$.apply` during dictionary build.
+
+Net effect: `snap-complete` runs on every engine except JVM. The harness's caret rewrite is kept (it's correct and necessary for any future ruleset with carets that doesn't ALSO have cycles), but the deeper fix would be either (a) restructuring the snap-complete ruleset to remove the cycle-inducing patterns, or (b) actually adding `^` to the upstream Scala engine's path resolver. Neither is in scope here.
+
+### `<IndexOf><Collection>…</Collection></IndexOf>` shape (used by IRS Direct File)
+
+`factgraph-rs`'s parser only handles the `<IndexOf path="..."><Index>…</Index></IndexOf>` shape. The Direct File tax XMLs use the wrapped-collection variant. Three files are skipped from the `direct-file-tax` aggregate as a result, leaving the aggregate with dangling references that the Scala-side engines (which validate at freeze) refuse to load. So `direct-file-tax` is `native`-only.
+
+### Stack depth (also direct-file-tax)
+
+The WASM build doesn't override its default stack size. The native binary boosts it to 64MB. `direct-file-tax`'s recursion depth exceeds WASM's default, causing `RuntimeError: unreachable`.
+
+### Summary table
+
+| ruleset | vanilla-sjs | patched-sjs | wasm | jvm | native |
+| --- | --- | --- | --- | --- | --- |
+| snap-fy2026 | ✓ | ✓ | ✓ | ✓ | ✓ |
+| snap-complete | ✓ | ✓ | ✓ | ⛔ (cycle in deps) | ✓ |
+| direct-file-tax | ⛔ (broken refs) | ⛔ (broken refs) | ⛔ (stack overflow) | ⛔ (broken refs) | ✓ |
+
+
 ### WASM call decomposition
 
 The WASM module reports the per-phase breakdown of each execute via
