@@ -61,27 +61,21 @@ type WorkerResult = {
 
 const ENGINES: Engine[] = ['vanilla-sjs', 'patched-sjs', 'wasm', 'jvm', 'native']
 
-// Rulesets that can't run on a given engine.
+// Rulesets that can't run on a given engine. See the README's
+// "Compatibility" section for the full story; brief recap:
 //
-// - JVM skips snap-complete: the public IRS-Public/fact-graph 3.1.0-SNAPSHOT
-//   is missing the caret-prefixed scope-escape ref handling that ruleset
-//   relies on. Our vendored Scala.js bundle was built from a commit that
-//   supports it.
-// - direct-file-tax (2354-fact aggregate of the IRS Direct File tax
-//   dictionary) is native-only:
-//     * vanilla-sjs / patched-sjs / jvm reject the partial aggregate
-//       (three files are skipped because factgraph-rs can't yet parse
-//       their `<IndexOf><Collection>…</Collection></IndexOf>` shape, and
-//       Scala-side engines validate path references at dictionary-build
-//       time and refuse to load with dangling refs);
-//     * wasm hits a stack-overflow on the deeper recursion. The native
-//       binary boosts the thread stack to 64MB; the WASM module is stuck
-//       with the default. Fixable but non-trivial.
+// - JVM skips snap-complete: even after the harness's caret-path rewrite
+//   clears upstream's freeze-time validation, the rewritten graph
+//   contains a dependency cycle that the JVM's multi-thread-safe lazy
+//   vals park on (Scala.js's single-threaded lazy vals silently tolerate
+//   the same cycle).
+// - wasm/native skip direct-file-full: factgraph-rs's parser doesn't
+//   yet handle the `<IndexOf><Collection>…</Collection></IndexOf>` shape
+//   Direct File uses. Real feature gap, not a config thing.
 const ENGINE_SKIPS: Partial<Record<Engine, Set<string>>> = {
-  jvm: new Set(['snap-complete', 'direct-file-tax']),
-  'vanilla-sjs': new Set(['direct-file-tax']),
-  'patched-sjs': new Set(['direct-file-tax']),
-  wasm: new Set(['direct-file-tax']),
+  jvm: new Set(['snap-complete']),
+  wasm: new Set(['direct-file-full']),
+  native: new Set(['direct-file-full']),
 }
 
 function parseList(s: string | undefined): string[] | undefined {
@@ -110,6 +104,7 @@ function parseArgs() {
 // and trivially fast on all engines.
 const DEFAULT_CASE_INDEX: Record<string, number> = {
   'snap-complete': 10,
+  // direct-file-full has a single placeholder case (empty inputs).
 }
 
 function runWorker(cell: Cell): Promise<WorkerResult> {

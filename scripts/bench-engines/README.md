@@ -64,7 +64,7 @@ lookups, so a 1-member case under-represents the perf gap. Defaults:
 | --- | --- | --- |
 | `snap-fy2026` | 0 | single applicant, modest income |
 | `snap-complete` | **10** | 5-member household, multiple income sources, elderly + disabled members |
-| `direct-file-tax` | 0 | 2,354-fact aggregate of the IRS Direct File tax dictionary. Native-only (see [data/factgraph/direct-file-tax/README.md](../../data/factgraph/direct-file-tax/README.md) for the parser-gap explanation) |
+| `direct-file-full` | 0 | 3,030-fact aggregate of the IRS Direct File tax dictionary (CC0). The largest workload here. JVM and Scala.js engines run it; the Rust engines skip it for a parser gap. See [data/factgraph/direct-file-full/README.md](../../data/factgraph/direct-file-full/README.md). |
 
 Override with `--case-index=N` (applies to every ruleset in the run).
 
@@ -142,11 +142,20 @@ Net effect: `snap-complete` runs on every engine except JVM. The harness's caret
 
 ### `<IndexOf><Collection>…</Collection></IndexOf>` shape (used by IRS Direct File)
 
-`factgraph-rs`'s parser only handles the `<IndexOf path="..."><Index>…</Index></IndexOf>` shape. The Direct File tax XMLs use the wrapped-collection variant. Three files are skipped from the `direct-file-tax` aggregate as a result, leaving the aggregate with dangling references that the Scala-side engines (which validate at freeze) refuse to load. So `direct-file-tax` is `native`-only.
+`factgraph-rs`'s parser only handles the `<IndexOf path="..."><Index>…</Index></IndexOf>` shape. The Direct File tax XMLs use the wrapped-collection variant, e.g.:
 
-### Stack depth (also direct-file-tax)
+```xml
+<IndexOf>
+  <Collection>
+    <Filter path="/familyAndHousehold">
+      <Dependency path="contradictory8832Knockout" />
+    </Filter>
+  </Collection>
+  <Index><Int>0</Int></Index>
+</IndexOf>
+```
 
-The WASM build doesn't override its default stack size. The native binary boosts it to 64MB. `direct-file-tax`'s recursion depth exceeds WASM's default, causing `RuntimeError: unreachable`.
+Adding it would touch the AST (the collection becomes an expression rather than a path string), parser, and interpreter — a real ~couple-hour extension. As a result, `direct-file-full` runs on JVM and both Scala.js engines but not on `native` or `wasm`. The JVM result on this ruleset is the **cleanest reference comparison the bench can produce**: IRS's own engine running IRS's own ruleset.
 
 ### Summary table
 
@@ -154,7 +163,7 @@ The WASM build doesn't override its default stack size. The native binary boosts
 | --- | --- | --- | --- | --- | --- |
 | snap-fy2026 | ✓ | ✓ | ✓ | ✓ | ✓ |
 | snap-complete | ✓ | ✓ | ✓ | ⛔ (cycle in deps) | ✓ |
-| direct-file-tax | ⛔ (broken refs) | ⛔ (broken refs) | ⛔ (stack overflow) | ⛔ (broken refs) | ✓ |
+| direct-file-full | ✓ | ✓ | ⛔ (parser gap) | ✓ | ⛔ (parser gap) |
 
 
 ### WASM call decomposition
@@ -175,13 +184,19 @@ wasm32 codegen is ~40% slower than native codegen for this interpreter
 that gap shrinks in relative terms because the serde boundary becomes
 proportionally smaller.
 
-### direct-file-tax (native only, 20 executes)
+### direct-file-full (IRS's own ruleset, 3,030 facts, 20 executes)
 
-| engine | cold | mean | throughput |
+| engine | cold | mean | vs. JVM |
 | --- | --- | --- | --- |
-| native | 13.0 ms | 92.0 ms | 11/s |
+| vanilla-sjs | 591 ms | 21.3 ms | 3.73× slower |
+| patched-sjs | 555 ms | 21.9 ms | 3.84× slower |
+| jvm | 925 ms | 5.71 ms | 1× |
 
-A 2,354-fact aggregate of the IRS Direct File tax dictionary — a meaningful
-non-SNAP workload, ~5× bigger than snap-complete. See the data dir's
-[README](../../data/factgraph/direct-file-tax/README.md) for why this is
-currently native-only.
+The cleanest "reference engine on reference ruleset" comparison the bench
+can produce — IRS's JVM build of the engine running IRS's own tax
+dictionary. The JVM-vs-Scala.js gap (~3.7×) is smaller than on
+snap-fy2026 (~7×) because each Direct File execute has more engine work
+to amortize the Scala.js↔JS bridge cost over. Patched-sjs is essentially
+identical to vanilla-sjs here — the `Fact.get` memoization patch was
+tuned for SNAP's `/members/*/...` repeated-lookup pattern, which Direct
+File doesn't use, so the cache pays its overhead for nothing.

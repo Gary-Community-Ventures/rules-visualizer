@@ -64,26 +64,27 @@ object Harness:
     * Returns a new XML string with no caret paths; the upstream engine
     * can then process it without modification. */
   private def rewriteCaretPaths(xml: String): String =
-    val factOpenRe: Regex = """<Fact\s+[^>]*?path="([^"]+)"[^>]*>""".r
-    val caretAttrRe: Regex = """path="(\^[^"]*)"""".r
-    // Pair each <Fact path="..."> open with the next </Fact>. fact-graph
-    // doesn't nest Fact elements, so a single linear pass is sufficient.
+    // Accept either `path="..."` or `path='...'`. Direct File's tax XMLs
+    // mix the two; SNAP rulesets use double-quotes. Multiline-tolerant
+    // so an open-tag split across lines still matches.
+    val factOpenRe: Regex = """(?s)<Fact\s+[^>]*?path=(["'])([^"']+)\1[^>]*>""".r
+    val caretAttrRe: Regex = """path=(["'])(\^[^"']*)\1""".r
     val opens = factOpenRe.findAllMatchIn(xml).toList
     val closes = "</Fact>".r.findAllMatchIn(xml).map(_.start).toList
     if opens.length != closes.length then
       sys.error(s"caret-rewrite: ${opens.length} <Fact> opens vs ${closes.length} </Fact> closes")
     val sb = new StringBuilder(xml)
-    // Process in reverse so earlier offsets stay valid as we replace.
     for ((open, closeStart) <- opens.zip(closes).reverse) do
-      val host = open.group(1)
+      val host = open.group(2)
       val bodyStart = open.end
       val bodyEnd = closeStart
       val body = sb.substring(bodyStart, bodyEnd)
       val newBody = caretAttrRe.replaceAllIn(
         body,
         m =>
-          val raw = m.group(1)
-          Regex.quoteReplacement(s"""path="${resolveCaret(raw, host)}"""")
+          val quote = m.group(1)
+          val raw = m.group(2)
+          Regex.quoteReplacement(s"""path=${quote}${resolveCaret(raw, host)}${quote}""")
       )
       if newBody != body then sb.replace(bodyStart, bodyEnd, newBody)
     sb.toString
