@@ -171,25 +171,24 @@ proportionally smaller.
 
 ### direct-file-full (IRS's own ruleset, 3,030 facts, 10 executes)
 
-| engine | cold | mean | vs. JVM |
+| engine | cold | mean | vs. native |
 | --- | --- | --- | --- |
-| vanilla-sjs | 564 ms | 31.2 ms | 4.90× slower |
-| patched-sjs | 563 ms | 21.7 ms | 3.40× slower |
-| jvm | 661 ms | **6.37 ms** | **1×** |
-| wasm | 314 ms | 115.0 ms | 18.1× slower |
-| native | 13 ms | 94.5 ms | 14.8× slower |
+| vanilla-sjs | 607 ms | 21.0 ms | 6.8× slower |
+| patched-sjs | 516 ms | 19.4 ms | 6.3× slower |
+| jvm | 680 ms | 17.3 ms | 5.6× slower |
+| wasm | 301 ms | 5.20 ms | 1.7× slower |
+| native | 13 ms | **3.08 ms** | **1×** |
 
-A surprise: on Direct File's 3,030-fact dictionary, `factgraph-rs` (both
-native and wasm) is **dramatically slower than JVM** — opposite of the
-pattern on snap-fy2026 / snap-complete, where the Rust engine wins. The
-Rust tree-walking interpreter's per-fact cost scales worse than the
-JVM's compiled-and-JIT'd evaluator on a workload this large. A real
-finding worth digging into — likely candidates: missing memoization
-between top-level fact evaluations, redundant scope-stack work during
-graph-wide reads, or the read-loop iterating more entries than the JVM
-does. Not investigated yet.
+After tracking down the per-fact scaling issue, **native is the fastest
+engine on direct-file-full — beating the JVM reference build 5.6×.**
+WASM also beats JVM (3.3×). The fix was caching Incomplete-scalar
+results in the interpreter's per-execute memoization (with a
+cycle-taint guard for safety — only skip caching when an Incomplete
+result actually consumed a cycle-break Incomplete during eval). Empty-
+input runs on a 3,030-fact dictionary produce mostly-Incomplete results,
+and not caching them was forcing N² re-evaluation through dependency
+chains — direct-file-full native went from **96.2 ms → 3.08 ms (~31×)**.
 
-Patched-sjs is meaningfully faster than vanilla-sjs here (21.7 vs 31.2
-ms), unlike on snap-fy2026 where the patch is a wash — Direct File
-DOES have repeated-lookup patterns the `Fact.get` cache helps with,
-just not the `/members/*/...` shape SNAP uses.
+Patched-sjs is faster than vanilla-sjs here (19.4 vs 21.0 ms) — Direct
+File has repeated-lookup patterns the `Fact.get` cache helps with, just
+not the `/members/*/...` shape SNAP uses.

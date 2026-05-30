@@ -154,24 +154,35 @@ object Harness:
     for (path, value) <- rawInputs do
       seeds(path) = coerce(dict, path, value)
 
-    val persister = InMemoryPersister(seeds.toSeq*)
-    val graph = Graph(dict, persister)
+    val seedsSeq = seeds.toSeq
 
-    // Read paths: every definition. Matches the JS engine apples-to-apples
-    // (the JS executor walks the whole graph state for the visualizer too).
+    // Read paths: every definition. Matches the JS / WASM / native engines
+    // apples-to-apples (they all walk the whole graph state per execute).
     val pathsToRead: Vector[String] =
       dict.getPaths().iterator.map(_.toString).toVector
 
-    val coldMs = (System.nanoTime() - coldT).toDouble / 1e6
-
-    // Warmup
-    var i = 0
-    while i < warmup do
+    // Build a fresh Graph each call. The visualizer, the API server, and
+    // the simulation runner all build a fresh graph per execute (inputs
+    // change between executes), so reusing the same Graph across
+    // measured iterations would over-credit JVM by amortizing the
+    // Graph.resultCache fill across calls — turning into a benchmark of
+    // map lookups rather than engine work. The native / WASM / Scala.js
+    // bench paths don't reuse anything across executes.
+    inline def runOnce(): Unit =
+      val persister = InMemoryPersister(seedsSeq*)
+      val graph = Graph(dict, persister)
       var j = 0
       while j < pathsToRead.length do
         if pathsToRead(j).contains("*") then graph.getVect(Path(pathsToRead(j)))
         else graph.get(Path(pathsToRead(j)))
         j += 1
+
+    val coldMs = (System.nanoTime() - coldT).toDouble / 1e6
+
+    // Warmup — primes JIT, NOT a graph cache (each call is a fresh Graph).
+    var i = 0
+    while i < warmup do
+      runOnce()
       i += 1
 
     // Timed executes
@@ -180,14 +191,14 @@ object Harness:
     i = 0
     while i < count do
       val s = System.nanoTime()
-      var j = 0
-      while j < pathsToRead.length do
-        if pathsToRead(j).contains("*") then graph.getVect(Path(pathsToRead(j)))
-        else graph.get(Path(pathsToRead(j)))
-        j += 1
+      runOnce()
       durations(i) = (System.nanoTime() - s).toDouble / 1e6
       i += 1
     val totalMs = (System.nanoTime() - t0).toDouble / 1e6
+
+    // For the output sample we DO get to reuse a Graph (one-shot, for the
+    // serialized snapshot — not measured).
+    val sampleGraph = Graph(dict, InMemoryPersister(seedsSeq*))
 
     val sorted = durations.sorted
     val mean = sorted.sum / sorted.length
@@ -202,7 +213,7 @@ object Harness:
     val sample = pathsToRead
       .filter(p => p.contains("/") && !p.contains("*"))
       .take(5)
-      .map(p => p -> graph.get(Path(p)).toString)
+      .map(p => p -> sampleGraph.get(Path(p)).toString)
       .toMap
 
     val result = ujson.Obj(
