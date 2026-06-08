@@ -134,13 +134,79 @@ test('SNAP determination with trace → denialReasonCode + x-decidingPath when d
   )
 })
 
-test('determination for an unsupported per-member program → 501', async () => {
+test('determination for an unsupported program (chip) → 501', async () => {
   const res = await request(app)
     .post(DETERMINATION_URL)
-    .send(householdRequest({ program: 'medicaid' }))
+    .send(householdRequest({ program: 'chip' }))
   assert.equal(res.status, 501)
   assert.equal(res.body.status, 501)
-  assert.match(res.body.detail, /medicaid/)
+})
+
+// ---------------------------------------------------------------------------
+// Medicaid determination (household-in, per-member-out)
+// ---------------------------------------------------------------------------
+
+test('medicaid determination returns one decision per member', async () => {
+  const body = {
+    metadata: { applicationId: 'm-1' },
+    program: 'medicaid',
+    household: { size: 3 },
+    members: [
+      {
+        id: 'mom',
+        dateOfBirth: '1990-01-01',
+        citizenshipStatus: 'us_citizen',
+        income: [{ type: 'employed', amount: 1500, frequency: 'monthly' }],
+      },
+      { id: 'baby', dateOfBirth: '2025-06-01', citizenshipStatus: 'us_citizen' },
+      { id: 'gran', dateOfBirth: '1950-01-01', citizenshipStatus: 'us_citizen' },
+    ],
+    verificationSummary: [],
+  }
+  const res = await request(app).post(DETERMINATION_URL).send(body)
+  assert.equal(res.status, 200)
+  assert.equal(res.body.program, 'medicaid')
+  assert.deepEqual(res.body.metadata, { applicationId: 'm-1' })
+  // One decision per member, correlated by the caller's member id.
+  assert.equal(res.body.decisions.length, 3)
+  assert.deepEqual(
+    res.body.decisions.map((d: { memberId: string }) => d.memberId),
+    ['mom', 'baby', 'gran']
+  )
+  const baby = res.body.decisions.find(
+    (d: { memberId: string }) => d.memberId === 'baby'
+  )
+  assert.equal(baby.status, 'approved')
+  assert.match(baby['x-medicaidCategory'], /Child|Infant/)
+})
+
+test('medicaid SSI is derived from unearned income type', async () => {
+  const body = {
+    program: 'medicaid',
+    household: { size: 1 },
+    members: [
+      {
+        id: 'a',
+        dateOfBirth: '1960-01-01',
+        citizenshipStatus: 'us_citizen',
+        income: [
+          {
+            type: 'unearned',
+            unearnedType: 'ssi_or_ssdi',
+            amount: 900,
+            frequency: 'monthly',
+          },
+        ],
+      },
+    ],
+  }
+  const res = await request(app).post(DETERMINATION_URL).send(body)
+  assert.equal(res.status, 200)
+  const d = res.body.decisions[0]
+  assert.equal(d['x-medicaidCategory'], 'SsiRecipient')
+  assert.ok(
+    (res.body['x-translationNotes'] as string[]).some((n) => /SSI/.test(n))
+  )
 })
 
 test('determination for an unknown program → 400', async () => {

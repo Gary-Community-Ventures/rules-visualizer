@@ -397,6 +397,48 @@ export function buildOpenApiDocument() {
       .openapi({ description: 'Response from expedited SNAP screening.' })
   )
 
+  const MemberMedicaidDecision = registry.register(
+    'MemberMedicaidDecision',
+    z
+      .object({
+        memberId: z.string().openapi({
+          description:
+            "The household member this decision applies to (caller's member id).",
+        }),
+        status: z.enum(['pending', 'approved', 'denied', 'ineligible']),
+        path: z.literal('auto'),
+        denialReasonCode: z.string().optional(),
+        'x-medicaidCategory': z.string().optional().openapi({
+          description:
+            'Infant | YoungChild | OlderChild | Adult | Pregnant | SsiRecipient | Ineligible.',
+        }),
+        'x-chpEligible': z.boolean().optional().openapi({
+          description:
+            "Whether the member qualifies for CHP+ (the children's plan) as an alternative.",
+        }),
+      })
+      .openapi({ description: 'One member-level medicaid decision.' })
+  )
+
+  const MedicaidDeterminationResponse = registry.register(
+    'MedicaidDeterminationResponse',
+    z
+      .object({
+        metadata: z.record(z.string(), z.unknown()),
+        program: z.literal('medicaid'),
+        decisions: z.array(MemberMedicaidDecision).openapi({
+          description:
+            'One decision per household member. Medicaid is household-in / per-member-out: each member’s eligibility depends on the whole household (size + income → FPL%), so one household request yields N member decisions.',
+        }),
+        'x-missingInputs': z.array(MissingInput).optional(),
+        'x-translationNotes': z.array(z.string()).optional(),
+      })
+      .openapi({
+        description:
+          "Medicaid determination result. Deliberately differs from the contract's per-applicant model: the request carries the whole household and the response returns a decision per member. See docs/contract-gap-analysis.md.",
+      })
+  )
+
   // -------------------------------------------------------------------------
   // Security scheme
   // -------------------------------------------------------------------------
@@ -554,7 +596,7 @@ export function buildOpenApiDocument() {
     description: [
       'Domain-oriented adapter endpoint conforming to the partner eligibility-adapter contract. Send an ORCA-shaped household request; receive a ProgramDecision. The caller never sees a Fact Graph path — all translation and defaulting is owned by the adapter.',
       '',
-      'SNAP (a household program) is evaluated against the `snap-complete` ruleset. Per-applicant programs (medicaid, chip, tanf, ccdf) are not yet implemented and return 501.',
+      'SNAP returns a single `ProgramDecision` for the household. Medicaid returns a `MedicaidDeterminationResponse` — one decision per member (household-in, per-member-out), a deliberate divergence from the contract’s per-applicant model (see docs/contract-gap-analysis.md). chip/tanf/ccdf return 501.',
       '',
       "Mounted at `/v1/eligibility` so a consumer can set its adapter base URL to `<host>/v1/eligibility` and reach the contract's bare `/evaluate/...` paths with no rewriting.",
     ].join('\n'),
@@ -570,8 +612,13 @@ export function buildOpenApiDocument() {
     },
     responses: {
       200: {
-        description: 'Program decision.',
-        content: { 'application/json': { schema: ProgramDecision } },
+        description:
+          'Program decision. `ProgramDecision` for SNAP; `MedicaidDeterminationResponse` (per-member) for Medicaid.',
+        content: {
+          'application/json': {
+            schema: z.union([ProgramDecision, MedicaidDeterminationResponse]),
+          },
+        },
       },
       400: {
         description: 'Invalid or unknown-program request.',

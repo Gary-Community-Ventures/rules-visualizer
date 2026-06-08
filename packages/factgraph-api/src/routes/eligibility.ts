@@ -35,11 +35,15 @@ import {
   translateHouseholdRequest,
   toProgramDecision,
 } from '../translate/snap.js'
+import {
+  MEDICAID_RULESET_ID,
+  MEDICAID_TARGETS,
+  translateMedicaidHousehold,
+  toMedicaidResponse,
+} from '../translate/medicaid.js'
 import { z } from 'zod'
 
 const router = Router()
-
-const PER_MEMBER_PROGRAMS = new Set(['medicaid', 'chip', 'tanf', 'ccdf'])
 
 function problem(
   res: import('express').Response,
@@ -71,34 +75,34 @@ function badBody(res: import('express').Response, error: z.ZodError): void {
 }
 
 /**
- * Run a set of targets against snap-complete via the shared evaluation
- * core. Returns the QueryResponse, or null after writing a 5xx Problem
- * Details (ruleset not loaded / executable / engine error / a bad target
- * produced by our own translation — all server-side faults, never the
- * caller's).
+ * Run a set of targets against a ruleset via the shared evaluation core.
+ * Returns the QueryResponse, or null after writing a 5xx Problem Details
+ * (ruleset not loaded / executable / engine error / a bad target produced
+ * by our own translation — all server-side faults, never the caller's).
  */
-function evaluateSnap(
+function evaluateRuleset(
   res: import('express').Response,
+  rulesetId: string,
   inputs: Record<string, unknown>,
   targets: readonly string[],
   include: string[] | undefined,
   metadata: unknown
 ): QueryResponse | null {
-  const model = getRuleset(SNAP_RULESET_ID)
-  const facts = getRawFacts(SNAP_RULESET_ID)
+  const model = getRuleset(rulesetId)
+  const facts = getRawFacts(rulesetId)
   if (!model || !facts) {
     problem(
       res,
       500,
       'Ruleset unavailable',
-      `The "${SNAP_RULESET_ID}" ruleset is not loaded or not executable on this server.`
+      `The "${rulesetId}" ruleset is not loaded or not executable on this server.`
     )
     return null
   }
 
   let result
   try {
-    result = runQuery(SNAP_RULESET_ID, model, facts, {
+    result = runQuery(rulesetId, model, facts, {
       targets: [...targets],
       inputs,
       include,
@@ -117,7 +121,7 @@ function evaluateSnap(
       res,
       500,
       'Adapter misconfiguration',
-      `Internal targets not found in "${SNAP_RULESET_ID}": ${result.unknownTargets.join(', ')}. This is an adapter bug.`
+      `Internal targets not found in "${rulesetId}": ${result.unknownTargets.join(', ')}. This is an adapter bug.`
     )
     return null
   }
@@ -138,8 +142,9 @@ router.post('/evaluate/expedited-screening', (req, res) => {
   const metadata = body.metadata ?? {}
 
   const { inputs } = translateHouseholdRequest(body, new Date())
-  const query = evaluateSnap(
+  const query = evaluateRuleset(
     res,
+    SNAP_RULESET_ID,
     inputs,
     [SNAP_EXPEDITED_TARGET],
     undefined,
@@ -154,17 +159,24 @@ router.post('/evaluate/expedited-screening', (req, res) => {
   })
 })
 
+/** Programs whose determination isn't implemented yet (recognized, 501). */
+const UNSUPPORTED_PROGRAMS = new Set(['chip', 'tanf', 'ccdf'])
+
 /**
  * POST /v1/eligibility/evaluate/determination
  *
- * Final eligibility determination for one program. SNAP (household
- * program) is evaluated against snap-complete and returned as a
- * ProgramDecision. Per-applicant programs (medicaid/chip/tanf/ccdf) are
- * not yet supported.
+ * Final eligibility determination for one program.
+ *   - `snap` (household program) → one `ProgramDecision` for the household.
+ *   - `medicaid` (household-in, per-member-out) → a `MedicaidDeterminationResponse`
+ *     carrying one decision per member. This deliberately uses the
+ *     household-shaped request rather than the contract's per-applicant
+ *     `IndividualDeterminationRequest`, because MAGI Medicaid eligibility for
+ *     any one member depends on the whole household's size and income. See
+ *     docs/contract-gap-analysis.md.
+ *   - `chip`/`tanf`/`ccdf` → 501 (not yet implemented).
  */
 router.post('/evaluate/determination', (req, res) => {
-  // We only need `program` to route; the full shape is validated once we
-  // know it's a SNAP household request.
+  // We only need `program` to route; the full shape is validated below.
   const program = (req.body as { program?: unknown })?.program
   if (typeof program !== 'string') {
     return problem(
@@ -175,35 +187,47 @@ router.post('/evaluate/determination', (req, res) => {
     )
   }
 
-  if (program !== 'snap') {
-    if (PER_MEMBER_PROGRAMS.has(program)) {
+  if (program !== 'snap' && program !== 'medicaid') {
+    if (UNSUPPORTED_PROGRAMS.has(program)) {
       return problem(
         res,
         501,
         'Program not supported',
         `Determination for "${program}" is not yet implemented by this adapter. ` +
-          `SNAP determination and expedited screening are available today.`
+          `SNAP and Medicaid determination and SNAP expedited screening are available today.`
       )
     }
-    return problem(
-      res,
-      400,
-      'Unknown program',
-      `Unrecognized program "${program}".`
-    )
+    return problem(res, 400, 'Unknown program', `Unrecognized program "${program}".`)
   }
 
+  // Both programs use the household-shaped request (members[] + household).
   const parsed = HouseholdDeterminationRequestSchema.safeParse(req.body)
   if (!parsed.success) return badBody(res, parsed.error)
   const body = parsed.data
   const metadata = body.metadata ?? {}
 
+  if (program === 'medicaid') {
+    const { inputs, memberIds, notes } = translateMedicaidHousehold(body, new Date())
+    const query = evaluateRuleset(
+      res,
+      MEDICAID_RULESET_ID,
+      inputs,
+      MEDICAID_TARGETS,
+      undefined,
+      metadata
+    )
+    if (!query) return
+    return void res.json(toMedicaidResponse(query, memberIds, metadata, notes))
+  }
+
+  // SNAP.
   const { inputs, notes } = translateHouseholdRequest(body, new Date())
   // Only pull trace material when the caller opted in — it's the
   // denialReasonCode source and is otherwise extra work.
   const include = body.include?.includes('trace') ? ['trace'] : undefined
-  const query = evaluateSnap(
+  const query = evaluateRuleset(
     res,
+    SNAP_RULESET_ID,
     inputs,
     SNAP_DETERMINATION_TARGETS,
     include,

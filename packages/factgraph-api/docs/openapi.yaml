@@ -35,8 +35,7 @@ components:
   schemas:
     TraceCitation:
       type: object
-      description:
-        A policy citation resolved from the ruleset's references.json.
+      description: A policy citation resolved from the ruleset's references.json.
         Surfaced inline on trace nodes whose underlying fact has policy
         mappings.
       required:
@@ -56,8 +55,7 @@ components:
     TraceNode: {}
     DecidingPathStep:
       type: object
-      description:
-        One step in the deciding chain for a queried target. Path-bearing
+      description: One step in the deciding chain for a queried target. Path-bearing
         nodes only — anonymous sub-expressions are skipped in favor of the
         surrounding fact they live under.
       required:
@@ -72,8 +70,7 @@ components:
         value: {}
         op:
           type: string
-          description:
-            Operator at this point in the chain — useful for picking icons or
+          description: Operator at this point in the chain — useful for picking icons or
             color in a UI.
     DecidingPath: {}
     QueryRequest:
@@ -98,7 +95,7 @@ components:
                       minLength: 1
                   additionalProperties: {}
               - {}
-              - type: 'null'
+              - type: "null"
         include:
           type: array
           items:
@@ -134,16 +131,14 @@ components:
             properties:
               path:
                 type: string
-                description:
-                  JSON path to the field that failed validation. Empty string for
+                description: JSON path to the field that failed validation. Empty string for
                   root-level errors.
               message:
                 type: string
             required:
               - path
               - message
-          description:
-            Present on 400 responses from request validation. Each entry
+          description: Present on 400 responses from request validation. Each entry
             pinpoints a specific failing field.
       required:
         - type
@@ -158,8 +153,7 @@ components:
         properties:
           memberId:
             type: string
-            description:
-              Caller-provided id from the entity row, or auto-generated
+            description: Caller-provided id from the entity row, or auto-generated
               `member-N` positional id when the caller didn't supply one.
           value:
             description: The fact value for this member.
@@ -183,16 +177,14 @@ components:
           description: Free-form description of what this input represents.
         dataType:
           type: string
-          description:
-            Writable type name from the fact graph (e.g. "Dollar", "Boolean",
+          description: Writable type name from the fact graph (e.g. "Dollar", "Boolean",
             "Int", "Enum").
           example: Dollar
         enumOptions:
           type: array
           items:
             type: string
-          description:
-            When dataType is "Enum" and the allowed values are statically
+          description: When dataType is "Enum" and the allowed values are statically
             resolvable, the list of accepted strings.
       required:
         - path
@@ -213,8 +205,7 @@ components:
       required:
         - path
         - name
-      description:
-        One fact from the dependency tree of a queried target that resolved
+      description: One fact from the dependency tree of a queried target that resolved
         with the provided inputs. Only included when `include` contained
         `"supportingFacts"`.
     QueryResponse:
@@ -225,55 +216,47 @@ components:
           enum:
             - complete
             - incomplete
-          description:
-            '`complete` iff every requested target resolved. Otherwise
-            `incomplete`.'
+          description: "`complete` iff every requested target resolved. Otherwise
+            `incomplete`."
         rulesetVersion:
           type: string
-          description:
-            The ruleset id that was evaluated. Useful for clients that pin to a
+          description: The ruleset id that was evaluated. Useful for clients that pin to a
             specific version (e.g. snap-fy2026 vs snap-fy2027).
           example: snap-fy2026
         values:
           type: object
           additionalProperties: {}
-          description:
-            One entry per requested target. Value is `null` when the engine
+          description: One entry per requested target. Value is `null` when the engine
             couldn't resolve that target with the provided inputs. Scalar facts
             return primitives; collection-scoped facts return PerMemberValue
             arrays.
         metadata:
-          description:
-            Echoed unchanged from the request. Omitted if the request didn't
+          description: Echoed unchanged from the request. Omitted if the request didn't
             send one.
         missingInputs:
           type: array
           items:
-            $ref: '#/components/schemas/MissingInput'
-          description:
-            Present iff status === "incomplete". Union of writables still
+            $ref: "#/components/schemas/MissingInput"
+          description: Present iff status === "incomplete". Union of writables still
             needed across all unresolved targets, deduped by path.
         supportingFacts:
           type: array
           items:
-            $ref: '#/components/schemas/SupportingFact'
-          description:
-            Present iff request.include contained "supportingFacts". Every fact
+            $ref: "#/components/schemas/SupportingFact"
+          description: Present iff request.include contained "supportingFacts". Every fact
             in the targets' dependency trees that resolved.
         traces:
           type: object
           additionalProperties:
-            $ref: '#/components/schemas/TraceNode'
-          description:
-            Present iff request.include contained "trace". Keyed by target
+            $ref: "#/components/schemas/TraceNode"
+          description: Present iff request.include contained "trace". Keyed by target
             path; each entry is a recursive TraceNode tree explaining how that
             target's value was derived.
         decidingPaths:
           type: object
           additionalProperties:
-            $ref: '#/components/schemas/DecidingPath'
-          description:
-            Present iff request.include contained "trace". For each requested
+            $ref: "#/components/schemas/DecidingPath"
+          description: Present iff request.include contained "trace". For each requested
             target, a compact ordered chain of path-bearing nodes from the
             target down to the deepest single-leaf cause. Powers one-line
             headline rendering — no need to walk the full TraceNode tree for the
@@ -282,8 +265,7 @@ components:
         - status
         - rulesetVersion
         - values
-      description:
-        Result of evaluating one or more fact-graph targets. Same shape
+      description: Result of evaluating one or more fact-graph targets. Same shape
         regardless of complete vs incomplete; clients branch on status and on
         null values per target.
     RulesetSummary:
@@ -326,6 +308,8 @@ components:
                 type: string
               citizenshipStatus:
                 type: string
+              immigrationStatus:
+                type: string
               relationshipToHead:
                 type: string
               isDisabled:
@@ -340,6 +324,8 @@ components:
                   type: object
                   properties:
                     type:
+                      type: string
+                    unearnedType:
                       type: string
                     amount:
                       type: number
@@ -389,8 +375,7 @@ components:
         - program
         - household
         - members
-      description:
-        'Final SNAP determination request for a household. Mirrors the
+      description: 'Final SNAP determination request for a household. Mirrors the
         blueprint eligibility-adapter contract (ORCA shape). `include:
         ["trace"]` is an adapter overlay that adds denial-reason and explanation
         detail to the response.'
@@ -417,6 +402,8 @@ components:
                 type: string
               citizenshipStatus:
                 type: string
+              immigrationStatus:
+                type: string
               relationshipToHead:
                 type: string
               isDisabled:
@@ -431,6 +418,8 @@ components:
                   type: object
                   properties:
                     type:
+                      type: string
+                    unearnedType:
                       type: string
                     amount:
                       type: number
@@ -482,8 +471,7 @@ components:
         metadata:
           type: object
           additionalProperties: {}
-          description:
-            Echoed back unchanged from the request (adapter passthrough rule).
+          description: Echoed back unchanged from the request (adapter passthrough rule).
             The adapter never inspects this field.
         program:
           type: string
@@ -495,8 +483,7 @@ components:
             - approved
             - denied
             - ineligible
-          description:
-            Eligibility outcome. `pending` here means the engine could not
+          description: Eligibility outcome. `pending` here means the engine could not
             resolve eligibility because inputs were missing — the still-needed
             writables are surfaced on `x-missingInputs`.
         path:
@@ -504,57 +491,50 @@ components:
           enum:
             - auto
             - manual
-          description:
-            '`auto` — resolved by the rules engine with no caseworker in the
-            loop.'
+          description: "`auto` — resolved by the rules engine with no caseworker in the
+            loop."
         denialReasonCode:
           type: string
-          description:
-            Machine-readable reason code when status is denied/ineligible (e.g.
+          description: Machine-readable reason code when status is denied/ineligible (e.g.
             FAILED_GROSS_INCOME_TEST).
         x-allotment:
           type: number
-          description: 'Overlay: full-month SNAP allotment.'
+          description: "Overlay: full-month SNAP allotment."
         x-proratedAllotment:
           type: number
-          description: 'Overlay: prorated first-month allotment.'
+          description: "Overlay: prorated first-month allotment."
         x-expedited:
           type: boolean
-          description:
-            'Overlay: whether the household also qualifies for expedited
-            processing.'
+          description: "Overlay: whether the household also qualifies for expedited
+            processing."
         x-missingInputs:
           type: array
           items:
-            $ref: '#/components/schemas/MissingInput'
-          description:
-            'Overlay (progressive disclosure): present when status is `pending`
+            $ref: "#/components/schemas/MissingInput"
+          description: "Overlay (progressive disclosure): present when status is `pending`
             because inputs were missing — the writables still needed to reach a
             determination. This is the structured missing-information hook the
-            base contract lacks.'
+            base contract lacks."
         x-translationNotes:
           type: array
           items:
             type: string
-          description: 'Overlay (transparency): assumptions the adapter made —
+          description: "Overlay (transparency): assumptions the adapter made —
             disqualifier flags defaulted because the request did not carry them,
             or enum values that fell through to a default. The determination is
-            conditional on these.'
+            conditional on these."
         x-decidingPath:
-          description:
-            'Overlay: present when `include: ["trace"]` — the deciding chain
+          description: 'Overlay: present when `include: ["trace"]` — the deciding chain
             (DecidingPath) for /eligibilityCategory.'
         x-trace:
-          description:
-            'Overlay: present when `include: ["trace"]` — the full explanation
+          description: 'Overlay: present when `include: ["trace"]` — the full explanation
             tree (TraceNode) for /eligibilityCategory.'
       required:
         - metadata
         - program
         - status
         - path
-      description:
-        "Eligibility decision for one program. The base fields (metadata,
+      description: "Eligibility decision for one program. The base fields (metadata,
         program, status, path, denialReasonCode) are the blueprint contract;
         `x-`-prefixed fields are this adapter's additive overlay (sanctioned by
         the contract's additionalProperties: true)."
@@ -571,6 +551,72 @@ components:
         - metadata
         - expedited
       description: Response from expedited SNAP screening.
+    MemberMedicaidDecision:
+      type: object
+      properties:
+        memberId:
+          type: string
+          description: The household member this decision applies to (caller's member id).
+        status:
+          type: string
+          enum:
+            - pending
+            - approved
+            - denied
+            - ineligible
+        path:
+          type: string
+          enum:
+            - auto
+        denialReasonCode:
+          type: string
+        x-medicaidCategory:
+          type: string
+          description: Infant | YoungChild | OlderChild | Adult | Pregnant | SsiRecipient
+            | Ineligible.
+        x-chpEligible:
+          type: boolean
+          description: Whether the member qualifies for CHP+ (the children's plan) as an
+            alternative.
+      required:
+        - memberId
+        - status
+        - path
+      description: One member-level medicaid decision.
+    MedicaidDeterminationResponse:
+      type: object
+      properties:
+        metadata:
+          type: object
+          additionalProperties: {}
+        program:
+          type: string
+          enum:
+            - medicaid
+        decisions:
+          type: array
+          items:
+            $ref: "#/components/schemas/MemberMedicaidDecision"
+          description: "One decision per household member. Medicaid is household-in /
+            per-member-out: each member’s eligibility depends on the whole
+            household (size + income → FPL%), so one household request yields N
+            member decisions."
+        x-missingInputs:
+          type: array
+          items:
+            $ref: "#/components/schemas/MissingInput"
+        x-translationNotes:
+          type: array
+          items:
+            type: string
+      required:
+        - metadata
+        - program
+        - decisions
+      description: "Medicaid determination result. Deliberately differs from the
+        contract's per-applicant model: the request carries the whole household
+        and the response returns a decision per member. See
+        docs/contract-gap-analysis.md."
   securitySchemes:
     bearerAuth:
       type: http
@@ -582,13 +628,12 @@ paths:
   /health:
     get:
       summary: Liveness probe.
-      description:
-        Unauthenticated. Returns `{"status":"ok"}` when the server is up.
+      description: Unauthenticated. Returns `{"status":"ok"}` when the server is up.
         Used by deployment tooling.
       tags:
         - Meta
       responses:
-        '200':
+        "200":
           description: Server is up.
           content:
             application/json:
@@ -604,15 +649,14 @@ paths:
   /v1/factgraph/rulesets:
     get:
       summary: List every loaded ruleset.
-      description:
-        Use the `id` field of each entry as the `:rulesetId` URL parameter
+      description: Use the `id` field of each entry as the `:rulesetId` URL parameter
         in subsequent calls.
       tags:
         - Discovery
       security:
         - bearerAuth: []
       responses:
-        '200':
+        "200":
           description: List of rulesets.
           content:
             application/json:
@@ -622,20 +666,19 @@ paths:
                   rulesets:
                     type: array
                     items:
-                      $ref: '#/components/schemas/RulesetSummary'
+                      $ref: "#/components/schemas/RulesetSummary"
                 required:
                   - rulesets
-        '401':
+        "401":
           description: Authentication required.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ProblemDetails'
+                $ref: "#/components/schemas/ProblemDetails"
   /v1/factgraph/{rulesetId}/schema:
     get:
       summary: Full node index for a ruleset.
-      description:
-        Returns every fact in the ruleset with its path, name, description,
+      description: Returns every fact in the ruleset with its path, name, description,
         dependencies, data type, and (when mapped) policy citations. For day-one
         discovery prefer POST /query with no inputs — it returns only what is
         needed for a specific target.
@@ -651,7 +694,7 @@ paths:
           name: rulesetId
           in: path
       responses:
-        '200':
+        "200":
           description: Ruleset model.
           content:
             application/json:
@@ -674,22 +717,21 @@ paths:
                   - name
                   - format
                   - nodes
-                description:
-                  Shape mirrors `rules-visualizer-shared-types`'s Model type. Each
+                description: Shape mirrors `rules-visualizer-shared-types`'s Model type. Each
                   node carries its content, dependencies, and (optionally)
                   references.
-        '401':
+        "401":
           description: Authentication required.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ProblemDetails'
-        '404':
+                $ref: "#/components/schemas/ProblemDetails"
+        "404":
           description: Ruleset not found.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ProblemDetails'
+                $ref: "#/components/schemas/ProblemDetails"
   /v1/factgraph/{rulesetId}/query:
     post:
       summary: Evaluate one or more fact-graph targets.
@@ -724,39 +766,36 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/QueryRequest'
+              $ref: "#/components/schemas/QueryRequest"
       responses:
-        '200':
-          description:
-            Evaluation result. Always 200; `status` field discriminates
+        "200":
+          description: Evaluation result. Always 200; `status` field discriminates
             complete vs incomplete.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/QueryResponse'
-        '400':
-          description:
-            Request body failed validation. The response includes both a
+                $ref: "#/components/schemas/QueryResponse"
+        "400":
+          description: Request body failed validation. The response includes both a
             human-readable `detail` string and a machine-readable `errors[]`
             array keyed by field path.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ProblemDetails'
-        '401':
+                $ref: "#/components/schemas/ProblemDetails"
+        "401":
           description: Authentication required.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ProblemDetails'
-        '404':
-          description:
-            Ruleset or target not found. `detail` lists every bad path so the
+                $ref: "#/components/schemas/ProblemDetails"
+        "404":
+          description: Ruleset or target not found. `detail` lists every bad path so the
             client can fix typos in one shot.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ProblemDetails'
+                $ref: "#/components/schemas/ProblemDetails"
   /v1/eligibility/evaluate/determination:
     post:
       summary: Final eligibility determination for one program.
@@ -767,9 +806,11 @@ paths:
         translation and defaulting is owned by the adapter.
 
 
-        SNAP (a household program) is evaluated against the `snap-complete`
-        ruleset. Per-applicant programs (medicaid, chip, tanf, ccdf) are not yet
-        implemented and return 501.
+        SNAP returns a single `ProgramDecision` for the household. Medicaid
+        returns a `MedicaidDeterminationResponse` — one decision per member
+        (household-in, per-member-out), a deliberate divergence from the
+        contract’s per-applicant model (see docs/contract-gap-analysis.md).
+        chip/tanf/ccdf return 501.
 
 
         Mounted at `/v1/eligibility` so a consumer can set its adapter base URL
@@ -784,32 +825,35 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/HouseholdDeterminationRequest'
+              $ref: "#/components/schemas/HouseholdDeterminationRequest"
       responses:
-        '200':
-          description: Program decision.
+        "200":
+          description: Program decision. `ProgramDecision` for SNAP;
+            `MedicaidDeterminationResponse` (per-member) for Medicaid.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ProgramDecision'
-        '400':
+                anyOf:
+                  - $ref: "#/components/schemas/ProgramDecision"
+                  - $ref: "#/components/schemas/MedicaidDeterminationResponse"
+        "400":
           description: Invalid or unknown-program request.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ProblemDetails'
-        '401':
+                $ref: "#/components/schemas/ProblemDetails"
+        "401":
           description: Authentication required.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ProblemDetails'
-        '501':
+                $ref: "#/components/schemas/ProblemDetails"
+        "501":
           description: Program recognized but not yet implemented by this adapter.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ProblemDetails'
+                $ref: "#/components/schemas/ProblemDetails"
   /v1/eligibility/evaluate/expedited-screening:
     post:
       summary: Expedited SNAP screening.
@@ -825,31 +869,30 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ExpeditedScreeningRequest'
+              $ref: "#/components/schemas/ExpeditedScreeningRequest"
       responses:
-        '200':
+        "200":
           description: Expedited screening result.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ExpeditedScreeningResponse'
-        '400':
+                $ref: "#/components/schemas/ExpeditedScreeningResponse"
+        "400":
           description: Invalid request.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ProblemDetails'
-        '401':
+                $ref: "#/components/schemas/ProblemDetails"
+        "401":
           description: Authentication required.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ProblemDetails'
+                $ref: "#/components/schemas/ProblemDetails"
   /v1/eligibility/evaluate/medicaid-ex-parte:
     post:
       summary: Medicaid ex parte evaluation (not yet supported).
-      description:
-        Reserved by the eligibility-adapter contract. Not yet implemented
+      description: Reserved by the eligibility-adapter contract. Not yet implemented
         by this adapter — the flow depends on electronic data-exchange results
         (FDSH FTI, Medicare/VCI) that are not yet modeled. Returns 501.
       tags:
@@ -857,10 +900,10 @@ paths:
       security:
         - bearerAuth: []
       responses:
-        '501':
+        "501":
           description: Not implemented.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ProblemDetails'
+                $ref: "#/components/schemas/ProblemDetails"
 webhooks: {}

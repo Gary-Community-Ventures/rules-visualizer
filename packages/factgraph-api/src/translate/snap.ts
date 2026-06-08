@@ -61,6 +61,7 @@ export const SNAP_EXPEDITED_TARGET = '/isExpedited'
 const OrcaIncome = z
   .object({
     type: z.string().optional(),
+    unearnedType: z.string().optional(),
     amount: z.number(),
     frequency: z.string().optional(),
     incomeBasis: z.string().optional(),
@@ -88,6 +89,7 @@ export const MemberContextSchema = z
     id: z.string().min(1),
     dateOfBirth: z.string().optional(),
     citizenshipStatus: z.string().optional(),
+    immigrationStatus: z.string().optional(),
     relationshipToHead: z.string().optional(),
     isDisabled: z.boolean().optional(),
     programs: z.array(z.string()).optional(),
