@@ -158,12 +158,7 @@ export function runQuery(
 
   const executionResults = executeFactGraph(
     rulesetId,
-    // The active WASM engine ignores `facts` — it reads the ruleset XML
-    // from disk and keeps the parameter only for signature parity with the
-    // Scala fallback. `getRawFacts` returns RawFact[] while the parameter is
-    // typed ParsedFact[]; cast at this single boundary rather than threading
-    // a parse the engine never reads.
-    facts as unknown as Parameters<typeof executeFactGraph>[1],
+    facts,
     scalars,
     model.nodes as Record<string, { content: { dataType?: string } }>,
     entitiesForExecutor
