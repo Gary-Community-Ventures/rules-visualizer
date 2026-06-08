@@ -14,7 +14,7 @@
 import { createRequire } from 'node:module'
 import fs from 'node:fs'
 import path from 'node:path'
-import type { ParsedFact } from './parser.js'
+import type { RawFact } from './store.js'
 
 const require = createRequire(import.meta.url)
 type FactGraphHandle = {
@@ -151,7 +151,10 @@ export function resetGraphSetTimings(): void {
  */
 export function executeFactGraph(
   rulesetId: string,
-  facts: ParsedFact[],
+  // Accepts whatever `getRawFacts` returns (RawFact[]). The WASM engine
+  // ignores it — it reads the ruleset XML from disk — so the parameter
+  // exists only for signature parity with the Scala fallback.
+  facts: RawFact[],
   inputs: Record<string, unknown>,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   modelNodes?: Record<string, { content: { dataType?: string } }>,
@@ -208,7 +211,7 @@ export function executeFactGraph(
  * `getFact()` for `Fact.explain()` walks; the WASM backend doesn't have
  * an analog yet. Kept for signature parity; returns an empty stub.
  */
-export function __debugBuildGraph(facts: ParsedFact[]): {
+export function __debugBuildGraph(facts: RawFact[]): {
   graph: { getFact: (path: string) => Record<string, unknown> }
 } {
   void facts

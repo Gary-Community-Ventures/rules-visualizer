@@ -7,6 +7,7 @@
  */
 
 import { createRequire } from 'node:module'
+import type { RawFact } from './store.js'
 const require = createRequire(import.meta.url)
 const sfg = require('../vendor/factgraph-scala.cjs')
 
@@ -449,10 +450,10 @@ function getModelLookup(
  * Explanation tree). Not part of the package's public contract; can
  * change without notice.
  */
-export function __debugBuildGraph(facts: ParsedFact[]): {
+export function __debugBuildGraph(rawFacts: RawFact[]): {
   graph: { getFact: (path: string) => Record<string, unknown> }
 } {
-  const dict = buildDictionary(facts)
+  const dict = buildDictionary(rawFacts as unknown as ParsedFact[])
   const persister = sfg.JSPersister.create()
   const graph = sfg.GraphFactory.apply(dict, persister)
   return { graph }
@@ -733,7 +734,11 @@ function findEnumOptionsPathInRaw(node: unknown): string | undefined {
 
 export function executeFactGraph(
   rulesetId: string,
-  facts: ParsedFact[],
+  // Accepts whatever `getRawFacts` returns (RawFact[]). This executor only
+  // reads `.path` and `.raw` off each fact (and rebuilds everything else
+  // from `.raw`), so the RawFact shape is sufficient — verified by the
+  // cross-engine parity test, which drives this executor with RawFact[].
+  rawFacts: RawFact[],
   inputs: Record<string, unknown>,
   modelNodes?: Record<string, { content: { dataType?: string } }>,
   entities?: Record<string, Record<string, unknown>[]>,
@@ -746,6 +751,7 @@ export function executeFactGraph(
 ): Record<string, unknown> {
   void rulesetId
 
+  const facts = rawFacts as unknown as ParsedFact[]
   const factsLookup = getFactsLookup(facts)
   const modelLookup = getModelLookup(
     modelNodes as Record<string, ModelNodeForLookup> | undefined
