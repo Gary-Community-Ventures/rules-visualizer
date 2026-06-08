@@ -148,7 +148,14 @@ async function main() {
 
   // Phase 3: warmup. Not counted; primes JIT / scala.js Fact caches.
   for (let i = 0; i < opts.warmup; i++) {
-    executeFactGraph(opts.ruleset, facts, inputs, model.nodes, entities, readPaths)
+    executeFactGraph(
+      opts.ruleset,
+      facts,
+      inputs,
+      model.nodes,
+      entities,
+      readPaths
+    )
   }
 
   // Reset WASM-side per-phase counters AFTER warmup so they reflect

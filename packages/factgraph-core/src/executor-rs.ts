@@ -25,7 +25,8 @@ type FactGraphHandle = {
 type WasmModule = {
   FactGraph: new (xml: string) => FactGraphHandle
 }
-const wasm: WasmModule = require('../vendor/factgraph-rs/factgraph_wasm.js') as WasmModule
+const wasm: WasmModule =
+  require('../vendor/factgraph-rs/factgraph_wasm.js') as WasmModule
 
 type ExecuteRequest = {
   inputs: Record<string, unknown>
@@ -40,7 +41,8 @@ type GlobalWithHandles = typeof globalThis & {
 }
 const _g = globalThis as GlobalWithHandles
 const handles: Map<string, FactGraphHandle> =
-  _g.__rulesVisualizerWasmHandles ?? (_g.__rulesVisualizerWasmHandles = new Map())
+  _g.__rulesVisualizerWasmHandles ??
+  (_g.__rulesVisualizerWasmHandles = new Map())
 
 function getDataDir(): string | undefined {
   return process.env.RULES_VISUALIZER_DATA_DIR

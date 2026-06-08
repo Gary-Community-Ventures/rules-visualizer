@@ -186,8 +186,14 @@ export function sidesAreIdentical(
   comparedOverrides: Record<string, unknown> | undefined
 ): boolean {
   if (baseRulesetId !== comparedRulesetId) return false
-  const a = JSON.stringify(baseOverrides ?? {}, Object.keys(baseOverrides ?? {}).sort())
-  const b = JSON.stringify(comparedOverrides ?? {}, Object.keys(comparedOverrides ?? {}).sort())
+  const a = JSON.stringify(
+    baseOverrides ?? {},
+    Object.keys(baseOverrides ?? {}).sort()
+  )
+  const b = JSON.stringify(
+    comparedOverrides ?? {},
+    Object.keys(comparedOverrides ?? {}).sort()
+  )
   return a === b
 }
 
@@ -597,7 +603,10 @@ export async function runSimulation(
             comparedRulesetId,
             editedFacts,
             comparedInputs,
-            editedModel.nodes as Record<string, { content: { dataType?: string } }>,
+            editedModel.nodes as Record<
+              string,
+              { content: { dataType?: string } }
+            >,
             scenario.entities,
             readPaths
           )

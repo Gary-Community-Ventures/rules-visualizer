@@ -1550,7 +1550,9 @@ export function PolicyPanel() {
                 className="h-6 w-6 shrink-0 text-rose-700 hover:text-rose-800 hover:bg-rose-50"
                 onClick={() => {
                   const target =
-                    currentOrphanIndex < 0 ? orphanSections[0] : nextOrphanSection
+                    currentOrphanIndex < 0
+                      ? orphanSections[0]
+                      : nextOrphanSection
                   if (target) goToSection(target)
                 }}
                 title="Next unlinked box"

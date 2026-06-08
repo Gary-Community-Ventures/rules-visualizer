@@ -55,10 +55,7 @@ function problem(
   })
 }
 
-function badBody(
-  res: import('express').Response,
-  error: z.ZodError
-): void {
+function badBody(res: import('express').Response, error: z.ZodError): void {
   res.status(400).json({
     type: 'https://tools.ietf.org/html/rfc9457',
     title: 'Invalid request body',

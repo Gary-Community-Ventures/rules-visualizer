@@ -82,7 +82,11 @@ test('BBCE short-circuit (smart walker prunes income/asset subtree)', async () =
     .post(QUERY_URL)
     .send({
       targets: ['/eligible'],
-      inputs: {  ...ZEROED_SCALARS, '/meetsCategoricalEligibility': true, '/members': [APPLICANT_ROW] },
+      inputs: {
+        ...ZEROED_SCALARS,
+        '/meetsCategoricalEligibility': true,
+        '/members': [APPLICANT_ROW],
+      },
     })
   assert.equal(res.status, 200)
   assert.equal(res.body.status, 'complete')
@@ -196,13 +200,15 @@ test('intermediate gate that lacks inputs returns incomplete with useful missing
     .post(QUERY_URL)
     .send({
       targets: ['/grossIncomeLimit'],
-      inputs: { '/members': [
+      inputs: {
+        '/members': [
           {
             id: 'applicant',
             '/members/*/age': 30,
             '/members/*/isImmigrationEligible': true,
           },
-        ] },
+        ],
+      },
     })
   assert.equal(res.status, 200)
   assert.equal(res.body.status, 'incomplete')

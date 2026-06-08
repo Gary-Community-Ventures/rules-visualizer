@@ -19,20 +19,20 @@ any request — no copy-paste, no JSON formatting.
 
 ## What's in here
 
-| #   | File                           | Tests                                                              |
-| --- | ------------------------------ | ------------------------------------------------------------------ |
-| 01  | `01-health.bru`                | Liveness probe                                                     |
-| 02  | `02-list-rulesets.bru`         | Discovering which rulesets the server has loaded                   |
-| 03  | `03-get-schema.bru`            | Inspecting one ruleset's node definitions                          |
-| 04  | `04-discover-inputs.bru`       | Empty query → full intake-form shape (smart walker)                |
-| 05  | `05-bbce-determination.bru`    | Multi-target + metadata + supportingFacts + member IDs in one call |
-| 06  | `06-full-determination.bru`    | Full SNAP determination — get a benefit amount                     |
-| 07  | `07-intermediate-gate.bru`     | Querying an intermediate fact directly                             |
-| 08  | `08-error-missing-target.bru`  | 400 Problem Details                                                |
-| 09  | `09-error-unknown-ruleset.bru` | 404 Problem Details                                                |
-| 10  | `10-error-unknown-target.bru`  | 404 Problem Details, multiple bad targets surfaced together        |
-| 11  | `11-trace-denial.bru`          | Structured trace/explanation tree via `include: ["trace"]`         |
-| 12  | `12-snap-complete-eligible.bru`| `snap-complete` real-world scenario mapping a HouseholdDeterminationRequest → /query → ProgramDecision |
+| #   | File                            | Tests                                                                                                  |
+| --- | ------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| 01  | `01-health.bru`                 | Liveness probe                                                                                         |
+| 02  | `02-list-rulesets.bru`          | Discovering which rulesets the server has loaded                                                       |
+| 03  | `03-get-schema.bru`             | Inspecting one ruleset's node definitions                                                              |
+| 04  | `04-discover-inputs.bru`        | Empty query → full intake-form shape (smart walker)                                                    |
+| 05  | `05-bbce-determination.bru`     | Multi-target + metadata + supportingFacts + member IDs in one call                                     |
+| 06  | `06-full-determination.bru`     | Full SNAP determination — get a benefit amount                                                         |
+| 07  | `07-intermediate-gate.bru`      | Querying an intermediate fact directly                                                                 |
+| 08  | `08-error-missing-target.bru`   | 400 Problem Details                                                                                    |
+| 09  | `09-error-unknown-ruleset.bru`  | 404 Problem Details                                                                                    |
+| 10  | `10-error-unknown-target.bru`   | 404 Problem Details, multiple bad targets surfaced together                                            |
+| 11  | `11-trace-denial.bru`           | Structured trace/explanation tree via `include: ["trace"]`                                             |
+| 12  | `12-snap-complete-eligible.bru` | `snap-complete` real-world scenario mapping a HouseholdDeterminationRequest → /query → ProgramDecision |
 
 Run them in order on the first session — each one builds on the previous
 one as documentation of the API surface.
@@ -62,10 +62,10 @@ correlate per-member response values back to specific rows.
 
 ## Environments
 
-| Env | `base_url` | Notes |
-| --- | --- | --- |
+| Env     | `base_url`              | Notes                                                             |
+| ------- | ----------------------- | ----------------------------------------------------------------- |
 | `local` | `http://localhost:5002` | Run `npm run dev:api` from the repo root. Auth is off by default. |
-| `prod` | The deployed Heroku URL | Bearer token required. Get the token from the team. |
+| `prod`  | The deployed Heroku URL | Bearer token required. Get the token from the team.               |
 
 Pick the environment in Bruno's top-right dropdown before clicking Send.
 

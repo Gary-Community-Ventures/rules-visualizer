@@ -113,7 +113,9 @@ export async function* streamEligibilityInterfaceAgent(
     const timeoutCheck = setInterval(() => {
       if (Date.now() - lastEventTime > TIMEOUT_MS) {
         clearInterval(timeoutCheck)
-        console.error('[Eligibility AI] Stream timed out after 60s of inactivity')
+        console.error(
+          '[Eligibility AI] Stream timed out after 60s of inactivity'
+        )
       }
     }, 5000)
 

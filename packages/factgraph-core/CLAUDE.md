@@ -80,7 +80,7 @@ any time the bundle is re-vendored.**
 #### 1. `DigestNodeWrapper.overrideDefaultOption` (correctness fix)
 
 A copy-paste bug in the upstream bundle made `overrideDefault` evaluate
-to the override *condition* instead of the override *default*. Patched at
+to the override _condition_ instead of the override _default_. Patched at
 the prototype level. Don't remove without confirming the upstream PR (#1
 in the upstream tracker) is in the re-vendored bundle.
 
@@ -113,6 +113,7 @@ read counts via `factCallCounts` and reset with `resetFactCallCounts()`.
 #### Upstreaming the Scala.js patches
 
 Both patches arguably belong upstream:
+
 - **#1** is a correctness bug they'd want regardless.
 - **#2** is JS-specific (the JVM build of factgraph wouldn't pay the
   boundary overhead this caches around). Could be contributed as a

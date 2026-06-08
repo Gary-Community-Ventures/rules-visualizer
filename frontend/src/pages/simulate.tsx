@@ -2773,8 +2773,8 @@ function ResultsScopeToggle({
           <div className="font-medium">Outcomes only</div>
           <div className="text-muted-foreground mt-0.5">
             Only outcome paths persisted per case. Lets you run up to{' '}
-            {MAX_CASE_COUNT_BY_SCOPE.outcomes.toLocaleString()} cases. The
-            "All nodes" tab will show only outcomes.
+            {MAX_CASE_COUNT_BY_SCOPE.outcomes.toLocaleString()} cases. The "All
+            nodes" tab will show only outcomes.
           </div>
         </button>
       </div>

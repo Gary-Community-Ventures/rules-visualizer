@@ -34,12 +34,12 @@ POST /v1/factgraph/snap-fy2026/query
 }
 ```
 
-| Field      | Required | Purpose                                                                                                                                     |
-| ---------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| `targets`  | yes      | Array of fact paths to evaluate. Single-value queries use a one-element array.                                                              |
-| `inputs`   | no       | Caller-provided values, keyed by fact path. Scalar facts take a primitive value; collection roots (e.g. `/members`) take an array of rows.  |
-| `include`  | no       | Opt-in response sections. Today: `"supportingFacts"`, `"trace"`. Unknown values ignored.                                                    |
-| `metadata` | no       | Opaque correlation context. Echoed back unchanged; never inspected or logged.                                                               |
+| Field      | Required | Purpose                                                                                                                                    |
+| ---------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `targets`  | yes      | Array of fact paths to evaluate. Single-value queries use a one-element array.                                                             |
+| `inputs`   | no       | Caller-provided values, keyed by fact path. Scalar facts take a primitive value; collection roots (e.g. `/members`) take an array of rows. |
+| `include`  | no       | Opt-in response sections. Today: `"supportingFacts"`, `"trace"`. Unknown values ignored.                                                   |
+| `metadata` | no       | Opaque correlation context. Echoed back unchanged; never inspected or logged.                                                              |
 
 Scalar values and collection rows share the `inputs` map so the
 request shape mirrors the response shape — every key in `inputs` is a
@@ -150,8 +150,8 @@ structure of the rules:
   see both the deciding gate and the alternatives that did hold.
 - `Any` that's true → `reason` calls out the satisfying branch.
 - Comparisons (`LessThanOrEqual`, `GreaterThan`, etc.) → `reason`
-  includes the concrete operand values: *"Gross monthly income (3500)
-  ≤ Gross income limit (1695.2) — did not hold."*
+  includes the concrete operand values: _"Gross monthly income (3500)
+  ≤ Gross income limit (1695.2) — did not hold."_
 - Dependency references recursively walk into the target fact.
 - Policy citations from `references.json` flow through on the
   corresponding `TraceNode`s.
@@ -182,8 +182,8 @@ outcome without having to derive that logic yourself:
 - **`decidingPaths`** at the top level of the response (sibling to
   `traces`), keyed by target path. Each entry is a compact ordered
   chain of path-bearing nodes `[target, deciding child, …]` powering
-  one-line headline rendering — *"Denied because gross income test
-  failed."* The chain stops at the first branch point (`All`-true with
+  one-line headline rendering — _"Denied because gross income test
+  failed."_ The chain stops at the first branch point (`All`-true with
   multiple operands, `Any`-false where every operand failed) since
   beyond that the causation fans out and a flat list would misrepresent
   it. For branchy outcomes the chain may be short; the full

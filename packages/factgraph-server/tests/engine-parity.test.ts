@@ -22,7 +22,11 @@ import assert from 'node:assert/strict'
 import path from 'node:path'
 import fs from 'node:fs'
 import { fileURLToPath } from 'node:url'
-import { loadFactGraphData, getRawFacts, getRuleset } from 'rules-visualizer-factgraph-core'
+import {
+  loadFactGraphData,
+  getRawFacts,
+  getRuleset,
+} from 'rules-visualizer-factgraph-core'
 import { executeFactGraph as execRust } from '../../factgraph-core/src/executor-rs.js'
 import { executeFactGraph as execScala } from '../../factgraph-core/src/executor.js'
 
@@ -61,7 +65,9 @@ function run(
 // We only need cases that actually exercise an income (so member-reference
 // resolution is observable). Cap the count to keep the suite fast — this is
 // a parity tripwire, not exhaustive coverage (the simulation system does that).
-const PARITY_CASES = fixtures.filter((f) => f.entities?.['/incomes']?.length).slice(0, 8)
+const PARITY_CASES = fixtures
+  .filter((f) => f.entities?.['/incomes']?.length)
+  .slice(0, 8)
 
 for (const fixture of PARITY_CASES) {
   test(`rust and scala agree on ${fixture.id.slice(0, 8)} (${fixture.name ?? ''})`, () => {
@@ -84,10 +90,18 @@ test('member references resolve positionally and identically across engines', ()
   // position (`#0`). With the income attached the household is eligible;
   // detach it and the outcome changes — so this scenario is sensitive to
   // member-reference resolution.
-  const profiles: Array<{ name: string; inputs: Record<string, unknown>; entities: Record<string, Record<string, unknown>[]> }> =
-    JSON.parse(fs.readFileSync(path.join(DATA_DIR, RULESET_ID, 'profiles.json'), 'utf-8'))
+  const profiles: Array<{
+    name: string
+    inputs: Record<string, unknown>
+    entities: Record<string, Record<string, unknown>[]>
+  }> = JSON.parse(
+    fs.readFileSync(path.join(DATA_DIR, RULESET_ID, 'profiles.json'), 'utf-8')
+  )
   const base = profiles.find((p) => p.name === 'Default') ?? profiles[0]
-  assert.ok(base?.entities?.['/incomes']?.length, 'expected the Default profile to carry an income')
+  assert.ok(
+    base?.entities?.['/incomes']?.length,
+    'expected the Default profile to carry an income'
+  )
 
   // Income-attribution-sensitive outputs — these flip when income detaches
   // from its member (gross income → eligibility category → allotment →
@@ -113,7 +127,11 @@ test('member references resolve positionally and identically across engines', ()
 
   // The two engines agree in BOTH the resolved and the unresolvable case —
   // the divergence that was once suspected does not exist.
-  assert.deepEqual(rustBase, scalaBase, 'engines disagree on resolved references')
+  assert.deepEqual(
+    rustBase,
+    scalaBase,
+    'engines disagree on resolved references'
+  )
   assert.deepEqual(
     rustBroken,
     scalaBroken,

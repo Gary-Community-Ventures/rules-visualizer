@@ -17,10 +17,10 @@ Two parts:
 
 This API serves two SNAP rulesets with different shapes and purposes.
 
-| Ruleset | Inputs | Source | When to use |
-| --- | --- | --- | --- |
-| **`snap-complete`** | ~17 scalar + ~142 per-member writables across five collections (`/members`, `/incomes`, `/expenses`, `/jobs`, `/resourceItems`) | Full modelling of the Colorado SNAP rule (10 CCR 2506-1) | Production-grade determinations — eligibility category, expedited screening, allotment + prorated allotment, denial reasons |
-| **`snap-fy2026`** | ~11 scalar + ~18 per-member writables, single `/members` collection | A subset modelled after PolicyEngine-US's `is_snap_eligible` covering the most common rules | Demos, quick experiments, prototypes where the full input surface would be a distraction |
+| Ruleset             | Inputs                                                                                                                          | Source                                                                                      | When to use                                                                                                                 |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| **`snap-complete`** | ~17 scalar + ~142 per-member writables across five collections (`/members`, `/incomes`, `/expenses`, `/jobs`, `/resourceItems`) | Full modelling of the Colorado SNAP rule (10 CCR 2506-1)                                    | Production-grade determinations — eligibility category, expedited screening, allotment + prorated allotment, denial reasons |
+| **`snap-fy2026`**   | ~11 scalar + ~18 per-member writables, single `/members` collection                                                             | A subset modelled after PolicyEngine-US's `is_snap_eligible` covering the most common rules | Demos, quick experiments, prototypes where the full input surface would be a distraction                                    |
 
 The main walkthrough below uses `snap-complete` because that's the
 right target for a real integration. The quick walkthrough above it
@@ -165,7 +165,12 @@ Your adapter receives a request like:
       "isDisabled": false,
       "programs": ["snap"],
       "income": [
-        { "type": "employed", "amount": 1200, "frequency": "monthly", "incomeBasis": "gross" }
+        {
+          "type": "employed",
+          "amount": 1200,
+          "frequency": "monthly",
+          "incomeBasis": "gross"
+        }
       ],
       "expenses": [
         { "category": "housing", "amount": 800, "frequency": "monthly" }
@@ -212,10 +217,10 @@ per-member arrays (income / expenses / assets) which fan out into
 {
   // The four outputs you'll read to build a ProgramDecision.
   "targets": [
-    "/isExpedited",         // expedited-screening result
+    "/isExpedited", // expedited-screening result
     "/eligibilityCategory", // Bce | Ece | Se | Ineligible
-    "/allotment",           // full month allotment
-    "/proratedAllotment"    // partial first-month allotment
+    "/allotment", // full month allotment
+    "/proratedAllotment", // partial first-month allotment
   ],
 
   // Echoed unchanged in the response — use for correlation.
@@ -226,16 +231,16 @@ per-member arrays (income / expenses / assets) which fan out into
     // HouseholdDeterminationRequest body — they're administrative
     // facts about the application itself ("when did this case file?",
     // "is this a recertification?") that your integration sets.
-    "/applicationFilingDate":          "2025-01-05",
-    "/benefitMonth":                   "2025-01-01",
-    "/certificationPeriodStartDate":   "2025-01-01",
+    "/applicationFilingDate": "2025-01-05",
+    "/benefitMonth": "2025-01-01",
+    "/certificationPeriodStartDate": "2025-01-01",
     "/isApplicationForRecertification": false,
-    "/receivedSnapInLast30Days":       false,
-    "/livesInApplicationCounty":       true,
-    "/dSnapActive":                    false,
-    "/temporaryEmergencyActive":       false,
-    "/hasOrExpectsShelterCosts":       false,
-    "/normalIssuanceCycleDate":        "2025-01-15",
+    "/receivedSnapInLast30Days": false,
+    "/livesInApplicationCounty": true,
+    "/dSnapActive": false,
+    "/temporaryEmergencyActive": false,
+    "/hasOrExpectsShelterCosts": false,
+    "/normalIssuanceCycleDate": "2025-01-15",
     // ... 7 more operational booleans, all defaulting to false
 
     // Each member from the adapter request becomes one row here. Reuse
@@ -244,15 +249,15 @@ per-member arrays (income / expenses / assets) which fan out into
     "/members": [
       {
         "id": "head",
-        "/members/*/age": 35,                                    // computed from dateOfBirth
-        "/members/*/citizenshipImmigrationStatus": "Citizen",    // mapped from citizenshipStatus
-        "/members/*/isHeadOfHousehold": true,                    // from relationshipToHead
-        "/members/*/hasPhysicalDisability": false,               // from isDisabled
-        "/members/*/preparesFoodWithHousehold": true,            // default
-        "/members/*/studentEnrollmentStatus": "LessThanHalfTimeOrNotEnrolled"
+        "/members/*/age": 35, // computed from dateOfBirth
+        "/members/*/citizenshipImmigrationStatus": "Citizen", // mapped from citizenshipStatus
+        "/members/*/isHeadOfHousehold": true, // from relationshipToHead
+        "/members/*/hasPhysicalDisability": false, // from isDisabled
+        "/members/*/preparesFoodWithHousehold": true, // default
+        "/members/*/studentEnrollmentStatus": "LessThanHalfTimeOrNotEnrolled",
         // ... ~80 other Boolean flags default to false; full list
         //     viewable on the /schema endpoint.
-      }
+      },
     ],
 
     // Each member's income[] fans out into /incomes rows with a
@@ -261,26 +266,26 @@ per-member arrays (income / expenses / assets) which fan out into
     "/incomes": [
       {
         "id": "head-wages",
-        "/incomes/*/memberId":  "head",
-        "/incomes/*/type":      "WagesAndSalaries",
-        "/incomes/*/amount":    1200,
+        "/incomes/*/memberId": "head",
+        "/incomes/*/type": "WagesAndSalaries",
+        "/incomes/*/amount": 1200,
         "/incomes/*/frequency": "Monthly",
         "/incomes/*/receivedBeforeSnapParticipation": false,
         "/incomes/*/isFromTerminatedSourceForDestituteIncome": false,
-        "/incomes/*/isFromNewSourceForDestituteIncome": false
-      }
+        "/incomes/*/isFromNewSourceForDestituteIncome": false,
+      },
     ],
     "/jobs": [
       {
         "id": "head-job",
-        "/jobs/*/memberId":              "head",
-        "/jobs/*/hoursPerWeek":          30,
-        "/jobs/*/abawdWorkType":         "CompensatedWork",
-        "/jobs/*/isSelfEmployed":        false,
+        "/jobs/*/memberId": "head",
+        "/jobs/*/hoursPerWeek": 30,
+        "/jobs/*/abawdWorkType": "CompensatedWork",
+        "/jobs/*/isSelfEmployed": false,
         "/jobs/*/isAtFederalMinimumWage": false,
-        "/jobs/*/offerAccepted":         true
+        "/jobs/*/offerAccepted": true,
         // ... ~10 other Boolean flags default to false
-      }
+      },
     ],
 
     // expenses[] → /expenses rows. Each one declares its `type`
@@ -290,14 +295,14 @@ per-member arrays (income / expenses / assets) which fan out into
     "/expenses": [
       {
         "id": "head-rent",
-        "/expenses/*/memberId":  "head",
-        "/expenses/*/type":      "Rent",
-        "/expenses/*/amount":    800,
+        "/expenses/*/memberId": "head",
+        "/expenses/*/type": "Rent",
+        "/expenses/*/amount": 800,
         "/expenses/*/frequency": "Monthly",
         "/expenses/*/isForClaimableShelterResidence": true,
-        "/expenses/*/reimbursementAmount": 0
+        "/expenses/*/reimbursementAmount": 0,
         // ... ~8 other Boolean flags default to false
-      }
+      },
     ],
 
     // assets[] → /resourceItems rows. The asset categories in your
@@ -309,11 +314,11 @@ per-member arrays (income / expenses / assets) which fan out into
       {
         "id": "head-checking",
         "/resourceItems/*/memberId": "head",
-        "/resourceItems/*/type":     "CheckingAccount",
-        "/resourceItems/*/value":    500
-      }
-    ]
-  }
+        "/resourceItems/*/type": "CheckingAccount",
+        "/resourceItems/*/value": 500,
+      },
+    ],
+  },
 }
 ```
 
@@ -370,27 +375,27 @@ straight from `/allotment`.
 
 ```typescript
 function toProgramDecision(query: QueryResponse): ProgramDecision {
-  const category = query.values["/eligibilityCategory"];
-  const allotment = query.values["/allotment"];
+  const category = query.values['/eligibilityCategory']
+  const allotment = query.values['/allotment']
 
   // status mapping
-  let status: ProgramDecision["status"];
-  if (category === "Bce" || category === "Ece" || category === "Se") {
-    status = "approved";
-  } else if (category === "Ineligible") {
-    status = "denied";  // or "ineligible" if you distinguish them
+  let status: ProgramDecision['status']
+  if (category === 'Bce' || category === 'Ece' || category === 'Se') {
+    status = 'approved'
+  } else if (category === 'Ineligible') {
+    status = 'denied' // or "ineligible" if you distinguish them
   } else {
-    status = "pending"; // null value — engine couldn't resolve
+    status = 'pending' // null value — engine couldn't resolve
   }
 
   return {
     metadata: query.metadata,
-    program: "snap",
+    program: 'snap',
     status,
-    path: "auto",
-    denialReasonCode: status === "approved" ? undefined : deriveReason(query),
+    path: 'auto',
+    denialReasonCode: status === 'approved' ? undefined : deriveReason(query),
     // Plus your own extension fields for allotment, prorated, expedited
-  };
+  }
 }
 ```
 
@@ -408,22 +413,22 @@ threshold for a household of size 1, set `include: ["trace"]`, and
 the response's `/eligibilityCategory` will eventually flip to
 `"Ineligible"`. The trace then shows the deciding gate
 (`/meetsGrossIncomeTest`) with a comparison leaf in its `reason`
-field — *"Gross income ($X) > gross income threshold ($1,316) — did
-not hold."*
+field — _"Gross income ($X) > gross income threshold ($1,316) — did
+not hold."_
 
 Use the `decidingPaths["/eligibilityCategory"]` chain to produce a
 structured `denialReasonCode`:
 
 ```typescript
 const reason: Record<string, string> = {
-  "/meetsGrossIncomeTest":      "FAILED_GROSS_INCOME_TEST",
-  "/meetsNetIncomeTest":        "FAILED_NET_INCOME_TEST",
-  "/meetsResourceTest":         "FAILED_RESOURCE_TEST",
-  "/disqualifiedForBCE":        "DISQUALIFIED_BROAD_CATEGORICAL",
-  "/meetsNonFinancialCriteria": "FAILED_NON_FINANCIAL",
+  '/meetsGrossIncomeTest': 'FAILED_GROSS_INCOME_TEST',
+  '/meetsNetIncomeTest': 'FAILED_NET_INCOME_TEST',
+  '/meetsResourceTest': 'FAILED_RESOURCE_TEST',
+  '/disqualifiedForBCE': 'DISQUALIFIED_BROAD_CATEGORICAL',
+  '/meetsNonFinancialCriteria': 'FAILED_NON_FINANCIAL',
 }
-const decidingFact = response.decidingPaths["/eligibilityCategory"].at(-1)
-const denialReasonCode = reason[decidingFact?.path ?? ""] ?? "OTHER"
+const decidingFact = response.decidingPaths['/eligibilityCategory'].at(-1)
+const denialReasonCode = reason[decidingFact?.path ?? ''] ?? 'OTHER'
 ```
 
 The full `traces["/eligibilityCategory"]` tree is always available
@@ -441,7 +446,7 @@ expedited fact and skip the heavier context:
   "inputs": {
     /* operational context */
     /* "/members": [...], "/incomes": [...], "/resourceItems": [...] */
-  }
+  },
 }
 ```
 
@@ -481,7 +486,7 @@ defaulting policy. Two common ones:
 
 - **Default unknown flags to `false`.** Equivalent to "assume the
   applicant is not disqualified for this reason." Produces an
-  eligibility result based on the criteria you *do* have data for,
+  eligibility result based on the criteria you _do_ have data for,
   and surfaces a problem only if a caseworker later flips a flag and
   re-queries. Be aware: a result computed this way is conditional on
   those flags being false in reality. If most of your applicants
@@ -505,21 +510,21 @@ are the easiest place to browse them.
 
 Field-by-field translation for codegen or hand-rolled mapping:
 
-| Adapter field | Query body location | Notes |
-| --- | --- | --- |
-| `metadata` | `metadata` | Echoed unchanged. |
-| `program` | (implicit in URL) | `snap-complete` is the ruleset path component. |
-| `household.size` | (derived from `/members[].length`) | Not provided directly; the engine counts non-disqualified `/members`. |
-| `household.housingCosts` | `/expenses[]` with `type: "Rent"` or `"Mortgage"` | Split by type in this model. |
-| `household.utilityCosts` | `/expenses[]` with utility types | Heating/cooling, electric, water etc. are each separate `/expenses` entries with `type` set. |
-| `members[i].dateOfBirth` | (compute age) → `/members/*/age` | The engine uses age in years. |
-| `members[i].citizenshipStatus` | `/members/*/citizenshipImmigrationStatus` | Enum — see `/citizenshipImmigrationStatusOptions` on the schema for the full list. |
-| `members[i].relationshipToHead` | `/members/*/isHeadOfHousehold` | Boolean only; head/non-head. |
-| `members[i].isDisabled` | `/members/*/hasPhysicalDisability` *or* `/hasMentalDisability` | One Boolean per type. |
-| `members[i].income[]` | `/incomes` rows with `/incomes/*/memberId` linking back | Each income type → an `/incomes/*/type` enum value. |
-| `members[i].expenses[]` | `/expenses` rows | Each expense category → an `/expenses/*/type` enum value. |
-| `members[i].assets[]` | `/resourceItems` rows | Each asset type → a `/resourceItems/*/type` enum value. |
-| (operational fields) | various scalar inputs | `applicationFilingDate`, `benefitMonth`, `livesInApplicationCounty`, etc. — administrative facts about the application itself, not about the applicant. Your integration sets these. |
+| Adapter field                   | Query body location                                            | Notes                                                                                                                                                                                |
+| ------------------------------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `metadata`                      | `metadata`                                                     | Echoed unchanged.                                                                                                                                                                    |
+| `program`                       | (implicit in URL)                                              | `snap-complete` is the ruleset path component.                                                                                                                                       |
+| `household.size`                | (derived from `/members[].length`)                             | Not provided directly; the engine counts non-disqualified `/members`.                                                                                                                |
+| `household.housingCosts`        | `/expenses[]` with `type: "Rent"` or `"Mortgage"`              | Split by type in this model.                                                                                                                                                         |
+| `household.utilityCosts`        | `/expenses[]` with utility types                               | Heating/cooling, electric, water etc. are each separate `/expenses` entries with `type` set.                                                                                         |
+| `members[i].dateOfBirth`        | (compute age) → `/members/*/age`                               | The engine uses age in years.                                                                                                                                                        |
+| `members[i].citizenshipStatus`  | `/members/*/citizenshipImmigrationStatus`                      | Enum — see `/citizenshipImmigrationStatusOptions` on the schema for the full list.                                                                                                   |
+| `members[i].relationshipToHead` | `/members/*/isHeadOfHousehold`                                 | Boolean only; head/non-head.                                                                                                                                                         |
+| `members[i].isDisabled`         | `/members/*/hasPhysicalDisability` _or_ `/hasMentalDisability` | One Boolean per type.                                                                                                                                                                |
+| `members[i].income[]`           | `/incomes` rows with `/incomes/*/memberId` linking back        | Each income type → an `/incomes/*/type` enum value.                                                                                                                                  |
+| `members[i].expenses[]`         | `/expenses` rows                                               | Each expense category → an `/expenses/*/type` enum value.                                                                                                                            |
+| `members[i].assets[]`           | `/resourceItems` rows                                          | Each asset type → a `/resourceItems/*/type` enum value.                                                                                                                              |
+| (operational fields)            | various scalar inputs                                          | `applicationFilingDate`, `benefitMonth`, `livesInApplicationCounty`, etc. — administrative facts about the application itself, not about the applicant. Your integration sets these. |
 
 For the enum mappings (income types, expense categories, citizenship
 statuses), pull the option list from
@@ -571,7 +576,7 @@ statuses), pull the option list from
   Per-member outputs come back as `[{memberId, value}]` arrays in
   `values`, but `traces` only walks scalar targets today.
 - **Alternation** in `missingInputs`: when an `Any(...)` could be
-  satisfied by *one of* several inputs, both branches' inputs appear
+  satisfied by _one of_ several inputs, both branches' inputs appear
   in the list without an explicit "one-of" relationship. Either input
   unblocks the determination — the list just doesn't flag that yet.
 

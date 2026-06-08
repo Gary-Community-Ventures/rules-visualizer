@@ -14,13 +14,13 @@ this repo without binding to the visualizer's internals.
 
 ## Live URLs
 
-| | |
-| --- | --- |
-| **API base** | `https://rules-visualizer-factgraph-api-f0c14673cf3a.herokuapp.com` |
-| **Interactive docs (Swagger UI, paste-token-and-try)** | [`/v1/factgraph/docs`](https://rules-visualizer-factgraph-api-f0c14673cf3a.herokuapp.com/v1/factgraph/docs) |
-| **Static docs site (Redoc, doesn't need API up)** | [gary-community-ventures.github.io/rules-visualizer](https://gary-community-ventures.github.io/rules-visualizer/) |
+|                                                            |                                                                                                                                            |
+| ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| **API base**                                               | `https://rules-visualizer-factgraph-api-f0c14673cf3a.herokuapp.com`                                                                        |
+| **Interactive docs (Swagger UI, paste-token-and-try)**     | [`/v1/factgraph/docs`](https://rules-visualizer-factgraph-api-f0c14673cf3a.herokuapp.com/v1/factgraph/docs)                                |
+| **Static docs site (Redoc, doesn't need API up)**          | [gary-community-ventures.github.io/rules-visualizer](https://gary-community-ventures.github.io/rules-visualizer/)                          |
 | **Target explorer (pick a fact, see its required inputs)** | [gary-community-ventures.github.io/rules-visualizer/explore.html](https://gary-community-ventures.github.io/rules-visualizer/explore.html) |
-| **OpenAPI 3.1 spec (for codegen)** | [`/v1/factgraph/openapi.yaml`](https://rules-visualizer-factgraph-api-f0c14673cf3a.herokuapp.com/v1/factgraph/openapi.yaml) |
+| **OpenAPI 3.1 spec (for codegen)**                         | [`/v1/factgraph/openapi.yaml`](https://rules-visualizer-factgraph-api-f0c14673cf3a.herokuapp.com/v1/factgraph/openapi.yaml)                |
 
 Every `/v1/*` request needs `Authorization: Bearer <token>`. Get the token from
 whoever set up your access. `/health`, `/v1/factgraph/openapi.{json,yaml}`,
@@ -64,15 +64,15 @@ and prod. Install Bruno, open that folder, click Send.
 
 ## Endpoints
 
-| Method | Path                              | Purpose                                    |
-| ------ | --------------------------------- | ------------------------------------------ |
-| `GET`  | `/health`                         | Liveness probe — `{ "status": "ok" }`      |
-| `GET`  | `/v1/factgraph/rulesets`          | List loaded rulesets                       |
-| `GET`  | `/v1/factgraph/:rulesetId/schema` | Node definitions, types, citations         |
-| `POST` | `/v1/factgraph/:rulesetId/query`  | Evaluate a target node with partial inputs |
+| Method | Path                              | Purpose                                      |
+| ------ | --------------------------------- | -------------------------------------------- |
+| `GET`  | `/health`                         | Liveness probe — `{ "status": "ok" }`        |
+| `GET`  | `/v1/factgraph/rulesets`          | List loaded rulesets                         |
+| `GET`  | `/v1/factgraph/:rulesetId/schema` | Node definitions, types, citations           |
+| `POST` | `/v1/factgraph/:rulesetId/query`  | Evaluate a target node with partial inputs   |
 | `GET`  | `/v1/factgraph/openapi.json`      | OpenAPI 3.1 spec (machine-readable) — public |
-| `GET`  | `/v1/factgraph/openapi.yaml`      | OpenAPI 3.1 spec (YAML) — public           |
-| `GET`  | `/v1/factgraph/docs`              | Interactive Swagger UI — public            |
+| `GET`  | `/v1/factgraph/openapi.yaml`      | OpenAPI 3.1 spec (YAML) — public             |
+| `GET`  | `/v1/factgraph/docs`              | Interactive Swagger UI — public              |
 
 The query endpoint is the centerpiece — see `docs/concepts.md` for the
 incompleteness model and `docs/examples-snap.md` for a worked SNAP
@@ -151,7 +151,7 @@ before we land them.
 | ✅     | Caller-provided member IDs surfaced as `{memberId, value}` arrays                                                                             |
 | ✅     | Health probe                                                                                                                                  |
 | ✅     | Optional bearer-token auth                                                                                                                    |
-| ✅     | OpenAPI 3.1 spec at `/v1/factgraph/openapi.yaml` + Swagger UI at `/v1/factgraph/docs` (both unauthenticated)                                   |
+| ✅     | OpenAPI 3.1 spec at `/v1/factgraph/openapi.yaml` + Swagger UI at `/v1/factgraph/docs` (both unauthenticated)                                  |
 | ✅     | Public docs site on GitHub Pages (Redoc renderer, auto-rebuilt on every push that touches the API)                                            |
 | ✅     | Structured trace/explanation API via `include: ["trace"]` (recursive TraceNode tree with deciding-branch semantics + inline citations)        |
 | ⏳     | Alternation in `missingInputs` (express "one-of" relationships when an `Any` could be satisfied by any of several inputs)                     |

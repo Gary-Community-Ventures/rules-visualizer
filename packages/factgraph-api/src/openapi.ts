@@ -101,7 +101,7 @@ export function buildOpenApiDocument() {
         z.object({
           memberId: z.string().openapi({
             description:
-              'Caller-provided id from the entity row, or auto-generated `member-N` positional id when the caller didn\'t supply one.',
+              "Caller-provided id from the entity row, or auto-generated `member-N` positional id when the caller didn't supply one.",
           }),
           value: z
             .unknown()
@@ -224,7 +224,7 @@ export function buildOpenApiDocument() {
   registry.registerComponent('schemas', 'DecidingPathStep', {
     type: 'object',
     description:
-      "One step in the deciding chain for a queried target. Path-bearing nodes only — anonymous sub-expressions are skipped in favor of the surrounding fact they live under.",
+      'One step in the deciding chain for a queried target. Path-bearing nodes only — anonymous sub-expressions are skipped in favor of the surrounding fact they live under.',
     required: ['path', 'value', 'op'],
     properties: {
       path: { type: 'string' },
@@ -265,15 +265,13 @@ export function buildOpenApiDocument() {
             'The ruleset id that was evaluated. Useful for clients that pin to a specific version (e.g. snap-fy2026 vs snap-fy2027).',
           example: 'snap-fy2026',
         }),
-        values: z
-          .record(z.string(), z.unknown())
-          .openapi({
-            description:
-              'One entry per requested target. Value is `null` when the engine couldn\'t resolve that target with the provided inputs. Scalar facts return primitives; collection-scoped facts return PerMemberValue arrays.',
-          }),
+        values: z.record(z.string(), z.unknown()).openapi({
+          description:
+            "One entry per requested target. Value is `null` when the engine couldn't resolve that target with the provided inputs. Scalar facts return primitives; collection-scoped facts return PerMemberValue arrays.",
+        }),
         metadata: z.unknown().optional().openapi({
           description:
-            'Echoed unchanged from the request. Omitted if the request didn\'t send one.',
+            "Echoed unchanged from the request. Omitted if the request didn't send one.",
         }),
         missingInputs: z.array(MissingInput).optional().openapi({
           description:
@@ -339,12 +337,15 @@ export function buildOpenApiDocument() {
             'Echoed back unchanged from the request (adapter passthrough rule). The adapter never inspects this field.',
         }),
         program: z.string().openapi({ example: 'snap' }),
-        status: z.enum(['pending', 'approved', 'denied', 'ineligible']).openapi({
-          description:
-            'Eligibility outcome. `pending` here means the engine could not resolve eligibility because inputs were missing — the still-needed writables are surfaced on `x-missingInputs`.',
-        }),
+        status: z
+          .enum(['pending', 'approved', 'denied', 'ineligible'])
+          .openapi({
+            description:
+              'Eligibility outcome. `pending` here means the engine could not resolve eligibility because inputs were missing — the still-needed writables are surfaced on `x-missingInputs`.',
+          }),
         path: z.enum(['auto', 'manual']).openapi({
-          description: '`auto` — resolved by the rules engine with no caseworker in the loop.',
+          description:
+            '`auto` — resolved by the rules engine with no caseworker in the loop.',
         }),
         denialReasonCode: z.string().optional().openapi({
           description:
@@ -357,7 +358,8 @@ export function buildOpenApiDocument() {
           description: 'Overlay: prorated first-month allotment.',
         }),
         'x-expedited': z.boolean().optional().openapi({
-          description: 'Overlay: whether the household also qualifies for expedited processing.',
+          description:
+            'Overlay: whether the household also qualifies for expedited processing.',
         }),
         'x-missingInputs': z.array(MissingInput).optional().openapi({
           description:
@@ -368,10 +370,12 @@ export function buildOpenApiDocument() {
             'Overlay (transparency): assumptions the adapter made — disqualifier flags defaulted because the request did not carry them, or enum values that fell through to a default. The determination is conditional on these.',
         }),
         'x-decidingPath': z.unknown().optional().openapi({
-          description: 'Overlay: present when `include: ["trace"]` — the deciding chain (DecidingPath) for /eligibilityCategory.',
+          description:
+            'Overlay: present when `include: ["trace"]` — the deciding chain (DecidingPath) for /eligibilityCategory.',
         }),
         'x-trace': z.unknown().optional().openapi({
-          description: 'Overlay: present when `include: ["trace"]` — the full explanation tree (TraceNode) for /eligibilityCategory.',
+          description:
+            'Overlay: present when `include: ["trace"]` — the full explanation tree (TraceNode) for /eligibilityCategory.',
         }),
       })
       .openapi({
@@ -386,7 +390,8 @@ export function buildOpenApiDocument() {
       .object({
         metadata: z.record(z.string(), z.unknown()),
         expedited: z.boolean().openapi({
-          description: 'Whether the household qualifies for expedited SNAP processing.',
+          description:
+            'Whether the household qualifies for expedited SNAP processing.',
         }),
       })
       .openapi({ description: 'Response from expedited SNAP screening.' })
@@ -396,12 +401,16 @@ export function buildOpenApiDocument() {
   // Security scheme
   // -------------------------------------------------------------------------
 
-  const bearerAuth = registry.registerComponent('securitySchemes', 'bearerAuth', {
-    type: 'http',
-    scheme: 'bearer',
-    description:
-      'Required on every /v1/* request when the deployed API has `API_BEARER_TOKEN` configured. Local dev runs without auth by default.',
-  })
+  const bearerAuth = registry.registerComponent(
+    'securitySchemes',
+    'bearerAuth',
+    {
+      type: 'http',
+      scheme: 'bearer',
+      description:
+        'Required on every /v1/* request when the deployed API has `API_BEARER_TOKEN` configured. Local dev runs without auth by default.',
+    }
+  )
 
   // -------------------------------------------------------------------------
   // Paths
@@ -477,7 +486,7 @@ export function buildOpenApiDocument() {
               })
               .openapi({
                 description:
-                  'Shape mirrors `rules-visualizer-shared-types`\'s Model type. Each node carries its content, dependencies, and (optionally) references.',
+                  "Shape mirrors `rules-visualizer-shared-types`'s Model type. Each node carries its content, dependencies, and (optionally) references.",
               }),
           },
         },
@@ -498,7 +507,7 @@ export function buildOpenApiDocument() {
     path: '/v1/factgraph/{rulesetId}/query',
     summary: 'Evaluate one or more fact-graph targets.',
     description: [
-      "Pass any subset of inputs (scalars and collection rows live in the same `inputs` map, keyed by fact path or collection root). The engine resolves what it can; the response carries values for resolved targets, and (when anything is missing) a deduped list of writables the caller would still need to supply.",
+      'Pass any subset of inputs (scalars and collection rows live in the same `inputs` map, keyed by fact path or collection root). The engine resolves what it can; the response carries values for resolved targets, and (when anything is missing) a deduped list of writables the caller would still need to supply.',
       '',
       'Targets can be top-level outputs (`/eligible`, `/snap`), intermediate gates (`/grossIncomeLimit`, `/meetsAssetTest`), or per-member facts. Per-member targets return arrays of `{memberId, value}` correlated to caller-provided `id` fields on entity rows.',
       '',
@@ -547,14 +556,16 @@ export function buildOpenApiDocument() {
       '',
       'SNAP (a household program) is evaluated against the `snap-complete` ruleset. Per-applicant programs (medicaid, chip, tanf, ccdf) are not yet implemented and return 501.',
       '',
-      'Mounted at `/v1/eligibility` so a consumer can set its adapter base URL to `<host>/v1/eligibility` and reach the contract\'s bare `/evaluate/...` paths with no rewriting.',
+      "Mounted at `/v1/eligibility` so a consumer can set its adapter base URL to `<host>/v1/eligibility` and reach the contract's bare `/evaluate/...` paths with no rewriting.",
     ].join('\n'),
     tags: ['Eligibility Adapter'],
     security: [{ [bearerAuth.name]: [] }],
     request: {
       body: {
         required: true,
-        content: { 'application/json': { schema: HouseholdDeterminationRequest } },
+        content: {
+          'application/json': { schema: HouseholdDeterminationRequest },
+        },
       },
     },
     responses: {
@@ -571,7 +582,8 @@ export function buildOpenApiDocument() {
         content: { 'application/json': { schema: ProblemDetails } },
       },
       501: {
-        description: 'Program recognized but not yet implemented by this adapter.',
+        description:
+          'Program recognized but not yet implemented by this adapter.',
         content: { 'application/json': { schema: ProblemDetails } },
       },
     },
@@ -582,7 +594,7 @@ export function buildOpenApiDocument() {
     path: '/v1/eligibility/evaluate/expedited-screening',
     summary: 'Expedited SNAP screening.',
     description:
-      'Evaluates whether a household qualifies for expedited SNAP processing under 7 CFR §273.2(i). Returns the contract\'s ExpeditedScreeningResponse.',
+      "Evaluates whether a household qualifies for expedited SNAP processing under 7 CFR §273.2(i). Returns the contract's ExpeditedScreeningResponse.",
     tags: ['Eligibility Adapter'],
     security: [{ [bearerAuth.name]: [] }],
     request: {
@@ -656,8 +668,15 @@ export function buildOpenApiDocument() {
     ],
     tags: [
       { name: 'Meta', description: 'Liveness probes and health checks.' },
-      { name: 'Discovery', description: 'Find available rulesets and inspect their schema.' },
-      { name: 'Query', description: 'Evaluate fact-graph targets against caller-provided input.' },
+      {
+        name: 'Discovery',
+        description: 'Find available rulesets and inspect their schema.',
+      },
+      {
+        name: 'Query',
+        description:
+          'Evaluate fact-graph targets against caller-provided input.',
+      },
       {
         name: 'Eligibility Adapter',
         description:

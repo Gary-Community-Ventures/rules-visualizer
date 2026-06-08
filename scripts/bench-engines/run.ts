@@ -59,7 +59,13 @@ type WorkerResult = {
   outputSample: Record<string, string>
 }
 
-const ENGINES: Engine[] = ['vanilla-sjs', 'patched-sjs', 'wasm', 'jvm', 'native']
+const ENGINES: Engine[] = [
+  'vanilla-sjs',
+  'patched-sjs',
+  'wasm',
+  'jvm',
+  'native',
+]
 
 // Rulesets that can't run on a given engine. See the README's
 // "Compatibility" section for the full story; brief recap:
@@ -75,7 +81,10 @@ const ENGINE_SKIPS: Partial<Record<Engine, Set<string>>> = {
 
 function parseList(s: string | undefined): string[] | undefined {
   if (!s) return undefined
-  return s.split(',').map((x) => x.trim()).filter(Boolean)
+  return s
+    .split(',')
+    .map((x) => x.trim())
+    .filter(Boolean)
 }
 
 function parseArgs() {
@@ -86,10 +95,16 @@ function parseArgs() {
   }
   return {
     counts: (parseList(args.get('counts')) ?? ['1', '100', '1000']).map(Number),
-    rulesets: parseList(args.get('rulesets')) ?? ['snap-fy2026', 'snap-complete'],
-    engines: (parseList(args.get('engines')) as Engine[] | undefined) ?? ENGINES,
+    rulesets: parseList(args.get('rulesets')) ?? [
+      'snap-fy2026',
+      'snap-complete',
+    ],
+    engines:
+      (parseList(args.get('engines')) as Engine[] | undefined) ?? ENGINES,
     warmup: Number(args.get('warmup') ?? 5),
-    caseIndex: args.get('case-index') ? Number(args.get('case-index')) : undefined,
+    caseIndex: args.get('case-index')
+      ? Number(args.get('case-index'))
+      : undefined,
   }
 }
 
@@ -124,7 +139,11 @@ function runWorker(cell: Cell): Promise<WorkerResult> {
       // via FACTGRAPH_BENCH_BIN when needed.
       cmd =
         process.env.FACTGRAPH_BENCH_BIN ??
-        path.resolve(here, '../..', '../factgraph-rs/target/release/factgraph-bench')
+        path.resolve(
+          here,
+          '../..',
+          '../factgraph-rs/target/release/factgraph-bench'
+        )
       args = []
     }
     args.push(
@@ -195,14 +214,21 @@ function tableFor(
   const rows = results.filter((r) => r.ruleset === ruleset && r.count === count)
   rows.sort((a, b) => ENGINES.indexOf(a.engine) - ENGINES.indexOf(b.engine))
   const lines: string[] = []
-  lines.push(`### ${ruleset} — ${count} ${count === 1 ? 'execute' : 'executes'}`)
+  lines.push(
+    `### ${ruleset} — ${count} ${count === 1 ? 'execute' : 'executes'}`
+  )
   lines.push('')
-  lines.push('| engine | cold | mean | vs. best | p50 | p95 | p99 | throughput |')
+  lines.push(
+    '| engine | cold | mean | vs. best | p50 | p95 | p99 | throughput |'
+  )
   lines.push('| --- | --- | --- | --- | --- | --- | --- | --- |')
   // Find the fastest mean so we can show relative-speed multipliers.
   const fastestMean = Math.min(...rows.map((r) => r.meanMs))
   for (const r of rows) {
-    const rel = r.meanMs === fastestMean ? '1.00×' : `${(r.meanMs / fastestMean).toFixed(2)}×`
+    const rel =
+      r.meanMs === fastestMean
+        ? '1.00×'
+        : `${(r.meanMs / fastestMean).toFixed(2)}×`
     lines.push(
       `| ${r.engine} | ${fmt(r.coldMs)} | ${fmt(r.meanMs)} | ${rel} | ${fmt(r.p50Ms)} | ${fmt(r.p95Ms)} | ${fmt(r.p99Ms)} | ${r.throughputPerSec.toFixed(0)}/s |`
     )

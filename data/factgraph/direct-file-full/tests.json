@@ -1,1 +1,9 @@
-[{"id":"df-empty","name":"Empty inputs","inputs":{},"entities":{},"expect":{}}]
+[
+  {
+    "id": "df-empty",
+    "name": "Empty inputs",
+    "inputs": {},
+    "entities": {},
+    "expect": {}
+  }
+]

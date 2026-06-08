@@ -11,7 +11,7 @@ fact count.
 ## How this was assembled
 
 `regenerate.sh` concatenates every `<Facts>…</Facts>` block from the
-upstream tax/*.xml files into one `<FactDictionaryModule>`. Direct
+upstream tax/\*.xml files into one `<FactDictionaryModule>`. Direct
 File's own Java loader does effectively the same thing at startup; this
 script just produces the static aggregate so the visualizer and the
 bench can use it like any other ruleset.
@@ -33,7 +33,7 @@ changes had to land to get there:
    `factgraph-rs/.cargo/config.toml`).
 3. **Enable `time`'s `wasm-bindgen` feature**. `<Today/>` calls
    `OffsetDateTime::now_utc()`, which on bare wasm32 panics with
-   *"time not implemented on this platform"*. The `wasm-bindgen`
+   _"time not implemented on this platform"_. The `wasm-bindgen`
    feature on the `time` crate routes that through `js_sys::Date`.
 
 JVM works without modification (IRS's own engine on IRS's own ruleset).

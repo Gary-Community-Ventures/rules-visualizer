@@ -348,7 +348,15 @@ function walkLogic(
   }
 
   if (COMPARISON_OPS.has(logic.op)) {
-    return walkComparison(logic, parentNode, model, index, results, stack, depth)
+    return walkComparison(
+      logic,
+      parentNode,
+      model,
+      index,
+      results,
+      stack,
+      depth
+    )
   }
 
   // Anything else: opaque sub-expression. We can't observe its value
@@ -374,17 +382,28 @@ function walkBoolean(
     parentNode.content.type !== 'entity' && 'path' in parentNode.content
       ? parentNode.content.path
       : undefined
-  const parentValue =
-    parentPath != null ? results[parentPath] : undefined
+  const parentValue = parentPath != null ? results[parentPath] : undefined
 
   // Special-case Not: walk the single child and report the inversion
   // factually — no value judgment about whether the result is desirable.
   if (logic.op === 'Not') {
     const child = logic.children[0]
     if (!child) {
-      return { op: 'Not', value: parentValue ?? null, reason: 'NOT with no operand.' }
+      return {
+        op: 'Not',
+        value: parentValue ?? null,
+        reason: 'NOT with no operand.',
+      }
     }
-    const childTrace = walkLogic(child, parentNode, model, index, results, stack, depth)
+    const childTrace = walkLogic(
+      child,
+      parentNode,
+      model,
+      index,
+      results,
+      stack,
+      depth
+    )
     childTrace.decisive = true
     return {
       op: 'Not',
@@ -515,10 +534,18 @@ function walkComparison(
 
   const leftTrace = leftLogic
     ? walkLogic(leftLogic, parentNode, model, index, results, stack, depth)
-    : ({ op: 'Unknown', value: null, reason: 'Missing left operand' } as TraceNode)
+    : ({
+        op: 'Unknown',
+        value: null,
+        reason: 'Missing left operand',
+      } as TraceNode)
   const rightTrace = rightLogic
     ? walkLogic(rightLogic, parentNode, model, index, results, stack, depth)
-    : ({ op: 'Unknown', value: null, reason: 'Missing right operand' } as TraceNode)
+    : ({
+        op: 'Unknown',
+        value: null,
+        reason: 'Missing right operand',
+      } as TraceNode)
 
   const parentValue =
     parentNode.content.type !== 'entity' && 'path' in parentNode.content
@@ -620,7 +647,10 @@ function toCitations(
   }))
 }
 
-function makeUnsupported(node: ModelNode, results: Record<string, unknown>): TraceNode {
+function makeUnsupported(
+  node: ModelNode,
+  results: Record<string, unknown>
+): TraceNode {
   const path =
     node.content.type !== 'entity' && 'path' in node.content
       ? node.content.path

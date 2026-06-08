@@ -47,9 +47,10 @@ const dataDir = resolve(__dirname, '..', 'data', 'factgraph')
 // ---------------------------------------------------------------------
 function scalaListToArray<T>(list: unknown): T[] {
   const out: T[] = []
-  let cur = list as
-    | { sci_$colon$colon__f_head?: T; sci_$colon$colon__f_next?: unknown }
-    | null
+  let cur = list as {
+    sci_$colon$colon__f_head?: T
+    sci_$colon$colon__f_next?: unknown
+  } | null
   while (cur && 'sci_$colon$colon__f_head' in cur) {
     out.push(cur.sci_$colon$colon__f_head as T)
     cur = cur.sci_$colon$colon__f_next as typeof cur
@@ -214,9 +215,9 @@ async function main() {
 
   const target = '/eligible'
   const fact = graph.getFact(target)
-  const explainFn = fact[
-    'explain__Lgov_irs_factgraph_monads_MaybeVector'
-  ] as (() => Record<string, unknown>) | undefined
+  const explainFn = fact['explain__Lgov_irs_factgraph_monads_MaybeVector'] as
+    | (() => Record<string, unknown>)
+    | undefined
   if (!explainFn) {
     console.error('Fact.explain not available on this bundle')
     process.exit(1)
@@ -302,8 +303,7 @@ async function main() {
   }
   const missing = data.missingInputs ?? []
   console.log(`  ${missing.length} missing input(s):`)
-  for (const m of missing)
-    console.log(`    - ${m.path} (${m.dataType ?? '?'})`)
+  for (const m of missing) console.log(`    - ${m.path} (${m.dataType ?? '?'})`)
 }
 
 main().catch((e) => {

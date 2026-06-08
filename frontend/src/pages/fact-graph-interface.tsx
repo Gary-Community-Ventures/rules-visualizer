@@ -352,7 +352,6 @@ export function FactGraphInterfacePage() {
               )}
             </div>
           </section>
-
         </div>
       </div>
     </div>
@@ -928,9 +927,7 @@ function VisibleNodesSettings({
     : []
 
   const addSelectedPath = (path: string, afterPath = insertAfterPath) => {
-    const insertAfterIndex = afterPath
-      ? selectedPaths.indexOf(afterPath)
-      : -1
+    const insertAfterIndex = afterPath ? selectedPaths.indexOf(afterPath) : -1
     const nextPaths = [...selectedPaths]
     nextPaths.splice(insertAfterIndex + 1, 0, path)
     setSelectedPaths(nextPaths)
@@ -1021,7 +1018,8 @@ function VisibleNodesSettings({
                   value: '',
                 }
                 const sourceAttached = getAttachedConditions(sourceCondition)
-                const sourceDraft = draftCondition?.path === attachingPath ? draftCondition : null
+                const sourceDraft =
+                  draftCondition?.path === attachingPath ? draftCondition : null
                 setConditions({
                   ...conditions,
                   [attachingPath]: {
@@ -1045,14 +1043,15 @@ function VisibleNodesSettings({
                           sourceDraft?.op && sourceDraft.op !== 'visible'
                             ? sourceDraft.value
                             : undefined,
-                      effect: sourceDraft?.effect ?? 'both',
+                        effect: sourceDraft?.effect ?? 'both',
                         color: sourceDraft?.color,
                       },
                     ],
                   },
                 })
                 setAttachingPath(null)
-                if (draftCondition?.path === attachingPath) setDraftCondition(null)
+                if (draftCondition?.path === attachingPath)
+                  setDraftCondition(null)
               }}
             >
               <div className="flex items-start gap-2">
@@ -1120,9 +1119,9 @@ function VisibleNodesSettings({
                           selectedCondition.dependsOn === path
                             ? undefined
                             : selectedCondition.dependsOn,
-                        attached: getAttachedConditions(selectedCondition).filter(
-                          (item) => item.path !== path
-                        ),
+                        attached: getAttachedConditions(
+                          selectedCondition
+                        ).filter((item) => item.path !== path),
                       }
                     }
                     setConditions(nextConditions)
@@ -1180,232 +1179,29 @@ function VisibleNodesSettings({
                   className="mt-2 space-y-2"
                   onClick={(e) => e.stopPropagation()}
                 >
-                {draftCondition?.path === path && (
-                  <div className="flex flex-wrap items-center gap-2 rounded-lg border border-blue-200 bg-blue-50/70 px-2.5 py-2 text-xs shadow-sm">
-                    <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-blue-800">
-                      new
-                    </span>
-                    <select
-                      className="h-7 rounded border bg-background px-2 text-xs"
-                      value={draftCondition.type}
-                      onChange={(e) => {
-                        const type = e.target.value as typeof draftCondition.type
-                        if (type === 'node-value') {
-                          const nextAttached = [
-                            ...attachedConditions,
-                            {
-                              id: createConditionId(),
-                              type: 'node-value' as const,
-                              path,
-                              op: 'equals' as const,
-                              value: '',
-                              effect: 'both' as const,
-                            },
-                          ]
-                          setConditions({
-                            ...conditions,
-                            [path]: {
-                              ...condition,
-                              attached: nextAttached,
-                            },
-                          })
-                          setDraftCondition(null)
-                          setAttachingPath(null)
-                          return
-                        }
-                        setDraftCondition({
-                          ...draftCondition,
-                          type,
-                          op: type === 'other-node' ? 'visible' : 'equals',
-                        })
-                        setAttachingPath(type === 'other-node' ? path : null)
-                      }}
-                    >
-                      <option value="node-value">this node value</option>
-                      <option value="other-node">another node</option>
-                    </select>
-                    <select
-                      className="h-7 rounded border bg-background px-2 text-xs"
-                      value={draftCondition.op}
-                      onChange={(e) =>
-                        setDraftCondition({
-                          ...draftCondition,
-                          op: e.target.value as typeof draftCondition.op,
-                        })
-                      }
-                    >
-                      <option value="visible">is showing</option>
-                      <option value="equals">equals</option>
-                      <option value="gt">greater than</option>
-                      <option value="lt">less than</option>
-                    </select>
-                    {draftCondition.op !== 'visible' && (
-                      <Input
-                        className="h-7 w-32 text-xs"
-                        value={draftCondition.value}
-                        onChange={(e) =>
-                          setDraftCondition({
-                            ...draftCondition,
-                            value: e.target.value,
-                          })
-                        }
-                        placeholder="value"
-                      />
-                    )}
-                    <ColorOnlyCheckbox
-                      checked={draftCondition.effect === 'color'}
-                      onChange={(checked) =>
-                        setDraftCondition({
-                          ...draftCondition,
-                          effect: checked ? 'color' : 'both',
-                        })
-                      }
-                    />
-                    <ConditionColorSelect
-                      value={draftCondition.color}
-                      onChange={(color) =>
-                        setDraftCondition({ ...draftCondition, color })
-                      }
-                    />
-                    <span className="rounded-full bg-background px-2.5 py-1 text-xs text-blue-800 shadow-sm">
-                      Click target card
-                    </span>
-                    <button
-                      className="rounded px-2 py-1 text-xs text-muted-foreground hover:bg-background hover:text-foreground"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        setDraftCondition(null)
-                        if (attachingPath === path) setAttachingPath(null)
-                      }}
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                )}
-
-                {hasValueCondition || attachedConditions.length > 0 ? (
-                  <div className="space-y-2">
-                    {hasValueCondition && (
-                      <div className="flex flex-wrap items-center gap-2 rounded-lg border bg-background/90 px-2.5 py-2 text-xs shadow-sm">
-                        <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-700">
-                          condition
-                        </span>
-                        <span className="rounded border bg-background px-2 py-1.5 text-xs text-foreground">
-                          this node value
-                        </span>
-                        <select
-                          className="h-7 rounded border bg-background px-2 text-xs"
-                          value={condition.op}
-                          onChange={(e) => {
-                            const op = e.target.value as NodeCondition['op']
-                            setConditions({
-                              ...conditions,
-                              [path]: {
-                                ...condition,
-                                op,
-                                value: op === 'always' ? '' : condition.value,
+                  {draftCondition?.path === path && (
+                    <div className="flex flex-wrap items-center gap-2 rounded-lg border border-blue-200 bg-blue-50/70 px-2.5 py-2 text-xs shadow-sm">
+                      <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-blue-800">
+                        new
+                      </span>
+                      <select
+                        className="h-7 rounded border bg-background px-2 text-xs"
+                        value={draftCondition.type}
+                        onChange={(e) => {
+                          const type = e.target
+                            .value as typeof draftCondition.type
+                          if (type === 'node-value') {
+                            const nextAttached = [
+                              ...attachedConditions,
+                              {
+                                id: createConditionId(),
+                                type: 'node-value' as const,
+                                path,
+                                op: 'equals' as const,
+                                value: '',
+                                effect: 'both' as const,
                               },
-                            })
-                          }}
-                        >
-                          {conditionOptions
-                            .filter((option) => option.value !== 'always')
-                            .map((option) => (
-                              <option key={option.value} value={option.value}>
-                                {option.label}
-                              </option>
-                            ))}
-                        </select>
-                        <ConditionValueInput
-                          node={node}
-                          condition={condition}
-                          onChange={(value) =>
-                            setConditions({
-                              ...conditions,
-                              [path]: { ...condition, value },
-                            })
-                          }
-                        />
-                        <ColorOnlyCheckbox
-                          checked={condition.effect === 'color'}
-                          onChange={(checked) =>
-                            setConditions({
-                              ...conditions,
-                              [path]: {
-                                ...condition,
-                                effect: checked ? 'color' : 'both',
-                              },
-                            })
-                          }
-                        />
-                        <ConditionColorSelect
-                          value={condition.color}
-                          onChange={(color) =>
-                            setConditions({
-                              ...conditions,
-                              [path]: { ...condition, color },
-                            })
-                          }
-                        />
-                        <button
-                          className="ml-auto rounded px-2 py-1 text-xs text-muted-foreground hover:bg-muted hover:text-foreground"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            setConditions({
-                              ...conditions,
-                              [path]: { ...condition, op: 'always', value: '' },
-                            })
-                          }}
-                        >
-                          Remove
-                        </button>
-                      </div>
-                    )}
-                    {attachedConditions.map((attachedCondition) => (
-                      <div
-                        key={attachedCondition.id}
-                        className="flex flex-wrap items-center gap-2 rounded-lg border bg-background/90 px-2.5 py-2 text-xs shadow-sm"
-                      >
-                        <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-700">
-                          condition
-                        </span>
-                        <span className="max-w-64 truncate rounded border bg-background px-2 py-1.5 font-mono text-[11px] text-foreground">
-                          {attachedCondition.path === path
-                            ? 'this node value'
-                            : attachedCondition.path}
-                        </span>
-                        <select
-                          className="h-7 rounded border bg-background px-2 text-xs"
-                          value={
-                            attachedCondition.type === 'node-visible'
-                              ? 'visible'
-                              : (attachedCondition.op ?? 'equals')
-                          }
-                          onChange={(e) => {
-                            const value = e.target.value
-                            const nextAttached = attachedConditions.map(
-                              (item) => {
-                                if (item.id !== attachedCondition.id) return item
-                                if (value === 'visible') {
-                                  return {
-                                    id: item.id,
-                                    type: 'node-visible' as const,
-                                    path: item.path,
-                                    effect: item.effect,
-                                    color: item.color,
-                                  }
-                                }
-                                return {
-                                  ...item,
-                                  type: 'node-value' as const,
-                                  op: value as Exclude<
-                                    NodeCondition['op'],
-                                    'always'
-                                  >,
-                                  value: item.value ?? '',
-                                }
-                              }
-                            )
+                            ]
                             setConditions({
                               ...conditions,
                               [path]: {
@@ -1413,29 +1209,264 @@ function VisibleNodesSettings({
                                 attached: nextAttached,
                               },
                             })
-                          }}
-                        >
-                          <option value="visible">is showing</option>
-                          {getConditionOptions(pathToNode.get(attachedCondition.path))
-                            .filter((option) => option.value !== 'always')
-                            .map((option) => (
-                              <option key={option.value} value={option.value}>
-                                {option.label}
-                              </option>
-                            ))}
-                        </select>
-                        {attachedCondition.type === 'node-value' && (
-                          <ConditionValueInput
-                            node={pathToNode.get(attachedCondition.path)}
-                            condition={{
-                              op: attachedCondition.op ?? 'equals',
-                              value: attachedCondition.value ?? '',
+                            setDraftCondition(null)
+                            setAttachingPath(null)
+                            return
+                          }
+                          setDraftCondition({
+                            ...draftCondition,
+                            type,
+                            op: type === 'other-node' ? 'visible' : 'equals',
+                          })
+                          setAttachingPath(type === 'other-node' ? path : null)
+                        }}
+                      >
+                        <option value="node-value">this node value</option>
+                        <option value="other-node">another node</option>
+                      </select>
+                      <select
+                        className="h-7 rounded border bg-background px-2 text-xs"
+                        value={draftCondition.op}
+                        onChange={(e) =>
+                          setDraftCondition({
+                            ...draftCondition,
+                            op: e.target.value as typeof draftCondition.op,
+                          })
+                        }
+                      >
+                        <option value="visible">is showing</option>
+                        <option value="equals">equals</option>
+                        <option value="gt">greater than</option>
+                        <option value="lt">less than</option>
+                      </select>
+                      {draftCondition.op !== 'visible' && (
+                        <Input
+                          className="h-7 w-32 text-xs"
+                          value={draftCondition.value}
+                          onChange={(e) =>
+                            setDraftCondition({
+                              ...draftCondition,
+                              value: e.target.value,
+                            })
+                          }
+                          placeholder="value"
+                        />
+                      )}
+                      <ColorOnlyCheckbox
+                        checked={draftCondition.effect === 'color'}
+                        onChange={(checked) =>
+                          setDraftCondition({
+                            ...draftCondition,
+                            effect: checked ? 'color' : 'both',
+                          })
+                        }
+                      />
+                      <ConditionColorSelect
+                        value={draftCondition.color}
+                        onChange={(color) =>
+                          setDraftCondition({ ...draftCondition, color })
+                        }
+                      />
+                      <span className="rounded-full bg-background px-2.5 py-1 text-xs text-blue-800 shadow-sm">
+                        Click target card
+                      </span>
+                      <button
+                        className="rounded px-2 py-1 text-xs text-muted-foreground hover:bg-background hover:text-foreground"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setDraftCondition(null)
+                          if (attachingPath === path) setAttachingPath(null)
+                        }}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  )}
+
+                  {hasValueCondition || attachedConditions.length > 0 ? (
+                    <div className="space-y-2">
+                      {hasValueCondition && (
+                        <div className="flex flex-wrap items-center gap-2 rounded-lg border bg-background/90 px-2.5 py-2 text-xs shadow-sm">
+                          <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-700">
+                            condition
+                          </span>
+                          <span className="rounded border bg-background px-2 py-1.5 text-xs text-foreground">
+                            this node value
+                          </span>
+                          <select
+                            className="h-7 rounded border bg-background px-2 text-xs"
+                            value={condition.op}
+                            onChange={(e) => {
+                              const op = e.target.value as NodeCondition['op']
+                              setConditions({
+                                ...conditions,
+                                [path]: {
+                                  ...condition,
+                                  op,
+                                  value: op === 'always' ? '' : condition.value,
+                                },
+                              })
                             }}
-                            onChange={(value) => {
+                          >
+                            {conditionOptions
+                              .filter((option) => option.value !== 'always')
+                              .map((option) => (
+                                <option key={option.value} value={option.value}>
+                                  {option.label}
+                                </option>
+                              ))}
+                          </select>
+                          <ConditionValueInput
+                            node={node}
+                            condition={condition}
+                            onChange={(value) =>
+                              setConditions({
+                                ...conditions,
+                                [path]: { ...condition, value },
+                              })
+                            }
+                          />
+                          <ColorOnlyCheckbox
+                            checked={condition.effect === 'color'}
+                            onChange={(checked) =>
+                              setConditions({
+                                ...conditions,
+                                [path]: {
+                                  ...condition,
+                                  effect: checked ? 'color' : 'both',
+                                },
+                              })
+                            }
+                          />
+                          <ConditionColorSelect
+                            value={condition.color}
+                            onChange={(color) =>
+                              setConditions({
+                                ...conditions,
+                                [path]: { ...condition, color },
+                              })
+                            }
+                          />
+                          <button
+                            className="ml-auto rounded px-2 py-1 text-xs text-muted-foreground hover:bg-muted hover:text-foreground"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setConditions({
+                                ...conditions,
+                                [path]: {
+                                  ...condition,
+                                  op: 'always',
+                                  value: '',
+                                },
+                              })
+                            }}
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      )}
+                      {attachedConditions.map((attachedCondition) => (
+                        <div
+                          key={attachedCondition.id}
+                          className="flex flex-wrap items-center gap-2 rounded-lg border bg-background/90 px-2.5 py-2 text-xs shadow-sm"
+                        >
+                          <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-700">
+                            condition
+                          </span>
+                          <span className="max-w-64 truncate rounded border bg-background px-2 py-1.5 font-mono text-[11px] text-foreground">
+                            {attachedCondition.path === path
+                              ? 'this node value'
+                              : attachedCondition.path}
+                          </span>
+                          <select
+                            className="h-7 rounded border bg-background px-2 text-xs"
+                            value={
+                              attachedCondition.type === 'node-visible'
+                                ? 'visible'
+                                : (attachedCondition.op ?? 'equals')
+                            }
+                            onChange={(e) => {
+                              const value = e.target.value
+                              const nextAttached = attachedConditions.map(
+                                (item) => {
+                                  if (item.id !== attachedCondition.id)
+                                    return item
+                                  if (value === 'visible') {
+                                    return {
+                                      id: item.id,
+                                      type: 'node-visible' as const,
+                                      path: item.path,
+                                      effect: item.effect,
+                                      color: item.color,
+                                    }
+                                  }
+                                  return {
+                                    ...item,
+                                    type: 'node-value' as const,
+                                    op: value as Exclude<
+                                      NodeCondition['op'],
+                                      'always'
+                                    >,
+                                    value: item.value ?? '',
+                                  }
+                                }
+                              )
+                              setConditions({
+                                ...conditions,
+                                [path]: {
+                                  ...condition,
+                                  attached: nextAttached,
+                                },
+                              })
+                            }}
+                          >
+                            <option value="visible">is showing</option>
+                            {getConditionOptions(
+                              pathToNode.get(attachedCondition.path)
+                            )
+                              .filter((option) => option.value !== 'always')
+                              .map((option) => (
+                                <option key={option.value} value={option.value}>
+                                  {option.label}
+                                </option>
+                              ))}
+                          </select>
+                          {attachedCondition.type === 'node-value' && (
+                            <ConditionValueInput
+                              node={pathToNode.get(attachedCondition.path)}
+                              condition={{
+                                op: attachedCondition.op ?? 'equals',
+                                value: attachedCondition.value ?? '',
+                              }}
+                              onChange={(value) => {
+                                const nextAttached = attachedConditions.map(
+                                  (item) =>
+                                    item.id === attachedCondition.id
+                                      ? { ...item, value }
+                                      : item
+                                )
+                                setConditions({
+                                  ...conditions,
+                                  [path]: {
+                                    ...condition,
+                                    attached: nextAttached,
+                                  },
+                                })
+                              }}
+                            />
+                          )}
+                          <ColorOnlyCheckbox
+                            checked={attachedCondition.effect === 'color'}
+                            onChange={(checked) => {
                               const nextAttached = attachedConditions.map(
                                 (item) =>
                                   item.id === attachedCondition.id
-                                    ? { ...item, value }
+                                    ? {
+                                        ...item,
+                                        effect: (checked
+                                          ? 'color'
+                                          : 'both') as ConditionEffect,
+                                      }
                                     : item
                               )
                               setConditions({
@@ -1447,64 +1478,45 @@ function VisibleNodesSettings({
                               })
                             }}
                           />
-                        )}
-                        <ColorOnlyCheckbox
-                          checked={attachedCondition.effect === 'color'}
-                          onChange={(checked) => {
-                            const nextAttached = attachedConditions.map(
-                              (item) =>
-                                item.id === attachedCondition.id
-                                  ? {
-                                      ...item,
-                                      effect: (checked
-                                        ? 'color'
-                                        : 'both') as ConditionEffect,
-                                    }
-                                  : item
-                            )
-                            setConditions({
-                              ...conditions,
-                              [path]: { ...condition, attached: nextAttached },
-                            })
-                          }}
-                        />
-                        <ConditionColorSelect
-                          value={attachedCondition.color}
-                          onChange={(color) => {
-                            const nextAttached = attachedConditions.map(
-                              (item) =>
-                                item.id === attachedCondition.id
-                                  ? { ...item, color }
-                                  : item
-                            )
-                            setConditions({
-                              ...conditions,
-                              [path]: { ...condition, attached: nextAttached },
-                            })
-                          }}
-                        />
-                        <button
-                          className="ml-auto rounded px-2 py-1 text-xs text-muted-foreground hover:bg-muted hover:text-foreground"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            setConditions({
-                              ...conditions,
-                              [path]: {
-                                ...condition,
-                                attached: attachedConditions.filter(
-                                  (item) => item.id !== attachedCondition.id
-                                ),
-                              },
-                            })
-                          }}
-                        >
-                          Remove
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                ) : null}
-
+                          <ConditionColorSelect
+                            value={attachedCondition.color}
+                            onChange={(color) => {
+                              const nextAttached = attachedConditions.map(
+                                (item) =>
+                                  item.id === attachedCondition.id
+                                    ? { ...item, color }
+                                    : item
+                              )
+                              setConditions({
+                                ...conditions,
+                                [path]: {
+                                  ...condition,
+                                  attached: nextAttached,
+                                },
+                              })
+                            }}
+                          />
+                          <button
+                            className="ml-auto rounded px-2 py-1 text-xs text-muted-foreground hover:bg-muted hover:text-foreground"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setConditions({
+                                ...conditions,
+                                [path]: {
+                                  ...condition,
+                                  attached: attachedConditions.filter(
+                                    (item) => item.id !== attachedCondition.id
+                                  ),
+                                },
+                              })
+                            }}
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  ) : null}
                 </div>
               )}
             </div>

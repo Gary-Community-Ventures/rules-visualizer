@@ -33,10 +33,17 @@ function householdRequest(overrides: Record<string, unknown> = {}) {
         isDisabled: false,
         programs: ['snap'],
         income: [
-          { type: 'employed', amount: 1200, frequency: 'monthly', incomeBasis: 'gross' },
+          {
+            type: 'employed',
+            amount: 1200,
+            frequency: 'monthly',
+            incomeBasis: 'gross',
+          },
         ],
         expenses: [{ category: 'housing', amount: 800, frequency: 'monthly' }],
-        assets: [{ type: 'liquid', value: 500, description: 'checking account' }],
+        assets: [
+          { type: 'liquid', value: 500, description: 'checking account' },
+        ],
       },
     ],
     verificationSummary: [],
@@ -49,7 +56,9 @@ function householdRequest(overrides: Record<string, unknown> = {}) {
 // ---------------------------------------------------------------------------
 
 test('SNAP determination — canonical applicant → approved ProgramDecision', async () => {
-  const res = await request(app).post(DETERMINATION_URL).send(householdRequest())
+  const res = await request(app)
+    .post(DETERMINATION_URL)
+    .send(householdRequest())
   assert.equal(res.status, 200)
   assert.equal(res.body.program, 'snap')
   assert.equal(res.body.status, 'approved')
@@ -67,7 +76,11 @@ test('SNAP determination — canonical applicant → approved ProgramDecision', 
 })
 
 test('SNAP determination echoes metadata unchanged (adapter passthrough rule)', async () => {
-  const metadata = { applicationId: 'echo-me', nested: { a: 1 }, traceId: 'xyz' }
+  const metadata = {
+    applicationId: 'echo-me',
+    nested: { a: 1 },
+    traceId: 'xyz',
+  }
   const res = await request(app)
     .post(DETERMINATION_URL)
     .send(householdRequest({ metadata }))
@@ -103,14 +116,22 @@ test('SNAP determination with trace → denialReasonCode + x-decidingPath when d
   // Push wages well over the gross-income limit for a household of 1.
   const req = householdRequest()
   req.members[0].income = [
-    { type: 'employed', amount: 9000, frequency: 'monthly', incomeBasis: 'gross' },
+    {
+      type: 'employed',
+      amount: 9000,
+      frequency: 'monthly',
+      incomeBasis: 'gross',
+    },
   ]
   ;(req as Record<string, unknown>).include = ['trace']
   const res = await request(app).post(DETERMINATION_URL).send(req)
   assert.equal(res.status, 200)
   assert.equal(res.body.status, 'denied')
   assert.ok(typeof res.body.denialReasonCode === 'string')
-  assert.ok(res.body['x-decidingPath'], 'expected x-decidingPath when trace requested')
+  assert.ok(
+    res.body['x-decidingPath'],
+    'expected x-decidingPath when trace requested'
+  )
 })
 
 test('determination for an unsupported per-member program → 501', async () => {
@@ -183,6 +204,8 @@ test('medicaid ex parte → 501 not supported', async () => {
 // ---------------------------------------------------------------------------
 
 test('expedited screening with no members → 400', async () => {
-  const res = await request(app).post(EXPEDITED_URL).send({ household: { size: 1 } })
+  const res = await request(app)
+    .post(EXPEDITED_URL)
+    .send({ household: { size: 1 } })
   assert.equal(res.status, 400)
 })

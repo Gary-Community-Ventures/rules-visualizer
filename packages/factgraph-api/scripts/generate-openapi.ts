@@ -30,7 +30,10 @@ export function renderOpenApiYaml(): string {
 }
 
 // Only write when run as a script (not when imported by the drift test).
-if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1])) {
+if (
+  process.argv[1] &&
+  fileURLToPath(import.meta.url) === path.resolve(process.argv[1])
+) {
   writeFileSync(OUT, renderOpenApiYaml())
   console.log(`Wrote ${OUT}`)
 }

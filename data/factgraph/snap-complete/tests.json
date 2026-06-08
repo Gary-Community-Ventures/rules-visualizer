@@ -451,30 +451,12 @@
       ]
     },
     "expect": {
-      "/members/*/isOnlyHouseholdParentOfDependentChild": [
-        true,
-        false
-      ],
-      "/members/*/isSingleParentOfDependentChild": [
-        true,
-        false
-      ],
-      "/members/*/isStudentResponsibleForDependentChild": [
-        true,
-        false
-      ],
-      "/members/*/meetsStudentEligibilityExemption": [
-        true,
-        false
-      ],
-      "/members/*/isIneligibleStudent": [
-        false,
-        false
-      ],
-      "/members/*/isPartOfHousehold": [
-        true,
-        true
-      ]
+      "/members/*/isOnlyHouseholdParentOfDependentChild": [true, false],
+      "/members/*/isSingleParentOfDependentChild": [true, false],
+      "/members/*/isStudentResponsibleForDependentChild": [true, false],
+      "/members/*/meetsStudentEligibilityExemption": [true, false],
+      "/members/*/isIneligibleStudent": [false, false],
+      "/members/*/isPartOfHousehold": [true, true]
     }
   },
   {
@@ -593,26 +575,11 @@
         true,
         false
       ],
-      "/members/*/isSingleParentOfDependentChild": [
-        true,
-        false
-      ],
-      "/members/*/isStudentResponsibleForDependentChild": [
-        true,
-        false
-      ],
-      "/members/*/meetsStudentEligibilityExemption": [
-        true,
-        false
-      ],
-      "/members/*/isIneligibleStudent": [
-        false,
-        false
-      ],
-      "/members/*/isPartOfHousehold": [
-        true,
-        true
-      ]
+      "/members/*/isSingleParentOfDependentChild": [true, false],
+      "/members/*/isStudentResponsibleForDependentChild": [true, false],
+      "/members/*/meetsStudentEligibilityExemption": [true, false],
+      "/members/*/isIneligibleStudent": [false, false],
+      "/members/*/isPartOfHousehold": [true, true]
     }
   },
   {

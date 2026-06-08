@@ -25,10 +25,7 @@ test('GET /openapi.json returns a valid OpenAPI 3.1 document', async () => {
   assert.ok(res.body.components.schemas.MissingInput)
   assert.ok(res.body.components.schemas.ProblemDetails)
   // Bearer auth security scheme.
-  assert.equal(
-    res.body.components.securitySchemes.bearerAuth.scheme,
-    'bearer'
-  )
+  assert.equal(res.body.components.securitySchemes.bearerAuth.scheme, 'bearer')
 })
 
 test('GET /openapi.yaml returns the same document in YAML', async () => {

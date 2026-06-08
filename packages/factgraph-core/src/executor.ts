@@ -161,7 +161,9 @@ function patchFactProtoOnce(factInstance: unknown): void {
 // Adds a counter wrapper around the cached get. Read counts via
 // factCallCounts; reset with resetFactCallCounts().
 export const factCallCounts = new Map<string, number>()
-export function resetFactCallCounts(): void { factCallCounts.clear() }
+export function resetFactCallCounts(): void {
+  factCallCounts.clear()
+}
 
 /** EXEC_TIME_SETS=1 populates this with total graph.set time + call count. */
 export const graphSetTimings = { elapsedMs: 0, count: 0 }
@@ -182,7 +184,8 @@ function maybeInstallTraceWrapper(factInstance: unknown): void {
   }): unknown {
     factCallCounts.set(
       String(this.Lgov_irs_factgraph_Fact__f_path),
-      (factCallCounts.get(String(this.Lgov_irs_factgraph_Fact__f_path)) ?? 0) + 1
+      (factCallCounts.get(String(this.Lgov_irs_factgraph_Fact__f_path)) ?? 0) +
+        1
     )
     return cachedGet.call(this)
   }

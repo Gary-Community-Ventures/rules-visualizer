@@ -107,11 +107,26 @@ function processAssignment(data: Assignment): CaseResult[] {
       const ev = edited[p]
       let diff: CaseDiff | null = null
       if (!(p in base)) {
-        diff = { path: p, baseValue: undefined, editedValue: ev, changeType: 'added' }
+        diff = {
+          path: p,
+          baseValue: undefined,
+          editedValue: ev,
+          changeType: 'added',
+        }
       } else if (!(p in edited)) {
-        diff = { path: p, baseValue: bv, editedValue: undefined, changeType: 'removed' }
+        diff = {
+          path: p,
+          baseValue: bv,
+          editedValue: undefined,
+          changeType: 'removed',
+        }
       } else if (!compareValues(bv, ev)) {
-        diff = { path: p, baseValue: bv, editedValue: ev, changeType: 'changed' }
+        diff = {
+          path: p,
+          baseValue: bv,
+          editedValue: ev,
+          changeType: 'changed',
+        }
       }
       if (diff) {
         allDiffs.push(diff)

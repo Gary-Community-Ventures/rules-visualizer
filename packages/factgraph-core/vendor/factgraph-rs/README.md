@@ -20,11 +20,11 @@ The reference engine ships as a Scala application that gets compiled to Scala.js
 
 Numbers we measured (release build, M-series Mac):
 
-| Workload | factgraph-rs | reference Scala.js | speedup |
-| --- | --- | --- | --- |
-| snap-fy2026, 1 execute | 0.2 ms | ~ish (small ruleset) | — |
-| snap-complete, 1 execute (5-member household) | 1.8 ms | ~350 ms (patched) / ~2,015 ms (upstream) | ~190× / ~1,100× |
-| snap-fy2026, 1,000-case simulation | 108 ms via worker pool | 2,684 ms recorded baseline | **~25×** |
+| Workload                                      | factgraph-rs           | reference Scala.js                       | speedup         |
+| --------------------------------------------- | ---------------------- | ---------------------------------------- | --------------- |
+| snap-fy2026, 1 execute                        | 0.2 ms                 | ~ish (small ruleset)                     | —               |
+| snap-complete, 1 execute (5-member household) | 1.8 ms                 | ~350 ms (patched) / ~2,015 ms (upstream) | ~190× / ~1,100× |
+| snap-fy2026, 1,000-case simulation            | 108 ms via worker pool | 2,684 ms recorded baseline               | **~25×**        |
 
 The 25× number is the apples-to-apples one: recorded against the rules-visualizer simulation runner's 1,000-case `snap-fy2026` workload, then re-run on the WASM backend through the same worker pool.
 
@@ -68,8 +68,9 @@ const { FactGraph } = require('./pkg-node/factgraph_wasm.js')
 const fs = require('node:fs')
 
 const xml = fs.readFileSync('eligibility.xml', 'utf-8')
-const handle = new FactGraph(xml)              // parse once
-const out = handle.execute({                   // execute many times
+const handle = new FactGraph(xml) // parse once
+const out = handle.execute({
+  // execute many times
   inputs: { '/grossEarnedIncome': 1500 },
   entities: { '/members': [{ '/members/*/age': 30 }] },
 })

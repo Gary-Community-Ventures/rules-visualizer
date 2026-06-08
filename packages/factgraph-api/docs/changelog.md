@@ -86,14 +86,14 @@ value}` objects so callers can correlate output to specific rows
 - **OpenAPI 3.1 spec.** Generated from the same Zod schemas that
   validate runtime requests, plus hand-written component schemas for the
   response shapes. Served at:
-    - `GET /v1/factgraph/openapi.json` — machine-readable spec, feed to
-      `openapi-typescript`, `openapi-generator`, etc.
-    - `GET /v1/factgraph/openapi.yaml` — same spec, YAML flavor.
-    - `GET /v1/factgraph/docs` — interactive Swagger UI with an
-      Authorize dialog where partners paste their bearer token for live
-      "Try it" calls.
-  All three are unauthenticated (mounted before the bearer-auth
-  middleware) so partners can read the contract without credentials.
+  - `GET /v1/factgraph/openapi.json` — machine-readable spec, feed to
+    `openapi-typescript`, `openapi-generator`, etc.
+  - `GET /v1/factgraph/openapi.yaml` — same spec, YAML flavor.
+  - `GET /v1/factgraph/docs` — interactive Swagger UI with an
+    Authorize dialog where partners paste their bearer token for live
+    "Try it" calls.
+    All three are unauthenticated (mounted before the bearer-auth
+    middleware) so partners can read the contract without credentials.
 - **Public docs site on GitHub Pages.** Same OpenAPI spec, rendered by
   Redoc, deployed at
   [gary-community-ventures.github.io/rules-visualizer](https://gary-community-ventures.github.io/rules-visualizer/).
