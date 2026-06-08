@@ -534,10 +534,16 @@ statuses), pull the option list from
   `/expenses` collections each have a `frequency` enum (Monthly,
   Weekly, BiWeekly, …). Pass through whatever frequency the source
   data has; the engine handles the conversion to monthly internally.
-- **`memberId` cross-references.** When a row references a member
-  (e.g. `/incomes/*/memberId`, `/expenses/*/memberId`), pass the
-  adapter row's `id` string and the server resolves it. The positional
-  `#N` form (e.g. `"#0"` = first member in the array) also works.
+- **`memberId` cross-references use the positional `#N` form.** When a
+  row references a member (e.g. `/incomes/*/memberId`,
+  `/expenses/*/memberId`), set the value to `#N`, where `N` is the
+  member's zero-based index in the `/members` array (`#0` = first member).
+  The engine resolves member identity positionally; an id-**string** value
+  (e.g. `"head"`) is **not** resolved on the `/query` endpoint today — the
+  row silently attaches to no member, so its income/expense computes to
+  `0` and you get a wrong-but-plausible result. (The `/v1/eligibility`
+  adapter endpoints handle this for you: they accept human member `id`s
+  and translate to `#N` internally.)
 - **`include: ["trace"]` gives you the `denialReasonCode` material.**
   When set, the response includes
   `decidingPaths["/eligibilityCategory"]` (a flat chain of the deciding
@@ -552,12 +558,15 @@ statuses), pull the option list from
 
 ## Known limitations
 
-- **No SNAP-shaped convenience endpoints yet.** Every call currently
-  goes through `POST /v1/factgraph/{rulesetId}/query`. Wrapper
-  endpoints matching the adapter contract's URL shape
-  (`/evaluate/expedited-screening`, `/evaluate/determination`) can be
-  added if that's a cleaner fit for your client code than the generic
-  query shape.
+- **SNAP-shaped convenience endpoints now exist.** The
+  `/v1/eligibility/evaluate/*` adapter endpoints (see the **Eligibility
+  Adapter** tag in the OpenAPI docs) wrap the translation in this
+  walkthrough behind the contract's URL shape — send a
+  `HouseholdDeterminationRequest` / `ExpeditedScreeningRequest`, get a
+  `ProgramDecision` / `ExpeditedScreeningResponse`. The generic
+  `POST /v1/factgraph/{rulesetId}/query` remains available for advanced or
+  tooling use where you want direct access to targets, traces, and
+  per-fact values.
 - **Per-member trace** for collection-scoped targets isn't built yet.
   Per-member outputs come back as `[{memberId, value}]` arrays in
   `values`, but `traces` only walks scalar targets today.

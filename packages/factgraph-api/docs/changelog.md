@@ -5,6 +5,33 @@ without surface impact aren't logged here; see git history for those.
 
 ## Unreleased
 
+### Added
+
+- **Eligibility adapter endpoints** (`/v1/eligibility/evaluate/*`) —
+  domain-oriented wrappers conforming to the partner team's
+  [eligibility-adapter contract](https://github.com/codeforamerica/safety-net-blueprint/blob/main/packages/contracts/eligibility-adapter-openapi.yaml).
+  The caller sends an ORCA-shaped request and receives a `ProgramDecision`;
+  no Fact Graph paths are exposed. Path translation, the defaulting policy
+  for fields the request doesn't carry, and the result mapping are all
+  owned by the adapter.
+  - `POST /v1/eligibility/evaluate/determination` — final SNAP
+    determination (household program) against `snap-complete`. Per-applicant
+    programs (medicaid/chip/tanf/ccdf) return `501` (not yet implemented).
+  - `POST /v1/eligibility/evaluate/expedited-screening` — expedited SNAP
+    screening (7 CFR §273.2(i)).
+  - `POST /v1/eligibility/evaluate/medicaid-ex-parte` — reserved; returns
+    `501` (depends on electronic data-exchange results not yet modeled).
+  - Mounted at `/v1/eligibility` so a consumer can set its adapter base URL
+    to `<host>/v1/eligibility` and reach the contract's bare `/evaluate/...`
+    paths with no rewriting.
+  - `ProgramDecision` carries `x-`-prefixed overlay extensions (sanctioned
+    by the contract's `additionalProperties: true`): `x-allotment`,
+    `x-proratedAllotment`, `x-expedited`, `x-translationNotes` (the
+    defaulting assumptions the determination is conditional on),
+    `x-missingInputs` (progressive-disclosure hook when `status: pending`),
+    and `x-decidingPath` / `x-trace` when `include: ["trace"]` is set.
+  - Documented in the OpenAPI spec under the **Eligibility Adapter** tag.
+
 ### Changed
 
 - **Unified `inputs` shape.** The request body's `inputs` field now

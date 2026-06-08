@@ -24,6 +24,10 @@ import {
 import { z } from 'zod'
 
 import { QueryRequestSchema } from './routes/query.js'
+import {
+  HouseholdDeterminationRequestSchema,
+  ExpeditedScreeningRequestSchema,
+} from './translate/snap.js'
 
 // Must run before any .openapi() call. Idempotent.
 extendZodWithOpenApi(z)
@@ -307,6 +311,88 @@ export function buildOpenApiDocument() {
   )
 
   // -------------------------------------------------------------------------
+  // Eligibility adapter schemas (domain-oriented contract)
+  // -------------------------------------------------------------------------
+
+  const HouseholdDeterminationRequest = registry.register(
+    'HouseholdDeterminationRequest',
+    HouseholdDeterminationRequestSchema.openapi({
+      description:
+        'Final SNAP determination request for a household. Mirrors the blueprint eligibility-adapter contract (ORCA shape). `include: ["trace"]` is an adapter overlay that adds denial-reason and explanation detail to the response.',
+    })
+  )
+
+  const ExpeditedScreeningRequest = registry.register(
+    'ExpeditedScreeningRequest',
+    ExpeditedScreeningRequestSchema.openapi({
+      description:
+        'Expedited SNAP screening request (7 CFR §273.2(i)). The base contract is household-only; this adapter accepts member/resource context via the overlay the contract sanctions, because the engine needs it to evaluate the criteria.',
+    })
+  )
+
+  const ProgramDecision = registry.register(
+    'ProgramDecision',
+    z
+      .object({
+        metadata: z.record(z.string(), z.unknown()).openapi({
+          description:
+            'Echoed back unchanged from the request (adapter passthrough rule). The adapter never inspects this field.',
+        }),
+        program: z.string().openapi({ example: 'snap' }),
+        status: z.enum(['pending', 'approved', 'denied', 'ineligible']).openapi({
+          description:
+            'Eligibility outcome. `pending` here means the engine could not resolve eligibility because inputs were missing — the still-needed writables are surfaced on `x-missingInputs`.',
+        }),
+        path: z.enum(['auto', 'manual']).openapi({
+          description: '`auto` — resolved by the rules engine with no caseworker in the loop.',
+        }),
+        denialReasonCode: z.string().optional().openapi({
+          description:
+            'Machine-readable reason code when status is denied/ineligible (e.g. FAILED_GROSS_INCOME_TEST).',
+        }),
+        'x-allotment': z.number().optional().openapi({
+          description: 'Overlay: full-month SNAP allotment.',
+        }),
+        'x-proratedAllotment': z.number().optional().openapi({
+          description: 'Overlay: prorated first-month allotment.',
+        }),
+        'x-expedited': z.boolean().optional().openapi({
+          description: 'Overlay: whether the household also qualifies for expedited processing.',
+        }),
+        'x-missingInputs': z.array(MissingInput).optional().openapi({
+          description:
+            'Overlay (progressive disclosure): present when status is `pending` because inputs were missing — the writables still needed to reach a determination. This is the structured missing-information hook the base contract lacks.',
+        }),
+        'x-translationNotes': z.array(z.string()).optional().openapi({
+          description:
+            'Overlay (transparency): assumptions the adapter made — disqualifier flags defaulted because the request did not carry them, or enum values that fell through to a default. The determination is conditional on these.',
+        }),
+        'x-decidingPath': z.unknown().optional().openapi({
+          description: 'Overlay: present when `include: ["trace"]` — the deciding chain (DecidingPath) for /eligibilityCategory.',
+        }),
+        'x-trace': z.unknown().optional().openapi({
+          description: 'Overlay: present when `include: ["trace"]` — the full explanation tree (TraceNode) for /eligibilityCategory.',
+        }),
+      })
+      .openapi({
+        description:
+          "Eligibility decision for one program. The base fields (metadata, program, status, path, denialReasonCode) are the blueprint contract; `x-`-prefixed fields are this adapter's additive overlay (sanctioned by the contract's additionalProperties: true).",
+      })
+  )
+
+  const ExpeditedScreeningResponse = registry.register(
+    'ExpeditedScreeningResponse',
+    z
+      .object({
+        metadata: z.record(z.string(), z.unknown()),
+        expedited: z.boolean().openapi({
+          description: 'Whether the household qualifies for expedited SNAP processing.',
+        }),
+      })
+      .openapi({ description: 'Response from expedited SNAP screening.' })
+  )
+
+  // -------------------------------------------------------------------------
   // Security scheme
   // -------------------------------------------------------------------------
 
@@ -452,6 +538,91 @@ export function buildOpenApiDocument() {
     },
   })
 
+  registry.registerPath({
+    method: 'post',
+    path: '/v1/eligibility/evaluate/determination',
+    summary: 'Final eligibility determination for one program.',
+    description: [
+      'Domain-oriented adapter endpoint conforming to the partner eligibility-adapter contract. Send an ORCA-shaped household request; receive a ProgramDecision. The caller never sees a Fact Graph path — all translation and defaulting is owned by the adapter.',
+      '',
+      'SNAP (a household program) is evaluated against the `snap-complete` ruleset. Per-applicant programs (medicaid, chip, tanf, ccdf) are not yet implemented and return 501.',
+      '',
+      'Mounted at `/v1/eligibility` so a consumer can set its adapter base URL to `<host>/v1/eligibility` and reach the contract\'s bare `/evaluate/...` paths with no rewriting.',
+    ].join('\n'),
+    tags: ['Eligibility Adapter'],
+    security: [{ [bearerAuth.name]: [] }],
+    request: {
+      body: {
+        required: true,
+        content: { 'application/json': { schema: HouseholdDeterminationRequest } },
+      },
+    },
+    responses: {
+      200: {
+        description: 'Program decision.',
+        content: { 'application/json': { schema: ProgramDecision } },
+      },
+      400: {
+        description: 'Invalid or unknown-program request.',
+        content: { 'application/json': { schema: ProblemDetails } },
+      },
+      401: {
+        description: 'Authentication required.',
+        content: { 'application/json': { schema: ProblemDetails } },
+      },
+      501: {
+        description: 'Program recognized but not yet implemented by this adapter.',
+        content: { 'application/json': { schema: ProblemDetails } },
+      },
+    },
+  })
+
+  registry.registerPath({
+    method: 'post',
+    path: '/v1/eligibility/evaluate/expedited-screening',
+    summary: 'Expedited SNAP screening.',
+    description:
+      'Evaluates whether a household qualifies for expedited SNAP processing under 7 CFR §273.2(i). Returns the contract\'s ExpeditedScreeningResponse.',
+    tags: ['Eligibility Adapter'],
+    security: [{ [bearerAuth.name]: [] }],
+    request: {
+      body: {
+        required: true,
+        content: { 'application/json': { schema: ExpeditedScreeningRequest } },
+      },
+    },
+    responses: {
+      200: {
+        description: 'Expedited screening result.',
+        content: { 'application/json': { schema: ExpeditedScreeningResponse } },
+      },
+      400: {
+        description: 'Invalid request.',
+        content: { 'application/json': { schema: ProblemDetails } },
+      },
+      401: {
+        description: 'Authentication required.',
+        content: { 'application/json': { schema: ProblemDetails } },
+      },
+    },
+  })
+
+  registry.registerPath({
+    method: 'post',
+    path: '/v1/eligibility/evaluate/medicaid-ex-parte',
+    summary: 'Medicaid ex parte evaluation (not yet supported).',
+    description:
+      'Reserved by the eligibility-adapter contract. Not yet implemented by this adapter — the flow depends on electronic data-exchange results (FDSH FTI, Medicare/VCI) that are not yet modeled. Returns 501.',
+    tags: ['Eligibility Adapter'],
+    security: [{ [bearerAuth.name]: [] }],
+    responses: {
+      501: {
+        description: 'Not implemented.',
+        content: { 'application/json': { schema: ProblemDetails } },
+      },
+    },
+  })
+
   // -------------------------------------------------------------------------
   // Generate
   // -------------------------------------------------------------------------
@@ -487,6 +658,11 @@ export function buildOpenApiDocument() {
       { name: 'Meta', description: 'Liveness probes and health checks.' },
       { name: 'Discovery', description: 'Find available rulesets and inspect their schema.' },
       { name: 'Query', description: 'Evaluate fact-graph targets against caller-provided input.' },
+      {
+        name: 'Eligibility Adapter',
+        description:
+          'Domain-oriented endpoints conforming to the partner eligibility-adapter contract. Request/response are shaped around the business workflow (ORCA model); Fact Graph paths are never exposed.',
+      },
     ],
   })
 }
