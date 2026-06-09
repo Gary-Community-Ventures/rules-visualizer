@@ -1,13 +1,18 @@
 # rules-visualizer-factgraph-api
 
 Partner-facing HTTP adapter for [Fact Graph](https://github.com/IRS-Public/direct-file)
-rulesets. Exposes a small, ruleset-agnostic API for evaluating a fact-graph
-target against partial input, with structured "missing inputs" feedback when
-the target can't yet be determined.
+rulesets. Two API surfaces, each with its own OpenAPI contract:
 
-This server is the integration point for external systems (caseworker tools,
-screeners, eligibility blueprints) that want to consume rulesets defined in
-this repo without binding to the visualizer's internals.
+- **Eligibility adapter (consumer-facing)** — domain-oriented determination
+  endpoints (`/v1/eligibility/evaluate/*`) conforming to the
+  [safety-net-blueprint eligibility-adapter contract](https://github.com/codeforamerica/safety-net-blueprint/blob/main/packages/contracts/eligibility-adapter-openapi.yaml).
+  Send an ORCA-shaped household; get back a program decision. No Fact Graph
+  internals anywhere in the contract. **Start here if you're integrating a
+  caseworker tool or portal.**
+- **Fact Graph query (advanced)** — a ruleset-agnostic API for evaluating any
+  fact-graph target against partial input, with structured "missing inputs"
+  feedback, traces, and policy citations. For tooling, exploration, and
+  integrations that want direct access to the graph.
 
 > **Prototype.** The API is under active development and not yet a production
 > service. See `docs/changelog.md` for what's stable and what's still moving.
@@ -17,14 +22,17 @@ this repo without binding to the visualizer's internals.
 |                                                            |                                                                                                                                            |
 | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
 | **API base**                                               | `https://rules-visualizer-factgraph-api-f0c14673cf3a.herokuapp.com`                                                                        |
-| **Interactive docs (Swagger UI, paste-token-and-try)**     | [`/v1/factgraph/docs`](https://rules-visualizer-factgraph-api-f0c14673cf3a.herokuapp.com/v1/factgraph/docs)                                |
+| **Eligibility contract — Swagger UI**                      | [`/v1/eligibility/docs`](https://rules-visualizer-factgraph-api-f0c14673cf3a.herokuapp.com/v1/eligibility/docs)                            |
+| **Eligibility contract — OpenAPI 3.1 (for codegen/diff)**  | [`/v1/eligibility/openapi.yaml`](https://rules-visualizer-factgraph-api-f0c14673cf3a.herokuapp.com/v1/eligibility/openapi.yaml)            |
+| **Advanced API — Swagger UI (paste-token-and-try)**        | [`/v1/factgraph/docs`](https://rules-visualizer-factgraph-api-f0c14673cf3a.herokuapp.com/v1/factgraph/docs)                                |
 | **Static docs site (Redoc, doesn't need API up)**          | [gary-community-ventures.github.io/rules-visualizer](https://gary-community-ventures.github.io/rules-visualizer/)                          |
 | **Target explorer (pick a fact, see its required inputs)** | [gary-community-ventures.github.io/rules-visualizer/explore.html](https://gary-community-ventures.github.io/rules-visualizer/explore.html) |
 | **OpenAPI 3.1 spec (for codegen)**                         | [`/v1/factgraph/openapi.yaml`](https://rules-visualizer-factgraph-api-f0c14673cf3a.herokuapp.com/v1/factgraph/openapi.yaml)                |
 
 Every `/v1/*` request needs `Authorization: Bearer <token>`. Get the token from
-whoever set up your access. `/health`, `/v1/factgraph/openapi.{json,yaml}`,
-and `/v1/factgraph/docs` are unauthenticated.
+whoever set up your access. `/health`, the OpenAPI specs, and the docs pages
+(`/v1/eligibility/openapi.{json,yaml}`, `/v1/eligibility/docs`,
+`/v1/factgraph/openapi.{json,yaml}`, `/v1/factgraph/docs`) are unauthenticated.
 
 ```sh
 # Sanity check
@@ -64,6 +72,23 @@ and prod. Install Bruno, open that folder, click Send.
 
 ## Endpoints
 
+**Eligibility adapter (consumer contract):**
+
+| Method | Path                                            | Purpose                                                          |
+| ------ | ----------------------------------------------- | ---------------------------------------------------------------- |
+| `POST` | `/v1/eligibility/evaluate/determination`        | Final determination — SNAP (household decision) or Medicaid (one decision per member) |
+| `POST` | `/v1/eligibility/evaluate/expedited-screening`  | Expedited SNAP screening (7 CFR §273.2(i))                       |
+| `POST` | `/v1/eligibility/evaluate/medicaid-ex-parte`    | Reserved — returns `501` (not yet modeled)                        |
+| `GET`  | `/v1/eligibility/openapi.{json,yaml}` · `/docs` | Consumer contract + Swagger UI — public                           |
+
+The committed contract snapshot lives at
+`docs/eligibility-adapter-openapi.yaml`. Related reading:
+`docs/contract-gap-analysis.md` (what the contract carries vs. what the
+rulesets need) and `docs/request-field-proposal.md` (the proposed fields to
+close that gap, and the defaulting policy).
+
+**Fact Graph query (advanced):**
+
 | Method | Path                              | Purpose                                      |
 | ------ | --------------------------------- | -------------------------------------------- |
 | `GET`  | `/health`                         | Liveness probe — `{ "status": "ok" }`        |
@@ -74,8 +99,8 @@ and prod. Install Bruno, open that folder, click Send.
 | `GET`  | `/v1/factgraph/openapi.yaml`      | OpenAPI 3.1 spec (YAML) — public             |
 | `GET`  | `/v1/factgraph/docs`              | Interactive Swagger UI — public              |
 
-The query endpoint is the centerpiece — see `docs/concepts.md` for the
-incompleteness model and `docs/examples-snap.md` for a worked SNAP
+The query endpoint is the advanced centerpiece — see `docs/concepts.md` for
+the incompleteness model and `docs/examples-snap.md` for a worked SNAP
 walkthrough.
 
 The `/v1/factgraph/docs` URL is the easiest way to browse the API

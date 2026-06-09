@@ -191,13 +191,13 @@ export function translateMedicaidHousehold(
     members.push(row)
   }
 
-  if (notes.length > 0) {
-    notes.unshift(
-      'Medicaid determination defaults the member fields the ORCA contract ' +
-        "doesn't carry (pregnancy, veteran, student, disabled-child); it is " +
-        'conditional on those. See docs/contract-gap-analysis.md.'
-    )
-  }
+  // Always disclosed — these fields are defaulted on every request and the
+  // per-member decisions are conditional on them.
+  notes.unshift(
+    'Medicaid determination defaults the member fields the ORCA contract ' +
+      "doesn't carry (pregnancy, veteran, student, disabled-child); it is " +
+      'conditional on those. See docs/contract-gap-analysis.md.'
+  )
 
   return {
     inputs: {

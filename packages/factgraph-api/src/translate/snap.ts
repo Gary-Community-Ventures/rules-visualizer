@@ -522,13 +522,14 @@ export function translateHouseholdRequest(
     }
   }
 
-  if (notes.length > 0) {
-    notes.unshift(
-      'This determination defaults the per-member disqualifier flags the ' +
-        'request does not carry to a non-disqualified baseline; it is ' +
-        'conditional on those defaults. See docs/examples-snap.md.'
-    )
-  }
+  // Always disclosed — the defaulting happens on every request, not just the
+  // ones that also hit a value-mapping fallback, and the determination is
+  // conditional on it either way.
+  notes.unshift(
+    'This determination defaults the per-member disqualifier flags the ' +
+      'request does not carry to a non-disqualified baseline; it is ' +
+      'conditional on those defaults. See docs/contract-gap-analysis.md.'
+  )
 
   const inputs: Record<string, unknown> = {
     ...OPERATIONAL_SCALAR_DEFAULTS,
