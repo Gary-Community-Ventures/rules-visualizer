@@ -169,12 +169,11 @@ const FREQUENCY_MAP: Record<string, string> = {
 
 /** Administrative facts about the application itself — not about the
  *  applicant. The ORCA request doesn't carry these; a real integration
- *  would set them from the case record. Defaulted here to the working
- *  baseline. */
+ *  would set them from the case record (see the `applicationContext`
+ *  proposal in docs/request-field-proposal.md). Defaulted here to the
+ *  "new application, normal operating conditions" baseline. */
 const OPERATIONAL_SCALAR_DEFAULTS: Record<string, unknown> = {
-  '/applicationFilingDate': '2025-01-05',
   '/isApplicationForRecertification': false,
-  '/normalIssuanceCycleDate': '2025-01-15',
   '/receivedSnapInLast30Days': false,
   '/receivesLeapInLast12Months': false,
   '/dSnapActive': false,
@@ -187,8 +186,32 @@ const OPERATIONAL_SCALAR_DEFAULTS: Record<string, unknown> = {
   '/hasNearbyCountyArrangement': false,
   '/isPresidentiallyDeclaredDisasterOrEmergency': false,
   '/hasInadvertentHouseholdErrorClaimDueToEarnedIncomeCalculation': false,
-  '/benefitMonth': '2025-01-01',
-  '/certificationPeriodStartDate': '2025-01-01',
+}
+
+/** Format a Date as the engine's `yyyy-mm-dd` Day string (UTC). */
+function isoDay(d: Date): string {
+  return d.toISOString().slice(0, 10)
+}
+
+/** Application timing facts, derived from the evaluation date. Calling the
+ *  endpoint means "evaluate this application as of now": filed today, for
+ *  this benefit month, certification period starting with it. The issuance
+ *  cycle date mirrors the canonical baseline's mid-month cycle. A real
+ *  integration will override all of these via `applicationContext` once the
+ *  request carries it (docs/request-field-proposal.md §5). */
+function applicationTimingDefaults(asOf: Date): Record<string, unknown> {
+  const monthStart = new Date(
+    Date.UTC(asOf.getUTCFullYear(), asOf.getUTCMonth(), 1)
+  )
+  const midMonth = new Date(
+    Date.UTC(asOf.getUTCFullYear(), asOf.getUTCMonth(), 15)
+  )
+  return {
+    '/applicationFilingDate': isoDay(asOf),
+    '/benefitMonth': isoDay(monthStart),
+    '/certificationPeriodStartDate': isoDay(monthStart),
+    '/normalIssuanceCycleDate': isoDay(midMonth),
+  }
 }
 
 /** Per-member flag baseline. Every `/members/*\/...` writable the ORCA
@@ -509,6 +532,7 @@ export function translateHouseholdRequest(
 
   const inputs: Record<string, unknown> = {
     ...OPERATIONAL_SCALAR_DEFAULTS,
+    ...applicationTimingDefaults(asOf),
     '/members': members,
     '/incomes': incomes,
     '/jobs': jobs,

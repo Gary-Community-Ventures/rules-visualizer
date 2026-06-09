@@ -44,6 +44,13 @@ without surface impact aren't logged here; see git history for those.
 
 ### Changed
 
+- **SNAP determination evaluates as of the request date.** The application
+  timing facts (`filing date`, `benefit month`, `certification period start`,
+  `issuance cycle date`) were previously fixed to a January 2025 baseline;
+  they are now derived from the evaluation date — calling the endpoint means
+  "evaluate this application as of now," so first-month proration reflects
+  the actual filing day. A future `applicationContext` request block will
+  make these caller-settable (see `docs/request-field-proposal.md` §5).
 - **Unified `inputs` shape.** The request body's `inputs` field now
   carries both scalar values and collection rows, keyed by fact path.
   Previously, scalars lived in `inputs` and collection rows lived in a
