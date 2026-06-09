@@ -15,10 +15,12 @@
  * positional-memberId concern that affects SNAP does not apply here.
  */
 import type { QueryResponse } from '../evaluate.js'
-import type {
-  HouseholdDeterminationRequest,
-  MemberContext,
-  TranslationNote,
+import {
+  toMissingInformation,
+  type HouseholdDeterminationRequest,
+  type MemberContext,
+  type MissingInformation,
+  type TranslationNote,
 } from './snap.js'
 
 export const MEDICAID_RULESET_ID = 'medicaid'
@@ -226,7 +228,7 @@ export type MedicaidDeterminationResponse = {
   program: 'medicaid'
   /** One decision per household member — the household-in/per-member-out shape. */
   decisions: MemberMedicaidDecision[]
-  'x-missingInputs'?: QueryResponse['missingInputs']
+  'x-missingInformation'?: MissingInformation[]
   'x-translationNotes'?: string[]
 }
 
@@ -264,8 +266,12 @@ export function toMedicaidResponse(
     if (typeof category === 'string') decision['x-medicaidCategory'] = category
     if (typeof chp === 'boolean') decision['x-chpEligible'] = chp
     if (status === 'ineligible') {
+      // MAGI non-eligibility is categorical (wrong category, legal status, or
+      // work requirement) → `ineligible` with a snake_case, state-style code.
       decision.denialReasonCode =
-        category === 'Ineligible' ? 'NOT_IN_ELIGIBLE_CATEGORY' : 'WORK_OR_LEGAL_STATUS'
+        category === 'Ineligible'
+          ? 'not_in_eligible_category'
+          : 'failed_work_or_legal_requirements'
     }
     return decision
   })
@@ -275,7 +281,8 @@ export function toMedicaidResponse(
     program: 'medicaid',
     decisions,
   }
-  if (query.missingInputs?.length) response['x-missingInputs'] = query.missingInputs
+  if (query.missingInputs?.length)
+    response['x-missingInformation'] = toMissingInformation(query.missingInputs)
   if (notes.length > 0) response['x-translationNotes'] = notes
   return response
 }

@@ -193,9 +193,9 @@ the case record (currently hardcoded — a defect):
 2. **SNAP member shape:** add the ➕ circumstance fields (domain-shaped, not
    raw Fact Graph paths). Agree the exact ✅/➕/🔎 line with the rule authors.
 3. **`verificationSummary`:** the 🔎 fields are exactly what this is for — and
-   the adapter should return `pending` + `x-missingInputs` for them rather
-   than defaulting, which is the structured-missing-info behavior the contract
-   already asked us for.
+   the adapter should return `pending` + `x-missingInformation` for them
+   rather than defaulting, which is the structured-missing-info behavior the
+   contract already asked us for.
 4. **`applicationContext`:** add a case-metadata block; stop hardcoding dates.
 5. **`/jobs` + `/caregiverRelationships`:** flag as the biggest SNAP gaps — the
    ORCA `employment[]` shape is far thinner than SNAP work-requirement logic needs.

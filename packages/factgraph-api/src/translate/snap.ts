@@ -110,9 +110,6 @@ export const HouseholdDeterminationRequestSchema = z
     household: HouseholdSchema,
     members: z.array(MemberContextSchema).min(1),
     verificationSummary: z.array(z.unknown()).optional(),
-    /** Adapter overlay extension (not in the base contract): opt into
-     *  trace/missing-info detail on the response. */
-    include: z.array(z.string()).optional(),
   })
   .passthrough()
 
@@ -530,10 +527,31 @@ export function translateHouseholdRequest(
 export type DecisionStatus = 'pending' | 'approved' | 'denied' | 'ineligible'
 export type DecisionPath = 'auto' | 'manual'
 
+/** One still-needed input, path-free. The consumer contract must not expose
+ *  Fact Graph paths (per the partner's requirement), so we surface the
+ *  field's human display name + type rather than its `/members/*\/...` path.
+ *  `field` is the rules display label today; the intent is to map these to
+ *  ORCA field names as the contract firms up. */
+export type MissingInformation = {
+  field: string
+  dataType: string
+  options?: string[]
+}
+
+/** One step of a path-free, domain-summarized explanation: which factor drove
+ *  the outcome and its value. Derived from the deciding chain with Fact Graph
+ *  paths stripped — the domain-readable summary, not the raw trace (raw traces
+ *  with paths live only on the advanced /query endpoint). */
+export type ExplanationStep = {
+  factor: string
+  outcome: unknown
+}
+
 /** The blueprint's ProgramDecision plus `x-`-prefixed overlay extensions.
  *  The base fields (metadata, program, status, path, denialReasonCode) are
  *  the contract; everything `x-`-prefixed is our additive overlay, which
- *  the contract's `additionalProperties: true` sanctions. */
+ *  the contract's `additionalProperties: true` sanctions. None of these
+ *  expose Fact Graph paths. */
 export type ProgramDecision = {
   metadata: Record<string, unknown>
   program: string
@@ -543,47 +561,79 @@ export type ProgramDecision = {
   'x-allotment'?: number
   'x-proratedAllotment'?: number
   'x-expedited'?: boolean
-  /** Present when status is `pending` because inputs were missing — the
-   *  writables still needed, straight from the engine's missing-input walk.
-   *  This is the progressive-disclosure hook the base contract lacks. */
-  'x-missingInputs'?: QueryResponse['missingInputs']
+  /** Present when status is `pending` — the information still needed to reach
+   *  a determination, by field name (no Fact Graph paths). The
+   *  progressive-disclosure hook the base contract lacks. */
+  'x-missingInformation'?: MissingInformation[]
   /** Assumptions made by the translation layer (defaulted flags, unmapped
    *  enum values). */
   'x-translationNotes'?: string[]
-  /** Present when the caller opted into trace detail. */
-  'x-decidingPath'?: unknown
-  'x-trace'?: unknown
+  /** Domain-summarized "why", path-free. Present on denials. */
+  'x-explanation'?: ExplanationStep[]
 }
 
-/** Map a deciding gate path to a stable, machine-readable denial code. */
-const DENIAL_REASON_BY_GATE: Record<string, string> = {
-  '/meetsGrossIncomeTest': 'FAILED_GROSS_INCOME_TEST',
-  '/meetsNetIncomeTest': 'FAILED_NET_INCOME_TEST',
-  '/meetsResourceTest': 'FAILED_RESOURCE_TEST',
-  '/disqualifiedForBCE': 'DISQUALIFIED_BROAD_CATEGORICAL',
-  '/meetsNonFinancialCriteria': 'FAILED_NON_FINANCIAL',
+/** Map a deciding gate path to a stable, machine-readable denial code.
+ *  Codes are snake_case per the Worker Portal conventions; the paths are
+ *  internal to this mapping and never leave the adapter. The boolean marks
+ *  whether the gate is a financial *test* (→ `denied`, appealable) vs a
+ *  categorical bar (→ `ineligible`). */
+const DENIAL_REASON_BY_GATE: Record<string, { code: string; categorical: boolean }> = {
+  '/meetsGrossIncomeTest': { code: 'failed_gross_income_test', categorical: false },
+  '/meetsNetIncomeTest': { code: 'failed_net_income_test', categorical: false },
+  '/meetsResourceTest': { code: 'failed_resource_test', categorical: false },
+  '/disqualifiedForBCE': { code: 'disqualified_broad_categorical', categorical: true },
+  '/meetsNonFinancialCriteria': { code: 'failed_non_financial_criteria', categorical: true },
 }
 
-function deriveDenialReasonCode(query: QueryResponse): string {
+/** Resolve the deciding gate into { status, reasonCode }: `denied` for a
+ *  failed financial test (appeal rights), `ineligible` for a categorical bar.
+ *  Defaults to `denied` (most SNAP denials are income-based). */
+function deriveDenial(query: QueryResponse): {
+  status: 'denied' | 'ineligible'
+  reasonCode: string
+} {
   const chain = query.decidingPaths?.['/eligibilityCategory']
   if (Array.isArray(chain) && chain.length > 0) {
     const deciding = chain[chain.length - 1]
-    const code = DENIAL_REASON_BY_GATE[deciding?.path ?? '']
-    if (code) return code
+    const hit = DENIAL_REASON_BY_GATE[deciding?.path ?? '']
+    if (hit) {
+      return { status: hit.categorical ? 'ineligible' : 'denied', reasonCode: hit.code }
+    }
   }
-  return 'OTHER'
+  return { status: 'denied', reasonCode: 'other' }
+}
+
+/** Convert the engine's path-bearing missingInputs into the path-free
+ *  consumer shape (display name + type). Shared with the medicaid mapping. */
+export function toMissingInformation(
+  missing: QueryResponse['missingInputs']
+): MissingInformation[] {
+  return (missing ?? []).map((m) => {
+    const info: MissingInformation = { field: m.name, dataType: m.dataType }
+    if (m.enumOptions) info.options = m.enumOptions
+    return info
+  })
+}
+
+/** Build a path-free explanation from the deciding chain: keep only the
+ *  named factors (skip anonymous/path-only nodes) so nothing leaks a path. */
+function toExplanation(query: QueryResponse): ExplanationStep[] {
+  const chain = query.decidingPaths?.['/eligibilityCategory']
+  if (!Array.isArray(chain)) return []
+  return chain
+    .filter((step) => typeof step?.name === 'string' && step.name.length > 0)
+    .map((step) => ({ factor: step.name as string, outcome: step.value }))
 }
 
 /**
  * Map a `snap-complete` query response onto a `ProgramDecision`.
  *
  *   - `/eligibilityCategory` ∈ {Bce, Ece, Se} → approved
- *   - `/eligibilityCategory` === "Ineligible" → denied (with a reason code)
- *   - unresolved (`null`, i.e. missing inputs) → pending, with the missing
- *     writables surfaced on `x-missingInputs`
+ *   - `/eligibilityCategory` === "Ineligible" → denied (reason code + explanation)
+ *   - unresolved (`null`) → pending, with the still-needed info surfaced on
+ *     `x-missingInformation` (by field name, never a Fact Graph path)
  *
- * `path` is `auto` — this is a rules-engine determination with no
- * caseworker in the loop.
+ * `path` is `auto` — a rules-engine determination with no caseworker in the loop.
  */
 export function toProgramDecision(
   query: QueryResponse,
@@ -600,8 +650,9 @@ export function toProgramDecision(
   if (category === 'Bce' || category === 'Ece' || category === 'Se') {
     status = 'approved'
   } else if (category === 'Ineligible') {
-    status = 'denied'
-    denialReasonCode = deriveDenialReasonCode(query)
+    const denial = deriveDenial(query)
+    status = denial.status
+    denialReasonCode = denial.reasonCode
   } else {
     // null — the engine couldn't resolve eligibility with the inputs given.
     status = 'pending'
@@ -618,14 +669,12 @@ export function toProgramDecision(
   if (typeof prorated === 'number') decision['x-proratedAllotment'] = prorated
   if (typeof expedited === 'boolean') decision['x-expedited'] = expedited
   if (status === 'pending' && query.missingInputs?.length) {
-    decision['x-missingInputs'] = query.missingInputs
+    decision['x-missingInformation'] = toMissingInformation(query.missingInputs)
   }
   if (notes.length > 0) decision['x-translationNotes'] = notes
-  if (query.decidingPaths?.['/eligibilityCategory']) {
-    decision['x-decidingPath'] = query.decidingPaths['/eligibilityCategory']
-  }
-  if (query.traces?.['/eligibilityCategory']) {
-    decision['x-trace'] = query.traces['/eligibilityCategory']
+  const explanation = toExplanation(query)
+  if ((status === 'denied' || status === 'ineligible') && explanation.length > 0) {
+    decision['x-explanation'] = explanation
   }
   return decision
 }

@@ -1,15 +1,15 @@
 /**
- * Generate the checked-in OpenAPI snapshot (docs/openapi.yaml) from the
- * single source of truth — buildOpenApiDocument() in src/openapi.ts.
+ * Generate the checked-in OpenAPI snapshots from the single sources of truth:
+ *   - docs/openapi.yaml                  ← buildOpenApiDocument() (advanced API)
+ *   - docs/eligibility-adapter-openapi.yaml ← buildConsumerOpenApiDocument()
  *
- * The snapshot exists so integration partners can review and comment on
- * the contract as a plain YAML file (the same artifact shape their own
- * contracts use) without reading TypeScript. It is also served live at
- * GET /v1/factgraph/openapi.yaml; this file is just a committed copy.
+ * The snapshots exist so integration partners can review and comment on the
+ * contracts as plain YAML files (the same artifact shape their own contracts
+ * use) without reading TypeScript. They're also served live at
+ * GET /v1/factgraph/openapi.yaml and GET /v1/eligibility/openapi.yaml.
  *
- * Run `npm run gen:openapi` after changing any request/response schema or
- * path. The `openapi-snapshot.test.ts` test fails if the committed file
- * drifts from what this generator would produce.
+ * Run `npm run gen:openapi` after changing any schema or path. The
+ * `openapi-snapshot.test.ts` test fails if either committed file drifts.
  */
 import { writeFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
@@ -17,16 +17,34 @@ import path from 'node:path'
 import yaml from 'yaml'
 
 import { buildOpenApiDocument } from '../src/openapi.js'
+import { buildConsumerOpenApiDocument } from '../src/consumer-openapi.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const OUT = path.resolve(__dirname, '..', 'docs', 'openapi.yaml')
+const ADVANCED_OUT = path.resolve(__dirname, '..', 'docs', 'openapi.yaml')
+const CONSUMER_OUT = path.resolve(
+  __dirname,
+  '..',
+  'docs',
+  'eligibility-adapter-openapi.yaml'
+)
+
+function banner(source: string): string {
+  return (
+    '# GENERATED FILE — do not edit by hand.\n' +
+    `# Source: packages/factgraph-api/src/${source}\n` +
+    '# Regenerate: npm run gen:openapi --workspace=rules-visualizer-factgraph-api\n'
+  )
+}
 
 export function renderOpenApiYaml(): string {
-  const banner =
-    '# GENERATED FILE — do not edit by hand.\n' +
-    '# Source: packages/factgraph-api/src/openapi.ts (buildOpenApiDocument).\n' +
-    '# Regenerate: npm run gen:openapi --workspace=rules-visualizer-factgraph-api\n'
-  return banner + yaml.stringify(buildOpenApiDocument())
+  return banner('openapi.ts (buildOpenApiDocument)') + yaml.stringify(buildOpenApiDocument())
+}
+
+export function renderConsumerOpenApiYaml(): string {
+  return (
+    banner('consumer-openapi.ts (buildConsumerOpenApiDocument)') +
+    yaml.stringify(buildConsumerOpenApiDocument())
+  )
 }
 
 // Only write when run as a script (not when imported by the drift test).
@@ -34,6 +52,8 @@ if (
   process.argv[1] &&
   fileURLToPath(import.meta.url) === path.resolve(process.argv[1])
 ) {
-  writeFileSync(OUT, renderOpenApiYaml())
-  console.log(`Wrote ${OUT}`)
+  writeFileSync(ADVANCED_OUT, renderOpenApiYaml())
+  writeFileSync(CONSUMER_OUT, renderConsumerOpenApiYaml())
+  console.log(`Wrote ${ADVANCED_OUT}`)
+  console.log(`Wrote ${CONSUMER_OUT}`)
 }

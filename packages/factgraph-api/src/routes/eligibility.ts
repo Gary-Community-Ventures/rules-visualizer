@@ -220,17 +220,16 @@ router.post('/evaluate/determination', (req, res) => {
     return void res.json(toMedicaidResponse(query, memberIds, metadata, notes))
   }
 
-  // SNAP.
+  // SNAP. Always compute the trace internally — it's the source of the
+  // (path-free) denialReasonCode + x-explanation. The consumer never opts
+  // into a Fact-Graph-flavored "include" flag; the raw trace stays internal.
   const { inputs, notes } = translateHouseholdRequest(body, new Date())
-  // Only pull trace material when the caller opted in — it's the
-  // denialReasonCode source and is otherwise extra work.
-  const include = body.include?.includes('trace') ? ['trace'] : undefined
   const query = evaluateRuleset(
     res,
     SNAP_RULESET_ID,
     inputs,
     SNAP_DETERMINATION_TARGETS,
-    include,
+    ['trace'],
     metadata
   )
   if (!query) return

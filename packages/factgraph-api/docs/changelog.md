@@ -14,9 +14,11 @@ without surface impact aren't logged here; see git history for those.
   no Fact Graph paths are exposed. Path translation, the defaulting policy
   for fields the request doesn't carry, and the result mapping are all
   owned by the adapter.
-  - `POST /v1/eligibility/evaluate/determination` — final SNAP
-    determination (household program) against `snap-complete`. Per-applicant
-    programs (medicaid/chip/tanf/ccdf) return `501` (not yet implemented).
+  - `POST /v1/eligibility/evaluate/determination` — final determination.
+    **SNAP** (household program) → one `ProgramDecision` against
+    `snap-complete`. **Medicaid** → a `MedicaidDeterminationResponse` with
+    one decision per member (household-in / per-member-out, since MAGI
+    eligibility depends on the whole household). `chip`/`tanf`/`ccdf` → `501`.
   - `POST /v1/eligibility/evaluate/expedited-screening` — expedited SNAP
     screening (7 CFR §273.2(i)).
   - `POST /v1/eligibility/evaluate/medicaid-ex-parte` — reserved; returns
@@ -24,13 +26,21 @@ without surface impact aren't logged here; see git history for those.
   - Mounted at `/v1/eligibility` so a consumer can set its adapter base URL
     to `<host>/v1/eligibility` and reach the contract's bare `/evaluate/...`
     paths with no rewriting.
-  - `ProgramDecision` carries `x-`-prefixed overlay extensions (sanctioned
-    by the contract's `additionalProperties: true`): `x-allotment`,
-    `x-proratedAllotment`, `x-expedited`, `x-translationNotes` (the
-    defaulting assumptions the determination is conditional on),
-    `x-missingInputs` (progressive-disclosure hook when `status: pending`),
-    and `x-decidingPath` / `x-trace` when `include: ["trace"]` is set.
-  - Documented in the OpenAPI spec under the **Eligibility Adapter** tag.
+  - Responses are **path-free** — no Fact Graph paths, targets, or traces.
+    `x-`-prefixed overlays: `x-allotment`, `x-proratedAllotment`,
+    `x-expedited`, `x-translationNotes` (defaulting assumptions the
+    determination is conditional on), `x-missingInformation` (still-needed
+    fields by name, when `status: pending`), and `x-explanation` (a
+    domain-summarized "why" on denials). `denialReasonCode` is snake_case;
+    `denied` (failed a test, appealable) is distinguished from `ineligible`
+    (categorical bar).
+- **Separate consumer-facing OpenAPI document** at
+  `GET /v1/eligibility/openapi.{json,yaml}` and Swagger UI at
+  `/v1/eligibility/docs` (committed snapshot:
+  `docs/eligibility-adapter-openapi.yaml`). Contains only the
+  `/v1/eligibility/evaluate/*` endpoints, ORCA-shaped with documented enums
+  and a representative example, and no Fact Graph paths. The advanced
+  Fact Graph query/discovery API stays in the separate `docs/openapi.yaml`.
 
 ### Changed
 

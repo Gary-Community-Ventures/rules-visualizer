@@ -1,0 +1,567 @@
+# GENERATED FILE — do not edit by hand.
+# Source: packages/factgraph-api/src/consumer-openapi.ts (buildConsumerOpenApiDocument)
+# Regenerate: npm run gen:openapi --workspace=rules-visualizer-factgraph-api
+openapi: 3.1.0
+info:
+  title: Eligibility Adapter API
+  version: 0.1.0
+  description: >-
+    Consumer-facing eligibility determination API for the Worker Portal.
+
+
+    Domain-oriented (ORCA-shaped) requests and responses. The caller never needs
+    to know Fact Graph paths, targets, or traces — the rules engine owns all of
+    that internally. Set your adapter base URL to `<host>/v1/eligibility` and
+    the contract’s `/evaluate/...` tails resolve directly.
+  license:
+    name: MPL-2.0
+servers:
+  - url: https://rules-visualizer-factgraph-api-f0c14673cf3a.herokuapp.com
+    description: Production
+  - url: http://localhost:5002
+    description: Local dev
+tags:
+  - name: Eligibility
+    description: Domain-oriented eligibility determination endpoints.
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: Required on every request when the deployed API has a bearer token
+        configured.
+  schemas:
+    Income:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - employed
+            - self_employed
+            - unearned
+          description: earned (employed/self_employed) vs unearned.
+        unearnedType:
+          type: string
+          description: Specific unearned source when type is unearned (e.g. ssi_or_ssdi,
+            social_security_retirement, unemployment).
+        incomeBasis:
+          type: string
+          enum:
+            - net
+            - gross
+        amount:
+          type: number
+          description: Amount for the given frequency period.
+        frequency:
+          type: string
+          enum: &a1
+            - hourly
+            - daily
+            - weekly
+            - every_2_weeks
+            - twice_a_month
+            - monthly
+            - yearly
+      required:
+        - type
+        - amount
+        - frequency
+      description: One income source for a member.
+    Expense:
+      type: object
+      properties:
+        category:
+          type: string
+          enum:
+            - housing
+            - utilities
+            - childcare
+            - medical
+            - dependent_care
+            - child_support_paid
+            - other
+        amount:
+          type: number
+        frequency:
+          type: string
+          enum: *a1
+      required:
+        - category
+        - amount
+        - frequency
+      description: One expense for a member.
+    Asset:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - liquid
+            - vehicle
+            - real_property
+            - retirement_account
+            - life_insurance
+            - other
+        value:
+          type: number
+          description: Current fair-market value.
+        description:
+          type: string
+      required:
+        - type
+        - value
+      description: One asset/resource for a member.
+    MemberContext:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Caller's stable handle for this member; echoed on per-member results.
+        dateOfBirth:
+          type: string
+          format: date
+          example: 1990-03-15
+        citizenshipStatus:
+          type: string
+          enum:
+            - us_citizen
+            - us_national
+            - non_citizen
+        immigrationStatus:
+          type: string
+          enum:
+            - lawful_permanent_resident
+            - refugee
+            - asylee
+            - deportation_withheld
+            - parolee
+            - conditional_entrant
+            - cuban_haitian_entrant
+            - amerasian
+            - battered_non_citizen
+            - trafficking_victim
+            - temporary_protected_status
+            - other
+          description: Present when citizenshipStatus is non_citizen.
+        relationshipToHead:
+          type: string
+          enum:
+            - head_of_household
+            - spouse
+            - partner
+            - child
+            - parent
+            - sibling
+            - grandparent
+            - grandchild
+            - other_relative
+            - non_relative
+        isDisabled:
+          type: boolean
+        programs:
+          type: array
+          items:
+            type: string
+            enum: &a2
+              - snap
+              - medicaid
+              - chip
+              - tanf
+              - ccdf
+        income:
+          type: array
+          items:
+            $ref: "#/components/schemas/Income"
+        expenses:
+          type: array
+          items:
+            $ref: "#/components/schemas/Expense"
+        assets:
+          type: array
+          items:
+            $ref: "#/components/schemas/Asset"
+      required:
+        - id
+        - dateOfBirth
+      description: "A household member: ORCA demographics plus income/expenses/assets.
+        Only id and dateOfBirth are required; other fields refine the
+        determination and, when absent, are defaulted (disclosed via
+        x-translationNotes) or requested back via x-missingInformation."
+    Household:
+      type: object
+      properties:
+        size:
+          type: integer
+        housingCosts:
+          type: number
+        utilityCosts:
+          type: number
+        isMigrantOrSeasonalFarmWorker:
+          type: boolean
+      description: Household-level data.
+    HouseholdDeterminationRequest:
+      type: object
+      properties:
+        metadata:
+          type: object
+          additionalProperties: {}
+          description: Opaque correlation context. The adapter echoes it back unchanged
+            and never inspects it.
+        program:
+          type: string
+          enum: *a2
+        household:
+          $ref: "#/components/schemas/Household"
+        members:
+          type: array
+          items:
+            $ref: "#/components/schemas/MemberContext"
+          minItems: 1
+        verificationSummary:
+          type: array
+          items: {}
+          description: "Status of verification obligations (status enum: pending |
+            inconclusive | satisfied | waived | cannot_verify)."
+      required:
+        - metadata
+        - program
+        - household
+        - members
+      description: Determination request carrying the whole household. Used for SNAP
+        and (per the gap analysis) Medicaid.
+      example:
+        metadata:
+          intake:
+            applicationId: app-123
+          eligibility:
+            caseId: case-456
+        program: snap
+        household:
+          size: 2
+          housingCosts: 800
+          utilityCosts: 150
+          isMigrantOrSeasonalFarmWorker: false
+        members:
+          - id: head
+            dateOfBirth: 1990-03-15
+            citizenshipStatus: us_citizen
+            relationshipToHead: head_of_household
+            isDisabled: false
+            programs:
+              - snap
+              - medicaid
+            income:
+              - type: employed
+                amount: 1200
+                frequency: monthly
+                incomeBasis: gross
+            expenses:
+              - category: housing
+                amount: 800
+                frequency: monthly
+            assets:
+              - type: liquid
+                value: 500
+                description: checking account
+          - id: child
+            dateOfBirth: 2020-01-01
+            citizenshipStatus: us_citizen
+            relationshipToHead: child
+        verificationSummary: []
+    ExpeditedScreeningRequest:
+      type: object
+      properties:
+        metadata:
+          type: object
+          additionalProperties: {}
+          description: Opaque correlation context. The adapter echoes it back unchanged
+            and never inspects it.
+        household:
+          $ref: "#/components/schemas/Household"
+        members:
+          type: array
+          items:
+            $ref: "#/components/schemas/MemberContext"
+          minItems: 1
+      required:
+        - metadata
+        - household
+        - members
+      description: Expedited SNAP screening request (7 CFR §273.2(i)).
+    MissingInformation:
+      type: object
+      properties:
+        field:
+          type: string
+          description: Human field name still needed (never a Fact Graph path).
+        dataType:
+          type: string
+          example: Boolean
+        options:
+          type: array
+          items:
+            type: string
+          description: Allowed values when the field is an enum.
+      required:
+        - field
+        - dataType
+      description: One piece of information still needed to reach a determination.
+    ExplanationStep:
+      type: object
+      properties:
+        factor:
+          type: string
+          description: Human-readable factor that drove the outcome.
+        outcome:
+          description: The factor’s value (e.g. true/false).
+      required:
+        - factor
+      description: One step of a path-free, domain-summarized explanation.
+    ProgramDecision:
+      type: object
+      properties:
+        metadata:
+          type: object
+          additionalProperties: {}
+          description: Opaque correlation context. The adapter echoes it back unchanged
+            and never inspects it.
+        program:
+          type: string
+          enum: *a2
+        status:
+          type: string
+          enum: &a3
+            - pending
+            - approved
+            - denied
+            - ineligible
+          description: approved · denied (failed a test — appeal rights) · ineligible
+            (categorical bar) · pending (more information needed — see
+            x-missingInformation).
+        path:
+          type: string
+          enum:
+            - auto
+            - manual
+          description: auto — resolved by the rules engine.
+        denialReasonCode:
+          type: string
+          description: snake_case reason code; present when denied/ineligible.
+          example: failed_gross_income_test
+        x-allotment:
+          type: number
+          description: "SNAP: full-month allotment."
+        x-proratedAllotment:
+          type: number
+          description: "SNAP: prorated first-month allotment."
+        x-expedited:
+          type: boolean
+          description: "SNAP: whether expedited processing also applies."
+        x-missingInformation:
+          type: array
+          items:
+            $ref: "#/components/schemas/MissingInformation"
+        x-translationNotes:
+          type: array
+          items:
+            type: string
+          description: Assumptions the determination is conditional on (defaulted fields,
+            unmapped values).
+        x-explanation:
+          type: array
+          items:
+            $ref: "#/components/schemas/ExplanationStep"
+          description: Path-free "why" for denials.
+      required:
+        - metadata
+        - program
+        - status
+        - path
+      description: Decision for one household-level program (SNAP). Base fields are
+        the contract; x- fields are additive overlays and never contain Fact
+        Graph paths.
+    MemberMedicaidDecision:
+      type: object
+      properties:
+        memberId:
+          type: string
+        status:
+          type: string
+          enum: *a3
+        path:
+          type: string
+          enum:
+            - auto
+        denialReasonCode:
+          type: string
+        x-medicaidCategory:
+          type: string
+          description: Infant | YoungChild | OlderChild | Adult | Pregnant | SsiRecipient
+            | Ineligible.
+        x-chpEligible:
+          type: boolean
+          description: Whether the member qualifies for CHP+ as an alternative.
+      required:
+        - memberId
+        - status
+        - path
+      description: One member-level medicaid decision.
+    MedicaidDeterminationResponse:
+      type: object
+      properties:
+        metadata:
+          type: object
+          additionalProperties: {}
+          description: Opaque correlation context. The adapter echoes it back unchanged
+            and never inspects it.
+        program:
+          type: string
+          enum:
+            - medicaid
+        decisions:
+          type: array
+          items:
+            $ref: "#/components/schemas/MemberMedicaidDecision"
+          description: "One decision per member. Medicaid is household-in /
+            per-member-out: each member’s eligibility depends on the whole
+            household (size + income → FPL%)."
+        x-missingInformation:
+          type: array
+          items:
+            $ref: "#/components/schemas/MissingInformation"
+        x-translationNotes:
+          type: array
+          items:
+            type: string
+      required:
+        - metadata
+        - program
+        - decisions
+      description: Medicaid determination — per-member decisions for the household.
+    ExpeditedScreeningResponse:
+      type: object
+      properties:
+        metadata:
+          type: object
+          additionalProperties: {}
+          description: Opaque correlation context. The adapter echoes it back unchanged
+            and never inspects it.
+        expedited:
+          type: boolean
+      required:
+        - metadata
+        - expedited
+      description: Response from expedited SNAP screening.
+    ProblemDetails:
+      type: object
+      properties:
+        type:
+          type: string
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+      required:
+        - type
+        - title
+        - status
+        - detail
+      description: RFC 9457 Problem Details error.
+  parameters: {}
+paths:
+  /v1/eligibility/evaluate/determination:
+    post:
+      summary: Final eligibility determination for one program.
+      description: Send an ORCA-shaped household request; receive a decision. SNAP
+        returns a single ProgramDecision for the household; Medicaid returns a
+        MedicaidDeterminationResponse (one decision per member). chip/tanf/ccdf
+        return 501. No Fact Graph paths appear in request or response.
+      tags:
+        - Eligibility
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HouseholdDeterminationRequest"
+      responses:
+        "200":
+          description: ProgramDecision (SNAP) or MedicaidDeterminationResponse (Medicaid).
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - $ref: "#/components/schemas/ProgramDecision"
+                  - $ref: "#/components/schemas/MedicaidDeterminationResponse"
+        "400":
+          description: Invalid or unknown program.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "401":
+          description: Authentication required.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "501":
+          description: Program recognized but not yet implemented.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+  /v1/eligibility/evaluate/expedited-screening:
+    post:
+      summary: Expedited SNAP screening (7 CFR §273.2(i)).
+      tags:
+        - Eligibility
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ExpeditedScreeningRequest"
+      responses:
+        "200":
+          description: Expedited screening result.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExpeditedScreeningResponse"
+        "400":
+          description: Invalid request.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "401":
+          description: Authentication required.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+  /v1/eligibility/evaluate/medicaid-ex-parte:
+    post:
+      summary: Medicaid ex parte evaluation (not yet supported).
+      description: Reserved by the contract. Not yet implemented — depends on
+        electronic data-exchange results not yet modeled. Returns 501.
+      tags:
+        - Eligibility
+      security:
+        - bearerAuth: []
+      responses:
+        "501":
+          description: Not implemented.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+webhooks: {}

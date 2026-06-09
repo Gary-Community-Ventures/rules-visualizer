@@ -4,6 +4,7 @@ import type { Server } from 'node:http'
 
 import { bearerAuth } from './middleware/auth.js'
 import openapiRouter from './routes/openapi.js'
+import consumerOpenapiRouter from './routes/consumer-openapi.js'
 import rulesetsRouter from './routes/rulesets.js'
 import queryRouter from './routes/query.js'
 import eligibilityRouter from './routes/eligibility.js'
@@ -40,6 +41,10 @@ export function buildApp() {
   // The Swagger UI's own Authorize dialog handles the bearer token for
   // "Try it" calls.
   app.use('/v1/factgraph', openapiRouter)
+  // Consumer-facing eligibility contract docs — also public, mounted before
+  // the authed eligibility routes so /v1/eligibility/openapi.* and /docs are
+  // reachable without a token.
+  app.use('/v1/eligibility', consumerOpenapiRouter)
 
   // Versioned API surface. Auth applies to everything under /v1.
   app.use('/v1/factgraph', bearerAuth, rulesetsRouter)

@@ -112,7 +112,7 @@ test('SNAP determination surfaces translation notes when flags were defaulted', 
   )
 })
 
-test('SNAP determination with trace → denialReasonCode + x-decidingPath when denied', async () => {
+test('SNAP over-income → denied, snake_case reason code, path-free explanation', async () => {
   // Push wages well over the gross-income limit for a household of 1.
   const req = householdRequest()
   req.members[0].income = [
@@ -123,14 +123,20 @@ test('SNAP determination with trace → denialReasonCode + x-decidingPath when d
       incomeBasis: 'gross',
     },
   ]
-  ;(req as Record<string, unknown>).include = ['trace']
   const res = await request(app).post(DETERMINATION_URL).send(req)
   assert.equal(res.status, 200)
+  // Failed financial test → denied (appealable), not ineligible (categorical).
   assert.equal(res.body.status, 'denied')
-  assert.ok(typeof res.body.denialReasonCode === 'string')
+  // snake_case, no SCREAMING_CASE, per Worker Portal conventions.
+  assert.match(res.body.denialReasonCode, /^[a-z0-9_]+$/)
+  // Path-free domain-summarized explanation; no Fact Graph paths or x-trace.
+  assert.ok(Array.isArray(res.body['x-explanation']), 'expected x-explanation')
+  assert.equal(res.body['x-decidingPath'], undefined)
+  assert.equal(res.body['x-trace'], undefined)
+  const serialized = JSON.stringify(res.body)
   assert.ok(
-    res.body['x-decidingPath'],
-    'expected x-decidingPath when trace requested'
+    !serialized.includes('/members/') && !serialized.includes('/meets'),
+    'response must not leak Fact Graph paths'
   )
 })
 
