@@ -7,8 +7,8 @@
  * The advanced/tooling surface (generic Fact Graph query + discovery) is a
  * different document — see `openapi.ts`.
  *
- * Conventions follow the Worker Portal contract (Mary's gist + the blueprint
- * `eligibility-adapter-openapi.yaml`): kebab-case paths, snake_case enum and
+ * Conventions follow the Worker Portal team's conventions guide and the
+ * blueprint `eligibility-adapter-openapi.yaml`: kebab-case paths, snake_case enum and
  * reason-code values, PascalCase schema names, camelCase properties,
  * `metadata` echoed unchanged, `pending | approved | denied | ineligible`
  * decision status. Served at `/v1/eligibility/openapi.{json,yaml}` + `/docs`.
