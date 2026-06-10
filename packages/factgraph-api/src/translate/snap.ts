@@ -84,9 +84,19 @@ const OrcaAsset = z
   })
   .passthrough()
 
+const OrcaEmployment = z
+  .object({
+    status: z.string().optional(),
+    hoursPerWeek: z.number().optional(),
+  })
+  .passthrough()
+
 export const MemberContextSchema = z
   .object({
-    id: z.string().min(1),
+    // The published contract's member has NO id (and no required fields at
+    // all) — id is our additive correlation handle. Optional: when absent,
+    // decisions correlate by the positional member-N fallback.
+    id: z.string().min(1).optional(),
     dateOfBirth: z.string().optional(),
     citizenshipStatus: z.string().optional(),
     immigrationStatus: z.string().optional(),
@@ -96,10 +106,19 @@ export const MemberContextSchema = z
     income: z.array(OrcaIncome).optional(),
     expenses: z.array(OrcaExpense).optional(),
     assets: z.array(OrcaAsset).optional(),
+    employment: z.array(OrcaEmployment).optional(),
+    healthCoverage: z.array(z.unknown()).optional(),
   })
   .passthrough()
 
-const HouseholdSchema = z.object({ size: z.number().optional() }).passthrough()
+const HouseholdSchema = z
+  .object({
+    size: z.number().optional(),
+    housingCosts: z.number().optional(),
+    utilityCosts: z.number().optional(),
+    isMigrantOrSeasonalFarmWorker: z.boolean().optional(),
+  })
+  .passthrough()
 
 const MetadataSchema = z.record(z.string(), z.unknown()).optional()
 
@@ -113,14 +132,30 @@ export const HouseholdDeterminationRequestSchema = z
   })
   .passthrough()
 
+/** The contract's per-applicant determination shape (medicaid/chip/tanf/
+ *  ccdf): a single `member`, no household. Accepted for conformance; the
+ *  adapter wraps it as a household whose only known member is the
+ *  applicant, with that assumption disclosed. */
+export const IndividualDeterminationRequestSchema = z
+  .object({
+    metadata: MetadataSchema,
+    program: z.string(),
+    member: MemberContextSchema,
+    verificationSummary: z.array(z.unknown()).optional(),
+  })
+  .passthrough()
+
 export const ExpeditedScreeningRequestSchema = z
   .object({
     metadata: MetadataSchema,
     household: HouseholdSchema,
-    // The base contract is household-only; the engine still needs member
-    // and resource context to evaluate 7 CFR §273.2(i), so we accept the
-    // same overlay the contract sanctions ("states may extend via overlay").
-    members: z.array(MemberContextSchema).min(1),
+    // The published contract is household-only. Member/income/resource
+    // context is an overlay (which the contract sanctions): with it the
+    // screen computes fully; without it the response is a conservative
+    // `expedited: false` plus x-missingInformation, because the contract's
+    // household object carries no income or liquid-resource fields — the
+    // 7 CFR §273.2(i) comparison cannot be computed from it alone.
+    members: z.array(MemberContextSchema).optional(),
   })
   .passthrough()
 
@@ -401,10 +436,34 @@ function ageFromDob(dob: string, asOf: Date): number | undefined {
  * the member's `id`.
  */
 export function translateHouseholdRequest(
-  req: { members: MemberContext[] },
+  req: {
+    members?: MemberContext[]
+    household?: { housingCosts?: number; utilityCosts?: number }
+  },
   asOf: Date
 ): TranslatedQuery {
   const notes: TranslationNote[] = []
+
+  // No member context at all (the contract's household-only expedited
+  // screening shape): emit only the application-level scalars and OMIT every
+  // collection, so the evaluation core treats the member-dependent subtree
+  // as still-needing-input rather than computing against a zero-member
+  // household (which would read "no income" into "income is zero").
+  if (!req.members || req.members.length === 0) {
+    notes.push(
+      'No member context was provided — the published contract\'s household ' +
+        'object carries no income or liquid-resource fields, so member-' +
+        'dependent results cannot be computed and are reported as missing ' +
+        'information.'
+    )
+    return {
+      inputs: {
+        ...OPERATIONAL_SCALAR_DEFAULTS,
+        ...applicationTimingDefaults(asOf),
+      },
+      notes,
+    }
+  }
 
   const members: Array<Record<string, unknown>> = []
   const incomes: Array<Record<string, unknown>> = []
@@ -421,17 +480,24 @@ export function translateHouseholdRequest(
     // the human `id` on each row for response correlation but link with
     // `#N`.
     const memberRef = `#${memberIdx}`
-    const row: Record<string, unknown> = { id: m.id, ...MEMBER_FLAG_DEFAULTS }
+    // The contract's member has no id; fall back to a positional handle so
+    // per-member results stay addressable.
+    const memberId = m.id ?? `member-${memberIdx}`
+    const row: Record<string, unknown> = { id: memberId, ...MEMBER_FLAG_DEFAULTS }
 
     if (m.dateOfBirth) {
       const age = ageFromDob(m.dateOfBirth, asOf)
       if (age === undefined) {
         notes.push(
-          `member ${m.id}: dateOfBirth "${m.dateOfBirth}" is not a valid date — kept default age ${MEMBER_FLAG_DEFAULTS['/members/*/age']}.`
+          `member ${memberId}: dateOfBirth "${m.dateOfBirth}" is not a valid date — kept default age ${MEMBER_FLAG_DEFAULTS['/members/*/age']}.`
         )
       } else {
         row['/members/*/age'] = age
       }
+    } else {
+      notes.push(
+        `member ${memberId}: no dateOfBirth — age defaulted to ${MEMBER_FLAG_DEFAULTS['/members/*/age']}.`
+      )
     }
     if (m.citizenshipStatus !== undefined) {
       row['/members/*/citizenshipImmigrationStatus'] = mapValue(
@@ -439,7 +505,7 @@ export function translateHouseholdRequest(
         CITIZENSHIP_MAP,
         'Citizen',
         notes,
-        `member ${m.id} citizenshipStatus`
+        `member ${memberId} citizenshipStatus`
       )
     }
     if (m.relationshipToHead !== undefined) {
@@ -457,10 +523,10 @@ export function translateHouseholdRequest(
         INCOME_TYPE_MAP,
         'WagesAndSalaries',
         notes,
-        `member ${m.id} income[${i}].type`
+        `member ${memberId} income[${i}].type`
       )
       incomes.push({
-        id: `${m.id}-income-${i}`,
+        id: `${memberId}-income-${i}`,
         '/incomes/*/memberId': memberRef,
         '/incomes/*/type': type,
         '/incomes/*/amount': inc.amount,
@@ -469,30 +535,36 @@ export function translateHouseholdRequest(
           FREQUENCY_MAP,
           'Monthly',
           notes,
-          `member ${m.id} income[${i}].frequency`
+          `member ${memberId} income[${i}].frequency`
         ),
         ...INCOME_ROW_DEFAULTS,
       })
       // Earned income needs a sibling /jobs row for work-requirement data.
+      // Hours come from the member's employment[] when supplied (the
+      // contract carries them there); otherwise the baseline default.
       if (type === 'WagesAndSalaries') {
+        const hours = m.employment?.find(
+          (e) => typeof e.hoursPerWeek === 'number'
+        )?.hoursPerWeek
         jobs.push({
-          id: `${m.id}-job-${i}`,
+          id: `${memberId}-job-${i}`,
           '/jobs/*/memberId': memberRef,
           ...JOB_ROW_DEFAULTS,
+          ...(hours !== undefined ? { '/jobs/*/hoursPerWeek': hours } : {}),
         })
       }
     }
 
     for (const [i, exp] of (m.expenses ?? []).entries()) {
       expenses.push({
-        id: `${m.id}-expense-${i}`,
+        id: `${memberId}-expense-${i}`,
         '/expenses/*/memberId': memberRef,
         '/expenses/*/type': mapValue(
           exp.category,
           EXPENSE_TYPE_MAP,
           'Rent',
           notes,
-          `member ${m.id} expenses[${i}].category`
+          `member ${memberId} expenses[${i}].category`
         ),
         '/expenses/*/amount': exp.amount,
         '/expenses/*/frequency': mapValue(
@@ -500,7 +572,7 @@ export function translateHouseholdRequest(
           FREQUENCY_MAP,
           'Monthly',
           notes,
-          `member ${m.id} expenses[${i}].frequency`
+          `member ${memberId} expenses[${i}].frequency`
         ),
         ...EXPENSE_ROW_DEFAULTS,
       })
@@ -508,18 +580,52 @@ export function translateHouseholdRequest(
 
     for (const [i, asset] of (m.assets ?? []).entries()) {
       resourceItems.push({
-        id: `${m.id}-asset-${i}`,
+        id: `${memberId}-asset-${i}`,
         '/resourceItems/*/memberId': memberRef,
         '/resourceItems/*/type': mapValue(
           asset.type,
           ASSET_TYPE_MAP,
           'CheckingAccount',
           notes,
-          `member ${m.id} assets[${i}].type`
+          `member ${memberId} assets[${i}].type`
         ),
         '/resourceItems/*/value': asset.value,
       })
     }
+  }
+
+  // The contract carries shelter/utility costs at the household level; the
+  // rules consume them as expense rows. When the caller supplied the
+  // household-level figures and no member-level expense of that kind,
+  // synthesize the rows so conformant minimal requests get correct shelter
+  // math instead of a silently-missing deduction.
+  const hasExpenseOf = (cat: string) =>
+    (req.members ?? []).some((mm) => mm.expenses?.some((e) => e.category === cat))
+  if (req.household?.housingCosts !== undefined && !hasExpenseOf('housing')) {
+    expenses.push({
+      id: 'household-housing',
+      '/expenses/*/memberId': '#0',
+      '/expenses/*/type': 'Rent',
+      '/expenses/*/amount': req.household.housingCosts,
+      '/expenses/*/frequency': 'Monthly',
+      ...EXPENSE_ROW_DEFAULTS,
+    })
+    notes.push(
+      'household.housingCosts was applied as a monthly housing (rent) expense.'
+    )
+  }
+  if (req.household?.utilityCosts !== undefined && !hasExpenseOf('utilities')) {
+    expenses.push({
+      id: 'household-utilities',
+      '/expenses/*/memberId': '#0',
+      '/expenses/*/type': 'Electricity',
+      '/expenses/*/amount': req.household.utilityCosts,
+      '/expenses/*/frequency': 'Monthly',
+      ...EXPENSE_ROW_DEFAULTS,
+    })
+    notes.push(
+      'household.utilityCosts was applied as a monthly utility (electricity) expense.'
+    )
   }
 
   // Always disclosed — the defaulting happens on every request, not just the

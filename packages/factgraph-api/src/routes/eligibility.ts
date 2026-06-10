@@ -29,11 +29,14 @@ import { runQuery, type QueryResponse } from '../evaluate.js'
 import {
   ExpeditedScreeningRequestSchema,
   HouseholdDeterminationRequestSchema,
+  IndividualDeterminationRequestSchema,
   SNAP_RULESET_ID,
   SNAP_DETERMINATION_TARGETS,
   SNAP_EXPEDITED_TARGET,
   translateHouseholdRequest,
   toProgramDecision,
+  toMissingInformation,
+  type HouseholdDeterminationRequest,
 } from '../translate/snap.js'
 import {
   MEDICAID_RULESET_ID,
@@ -152,10 +155,17 @@ router.post('/evaluate/expedited-screening', (req, res) => {
   )
   if (!query) return
 
+  // The contract's response is just {metadata, expedited}. When the screen
+  // could not actually be computed (e.g. the contract's household-only shape
+  // carries no income or liquid resources), we answer a conservative `false`
+  // and say what was missing rather than presenting an unknown as a result.
   const expedited = query.values[SNAP_EXPEDITED_TARGET]
   res.json({
     metadata,
     expedited: expedited === true,
+    ...(expedited === null || expedited === undefined
+      ? { 'x-missingInformation': toMissingInformation(query.missingInputs) }
+      : {}),
   })
 })
 
@@ -200,14 +210,44 @@ router.post('/evaluate/determination', (req, res) => {
     return problem(res, 400, 'Unknown program', `Unrecognized program "${program}".`)
   }
 
-  // Both programs use the household-shaped request (members[] + household).
-  const parsed = HouseholdDeterminationRequestSchema.safeParse(req.body)
-  if (!parsed.success) return badBody(res, parsed.error)
-  const body = parsed.data
+  // Preferred shape for both programs: household (members[] + household).
+  // For conformance we also accept the contract's per-applicant
+  // IndividualDeterminationRequest (single `member`) for medicaid, wrapping
+  // it as a household whose only known member is the applicant — with that
+  // assumption disclosed, since MAGI results depend on the full household.
+  let body: HouseholdDeterminationRequest
+  const wrapNotes: string[] = []
+  const looksIndividual =
+    program === 'medicaid' &&
+    (req.body as { member?: unknown })?.member !== undefined &&
+    (req.body as { members?: unknown })?.members === undefined
+  if (looksIndividual) {
+    const parsedIndividual = IndividualDeterminationRequestSchema.safeParse(req.body)
+    if (!parsedIndividual.success) return badBody(res, parsedIndividual.error)
+    const ind = parsedIndividual.data
+    body = {
+      metadata: ind.metadata,
+      program: ind.program,
+      household: {},
+      members: [ind.member],
+      verificationSummary: ind.verificationSummary,
+    } as HouseholdDeterminationRequest
+    wrapNotes.push(
+      'Per-applicant request: household context was assumed to be the sole ' +
+        'applicant. MAGI eligibility depends on full household size and ' +
+        'income — an orchestration layer holding the case record should ' +
+        'supply the whole household for an accurate result.'
+    )
+  } else {
+    const parsed = HouseholdDeterminationRequestSchema.safeParse(req.body)
+    if (!parsed.success) return badBody(res, parsed.error)
+    body = parsed.data
+  }
   const metadata = body.metadata ?? {}
 
   if (program === 'medicaid') {
     const { inputs, memberIds, notes } = translateMedicaidHousehold(body, new Date())
+    notes.push(...wrapNotes)
     const query = evaluateRuleset(
       res,
       MEDICAID_RULESET_ID,

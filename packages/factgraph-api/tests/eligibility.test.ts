@@ -275,9 +275,68 @@ test('medicaid ex parte → 501 not supported', async () => {
 // Validation
 // ---------------------------------------------------------------------------
 
-test('expedited screening with no members → 400', async () => {
+// ---------------------------------------------------------------------------
+// Contract-exact conformance (shapes copied from the published contract,
+// which has no member ids, no required member fields, and a household-only
+// expedited request)
+// ---------------------------------------------------------------------------
+
+test('expedited screening accepts the contract-exact household-only shape', async () => {
+  // The published household object carries no income or liquid resources,
+  // so the §273.2(i) comparison cannot be computed — the honest answer is a
+  // conservative false plus what was missing, not a 400.
   const res = await request(app)
     .post(EXPEDITED_URL)
-    .send({ household: { size: 1 } })
-  assert.equal(res.status, 400)
+    .send({ metadata: {}, household: { size: 1, housingCosts: 800, utilityCosts: 150 } })
+  assert.equal(res.status, 200)
+  assert.equal(res.body.expedited, false)
+  assert.ok(
+    Array.isArray(res.body['x-missingInformation']) &&
+      res.body['x-missingInformation'].length > 0,
+    'expected x-missingInformation when the screen is uncomputable'
+  )
+})
+
+test('determination accepts members without ids (contract has none)', async () => {
+  const req = householdRequest()
+  for (const m of req.members) delete (m as Record<string, unknown>).id
+  const res = await request(app).post(DETERMINATION_URL).send(req)
+  assert.equal(res.status, 200)
+  assert.equal(res.body.status, 'approved')
+})
+
+test('household.housingCosts is applied as a shelter expense when no expenses[] given', async () => {
+  const req = householdRequest()
+  req.members[0].expenses = []
+  ;(req.household as Record<string, unknown>).housingCosts = 800
+  const res = await request(app).post(DETERMINATION_URL).send(req)
+  assert.equal(res.status, 200)
+  assert.ok(
+    (res.body['x-translationNotes'] as string[]).some((n) =>
+      n.includes('housingCosts')
+    ),
+    'expected a note that household.housingCosts was applied'
+  )
+})
+
+test('medicaid accepts the contract IndividualDeterminationRequest with disclosed household assumption', async () => {
+  const res = await request(app).post(DETERMINATION_URL).send({
+    metadata: { applicationId: 'ind-1' },
+    program: 'medicaid',
+    member: {
+      dateOfBirth: '1990-01-01',
+      citizenshipStatus: 'us_citizen',
+      income: [{ type: 'employed', amount: 1200, frequency: 'monthly' }],
+    },
+    verificationSummary: [],
+  })
+  assert.equal(res.status, 200)
+  assert.equal(res.body.program, 'medicaid')
+  assert.equal(res.body.decisions.length, 1)
+  assert.ok(
+    (res.body['x-translationNotes'] as string[]).some((n) =>
+      /household context was assumed/.test(n)
+    ),
+    'expected the sole-applicant household assumption to be disclosed'
+  )
 })

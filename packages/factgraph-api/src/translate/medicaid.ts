@@ -106,6 +106,7 @@ function toMonthly(amount: number, frequency: string | undefined, notes: Transla
 
 function mapImmigrant(
   m: MemberContext,
+  memberId: string,
   notes: TranslationNote[]
 ): string {
   const c = m.citizenshipStatus
@@ -116,12 +117,12 @@ function mapImmigrant(
       : undefined
     if (mapped) return mapped
     notes.push(
-      `member ${m.id}: immigrationStatus "${m.immigrationStatus ?? '(none)'}" has no medicaid mapping — defaulted to "Undocumented".`
+      `member ${memberId}: immigrationStatus "${m.immigrationStatus ?? '(none)'}" has no medicaid mapping — defaulted to "Undocumented".`
     )
     return 'Undocumented'
   }
   if (c !== undefined) {
-    notes.push(`member ${m.id}: citizenshipStatus "${c}" unmapped — defaulted to "Citizen".`)
+    notes.push(`member ${memberId}: citizenshipStatus "${c}" unmapped — defaulted to "Citizen".`)
   }
   return CITIZENSHIP_TO_IMMIGRANT[c ?? ''] ?? 'Citizen'
 }
@@ -141,12 +142,15 @@ export function translateMedicaidHousehold(
   let earned = 0
   let unearned = 0
 
-  for (const m of req.members) {
-    memberIds.push(m.id)
+  for (const [idx, m] of req.members.entries()) {
+    // The contract's member has no id; positional fallback keeps per-member
+    // decisions addressable.
+    const memberId = m.id ?? `member-${idx}`
+    memberIds.push(memberId)
 
     // Household income aggregation.
     for (const [i, inc] of (m.income ?? []).entries()) {
-      const monthly = toMonthly(inc.amount, inc.frequency, notes, `member ${m.id} income[${i}]`)
+      const monthly = toMonthly(inc.amount, inc.frequency, notes, `member ${memberId} income[${i}]`)
       if (inc.type === 'unearned') unearned += monthly
       else earned += monthly // employed / self_employed (default earned)
     }
@@ -164,12 +168,12 @@ export function translateMedicaidHousehold(
     )
     if (receivesSsi) {
       notes.push(
-        `member ${m.id}: receivesSsi inferred from income unearnedType "ssi_or_ssdi" — ORCA does not distinguish SSI from SSDI, which the SsiRecipient category requires.`
+        `member ${memberId}: receivesSsi inferred from income unearnedType "ssi_or_ssdi" — ORCA does not distinguish SSI from SSDI, which the SsiRecipient category requires.`
       )
     }
 
     const row: Record<string, unknown> = {
-      id: m.id,
+      id: memberId,
       // ➕ fields ORCA doesn't carry — defaulted (see contract-gap-analysis.md).
       '/members/*/pregnant': 0,
       '/members/*/daysSincePregnancy': 999999999,
@@ -178,7 +182,7 @@ export function translateMedicaidHousehold(
       '/members/*/isFullTimeStudent': false,
       // Covered / derivable from ORCA.
       '/members/*/disabled': m.isDisabled ?? false,
-      '/members/*/immigrantStatus': mapImmigrant(m, notes),
+      '/members/*/immigrantStatus': mapImmigrant(m, memberId, notes),
       '/members/*/receivesSsi': receivesSsi,
       '/members/*/monthlyHoursWorked': monthlyHours
         ? Math.round(monthlyHours * HOURS_PER_WEEK_TO_MONTH)

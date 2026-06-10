@@ -109,11 +109,19 @@ export function buildConsumerOpenApiDocument() {
     }).openapi({ description: 'One asset/resource for a member.' })
   )
 
+  const Employment = registry.register(
+    'Employment',
+    z.object({
+      status: z.string().optional().openapi({ description: 'full_time | part_time | seasonal | self_employed | not_employed.' }),
+      hoursPerWeek: z.number().optional().openapi({ description: 'Used for SNAP work-requirement evaluation when present.' }),
+    }).openapi({ description: 'One employment record (from the published contract). hoursPerWeek is consumed; other fields are accepted for compatibility.' })
+  )
+
   const MemberContext = registry.register(
     'MemberContext',
     z.object({
-      id: z.string().openapi({ description: "Caller's stable handle for this member; echoed on per-member results." }),
-      dateOfBirth: z.string().openapi({ format: 'date', example: '1990-03-15' }),
+      id: z.string().optional().openapi({ description: "Caller's correlation handle for this member, echoed on per-member results. Optional — the published contract's member has no id; absent ids fall back to positional member-N handles." }),
+      dateOfBirth: z.string().optional().openapi({ format: 'date', example: '1990-03-15', description: 'Optional per the published contract; when absent, age is defaulted and the assumption disclosed in x-translationNotes.' }),
       citizenshipStatus: z.enum(CITIZENSHIP).optional(),
       immigrationStatus: z.enum(IMMIGRATION).optional().openapi({
         description: 'Present when citizenshipStatus is non_citizen.',
@@ -124,8 +132,10 @@ export function buildConsumerOpenApiDocument() {
       income: z.array(Income).optional(),
       expenses: z.array(Expense).optional(),
       assets: z.array(Asset).optional(),
+      employment: z.array(Employment).optional(),
+      healthCoverage: z.array(z.unknown()).optional().openapi({ description: 'Accepted for contract compatibility; not consumed by the SNAP/Medicaid rules today.' }),
     }).openapi({
-      description: 'A household member: ORCA demographics plus income/expenses/assets. Only id and dateOfBirth are required; other fields refine the determination and, when absent, are defaulted (disclosed via x-translationNotes) or requested back via x-missingInformation.',
+      description: 'A household member: ORCA demographics plus income/expenses/assets/employment. No fields are required (matching the published contract); absent fields are defaulted (disclosed via x-translationNotes) or requested back via x-missingInformation.',
     })
   )
 
@@ -153,7 +163,7 @@ export function buildConsumerOpenApiDocument() {
       verificationSummary: z.array(z.unknown()).optional().openapi({
         description: 'Status of verification obligations (status enum: pending | inconclusive | satisfied | waived | cannot_verify).',
       }),
-    }).openapi({ description: 'Determination request carrying the whole household. Used for SNAP and (per the gap analysis) Medicaid.', example: HOUSEHOLD_EXAMPLE as never })
+    }).openapi({ description: 'Determination request carrying the whole household. Used for SNAP and Medicaid. The published contract\'s per-applicant IndividualDeterminationRequest (single `member`) is also accepted for medicaid — the adapter wraps it as a household whose only known member is the applicant and discloses that assumption in x-translationNotes.', example: HOUSEHOLD_EXAMPLE as never })
   )
 
   const ExpeditedScreeningRequest = registry.register(
@@ -161,8 +171,10 @@ export function buildConsumerOpenApiDocument() {
     z.object({
       metadata: metadata,
       household: Household,
-      members: z.array(MemberContext).min(1),
-    }).openapi({ description: 'Expedited SNAP screening request (7 CFR §273.2(i)).' })
+      members: z.array(MemberContext).optional().openapi({
+        description: 'Overlay: member/income/resource context. The published contract is household-only, but its household object carries no income or liquid-resource fields, so without members the §273.2(i) comparison cannot be computed and the response is a conservative `expedited: false` with x-missingInformation.',
+      }),
+    }).openapi({ description: 'Expedited SNAP screening request (7 CFR §273.2(i)). Household-only requests (the contract-exact shape) are accepted.' })
   )
 
   // ---- Responses (path-free) ----
@@ -235,6 +247,9 @@ export function buildConsumerOpenApiDocument() {
     z.object({
       metadata: metadata,
       expedited: z.boolean(),
+      'x-missingInformation': z.array(MissingInformation).optional().openapi({
+        description: 'Present when the screen could not actually be computed from the supplied data — expedited is then a conservative false, and this lists what was missing.',
+      }),
     }).openapi({ description: 'Response from expedited SNAP screening.' })
   )
 

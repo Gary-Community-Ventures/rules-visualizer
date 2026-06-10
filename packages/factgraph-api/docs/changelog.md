@@ -7,6 +7,26 @@ without surface impact aren't logged here; see git history for those.
 
 ### Added
 
+- **Contract-exact conformance** (verified against the published adapter
+  contract's schemas; see the new [`docs/v1-conformance.md`](./v1-conformance.md)
+  matrix):
+  - Member `id` and `dateOfBirth` are now optional (the published member has
+    no required fields and no id) — absent ids fall back to positional
+    `member-N` handles; absent birth dates default age with disclosure.
+  - `household.housingCosts` / `utilityCosts` are now applied as monthly
+    shelter/utility expenses when no member-level expense covers them
+    (previously accepted but silently ignored — wrong shelter math for
+    conformant minimal callers).
+  - `member.employment[].hoursPerWeek` is now consumed for SNAP work
+    requirements; `healthCoverage` accepted for compatibility.
+  - Household-only expedited screening (the contract-exact shape) is now
+    accepted: since the contract's household carries no income or
+    liquid-resource fields, the response is a conservative
+    `expedited: false` plus `x-missingInformation` naming what's needed.
+  - The contract's per-applicant `IndividualDeterminationRequest` is now
+    accepted for medicaid, wrapped as a sole-applicant household with the
+    assumption disclosed in `x-translationNotes`.
+
 - **v2 draft-proposal contract** at `GET /v2/eligibility/openapi.{json,yaml}`
   + Swagger UI at `/v2/eligibility/docs` (committed snapshot:
   `docs/eligibility-adapter-v2-proposal-openapi.yaml`). A proposed revision

@@ -112,15 +112,30 @@ components:
         - type
         - value
       description: One asset/resource for a member.
+    Employment:
+      type: object
+      properties:
+        status:
+          type: string
+          description: full_time | part_time | seasonal | self_employed | not_employed.
+        hoursPerWeek:
+          type: number
+          description: Used for SNAP work-requirement evaluation when present.
+      description: One employment record (from the published contract). hoursPerWeek
+        is consumed; other fields are accepted for compatibility.
     MemberContext:
       type: object
       properties:
         id:
           type: string
-          description: Caller's stable handle for this member; echoed on per-member results.
+          description: Caller's correlation handle for this member, echoed on per-member
+            results. Optional — the published contract's member has no id;
+            absent ids fall back to positional member-N handles.
         dateOfBirth:
           type: string
           format: date
+          description: Optional per the published contract; when absent, age is defaulted
+            and the assumption disclosed in x-translationNotes.
           example: 1990-03-15
         citizenshipStatus:
           type: string
@@ -181,12 +196,18 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/Asset"
-      required:
-        - id
-        - dateOfBirth
-      description: "A household member: ORCA demographics plus income/expenses/assets.
-        Only id and dateOfBirth are required; other fields refine the
-        determination and, when absent, are defaulted (disclosed via
+        employment:
+          type: array
+          items:
+            $ref: "#/components/schemas/Employment"
+        healthCoverage:
+          type: array
+          items: {}
+          description: Accepted for contract compatibility; not consumed by the
+            SNAP/Medicaid rules today.
+      description: "A household member: ORCA demographics plus
+        income/expenses/assets/employment. No fields are required (matching the
+        published contract); absent fields are defaulted (disclosed via
         x-translationNotes) or requested back via x-missingInformation."
     Household:
       type: object
@@ -229,7 +250,10 @@ components:
         - household
         - members
       description: Determination request carrying the whole household. Used for SNAP
-        and (per the gap analysis) Medicaid.
+        and Medicaid. The published contract's per-applicant
+        IndividualDeterminationRequest (single `member`) is also accepted for
+        medicaid — the adapter wraps it as a household whose only known member
+        is the applicant and discloses that assumption in x-translationNotes.
       example:
         metadata:
           intake:
@@ -283,12 +307,16 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/MemberContext"
-          minItems: 1
+          description: "Overlay: member/income/resource context. The published contract is
+            household-only, but its household object carries no income or
+            liquid-resource fields, so without members the §273.2(i) comparison
+            cannot be computed and the response is a conservative `expedited:
+            false` with x-missingInformation."
       required:
         - metadata
         - household
-        - members
-      description: Expedited SNAP screening request (7 CFR §273.2(i)).
+      description: Expedited SNAP screening request (7 CFR §273.2(i)). Household-only
+        requests (the contract-exact shape) are accepted.
     MissingInformation:
       type: object
       properties:
@@ -449,6 +477,13 @@ components:
             and never inspects it.
         expedited:
           type: boolean
+        x-missingInformation:
+          type: array
+          items:
+            $ref: "#/components/schemas/MissingInformation"
+          description: Present when the screen could not actually be computed from the
+            supplied data — expedited is then a conservative false, and this
+            lists what was missing.
       required:
         - metadata
         - expedited
