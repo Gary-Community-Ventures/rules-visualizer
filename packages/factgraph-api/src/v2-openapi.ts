@@ -206,7 +206,7 @@ export function buildV2OpenApiDocument() {
         format: 'date',
         description: 'Date a recent pregnancy ended; drives postpartum coverage windows.',
       }),
-    }).openapi({ description: 'Pregnancy status. Absent fields are unknown (never guessed) and may produce `pending`.' })
+    }).openapi({ description: 'Pregnancy status. Programs: SNAP, Medicaid. Absent fields are unknown (never guessed) and may produce `pending`.' })
   )
 
   const VeteranStatus = registry.register(
@@ -217,7 +217,7 @@ export function buildV2OpenApiDocument() {
       needsAidAndAttendance: z.boolean().optional(),
       survivorNeedsAidAndAttendance: z.boolean().optional(),
       survivorHasDisability: z.boolean().optional(),
-    }).openapi({ description: 'Veteran status and related disability/survivor flags.' })
+    }).openapi({ description: 'Veteran status and related disability/survivor flags. Programs: SNAP, Medicaid.' })
   )
 
   const StudentStatus = registry.register(
@@ -228,7 +228,7 @@ export function buildV2OpenApiDocument() {
       inWorkStudy: z.boolean().optional(),
       assignedByEmploymentTrainingProgram: z.boolean().optional(),
       unfitForEmployment: z.boolean().optional(),
-    }).openapi({ description: 'Student enrollment status and student-eligibility exemption flags.' })
+    }).openapi({ description: 'Student enrollment status and student-eligibility exemption flags. Programs: SNAP, Medicaid.' })
   )
 
   const DisabilityDetails = registry.register(
@@ -244,7 +244,7 @@ export function buildV2OpenApiDocument() {
       ssiApplicationPending: z.boolean().optional(),
       inVocationalRehabilitation: z.boolean().optional(),
       hasDisabledChild: z.boolean().optional(),
-    }).openapi({ description: 'Refines the coarse `isDisabled` with the distinctions program rules require.' })
+    }).openapi({ description: 'Refines the coarse `isDisabled` with the distinctions program rules require — isDisabled alone is ambiguous (SNAP and Medicaid use different legal definitions of disability; both derive from these facts). Programs: SNAP, Medicaid.' })
   )
 
   const LivingSituation = registry.register(
@@ -261,7 +261,7 @@ export function buildV2OpenApiDocument() {
       preparesFoodWithHousehold: z.boolean().optional(),
       recentlyReleasedFromInstitution: z.boolean().optional(),
       participatesInAnotherHousehold: z.boolean().optional(),
-    }).openapi({ description: 'Living arrangement facts that drive household-composition rules.' })
+    }).openapi({ description: 'Living arrangement facts that drive household-composition rules (SNAP composes its household unit from these — e.g. preparesFoodWithHousehold). Programs: SNAP.' })
   )
 
   const StrikerStatus = registry.register(
@@ -294,7 +294,7 @@ export function buildV2OpenApiDocument() {
       otherUnfitnessReason: z.boolean().optional(),
       isMigrantFarmWorker: z.boolean().optional(),
       striker: StrikerStatus.optional(),
-    }).openapi({ description: 'Work registration, ABAWD, and work-requirement exemption facts.' })
+    }).openapi({ description: 'Work registration, ABAWD, and work-requirement exemption facts. Programs: SNAP.' })
   )
 
   const SponsorInfo = registry.register(
@@ -315,7 +315,7 @@ export function buildV2OpenApiDocument() {
       lawfullyResidedSince1996Senior: z.boolean().optional(),
       qualifyingMilitaryConnection: z.boolean().optional(),
       sponsor: SponsorInfo.optional(),
-    }).openapi({ description: 'Immigration detail beyond status — waiting-period and deeming inputs.' })
+    }).openapi({ description: 'Immigration detail beyond status — waiting-period and deeming inputs. Programs: SNAP.' })
   )
 
   const Findings = registry.register(
@@ -334,7 +334,7 @@ export function buildV2OpenApiDocument() {
       sanctionImposed: z.boolean().optional(),
     }).openapi({
       description:
-        'Caseworker/records-check verification OUTCOMES — these do not exist until verified and are never defaulted. A determination that needs one that is absent returns `pending` with the field in `missingInformation`. (Open question: these could alternatively ride `verificationSummary` with result values.)',
+        'Caseworker/records-check verification OUTCOMES — these do not exist until verified and are never defaulted. A determination that needs one that is absent returns `pending` with the field in `missingInformation`. (Open question: these could alternatively ride `verificationSummary` with result values.) Programs: SNAP.',
     })
   )
 
@@ -486,7 +486,7 @@ export function buildV2OpenApiDocument() {
       providesMostOfCare: z.boolean().optional(),
       adequateChildcareUnavailable: z.boolean().optional(),
       claimedForWorkExemption: z.boolean().optional(),
-    }).openapi({ description: 'A caregiver→dependent relationship (work-requirement exemptions).' })
+    }).openapi({ description: 'A caregiver→dependent relationship (work-requirement exemptions). Programs: SNAP.' })
   )
 
   const Household = registry.register(
@@ -822,6 +822,8 @@ export function buildV2OpenApiDocument() {
         '6. **Ex parte fully specified** — including proposed serviceResult payload shapes where the upstream schemas are currently stubs.',
         '',
         'Like v1, this contract is path-free: no rules-engine internals anywhere.',
+        '',
+        '**Field semantics:** every request field is defined in the generated [input dictionary](https://github.com/Gary-Community-Ventures/rules-visualizer/blob/main/packages/factgraph-api/docs/input-dictionary.md) — rule-author-written definitions, full enum vocabularies (including the open-string `detailType` value sets), policy citations, and which programs consume each field. Group schemas carry a `Programs:` tag inline.',
       ].join('\n'),
       license: { name: 'MPL-2.0' },
     },

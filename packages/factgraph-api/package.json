@@ -12,7 +12,8 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "test": "node --import tsx --test tests/*.test.ts",
-    "gen:openapi": "tsx scripts/generate-openapi.ts"
+    "gen:openapi": "tsx scripts/generate-openapi.ts",
+    "gen:dictionary": "tsx scripts/generate-input-dictionary.ts"
   },
   "dependencies": {
     "@asteasolutions/zod-to-openapi": "^7.3.0",

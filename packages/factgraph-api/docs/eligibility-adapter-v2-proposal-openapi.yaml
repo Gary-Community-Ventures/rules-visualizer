@@ -5,39 +5,21 @@ openapi: 3.1.0
 info:
   title: Eligibility Adapter API — v2 draft proposal
   version: 2.0.0-draft.1
-  description: >-
-    **Status: draft proposal for review — not an implemented surface.** The
-    conformant v1 contract lives at `/v1/eligibility` and is unaffected.
+  description: |-
+    **Status: draft proposal for review — not an implemented surface.** The conformant v1 contract lives at `/v1/eligibility` and is unaffected.
 
+    A proposed revision of the eligibility-adapter contract, addressing the gaps documented in `docs/contract-gap-analysis.md` and `docs/request-field-proposal.md`:
 
-    A proposed revision of the eligibility-adapter contract, addressing the gaps
-    documented in `docs/contract-gap-analysis.md` and
-    `docs/request-field-proposal.md`:
-
-
-    1. **No-guess policy** — applicant-material facts and verification findings
-    are never defaulted; what is missing comes back as `pending` +
-    `missingInformation`.
-
-    2. **The request can carry a real determination** — domain-shaped member,
-    household, and application-context fields for everything the rules consume.
-
-    3. **Medicaid cardinality fixed** — household in, per-member decisions out
-    (or one member via `subjectMemberId`).
-
-    4. **One response shape for every program** — a `DeterminationResponse`
-    whose `decisions[]` entries carry a `scope` (`household` for SNAP, `member`
-    for medicaid/chip). Callers never branch on program to know the schema.
-
-    5. **The response can express the outcome** — `benefitAmount`,
-    `missingInformation`, `explanation` as first-class fields; `status` adds
-    `not_supported`; `path` adds `ex_parte`.
-
-    6. **Ex parte fully specified** — including proposed serviceResult payload
-    shapes where the upstream schemas are currently stubs.
-
+    1. **No-guess policy** — applicant-material facts and verification findings are never defaulted; what is missing comes back as `pending` + `missingInformation`.
+    2. **The request can carry a real determination** — domain-shaped member, household, and application-context fields for everything the rules consume.
+    3. **Medicaid cardinality fixed** — household in, per-member decisions out (or one member via `subjectMemberId`).
+    4. **One response shape for every program** — a `DeterminationResponse` whose `decisions[]` entries carry a `scope` (`household` for SNAP, `member` for medicaid/chip). Callers never branch on program to know the schema.
+    5. **The response can express the outcome** — `benefitAmount`, `missingInformation`, `explanation` as first-class fields; `status` adds `not_supported`; `path` adds `ex_parte`.
+    6. **Ex parte fully specified** — including proposed serviceResult payload shapes where the upstream schemas are currently stubs.
 
     Like v1, this contract is path-free: no rules-engine internals anywhere.
+
+    **Field semantics:** every request field is defined in the generated [input dictionary](https://github.com/Gary-Community-Ventures/rules-visualizer/blob/main/packages/factgraph-api/docs/input-dictionary.md) — rule-author-written definitions, full enum vocabularies (including the open-string `detailType` value sets), policy citations, and which programs consume each field. Group schemas carry a `Programs:` tag inline.
   license:
     name: MPL-2.0
 servers:
@@ -69,8 +51,8 @@ components:
           type: string
           format: date
           description: Date a recent pregnancy ended; drives postpartum coverage windows.
-      description: Pregnancy status. Absent fields are unknown (never guessed) and may
-        produce `pending`.
+      description: "Pregnancy status. Programs: SNAP, Medicaid. Absent fields are
+        unknown (never guessed) and may produce `pending`."
     VeteranStatus:
       type: object
       properties:
@@ -84,7 +66,8 @@ components:
           type: boolean
         survivorHasDisability:
           type: boolean
-      description: Veteran status and related disability/survivor flags.
+      description: "Veteran status and related disability/survivor flags. Programs:
+        SNAP, Medicaid."
     StudentStatus:
       type: object
       properties:
@@ -102,7 +85,8 @@ components:
           type: boolean
         unfitForEmployment:
           type: boolean
-      description: Student enrollment status and student-eligibility exemption flags.
+      description: "Student enrollment status and student-eligibility exemption flags.
+        Programs: SNAP, Medicaid."
     DisabilityDetails:
       type: object
       properties:
@@ -131,8 +115,10 @@ components:
           type: boolean
         hasDisabledChild:
           type: boolean
-      description: Refines the coarse `isDisabled` with the distinctions program rules
-        require.
+      description: "Refines the coarse `isDisabled` with the distinctions program
+        rules require — isDisabled alone is ambiguous (SNAP and Medicaid use
+        different legal definitions of disability; both derive from these
+        facts). Programs: SNAP, Medicaid."
     LivingSituation:
       type: object
       properties:
@@ -165,7 +151,9 @@ components:
           type: boolean
         participatesInAnotherHousehold:
           type: boolean
-      description: Living arrangement facts that drive household-composition rules.
+      description: "Living arrangement facts that drive household-composition rules
+        (SNAP composes its household unit from these — e.g.
+        preparesFoodWithHousehold). Programs: SNAP."
     StrikerStatus:
       type: object
       properties:
@@ -215,7 +203,8 @@ components:
           type: boolean
         striker:
           $ref: "#/components/schemas/StrikerStatus"
-      description: Work registration, ABAWD, and work-requirement exemption facts.
+      description: "Work registration, ABAWD, and work-requirement exemption facts.
+        Programs: SNAP."
     SponsorInfo:
       type: object
       properties:
@@ -242,7 +231,8 @@ components:
           type: boolean
         sponsor:
           $ref: "#/components/schemas/SponsorInfo"
-      description: Immigration detail beyond status — waiting-period and deeming inputs.
+      description: "Immigration detail beyond status — waiting-period and deeming
+        inputs. Programs: SNAP."
     Findings:
       type: object
       properties:
@@ -289,7 +279,7 @@ components:
         exist until verified and are never defaulted. A determination that needs
         one that is absent returns `pending` with the field in
         `missingInformation`. (Open question: these could alternatively ride
-        `verificationSummary` with result values.)"
+        `verificationSummary` with result values.) Programs: SNAP."
     Income:
       type: object
       properties:
@@ -619,7 +609,8 @@ components:
       required:
         - caregiverId
         - dependentId
-      description: A caregiver→dependent relationship (work-requirement exemptions).
+      description: "A caregiver→dependent relationship (work-requirement exemptions).
+        Programs: SNAP."
     Household:
       type: object
       properties:
