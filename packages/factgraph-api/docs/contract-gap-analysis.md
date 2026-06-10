@@ -106,10 +106,49 @@ cardinality question. Everything else is covered or derivable.
 
 ### Medicaid ex parte
 
-`/evaluate/medicaid-ex-parte` does **not** map to this graph at all — it
-determines eligibility from electronic-data-exchange results (FDSH FTI,
-Medicare/VCI), a concept the graph has no inputs for. Stays `501` until/unless
-that flow is modeled separately.
+Ex parte (42 CFR §435.916) is **not different eligibility math** — it is the
+same MAGI determination reached through a different evidentiary pathway:
+determine from information already available (electronic data exchange),
+without asking the applicant for documentation. The same medicaid graph
+computes the answer; what differs is a thin workflow wrapper:
+
+1. **Conclusiveness gate.** Each `electronicChecks[]` entry carries
+   `result: conclusive | inconclusive | partial | error`. Ex parte's defining
+   constraint is that the applicant can't be asked for more — so any required
+   check that isn't `conclusive` ⇒ `status: pending` (falls to the regular
+   process). This belongs in the adapter, not the rules.
+2. **Input provenance.** Facts arrive via data exchange (`fdsh_fti` → income,
+   `fdsh_ssa`/`ssa_ievs` → SSI, `fdsh_vlp`/`save` → immigration status)
+   rather than caseworker entry. Note MAGI's household is essentially the tax
+   unit, so FTI income aligns naturally with the graph's household-level
+   income inputs.
+
+**Why it isn't implemented yet — three open contract questions, no engine
+gaps:**
+
+- **Who owns extraction?** `MedicaidExParteRequest` carries full
+  `MemberContext` *alongside* the checks. If the blueprint populates the
+  member context from data-exchange results before calling (checks ride along
+  for the conclusiveness gate), the endpoint is implementable today from
+  defined fields only. If the adapter is meant to extract facts from the raw
+  `serviceResult` payloads, it is blocked: all 12 `serviceResult` schemas in
+  `data-exchange-adapter-openapi.yaml` are currently `additionalProperties:
+  true` stubs with no fields defined.
+- **Cardinality**, again: the request carries one member and no household,
+  but MAGI needs household size + income — the same issue as the
+  per-applicant determination (above). Even a fully-wired ex parte call would
+  return `pending` for missing household context today.
+- **`path: ex_parte` vs the enum.** The contract's ex parte example response
+  returns `path: ex_parte`, but the shared `DecisionPath` enum is
+  `[auto, manual]` — the example is invalid against its own schema. Either a
+  doc bug or an intended third value that hasn't landed; adapters need to
+  know which value to return.
+
+Once these are answered the implementation is small — conclusiveness gate →
+the existing medicaid translator → the same graph → `ProgramDecision`. The
+endpoint returns `501` until then, and the structure stays "one medicaid
+graph, two workflow endpoints" (mirroring SNAP's expedited-screening over
+`snap-complete`).
 
 ---
 
@@ -207,6 +246,13 @@ the case record (currently hardcoded — a defect):
    promoting them into the contract as `benefitAmount` and an optional
    `proratedFirstMonthAmount` (monthly dollars, present when status is
    `approved` for benefit-amount programs).
+7. **Medicaid ex parte:** clarify (a) whether the blueprint or the adapter
+   owns extraction of facts from `serviceResult` payloads (the per-service
+   schemas are currently empty stubs), (b) the household-context question for
+   the per-applicant call (same as #1), and (c) whether `path: ex_parte` in
+   the contract's example is a doc bug or an intended addition to the
+   `DecisionPath` enum. The rules engine is ready — same medicaid graph,
+   plus a conclusiveness gate in the adapter.
 
 > The ✅/➕/🔎 buckets above are a first pass and should be confirmed against the
 > rule authors' intent; some flags (e.g. striker status) are arguably either

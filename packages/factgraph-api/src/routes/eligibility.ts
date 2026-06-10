@@ -240,19 +240,25 @@ router.post('/evaluate/determination', (req, res) => {
 /**
  * POST /v1/eligibility/evaluate/medicaid-ex-parte
  *
- * Not yet supported. The Medicaid ex parte flow depends on electronic
- * data-exchange (FDSH FTI, Medicare/VCI) results that this adapter does
- * not yet model. Returns 501 rather than a fabricated determination.
+ * Not yet implemented — but not for engine reasons. Ex parte is the same
+ * MAGI determination the medicaid graph already computes, reached through a
+ * different evidentiary pathway (electronic data exchange + a "every
+ * required check must be conclusive" gate). Implementation is pending three
+ * contract clarifications (serviceResult payload schemas, household context
+ * on the per-applicant call, and the `path: ex_parte` enum value) — see
+ * docs/contract-gap-analysis.md § Medicaid ex parte. Returns 501 rather
+ * than a fabricated determination.
  */
 router.post('/evaluate/medicaid-ex-parte', (_req, res) => {
   problem(
     res,
     501,
-    'Not supported',
-    'Medicaid ex parte evaluation is not yet implemented by this adapter. ' +
-      'It requires electronic data-exchange results (FDSH FTI, Medicare/VCI) ' +
-      'that are not yet modeled. SNAP determination and expedited screening ' +
-      'are available today.'
+    'Not implemented',
+    'Medicaid ex parte evaluation is not yet implemented. The underlying ' +
+      'rules are ready (the same medicaid determination available at ' +
+      '/evaluate/determination); implementation awaits contract ' +
+      'clarifications on the electronic-check result schemas and household ' +
+      'context. See docs/contract-gap-analysis.md in the repository.'
   )
 })
 

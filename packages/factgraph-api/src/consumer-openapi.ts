@@ -289,8 +289,8 @@ export function buildConsumerOpenApiDocument() {
   registry.registerPath({
     method: 'post',
     path: '/v1/eligibility/evaluate/medicaid-ex-parte',
-    summary: 'Medicaid ex parte evaluation (not yet supported).',
-    description: 'Reserved by the contract. Not yet implemented — depends on electronic data-exchange results not yet modeled. Returns 501.',
+    summary: 'Medicaid ex parte evaluation (not yet implemented).',
+    description: 'Reserved by the contract. Ex parte runs the same medicaid determination through a different evidentiary pathway (electronic checks + a conclusiveness gate); implementation awaits contract clarification of the electronic-check result schemas and household context for the per-applicant call. Returns 501.',
     tags: ['Eligibility'],
     security: [{ [bearerAuth.name]: [] }],
     responses: { 501: { description: 'Not implemented.', content: { 'application/json': { schema: ProblemDetails } } } },
