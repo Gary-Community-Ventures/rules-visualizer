@@ -25,11 +25,15 @@ info:
     3. **Medicaid cardinality fixed** — household in, per-member decisions out
     (or one member via `subjectMemberId`).
 
-    4. **The response can express the outcome** — `benefitAmount`,
+    4. **One response shape for every program** — a `DeterminationResponse`
+    whose `decisions[]` entries carry a `scope` (`household` for SNAP, `member`
+    for medicaid/chip). Callers never branch on program to know the schema.
+
+    5. **The response can express the outcome** — `benefitAmount`,
     `missingInformation`, `explanation` as first-class fields; `status` adds
     `not_supported`; `path` adds `ex_parte`.
 
-    5. **Ex parte fully specified** — including proposed serviceResult payload
+    6. **Ex parte fully specified** — including proposed serviceResult payload
     shapes where the upstream schemas are currently stubs.
 
 
@@ -332,6 +336,14 @@ components:
           type: string
           description: Specific excluded-income category from the rules vocabulary, when
             applicable.
+        needBasedNonprofitCashDonationQuarterlyExclusionUsed:
+          type: number
+          description: Exclusion amount already used this quarter for need-based nonprofit
+            cash donations (case history).
+        indianTrustRestrictedLandInterestAnnualExclusionUsed:
+          type: number
+          description: Exclusion amount already used this year for Indian trust /
+            restricted-land interest income (case history).
       required:
         - type
         - amount
@@ -730,7 +742,7 @@ components:
       description: Determination request. ALWAYS household-shaped — per-member
         programs still require household context (MAGI eligibility depends on
         household size + income).
-      example:
+      example: &a3
         metadata:
           intake:
             applicationId: app-123
@@ -827,19 +839,24 @@ components:
       required:
         - factor
       description: One step of the domain-summarized "why" behind an outcome.
-    ProgramDecision:
+    Decision:
       type: object
       properties:
-        metadata:
-          type: object
-          additionalProperties: {}
-          description: Opaque correlation context, echoed back unchanged; never inspected.
-        program:
+        scope:
           type: string
-          enum: *a2
+          enum:
+            - household
+            - member
+          description: What this decision applies to. Household-unit programs (SNAP) emit
+            one household-scoped decision; per-member programs (medicaid/chip)
+            emit one member-scoped decision per member. The scope is a property
+            of the program rules, not the request.
+        memberId:
+          type: string
+          description: Present iff scope is member.
         status:
           type: string
-          enum: &a3
+          enum:
             - pending
             - approved
             - denied
@@ -851,7 +868,7 @@ components:
             implemented by this adapter).
         path:
           type: string
-          enum: &a4
+          enum:
             - auto
             - manual
             - ex_parte
@@ -866,60 +883,25 @@ components:
             programs (SNAP allotment).
         proratedFirstMonthAmount:
           type: number
-        missingInformation:
-          type: array
-          items:
-            $ref: "#/components/schemas/MissingInformation"
-          description: "Present when status is pending — exactly what is still needed. The
-            progressive-disclosure loop: supply these and re-call."
-        translationNotes:
-          type: array
-          items:
-            type: string
-          description: Lossy derivations the determination relied on (e.g. SSI inferred
-            from a conflated SSI/SSDI income type). Under the no-guess policy,
-            nothing here is a guessed fact.
-        explanation:
-          type: array
-          items:
-            $ref: "#/components/schemas/ExplanationStep"
-      required:
-        - metadata
-        - program
-        - status
-        - path
-      description: Decision for one program for the household unit (SNAP) —
-        first-class amounts, missing-information, and explanation; no extension
-        prefixes.
-    MemberDecision:
-      type: object
-      properties:
-        memberId:
-          type: string
-        status:
-          type: string
-          enum: *a3
-        path:
-          type: string
-          enum: *a4
-        denialReasonCode:
-          type: string
         medicaidCategory:
           type: string
-          description: Infant | YoungChild | OlderChild | Adult | Pregnant | SsiRecipient
-            | Ineligible.
+          description: "Medicaid only: Infant | YoungChild | OlderChild | Adult | Pregnant
+            | SsiRecipient | Ineligible."
         chpEligible:
           type: boolean
+          description: "Medicaid only: CHP+ alternative eligibility."
         explanation:
           type: array
           items:
             $ref: "#/components/schemas/ExplanationStep"
       required:
-        - memberId
+        - scope
         - status
         - path
-      description: One member-level decision (per-member programs).
-    MemberDeterminationResponse:
+      description: One eligibility decision. A single schema covers every program —
+        what varies is the scope and which outcome fields apply (documented per
+        field). Program-specific values never change the shape.
+    DeterminationResponse:
       type: object
       properties:
         metadata:
@@ -932,23 +914,30 @@ components:
         decisions:
           type: array
           items:
-            $ref: "#/components/schemas/MemberDecision"
-          description: One decision per member (or one entry when subjectMemberId was
-            supplied).
+            $ref: "#/components/schemas/Decision"
+          description: "The decisions this evaluation produced: exactly one
+            household-scoped entry for household-unit programs (SNAP); one
+            member-scoped entry per member for per-member programs (medicaid) —
+            or a single entry when subjectMemberId was supplied."
         missingInformation:
           type: array
           items:
             $ref: "#/components/schemas/MissingInformation"
+          description: "Present when any decision is pending — exactly what is still
+            needed. The progressive-disclosure loop: supply these and re-call."
         translationNotes:
           type: array
           items:
             type: string
+          description: Lossy derivations the determination relied on (e.g. SSI inferred
+            from a conflated SSI/SSDI income type). Under the no-guess policy,
+            nothing here is a guessed fact.
       required:
         - metadata
         - program
         - decisions
-      description: "Determination response for per-member programs (medicaid/chip):
-        household in, per-member decisions out."
+      description: The one determination response shape for every program. Callers
+        never branch on program to know the schema; they iterate decisions[].
     ExpeditedScreeningRequest:
       type: object
       properties:
@@ -1116,12 +1105,14 @@ paths:
   /v2/eligibility/evaluate/determination:
     post:
       summary: Final eligibility determination (no-guess).
-      description: "Household-shaped for every program. SNAP returns a household
-        ProgramDecision; per-member programs (medicaid) return one decision per
-        member, or one member via subjectMemberId. Nothing applicant-material is
-        defaulted: anything needed-but-absent yields status pending +
-        missingInformation. **Draft proposal — not yet implemented.** The
-        conformant v1 endpoint remains available under /v1/eligibility."
+      description: "Household-shaped for every program, and one response shape for
+        every program: a DeterminationResponse whose decisions[] carry one
+        household-scoped entry (SNAP) or one member-scoped entry per member
+        (medicaid; or a single member via subjectMemberId). Nothing
+        applicant-material is defaulted: anything needed-but-absent yields
+        status pending + missingInformation. **Draft proposal — not yet
+        implemented.** The conformant v1 endpoint remains available under
+        /v1/eligibility."
       tags:
         - Eligibility v2 (draft)
       security:
@@ -1132,16 +1123,59 @@ paths:
           application/json:
             schema:
               $ref: "#/components/schemas/DeterminationRequest"
+            examples:
+              snap-household:
+                summary: SNAP — working household of 2
+                value: *a3
+              medicaid-household:
+                summary: Medicaid — pregnant head, infant, LPR grandparent on SSI
+                value:
+                  metadata:
+                    intake:
+                      applicationId: app-789
+                    eligibility:
+                      caseId: case-1011
+                  program: medicaid
+                  household:
+                    size: 3
+                  members:
+                    - id: mom
+                      dateOfBirth: 1992-04-10
+                      citizenshipStatus: us_citizen
+                      relationshipToHead: head_of_household
+                      pregnancy:
+                        isPregnant: true
+                        expectedChildren: 1
+                      income:
+                        - type: employed
+                          amount: 1800
+                          frequency: monthly
+                          incomeBasis: gross
+                      employment:
+                        - status: full_time
+                          hoursPerWeek: 40
+                    - id: baby
+                      dateOfBirth: 2025-09-01
+                      citizenshipStatus: us_citizen
+                      relationshipToHead: child
+                    - id: gran
+                      dateOfBirth: 1952-07-22
+                      citizenshipStatus: non_citizen
+                      immigrationStatus: lawful_permanent_resident
+                      relationshipToHead: parent
+                      income:
+                        - type: unearned
+                          unearnedType: ssi_or_ssdi
+                          amount: 900
+                          frequency: monthly
+                  verificationSummary: []
       responses:
         "200":
-          description: ProgramDecision (household programs) or MemberDeterminationResponse
-            (per-member programs).
+          description: The unified DeterminationResponse — same schema for every program.
           content:
             application/json:
               schema:
-                anyOf:
-                  - $ref: "#/components/schemas/ProgramDecision"
-                  - $ref: "#/components/schemas/MemberDeterminationResponse"
+                $ref: "#/components/schemas/DeterminationResponse"
         "400":
           description: Invalid request.
           content:
@@ -1223,11 +1257,12 @@ paths:
               $ref: "#/components/schemas/MedicaidExParteRequest"
       responses:
         "200":
-          description: Per-member decision for the subject applicant.
+          description: DeterminationResponse with one member-scoped decision for the
+            subject applicant.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/MemberDeterminationResponse"
+                $ref: "#/components/schemas/DeterminationResponse"
         "400":
           description: Invalid request.
           content:

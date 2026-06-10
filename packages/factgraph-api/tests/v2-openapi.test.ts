@@ -32,25 +32,44 @@ test('v2 spec carries the proposal deltas', async () => {
     assert.ok(schemas[name], `expected schema ${name}`)
   }
 
-  // Response expresses the outcome: first-class fields, no x- prefixes.
-  const decision = schemas.ProgramDecision.properties
+  // Unified response: ONE schema for every program, scoped decisions,
+  // first-class outcome fields, no x- prefixes, no oneOf union.
+  const decision = schemas.Decision.properties
+  assert.deepEqual(decision.scope.enum, ['household', 'member'])
   assert.ok(decision.benefitAmount, 'benefitAmount should be first-class')
-  assert.ok(decision.missingInformation, 'missingInformation should be first-class')
+  assert.ok(decision.medicaidCategory, 'one Decision schema covers both programs')
   assert.equal(decision['x-allotment'], undefined)
+  assert.ok(schemas.DeterminationResponse.properties.decisions)
+  assert.ok(schemas.DeterminationResponse.properties.missingInformation)
+  const det200 =
+    res.body.paths['/v2/eligibility/evaluate/determination'].post.responses['200']
+  const detSchema = det200.content['application/json'].schema
+  assert.equal(detSchema.oneOf, undefined, 'determination 200 must not be a union')
+  assert.equal(detSchema.anyOf, undefined, 'determination 200 must not be a union')
+  assert.match(detSchema.$ref, /DeterminationResponse/)
 
   // Explicit states.
   assert.ok(decision.status.enum.includes('not_supported'))
   assert.ok(decision.path.enum.includes('ex_parte'))
 
   // Medicaid cardinality: household-shaped request with subjectMemberId,
-  // per-member response, and an ex parte request requiring household.
+  // and an ex parte request requiring household.
   assert.ok(schemas.DeterminationRequest.properties.subjectMemberId)
-  assert.ok(schemas.MemberDeterminationResponse.properties.decisions)
   assert.ok(schemas.MedicaidExParteRequest.properties.household)
   assert.ok(schemas.MedicaidExParteRequest.required.includes('household'))
 
   // Proposed serviceResult shapes exist and say so.
   assert.match(schemas.FdshFtiResult.description, /PROPOSED/)
+})
+
+test('v2 request body ships SNAP and medicaid named examples', async () => {
+  const res = await request(app).get('/v2/eligibility/openapi.json')
+  const body =
+    res.body.paths['/v2/eligibility/evaluate/determination'].post.requestBody
+  const examples = body.content['application/json'].examples
+  assert.ok(examples['snap-household'], 'expected snap example')
+  assert.ok(examples['medicaid-household'], 'expected medicaid example')
+  assert.equal(examples['medicaid-household'].value.program, 'medicaid')
 })
 
 test('v2 spec is path-free (no rules-engine internals)', async () => {

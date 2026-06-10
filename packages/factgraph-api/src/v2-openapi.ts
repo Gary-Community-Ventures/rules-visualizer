@@ -159,6 +159,33 @@ const DETERMINATION_EXAMPLE = {
   verificationSummary: [],
 }
 
+const MEDICAID_EXAMPLE = {
+  metadata: { intake: { applicationId: 'app-789' }, eligibility: { caseId: 'case-1011' } },
+  program: 'medicaid',
+  household: { size: 3 },
+  members: [
+    {
+      id: 'mom',
+      dateOfBirth: '1992-04-10',
+      citizenshipStatus: 'us_citizen',
+      relationshipToHead: 'head_of_household',
+      pregnancy: { isPregnant: true, expectedChildren: 1 },
+      income: [{ type: 'employed', amount: 1800, frequency: 'monthly', incomeBasis: 'gross' }],
+      employment: [{ status: 'full_time', hoursPerWeek: 40 }],
+    },
+    { id: 'baby', dateOfBirth: '2025-09-01', citizenshipStatus: 'us_citizen', relationshipToHead: 'child' },
+    {
+      id: 'gran',
+      dateOfBirth: '1952-07-22',
+      citizenshipStatus: 'non_citizen',
+      immigrationStatus: 'lawful_permanent_resident',
+      relationshipToHead: 'parent',
+      income: [{ type: 'unearned', unearnedType: 'ssi_or_ssdi', amount: 900, frequency: 'monthly' }],
+    },
+  ],
+  verificationSummary: [],
+}
+
 // ---------------------------------------------------------------------------
 // Document
 // ---------------------------------------------------------------------------
@@ -329,6 +356,12 @@ export function buildV2OpenApiDocument() {
       fromNewSource: z.boolean().optional(),
       excludedIncomeType: z.string().optional().openapi({
         description: 'Specific excluded-income category from the rules vocabulary, when applicable.',
+      }),
+      needBasedNonprofitCashDonationQuarterlyExclusionUsed: z.number().optional().openapi({
+        description: 'Exclusion amount already used this quarter for need-based nonprofit cash donations (case history).',
+      }),
+      indianTrustRestrictedLandInterestAnnualExclusionUsed: z.number().optional().openapi({
+        description: 'Exclusion amount already used this year for Indian trust / restricted-land interest income (case history).',
       }),
     }).openapi({ description: 'One income source. Absence of income rows means "no income reported" (documented semantics, not a guess).' })
   )
@@ -546,11 +579,16 @@ export function buildV2OpenApiDocument() {
     }).openapi({ description: 'One step of the domain-summarized "why" behind an outcome.' })
   )
 
-  const ProgramDecision = registry.register(
-    'ProgramDecision',
+  const Decision = registry.register(
+    'Decision',
     z.object({
-      metadata: metadata,
-      program: z.enum(PROGRAM),
+      scope: z.enum(['household', 'member']).openapi({
+        description:
+          'What this decision applies to. Household-unit programs (SNAP) emit one household-scoped decision; per-member programs (medicaid/chip) emit one member-scoped decision per member. The scope is a property of the program rules, not the request.',
+      }),
+      memberId: z.string().optional().openapi({
+        description: 'Present iff scope is member.',
+      }),
       status: z.enum(STATUS).openapi({
         description:
           'approved · denied (failed a test; appeal rights) · ineligible (categorical bar) · pending (information missing — see missingInformation) · not_supported (program recognized but not implemented by this adapter).',
@@ -563,44 +601,36 @@ export function buildV2OpenApiDocument() {
         description: 'Monthly benefit when status is approved, for benefit-amount programs (SNAP allotment).',
       }),
       proratedFirstMonthAmount: z.number().optional(),
+      medicaidCategory: z.string().optional().openapi({
+        description: 'Medicaid only: Infant | YoungChild | OlderChild | Adult | Pregnant | SsiRecipient | Ineligible.',
+      }),
+      chpEligible: z.boolean().optional().openapi({ description: 'Medicaid only: CHP+ alternative eligibility.' }),
+      explanation: z.array(ExplanationStep).optional(),
+    }).openapi({
+      description:
+        'One eligibility decision. A single schema covers every program — what varies is the scope and which outcome fields apply (documented per field). Program-specific values never change the shape.',
+    })
+  )
+
+  const DeterminationResponse = registry.register(
+    'DeterminationResponse',
+    z.object({
+      metadata: metadata,
+      program: z.enum(PROGRAM),
+      decisions: z.array(Decision).openapi({
+        description:
+          'The decisions this evaluation produced: exactly one household-scoped entry for household-unit programs (SNAP); one member-scoped entry per member for per-member programs (medicaid) — or a single entry when subjectMemberId was supplied.',
+      }),
       missingInformation: z.array(MissingInformation).optional().openapi({
-        description: 'Present when status is pending — exactly what is still needed. The progressive-disclosure loop: supply these and re-call.',
+        description: 'Present when any decision is pending — exactly what is still needed. The progressive-disclosure loop: supply these and re-call.',
       }),
       translationNotes: z.array(z.string()).optional().openapi({
         description: 'Lossy derivations the determination relied on (e.g. SSI inferred from a conflated SSI/SSDI income type). Under the no-guess policy, nothing here is a guessed fact.',
       }),
-      explanation: z.array(ExplanationStep).optional(),
     }).openapi({
-      description: 'Decision for one program for the household unit (SNAP) — first-class amounts, missing-information, and explanation; no extension prefixes.',
+      description:
+        'The one determination response shape for every program. Callers never branch on program to know the schema; they iterate decisions[].',
     })
-  )
-
-  const MemberDecision = registry.register(
-    'MemberDecision',
-    z.object({
-      memberId: z.string(),
-      status: z.enum(STATUS),
-      path: z.enum(PATH),
-      denialReasonCode: z.string().optional(),
-      medicaidCategory: z.string().optional().openapi({
-        description: 'Infant | YoungChild | OlderChild | Adult | Pregnant | SsiRecipient | Ineligible.',
-      }),
-      chpEligible: z.boolean().optional(),
-      explanation: z.array(ExplanationStep).optional(),
-    }).openapi({ description: 'One member-level decision (per-member programs).' })
-  )
-
-  const MemberDeterminationResponse = registry.register(
-    'MemberDeterminationResponse',
-    z.object({
-      metadata: metadata,
-      program: z.enum(PROGRAM),
-      decisions: z.array(MemberDecision).openapi({
-        description: 'One decision per member (or one entry when subjectMemberId was supplied).',
-      }),
-      missingInformation: z.array(MissingInformation).optional(),
-      translationNotes: z.array(z.string()).optional(),
-    }).openapi({ description: 'Determination response for per-member programs (medicaid/chip): household in, per-member decisions out.' })
   )
 
   const ExpeditedScreeningRequest = registry.register(
@@ -704,15 +734,34 @@ export function buildV2OpenApiDocument() {
     path: '/v2/eligibility/evaluate/determination',
     summary: 'Final eligibility determination (no-guess).',
     description:
-      'Household-shaped for every program. SNAP returns a household ProgramDecision; per-member programs (medicaid) return one decision per member, or one member via subjectMemberId. Nothing applicant-material is defaulted: anything needed-but-absent yields status pending + missingInformation.' +
+      'Household-shaped for every program, and one response shape for every program: a DeterminationResponse whose decisions[] carry one household-scoped entry (SNAP) or one member-scoped entry per member (medicaid; or a single member via subjectMemberId). Nothing applicant-material is defaulted: anything needed-but-absent yields status pending + missingInformation.' +
       draftNote,
     tags: ['Eligibility v2 (draft)'],
     security: [{ [bearerAuth.name]: [] }],
-    request: { body: { required: true, content: { 'application/json': { schema: DeterminationRequest } } } },
+    request: {
+      body: {
+        required: true,
+        content: {
+          'application/json': {
+            schema: DeterminationRequest,
+            examples: {
+              'snap-household': {
+                summary: 'SNAP — working household of 2',
+                value: DETERMINATION_EXAMPLE,
+              },
+              'medicaid-household': {
+                summary: 'Medicaid — pregnant head, infant, LPR grandparent on SSI',
+                value: MEDICAID_EXAMPLE,
+              },
+            },
+          } as never,
+        },
+      },
+    },
     responses: {
       200: {
-        description: 'ProgramDecision (household programs) or MemberDeterminationResponse (per-member programs).',
-        content: { 'application/json': { schema: z.union([ProgramDecision, MemberDeterminationResponse]) } },
+        description: 'The unified DeterminationResponse — same schema for every program.',
+        content: { 'application/json': { schema: DeterminationResponse } },
       },
       400: { description: 'Invalid request.', content: { 'application/json': { schema: ProblemDetails } } },
       401: { description: 'Authentication required.', content: { 'application/json': { schema: ProblemDetails } } },
@@ -747,7 +796,7 @@ export function buildV2OpenApiDocument() {
     security: [{ [bearerAuth.name]: [] }],
     request: { body: { required: true, content: { 'application/json': { schema: MedicaidExParteRequest } } } },
     responses: {
-      200: { description: 'Per-member decision for the subject applicant.', content: { 'application/json': { schema: MemberDeterminationResponse } } },
+      200: { description: 'DeterminationResponse with one member-scoped decision for the subject applicant.', content: { 'application/json': { schema: DeterminationResponse } } },
       400: { description: 'Invalid request.', content: { 'application/json': { schema: ProblemDetails } } },
       401: { description: 'Authentication required.', content: { 'application/json': { schema: ProblemDetails } } },
       501: { description: 'Draft proposal — not yet implemented.', content: { 'application/json': { schema: ProblemDetails } } },
@@ -768,8 +817,9 @@ export function buildV2OpenApiDocument() {
         '1. **No-guess policy** — applicant-material facts and verification findings are never defaulted; what is missing comes back as `pending` + `missingInformation`.',
         '2. **The request can carry a real determination** — domain-shaped member, household, and application-context fields for everything the rules consume.',
         '3. **Medicaid cardinality fixed** — household in, per-member decisions out (or one member via `subjectMemberId`).',
-        '4. **The response can express the outcome** — `benefitAmount`, `missingInformation`, `explanation` as first-class fields; `status` adds `not_supported`; `path` adds `ex_parte`.',
-        '5. **Ex parte fully specified** — including proposed serviceResult payload shapes where the upstream schemas are currently stubs.',
+        '4. **One response shape for every program** — a `DeterminationResponse` whose `decisions[]` entries carry a `scope` (`household` for SNAP, `member` for medicaid/chip). Callers never branch on program to know the schema.',
+        '5. **The response can express the outcome** — `benefitAmount`, `missingInformation`, `explanation` as first-class fields; `status` adds `not_supported`; `path` adds `ex_parte`.',
+        '6. **Ex parte fully specified** — including proposed serviceResult payload shapes where the upstream schemas are currently stubs.',
         '',
         'Like v1, this contract is path-free: no rules-engine internals anywhere.',
       ].join('\n'),
