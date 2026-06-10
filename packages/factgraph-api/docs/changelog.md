@@ -7,6 +7,20 @@ without surface impact aren't logged here; see git history for those.
 
 ### Added
 
+- **v2 draft-proposal contract** at `GET /v2/eligibility/openapi.{json,yaml}`
+  + Swagger UI at `/v2/eligibility/docs` (committed snapshot:
+  `docs/eligibility-adapter-v2-proposal-openapi.yaml`). A proposed revision
+  of the eligibility-adapter contract — the executable form of
+  `docs/request-field-proposal.md` and the gap analysis: no-guess policy
+  (`pending` + first-class `missingInformation` instead of defaulting),
+  ~70 domain-shaped request fields, medicaid household-in/per-member-out
+  with `subjectMemberId`, first-class `benefitAmount` /
+  `proratedFirstMonthAmount` / `explanation`, `status: not_supported`,
+  `path: ex_parte`, and a fully-specified ex parte endpoint with proposed
+  FDSH serviceResult shapes. **Draft for review only** — the evaluate
+  endpoints return `501` pointing at the implemented `/v1/eligibility`
+  surface, which is frozen and unaffected.
+
 - **Eligibility adapter endpoints** (`/v1/eligibility/evaluate/*`) —
   domain-oriented wrappers conforming to the partner team's
   [eligibility-adapter contract](https://github.com/codeforamerica/safety-net-blueprint/blob/main/packages/contracts/eligibility-adapter-openapi.yaml).

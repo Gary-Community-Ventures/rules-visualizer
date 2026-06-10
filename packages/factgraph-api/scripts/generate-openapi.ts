@@ -18,6 +18,7 @@ import yaml from 'yaml'
 
 import { buildOpenApiDocument } from '../src/openapi.js'
 import { buildConsumerOpenApiDocument } from '../src/consumer-openapi.js'
+import { buildV2OpenApiDocument } from '../src/v2-openapi.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const ADVANCED_OUT = path.resolve(__dirname, '..', 'docs', 'openapi.yaml')
@@ -26,6 +27,12 @@ const CONSUMER_OUT = path.resolve(
   '..',
   'docs',
   'eligibility-adapter-openapi.yaml'
+)
+const V2_OUT = path.resolve(
+  __dirname,
+  '..',
+  'docs',
+  'eligibility-adapter-v2-proposal-openapi.yaml'
 )
 
 function banner(source: string): string {
@@ -47,6 +54,13 @@ export function renderConsumerOpenApiYaml(): string {
   )
 }
 
+export function renderV2OpenApiYaml(): string {
+  return (
+    banner('v2-openapi.ts (buildV2OpenApiDocument) — DRAFT PROPOSAL') +
+    yaml.stringify(buildV2OpenApiDocument())
+  )
+}
+
 // Only write when run as a script (not when imported by the drift test).
 if (
   process.argv[1] &&
@@ -54,6 +68,8 @@ if (
 ) {
   writeFileSync(ADVANCED_OUT, renderOpenApiYaml())
   writeFileSync(CONSUMER_OUT, renderConsumerOpenApiYaml())
+  writeFileSync(V2_OUT, renderV2OpenApiYaml())
   console.log(`Wrote ${ADVANCED_OUT}`)
   console.log(`Wrote ${CONSUMER_OUT}`)
+  console.log(`Wrote ${V2_OUT}`)
 }

@@ -5,6 +5,7 @@ import type { Server } from 'node:http'
 import { bearerAuth } from './middleware/auth.js'
 import openapiRouter from './routes/openapi.js'
 import consumerOpenapiRouter from './routes/consumer-openapi.js'
+import { v2DocsRouter, v2StubsRouter } from './routes/v2-openapi.js'
 import rulesetsRouter from './routes/rulesets.js'
 import queryRouter from './routes/query.js'
 import eligibilityRouter from './routes/eligibility.js'
@@ -45,6 +46,10 @@ export function buildApp() {
   // the authed eligibility routes so /v1/eligibility/openapi.* and /docs are
   // reachable without a token.
   app.use('/v1/eligibility', consumerOpenapiRouter)
+  // v2 draft-proposal contract: public spec/docs; evaluate endpoints are
+  // authed 501 stubs until the proposal is reviewed.
+  app.use('/v2/eligibility', v2DocsRouter)
+  app.use('/v2/eligibility', bearerAuth, v2StubsRouter)
 
   // Versioned API surface. Auth applies to everything under /v1.
   app.use('/v1/factgraph', bearerAuth, rulesetsRouter)

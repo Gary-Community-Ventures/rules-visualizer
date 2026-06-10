@@ -12,6 +12,7 @@ import { fileURLToPath } from 'node:url'
 import {
   renderOpenApiYaml,
   renderConsumerOpenApiYaml,
+  renderV2OpenApiYaml,
 } from '../scripts/generate-openapi.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -35,5 +36,17 @@ test('committed eligibility-adapter-openapi.yaml matches the generator output', 
     committed,
     renderConsumerOpenApiYaml(),
     'docs/eligibility-adapter-openapi.yaml is stale — run `npm run gen:openapi`'
+  )
+})
+
+test('committed v2 proposal snapshot matches the generator output', () => {
+  const committed = readFileSync(
+    path.join(docs, 'eligibility-adapter-v2-proposal-openapi.yaml'),
+    'utf-8'
+  )
+  assert.equal(
+    committed,
+    renderV2OpenApiYaml(),
+    'docs/eligibility-adapter-v2-proposal-openapi.yaml is stale — run `npm run gen:openapi`'
   )
 })

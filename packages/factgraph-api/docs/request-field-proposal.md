@@ -3,6 +3,11 @@
 **Status: Draft for internal review, then discussion with the State and the
 Worker Portal team.**
 
+> **Now expressed as an OpenAPI document:** this proposal is authored in full
+> as the [v2 draft contract](./eligibility-adapter-v2-proposal-openapi.yaml)
+> (served live at `/v2/eligibility/docs`). This file remains the rationale;
+> the v2 spec is the reviewable/diffable artifact.
+
 This proposes the domain-shaped request fields the eligibility adapter needs
 so a determination can be made **without the adapter guessing**. It is the
 companion to [contract-gap-analysis.md](./contract-gap-analysis.md): that doc
