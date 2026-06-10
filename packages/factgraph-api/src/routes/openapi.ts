@@ -45,9 +45,14 @@ router.get('/openapi.yaml', (_req, res) => {
  * Swagger UI rendering of the spec. Includes an Authorize dialog where
  * partners paste their bearer token for live "Try it" calls.
  */
+// serveFiles (not the shared `serve`) — this app mounts two Swagger UIs
+// (this one and /v1/eligibility/docs), and `swaggerUi.serve` keeps the
+// generated swagger-ui-init.js as module-global state, so the last-mounted
+// setup() wins for every instance and both UIs render the same spec.
+// serveFiles scopes the generated assets to this router.
 router.use(
   '/docs',
-  swaggerUi.serve,
+  swaggerUi.serveFiles(document),
   swaggerUi.setup(document, {
     customSiteTitle: 'Factgraph API — docs',
     swaggerOptions: {

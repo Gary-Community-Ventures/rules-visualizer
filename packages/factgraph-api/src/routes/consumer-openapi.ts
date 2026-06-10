@@ -26,10 +26,12 @@ router.get('/openapi.yaml', (_req, res) => {
   res.type('application/yaml').send(yamlSerialized)
 })
 
-/** GET /v1/eligibility/docs — Swagger UI for the consumer contract. */
+/** GET /v1/eligibility/docs — Swagger UI for the consumer contract.
+ *  serveFiles (not the shared `serve`) so this instance's generated assets
+ *  don't collide with the advanced API's Swagger UI — see routes/openapi.ts. */
 router.use(
   '/docs',
-  swaggerUi.serve,
+  swaggerUi.serveFiles(document),
   swaggerUi.setup(document, {
     customSiteTitle: 'Eligibility Adapter API — docs',
     swaggerOptions: { defaultModelsExpandDepth: -1, docExpansion: 'list' },

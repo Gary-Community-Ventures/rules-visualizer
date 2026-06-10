@@ -47,3 +47,16 @@ test('the determination request ships a representative example', async () => {
   assert.ok(schema.example, 'expected a representative example on the request schema')
   assert.equal(schema.example.members[0].id, 'head')
 })
+
+test('the two Swagger UIs serve their own specs (no instance collision)', async () => {
+  // swagger-ui-express keeps the generated init file as module-global state
+  // when mounted via the shared `serve` middleware — both UIs then render
+  // whichever setup() ran last. Pin each instance to its own document.
+  const advanced = await request(app).get('/v1/factgraph/docs/swagger-ui-init.js')
+  const consumer = await request(app).get('/v1/eligibility/docs/swagger-ui-init.js')
+  assert.equal(advanced.status, 200)
+  assert.equal(consumer.status, 200)
+  assert.match(advanced.text, /"Factgraph API"/)
+  assert.match(consumer.text, /"Eligibility Adapter API"/)
+  assert.doesNotMatch(advanced.text, /"Eligibility Adapter API"/)
+})
