@@ -199,6 +199,14 @@ the case record (currently hardcoded — a defect):
 4. **`applicationContext`:** add a case-metadata block; stop hardcoding dates.
 5. **`/jobs` + `/caregiverRelationships`:** flag as the biggest SNAP gaps — the
    ORCA `employment[]` shape is far thinner than SNAP work-requirement logic needs.
+6. **`ProgramDecision` has no benefit-amount field.** The response vocabulary
+   is `status` / `path` / `denialReasonCode` — it can say "approved" but not
+   "approved *for how much*," and a SNAP approval without an allotment isn't
+   actionable for a caseworker. Our adapter currently carries the amounts as
+   overlay extensions (`x-allotment`, `x-proratedAllotment`); propose
+   promoting them into the contract as `benefitAmount` and an optional
+   `proratedFirstMonthAmount` (monthly dollars, present when status is
+   `approved` for benefit-amount programs).
 
 > The ✅/➕/🔎 buckets above are a first pass and should be confirmed against the
 > rule authors' intent; some flags (e.g. striker status) are arguably either
