@@ -370,6 +370,12 @@ income above the destitute threshold).
 
 ## Step 3 — map back to a `ProgramDecision`
 
+> **You don't have to write this yourself.** The `/v1/eligibility` adapter
+> endpoints implement this entire translation — both directions — including
+> the `denied`-vs-`ineligible` distinction and snake_case reason codes (see
+> [`v1-conformance.md`](./v1-conformance.md)). The sketch below shows how the
+> mapping works for callers using the query endpoint directly.
+
 Use `/eligibilityCategory` as the primary signal; lift the allotment
 straight from `/allotment`.
 
@@ -383,7 +389,7 @@ function toProgramDecision(query: QueryResponse): ProgramDecision {
   if (category === 'Bce' || category === 'Ece' || category === 'Se') {
     status = 'approved'
   } else if (category === 'Ineligible') {
-    status = 'denied' // or "ineligible" if you distinguish them
+    status = 'denied' // 'ineligible' when the deciding gate is a categorical bar
   } else {
     status = 'pending' // null value — engine couldn't resolve
   }
@@ -421,14 +427,14 @@ structured `denialReasonCode`:
 
 ```typescript
 const reason: Record<string, string> = {
-  '/meetsGrossIncomeTest': 'FAILED_GROSS_INCOME_TEST',
-  '/meetsNetIncomeTest': 'FAILED_NET_INCOME_TEST',
-  '/meetsResourceTest': 'FAILED_RESOURCE_TEST',
-  '/disqualifiedForBCE': 'DISQUALIFIED_BROAD_CATEGORICAL',
-  '/meetsNonFinancialCriteria': 'FAILED_NON_FINANCIAL',
+  '/meetsGrossIncomeTest': 'failed_gross_income_test',
+  '/meetsNetIncomeTest': 'failed_net_income_test',
+  '/meetsResourceTest': 'failed_resource_test',
+  '/disqualifiedForBCE': 'disqualified_broad_categorical',
+  '/meetsNonFinancialCriteria': 'failed_non_financial_criteria',
 }
 const decidingFact = response.decidingPaths['/eligibilityCategory'].at(-1)
-const denialReasonCode = reason[decidingFact?.path ?? ''] ?? 'OTHER'
+const denialReasonCode = reason[decidingFact?.path ?? ''] ?? 'other'
 ```
 
 The full `traces["/eligibilityCategory"]` tree is always available

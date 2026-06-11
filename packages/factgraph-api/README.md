@@ -17,6 +17,10 @@ rulesets. Two API surfaces, each with its own OpenAPI contract:
 > **Prototype.** The API is under active development and not yet a production
 > service. See `docs/changelog.md` for what's stable and what's still moving.
 
+**Documentation index:** [`docs/README.md`](./docs/README.md) — every document
+organized by audience (portal integrators · contract-proposal reviewers ·
+advanced/direct API users).
+
 ## Live URLs
 
 |                                                            |                                                                                                                                            |
@@ -179,10 +183,15 @@ before we land them.
 | ✅     | OpenAPI 3.1 spec at `/v1/factgraph/openapi.yaml` + Swagger UI at `/v1/factgraph/docs` (both unauthenticated)                                  |
 | ✅     | Public docs site on GitHub Pages (Redoc renderer, auto-rebuilt on every push that touches the API)                                            |
 | ✅     | Structured trace/explanation API via `include: ["trace"]` (recursive TraceNode tree with deciding-branch semantics + inline citations)        |
+| ✅     | Eligibility adapter (`/v1/eligibility/evaluate/*`): SNAP + Medicaid determinations and expedited screening, conformant to the published contract ([matrix](./docs/v1-conformance.md)) |
+| ✅     | Separate consumer-facing OpenAPI contract + Swagger UI per surface                                                                            |
+| ✅     | v2 draft-proposal contract (`/v2/eligibility/docs`) — no-guess policy, full input surface, unified `decisions[]` response                     |
+| ✅     | Generated [input dictionary](./docs/input-dictionary.md) — rules-sourced definitions, enums, policy citations per field                       |
+| ⏳     | v2 implementation (pending partner review of the draft contract)                                                                              |
+| ⏳     | Medicaid ex parte (pending contract clarifications — see the [gap analysis](./docs/contract-gap-analysis.md))                                 |
 | ⏳     | Alternation in `missingInputs` (express "one-of" relationships when an `Any` could be satisfied by any of several inputs)                     |
 | ⏳     | Trace v2: walk arithmetic + Switch ops, per-member traces for collection-scoped targets                                                       |
 | ⏳     | Typed client packages (`@npm` consumer) generated from the OpenAPI                                                                            |
-| ⏳     | SNAP-shaped convenience endpoints (`/evaluate/expedited-screening`, `/evaluate/determination`) layered over the generic query                 |
 | ⏳     | Rate limiting                                                                                                                                 |
 
 ## License

@@ -17,10 +17,13 @@
  * keep a versioned namespace distinct from the generic `/v1/factgraph`
  * surface.
  *
- * Scope: SNAP is implemented against `snap-complete`. The per-applicant
- * programs (medicaid, chip, tanf, ccdf) and Medicaid ex parte are not yet
- * supported and return 501 with RFC 9457 Problem Details — explicit and
- * honest rather than a fabricated determination.
+ * Scope: SNAP (determination + expedited screening, against `snap-complete`)
+ * and Medicaid (determination, against `medicaid`; household-shaped or the
+ * contract's per-applicant shape with a disclosed sole-applicant assumption)
+ * are implemented. chip/tanf/ccdf and Medicaid ex parte return 501 with RFC
+ * 9457 Problem Details — explicit and honest rather than a fabricated
+ * determination. Conformance to the published contract is documented
+ * clause-by-clause in docs/v1-conformance.md.
  */
 import { Router } from 'express'
 import { getRuleset, getRawFacts } from 'rules-visualizer-factgraph-core'
