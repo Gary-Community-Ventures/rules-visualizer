@@ -1,0 +1,46 @@
+meta {
+  name: 03 SNAP determination — contract-exact minimal
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{base_url}}/v1/eligibility/evaluate/determination
+  body: json
+  auth: bearer
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{api_token}}
+}
+
+body:json {
+  {
+    "metadata": {},
+    "program": "snap",
+    "household": { "size": 1, "housingCosts": 800, "utilityCosts": 150 },
+    "members": [
+      {
+        "dateOfBirth": "1990-03-15",
+        "citizenshipStatus": "us_citizen",
+        "income": [{ "type": "employed", "amount": 1200, "frequency": "monthly" }]
+      }
+    ],
+    "verificationSummary": []
+  }
+}
+
+docs {
+  A request copied as-published from the partner contract: no member ids
+  (the contract's member has none), shelter costs at the household level
+  rather than as member expenses.
+
+  Expected: 200 approved. household.housingCosts/utilityCosts are applied
+  as monthly shelter/utility expenses (disclosed in x-translationNotes),
+  and the member is addressable as "member-0". See docs/v1-conformance.md
+  for the clause-by-clause conformance matrix this exercises.
+}

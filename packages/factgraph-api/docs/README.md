@@ -8,6 +8,7 @@ Eleven files, three audiences. Start with the row that matches why you're here.
 |---|---|
 | [`eligibility-adapter-openapi.yaml`](./eligibility-adapter-openapi.yaml) | The consumer contract v1 implements — ORCA-shaped requests in, `ProgramDecision` out, no rules-engine internals. Live Swagger: `/v1/eligibility/docs` |
 | [`v1-conformance.md`](./v1-conformance.md) | Clause-by-clause conformance to the published adapter contract: what's exact, where we're more lenient, the two deliberate deviations, and findings in the published contract itself |
+| [`bruno/eligibility-adapter/`](./bruno/eligibility-adapter/) | Runnable requests for every adapter behavior — open in [Bruno](https://www.usebruno.com/), set the token, click Send |
 | [`changelog.md`](./changelog.md) | Public surface changes, with migration notes |
 
 ## I'm reviewing the contract proposal (the v2 draft)
@@ -28,7 +29,7 @@ Read in this order — rationale, then the contract, then the field semantics:
 | [`openapi.yaml`](./openapi.yaml) | The generic Fact Graph query/discovery contract (`/v1/factgraph/...`) — targets, traces, missing-inputs. Live Swagger: `/v1/factgraph/docs` |
 | [`concepts.md`](./concepts.md) | The incompleteness model: how partial input, missing-inputs detection, and short-circuiting behave |
 | [`examples-snap.md`](./examples-snap.md) | Worked SNAP walkthroughs against the query endpoint, including the full adapter-shape-to-query translation |
-| [`bruno/`](./bruno/) | Runnable request collection ([Bruno](https://www.usebruno.com/)) covering the query endpoints end to end |
+| [`bruno/`](./bruno/) | Runnable request collection ([Bruno](https://www.usebruno.com/)) — `eligibility-adapter/` for the consumer endpoints, `advanced-query/` for the query API |
 
 ## How the documents relate
 

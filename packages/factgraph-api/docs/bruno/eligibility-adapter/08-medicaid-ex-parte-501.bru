@@ -1,0 +1,39 @@
+meta {
+  name: 08 Medicaid ex parte — 501 (pending contract clarifications)
+  type: http
+  seq: 8
+}
+
+post {
+  url: {{base_url}}/v1/eligibility/evaluate/medicaid-ex-parte
+  body: json
+  auth: bearer
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{api_token}}
+}
+
+body:json {
+  {
+    "metadata": {},
+    "program": "medicaid",
+    "member": { "dateOfBirth": "1990-01-01" },
+    "electronicChecks": [
+      { "serviceType": "fdsh_fti", "result": "conclusive", "serviceResult": {} }
+    ]
+  }
+}
+
+docs {
+  Expected: 501 Problem Details. Ex parte is the same MAGI determination
+  the medicaid graph already computes, via a different evidentiary pathway
+  (electronic checks + a conclusiveness gate). Implementation awaits
+  contract clarification of the per-service result schemas and household
+  context — see docs/contract-gap-analysis.md ("Medicaid ex parte"). The
+  v2 draft contract specifies the endpoint fully: /v2/eligibility/docs.
+}

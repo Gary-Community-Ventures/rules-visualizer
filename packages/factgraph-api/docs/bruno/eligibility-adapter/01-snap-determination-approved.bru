@@ -1,0 +1,52 @@
+meta {
+  name: 01 SNAP determination — approved household
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{base_url}}/v1/eligibility/evaluate/determination
+  body: json
+  auth: bearer
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{api_token}}
+}
+
+body:json {
+  {
+    "metadata": { "applicationId": "case-1234", "traceId": "req-abc" },
+    "program": "snap",
+    "household": { "size": 1 },
+    "members": [
+      {
+        "id": "head",
+        "dateOfBirth": "1990-03-15",
+        "citizenshipStatus": "us_citizen",
+        "relationshipToHead": "head_of_household",
+        "isDisabled": false,
+        "income": [{ "type": "employed", "amount": 1200, "frequency": "monthly", "incomeBasis": "gross" }],
+        "employment": [{ "status": "part_time", "hoursPerWeek": 30 }],
+        "expenses": [{ "category": "housing", "amount": 800, "frequency": "monthly" }],
+        "assets": [{ "type": "liquid", "value": 500, "description": "checking account" }]
+      }
+    ],
+    "verificationSummary": []
+  }
+}
+
+docs {
+  The canonical eligible applicant: single working adult, $1,200/month
+  wages, $800/month rent, $500 in checking.
+
+  Expected: status "approved", path "auto", with the benefit amounts on
+  the x- overlay fields (x-allotment for the full month, x-proratedAllotment
+  for the first month — prorated from today's date, so the value moves with
+  the calendar). x-translationNotes discloses the defaulted disqualifier
+  flags the request doesn't carry.
+}

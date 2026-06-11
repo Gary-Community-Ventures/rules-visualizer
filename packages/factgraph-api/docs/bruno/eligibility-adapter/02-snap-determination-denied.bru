@@ -1,0 +1,48 @@
+meta {
+  name: 02 SNAP determination — over-income denial
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{base_url}}/v1/eligibility/evaluate/determination
+  body: json
+  auth: bearer
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{api_token}}
+}
+
+body:json {
+  {
+    "metadata": { "applicationId": "case-5678" },
+    "program": "snap",
+    "household": { "size": 1 },
+    "members": [
+      {
+        "id": "head",
+        "dateOfBirth": "1990-03-15",
+        "citizenshipStatus": "us_citizen",
+        "relationshipToHead": "head_of_household",
+        "income": [{ "type": "employed", "amount": 9000, "frequency": "monthly", "incomeBasis": "gross" }],
+        "expenses": [{ "category": "housing", "amount": 800, "frequency": "monthly" }],
+        "assets": [{ "type": "liquid", "value": 500 }]
+      }
+    ]
+  }
+}
+
+docs {
+  Same applicant with $9,000/month wages — far over the gross income
+  limit for a household of one.
+
+  Expected: status "denied" (a failed financial test is appealable —
+  distinct from "ineligible", a categorical bar), a snake_case
+  denialReasonCode such as "failed_gross_income_test", and x-explanation:
+  a path-free chain of the factors that drove the outcome.
+}

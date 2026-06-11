@@ -1,0 +1,43 @@
+meta {
+  name: 05 Medicaid determination — contract per-applicant shape
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{base_url}}/v1/eligibility/evaluate/determination
+  body: json
+  auth: bearer
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{api_token}}
+}
+
+body:json {
+  {
+    "metadata": { "applicationId": "case-ind-1" },
+    "program": "medicaid",
+    "member": {
+      "dateOfBirth": "1990-01-01",
+      "citizenshipStatus": "us_citizen",
+      "income": [{ "type": "employed", "amount": 1200, "frequency": "monthly" }]
+    },
+    "verificationSummary": []
+  }
+}
+
+docs {
+  The published contract's IndividualDeterminationRequest: a single
+  `member`, no household. Accepted for conformance — the adapter wraps it
+  as a household whose only known member is the applicant.
+
+  Expected: 200 with one decision, and x-translationNotes disclosing the
+  sole-applicant household assumption (MAGI results depend on full
+  household size + income; an orchestration layer holding the case record
+  should send the whole household for an accurate result).
+}

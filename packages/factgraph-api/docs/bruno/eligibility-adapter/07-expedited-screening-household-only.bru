@@ -1,0 +1,38 @@
+meta {
+  name: 07 Expedited screening — contract-exact household-only
+  type: http
+  seq: 7
+}
+
+post {
+  url: {{base_url}}/v1/eligibility/evaluate/expedited-screening
+  body: json
+  auth: bearer
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{api_token}}
+}
+
+body:json {
+  {
+    "metadata": {},
+    "household": { "size": 1, "housingCosts": 800, "utilityCosts": 150 }
+  }
+}
+
+docs {
+  The contract-exact shape: household only, no members. The published
+  household object carries no income or liquid-resource fields, so the
+  273.2(i) comparison (income + resources vs. shelter costs) cannot
+  actually be computed from it.
+
+  Expected: a conservative { "expedited": false } plus
+  x-missingInformation listing what would be needed — rather than a 400,
+  and rather than presenting an unknown as a confident "no". This is
+  finding #1 in docs/v1-conformance.md.
+}

@@ -19,7 +19,25 @@ any request — no copy-paste, no JSON formatting.
 
 ## What's in here
 
-| #   | File                            | Tests                                                                                                  |
+Two folders, by API surface. If you're integrating a caseworker tool or
+portal, start with `eligibility-adapter/`.
+
+### `eligibility-adapter/` — the consumer-facing adapter (`/v1/eligibility`)
+
+| #   | Request                                  | Shows                                                                                       |
+| --- | ---------------------------------------- | -------------------------------------------------------------------------------------------- |
+| 01  | SNAP determination — approved            | The canonical eligible household; benefit amounts on `x-allotment` / `x-proratedAllotment`  |
+| 02  | SNAP determination — over-income denial  | `denied` vs `ineligible`, snake_case `denialReasonCode`, path-free `x-explanation`          |
+| 03  | SNAP determination — contract-exact      | A request copied as-published (no member ids; household-level shelter costs) still works    |
+| 04  | Medicaid determination — household       | Household-in / per-member-out: one call, one decision per member                            |
+| 05  | Medicaid determination — per-applicant   | The contract's `IndividualDeterminationRequest`, with the sole-applicant assumption disclosed |
+| 06  | Expedited screening — destitute          | 7 CFR §273.2(i) qualifying case → `expedited: true`                                         |
+| 07  | Expedited screening — household-only     | The contract-exact shape: conservative `false` + `x-missingInformation`                     |
+| 08  | Medicaid ex parte                        | `501` with the pending contract clarifications                                              |
+
+### `advanced-query/` — the generic Fact Graph API (`/v1/factgraph`)
+
+| #   | Request                         | Shows                                                                                                  |
 | --- | ------------------------------- | ------------------------------------------------------------------------------------------------------ |
 | 01  | `01-health.bru`                 | Liveness probe                                                                                         |
 | 02  | `02-list-rulesets.bru`          | Discovering which rulesets the server has loaded                                                       |
@@ -34,8 +52,8 @@ any request — no copy-paste, no JSON formatting.
 | 11  | `11-trace-denial.bru`           | Structured trace/explanation tree via `include: ["trace"]`                                             |
 | 12  | `12-snap-complete-eligible.bru` | `snap-complete` real-world scenario mapping a HouseholdDeterminationRequest → /query → ProgramDecision |
 
-Run them in order on the first session — each one builds on the previous
-one as documentation of the API surface.
+Run each folder in order on the first session — the requests build on each
+other as documentation of their API surface.
 
 ## Quick reference: request shape
 

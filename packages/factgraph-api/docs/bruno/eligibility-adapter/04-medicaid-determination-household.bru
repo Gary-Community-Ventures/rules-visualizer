@@ -1,0 +1,58 @@
+meta {
+  name: 04 Medicaid determination — household, per-member decisions
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{base_url}}/v1/eligibility/evaluate/determination
+  body: json
+  auth: bearer
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{api_token}}
+}
+
+body:json {
+  {
+    "metadata": { "applicationId": "case-m-1" },
+    "program": "medicaid",
+    "household": { "size": 3 },
+    "members": [
+      {
+        "id": "mom",
+        "dateOfBirth": "1992-04-10",
+        "citizenshipStatus": "us_citizen",
+        "relationshipToHead": "head_of_household",
+        "income": [{ "type": "employed", "amount": 1500, "frequency": "monthly" }],
+        "employment": [{ "status": "full_time", "hoursPerWeek": 40 }]
+      },
+      { "id": "baby", "dateOfBirth": "2025-09-01", "citizenshipStatus": "us_citizen", "relationshipToHead": "child" },
+      {
+        "id": "gran",
+        "dateOfBirth": "1952-07-22",
+        "citizenshipStatus": "non_citizen",
+        "immigrationStatus": "lawful_permanent_resident",
+        "relationshipToHead": "parent",
+        "income": [{ "type": "unearned", "unearnedType": "ssi_or_ssdi", "amount": 900, "frequency": "monthly" }]
+      }
+    ]
+  }
+}
+
+docs {
+  Medicaid is household-in / per-member-out: MAGI eligibility for each
+  member depends on the whole household's size and income, so one call
+  returns one decision per member.
+
+  Expected: decisions[] with three entries — typically the infant approved
+  (x-medicaidCategory "YoungChild" or "Infant"), the grandparent approved
+  via "SsiRecipient" (SSI derived from the income's unearnedType — the
+  conflation with SSDI is disclosed in x-translationNotes), and the
+  working adult evaluated against the adult FPL threshold.
+}

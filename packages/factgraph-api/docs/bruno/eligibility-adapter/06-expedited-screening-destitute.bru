@@ -1,0 +1,45 @@
+meta {
+  name: 06 Expedited screening — destitute household qualifies
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{base_url}}/v1/eligibility/evaluate/expedited-screening
+  body: json
+  auth: bearer
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{api_token}}
+}
+
+body:json {
+  {
+    "metadata": {},
+    "household": { "size": 1 },
+    "members": [
+      {
+        "id": "head",
+        "dateOfBirth": "1990-03-15",
+        "citizenshipStatus": "us_citizen",
+        "relationshipToHead": "head_of_household",
+        "income": [],
+        "assets": []
+      }
+    ]
+  }
+}
+
+docs {
+  Zero income, zero liquid resources — at/below the 7 CFR 273.2(i)
+  thresholds.
+
+  Expected: { "expedited": true }. Member context rides the overlay the
+  published contract sanctions; compare with request 07 for what happens
+  without it.
+}
