@@ -26,8 +26,11 @@ Each entry reads: **type · programs that consume it · kind · source.**
 `applicant` (self-attestable on an application form), `state` (records
 checks, case history, batch/data-exchange systems), or `either`. These
 guesses are offered for the Worker Portal team and the State to correct;
-they drive the candidate-additions list below. Fields already in the
-published worker-portal contract are marked ✦.
+they drive the candidate-additions list below. Fields that already exist
+in the partner's published worker-portal contract (the eligibility-
+adapter OpenAPI in safety-net-blueprint) are marked ✦ — the candidate-
+additions list below is exactly the applicant-attestable fields WITHOUT
+that marker.
 
 Which fields are *required*? Per case, not per program: the rules
 short-circuit, so the authoritative answer is the response's
@@ -44,7 +47,7 @@ needed). See "Getting started" at the bottom for practical starting sets.
 
 #### `members[].dateOfBirth`
 
-`Int` · SNAP + Medicaid · derived · source: **applicant** · ✦ in published contract
+`Int` · SNAP + Medicaid · derived · source: **applicant** · ✦ in the published worker-portal contract
 
 Age of this member in years. If their birthday occurs in the middle of a month, use the age they were when the month began (the last day of the previous month).
 
@@ -52,7 +55,7 @@ Age of this member in years. If their birthday occurs in the middle of a month, 
 
 #### `members[].citizenshipStatus`
 
-`Enum` · SNAP + Medicaid · derived · source: **applicant** · ✦ in published contract
+`Enum` · SNAP + Medicaid · derived · source: **applicant** · ✦ in the published worker-portal contract
 
 This member's selected citizenship or immigration status for SNAP citizenship and non-citizenship eligibility (10 CCR 2506-1, 4.305).
 
@@ -64,7 +67,7 @@ Policy: 10 CCR 2506-1 — Colorado SNAP Rules — pp. 7, 8, 10, 12, 53, 54, 55, 
 
 #### `members[].immigrationStatus`
 
-`Enum` · SNAP + Medicaid · derived · source: **applicant** · ✦ in published contract
+`Enum` · SNAP + Medicaid · derived · source: **applicant** · ✦ in the published worker-portal contract
 
 This member's selected citizenship or immigration status for SNAP citizenship and non-citizenship eligibility (10 CCR 2506-1, 4.305).
 
@@ -76,7 +79,7 @@ Policy: 10 CCR 2506-1 — Colorado SNAP Rules — pp. 7, 8, 10, 12, 53, 54, 55, 
 
 #### `members[].relationshipToHead`
 
-`Boolean` · SNAP · derived · source: **applicant** · ✦ in published contract
+`Boolean` · SNAP · derived · source: **applicant** · ✦ in the published worker-portal contract
 
 Whether this member is the head of the SNAP household — the person to whom the local office addresses correspondence and notices about the household's case, generally the individual who completes the application process and is responsible for obtaining and using the household's EBT card (10 CCR 2506-1, 4.304).
 
@@ -96,7 +99,7 @@ Policy: 10 CCR 2506-1 — Colorado SNAP Rules — p. 47
 
 #### `members[].isDisabled`
 
-`Boolean` · SNAP + Medicaid · derived · source: **applicant** · ✦ in published contract
+`Boolean` · SNAP + Medicaid · derived · source: **applicant** · ✦ in the published worker-portal contract
 
 Whether this member has a physical disability
 
@@ -738,7 +741,7 @@ Policy: 10 CCR 2506-1 — Colorado SNAP Rules — p. 34
 
 #### `members[].income[].type`
 
-`Enum` · SNAP + Medicaid · derived · source: **applicant** · ✦ in published contract
+`Enum` · SNAP + Medicaid · derived · source: **applicant** · ✦ in the published worker-portal contract
 
 The source/type of this income.
 
@@ -750,7 +753,7 @@ Policy: 10 CCR 2506-1 — Colorado SNAP Rules — pp. 8, 11, 12, 92
 
 #### `members[].income[].unearnedType`
 
-`Enum` · SNAP + Medicaid · derived · source: **applicant** · ✦ in published contract
+`Enum` · SNAP + Medicaid · derived · source: **applicant** · ✦ in the published worker-portal contract
 
 The source/type of this income.
 
@@ -762,13 +765,13 @@ Policy: 10 CCR 2506-1 — Colorado SNAP Rules — pp. 8, 11, 12, 92
 
 #### `members[].income[].incomeBasis`
 
-`—` · no program (see note) · compat · source: **applicant** · ✦ in published contract
+`—` · no program (see note) · compat · source: **applicant** · ✦ in the published worker-portal contract
 
 > *Adapter mapping:* Carried for ORCA compatibility; the rules do not currently distinguish net vs gross at the income-row level.
 
 #### `members[].income[].amount`
 
-`Dollar` · SNAP + Medicaid · direct · source: **applicant** · ✦ in published contract
+`Dollar` · SNAP + Medicaid · direct · source: **applicant** · ✦ in the published worker-portal contract
 
 The average income amount for this income at its stated frequency.
 
@@ -776,7 +779,7 @@ Policy: 10 CCR 2506-1 — Colorado SNAP Rules — pp. 69, 86, 87, 90, 91, 92, 93
 
 #### `members[].income[].frequency`
 
-`Enum` · SNAP · direct · source: **applicant** · ✦ in published contract
+`Enum` · SNAP · direct · source: **applicant** · ✦ in the published worker-portal contract
 
 How often this income amount is received or anticipated, used to convert the amount to a monthly amount (10 CCR 2506-1, 4.402).
 
@@ -862,7 +865,7 @@ Policy: 10 CCR 2506-1 — Colorado SNAP Rules — p. 103
 
 #### `members[].expenses[].category`
 
-`Enum` · SNAP · derived · source: **applicant** · ✦ in published contract
+`Enum` · SNAP · derived · source: **applicant** · ✦ in the published worker-portal contract
 
 The type of household expense. Select ChildSupport for legally obligated child support, which is considered an income exclusion (10 CCR 2506-1, 4.405, D).
 
@@ -886,7 +889,7 @@ Policy: 10 CCR 2506-1 — Colorado SNAP Rules — pp. 108, 110, 111
 
 #### `members[].expenses[].amount`
 
-`Dollar` · SNAP · direct · source: **applicant** · ✦ in published contract
+`Dollar` · SNAP · direct · source: **applicant** · ✦ in the published worker-portal contract
 
 The expense amount at its stated frequency or, when the household does not elect averaging, the monthly expense amount.
 
@@ -894,7 +897,7 @@ Policy: 10 CCR 2506-1 — Colorado SNAP Rules — pp. 69, 108
 
 #### `members[].expenses[].frequency`
 
-`Enum` · SNAP · direct · source: **applicant** · ✦ in published contract
+`Enum` · SNAP · direct · source: **applicant** · ✦ in the published worker-portal contract
 
 How often this expense is billed or incurred. Weekly, bi-weekly, and semi-monthly expenses are converted to monthly amounts; other non-monthly frequencies are averaged only when the household elects to average the expense over the period it is intended to cover (10 CCR 2506-1, 4.407, B).
 
@@ -1002,7 +1005,7 @@ Policy: 10 CCR 2506-1 — Colorado SNAP Rules — p. 111
 
 #### `members[].assets[].type`
 
-`Enum` · SNAP · derived · source: **applicant** · ✦ in published contract
+`Enum` · SNAP · derived · source: **applicant** · ✦ in the published worker-portal contract
 
 The type of household resource item, including liquid resources such as cash on hand, money in checking or savings accounts, saving certificates, stocks or bonds, and exempt resources identified in 10 CCR 2506-1, 4.410.
 
@@ -1026,7 +1029,7 @@ Policy: 10 CCR 2506-1 — Colorado SNAP Rules — pp. 69, 120, 121, 122, 123
 
 #### `members[].assets[].value`
 
-`Dollar` · SNAP · direct · source: **applicant** · ✦ in published contract
+`Dollar` · SNAP · direct · source: **applicant** · ✦ in the published worker-portal contract
 
 The countable value of this resource item: for liquid resources, the current redemption rate less encumbrances; for non-liquid resources, the fair market value (or real property value) less verified encumbrances (10 CCR 2506-1, 4.408.1).
 
@@ -1046,7 +1049,7 @@ Policy: 10 CCR 2506-1 — Colorado SNAP Rules — pp. 124, 125
 
 #### `members[].employment[].status`
 
-`Boolean` · SNAP · derived · source: **applicant** · ✦ in published contract
+`Boolean` · SNAP · derived · source: **applicant** · ✦ in the published worker-portal contract
 
 Whether this job is self-employment. The work-requirement employment exemption applies to employed or self-employed individuals who meet the hours or weekly-earnings threshold (10 CCR 2506-1, 4.310).
 
@@ -1056,7 +1059,7 @@ Policy: 10 CCR 2506-1 — Colorado SNAP Rules — pp. 65, 76, 90
 
 #### `members[].employment[].hoursPerWeek`
 
-`Int` · SNAP + Medicaid · derived · source: **applicant** · ✦ in published contract
+`Int` · SNAP + Medicaid · derived · source: **applicant** · ✦ in the published worker-portal contract
 
 The average number of hours per week worked in this job. Employed or self-employed individuals may be exempt from SNAP work requirements when they work at least thirty (30) hours per week (10 CCR 2506-1, 4.310).
 
@@ -1188,7 +1191,7 @@ Whether the member accepted this offered job.
 
 #### `household.size`
 
-`—` · Medicaid · derived · source: **applicant** · ✦ in published contract
+`—` · Medicaid · derived · source: **applicant** · ✦ in the published worker-portal contract
 
 Number of members in the household.
 
@@ -1196,19 +1199,19 @@ Number of members in the household.
 
 #### `household.housingCosts`
 
-`—` · no program (see note) · compat · source: **applicant** · ✦ in published contract
+`—` · no program (see note) · compat · source: **applicant** · ✦ in the published worker-portal contract
 
 > *Adapter mapping:* Coarse ORCA field; prefer per-member expenses[] with category housing, which is what the rules consume.
 
 #### `household.utilityCosts`
 
-`—` · no program (see note) · compat · source: **applicant** · ✦ in published contract
+`—` · no program (see note) · compat · source: **applicant** · ✦ in the published worker-portal contract
 
 > *Adapter mapping:* Coarse ORCA field; prefer per-member expenses[] with category utilities / a utility detailType.
 
 #### `household.isMigrantOrSeasonalFarmWorker`
 
-`Boolean` · SNAP · derived · source: **applicant** · ✦ in published contract
+`Boolean` · SNAP · derived · source: **applicant** · ✦ in the published worker-portal contract
 
 Whether this member travels away from home on a regular basis to follow the flow of seasonal agricultural work (10 CCR 2506-1, 4.000.1)
 

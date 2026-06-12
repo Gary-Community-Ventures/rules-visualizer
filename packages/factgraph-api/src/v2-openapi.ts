@@ -345,7 +345,11 @@ export function buildV2OpenApiDocument() {
     z.object({
       type: z.enum(INCOME_TYPE),
       unearnedType: z.string().optional(),
-      incomeBasis: z.enum(INCOME_BASIS).optional(),
+      incomeBasis: z.enum(INCOME_BASIS).optional().openapi({
+        deprecated: true,
+        description:
+          'Carried from the published contract for compatibility; not consumed by the rules today.',
+      }),
       amount: z.number(),
       frequency: z.enum(FREQUENCY),
       payDate: z.string().optional().openapi({ format: 'date' }),
@@ -452,7 +456,11 @@ export function buildV2OpenApiDocument() {
       immigrationDetails: ImmigrationDetails.optional(),
       relationshipToHead: z.enum(RELATIONSHIP).optional(),
       spouseId: z.string().optional(),
-      isDisabled: z.boolean().optional(),
+      isDisabled: z.boolean().optional().openapi({
+        deprecated: true,
+        description:
+          'Carried from the published contract for migration; proposed for retirement. A single boolean is ambiguous across programs — SNAP and Medicaid apply different legal definitions of disability. Prefer disabilityDetails, which carries the observable facts each definition derives from; when only this flag is sent the adapter maps it coarsely and discloses the assumption.',
+      }),
       disabilityDetails: DisabilityDetails.optional(),
       pregnancy: Pregnancy.optional(),
       veteranStatus: VeteranStatus.optional(),
@@ -493,9 +501,21 @@ export function buildV2OpenApiDocument() {
     'Household',
     z.object({
       size: z.number().int().optional(),
-      housingCosts: z.number().optional(),
-      utilityCosts: z.number().optional(),
-      isMigrantOrSeasonalFarmWorker: z.boolean().optional(),
+      housingCosts: z.number().optional().openapi({
+        deprecated: true,
+        description:
+          'Carried from the published contract; proposed for retirement in favor of per-member expenses[] (category housing), which is what the rules consume. When sent without a covering expense, the adapter applies it as a monthly housing expense.',
+      }),
+      utilityCosts: z.number().optional().openapi({
+        deprecated: true,
+        description:
+          'Carried from the published contract; proposed for retirement in favor of per-member expenses[] (category utilities / a utility detailType).',
+      }),
+      isMigrantOrSeasonalFarmWorker: z.boolean().optional().openapi({
+        deprecated: true,
+        description:
+          'Carried from the published contract; proposed for retirement — the rules evaluate migrant/seasonal status per member (workRequirements.isMigrantFarmWorker).',
+      }),
       expectsShelterCosts: z.boolean().optional(),
       previousSubstantialLotteryWinnings: z.boolean().optional(),
       participatesInCommodityFoodProgram: z.boolean().optional(),

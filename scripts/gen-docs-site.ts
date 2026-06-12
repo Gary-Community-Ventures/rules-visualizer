@@ -170,7 +170,10 @@ const dictionaryHtml = `<!DOCTYPE html>
       and the v2 draft, with the rule authors' own definitions, enum vocabularies,
       and policy citations — generated from the rulesets.
       <strong>Source</strong> is our best guess at where each value realistically
-      originates, offered for the partner teams to correct.
+      originates, offered for the partner teams to correct. The purple
+      <em>in worker-portal contract</em> badge marks fields that already exist in the
+      partner's published eligibility-adapter contract — candidate additions are
+      the applicant-sourced fields without it.
       Also available as <a href="./dictionary.json">JSON</a> or
       <a href="https://github.com/Gary-Community-Ventures/rules-visualizer/blob/main/packages/factgraph-api/docs/input-dictionary.md">markdown</a>.</p>
       <div class="controls">
@@ -213,7 +216,7 @@ const dictionaryHtml = `<!DOCTYPE html>
             ...e.programs.map((p) => '<span class="badge">' + p + '</span>'),
             '<span class="badge">' + e.kind + '</span>',
             e.source ? '<span class="badge src-' + e.source + '">' + e.source + '</span>' : '',
-            e.inPublishedContract ? '<span class="badge published">in published contract</span>' : '',
+            e.inPublishedContract ? '<span class="badge published">in worker-portal contract</span>' : '',
           ].filter(Boolean).join('')
           let values = ''
           if (e.values) {

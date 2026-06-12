@@ -296,6 +296,9 @@ components:
           enum:
             - net
             - gross
+          description: Carried from the published contract for compatibility; not consumed
+            by the rules today.
+          deprecated: true
         amount:
           type: number
         frequency:
@@ -531,6 +534,13 @@ components:
           type: string
         isDisabled:
           type: boolean
+          description: Carried from the published contract for migration; proposed for
+            retirement. A single boolean is ambiguous across programs — SNAP and
+            Medicaid apply different legal definitions of disability. Prefer
+            disabilityDetails, which carries the observable facts each
+            definition derives from; when only this flag is sent the adapter
+            maps it coarsely and discloses the assumption.
+          deprecated: true
         disabilityDetails:
           $ref: "#/components/schemas/DisabilityDetails"
         pregnancy:
@@ -618,10 +628,23 @@ components:
           type: integer
         housingCosts:
           type: number
+          description: Carried from the published contract; proposed for retirement in
+            favor of per-member expenses[] (category housing), which is what the
+            rules consume. When sent without a covering expense, the adapter
+            applies it as a monthly housing expense.
+          deprecated: true
         utilityCosts:
           type: number
+          description: Carried from the published contract; proposed for retirement in
+            favor of per-member expenses[] (category utilities / a utility
+            detailType).
+          deprecated: true
         isMigrantOrSeasonalFarmWorker:
           type: boolean
+          description: Carried from the published contract; proposed for retirement — the
+            rules evaluate migrant/seasonal status per member
+            (workRequirements.isMigrantFarmWorker).
+          deprecated: true
         expectsShelterCosts:
           type: boolean
         previousSubstantialLotteryWinnings:
