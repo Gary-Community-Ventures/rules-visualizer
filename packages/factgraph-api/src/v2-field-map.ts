@@ -294,6 +294,108 @@ export const FIELD_MAP: FieldGroup[] = [
   },
 ]
 
+
+// ---------------------------------------------------------------------------
+// Realistic-source classification
+// ---------------------------------------------------------------------------
+//
+// Per the State's guidance, the worker-portal contract should carry only the
+// data that would realistically travel between the portal and the rules
+// engine. The operational test: can the applicant self-attest it on an
+// application form ('applicant'), does it come from state systems — records
+// checks, case history, batch/data-exchange ('state') — or could it arrive
+// either way ('either')? These are OUR BEST GUESSES, structured for the
+// Worker Portal team and the State to correct; the dictionary surfaces them
+// per field and derives the candidate portal-contract additions from them.
+
+export type FieldSource = 'applicant' | 'state' | 'either'
+
+/** Default source per group; FIELD_SOURCE_OVERRIDES wins per field. */
+export const GROUP_SOURCE_DEFAULTS: Record<string, FieldSource> = {
+  'Member — identity & demographics': 'applicant',
+  'Member — pregnancy': 'applicant',
+  'Member — veteran status': 'applicant',
+  'Member — student status': 'applicant',
+  'Member — disability details': 'applicant',
+  'Member — living situation': 'applicant',
+  'Member — work requirements': 'applicant',
+  'Member — immigration details': 'applicant',
+  'Member — caseworker findings (never defaulted)': 'state',
+  'Member — other': 'either',
+  'Income (members[].income[])': 'applicant',
+  'Expenses (members[].expenses[])': 'applicant',
+  'Assets (members[].assets[])': 'applicant',
+  'Employment (members[].employment[])': 'applicant',
+  'Household': 'applicant',
+  'Caregiver relationships (household.caregiverRelationships[])': 'applicant',
+  'Application context': 'state',
+}
+
+export const FIELD_SOURCE_OVERRIDES: Record<string, FieldSource> = {
+  // Work requirements: administrative/compliance statuses live in state
+  // systems; circumstances are applicant-attestable.
+  'members[].workRequirements.registeredForWork': 'state',
+  'members[].workRequirements.providedEmploymentInfo': 'state',
+  'members[].workRequirements.reportedToReferredEmployer': 'state',
+  'members[].workRequirements.complyingWithOtherWorkProgram': 'state',
+  'members[].workRequirements.abawdWaiverExempt': 'state',
+  'members[].workRequirements.abawdStateExemption': 'state',
+  'members[].workRequirements.abawdCountableMonthsUsed': 'state',
+  'members[].workRequirements.participatesInWorkfare': 'state',
+  'members[].workRequirements.inEmploymentTrainingProgram': 'either',
+  'members[].workRequirements.appliedForOrReceivingUnemployment': 'either',
+  // Immigration: work quarters are an SSA data-exchange product.
+  'members[].immigrationDetails.qualifyingWorkQuarters': 'either',
+  // Member — other.
+  'members[].isEmancipated': 'applicant',
+  // Income: participation/case-history flags are state-side.
+  'members[].income[].receivedBeforeSnapParticipation': 'state',
+  'members[].income[].isWorkSupplementation': 'state',
+  'members[].income[].excludedIncomeType': 'either',
+  'members[].income[].needBasedNonprofitCashDonationQuarterlyExclusionUsed': 'state',
+  'members[].income[].indianTrustRestrictedLandInterestAnnualExclusionUsed': 'state',
+  // Assets / employment refinements.
+  'members[].assets[].excludedResourceType': 'either',
+  'members[].employment[].abawdWorkType': 'either',
+  // Household: program-participation history is state-side.
+  'household.previousSubstantialLotteryWinnings': 'either',
+  'household.participatesInCommodityFoodProgram': 'either',
+  'household.receivesEnergyAssistance': 'state',
+  'household.receivedEmergencyBenefits': 'state',
+  // Application context: the portal knows when it submitted.
+  'applicationContext.filingDate': 'either',
+}
+
+/** v2 fields that already exist in the published worker-portal contract
+ *  (so they are not "candidate additions"). */
+export const PUBLISHED_CONTRACT_FIELDS = new Set([
+  'members[].dateOfBirth',
+  'members[].citizenshipStatus',
+  'members[].immigrationStatus',
+  'members[].relationshipToHead',
+  'members[].isDisabled',
+  'members[].income[].type',
+  'members[].income[].unearnedType',
+  'members[].income[].incomeBasis',
+  'members[].income[].amount',
+  'members[].income[].frequency',
+  'members[].expenses[].category',
+  'members[].expenses[].amount',
+  'members[].expenses[].frequency',
+  'members[].assets[].type',
+  'members[].assets[].value',
+  'members[].employment[].status',
+  'members[].employment[].hoursPerWeek',
+  'household.size',
+  'household.housingCosts',
+  'household.utilityCosts',
+  'household.isMigrantOrSeasonalFarmWorker',
+])
+
+export function sourceOf(groupTitle: string, field: string): FieldSource | undefined {
+  return FIELD_SOURCE_OVERRIDES[field] ?? GROUP_SOURCE_DEFAULTS[groupTitle]
+}
+
 /** The enum-bearing inputs whose value vocabularies the dictionary publishes
  *  in full (the contract carries them as open strings via detailType etc.). */
 export const VOCABULARIES: Array<{ title: string; ruleset: string; path: string; apiField: string }> = [

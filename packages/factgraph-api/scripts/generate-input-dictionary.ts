@@ -16,7 +16,13 @@ import path from 'node:path'
 import { loadFactGraphData, getRuleset } from 'rules-visualizer-factgraph-core'
 import type { Model, ModelNode } from 'rules-visualizer-shared-types'
 
-import { FIELD_MAP, VOCABULARIES, type FieldMapping } from '../src/v2-field-map.js'
+import {
+  FIELD_MAP,
+  VOCABULARIES,
+  PUBLISHED_CONTRACT_FIELDS,
+  sourceOf,
+  type FieldMapping,
+} from '../src/v2-field-map.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const DATA_DIR = path.resolve(__dirname, '..', '..', '..', 'data', 'factgraph')
@@ -129,6 +135,11 @@ export function renderInputDictionary(): string {
   w('**Kind**: how the adapter maps it — `direct` (passes through), `derived`')
   w('(computed; the note says how), `structural` (identity/reference plumbing),')
   w('`compat` (carried for contract compatibility; not consumed by the rules).')
+  w('**Source**: our best guess at where the value realistically originates —')
+  w('`applicant` (self-attestable on an application form), `state` (records')
+  w('checks, case history, batch/data-exchange systems), or `either`. These')
+  w('guesses are offered for the Worker Portal team and the State to correct;')
+  w('they drive the candidate-additions list below.')
   w()
   w('Which fields are *required*? Per case, not per program: the rules')
   w('short-circuit, so the authoritative answer is the response\'s')
@@ -139,8 +150,8 @@ export function renderInputDictionary(): string {
   for (const group of FIELD_MAP) {
     w(`## ${group.title}`)
     w()
-    w('| Field | Type | Programs | Kind | Definition (from the rules) | Policy citation |')
-    w('|---|---|---|---|---|---|')
+    w('| Field | Type | Programs | Kind | Source | Definition (from the rules) | Policy citation |')
+    w('|---|---|---|---|---|---|---|')
     for (const e of group.entries) {
       const sPath = firstPath(e.snap)
       const mPath = firstPath(e.medicaid)
@@ -170,12 +181,47 @@ export function renderInputDictionary(): string {
       const definition = definitionParts.join(' ') || '—'
       const citation = info?.citations.length ? info.citations.join('; ') : '—'
 
+      const src =
+        e.kind === 'structural' ? '—' : (sourceOf(group.title, e.field) ?? '—')
       w(
-        `| \`${e.field}\` | ${cell(typeName)}${enumSuffix} | ${programs} | ${e.kind} | ${cell(definition)} | ${cell(citation)} |`
+        `| \`${e.field}\` | ${cell(typeName)}${enumSuffix} | ${programs} | ${e.kind} | ${src} | ${cell(definition)} | ${cell(citation)} |`
       )
     }
     w()
   }
+
+  w('## Candidate worker-portal contract additions')
+  w()
+  w('Fields that pass the realistic-source test for the portal — `applicant`')
+  w('or `either` origin — and are **not** in the published worker-portal')
+  w('contract today. Generated from the Source classification above; offered')
+  w('as the starting list for the contract conversation (which of these the')
+  w('portal application should actually ask is a Worker Portal / State')
+  w('workflow decision). Fields classified `state` belong at the')
+  w('rules-engine boundary (the v2 contract), supplied by the systems that')
+  w('hold case records and data-exchange results — not by the portal.')
+  w()
+  for (const group of FIELD_MAP) {
+    const candidates = group.entries.filter((e) => {
+      if (e.kind === 'structural' || e.kind === 'compat') return false
+      if (PUBLISHED_CONTRACT_FIELDS.has(e.field)) return false
+      const src = sourceOf(group.title, e.field)
+      return src === 'applicant' || src === 'either'
+    })
+    if (candidates.length === 0) continue
+    w(`- **${group.title}**: ${candidates.map((e) => '`' + e.field + '`').join(', ')}`)
+  }
+  w()
+  const totals = { applicant: 0, state: 0, either: 0 }
+  for (const group of FIELD_MAP) {
+    for (const e of group.entries) {
+      if (e.kind === 'structural' || e.kind === 'compat') continue
+      const src = sourceOf(group.title, e.field)
+      if (src) totals[src]++
+    }
+  }
+  w(`Totals across mapped value fields: ${totals.applicant} applicant-attestable, ${totals.either} either, ${totals.state} state-systems-only.`)
+  w()
 
   w('## Vocabularies')
   w()
