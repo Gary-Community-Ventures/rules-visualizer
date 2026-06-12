@@ -23,6 +23,7 @@ import yaml from 'yaml'
 
 import { buildOpenApiDocument } from '../packages/factgraph-api/src/openapi.js'
 import { buildConsumerOpenApiDocument } from '../packages/factgraph-api/src/consumer-openapi.js'
+import { buildDictionaryData } from '../packages/factgraph-api/scripts/generate-input-dictionary.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const outDir = resolve(process.argv[2] ?? 'build')
@@ -75,6 +76,7 @@ function redocPage(opts: {
     <nav class="docs-nav">
       ${tab('./index.html', 'Eligibility contract', opts.here === 'consumer')}
       ${tab('./advanced.html', 'Advanced API', opts.here === 'advanced')}
+      <a href="./dictionary.html">Input dictionary</a>
       <span class="spacer"></span>
       <a href="./explore.html">Target explorer →</a>
     </nav>
@@ -104,6 +106,167 @@ writeFileSync(
     description:
       'Advanced/tooling Fact Graph query + discovery API.',
   })
+)
+
+// Input dictionary — filterable HTML rendering of the same data that
+// generates docs/input-dictionary.md. Cards (not a wide table) so the
+// rule-author definitions wrap; client-side text search + program/source
+// filters, no build step. Data is also emitted as dictionary.json for
+// tooling.
+const dict = buildDictionaryData()
+writeFileSync(`${outDir}/dictionary.json`, JSON.stringify(dict, null, 2))
+
+const dictionaryHtml = `<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Input dictionary — Eligibility Adapter API</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Every eligibility request field with its regulatory definition, enum vocabulary, policy citations, and realistic source." />
+    <style>
+      :root { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+      body { margin: 0; color: #1f2937; }
+      .docs-nav {
+        font-size: 14px; padding: 0.6rem 1.25rem; background: #f3f4f6;
+        border-bottom: 1px solid #e5e7eb; display: flex; gap: 1rem; align-items: center;
+      }
+      .docs-nav strong { color: #1f2937; }
+      .docs-nav a { color: #2563eb; text-decoration: none; }
+      .docs-nav .spacer { flex: 1; }
+      main { max-width: 56rem; margin: 0 auto; padding: 1rem 1.25rem 4rem; }
+      .controls { display: flex; gap: 0.6rem; flex-wrap: wrap; align-items: center;
+        position: sticky; top: 0; background: #fff; padding: 0.75rem 0; border-bottom: 1px solid #e5e7eb; z-index: 2; }
+      .controls input, .controls select { padding: 0.45rem 0.6rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px; }
+      .controls input { flex: 1; min-width: 14rem; }
+      .count { color: #6b7280; font-size: 13px; }
+      h2.group { font-size: 1.05rem; margin: 1.8rem 0 0.4rem; color: #374151; }
+      .card { border: 1px solid #e5e7eb; border-radius: 8px; padding: 0.8rem 1rem; margin: 0.6rem 0; }
+      .card code.field { font-weight: 600; font-size: 0.95rem; }
+      .badges { margin: 0.35rem 0 0.5rem; display: flex; gap: 0.35rem; flex-wrap: wrap; }
+      .badge { font-size: 11.5px; padding: 0.1rem 0.5rem; border-radius: 999px; background: #f3f4f6; color: #374151; }
+      .badge.src-applicant { background: #dcfce7; color: #166534; }
+      .badge.src-state { background: #dbeafe; color: #1e40af; }
+      .badge.src-either { background: #fef9c3; color: #854d0e; }
+      .badge.published { background: #ede9fe; color: #5b21b6; }
+      .def { font-size: 14px; line-height: 1.5; }
+      .note { font-size: 13px; color: #6b7280; font-style: italic; margin-top: 0.35rem; }
+      .cite { font-size: 12.5px; color: #6b7280; margin-top: 0.4rem; }
+      details.values { margin-top: 0.4rem; font-size: 13px; }
+      details.values code { background: #f3f4f6; padding: 0 0.3rem; border-radius: 4px; }
+      .hidden { display: none; }
+    </style>
+  </head>
+  <body>
+    <nav class="docs-nav">
+      <a href="./index.html">Eligibility contract</a>
+      <a href="./advanced.html">Advanced API</a>
+      <strong>Input dictionary</strong>
+      <span class="spacer"></span>
+      <a href="./explore.html">Target explorer →</a>
+    </nav>
+    <main>
+      <h1>Input dictionary</h1>
+      <p>Every request field in the <a href="./index.html">eligibility contract</a>
+      and the v2 draft, with the rule authors' own definitions, enum vocabularies,
+      and policy citations — generated from the rulesets.
+      <strong>Source</strong> is our best guess at where each value realistically
+      originates, offered for the partner teams to correct.
+      Also available as <a href="./dictionary.json">JSON</a> or
+      <a href="https://github.com/Gary-Community-Ventures/rules-visualizer/blob/main/packages/factgraph-api/docs/input-dictionary.md">markdown</a>.</p>
+      <div class="controls">
+        <input id="q" type="search" placeholder="Search fields and definitions…" />
+        <select id="program">
+          <option value="">All programs</option>
+          <option>SNAP</option>
+          <option>Medicaid</option>
+        </select>
+        <select id="source">
+          <option value="">All sources</option>
+          <option value="applicant">applicant</option>
+          <option value="state">state</option>
+          <option value="either">either</option>
+        </select>
+        <span class="count" id="count"></span>
+      </div>
+      <div id="list"></div>
+    </main>
+    <script id="data" type="application/json">__DATA__</script>
+    <script>
+      const data = JSON.parse(document.getElementById('data').textContent)
+      const list = document.getElementById('list')
+      const esc = (s) => s.replace(/[&<>]/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))
+      function citeText(cs) {
+        return cs.map((c) => c.pages.length ? c.title + ' — ' + (c.pages.length > 1 ? 'pp. ' : 'p. ') + c.pages.join(', ') : c.title).join('; ')
+      }
+      for (const group of data.groups) {
+        const h = document.createElement('h2')
+        h.className = 'group'; h.textContent = group.title
+        list.appendChild(h)
+        for (const e of group.entries) {
+          const card = document.createElement('div')
+          card.className = 'card'
+          card.dataset.text = (e.field + ' ' + (e.definition || '') + ' ' + (e.note || '')).toLowerCase()
+          card.dataset.programs = e.programs.join(',')
+          card.dataset.source = e.source || ''
+          const badges = [
+            '<span class="badge">' + esc(e.type) + '</span>',
+            ...e.programs.map((p) => '<span class="badge">' + p + '</span>'),
+            '<span class="badge">' + e.kind + '</span>',
+            e.source ? '<span class="badge src-' + e.source + '">' + e.source + '</span>' : '',
+            e.inPublishedContract ? '<span class="badge published">in published contract</span>' : '',
+          ].filter(Boolean).join('')
+          let values = ''
+          if (e.values) {
+            values = '<details class="values"><summary>' + e.values.length + ' allowed values</summary><p>' +
+              e.values.map((v) => '<code>' + esc(v) + '</code>').join(' ') + '</p></details>'
+          }
+          card.innerHTML =
+            '<code class="field">' + esc(e.field) + '</code>' +
+            '<div class="badges">' + badges + '</div>' +
+            (e.definition ? '<div class="def">' + esc(e.definition) + '</div>' : '') +
+            (e.note ? '<div class="note">Adapter mapping: ' + esc(e.note) + '</div>' : '') +
+            values +
+            (e.citations.length ? '<div class="cite">' + esc(citeText(e.citations)) + '</div>' : '')
+          list.appendChild(card)
+        }
+      }
+      const q = document.getElementById('q')
+      const program = document.getElementById('program')
+      const source = document.getElementById('source')
+      const count = document.getElementById('count')
+      function apply() {
+        const term = q.value.toLowerCase().trim()
+        let shown = 0
+        const cards = list.querySelectorAll('.card')
+        for (const card of cards) {
+          const ok =
+            (!term || card.dataset.text.includes(term)) &&
+            (!program.value || card.dataset.programs.includes(program.value)) &&
+            (!source.value || card.dataset.source === source.value)
+          card.classList.toggle('hidden', !ok)
+          if (ok) shown++
+        }
+        for (const h of list.querySelectorAll('h2.group')) {
+          let el = h.nextElementSibling, any = false
+          while (el && el.tagName !== 'H2') {
+            if (!el.classList.contains('hidden')) { any = true; break }
+            el = el.nextElementSibling
+          }
+          h.classList.toggle('hidden', !any)
+        }
+        count.textContent = shown + ' fields'
+      }
+      q.addEventListener('input', apply)
+      program.addEventListener('change', apply)
+      source.addEventListener('change', apply)
+      apply()
+    </script>
+  </body>
+</html>
+`
+writeFileSync(
+  `${outDir}/dictionary.html`,
+  dictionaryHtml.replace('__DATA__', JSON.stringify(dict).replace(/</g, '\\u003c'))
 )
 
 // Lift the explorer template into the build output. Sourced from
