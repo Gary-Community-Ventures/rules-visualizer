@@ -117,6 +117,8 @@ export type DictionaryEntry = {
   definition?: string
   /** Adapter mapping note (how derived values are computed, caveats). */
   note?: string
+  /** A field we propose consolidating this one into, when present. */
+  supersededBy?: string
   citations: Array<{ title: string; pages: number[] }>
   inPublishedContract: boolean
 }
@@ -172,6 +174,7 @@ export function buildDictionaryData(): DictionaryData {
         source,
         definition: info?.description ?? info?.label,
         note: e.note,
+        supersededBy: e.supersededBy,
         citations: info?.citations ?? [],
         inPublishedContract: PUBLISHED_CONTRACT_FIELDS.has(e.field),
       }
@@ -241,7 +244,10 @@ export function renderInputDictionary(): string {
   w('`applicant` (self-attestable on an application form), `state` (records')
   w('checks, case history, batch/data-exchange systems), or `either`. These')
   w('guesses are offered for the Worker Portal team and the State to correct;')
-  w('they drive the candidate-additions list below. Fields that already exist')
+  w('they drive the candidate-additions list below. A field marked')
+  w('**proposed for consolidation** is one we still accept but propose folding')
+  w('into a richer field (named inline) — offered for discussion, not a')
+  w('unilateral change. Fields that already exist')
   w("in the partner's published worker-portal contract (the eligibility-")
   w('adapter OpenAPI in safety-net-blueprint) are marked ✦ — the candidate-')
   w('additions list below is exactly the applicant-attestable fields WITHOUT')
@@ -268,6 +274,10 @@ export function renderInputDictionary(): string {
       w()
       if (e.definition) {
         w(e.definition.replace(/\n+/g, ' ').trim())
+        w()
+      }
+      if (e.supersededBy) {
+        w(`> **Proposed for consolidation** into \`${e.supersededBy}\` — still accepted for the published-contract shape.`)
         w()
       }
       if (e.note) {

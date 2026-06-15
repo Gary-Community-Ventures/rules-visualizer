@@ -26,6 +26,9 @@ export type FieldMapping = {
   medicaid?: string | string[]
   kind: 'direct' | 'derived' | 'structural' | 'compat'
   note?: string
+  /** A v2 field we propose consolidating this one into, when sent. Drives
+   *  the "proposed for consolidation" signal in the spec + dictionary. */
+  supersededBy?: string
 }
 
 export type FieldGroup = { title: string; entries: FieldMapping[] }
@@ -41,8 +44,9 @@ const dv = (
   field: string,
   snap: string | string[] | undefined,
   medicaid: string | string[] | undefined,
-  note: string
-): FieldMapping => ({ field, snap, medicaid, kind: 'derived', note })
+  note: string,
+  supersededBy?: string
+): FieldMapping => ({ field, snap, medicaid, kind: 'derived', note, supersededBy })
 
 export const FIELD_MAP: FieldGroup[] = [
   {
@@ -54,7 +58,7 @@ export const FIELD_MAP: FieldGroup[] = [
       dv('members[].immigrationStatus', '/members/*/citizenshipImmigrationStatus', '/members/*/immigrantStatus', 'Present when citizenshipStatus is non_citizen; refines the mapped enum value.'),
       dv('members[].relationshipToHead', '/members/*/isHeadOfHousehold', undefined, 'head_of_household → true; other values → false.'),
       { field: 'members[].spouseId', snap: '/members/*/spouseId', kind: 'structural', note: 'Reference to another member id.' },
-      dv('members[].isDisabled', '/members/*/hasPhysicalDisability', '/members/*/disabled', 'Coarse ORCA flag. Ambiguous across programs — prefer disabilityDetails, which decomposes it into the observable facts each program\'s definition derives from.'),
+      dv('members[].isDisabled', '/members/*/hasPhysicalDisability', '/members/*/disabled', 'Coarse ORCA flag, ambiguous across programs (SNAP and Medicaid apply different legal definitions of disability).', 'members[].disabilityDetails'),
     ],
   },
   {
@@ -253,9 +257,9 @@ export const FIELD_MAP: FieldGroup[] = [
     title: 'Household',
     entries: [
       dv('household.size', undefined, '/householdSize', 'Medicaid derives household size from the members list (+ expected children); SNAP composes its own household unit from member facts. Supplied size is used as a cross-check.'),
-      { field: 'household.housingCosts', kind: 'compat', note: 'Coarse ORCA field; prefer per-member expenses[] with category housing, which is what the rules consume.' },
-      { field: 'household.utilityCosts', kind: 'compat', note: 'Coarse ORCA field; prefer per-member expenses[] with category utilities / a utility detailType.' },
-      dv('household.isMigrantOrSeasonalFarmWorker', '/members/*/isMigrantFarmWorker', undefined, 'Household-level ORCA flag; the rules evaluate migrant status per member — prefer workRequirements.isMigrantFarmWorker.'),
+      { field: 'household.housingCosts', kind: 'compat', note: 'Coarse ORCA field; the rules consume per-member expense rows.', supersededBy: 'members[].expenses[] (category housing)' },
+      { field: 'household.utilityCosts', kind: 'compat', note: 'Coarse ORCA field; the rules consume per-member expense rows.', supersededBy: 'members[].expenses[] (category utilities)' },
+      dv('household.isMigrantOrSeasonalFarmWorker', '/members/*/isMigrantFarmWorker', undefined, 'Household-level ORCA flag; the rules evaluate migrant status per member.', 'members[].workRequirements.isMigrantFarmWorker'),
       d('household.expectsShelterCosts', '/hasOrExpectsShelterCosts'),
       d('household.previousSubstantialLotteryWinnings', '/hadPreviousSubstantialLotteryOrGamblingWinnings'),
       d('household.participatesInCommodityFoodProgram', '/participatesInCommodityFoodDistributionProgram'),

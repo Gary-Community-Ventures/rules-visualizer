@@ -148,6 +148,7 @@ const dictionaryHtml = `<!DOCTYPE html>
       .badge.src-state { background: #dbeafe; color: #1e40af; }
       .badge.src-either { background: #fef9c3; color: #854d0e; }
       .badge.published { background: #ede9fe; color: #5b21b6; }
+      .badge.superseded { background: #ffedd5; color: #9a3412; }
       .def { font-size: 14px; line-height: 1.5; }
       .note { font-size: 13px; color: #6b7280; font-style: italic; margin-top: 0.35rem; }
       .cite { font-size: 12.5px; color: #6b7280; margin-top: 0.4rem; }
@@ -217,6 +218,7 @@ const dictionaryHtml = `<!DOCTYPE html>
             '<span class="badge">' + e.kind + '</span>',
             e.source ? '<span class="badge src-' + e.source + '">' + e.source + '</span>' : '',
             e.inPublishedContract ? '<span class="badge published">in worker-portal contract</span>' : '',
+            e.supersededBy ? '<span class="badge superseded">→ prefer ' + esc(e.supersededBy) + '</span>' : '',
           ].filter(Boolean).join('')
           let values = ''
           if (e.values) {

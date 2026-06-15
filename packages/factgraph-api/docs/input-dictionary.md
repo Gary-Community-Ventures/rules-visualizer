@@ -26,7 +26,10 @@ Each entry reads: **type · programs that consume it · kind · source.**
 `applicant` (self-attestable on an application form), `state` (records
 checks, case history, batch/data-exchange systems), or `either`. These
 guesses are offered for the Worker Portal team and the State to correct;
-they drive the candidate-additions list below. Fields that already exist
+they drive the candidate-additions list below. A field marked
+**proposed for consolidation** is one we still accept but propose folding
+into a richer field (named inline) — offered for discussion, not a
+unilateral change. Fields that already exist
 in the partner's published worker-portal contract (the eligibility-
 adapter OpenAPI in safety-net-blueprint) are marked ✦ — the candidate-
 additions list below is exactly the applicant-attestable fields WITHOUT
@@ -103,7 +106,9 @@ Policy: 10 CCR 2506-1 — Colorado SNAP Rules — p. 47
 
 Whether this member has a physical disability
 
-> *Adapter mapping:* Coarse ORCA flag. Ambiguous across programs — prefer disabilityDetails, which decomposes it into the observable facts each program's definition derives from.
+> **Proposed for consolidation** into `members[].disabilityDetails` — still accepted for the published-contract shape.
+
+> *Adapter mapping:* Coarse ORCA flag, ambiguous across programs (SNAP and Medicaid apply different legal definitions of disability).
 
 ## Member — pregnancy
 
@@ -1201,13 +1206,17 @@ Number of members in the household.
 
 `—` · no program (see note) · compat · source: **applicant** · ✦ in the published worker-portal contract
 
-> *Adapter mapping:* Coarse ORCA field; prefer per-member expenses[] with category housing, which is what the rules consume.
+> **Proposed for consolidation** into `members[].expenses[] (category housing)` — still accepted for the published-contract shape.
+
+> *Adapter mapping:* Coarse ORCA field; the rules consume per-member expense rows.
 
 #### `household.utilityCosts`
 
 `—` · no program (see note) · compat · source: **applicant** · ✦ in the published worker-portal contract
 
-> *Adapter mapping:* Coarse ORCA field; prefer per-member expenses[] with category utilities / a utility detailType.
+> **Proposed for consolidation** into `members[].expenses[] (category utilities)` — still accepted for the published-contract shape.
+
+> *Adapter mapping:* Coarse ORCA field; the rules consume per-member expense rows.
 
 #### `household.isMigrantOrSeasonalFarmWorker`
 
@@ -1215,7 +1224,9 @@ Number of members in the household.
 
 Whether this member travels away from home on a regular basis to follow the flow of seasonal agricultural work (10 CCR 2506-1, 4.000.1)
 
-> *Adapter mapping:* Household-level ORCA flag; the rules evaluate migrant status per member — prefer workRequirements.isMigrantFarmWorker.
+> **Proposed for consolidation** into `members[].workRequirements.isMigrantFarmWorker` — still accepted for the published-contract shape.
+
+> *Adapter mapping:* Household-level ORCA flag; the rules evaluate migrant status per member.
 
 Policy: 10 CCR 2506-1 — Colorado SNAP Rules — p. 7
 

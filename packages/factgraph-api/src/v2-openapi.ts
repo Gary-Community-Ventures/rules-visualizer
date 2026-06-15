@@ -346,7 +346,6 @@ export function buildV2OpenApiDocument() {
       type: z.enum(INCOME_TYPE),
       unearnedType: z.string().optional(),
       incomeBasis: z.enum(INCOME_BASIS).optional().openapi({
-        deprecated: true,
         description:
           'Carried from the published contract for compatibility; not consumed by the rules today.',
       }),
@@ -457,9 +456,9 @@ export function buildV2OpenApiDocument() {
       relationshipToHead: z.enum(RELATIONSHIP).optional(),
       spouseId: z.string().optional(),
       isDisabled: z.boolean().optional().openapi({
-        deprecated: true,
         description:
-          'Carried from the published contract for migration; proposed for retirement. A single boolean is ambiguous across programs — SNAP and Medicaid apply different legal definitions of disability. Prefer disabilityDetails, which carries the observable facts each definition derives from; when only this flag is sent the adapter maps it coarsely and discloses the assumption.',
+          'PROPOSED FOR CONSOLIDATION into `disabilityDetails`. A single boolean is ambiguous across programs — SNAP and Medicaid apply different legal definitions of disability — so we propose carrying the observable facts each definition derives from instead. Still accepted (and mapped coarsely, with the assumption disclosed) for callers sending the published-contract shape.',
+        'x-supersededBy': 'disabilityDetails',
       }),
       disabilityDetails: DisabilityDetails.optional(),
       pregnancy: Pregnancy.optional(),
@@ -502,19 +501,19 @@ export function buildV2OpenApiDocument() {
     z.object({
       size: z.number().int().optional(),
       housingCosts: z.number().optional().openapi({
-        deprecated: true,
         description:
-          'Carried from the published contract; proposed for retirement in favor of per-member expenses[] (category housing), which is what the rules consume. When sent without a covering expense, the adapter applies it as a monthly housing expense.',
+          'PROPOSED FOR CONSOLIDATION into per-member `expenses[]` (category housing), which is what the rules consume. Still accepted — when sent without a covering expense, the adapter applies it as a monthly housing expense.',
+        'x-supersededBy': 'members[].expenses[] (category housing)',
       }),
       utilityCosts: z.number().optional().openapi({
-        deprecated: true,
         description:
-          'Carried from the published contract; proposed for retirement in favor of per-member expenses[] (category utilities / a utility detailType).',
+          'PROPOSED FOR CONSOLIDATION into per-member `expenses[]` (category utilities / a utility detailType). Still accepted.',
+        'x-supersededBy': 'members[].expenses[] (category utilities)',
       }),
       isMigrantOrSeasonalFarmWorker: z.boolean().optional().openapi({
-        deprecated: true,
         description:
-          'Carried from the published contract; proposed for retirement — the rules evaluate migrant/seasonal status per member (workRequirements.isMigrantFarmWorker).',
+          'PROPOSED FOR CONSOLIDATION into `workRequirements.isMigrantFarmWorker` — the rules evaluate migrant/seasonal status per member. Still accepted.',
+        'x-supersededBy': 'members[].workRequirements.isMigrantFarmWorker',
       }),
       expectsShelterCosts: z.boolean().optional(),
       previousSubstantialLotteryWinnings: z.boolean().optional(),
