@@ -78,11 +78,15 @@ call", pass the full household **plus** a `subjectMemberId` and return that
 member's decision computed against the household — but the household context
 must travel either way.
 
-> **Implemented:** `POST /v1/eligibility/evaluate/determination` with
-> `program: "medicaid"` now does exactly this — household-shaped request in, a
-> `MedicaidDeterminationResponse` with one decision per member out. It's live
-> and testable; this section is the rationale + the contract change we're
-> proposing back to the blueprint.
+> **Implemented (the per-member form):** `POST /v1/eligibility/evaluate/determination`
+> with `program: "medicaid"` takes a household-shaped request and returns a
+> `MedicaidDeterminationResponse` with one decision per member — live and
+> testable. It also accepts the contract's per-applicant
+> `IndividualDeterminationRequest` (single `member`), wrapping it as a
+> sole-applicant household with that assumption disclosed. The
+> `subjectMemberId` "one decision per call" variant is part of the **v2
+> proposal**, not implemented in v1. This section is the rationale + the
+> contract change we're proposing back to the blueprint.
 
 ### Medicaid input coverage (13 inputs)
 
