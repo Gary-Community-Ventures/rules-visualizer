@@ -123,31 +123,34 @@ computes the answer; what differs is a thin workflow wrapper:
    unit, so FTI income aligns naturally with the graph's household-level
    income inputs.
 
-**Why it isn't implemented yet — three open contract questions, no engine
-gaps:**
+**Why it isn't implemented yet — confirmations to align on, no engine gaps:**
 
-- **Who owns extraction?** `MedicaidExParteRequest` carries full
-  `MemberContext` *alongside* the checks. If the blueprint populates the
-  member context from data-exchange results before calling (checks ride along
-  for the conclusiveness gate), the endpoint is implementable today from
-  defined fields only. If the adapter is meant to extract facts from the raw
-  `serviceResult` payloads, it is blocked: all 12 `serviceResult` schemas in
-  `data-exchange-adapter-openapi.yaml` are currently `additionalProperties:
-  true` stubs with no fields defined.
-- **Cardinality**, again: the request carries one member and no household,
-  but MAGI needs household size + income — the same issue as the
-  per-applicant determination (above). Even a fully-wired ex parte call would
-  return `pending` for missing household context today.
-- **`path: ex_parte` vs the enum.** The contract's ex parte example response
-  returns `path: ex_parte`, but the shared `DecisionPath` enum is
-  `[auto, manual]` — the example is invalid against its own schema. Either a
-  doc bug or an intended third value that hasn't landed; adapters need to
-  know which value to return.
+- **Division of labor (already largely agreed).** The established model is
+  that the rules engine receives the facts it needs *as input*, while the
+  orchestration/adapter layer performs the federal call-outs and passes the
+  results in — the engine does not call external services or parse their raw
+  payloads. Read that way, ex parte is straightforward: the `member` context
+  carries the extracted facts (income, SSI status, immigration status), and
+  `electronicChecks[]` supplies the per-check *conclusiveness* status the
+  adapter needs for the gate; the `serviceResult` payloads are treated as
+  opaque. So the empty `serviceResult` schemas in
+  `data-exchange-adapter-openapi.yaml` are **not a blocker for the engine** —
+  we just want to confirm that division holds for ex parte specifically.
+- **Household context.** The request carries one member and no household, but
+  MAGI needs household size + income — the same point as the per-applicant
+  determination (above). A per-applicant ex parte call needs household
+  context to resolve.
+- **`path: ex_parte` vs the enum.** The example response returns
+  `path: ex_parte`, but `DecisionPath` is `[auto, manual]` — and the enum's
+  own description cites Medicaid ex parte as an example of `auto`. So the
+  example is internally inconsistent: either it should be `auto` (a doc fix),
+  or `ex_parte` is an intended, more-informative third value (an enum
+  addition). Adapters need to know which.
 
-Once these are answered the implementation is small — conclusiveness gate →
-the existing medicaid translator → the same graph → `ProgramDecision`. The
-endpoint returns `501` until then, and the structure stays "one medicaid
-graph, two workflow endpoints" (mirroring SNAP's expedited-screening over
+Once those are confirmed the implementation is small — conclusiveness gate →
+the existing medicaid translator → the same graph → decision. The endpoint
+returns `501` until then, and the structure stays "one medicaid graph, two
+workflow endpoints" (mirroring SNAP's expedited-screening over
 `snap-complete`).
 
 ---
@@ -246,13 +249,15 @@ the case record (currently hardcoded — a defect):
    promoting them into the contract as `benefitAmount` and an optional
    `proratedFirstMonthAmount` (monthly dollars, present when status is
    `approved` for benefit-amount programs).
-7. **Medicaid ex parte:** clarify (a) whether the blueprint or the adapter
-   owns extraction of facts from `serviceResult` payloads (the per-service
-   schemas are currently empty stubs), (b) the household-context question for
-   the per-applicant call (same as #1), and (c) whether `path: ex_parte` in
-   the contract's example is a doc bug or an intended addition to the
-   `DecisionPath` enum. The rules engine is ready — same medicaid graph,
-   plus a conclusiveness gate in the adapter.
+7. **Medicaid ex parte:** confirm (a) that the agreed division of labor holds
+   — the orchestration layer does the federal call-outs and passes the facts
+   in, so the engine treats `serviceResult` payloads as opaque and uses
+   `electronicChecks[]` only for conclusiveness (no dependence on the empty
+   per-service schemas); (b) the household-context question for the
+   per-applicant call (same as #1); and (c) whether `path: ex_parte` in the
+   example should be `auto` (matching the enum's own description) or a new
+   enum value. The rules engine is ready — same medicaid graph, plus a
+   conclusiveness gate in the adapter.
 
 > The ✅/➕/🔎 buckets above are a first pass and should be confirmed against the
 > rule authors' intent; some flags (e.g. striker status) are arguably either
