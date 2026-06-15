@@ -390,6 +390,8 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/MissingInformation"
+          description: "Present when status is pending: the information still needed to
+            reach a determination, by field name (no Fact Graph paths)."
         x-translationNotes:
           type: array
           items:
@@ -458,10 +460,14 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/MissingInformation"
+          description: "Present when any member decision is pending: the information still
+            needed, by field name."
         x-translationNotes:
           type: array
           items:
             type: string
+          description: Assumptions the determinations are conditional on (defaulted
+            fields, unmapped values).
       required:
         - metadata
         - program

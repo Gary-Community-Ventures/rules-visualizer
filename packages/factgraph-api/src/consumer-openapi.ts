@@ -209,7 +209,7 @@ export function buildConsumerOpenApiDocument() {
       'x-allotment': z.number().optional().openapi({ description: 'SNAP: full-month allotment.' }),
       'x-proratedAllotment': z.number().optional().openapi({ description: 'SNAP: prorated first-month allotment.' }),
       'x-expedited': z.boolean().optional().openapi({ description: 'SNAP: whether expedited processing also applies.' }),
-      'x-missingInformation': z.array(MissingInformation).optional(),
+      'x-missingInformation': z.array(MissingInformation).optional().openapi({ description: 'Present when status is pending: the information still needed to reach a determination, by field name (no Fact Graph paths).' }),
       'x-translationNotes': z.array(z.string()).optional().openapi({ description: 'Assumptions the determination is conditional on (defaulted fields, unmapped values).' }),
       'x-explanation': z.array(ExplanationStep).optional().openapi({ description: 'Path-free "why" for denials.' }),
     }).openapi({
@@ -237,8 +237,8 @@ export function buildConsumerOpenApiDocument() {
       decisions: z.array(MemberMedicaidDecision).openapi({
         description: 'One decision per member. Medicaid is household-in / per-member-out: each member’s eligibility depends on the whole household (size + income → FPL%).',
       }),
-      'x-missingInformation': z.array(MissingInformation).optional(),
-      'x-translationNotes': z.array(z.string()).optional(),
+      'x-missingInformation': z.array(MissingInformation).optional().openapi({ description: 'Present when any member decision is pending: the information still needed, by field name.' }),
+      'x-translationNotes': z.array(z.string()).optional().openapi({ description: 'Assumptions the determinations are conditional on (defaulted fields, unmapped values).' }),
     }).openapi({ description: 'Medicaid determination — per-member decisions for the household.' })
   )
 
