@@ -30,6 +30,7 @@ Read in this order — rationale, then the contract, then the field semantics:
 | [`concepts.md`](./concepts.md) | The incompleteness model: how partial input, missing-inputs detection, and short-circuiting behave |
 | [`examples-snap.md`](./examples-snap.md) | Worked SNAP walkthroughs against the query endpoint, including the full adapter-shape-to-query translation |
 | [`bruno/`](./bruno/) | Runnable request collection ([Bruno](https://www.usebruno.com/)) — `eligibility-adapter/` for the consumer endpoints, `advanced-query/` for the query API |
+| [`examples/`](./examples/) | Ready-to-POST `snap-complete` query bodies — all-inputs (every writable), minimal (31 fields, same result), and multi-member |
 
 ## How the documents relate
 

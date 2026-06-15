@@ -1,0 +1,71 @@
+{
+  "targets": [
+    "/eligibilityCategory",
+    "/allotment",
+    "/proratedAllotment",
+    "/isExpedited"
+  ],
+  "inputs": {
+    "/expenses": [
+      {
+        "id": "expenses-1",
+        "/expenses/*/memberId": "#0",
+        "/expenses/*/type": "Rent",
+        "/expenses/*/amount": 800,
+        "/expenses/*/isForClaimableShelterResidence": true
+      }
+    ],
+    "/resourceItems": [
+      {
+        "id": "resourceItems-1",
+        "/resourceItems/*/memberId": "#0"
+      }
+    ],
+    "/incomes": [
+      {
+        "id": "incomes-1",
+        "/incomes/*/memberId": "#0",
+        "/incomes/*/type": "WagesAndSalaries",
+        "/incomes/*/isWorkSupplementationOrWorkSupportPublicAssistancePortion": false,
+        "/incomes/*/amount": 1200
+      }
+    ],
+    "/jobs": [
+      {
+        "id": "jobs-1",
+        "/jobs/*/memberId": "#0"
+      }
+    ],
+    "/caregiverRelationships": [
+      {
+        "id": "caregiverRelationships-1"
+      }
+    ],
+    "/members": [
+      {
+        "id": "head",
+        "/members/*/isRoomer": false,
+        "/members/*/livesInBoardingHouse": false,
+        "/members/*/livesInInstitution": false,
+        "/members/*/isLiveInAttendant": false,
+        "/members/*/isSeparateAndApart": false,
+        "/members/*/isHeadOfHousehold": true,
+        "/members/*/disqualifiedForIPV": false,
+        "/members/*/convictedOfDrugRelatedFelonyWithSnap": false,
+        "/members/*/failedToProvideOrObtainSSN": false,
+        "/members/*/disqualifiedForWorkRequirementsCooperation": false,
+        "/members/*/disqualifiedForQualityAssuranceCooperation": false,
+        "/members/*/isParticipatingInAnotherHousehold": false,
+        "/members/*/disqualifiedForFelonyNonCompliance": false,
+        "/members/*/disqualifiedForParoleOrProbationViolation": false,
+        "/members/*/isFleeingFelon": false,
+        "/members/*/isStriker": false,
+        "/members/*/studentEnrollmentStatus": "LessThanHalfTimeOrNotEnrolled",
+        "/members/*/citizenshipImmigrationStatus": "Citizen",
+        "/members/*/hasLevelSanctionImposed": false
+      }
+    ],
+    "/applicationFilingDate": "2026-06-15",
+    "/hadPreviousSubstantialLotteryOrGamblingWinnings": false
+  }
+}
