@@ -156,12 +156,18 @@ structure of the rules:
 - Policy citations from `references.json` flow through on the
   corresponding `TraceNode`s.
 
-V1 walks booleans, comparisons, dependency references, and the common
-literal types (Int, Dollar, Boolean, etc.). Arithmetic operators
-(`Multiply`, `Add`, `Subtract`, ...) and `Switch` report the computed
-value but don't recurse — query those facts directly for their
-breakdown. Per-member trace for collection-scoped targets is planned;
-ask for a scalar parent instead today.
+The walker handles booleans, comparisons, `Switch`/`Case`/`When`,
+dependency references, and the common literal types (Int, Dollar,
+Boolean, Enum, etc.). `Switch` is the branch-selection operator behind
+categorical decisions: the walker evaluates each case's condition in
+source order and follows the one that selected the outcome — or, on a
+fallthrough to a catch-all, the conditions that failed — so a denial
+trace descends into the gate that actually failed instead of stopping at
+the category node. Arithmetic operators (`Multiply`, `Add`, `Subtract`,
+...) and collection operators (`Filter`, `Count`) still report the
+computed value without recursing — query those facts directly for their
+value breakdown. Per-member trace for collection-scoped targets is
+planned; ask for a scalar parent instead today.
 
 ### Finding the deciding nodes
 

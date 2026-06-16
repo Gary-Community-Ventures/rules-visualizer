@@ -129,8 +129,21 @@ test('SNAP over-income → denied, snake_case reason code, path-free explanation
   assert.equal(res.body.status, 'denied')
   // snake_case, no SCREAMING_CASE, per Worker Portal conventions.
   assert.match(res.body.denialReasonCode, /^[a-z0-9_]+$/)
+  // The Switch walk descends /eligibilityCategory into the failed income gate,
+  // so the reason is the specific failed test — not the `other` fallback that
+  // an opaque Switch produced. Income over the limit fails gross and/or net.
+  assert.match(
+    res.body.denialReasonCode,
+    /^failed_(gross|net)_income_test$/,
+    `expected a specific income-test reason, got ${res.body.denialReasonCode}`
+  )
   // Path-free domain-summarized explanation; no Fact Graph paths or x-trace.
   assert.ok(Array.isArray(res.body['x-explanation']), 'expected x-explanation')
+  assert.ok(res.body['x-explanation'].length > 0, 'explanation should not be empty')
+  const factor = res.body['x-explanation'][0]
+  assert.equal(typeof factor.factor, 'string')
+  assert.ok(factor.factor.length > 0, 'factor should be a human-readable name')
+  assert.equal(factor.outcome, false, 'a failed gate explains a denial')
   assert.equal(res.body['x-decidingPath'], undefined)
   assert.equal(res.body['x-trace'], undefined)
   const serialized = JSON.stringify(res.body)

@@ -35,6 +35,7 @@
 import { z } from 'zod'
 
 import type { QueryResponse } from '../evaluate.js'
+import type { TraceNode } from '../explain.js'
 
 export const SNAP_RULESET_ID = 'snap-complete'
 
@@ -716,19 +717,50 @@ const DENIAL_REASON_BY_GATE: Record<string, { code: string; categorical: boolean
   '/meetsNonFinancialCriteria': { code: 'failed_non_financial_criteria', categorical: true },
 }
 
-/** Resolve the deciding gate into { status, reasonCode }: `denied` for a
+type FailedGate = { path: string; name?: string; code: string; categorical: boolean }
+
+/** Walk the `/eligibilityCategory` trace tree along its decisive branches and
+ *  collect the recognized eligibility gates that failed (value === false).
+ *
+ *  Following only `decisive` children keeps us on the causal path the engine
+ *  actually took: a denial fans out across the eligibility tiers (each a
+ *  failed `When`), and within the standard tier the `All`-false handler marks
+ *  the first failed gate decisive. Because only the five gates in
+ *  DENIAL_REASON_BY_GATE are recognized, the categorical-eligibility internals
+ *  (TANF/SSI checks, etc.) are walked past rather than reported as reasons. */
+function collectFailedGates(root: TraceNode | undefined): FailedGate[] {
+  const out: FailedGate[] = []
+  const seen = new Set<string>()
+  const visit = (node: TraceNode | undefined): void => {
+    if (!node) return
+    const hit = node.path ? DENIAL_REASON_BY_GATE[node.path] : undefined
+    if (hit && node.value === false && !seen.has(node.path!)) {
+      seen.add(node.path!)
+      out.push({ path: node.path!, name: node.name, ...hit })
+    }
+    for (const child of node.children ?? []) {
+      if (child.decisive) visit(child)
+    }
+  }
+  visit(root)
+  return out
+}
+
+/** Resolve the failed gates into { status, reasonCode }: `denied` for a
  *  failed financial test (appeal rights), `ineligible` for a categorical bar.
- *  Defaults to `denied` (most SNAP denials are income-based). */
+ *  Prefers a financial test for the headline code when several gates failed,
+ *  since those carry appeal rights and are the substantive denial. Defaults to
+ *  `denied`/`other` when no recognized gate is on the decisive path. */
 function deriveDenial(query: QueryResponse): {
   status: 'denied' | 'ineligible'
   reasonCode: string
 } {
-  const chain = query.decidingPaths?.['/eligibilityCategory']
-  if (Array.isArray(chain) && chain.length > 0) {
-    const deciding = chain[chain.length - 1]
-    const hit = DENIAL_REASON_BY_GATE[deciding?.path ?? '']
-    if (hit) {
-      return { status: hit.categorical ? 'ineligible' : 'denied', reasonCode: hit.code }
+  const gates = collectFailedGates(query.traces?.['/eligibilityCategory'])
+  if (gates.length > 0) {
+    const chosen = gates.find((g) => !g.categorical) ?? gates[0]
+    return {
+      status: chosen.categorical ? 'ineligible' : 'denied',
+      reasonCode: chosen.code,
     }
   }
   return { status: 'denied', reasonCode: 'other' }
@@ -746,14 +778,18 @@ export function toMissingInformation(
   })
 }
 
-/** Build a path-free explanation from the deciding chain: keep only the
- *  named factors (skip anonymous/path-only nodes) so nothing leaks a path. */
+/** Build a path-free explanation from the failed gates on the decisive path:
+ *  each gate becomes a factor named by the rule's own display name (never a
+ *  path), with its boolean outcome. Falls back to the top-level category node
+ *  when no recognized gate is on the decisive path. */
 function toExplanation(query: QueryResponse): ExplanationStep[] {
-  const chain = query.decidingPaths?.['/eligibilityCategory']
-  if (!Array.isArray(chain)) return []
-  return chain
-    .filter((step) => typeof step?.name === 'string' && step.name.length > 0)
-    .map((step) => ({ factor: step.name as string, outcome: step.value }))
+  const gates = collectFailedGates(query.traces?.['/eligibilityCategory'])
+  if (gates.length > 0) {
+    return gates.map((g) => ({ factor: g.name ?? g.path, outcome: false }))
+  }
+  const root = query.traces?.['/eligibilityCategory']
+  if (root?.name) return [{ factor: root.name, outcome: root.value }]
+  return []
 }
 
 /**

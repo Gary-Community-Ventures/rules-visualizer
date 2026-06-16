@@ -13,12 +13,16 @@
  * comparison semantics. New rulesets get explanations for free as long
  * as they stick to the supported operator vocabulary.
  *
- * V1 scope: All, Any, Not, the six comparisons, Dependency references,
- * and the common literal types. Other operators (Switch, Multiply,
- * Round, Subtract, GreaterOf, etc.) are surfaced as "opaque" — the
- * computed value is in the trace but we don't descend into the
- * sub-expressions. Callers wanting deeper detail can target those
- * intermediate facts directly via a second /query call.
+ * Scope: All, Any, Not, the six comparisons, Switch/Case/When, Dependency
+ * references, and the common literal types (including Enum). Switch is the
+ * branch-selection operator behind every categorical decision, so descending
+ * it is what lets a denial trace reach the gate that actually failed rather
+ * than stopping at the top-level category node. Arithmetic and collection
+ * operators (Multiply, Round, Subtract, GreaterOf, Filter, Count, etc.) are
+ * still surfaced as "opaque" — the computed value is in the trace but we
+ * don't descend into the sub-expressions. Callers wanting that deeper
+ * value-composition detail can target those intermediate facts directly via
+ * a second /query call.
  */
 import { XMLParser } from 'fast-xml-parser'
 import type {
@@ -188,6 +192,7 @@ const LITERAL_OPS = new Set([
   'True',
   'False',
   'Boolean',
+  'Enum',
 ])
 
 /**
@@ -359,6 +364,10 @@ function walkLogic(
     )
   }
 
+  if (logic.op === 'Switch') {
+    return walkSwitch(logic, parentNode, model, index, results, stack, depth)
+  }
+
   // Anything else: opaque sub-expression. We can't observe its value
   // without re-executing, so report it as unknown rather than echoing
   // the parent's value (which is just wrong for sub-expressions).
@@ -517,6 +526,88 @@ function markOneDecisive(nodes: TraceNode[], idx: number): void {
   })
 }
 
+/**
+ * Switch/Case/When/Then. The engine takes the first Case whose `When` holds
+ * and yields that Case's `Then` value, so we evaluate the When conditions in
+ * source order, stopping at the first that holds (matching short-circuit
+ * semantics — later cases are never reached and don't appear in the trace).
+ *
+ * Decisiveness has two modes:
+ *   - A *real* condition selected the outcome (its When references facts) —
+ *     that single condition is decisive, like an `Any` that held.
+ *   - The Switch fell through to a catch-all (`<When><True/></When>`) whose
+ *     condition carries no information. Then the meaningful causes are the
+ *     preceding conditions that did *not* hold — those are marked decisive,
+ *     like an `Any`-false where every operand failed. This is what lets a
+ *     denial chain descend through the eligibility tiers (each a failed
+ *     condition) into the gate that actually failed.
+ */
+function walkSwitch(
+  logic: LogicNode,
+  parentNode: ModelNode,
+  model: Model,
+  index: ModelIndex,
+  results: Record<string, unknown>,
+  stack: Set<string>,
+  depth: number
+): TraceNode {
+  const parentPath =
+    parentNode.content.type !== 'entity' && 'path' in parentNode.content
+      ? parentNode.content.path
+      : undefined
+  const parentValue = parentPath != null ? results[parentPath] : undefined
+
+  const cases = logic.children.filter((c) => c.op === 'Case')
+  const whenTraces: TraceNode[] = []
+  let takenIdx = -1
+  for (let i = 0; i < cases.length; i++) {
+    const whenLogic = cases[i].children.find((x) => x.op === 'When')
+      ?.children[0]
+    const whenTrace = whenLogic
+      ? walkLogic(whenLogic, parentNode, model, index, results, stack, depth)
+      : ({
+          op: 'Unknown',
+          value: null,
+          reason: 'Switch case missing a When condition.',
+        } as TraceNode)
+    whenTraces.push(whenTrace)
+    if (whenTrace.value === true) {
+      takenIdx = i
+      break // engine stops at the first matching case
+    }
+  }
+
+  const taken = takenIdx >= 0 ? whenTraces[takenIdx] : undefined
+  // A condition is "informative" when it points at real facts rather than
+  // being a bare literal like <True/>.
+  const informative =
+    !!taken && (taken.path != null || (taken.children?.length ?? 0) > 0)
+
+  if (informative) {
+    markOneDecisive(whenTraces, takenIdx)
+    return {
+      op: 'Switch',
+      value: parentValue ?? null,
+      reason: `${describeOperand(taken!)} held, selecting ${formatValue(parentValue)}.`,
+      children: whenTraces,
+    }
+  }
+
+  // Fell through (or nothing held): the conditions that did not hold are why.
+  whenTraces.forEach((w, i) => {
+    w.decisive = i !== takenIdx && w.value === false
+  })
+  const failedCount = whenTraces.filter((w) => w.decisive).length
+  return {
+    op: 'Switch',
+    value: parentValue ?? null,
+    reason: failedCount
+      ? `No case applied; ${failedCount === 1 ? 'the condition' : `all ${failedCount} conditions`} did not hold, so the result is ${formatValue(parentValue)}.`
+      : `Resolved to ${formatValue(parentValue)}.`,
+    children: whenTraces,
+  }
+}
+
 function walkComparison(
   logic: LogicNode,
   parentNode: ModelNode,
@@ -604,6 +695,8 @@ function literalValue(node: LogicNode): unknown {
     if (node.text === 'false') return false
     return node.text
   }
+  // <Enum optionsPath="…">Se</Enum> — the option string is the value.
+  if (node.op === 'Enum') return node.text ?? null
   if (node.text == null) return null
   // Numeric types come through as strings — coerce when safe.
   if (

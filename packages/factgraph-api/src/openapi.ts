@@ -178,7 +178,7 @@ export function buildOpenApiDocument() {
   registry.registerComponent('schemas', 'TraceNode', {
     type: 'object',
     description:
-      "One step in the explanation tree for a queried fact. The walker produces a recursive structure: the top-level node is the queried target; children are the operands or dependencies that contributed to its value. For boolean operators (All/Any) the walker visits every operand so the caller sees both the deciding branch and the alternatives — use `decisive` on each child to tell them apart. Arithmetic and Switch operators currently report the computed value but don't recurse — query those facts directly to drill in.",
+      "One step in the explanation tree for a queried fact. The walker produces a recursive structure: the top-level node is the queried target; children are the operands or dependencies that contributed to its value. For boolean operators (All/Any) the walker visits every operand so the caller sees both the deciding branch and the alternatives — use `decisive` on each child to tell them apart. Switch/Case conditions are walked too, so categorical denials descend into the gate that actually failed. Arithmetic and collection operators (Multiply, Add, Filter, Count) report the computed value but don't recurse — query those facts directly to drill in.",
     required: ['op', 'value', 'reason'],
     properties: {
       path: {
@@ -191,7 +191,7 @@ export function buildOpenApiDocument() {
       op: {
         type: 'string',
         description:
-          'Operator tag — All, Any, Not, GreaterThan, LessThanOrEqual, Dependency, Int, Dollar, True, False, Writable, Opaque, etc.',
+          'Operator tag — All, Any, Not, GreaterThan, LessThanOrEqual, Switch, Dependency, Int, Dollar, Enum, True, False, Writable, Opaque, etc.',
       },
       value: {
         description: 'Computed value at this node, or null if unresolved.',

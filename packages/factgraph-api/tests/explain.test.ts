@@ -5,9 +5,14 @@
  */
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import request from 'supertest'
 
 import { app, RULESET_ID, APPLICANT_ROW, ZEROED_SCALARS } from './helpers.js'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 type TraceNode = {
   path?: string
@@ -428,4 +433,74 @@ test('comparison leaves mark both operands decisive', async () => {
   for (const operand of cmp!.children ?? []) {
     assert.equal(operand.decisive, true)
   }
+})
+
+// ---------------------------------------------------------------------------
+// Switch / Case / When — branch-selection operator
+//
+// /eligibilityCategory in snap-complete is a Switch over the eligibility
+// tiers. These exercise the real ruleset: the committed minimal example
+// resolves to an approved category, and a bumped-income variant falls through
+// to Ineligible.
+// ---------------------------------------------------------------------------
+
+const SNAP_COMPLETE_URL = '/v1/factgraph/snap-complete/query'
+
+function minimalBlob(): { targets: string[]; inputs: Record<string, unknown> } {
+  const p = path.resolve(
+    __dirname,
+    '..',
+    'docs',
+    'examples',
+    'snap-complete-minimal.query.json'
+  )
+  return JSON.parse(readFileSync(p, 'utf-8'))
+}
+
+test('Switch on an approved category: one informative condition is decisive', async () => {
+  const blob = minimalBlob()
+  const res = await request(app)
+    .post(SNAP_COMPLETE_URL)
+    .send({ targets: ['/eligibilityCategory'], inputs: blob.inputs, include: ['trace'] })
+  assert.equal(res.status, 200)
+  const root = res.body.traces['/eligibilityCategory'] as TraceNode
+  assert.equal(root.op, 'Switch')
+  assert.ok(
+    ['Bce', 'Ece', 'Se'].includes(root.value as string),
+    `expected an approved category, got ${root.value}`
+  )
+  assert.ok(root.children && root.children.length > 0, 'Switch should expose its conditions')
+  // The case whose condition held is the single decisive child, and it points
+  // at a real fact (a tier boolean) rather than a bare literal.
+  const decisive = (root.children ?? []).filter((c) => c.decisive)
+  assert.equal(decisive.length, 1, 'exactly one condition selected the outcome')
+  assert.ok(decisive[0].path, 'the selecting condition references a fact')
+  assert.equal(decisive[0].value, true)
+})
+
+test('Switch fallthrough on a denial descends into the failed gate', async () => {
+  const blob = minimalBlob()
+  // Force the standard income path to fail.
+  const incomes = blob.inputs['/incomes'] as Array<Record<string, unknown>>
+  incomes[0]['/incomes/*/amount'] = 9000
+  const res = await request(app)
+    .post(SNAP_COMPLETE_URL)
+    .send({ targets: ['/eligibilityCategory'], inputs: blob.inputs, include: ['trace'] })
+  assert.equal(res.status, 200)
+  const root = res.body.traces['/eligibilityCategory'] as TraceNode
+  assert.equal(root.op, 'Switch')
+  assert.equal(root.value, 'Ineligible')
+  // Fell through the tiers: the failed conditions are decisive (Any-false
+  // style), and the bare <True/> catch-all is not.
+  const decisive = (root.children ?? []).filter((c) => c.decisive)
+  assert.ok(decisive.length >= 1, 'failed conditions should be decisive')
+  assert.ok(
+    decisive.every((c) => c.value === false),
+    'only failed conditions drive a fallthrough'
+  )
+  // Descending the decisive standard-eligibility branch reaches a failed
+  // income gate — proof the Switch walk unblocks the rest of the chain.
+  const gate = findByPath(root, '/meetsNetIncomeTest') ?? findByPath(root, '/meetsGrossIncomeTest')
+  assert.ok(gate, 'expected a failed income gate beneath the Switch')
+  assert.equal(gate!.value, false)
 })
