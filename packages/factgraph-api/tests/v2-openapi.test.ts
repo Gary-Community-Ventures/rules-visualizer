@@ -78,12 +78,20 @@ test('v2 spec is path-free (no rules-engine internals)', async () => {
   assert.ok(!/eligibilityCategory|x-trace|TraceNode/.test(res.text), 'leaked engine internals')
 })
 
-test('v2 evaluate endpoints are 501 stubs pointing at v1', async () => {
-  const res = await request(app)
+test('v2 determination is implemented; the other evaluate tails are still 501 stubs', async () => {
+  // /evaluate/determination is the real engine-shaped endpoint now.
+  const det = await request(app)
     .post('/v2/eligibility/evaluate/determination')
-    .send({ program: 'snap' })
-  assert.equal(res.status, 501)
-  assert.match(res.body.detail, /\/v1\/eligibility\/evaluate\/determination/)
+    .send({ programs: ['snap'], members: [] })
+  assert.equal(det.status, 200)
+  assert.ok(Array.isArray(det.body.determinations))
+
+  // The not-yet-built tails still stub to 501 and point at v1.
+  for (const tail of ['/evaluate/expedited-screening', '/evaluate/medicaid-ex-parte']) {
+    const res = await request(app).post(`/v2/eligibility${tail}`).send({})
+    assert.equal(res.status, 501, `${tail} should still be a stub`)
+    assert.match(res.body.detail, new RegExp(`/v1/eligibility${tail}`))
+  }
 })
 
 test('three Swagger UIs coexist without clobbering each other', async () => {

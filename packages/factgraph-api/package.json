@@ -14,6 +14,7 @@
     "test": "node --import tsx --test tests/*.test.ts",
     "gen:openapi": "tsx scripts/generate-openapi.ts",
     "gen:dictionary": "tsx scripts/generate-input-dictionary.ts",
+    "gen:engine-inputs": "tsx scripts/generate-engine-inputs.ts",
     "gen:examples": "tsx scripts/generate-query-examples.ts"
   },
   "dependencies": {
