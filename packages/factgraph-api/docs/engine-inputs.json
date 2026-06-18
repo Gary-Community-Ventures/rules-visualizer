@@ -1,17 +1,19 @@
 {
-  "$comment": "GENERATED FILE — do not edit by hand. Source: scripts/generate-engine-inputs.ts (built from the rulesets’ writable facts). Regenerate: npm run gen:engine-inputs.",
-  "about": "Canonical catalog of every input the rules engine accepts. The rules engine is the source of truth: build your data model to match these fields. Each field is keyed by its Fact Graph path (its identity on the wire) and labeled with the rule author’s name, definition, enum vocabulary, and policy citations, taken directly from the rules.",
+  "$comment": "GENERATED FILE — do not edit by hand. Source: scripts/generate-engine-inputs.ts (built from the rulesets via the adapter field index). Regenerate: npm run gen:engine-inputs.",
+  "about": "Canonical catalog of every input the eligibility API accepts. The rules engine is the source of truth: build your data model to match these fields. Each field is shown as you send it — a friendly name in a request location — with the rule author’s name, definition, enum vocabulary, and policy citations taken directly from the rules. `enginePath` is the internal Fact Graph path it maps to, for traceability only.",
   "coverage": "SNAP is a near-complete implementation of the program, so its inputs are exhaustive. Medicaid is a basic, illustrative subset — its input list is a sketch, not the full program. SNAP and Medicaid model some shared concepts (age, disability, income) with different facts, so a concept can appear under each program.",
   "kinds": {
-    "applicant": "A fact value the engine consumes; you provide it.",
-    "reference": "An identity/link handle (a member cross-reference such as a spouse or caregiver), not a fact value."
+    "applicant": "A value you provide.",
+    "reference": "A link to another row by its id (e.g. a member’s spouse, or a caregiver/dependent pairing)."
   },
   "groups": [
     {
       "title": "Member",
       "fields": [
         {
-          "path": "/members/*/age",
+          "requestPath": "members[].age",
+          "field": "age",
+          "location": "members[]",
           "name": "Age",
           "kind": "applicant",
           "type": "Int",
@@ -20,10 +22,13 @@
             "Medicaid"
           ],
           "definition": "Age of this member in years. If their birthday occurs in the middle of a month, use the age they were when the month began (the last day of the previous month).",
-          "citations": []
+          "citations": [],
+          "enginePath": "/members/*/age"
         },
         {
-          "path": "/members/*/hasPhysicalDisability",
+          "requestPath": "members[].hasPhysicalDisability",
+          "field": "hasPhysicalDisability",
+          "location": "members[]",
           "name": "Has physical disability",
           "kind": "applicant",
           "type": "Boolean",
@@ -31,10 +36,13 @@
             "SNAP"
           ],
           "definition": "Whether this member has a physical disability",
-          "citations": []
+          "citations": [],
+          "enginePath": "/members/*/hasPhysicalDisability"
         },
         {
-          "path": "/members/*/hasMentalDisability",
+          "requestPath": "members[].hasMentalDisability",
+          "field": "hasMentalDisability",
+          "location": "members[]",
           "name": "Has mental disability",
           "kind": "applicant",
           "type": "Boolean",
@@ -42,10 +50,13 @@
             "SNAP"
           ],
           "definition": "Whether this member has a mental disability",
-          "citations": []
+          "citations": [],
+          "enginePath": "/members/*/hasMentalDisability"
         },
         {
-          "path": "/members/*/isIncapacitated",
+          "requestPath": "members[].isIncapacitated",
+          "field": "isIncapacitated",
+          "location": "members[]",
           "name": "Is incapacitated",
           "kind": "applicant",
           "type": "Boolean",
@@ -60,10 +71,13 @@
                 75
               ]
             }
-          ]
+          ],
+          "enginePath": "/members/*/isIncapacitated"
         },
         {
-          "path": "/members/*/isVeteranWithDisability",
+          "requestPath": "members[].isVeteranWithDisability",
+          "field": "isVeteranWithDisability",
+          "location": "members[]",
           "name": "Is veteran with service-connected or non-service-connected disability",
           "kind": "applicant",
           "type": "Boolean",
@@ -78,10 +92,13 @@
                 9
               ]
             }
-          ]
+          ],
+          "enginePath": "/members/*/isVeteranWithDisability"
         },
         {
-          "path": "/members/*/isVeteranNeedingAidAndAttendance",
+          "requestPath": "members[].isVeteranNeedingAidAndAttendance",
+          "field": "isVeteranNeedingAidAndAttendance",
+          "location": "members[]",
           "name": "Is veteran needing aid and attendance or permanently housebound",
           "kind": "applicant",
           "type": "Boolean",
@@ -96,10 +113,13 @@
                 9
               ]
             }
-          ]
+          ],
+          "enginePath": "/members/*/isVeteranNeedingAidAndAttendance"
         },
         {
-          "path": "/members/*/isVeteranSurvivorNeedingAidAndAttendance",
+          "requestPath": "members[].isVeteranSurvivorNeedingAidAndAttendance",
+          "field": "isVeteranSurvivorNeedingAidAndAttendance",
+          "location": "members[]",
           "name": "Is veteran's surviving spouse or child needing aid and attendance",
           "kind": "applicant",
           "type": "Boolean",
@@ -114,10 +134,13 @@
                 9
               ]
             }
-          ]
+          ],
+          "enginePath": "/members/*/isVeteranSurvivorNeedingAidAndAttendance"
         },
         {
-          "path": "/members/*/isVeteranSurvivorWithDisability",
+          "requestPath": "members[].isVeteranSurvivorWithDisability",
+          "field": "isVeteranSurvivorWithDisability",
+          "location": "members[]",
           "name": "Is veteran's surviving spouse or child with permanent disability",
           "kind": "applicant",
           "type": "Boolean",
@@ -132,10 +155,13 @@
                 9
               ]
             }
-          ]
+          ],
+          "enginePath": "/members/*/isVeteranSurvivorWithDisability"
         },
         {
-          "path": "/members/*/receivesPublicDisabilityRetirementPension",
+          "requestPath": "members[].receivesPublicDisabilityRetirementPension",
+          "field": "receivesPublicDisabilityRetirementPension",
+          "location": "members[]",
           "name": "Receives public disability retirement pension",
           "kind": "applicant",
           "type": "Boolean",
@@ -150,10 +176,13 @@
                 9
               ]
             }
-          ]
+          ],
+          "enginePath": "/members/*/receivesPublicDisabilityRetirementPension"
         },
         {
-          "path": "/members/*/receivesRailroadRetirementDisability",
+          "requestPath": "members[].receivesRailroadRetirementDisability",
+          "field": "receivesRailroadRetirementDisability",
+          "location": "members[]",
           "name": "Receives railroad retirement disability annuity",
           "kind": "applicant",
           "type": "Boolean",
@@ -168,10 +197,13 @@
                 9
               ]
             }
-          ]
+          ],
+          "enginePath": "/members/*/receivesRailroadRetirementDisability"
         },
         {
-          "path": "/members/*/receivesInterimAssistanceForDisability",
+          "requestPath": "members[].receivesInterimAssistanceForDisability",
+          "field": "receivesInterimAssistanceForDisability",
+          "location": "members[]",
           "name": "Receives interim assistance pending SSI/disability benefits",
           "kind": "applicant",
           "type": "Boolean",
@@ -186,10 +218,13 @@
                 9
               ]
             }
-          ]
+          ],
+          "enginePath": "/members/*/receivesInterimAssistanceForDisability"
         },
         {
-          "path": "/members/*/isBoarder",
+          "requestPath": "members[].isBoarder",
+          "field": "isBoarder",
+          "location": "members[]",
           "name": "Is boarder",
           "kind": "applicant",
           "type": "Boolean",
@@ -205,10 +240,13 @@
                 49
               ]
             }
-          ]
+          ],
+          "enginePath": "/members/*/isBoarder"
         },
         {
-          "path": "/members/*/isRoomer",
+          "requestPath": "members[].isRoomer",
+          "field": "isRoomer",
+          "location": "members[]",
           "name": "Is roomer",
           "kind": "applicant",
           "type": "Boolean",
@@ -224,10 +262,13 @@
                 50
               ]
             }
-          ]
+          ],
+          "enginePath": "/members/*/isRoomer"
         },
         {
-          "path": "/members/*/livesInBoardingHouse",
+          "requestPath": "members[].livesInBoardingHouse",
+          "field": "livesInBoardingHouse",
+          "location": "members[]",
           "name": "Lives in boarding house",
           "kind": "applicant",
           "type": "Boolean",
@@ -243,10 +284,13 @@
                 52
               ]
             }
-          ]
+          ],
+          "enginePath": "/members/*/livesInBoardingHouse"
         },
         {
-          "path": "/members/*/livesInInstitution",
+          "requestPath": "members[].livesInInstitution",
+          "field": "livesInInstitution",
+          "location": "members[]",
           "name": "Lives in an institution",
           "kind": "applicant",
           "type": "Boolean",
@@ -262,10 +306,13 @@
                 69
               ]
             }
-          ]
+          ],
+          "enginePath": "/members/*/livesInInstitution"
         },
         {
-          "path": "/members/*/livesInFederallySubsidizedElderlyHousing",
+          "requestPath": "members[].livesInFederallySubsidizedElderlyHousing",
+          "field": "livesInFederallySubsidizedElderlyHousing",
+          "location": "members[]",
           "name": "Lives in federally subsidized housing for persons aged 60 and older",
           "kind": "applicant",
           "type": "Boolean",
@@ -280,10 +327,13 @@
                 52
               ]
             }
-          ]
+          ],
+          "enginePath": "/members/*/livesInFederallySubsidizedElderlyHousing"
         },
         {
-          "path": "/members/*/residesAtSubstanceAbuseTreatmentFacility",
+          "requestPath": "members[].residesAtSubstanceAbuseTreatmentFacility",
+          "field": "residesAtSubstanceAbuseTreatmentFacility",
+          "location": "members[]",
           "name": "Resides at a drug or alcohol treatment and rehabilitation facility",
           "kind": "applicant",
           "type": "Boolean",
@@ -299,10 +349,13 @@
                 70
               ]
             }
-          ]
+          ],
+          "enginePath": "/members/*/residesAtSubstanceAbuseTreatmentFacility"
         },
         {
-          "path": "/members/*/livesInHomelessShelter",
+          "requestPath": "members[].livesInHomelessShelter",
+          "field": "livesInHomelessShelter",
+          "location": "members[]",
           "name": "Resident of a homeless shelter",
           "kind": "applicant",
           "type": "Boolean",
@@ -317,10 +370,13 @@
                 53
               ]
             }
-          ]
+          ],
+          "enginePath": "/members/*/livesInHomelessShelter"
         },
         {
-          "path": "/members/*/preparesFoodWithHousehold",
+          "requestPath": "members[].preparesFoodWithHousehold",
+          "field": "preparesFoodWithHousehold",
+          "location": "members[]",
           "name": "Prepares food with household",
           "kind": "applicant",
           "type": "Boolean",
@@ -336,10 +392,13 @@
                 69
               ]
             }
-          ]
+          ],
+          "enginePath": "/members/*/preparesFoodWithHousehold"
         },
         {
-          "path": "/members/*/livesInGroupLivingArrangement",
+          "requestPath": "members[].livesInGroupLivingArrangement",
+          "field": "livesInGroupLivingArrangement",
+          "location": "members[]",
           "name": "Lives in group living arrangement",
           "kind": "applicant",
           "type": "Boolean",
@@ -356,10 +415,13 @@
                 72
               ]
             }
-          ]
+          ],
+          "enginePath": "/members/*/livesInGroupLivingArrangement"
         },
         {
-          "path": "/members/*/isLiveInAttendant",
+          "requestPath": "members[].isLiveInAttendant",
+          "field": "isLiveInAttendant",
+          "location": "members[]",
           "name": "Is live-in attendant",
           "kind": "applicant",
           "type": "Boolean",
@@ -375,10 +437,13 @@
                 50
               ]
             }
-          ]
+          ],
+          "enginePath": "/members/*/isLiveInAttendant"
         },
         {
-          "path": "/members/*/isSeparateAndApart",
+          "requestPath": "members[].isSeparateAndApart",
+          "field": "isSeparateAndApart",
+          "location": "members[]",
           "name": "Is separate and apart",
           "kind": "applicant",
           "type": "Boolean",
@@ -394,10 +459,13 @@
                 51
               ]
             }
-          ]
+          ],
+          "enginePath": "/members/*/isSeparateAndApart"
         },
         {
-          "path": "/members/*/isHeadOfHousehold",
+          "requestPath": "members[].isHeadOfHousehold",
+          "field": "isHeadOfHousehold",
+          "location": "members[]",
           "name": "Is head of household",
           "kind": "applicant",
           "type": "Boolean",
@@ -413,10 +481,13 @@
                 25
               ]
             }
-          ]
+          ],
+          "enginePath": "/members/*/isHeadOfHousehold"
         },
         {
-          "path": "/members/*/spouseId",
+          "requestPath": "members[].spouseId",
+          "field": "spouseId",
+          "location": "members[]",
           "name": "Spouse",
           "kind": "reference",
           "type": "CollectionItem",
@@ -431,10 +502,13 @@
                 47
               ]
             }
-          ]
+          ],
+          "enginePath": "/members/*/spouseId"
         },
         {
-          "path": "/members/*/isEmancipated",
+          "requestPath": "members[].isEmancipated",
+          "field": "isEmancipated",
+          "location": "members[]",
           "name": "Is emancipated minor",
           "kind": "applicant",
           "type": "Boolean",
@@ -449,10 +523,13 @@
                 47
               ]
             }
-          ]
+          ],
+          "enginePath": "/members/*/isEmancipated"
         },
         {
-          "path": "/members/*/isFosterChild",
+          "requestPath": "members[].isFosterChild",
+          "field": "isFosterChild",
+          "location": "members[]",
           "name": "Is foster child",
           "kind": "applicant",
           "type": "Boolean",
@@ -467,10 +544,13 @@
                 47
               ]
             }
-          ]
+          ],
+          "enginePath": "/members/*/isFosterChild"
         },
         {
-          "path": "/members/*/isUnableToPurchaseAndPrepareOwnMealsDueToDisability",
+          "requestPath": "members[].isUnableToPurchaseAndPrepareOwnMealsDueToDisability",
+          "field": "isUnableToPurchaseAndPrepareOwnMealsDueToDisability",
+          "location": "members[]",
           "name": "Is unable to purchase and prepare own meals due to a disability",
           "kind": "applicant",
           "type": "Boolean",
@@ -486,10 +566,13 @@
                 84
               ]
             }
-          ]
+          ],
+          "enginePath": "/members/*/isUnableToPurchaseAndPrepareOwnMealsDueToDisability"
         },
         {
-          "path": "/members/*/isMigrantFarmWorker",
+          "requestPath": "members[].isMigrantFarmWorker",
+          "field": "isMigrantFarmWorker",
+          "location": "members[]",
           "name": "Is migrant farm worker",
           "kind": "applicant",
           "type": "Boolean",
@@ -504,10 +587,13 @@
                 7
               ]
             }
-          ]
+          ],
+          "enginePath": "/members/*/isMigrantFarmWorker"
         },
         {
-          "path": "/members/*/receivesFamilyPreservationServices",
+          "requestPath": "members[].receivesFamilyPreservationServices",
+          "field": "receivesFamilyPreservationServices",
+          "location": "members[]",
           "name": "Receives Family Preservation services",
           "kind": "applicant",
           "type": "Boolean",
@@ -522,10 +608,13 @@
                 34
               ]
             }
-          ]
+          ],
+          "enginePath": "/members/*/receivesFamilyPreservationServices"
         },
         {
-          "path": "/members/*/countableMonths",
+          "requestPath": "members[].countableMonths",
+          "field": "countableMonths",
+          "location": "members[]",
           "name": "Countable months",
           "kind": "applicant",
           "type": "Int",
@@ -543,10 +632,13 @@
                 82
               ]
             }
-          ]
+          ],
+          "enginePath": "/members/*/countableMonths"
         },
         {
-          "path": "/members/*/disqualifiedForIPV",
+          "requestPath": "members[].disqualifiedForIPV",
+          "field": "disqualifiedForIPV",
+          "location": "members[]",
           "name": "Disqualified for IPV/fraud",
           "kind": "applicant",
           "type": "Boolean",
@@ -567,10 +659,13 @@
                 209
               ]
             }
-          ]
+          ],
+          "enginePath": "/members/*/disqualifiedForIPV"
         },
         {
-          "path": "/members/*/convictedOfDrugRelatedFelonyWithSnap",
+          "requestPath": "members[].convictedOfDrugRelatedFelonyWithSnap",
+          "field": "convictedOfDrugRelatedFelonyWithSnap",
+          "location": "members[]",
           "name": "Convicted of drug-related felony involving SNAP",
           "kind": "applicant",
           "type": "Boolean",
@@ -585,10 +680,13 @@
                 35
               ]
             }
-          ]
+          ],
+          "enginePath": "/members/*/convictedOfDrugRelatedFelonyWithSnap"
         },
         {
-          "path": "/members/*/failedToProvideOrObtainSSN",
+          "requestPath": "members[].failedToProvideOrObtainSSN",
+          "field": "failedToProvideOrObtainSSN",
+          "location": "members[]",
           "name": "Failed to provide or obtain SSN",
           "kind": "applicant",
           "type": "Boolean",
@@ -606,10 +704,13 @@
                 46
               ]
             }
-          ]
+          ],
+          "enginePath": "/members/*/failedToProvideOrObtainSSN"
         },
         {
-          "path": "/members/*/isParticipatingInWorkStudy",
+          "requestPath": "members[].isParticipatingInWorkStudy",
+          "field": "isParticipatingInWorkStudy",
+          "location": "members[]",
           "name": "Is participating in work-study",
           "kind": "applicant",
           "type": "Boolean",
@@ -624,10 +725,13 @@
                 65
               ]
             }
-          ]
+          ],
+          "enginePath": "/members/*/isParticipatingInWorkStudy"
         },
         {
-          "path": "/members/*/isAssignedToHigherEducationThroughEmploymentTrainingProgram",
+          "requestPath": "members[].isAssignedToHigherEducationThroughEmploymentTrainingProgram",
+          "field": "isAssignedToHigherEducationThroughEmploymentTrainingProgram",
+          "location": "members[]",
           "name": "Is assigned to higher education through an employment and training program",
           "kind": "applicant",
           "type": "Boolean",
@@ -643,10 +747,13 @@
                 66
               ]
             }
-          ]
+          ],
+          "enginePath": "/members/*/isAssignedToHigherEducationThroughEmploymentTrainingProgram"
         },
         {
-          "path": "/members/*/isInK12",
+          "requestPath": "members[].isInK12",
+          "field": "isInK12",
+          "location": "members[]",
           "name": "Is in K-12",
           "kind": "applicant",
           "type": "Boolean",
@@ -661,10 +768,13 @@
                 64
               ]
             }
-          ]
+          ],
+          "enginePath": "/members/*/isInK12"
         },
         {
-          "path": "/members/*/disqualifiedForWorkRequirementsCooperation",
+          "requestPath": "members[].disqualifiedForWorkRequirementsCooperation",
+          "field": "disqualifiedForWorkRequirementsCooperation",
+          "location": "members[]",
           "name": "Disqualified for failure to cooperate with work requirements",
           "kind": "applicant",
           "type": "Boolean",
@@ -679,10 +789,13 @@
                 4
               ]
             }
-          ]
+          ],
+          "enginePath": "/members/*/disqualifiedForWorkRequirementsCooperation"
         },
         {
-          "path": "/members/*/voluntarilyQuitOrReducedWorkEffort",
+          "requestPath": "members[].voluntarilyQuitOrReducedWorkEffort",
+          "field": "voluntarilyQuitOrReducedWorkEffort",
+          "location": "members[]",
           "name": "Voluntarily quit or reduced work effort",
           "kind": "applicant",
           "type": "Boolean",
@@ -700,10 +813,13 @@
                 77
               ]
             }
-          ]
+          ],
+          "enginePath": "/members/*/voluntarilyQuitOrReducedWorkEffort"
         },
         {
-          "path": "/members/*/voluntaryQuitReason",
+          "requestPath": "members[].voluntaryQuitReason",
+          "field": "voluntaryQuitReason",
+          "location": "members[]",
           "name": "Voluntary quit reason",
           "kind": "applicant",
           "type": "Enum",
@@ -739,10 +855,13 @@
                 79
               ]
             }
-          ]
+          ],
+          "enginePath": "/members/*/voluntaryQuitReason"
         },
         {
-          "path": "/members/*/registeredForWork",
+          "requestPath": "members[].registeredForWork",
+          "field": "registeredForWork",
+          "location": "members[]",
           "name": "Registered for work",
           "kind": "applicant",
           "type": "Boolean",
@@ -757,10 +876,13 @@
                 74
               ]
             }
-          ]
+          ],
+          "enginePath": "/members/*/registeredForWork"
         },
         {
-          "path": "/members/*/providedEmploymentStatusOrAvailabilityInfo",
+          "requestPath": "members[].providedEmploymentStatusOrAvailabilityInfo",
+          "field": "providedEmploymentStatusOrAvailabilityInfo",
+          "location": "members[]",
           "name": "Provided employment status or availability information",
           "kind": "applicant",
           "type": "Boolean",
@@ -775,10 +897,13 @@
                 74
               ]
             }
-          ]
+          ],
+          "enginePath": "/members/*/providedEmploymentStatusOrAvailabilityInfo"
         },
         {
-          "path": "/members/*/reportedToReferredSuitableEmployer",
+          "requestPath": "members[].reportedToReferredSuitableEmployer",
+          "field": "reportedToReferredSuitableEmployer",
+          "location": "members[]",
           "name": "Reported to referred suitable employer",
           "kind": "applicant",
           "type": "Boolean",
@@ -793,10 +918,13 @@
                 74
               ]
             }
-          ]
+          ],
+          "enginePath": "/members/*/reportedToReferredSuitableEmployer"
         },
         {
-          "path": "/members/*/isApplyingForOrReceivingUnemploymentInsuranceBenefits",
+          "requestPath": "members[].isApplyingForOrReceivingUnemploymentInsuranceBenefits",
+          "field": "isApplyingForOrReceivingUnemploymentInsuranceBenefits",
+          "location": "members[]",
           "name": "Applying for or receiving unemployment insurance benefits",
           "kind": "applicant",
           "type": "Boolean",
@@ -811,10 +939,13 @@
                 76
               ]
             }
-          ]
+          ],
+          "enginePath": "/members/*/isApplyingForOrReceivingUnemploymentInsuranceBenefits"
         },
         {
-          "path": "/members/*/isRegularParticipantInDrugOrAlcoholTreatment",
+          "requestPath": "members[].isRegularParticipantInDrugOrAlcoholTreatment",
+          "field": "isRegularParticipantInDrugOrAlcoholTreatment",
+          "location": "members[]",
           "name": "Regular participant in drug or alcohol treatment",
           "kind": "applicant",
           "type": "Boolean",
@@ -829,10 +960,13 @@
                 76
               ]
             }
-          ]
+          ],
+          "enginePath": "/members/*/isRegularParticipantInDrugOrAlcoholTreatment"
         },
         {
-          "path": "/members/*/isComplyingWithColoradoWorksOrRefugeeServicesWorkProgram",
+          "requestPath": "members[].isComplyingWithColoradoWorksOrRefugeeServicesWorkProgram",
+          "field": "isComplyingWithColoradoWorksOrRefugeeServicesWorkProgram",
+          "location": "members[]",
           "name": "Complying with Colorado Works or refugee services work program",
           "kind": "applicant",
           "type": "Boolean",
@@ -847,10 +981,13 @@
                 76
               ]
             }
-          ]
+          ],
+          "enginePath": "/members/*/isComplyingWithColoradoWorksOrRefugeeServicesWorkProgram"
         },
         {
-          "path": "/members/*/disqualifiedForQualityAssuranceCooperation",
+          "requestPath": "members[].disqualifiedForQualityAssuranceCooperation",
+          "field": "disqualifiedForQualityAssuranceCooperation",
+          "location": "members[]",
           "name": "Disqualified for failure to cooperate with QA division",
           "kind": "applicant",
           "type": "Boolean",
@@ -867,10 +1004,13 @@
                 222
               ]
             }
-          ]
+          ],
+          "enginePath": "/members/*/disqualifiedForQualityAssuranceCooperation"
         },
         {
-          "path": "/members/*/isPhysicallyOrMentallyUnfitForEmploymentForStudentEligibility",
+          "requestPath": "members[].isPhysicallyOrMentallyUnfitForEmploymentForStudentEligibility",
+          "field": "isPhysicallyOrMentallyUnfitForEmploymentForStudentEligibility",
+          "location": "members[]",
           "name": "Physically or mentally unfit for employment for student eligibility",
           "kind": "applicant",
           "type": "Boolean",
@@ -888,10 +1028,13 @@
                 76
               ]
             }
-          ]
+          ],
+          "enginePath": "/members/*/isPhysicallyOrMentallyUnfitForEmploymentForStudentEligibility"
         },
         {
-          "path": "/members/*/recentlyReleasedFromInstitution",
+          "requestPath": "members[].recentlyReleasedFromInstitution",
+          "field": "recentlyReleasedFromInstitution",
+          "location": "members[]",
           "name": "Recently released from an institution",
           "kind": "applicant",
           "type": "Boolean",
@@ -906,10 +1049,13 @@
                 75
               ]
             }
-          ]
+          ],
+          "enginePath": "/members/*/recentlyReleasedFromInstitution"
         },
         {
-          "path": "/members/*/hasSelfDeclaredTemporaryConditionPreventingWorkActivities",
+          "requestPath": "members[].hasSelfDeclaredTemporaryConditionPreventingWorkActivities",
+          "field": "hasSelfDeclaredTemporaryConditionPreventingWorkActivities",
+          "location": "members[]",
           "name": "Has self-declared temporary condition preventing work activities",
           "kind": "applicant",
           "type": "Boolean",
@@ -924,10 +1070,13 @@
                 76
               ]
             }
-          ]
+          ],
+          "enginePath": "/members/*/hasSelfDeclaredTemporaryConditionPreventingWorkActivities"
         },
         {
-          "path": "/members/*/receivesTemporaryOrPermanentDisabilityBenefits",
+          "requestPath": "members[].receivesTemporaryOrPermanentDisabilityBenefits",
+          "field": "receivesTemporaryOrPermanentDisabilityBenefits",
+          "location": "members[]",
           "name": "Receives temporary or permanent disability benefits",
           "kind": "applicant",
           "type": "Boolean",
@@ -943,10 +1092,13 @@
                 80
               ]
             }
-          ]
+          ],
+          "enginePath": "/members/*/receivesTemporaryOrPermanentDisabilityBenefits"
         },
         {
-          "path": "/members/*/isParticipatingInVocationalRehabilitation",
+          "requestPath": "members[].isParticipatingInVocationalRehabilitation",
+          "field": "isParticipatingInVocationalRehabilitation",
+          "location": "members[]",
           "name": "Is participating in vocational rehabilitation",
           "kind": "applicant",
           "type": "Boolean",
@@ -961,10 +1113,13 @@
                 76
               ]
             }
-          ]
+          ],
+          "enginePath": "/members/*/isParticipatingInVocationalRehabilitation"
         },
         {
-          "path": "/members/*/isApplyingForOrAppealingSsiBenefits",
+          "requestPath": "members[].isApplyingForOrAppealingSsiBenefits",
+          "field": "isApplyingForOrAppealingSsiBenefits",
+          "location": "members[]",
           "name": "Is applying for or appealing SSI benefits",
           "kind": "applicant",
           "type": "Boolean",
@@ -979,10 +1134,13 @@
                 76
               ]
             }
-          ]
+          ],
+          "enginePath": "/members/*/isApplyingForOrAppealingSsiBenefits"
         },
         {
-          "path": "/members/*/isUnableToMaintainEmployment",
+          "requestPath": "members[].isUnableToMaintainEmployment",
+          "field": "isUnableToMaintainEmployment",
+          "location": "members[]",
           "name": "Is unable to maintain employment",
           "kind": "applicant",
           "type": "Boolean",
@@ -997,10 +1155,13 @@
                 76
               ]
             }
-          ]
+          ],
+          "enginePath": "/members/*/isUnableToMaintainEmployment"
         },
         {
-          "path": "/members/*/isImpactedByDomesticViolence",
+          "requestPath": "members[].isImpactedByDomesticViolence",
+          "field": "isImpactedByDomesticViolence",
+          "location": "members[]",
           "name": "Is impacted by domestic violence",
           "kind": "applicant",
           "type": "Boolean",
@@ -1015,10 +1176,13 @@
                 76
               ]
             }
-          ]
+          ],
+          "enginePath": "/members/*/isImpactedByDomesticViolence"
         },
         {
-          "path": "/members/*/hasOtherValidReasonForWorkRequirementsUnfitness",
+          "requestPath": "members[].hasOtherValidReasonForWorkRequirementsUnfitness",
+          "field": "hasOtherValidReasonForWorkRequirementsUnfitness",
+          "location": "members[]",
           "name": "Has other valid reason for work-requirements unfitness",
           "kind": "applicant",
           "type": "Boolean",
@@ -1033,10 +1197,13 @@
                 75
               ]
             }
-          ]
+          ],
+          "enginePath": "/members/*/hasOtherValidReasonForWorkRequirementsUnfitness"
         },
         {
-          "path": "/members/*/isEnrolledInEmploymentTrainingProgram",
+          "requestPath": "members[].isEnrolledInEmploymentTrainingProgram",
+          "field": "isEnrolledInEmploymentTrainingProgram",
+          "location": "members[]",
           "name": "Enrolled in Employment and Training Program",
           "kind": "applicant",
           "type": "Boolean",
@@ -1051,10 +1218,13 @@
                 4
               ]
             }
-          ]
+          ],
+          "enginePath": "/members/*/isEnrolledInEmploymentTrainingProgram"
         },
         {
-          "path": "/members/*/isParticipatingInAnotherHousehold",
+          "requestPath": "members[].isParticipatingInAnotherHousehold",
+          "field": "isParticipatingInAnotherHousehold",
+          "location": "members[]",
           "name": "Is already participating in another household",
           "kind": "applicant",
           "type": "Boolean",
@@ -1069,10 +1239,13 @@
                 4
               ]
             }
-          ]
+          ],
+          "enginePath": "/members/*/isParticipatingInAnotherHousehold"
         },
         {
-          "path": "/members/*/isResidentOfBatteredWomensShelter",
+          "requestPath": "members[].isResidentOfBatteredWomensShelter",
+          "field": "isResidentOfBatteredWomensShelter",
+          "location": "members[]",
           "name": "Resident of a shelter for battered women and children",
           "kind": "applicant",
           "type": "Boolean",
@@ -1089,10 +1262,13 @@
                 69
               ]
             }
-          ]
+          ],
+          "enginePath": "/members/*/isResidentOfBatteredWomensShelter"
         },
         {
-          "path": "/members/*/disqualifiedForFelonyNonCompliance",
+          "requestPath": "members[].disqualifiedForFelonyNonCompliance",
+          "field": "disqualifiedForFelonyNonCompliance",
+          "location": "members[]",
           "name": "Disqualified for felony conviction non-compliance",
           "kind": "applicant",
           "type": "Boolean",
@@ -1107,10 +1283,13 @@
                 51
               ]
             }
-          ]
+          ],
+          "enginePath": "/members/*/disqualifiedForFelonyNonCompliance"
         },
         {
-          "path": "/members/*/disqualifiedForParoleOrProbationViolation",
+          "requestPath": "members[].disqualifiedForParoleOrProbationViolation",
+          "field": "disqualifiedForParoleOrProbationViolation",
+          "location": "members[]",
           "name": "Disqualified for parole or probation violation",
           "kind": "applicant",
           "type": "Boolean",
@@ -1125,10 +1304,13 @@
                 52
               ]
             }
-          ]
+          ],
+          "enginePath": "/members/*/disqualifiedForParoleOrProbationViolation"
         },
         {
-          "path": "/members/*/isPregnant",
+          "requestPath": "members[].isPregnant",
+          "field": "isPregnant",
+          "location": "members[]",
           "name": "Is pregnant",
           "kind": "applicant",
           "type": "Boolean",
@@ -1143,10 +1325,13 @@
                 81
               ]
             }
-          ]
+          ],
+          "enginePath": "/members/*/isPregnant"
         },
         {
-          "path": "/members/*/isVeteran",
+          "requestPath": "members[].isVeteran",
+          "field": "isVeteran",
+          "location": "members[]",
           "name": "Is veteran",
           "kind": "applicant",
           "type": "Boolean",
@@ -1161,10 +1346,13 @@
                 81
               ]
             }
-          ]
+          ],
+          "enginePath": "/members/*/isVeteran"
         },
         {
-          "path": "/members/*/wasInFosterCareOn18thBirthday",
+          "requestPath": "members[].wasInFosterCareOn18thBirthday",
+          "field": "wasInFosterCareOn18thBirthday",
+          "location": "members[]",
           "name": "Was in foster care on 18th birthday",
           "kind": "applicant",
           "type": "Boolean",
@@ -1179,10 +1367,13 @@
                 81
               ]
             }
-          ]
+          ],
+          "enginePath": "/members/*/wasInFosterCareOn18thBirthday"
         },
         {
-          "path": "/members/*/isExemptUnderAbawdWaiver",
+          "requestPath": "members[].isExemptUnderAbawdWaiver",
+          "field": "isExemptUnderAbawdWaiver",
+          "location": "members[]",
           "name": "Exempt under ABAWD waiver",
           "kind": "applicant",
           "type": "Boolean",
@@ -1197,10 +1388,13 @@
                 81
               ]
             }
-          ]
+          ],
+          "enginePath": "/members/*/isExemptUnderAbawdWaiver"
         },
         {
-          "path": "/members/*/isExemptUnderColoradoAbawdStateExemption",
+          "requestPath": "members[].isExemptUnderColoradoAbawdStateExemption",
+          "field": "isExemptUnderColoradoAbawdStateExemption",
+          "location": "members[]",
           "name": "Exempt under Colorado ABAWD state exemption",
           "kind": "applicant",
           "type": "Boolean",
@@ -1215,10 +1409,13 @@
                 81
               ]
             }
-          ]
+          ],
+          "enginePath": "/members/*/isExemptUnderColoradoAbawdStateExemption"
         },
         {
-          "path": "/members/*/abawdWorkProgramHoursPerWeek",
+          "requestPath": "members[].abawdWorkProgramHoursPerWeek",
+          "field": "abawdWorkProgramHoursPerWeek",
+          "location": "members[]",
           "name": "ABAWD work program hours per week",
           "kind": "applicant",
           "type": "Int",
@@ -1233,10 +1430,13 @@
                 80
               ]
             }
-          ]
+          ],
+          "enginePath": "/members/*/abawdWorkProgramHoursPerWeek"
         },
         {
-          "path": "/members/*/participatesInColoradoWorkfare",
+          "requestPath": "members[].participatesInColoradoWorkfare",
+          "field": "participatesInColoradoWorkfare",
+          "location": "members[]",
           "name": "Participates in Colorado Workfare",
           "kind": "applicant",
           "type": "Boolean",
@@ -1251,10 +1451,13 @@
                 80
               ]
             }
-          ]
+          ],
+          "enginePath": "/members/*/participatesInColoradoWorkfare"
         },
         {
-          "path": "/members/*/isExperiencingHomelessness",
+          "requestPath": "members[].isExperiencingHomelessness",
+          "field": "isExperiencingHomelessness",
+          "location": "members[]",
           "name": "Is experiencing homelessness",
           "kind": "applicant",
           "type": "Boolean",
@@ -1269,10 +1472,13 @@
                 9
               ]
             }
-          ]
+          ],
+          "enginePath": "/members/*/isExperiencingHomelessness"
         },
         {
-          "path": "/members/*/isFleeingFelon",
+          "requestPath": "members[].isFleeingFelon",
+          "field": "isFleeingFelon",
+          "location": "members[]",
           "name": "Is fleeing felon",
           "kind": "applicant",
           "type": "Boolean",
@@ -1289,10 +1495,13 @@
                 52
               ]
             }
-          ]
+          ],
+          "enginePath": "/members/*/isFleeingFelon"
         },
         {
-          "path": "/members/*/isStriker",
+          "requestPath": "members[].isStriker",
+          "field": "isStriker",
+          "location": "members[]",
           "name": "Is striker",
           "kind": "applicant",
           "type": "Boolean",
@@ -1308,10 +1517,13 @@
                 66
               ]
             }
-          ]
+          ],
+          "enginePath": "/members/*/isStriker"
         },
         {
-          "path": "/members/*/wasEligibleForSnapDayBeforeStrike",
+          "requestPath": "members[].wasEligibleForSnapDayBeforeStrike",
+          "field": "wasEligibleForSnapDayBeforeStrike",
+          "location": "members[]",
           "name": "Was eligible for SNAP the day before the strike",
           "kind": "applicant",
           "type": "Boolean",
@@ -1326,10 +1538,13 @@
                 66
               ]
             }
-          ]
+          ],
+          "enginePath": "/members/*/wasEligibleForSnapDayBeforeStrike"
         },
         {
-          "path": "/members/*/wasExemptFromWorkRegistrationDayBeforeStrike",
+          "requestPath": "members[].wasExemptFromWorkRegistrationDayBeforeStrike",
+          "field": "wasExemptFromWorkRegistrationDayBeforeStrike",
+          "location": "members[]",
           "name": "Was exempt from work registration the day before the strike",
           "kind": "applicant",
           "type": "Boolean",
@@ -1344,10 +1559,13 @@
                 66
               ]
             }
-          ]
+          ],
+          "enginePath": "/members/*/wasExemptFromWorkRegistrationDayBeforeStrike"
         },
         {
-          "path": "/members/*/studentEnrollmentStatus",
+          "requestPath": "members[].studentEnrollmentStatus",
+          "field": "studentEnrollmentStatus",
+          "location": "members[]",
           "name": "Student enrollment status",
           "kind": "applicant",
           "type": "Enum",
@@ -1369,10 +1587,13 @@
                 9
               ]
             }
-          ]
+          ],
+          "enginePath": "/members/*/studentEnrollmentStatus"
         },
         {
-          "path": "/members/*/citizenshipImmigrationStatus",
+          "requestPath": "members[].citizenshipImmigrationStatus",
+          "field": "citizenshipImmigrationStatus",
+          "location": "members[]",
           "name": "Citizenship/immigration status",
           "kind": "applicant",
           "type": "Enum",
@@ -1413,10 +1634,13 @@
                 57
               ]
             }
-          ]
+          ],
+          "enginePath": "/members/*/citizenshipImmigrationStatus"
         },
         {
-          "path": "/members/*/qualifiedYearsInUs",
+          "requestPath": "members[].qualifiedYearsInUs",
+          "field": "qualifiedYearsInUs",
+          "location": "members[]",
           "name": "Qualified years in the U.S.",
           "kind": "applicant",
           "type": "Int",
@@ -1431,10 +1655,13 @@
                 57
               ]
             }
-          ]
+          ],
+          "enginePath": "/members/*/qualifiedYearsInUs"
         },
         {
-          "path": "/members/*/qualifyingWorkQuarters",
+          "requestPath": "members[].qualifyingWorkQuarters",
+          "field": "qualifyingWorkQuarters",
+          "location": "members[]",
           "name": "Qualifying work quarters",
           "kind": "applicant",
           "type": "Int",
@@ -1450,10 +1677,13 @@
                 58
               ]
             }
-          ]
+          ],
+          "enginePath": "/members/*/qualifyingWorkQuarters"
         },
         {
-          "path": "/members/*/wasBornOnOrBeforeAug221931AndLawfullyResidedAug221996",
+          "requestPath": "members[].wasBornOnOrBeforeAug221931AndLawfullyResidedAug221996",
+          "field": "wasBornOnOrBeforeAug221931AndLawfullyResidedAug221996",
+          "location": "members[]",
           "name": "Born on or before August 22, 1931 and lawfully resided in the U.S. on August 22, 1996",
           "kind": "applicant",
           "type": "Boolean",
@@ -1468,10 +1698,13 @@
                 58
               ]
             }
-          ]
+          ],
+          "enginePath": "/members/*/wasBornOnOrBeforeAug221931AndLawfullyResidedAug221996"
         },
         {
-          "path": "/members/*/hasQualifyingMilitaryConnection",
+          "requestPath": "members[].hasQualifyingMilitaryConnection",
+          "field": "hasQualifyingMilitaryConnection",
+          "location": "members[]",
           "name": "Has qualifying military connection",
           "kind": "applicant",
           "type": "Boolean",
@@ -1487,10 +1720,13 @@
                 59
               ]
             }
-          ]
+          ],
+          "enginePath": "/members/*/hasQualifyingMilitaryConnection"
         },
         {
-          "path": "/members/*/sponsorAndSpouseDependentCount",
+          "requestPath": "members[].sponsorAndSpouseDependentCount",
+          "field": "sponsorAndSpouseDependentCount",
+          "location": "members[]",
           "name": "Sponsor and spouse dependent count",
           "kind": "applicant",
           "type": "Int",
@@ -1505,10 +1741,13 @@
                 60
               ]
             }
-          ]
+          ],
+          "enginePath": "/members/*/sponsorAndSpouseDependentCount"
         },
         {
-          "path": "/members/*/sponsoredNonCitizenCountOutsideHousehold",
+          "requestPath": "members[].sponsoredNonCitizenCountOutsideHousehold",
+          "field": "sponsoredNonCitizenCountOutsideHousehold",
+          "location": "members[]",
           "name": "Sponsored non-citizen count outside household",
           "kind": "applicant",
           "type": "Int",
@@ -1523,10 +1762,13 @@
                 61
               ]
             }
-          ]
+          ],
+          "enginePath": "/members/*/sponsoredNonCitizenCountOutsideHousehold"
         },
         {
-          "path": "/members/*/sponsorId",
+          "requestPath": "members[].sponsorId",
+          "field": "sponsorId",
+          "location": "members[]",
           "name": "Sponsor",
           "kind": "reference",
           "type": "CollectionItem",
@@ -1542,10 +1784,13 @@
                 60
               ]
             }
-          ]
+          ],
+          "enginePath": "/members/*/sponsorId"
         },
         {
-          "path": "/members/*/isSponsoredByOrganization",
+          "requestPath": "members[].isSponsoredByOrganization",
+          "field": "isSponsoredByOrganization",
+          "location": "members[]",
           "name": "Is sponsored by organization",
           "kind": "applicant",
           "type": "Boolean",
@@ -1560,10 +1805,13 @@
                 61
               ]
             }
-          ]
+          ],
+          "enginePath": "/members/*/isSponsoredByOrganization"
         },
         {
-          "path": "/members/*/receivesTanf",
+          "requestPath": "members[].receivesTanf",
+          "field": "receivesTanf",
+          "location": "members[]",
           "name": "Receives TANF/Colorado Works",
           "kind": "applicant",
           "type": "Boolean",
@@ -1580,10 +1828,13 @@
                 65
               ]
             }
-          ]
+          ],
+          "enginePath": "/members/*/receivesTanf"
         },
         {
-          "path": "/members/*/hasLevelSanctionImposed",
+          "requestPath": "members[].hasLevelSanctionImposed",
+          "field": "hasLevelSanctionImposed",
+          "location": "members[]",
           "name": "Has level sanction imposed",
           "kind": "applicant",
           "type": "Boolean",
@@ -1600,10 +1851,13 @@
                 79
               ]
             }
-          ]
+          ],
+          "enginePath": "/members/*/hasLevelSanctionImposed"
         },
         {
-          "path": "/members/*/pregnant",
+          "requestPath": "members[].pregnant",
+          "field": "pregnant",
+          "location": "members[]",
           "name": "Children Due",
           "kind": "applicant",
           "type": "Int",
@@ -1611,10 +1865,13 @@
             "Medicaid"
           ],
           "definition": "Number of children expected from this member's current pregnancy (0 if not pregnant). Adds to household size for FPL.",
-          "citations": []
+          "citations": [],
+          "enginePath": "/members/*/pregnant"
         },
         {
-          "path": "/members/*/disabled",
+          "requestPath": "members[].disabled",
+          "field": "disabled",
+          "location": "members[]",
           "name": "Disabled",
           "kind": "applicant",
           "type": "Boolean",
@@ -1622,10 +1879,13 @@
             "Medicaid"
           ],
           "definition": "Whether this member has a qualifying disability.",
-          "citations": []
+          "citations": [],
+          "enginePath": "/members/*/disabled"
         },
         {
-          "path": "/members/*/veteran",
+          "requestPath": "members[].veteran",
+          "field": "veteran",
+          "location": "members[]",
           "name": "Veteran",
           "kind": "applicant",
           "type": "Boolean",
@@ -1633,10 +1893,13 @@
             "Medicaid"
           ],
           "definition": "Whether this member is a military veteran.",
-          "citations": []
+          "citations": [],
+          "enginePath": "/members/*/veteran"
         },
         {
-          "path": "/members/*/hasDisabledChild",
+          "requestPath": "members[].hasDisabledChild",
+          "field": "hasDisabledChild",
+          "location": "members[]",
           "name": "Has Disabled Child",
           "kind": "applicant",
           "type": "Boolean",
@@ -1644,10 +1907,13 @@
             "Medicaid"
           ],
           "definition": "Whether this member has a child with a disability in the household.",
-          "citations": []
+          "citations": [],
+          "enginePath": "/members/*/hasDisabledChild"
         },
         {
-          "path": "/members/*/isFullTimeStudent",
+          "requestPath": "members[].isFullTimeStudent",
+          "field": "isFullTimeStudent",
+          "location": "members[]",
           "name": "Is Full-Time Student",
           "kind": "applicant",
           "type": "Boolean",
@@ -1655,10 +1921,13 @@
             "Medicaid"
           ],
           "definition": "Whether this member is enrolled as a full-time student.",
-          "citations": []
+          "citations": [],
+          "enginePath": "/members/*/isFullTimeStudent"
         },
         {
-          "path": "/members/*/monthlyHoursWorked",
+          "requestPath": "members[].monthlyHoursWorked",
+          "field": "monthlyHoursWorked",
+          "location": "members[]",
           "name": "Monthly Hours Worked",
           "kind": "applicant",
           "type": "Int",
@@ -1666,10 +1935,13 @@
             "Medicaid"
           ],
           "definition": "Hours per month this member works.",
-          "citations": []
+          "citations": [],
+          "enginePath": "/members/*/monthlyHoursWorked"
         },
         {
-          "path": "/members/*/immigrantStatus",
+          "requestPath": "members[].immigrantStatus",
+          "field": "immigrantStatus",
+          "location": "members[]",
           "name": "Immigrant Status",
           "kind": "applicant",
           "type": "Enum",
@@ -1690,10 +1962,13 @@
             "daca",
             "temporary_protected_status"
           ],
-          "citations": []
+          "citations": [],
+          "enginePath": "/members/*/immigrantStatus"
         },
         {
-          "path": "/members/*/receivesSsi",
+          "requestPath": "members[].receivesSsi",
+          "field": "receivesSsi",
+          "location": "members[]",
           "name": "Receives SSI",
           "kind": "applicant",
           "type": "Boolean",
@@ -1701,10 +1976,13 @@
             "Medicaid"
           ],
           "definition": "Whether this member receives Supplemental Security Income.",
-          "citations": []
+          "citations": [],
+          "enginePath": "/members/*/receivesSsi"
         },
         {
-          "path": "/members/*/daysSincePregnancy",
+          "requestPath": "members[].daysSincePregnancy",
+          "field": "daysSincePregnancy",
+          "location": "members[]",
           "name": "Days Since Pregnancy",
           "kind": "applicant",
           "type": "Int",
@@ -1712,26 +1990,18 @@
             "Medicaid"
           ],
           "definition": "Days since this member's pregnancy ended (used for postpartum coverage).",
-          "citations": []
+          "citations": [],
+          "enginePath": "/members/*/daysSincePregnancy"
         }
       ]
     },
     {
-      "title": "Income (one row per source)",
+      "title": "Income (nested under each member)",
       "fields": [
         {
-          "path": "/incomes/*/memberId",
-          "name": "Member",
-          "kind": "reference",
-          "type": "CollectionItem",
-          "programs": [
-            "SNAP"
-          ],
-          "definition": "The household member to whom this income belongs",
-          "citations": []
-        },
-        {
-          "path": "/incomes/*/type",
+          "requestPath": "members[].income[].type",
+          "field": "type",
+          "location": "members[].income[]",
           "name": "Income type",
           "kind": "applicant",
           "type": "Enum",
@@ -1793,10 +2063,13 @@
                 92
               ]
             }
-          ]
+          ],
+          "enginePath": "/incomes/*/type"
         },
         {
-          "path": "/incomes/*/otherExcludedIncomeType",
+          "requestPath": "members[].income[].otherExcludedIncomeType",
+          "field": "otherExcludedIncomeType",
+          "location": "members[].income[]",
           "name": "Other excluded income type",
           "kind": "applicant",
           "type": "Enum",
@@ -1873,10 +2146,13 @@
                 106
               ]
             }
-          ]
+          ],
+          "enginePath": "/incomes/*/otherExcludedIncomeType"
         },
         {
-          "path": "/incomes/*/needBasedNonprofitCashDonationQuarterlyExclusionUsed",
+          "requestPath": "members[].income[].needBasedNonprofitCashDonationQuarterlyExclusionUsed",
+          "field": "needBasedNonprofitCashDonationQuarterlyExclusionUsed",
+          "location": "members[].income[]",
           "name": "Need-based nonprofit cash donation quarterly exclusion used",
           "kind": "applicant",
           "type": "Dollar",
@@ -1891,10 +2167,13 @@
                 100
               ]
             }
-          ]
+          ],
+          "enginePath": "/incomes/*/needBasedNonprofitCashDonationQuarterlyExclusionUsed"
         },
         {
-          "path": "/incomes/*/indianTrustRestrictedLandInterestAnnualExclusionUsed",
+          "requestPath": "members[].income[].indianTrustRestrictedLandInterestAnnualExclusionUsed",
+          "field": "indianTrustRestrictedLandInterestAnnualExclusionUsed",
+          "location": "members[].income[]",
           "name": "Indian trust or restricted land interest annual exclusion used",
           "kind": "applicant",
           "type": "Dollar",
@@ -1909,10 +2188,13 @@
                 103
               ]
             }
-          ]
+          ],
+          "enginePath": "/incomes/*/indianTrustRestrictedLandInterestAnnualExclusionUsed"
         },
         {
-          "path": "/incomes/*/receivedBeforeSnapParticipation",
+          "requestPath": "members[].income[].receivedBeforeSnapParticipation",
+          "field": "receivedBeforeSnapParticipation",
+          "location": "members[].income[]",
           "name": "Received before SNAP participation",
           "kind": "applicant",
           "type": "Boolean",
@@ -1928,10 +2210,13 @@
                 101
               ]
             }
-          ]
+          ],
+          "enginePath": "/incomes/*/receivedBeforeSnapParticipation"
         },
         {
-          "path": "/incomes/*/isWorkSupplementationOrWorkSupportPublicAssistancePortion",
+          "requestPath": "members[].income[].isWorkSupplementationOrWorkSupportPublicAssistancePortion",
+          "field": "isWorkSupplementationOrWorkSupportPublicAssistancePortion",
+          "location": "members[].income[]",
           "name": "Is work supplementation or work support public assistance portion",
           "kind": "applicant",
           "type": "Boolean",
@@ -1946,10 +2231,13 @@
                 108
               ]
             }
-          ]
+          ],
+          "enginePath": "/incomes/*/isWorkSupplementationOrWorkSupportPublicAssistancePortion"
         },
         {
-          "path": "/incomes/*/amount",
+          "requestPath": "members[].income[].amount",
+          "field": "amount",
+          "location": "members[].income[]",
           "name": "Amount",
           "kind": "applicant",
           "type": "Dollar",
@@ -1971,10 +2259,13 @@
                 180
               ]
             }
-          ]
+          ],
+          "enginePath": "/incomes/*/amount"
         },
         {
-          "path": "/incomes/*/targetPayDate",
+          "requestPath": "members[].income[].targetPayDate",
+          "field": "targetPayDate",
+          "location": "members[].income[]",
           "name": "Target pay date",
           "kind": "applicant",
           "type": "Day",
@@ -1990,10 +2281,13 @@
                 107
               ]
             }
-          ]
+          ],
+          "enginePath": "/incomes/*/targetPayDate"
         },
         {
-          "path": "/incomes/*/isFromTerminatedSourceForDestituteIncome",
+          "requestPath": "members[].income[].isFromTerminatedSourceForDestituteIncome",
+          "field": "isFromTerminatedSourceForDestituteIncome",
+          "location": "members[].income[]",
           "name": "Is from terminated source for destitute income",
           "kind": "applicant",
           "type": "Boolean",
@@ -2008,10 +2302,13 @@
                 106
               ]
             }
-          ]
+          ],
+          "enginePath": "/incomes/*/isFromTerminatedSourceForDestituteIncome"
         },
         {
-          "path": "/incomes/*/isFromNewSourceForDestituteIncome",
+          "requestPath": "members[].income[].isFromNewSourceForDestituteIncome",
+          "field": "isFromNewSourceForDestituteIncome",
+          "location": "members[].income[]",
           "name": "Is from new source for destitute income",
           "kind": "applicant",
           "type": "Boolean",
@@ -2026,10 +2323,13 @@
                 107
               ]
             }
-          ]
+          ],
+          "enginePath": "/incomes/*/isFromNewSourceForDestituteIncome"
         },
         {
-          "path": "/incomes/*/frequency",
+          "requestPath": "members[].income[].frequency",
+          "field": "frequency",
+          "location": "members[].income[]",
           "name": "Income frequency",
           "kind": "applicant",
           "type": "Enum",
@@ -2056,10 +2356,13 @@
                 93
               ]
             }
-          ]
+          ],
+          "enginePath": "/incomes/*/frequency"
         },
         {
-          "path": "/incomes/*/intendedMonths",
+          "requestPath": "members[].income[].intendedMonths",
+          "field": "intendedMonths",
+          "location": "members[].income[]",
           "name": "Months intended to cover",
           "kind": "applicant",
           "type": "Int",
@@ -2074,33 +2377,18 @@
                 87
               ]
             }
-          ]
+          ],
+          "enginePath": "/incomes/*/intendedMonths"
         }
       ]
     },
     {
-      "title": "Expense (one row per expense)",
+      "title": "Expenses (nested under each member)",
       "fields": [
         {
-          "path": "/expenses/*/memberId",
-          "name": "Member",
-          "kind": "reference",
-          "type": "CollectionItem",
-          "programs": [
-            "SNAP"
-          ],
-          "definition": "The household member who pays or is legally obligated to pay this expense.",
-          "citations": [
-            {
-              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
-              "pages": [
-                108
-              ]
-            }
-          ]
-        },
-        {
-          "path": "/expenses/*/type",
+          "requestPath": "members[].expenses[].type",
+          "field": "type",
+          "location": "members[].expenses[]",
           "name": "Expense type",
           "kind": "applicant",
           "type": "Enum",
@@ -2197,10 +2485,13 @@
                 111
               ]
             }
-          ]
+          ],
+          "enginePath": "/expenses/*/type"
         },
         {
-          "path": "/expenses/*/amount",
+          "requestPath": "members[].expenses[].amount",
+          "field": "amount",
+          "location": "members[].expenses[]",
           "name": "Amount",
           "kind": "applicant",
           "type": "Dollar",
@@ -2216,10 +2507,13 @@
                 108
               ]
             }
-          ]
+          ],
+          "enginePath": "/expenses/*/amount"
         },
         {
-          "path": "/expenses/*/milesDrivenToDependentCareFacility",
+          "requestPath": "members[].expenses[].milesDrivenToDependentCareFacility",
+          "field": "milesDrivenToDependentCareFacility",
+          "location": "members[].expenses[]",
           "name": "Miles driven to dependent care facility",
           "kind": "applicant",
           "type": "Int",
@@ -2234,10 +2528,13 @@
                 113
               ]
             }
-          ]
+          ],
+          "enginePath": "/expenses/*/milesDrivenToDependentCareFacility"
         },
         {
-          "path": "/expenses/*/milesDrivenForMedicalTreatment",
+          "requestPath": "members[].expenses[].milesDrivenForMedicalTreatment",
+          "field": "milesDrivenForMedicalTreatment",
+          "location": "members[].expenses[]",
           "name": "Miles driven for medical treatment",
           "kind": "applicant",
           "type": "Int",
@@ -2252,10 +2549,13 @@
                 114
               ]
             }
-          ]
+          ],
+          "enginePath": "/expenses/*/milesDrivenForMedicalTreatment"
         },
         {
-          "path": "/expenses/*/isNecessaryDependentCareForWorkTrainingOrEducation",
+          "requestPath": "members[].expenses[].isNecessaryDependentCareForWorkTrainingOrEducation",
+          "field": "isNecessaryDependentCareForWorkTrainingOrEducation",
+          "location": "members[].expenses[]",
           "name": "Is necessary dependent care for work, training, or education",
           "kind": "applicant",
           "type": "Boolean",
@@ -2270,10 +2570,13 @@
                 112
               ]
             }
-          ]
+          ],
+          "enginePath": "/expenses/*/isNecessaryDependentCareForWorkTrainingOrEducation"
         },
         {
-          "path": "/expenses/*/isDirectMonetaryPaymentToAgencyOrPersonOutsideHousehold",
+          "requestPath": "members[].expenses[].isDirectMonetaryPaymentToAgencyOrPersonOutsideHousehold",
+          "field": "isDirectMonetaryPaymentToAgencyOrPersonOutsideHousehold",
+          "location": "members[].expenses[]",
           "name": "Is direct monetary payment outside household",
           "kind": "applicant",
           "type": "Boolean",
@@ -2288,10 +2591,13 @@
                 113
               ]
             }
-          ]
+          ],
+          "enginePath": "/expenses/*/isDirectMonetaryPaymentToAgencyOrPersonOutsideHousehold"
         },
         {
-          "path": "/expenses/*/reimbursementAmount",
+          "requestPath": "members[].expenses[].reimbursementAmount",
+          "field": "reimbursementAmount",
+          "location": "members[].expenses[]",
           "name": "Reimbursement amount",
           "kind": "applicant",
           "type": "Dollar",
@@ -2306,10 +2612,13 @@
                 113
               ]
             }
-          ]
+          ],
+          "enginePath": "/expenses/*/reimbursementAmount"
         },
         {
-          "path": "/expenses/*/isForClaimableShelterResidence",
+          "requestPath": "members[].expenses[].isForClaimableShelterResidence",
+          "field": "isForClaimableShelterResidence",
+          "location": "members[].expenses[]",
           "name": "Is for claimable shelter residence",
           "kind": "applicant",
           "type": "Boolean",
@@ -2324,10 +2633,13 @@
                 109
               ]
             }
-          ]
+          ],
+          "enginePath": "/expenses/*/isForClaimableShelterResidence"
         },
         {
-          "path": "/expenses/*/incursOrAnticipatesSeparateHeatingCoolingCosts",
+          "requestPath": "members[].expenses[].incursOrAnticipatesSeparateHeatingCoolingCosts",
+          "field": "incursOrAnticipatesSeparateHeatingCoolingCosts",
+          "location": "members[].expenses[]",
           "name": "Incurs or anticipates separate heating/cooling costs",
           "kind": "applicant",
           "type": "Boolean",
@@ -2342,10 +2654,13 @@
                 111
               ]
             }
-          ]
+          ],
+          "enginePath": "/expenses/*/incursOrAnticipatesSeparateHeatingCoolingCosts"
         },
         {
-          "path": "/expenses/*/privateRentalBilledForHeatingCooling",
+          "requestPath": "members[].expenses[].privateRentalBilledForHeatingCooling",
+          "field": "privateRentalBilledForHeatingCooling",
+          "location": "members[].expenses[]",
           "name": "Private rental billed for heating/cooling",
           "kind": "applicant",
           "type": "Boolean",
@@ -2360,10 +2675,13 @@
                 111
               ]
             }
-          ]
+          ],
+          "enginePath": "/expenses/*/privateRentalBilledForHeatingCooling"
         },
         {
-          "path": "/expenses/*/sharedResidencePaysHeatingCoolingPortion",
+          "requestPath": "members[].expenses[].sharedResidencePaysHeatingCoolingPortion",
+          "field": "sharedResidencePaysHeatingCoolingPortion",
+          "location": "members[].expenses[]",
           "name": "Shared residence pays heating/cooling portion",
           "kind": "applicant",
           "type": "Boolean",
@@ -2378,10 +2696,13 @@
                 111
               ]
             }
-          ]
+          ],
+          "enginePath": "/expenses/*/sharedResidencePaysHeatingCoolingPortion"
         },
         {
-          "path": "/expenses/*/publicHousingResponsibleForExcessHeatingCoolingCosts",
+          "requestPath": "members[].expenses[].publicHousingResponsibleForExcessHeatingCoolingCosts",
+          "field": "publicHousingResponsibleForExcessHeatingCoolingCosts",
+          "location": "members[].expenses[]",
           "name": "Public housing responsible for excess heating/cooling costs",
           "kind": "applicant",
           "type": "Boolean",
@@ -2396,10 +2717,13 @@
                 111
               ]
             }
-          ]
+          ],
+          "enginePath": "/expenses/*/publicHousingResponsibleForExcessHeatingCoolingCosts"
         },
         {
-          "path": "/expenses/*/frequency",
+          "requestPath": "members[].expenses[].frequency",
+          "field": "frequency",
+          "location": "members[].expenses[]",
           "name": "Expense frequency",
           "kind": "applicant",
           "type": "Enum",
@@ -2426,10 +2750,13 @@
                 146
               ]
             }
-          ]
+          ],
+          "enginePath": "/expenses/*/frequency"
         },
         {
-          "path": "/expenses/*/shouldAverage",
+          "requestPath": "members[].expenses[].shouldAverage",
+          "field": "shouldAverage",
+          "location": "members[].expenses[]",
           "name": "Should average expense",
           "kind": "applicant",
           "type": "Boolean",
@@ -2444,10 +2771,13 @@
                 108
               ]
             }
-          ]
+          ],
+          "enginePath": "/expenses/*/shouldAverage"
         },
         {
-          "path": "/expenses/*/intendedMonths",
+          "requestPath": "members[].expenses[].intendedMonths",
+          "field": "intendedMonths",
+          "location": "members[].expenses[]",
           "name": "Months intended to cover",
           "kind": "applicant",
           "type": "Int",
@@ -2462,33 +2792,18 @@
                 108
               ]
             }
-          ]
+          ],
+          "enginePath": "/expenses/*/intendedMonths"
         }
       ]
     },
     {
-      "title": "Employment (one row per job)",
+      "title": "Jobs (nested under each member)",
       "fields": [
         {
-          "path": "/jobs/*/memberId",
-          "name": "Member",
-          "kind": "reference",
-          "type": "CollectionItem",
-          "programs": [
-            "SNAP"
-          ],
-          "definition": "The household member who holds this job.",
-          "citations": [
-            {
-              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
-              "pages": [
-                76
-              ]
-            }
-          ]
-        },
-        {
-          "path": "/jobs/*/hoursPerWeek",
+          "requestPath": "members[].jobs[].hoursPerWeek",
+          "field": "hoursPerWeek",
+          "location": "members[].jobs[]",
           "name": "Hours per week",
           "kind": "applicant",
           "type": "Int",
@@ -2504,10 +2819,13 @@
                 76
               ]
             }
-          ]
+          ],
+          "enginePath": "/jobs/*/hoursPerWeek"
         },
         {
-          "path": "/jobs/*/abawdWorkType",
+          "requestPath": "members[].jobs[].abawdWorkType",
+          "field": "abawdWorkType",
+          "location": "members[].jobs[]",
           "name": "ABAWD work type",
           "kind": "applicant",
           "type": "Enum",
@@ -2528,10 +2846,13 @@
                 80
               ]
             }
-          ]
+          ],
+          "enginePath": "/jobs/*/abawdWorkType"
         },
         {
-          "path": "/jobs/*/isSelfEmployed",
+          "requestPath": "members[].jobs[].isSelfEmployed",
+          "field": "isSelfEmployed",
+          "location": "members[].jobs[]",
           "name": "Is self-employed",
           "kind": "applicant",
           "type": "Boolean",
@@ -2548,10 +2869,13 @@
                 90
               ]
             }
-          ]
+          ],
+          "enginePath": "/jobs/*/isSelfEmployed"
         },
         {
-          "path": "/jobs/*/isAtFederalMinimumWage",
+          "requestPath": "members[].jobs[].isAtFederalMinimumWage",
+          "field": "isAtFederalMinimumWage",
+          "location": "members[].jobs[]",
           "name": "Is at federal minimum wage",
           "kind": "applicant",
           "type": "Boolean",
@@ -2567,10 +2891,13 @@
                 76
               ]
             }
-          ]
+          ],
+          "enginePath": "/jobs/*/isAtFederalMinimumWage"
         },
         {
-          "path": "/jobs/*/isOnTheJobTraining",
+          "requestPath": "members[].jobs[].isOnTheJobTraining",
+          "field": "isOnTheJobTraining",
+          "location": "members[].jobs[]",
           "name": "Is on-the-job training",
           "kind": "applicant",
           "type": "Boolean",
@@ -2585,10 +2912,13 @@
                 8
               ]
             }
-          ]
+          ],
+          "enginePath": "/jobs/*/isOnTheJobTraining"
         },
         {
-          "path": "/jobs/*/offerAccepted",
+          "requestPath": "members[].jobs[].offerAccepted",
+          "field": "offerAccepted",
+          "location": "members[].jobs[]",
           "name": "Offer accepted",
           "kind": "applicant",
           "type": "Boolean",
@@ -2596,10 +2926,13 @@
             "SNAP"
           ],
           "definition": "Whether the member accepted this offered job.",
-          "citations": []
+          "citations": [],
+          "enginePath": "/jobs/*/offerAccepted"
         },
         {
-          "path": "/jobs/*/wagesBelowApplicableMinimum",
+          "requestPath": "members[].jobs[].wagesBelowApplicableMinimum",
+          "field": "wagesBelowApplicableMinimum",
+          "location": "members[].jobs[]",
           "name": "Wages below applicable minimum",
           "kind": "applicant",
           "type": "Boolean",
@@ -2614,10 +2947,13 @@
                 77
               ]
             }
-          ]
+          ],
+          "enginePath": "/jobs/*/wagesBelowApplicableMinimum"
         },
         {
-          "path": "/jobs/*/pieceRateYieldBelowApplicableWage",
+          "requestPath": "members[].jobs[].pieceRateYieldBelowApplicableWage",
+          "field": "pieceRateYieldBelowApplicableWage",
+          "location": "members[].jobs[]",
           "name": "Piece-rate yield below applicable wage",
           "kind": "applicant",
           "type": "Boolean",
@@ -2632,10 +2968,13 @@
                 77
               ]
             }
-          ]
+          ],
+          "enginePath": "/jobs/*/pieceRateYieldBelowApplicableWage"
         },
         {
-          "path": "/jobs/*/requiresLaborOrganizationAction",
+          "requestPath": "members[].jobs[].requiresLaborOrganizationAction",
+          "field": "requiresLaborOrganizationAction",
+          "location": "members[].jobs[]",
           "name": "Requires labor organization action",
           "kind": "applicant",
           "type": "Boolean",
@@ -2650,10 +2989,13 @@
                 77
               ]
             }
-          ]
+          ],
+          "enginePath": "/jobs/*/requiresLaborOrganizationAction"
         },
         {
-          "path": "/jobs/*/worksiteSubjectToStrikeOrLockout",
+          "requestPath": "members[].jobs[].worksiteSubjectToStrikeOrLockout",
+          "field": "worksiteSubjectToStrikeOrLockout",
+          "location": "members[].jobs[]",
           "name": "Worksite subject to strike or lockout",
           "kind": "applicant",
           "type": "Boolean",
@@ -2668,10 +3010,13 @@
                 77
               ]
             }
-          ]
+          ],
+          "enginePath": "/jobs/*/worksiteSubjectToStrikeOrLockout"
         },
         {
-          "path": "/jobs/*/unreasonableHealthSafetyRisk",
+          "requestPath": "members[].jobs[].unreasonableHealthSafetyRisk",
+          "field": "unreasonableHealthSafetyRisk",
+          "location": "members[].jobs[]",
           "name": "Unreasonable health or safety risk",
           "kind": "applicant",
           "type": "Boolean",
@@ -2686,10 +3031,13 @@
                 77
               ]
             }
-          ]
+          ],
+          "enginePath": "/jobs/*/unreasonableHealthSafetyRisk"
         },
         {
-          "path": "/jobs/*/memberPhysicallyOrMentallyUnfit",
+          "requestPath": "members[].jobs[].memberPhysicallyOrMentallyUnfit",
+          "field": "memberPhysicallyOrMentallyUnfit",
+          "location": "members[].jobs[]",
           "name": "Member physically or mentally unfit",
           "kind": "applicant",
           "type": "Boolean",
@@ -2704,10 +3052,13 @@
                 77
               ]
             }
-          ]
+          ],
+          "enginePath": "/jobs/*/memberPhysicallyOrMentallyUnfit"
         },
         {
-          "path": "/jobs/*/outsideMajorFieldDuringInitialThirtyDays",
+          "requestPath": "members[].jobs[].outsideMajorFieldDuringInitialThirtyDays",
+          "field": "outsideMajorFieldDuringInitialThirtyDays",
+          "location": "members[].jobs[]",
           "name": "Outside major field during initial thirty days",
           "kind": "applicant",
           "type": "Boolean",
@@ -2722,10 +3073,13 @@
                 78
               ]
             }
-          ]
+          ],
+          "enginePath": "/jobs/*/outsideMajorFieldDuringInitialThirtyDays"
         },
         {
-          "path": "/jobs/*/unreasonableDistance",
+          "requestPath": "members[].jobs[].unreasonableDistance",
+          "field": "unreasonableDistance",
+          "location": "members[].jobs[]",
           "name": "Unreasonable distance",
           "kind": "applicant",
           "type": "Boolean",
@@ -2740,10 +3094,13 @@
                 78
               ]
             }
-          ]
+          ],
+          "enginePath": "/jobs/*/unreasonableDistance"
         },
         {
-          "path": "/jobs/*/dailyCommuteExceedsTwoHours",
+          "requestPath": "members[].jobs[].dailyCommuteExceedsTwoHours",
+          "field": "dailyCommuteExceedsTwoHours",
+          "location": "members[].jobs[]",
           "name": "Daily commute exceeds two hours",
           "kind": "applicant",
           "type": "Boolean",
@@ -2758,10 +3115,13 @@
                 78
               ]
             }
-          ]
+          ],
+          "enginePath": "/jobs/*/dailyCommuteExceedsTwoHours"
         },
         {
-          "path": "/jobs/*/noTransportationForNonWalkingDistance",
+          "requestPath": "members[].jobs[].noTransportationForNonWalkingDistance",
+          "field": "noTransportationForNonWalkingDistance",
+          "location": "members[].jobs[]",
           "name": "No transportation for non-walking distance",
           "kind": "applicant",
           "type": "Boolean",
@@ -2776,10 +3136,13 @@
                 78
               ]
             }
-          ]
+          ],
+          "enginePath": "/jobs/*/noTransportationForNonWalkingDistance"
         },
         {
-          "path": "/jobs/*/interferesWithReligiousObservance",
+          "requestPath": "members[].jobs[].interferesWithReligiousObservance",
+          "field": "interferesWithReligiousObservance",
+          "location": "members[].jobs[]",
           "name": "Interferes with religious observance",
           "kind": "applicant",
           "type": "Boolean",
@@ -2794,26 +3157,18 @@
                 78
               ]
             }
-          ]
+          ],
+          "enginePath": "/jobs/*/interferesWithReligiousObservance"
         }
       ]
     },
     {
-      "title": "Resource / asset (one row per item)",
+      "title": "Assets (nested under each member)",
       "fields": [
         {
-          "path": "/resourceItems/*/memberId",
-          "name": "Member",
-          "kind": "reference",
-          "type": "CollectionItem",
-          "programs": [
-            "SNAP"
-          ],
-          "definition": "The household member who owns this resource item.",
-          "citations": []
-        },
-        {
-          "path": "/resourceItems/*/type",
+          "requestPath": "members[].assets[].type",
+          "field": "type",
+          "location": "members[].assets[]",
           "name": "Resource type",
           "kind": "applicant",
           "type": "Enum",
@@ -2899,10 +3254,13 @@
                 123
               ]
             }
-          ]
+          ],
+          "enginePath": "/resourceItems/*/type"
         },
         {
-          "path": "/resourceItems/*/otherExcludedResourceType",
+          "requestPath": "members[].assets[].otherExcludedResourceType",
+          "field": "otherExcludedResourceType",
+          "location": "members[].assets[]",
           "name": "Other excluded resource type",
           "kind": "applicant",
           "type": "Enum",
@@ -2938,10 +3296,13 @@
                 125
               ]
             }
-          ]
+          ],
+          "enginePath": "/resourceItems/*/otherExcludedResourceType"
         },
         {
-          "path": "/resourceItems/*/value",
+          "requestPath": "members[].assets[].value",
+          "field": "value",
+          "location": "members[].assets[]",
           "name": "Resource value",
           "kind": "applicant",
           "type": "Dollar",
@@ -2959,15 +3320,18 @@
                 120
               ]
             }
-          ]
+          ],
+          "enginePath": "/resourceItems/*/value"
         }
       ]
     },
     {
-      "title": "Caregiver relationship (one row per pair)",
+      "title": "Caregiver relationships",
       "fields": [
         {
-          "path": "/caregiverRelationships/*/caregiverId",
+          "requestPath": "caregiverRelationships[].caregiverId",
+          "field": "caregiverId",
+          "location": "caregiverRelationships[]",
           "name": "Caregiver",
           "kind": "reference",
           "type": "CollectionItem",
@@ -2982,10 +3346,13 @@
                 47
               ]
             }
-          ]
+          ],
+          "enginePath": "/caregiverRelationships/*/caregiverId"
         },
         {
-          "path": "/caregiverRelationships/*/dependentId",
+          "requestPath": "caregiverRelationships[].dependentId",
+          "field": "dependentId",
+          "location": "caregiverRelationships[]",
           "name": "Dependent",
           "kind": "reference",
           "type": "CollectionItem",
@@ -3000,10 +3367,13 @@
                 47
               ]
             }
-          ]
+          ],
+          "enginePath": "/caregiverRelationships/*/dependentId"
         },
         {
-          "path": "/caregiverRelationships/*/isParent",
+          "requestPath": "caregiverRelationships[].isParent",
+          "field": "isParent",
+          "location": "caregiverRelationships[]",
           "name": "Is parent relationship",
           "kind": "applicant",
           "type": "Boolean",
@@ -3018,10 +3388,13 @@
                 47
               ]
             }
-          ]
+          ],
+          "enginePath": "/caregiverRelationships/*/isParent"
         },
         {
-          "path": "/caregiverRelationships/*/isNonparentParentalControl",
+          "requestPath": "caregiverRelationships[].isNonparentParentalControl",
+          "field": "isNonparentParentalControl",
+          "location": "caregiverRelationships[]",
           "name": "Is non-parent parental-control relationship",
           "kind": "applicant",
           "type": "Boolean",
@@ -3036,10 +3409,13 @@
                 47
               ]
             }
-          ]
+          ],
+          "enginePath": "/caregiverRelationships/*/isNonparentParentalControl"
         },
         {
-          "path": "/caregiverRelationships/*/caregiverProvidesMoreThanHalfOfPhysicalCare",
+          "requestPath": "caregiverRelationships[].caregiverProvidesMoreThanHalfOfPhysicalCare",
+          "field": "caregiverProvidesMoreThanHalfOfPhysicalCare",
+          "location": "caregiverRelationships[]",
           "name": "Caregiver provides more than half of physical care",
           "kind": "applicant",
           "type": "Boolean",
@@ -3054,10 +3430,13 @@
                 65
               ]
             }
-          ]
+          ],
+          "enginePath": "/caregiverRelationships/*/caregiverProvidesMoreThanHalfOfPhysicalCare"
         },
         {
-          "path": "/caregiverRelationships/*/adequateChildcareUnavailable",
+          "requestPath": "caregiverRelationships[].adequateChildcareUnavailable",
+          "field": "adequateChildcareUnavailable",
+          "location": "caregiverRelationships[]",
           "name": "Adequate childcare is unavailable",
           "kind": "applicant",
           "type": "Boolean",
@@ -3072,10 +3451,13 @@
                 65
               ]
             }
-          ]
+          ],
+          "enginePath": "/caregiverRelationships/*/adequateChildcareUnavailable"
         },
         {
-          "path": "/caregiverRelationships/*/claimedForWorkRequirementsCareExemption",
+          "requestPath": "caregiverRelationships[].claimedForWorkRequirementsCareExemption",
+          "field": "claimedForWorkRequirementsCareExemption",
+          "location": "caregiverRelationships[]",
           "name": "Claimed for work-requirements care exemption",
           "kind": "applicant",
           "type": "Boolean",
@@ -3090,7 +3472,8 @@
                 75
               ]
             }
-          ]
+          ],
+          "enginePath": "/caregiverRelationships/*/claimedForWorkRequirementsCareExemption"
         }
       ]
     },
@@ -3098,7 +3481,9 @@
       "title": "Household & application",
       "fields": [
         {
-          "path": "/isPresidentiallyDeclaredDisasterOrEmergency",
+          "requestPath": "household.isPresidentiallyDeclaredDisasterOrEmergency",
+          "field": "isPresidentiallyDeclaredDisasterOrEmergency",
+          "location": "household",
           "name": "Is presidentially declared disaster or emergency",
           "kind": "applicant",
           "type": "Boolean",
@@ -3113,10 +3498,13 @@
                 100
               ]
             }
-          ]
+          ],
+          "enginePath": "/isPresidentiallyDeclaredDisasterOrEmergency"
         },
         {
-          "path": "/hasInadvertentHouseholdErrorClaimDueToEarnedIncomeCalculation",
+          "requestPath": "household.hasInadvertentHouseholdErrorClaimDueToEarnedIncomeCalculation",
+          "field": "hasInadvertentHouseholdErrorClaimDueToEarnedIncomeCalculation",
+          "location": "household",
           "name": "Has inadvertent household error claim due to earned income calculation",
           "kind": "applicant",
           "type": "Boolean",
@@ -3134,10 +3522,13 @@
                 180
               ]
             }
-          ]
+          ],
+          "enginePath": "/hasInadvertentHouseholdErrorClaimDueToEarnedIncomeCalculation"
         },
         {
-          "path": "/applicationFilingDate",
+          "requestPath": "household.applicationFilingDate",
+          "field": "applicationFilingDate",
+          "location": "household",
           "name": "Application filing date",
           "kind": "applicant",
           "type": "Day",
@@ -3153,10 +3544,13 @@
                 106
               ]
             }
-          ]
+          ],
+          "enginePath": "/applicationFilingDate"
         },
         {
-          "path": "/isApplicationForRecertification",
+          "requestPath": "household.isApplicationForRecertification",
+          "field": "isApplicationForRecertification",
+          "location": "household",
           "name": "Application for recertification",
           "kind": "applicant",
           "type": "Boolean",
@@ -3171,10 +3565,13 @@
                 1
               ]
             }
-          ]
+          ],
+          "enginePath": "/isApplicationForRecertification"
         },
         {
-          "path": "/normalIssuanceCycleDate",
+          "requestPath": "household.normalIssuanceCycleDate",
+          "field": "normalIssuanceCycleDate",
+          "location": "household",
           "name": "Normal issuance cycle date",
           "kind": "applicant",
           "type": "Day",
@@ -3189,10 +3586,13 @@
                 107
               ]
             }
-          ]
+          ],
+          "enginePath": "/normalIssuanceCycleDate"
         },
         {
-          "path": "/receivedSnapInLast30Days",
+          "requestPath": "household.receivedSnapInLast30Days",
+          "field": "receivedSnapInLast30Days",
+          "location": "household",
           "name": "Received SNAP in the last 30 days",
           "kind": "applicant",
           "type": "Boolean",
@@ -3207,10 +3607,13 @@
                 38
               ]
             }
-          ]
+          ],
+          "enginePath": "/receivedSnapInLast30Days"
         },
         {
-          "path": "/receivesLeapInLast12Months",
+          "requestPath": "household.receivesLeapInLast12Months",
+          "field": "receivesLeapInLast12Months",
+          "location": "household",
           "name": "Receives LEAP in last 12 months",
           "kind": "applicant",
           "type": "Boolean",
@@ -3226,10 +3629,13 @@
                 111
               ]
             }
-          ]
+          ],
+          "enginePath": "/receivesLeapInLast12Months"
         },
         {
-          "path": "/dSnapActive",
+          "requestPath": "household.dSnapActive",
+          "field": "dSnapActive",
+          "location": "household",
           "name": "D-SNAP active",
           "kind": "applicant",
           "type": "Boolean",
@@ -3246,10 +3652,13 @@
                 224
               ]
             }
-          ]
+          ],
+          "enginePath": "/dSnapActive"
         },
         {
-          "path": "/temporaryEmergencyActive",
+          "requestPath": "household.temporaryEmergencyActive",
+          "field": "temporaryEmergencyActive",
+          "location": "household",
           "name": "Temporary emergency active",
           "kind": "applicant",
           "type": "Boolean",
@@ -3266,10 +3675,13 @@
                 224
               ]
             }
-          ]
+          ],
+          "enginePath": "/temporaryEmergencyActive"
         },
         {
-          "path": "/hasEebtInLast12Months",
+          "requestPath": "household.hasEebtInLast12Months",
+          "field": "hasEebtInLast12Months",
+          "location": "household",
           "name": "Has E-EBT in last 12 months",
           "kind": "applicant",
           "type": "Boolean",
@@ -3285,10 +3697,13 @@
                 111
               ]
             }
-          ]
+          ],
+          "enginePath": "/hasEebtInLast12Months"
         },
         {
-          "path": "/hasOrExpectsShelterCosts",
+          "requestPath": "household.hasOrExpectsShelterCosts",
+          "field": "hasOrExpectsShelterCosts",
+          "location": "household",
           "name": "Has or expects shelter costs",
           "kind": "applicant",
           "type": "Boolean",
@@ -3303,10 +3718,13 @@
                 109
               ]
             }
-          ]
+          ],
+          "enginePath": "/hasOrExpectsShelterCosts"
         },
         {
-          "path": "/hadPreviousSubstantialLotteryOrGamblingWinnings",
+          "requestPath": "household.hadPreviousSubstantialLotteryOrGamblingWinnings",
+          "field": "hadPreviousSubstantialLotteryOrGamblingWinnings",
+          "location": "household",
           "name": "Had previous substantial lottery or gambling winnings",
           "kind": "applicant",
           "type": "Boolean",
@@ -3321,10 +3739,13 @@
                 37
               ]
             }
-          ]
+          ],
+          "enginePath": "/hadPreviousSubstantialLotteryOrGamblingWinnings"
         },
         {
-          "path": "/participatesInCommodityFoodDistributionProgram",
+          "requestPath": "household.participatesInCommodityFoodDistributionProgram",
+          "field": "participatesInCommodityFoodDistributionProgram",
+          "location": "household",
           "name": "Participates in Commodity Food Distribution Program",
           "kind": "applicant",
           "type": "Boolean",
@@ -3339,10 +3760,13 @@
                 46
               ]
             }
-          ]
+          ],
+          "enginePath": "/participatesInCommodityFoodDistributionProgram"
         },
         {
-          "path": "/livesInApplicationCounty",
+          "requestPath": "household.livesInApplicationCounty",
+          "field": "livesInApplicationCounty",
+          "location": "household",
           "name": "Lives in application county or district",
           "kind": "applicant",
           "type": "Boolean",
@@ -3357,10 +3781,13 @@
                 46
               ]
             }
-          ]
+          ],
+          "enginePath": "/livesInApplicationCounty"
         },
         {
-          "path": "/hasNearbyCountyArrangement",
+          "requestPath": "household.hasNearbyCountyArrangement",
+          "field": "hasNearbyCountyArrangement",
+          "location": "household",
           "name": "Has nearby county/district filing arrangement",
           "kind": "applicant",
           "type": "Boolean",
@@ -3375,10 +3802,13 @@
                 46
               ]
             }
-          ]
+          ],
+          "enginePath": "/hasNearbyCountyArrangement"
         },
         {
-          "path": "/benefitMonth",
+          "requestPath": "household.benefitMonth",
+          "field": "benefitMonth",
+          "location": "household",
           "name": "Benefit month",
           "kind": "applicant",
           "type": "Day",
@@ -3394,10 +3824,13 @@
                 106
               ]
             }
-          ]
+          ],
+          "enginePath": "/benefitMonth"
         },
         {
-          "path": "/certificationPeriodStartDate",
+          "requestPath": "household.certificationPeriodStartDate",
+          "field": "certificationPeriodStartDate",
+          "location": "household",
           "name": "Certification period start date",
           "kind": "applicant",
           "type": "Day",
@@ -3412,10 +3845,13 @@
                 106
               ]
             }
-          ]
+          ],
+          "enginePath": "/certificationPeriodStartDate"
         },
         {
-          "path": "/earnedIncome",
+          "requestPath": "household.earnedIncome",
+          "field": "earnedIncome",
+          "location": "household",
           "name": "Earned Income",
           "kind": "applicant",
           "type": "Dollar",
@@ -3423,10 +3859,13 @@
             "Medicaid"
           ],
           "definition": "Annual household earned income (wages, salary, tips, self-employment).",
-          "citations": []
+          "citations": [],
+          "enginePath": "/earnedIncome"
         },
         {
-          "path": "/unearnedIncome",
+          "requestPath": "household.unearnedIncome",
+          "field": "unearnedIncome",
+          "location": "household",
           "name": "Unearned Income",
           "kind": "applicant",
           "type": "Dollar",
@@ -3434,7 +3873,8 @@
             "Medicaid"
           ],
           "definition": "Annual household unearned income (Social Security, pensions, unemployment, child support, investments).",
-          "citations": []
+          "citations": [],
+          "enginePath": "/unearnedIncome"
         }
       ]
     }

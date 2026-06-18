@@ -12,6 +12,23 @@ that's the visualizer's package and is not part of the shared surface.
 If you need a primitive that's currently only in `factgraph-server`, lift
 it into `factgraph-core` first.
 
+## Field naming: this layer is a translation boundary
+
+The root `CLAUDE.md` "always use the path" rule governs **internal node
+identity** (the model, the visualizer) and the **engine-facing inputs** — the
+`inputs` map we hand to the engine must be path-keyed (`/members/*/age`), and
+code must never fabricate a short name by splitting a path
+(`segments.pop()`, `.replace('/*/','')`).
+
+It does **not** govern the **external request/response DTO**. This package is
+an adapter; choosing consumer-friendly field names (`members[].hasPhysicalDisability`,
+nested `members[].income[]`) is exactly its job. That path↔name translation
+lives in **one place**: `src/translate/field-index.ts`. That module is the
+single sanctioned spot that derives a field's `location` + `field` (the path
+leaf) from its engine path and maps back, keeping `enginePath` as the canonical
+reference — analogous to the executor boundary. Don't scatter `split('/')` /
+`segments.pop()` elsewhere; go through the field index.
+
 ## Public-surface discipline
 
 The repo is open source and the integration partner reads it directly to

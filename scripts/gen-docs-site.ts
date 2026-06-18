@@ -371,9 +371,10 @@ const engineInputsHtml = `<!DOCTYPE html>
         h.className = 'group'; h.textContent = group.title
         list.appendChild(h)
         for (const f of group.fields) {
+          const apiField = f.requestPath
           const card = document.createElement('div')
           card.className = 'card'
-          card.dataset.text = (f.path + ' ' + f.name + ' ' + (f.definition || '')).toLowerCase()
+          card.dataset.text = (apiField + ' ' + f.name + ' ' + (f.definition || '')).toLowerCase()
           card.dataset.programs = f.programs.join(',')
           card.dataset.kind = f.kind
           const badges = [
@@ -388,11 +389,12 @@ const engineInputsHtml = `<!DOCTYPE html>
           }
           card.innerHTML =
             '<div><strong>' + esc(f.name) + '</strong></div>' +
-            '<code class="field">' + esc(f.path) + '</code>' +
+            '<code class="field">' + esc(apiField) + '</code>' +
             '<div class="badges">' + badges + '</div>' +
             (f.definition ? '<div class="def">' + esc(f.definition) + '</div>' : '') +
             values +
-            (f.citations.length ? '<div class="cite">' + esc(citeText(f.citations)) + '</div>' : '')
+            (f.citations.length ? '<div class="cite">' + esc(citeText(f.citations)) + '</div>' : '') +
+            '<div class="cite">engine path: <code>' + esc(f.enginePath) + '</code></div>'
           list.appendChild(card)
         }
       }
