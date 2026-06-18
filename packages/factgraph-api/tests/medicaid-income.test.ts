@@ -7,10 +7,20 @@
  */
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
+import request from 'supertest'
 import { getRuleset, getRawFacts } from 'rules-visualizer-factgraph-core'
 
-import './helpers.js'
+import { app } from './helpers.js'
 import { runQuery } from '../src/evaluate.js'
+
+/** Pull an enum fact's options out of a ruleset's model. */
+function enumOptions(rulesetId: string, path: string): string[] {
+  const m = getRuleset(rulesetId)!
+  const node = (Object.values(m.nodes) as Array<{ content: { path?: string; enumOptions?: string[] } }>).find(
+    (n) => n.content.path === path
+  )
+  return node?.content.enumOptions ?? []
+}
 
 const model = getRuleset('medicaid')!
 const facts = getRawFacts('medicaid')!
@@ -67,4 +77,51 @@ test('boarder income counts as earned (mirrors SNAP classification)', () => {
   const v = totals([row('BoarderIncome', 200, 'Monthly'), row('Loans', 200, 'Monthly')])
   assert.equal(v['/earnedIncome'], 2_400) // boarder income is earned
   assert.equal(v['/unearnedIncome'], 2_400) // loans are unearned
+})
+
+// The income source/frequency vocab is duplicated into the Medicaid ruleset
+// (the two rulesets load independently). Guard against silent drift: if SNAP's
+// vocabulary changes, Medicaid's copy must change too, or this fails.
+test('Medicaid income vocab stays in lockstep with SNAP', () => {
+  assert.deepEqual(
+    enumOptions('medicaid', '/incomeSourceOptions'),
+    enumOptions('snap-complete', '/incomeSourceOptions'),
+    'income source options drifted between Medicaid and SNAP'
+  )
+  assert.deepEqual(
+    enumOptions('medicaid', '/incomeFrequencyOptions'),
+    enumOptions('snap-complete', '/incomeFrequencyOptions'),
+    'income frequency options drifted between Medicaid and SNAP'
+  )
+})
+
+// End-to-end: the corrected (annual) income must actually drive the MAGI
+// determination — clearly-over-income lands Ineligible, clearly-under stays in
+// an income-eligible category. (Under the old monthly-into-annual bug, $60k/yr
+// read as $5k/yr and looked income-eligible.)
+const medicaidRequest = (monthlyWages: number) => ({
+  metadata: {},
+  program: 'medicaid',
+  household: { size: 1 },
+  members: [
+    {
+      id: 'head',
+      dateOfBirth: '1990-01-01',
+      citizenshipStatus: 'us_citizen',
+      income: [{ type: 'employed', amount: monthlyWages, frequency: 'monthly' }],
+    },
+  ],
+})
+
+test('annual income drives the MAGI category (over FPL → Ineligible)', async () => {
+  const over = await request(app)
+    .post('/v1/eligibility/evaluate/determination')
+    .send(medicaidRequest(5000)) // $60,000/yr — well over the annual FPL
+  assert.equal(over.status, 200)
+  assert.equal(over.body.decisions[0]['x-medicaidCategory'], 'Ineligible')
+
+  const under = await request(app)
+    .post('/v1/eligibility/evaluate/determination')
+    .send(medicaidRequest(500)) // $6,000/yr — income-eligible (Adult)
+  assert.equal(under.body.decisions[0]['x-medicaidCategory'], 'Adult')
 })
