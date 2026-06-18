@@ -27,30 +27,30 @@ test('engine-inputs.json is in sync with the generator', () => {
   )
 })
 
-test('every field has the metadata a consumer needs', () => {
+test('every field is keyed by its real path and carries consumer metadata', () => {
   const doc = buildEngineInputs()
   assert.ok(doc.groups.length > 0, 'expected at least one group')
   for (const group of doc.groups) {
     for (const f of group.fields) {
-      assert.ok(f.field, 'field name')
-      assert.ok(['applicant', 'derived', 'reference'].includes(f.kind), `kind for ${f.field}`)
-      assert.ok(typeof f.type === 'string' && f.type.length > 0, `type for ${f.field}`)
-      assert.ok(Array.isArray(f.programs), `programs for ${f.field}`)
-      assert.ok(Array.isArray(f.citations), `citations for ${f.field}`)
-      // No retired conformance vocabulary leaks into the catalog.
-      assert.ok(!('source' in f), `${f.field} must not carry the retired source tag`)
-      assert.ok(!('supersededBy' in f), `${f.field} must not carry supersededBy`)
+      // Identity is the Fact Graph path, never a reconstructed short name.
+      assert.ok(f.path && f.path.startsWith('/'), `path for ${JSON.stringify(f)}`)
+      assert.ok(f.name && f.name.length > 0, `name for ${f.path}`)
+      assert.ok(['applicant', 'reference'].includes(f.kind), `kind for ${f.path}`)
+      assert.ok(typeof f.type === 'string' && f.type.length > 0, `type for ${f.path}`)
+      assert.ok(Array.isArray(f.programs) && f.programs.length > 0, `programs for ${f.path}`)
+      assert.ok(Array.isArray(f.citations), `citations for ${f.path}`)
+      // No retired ORCA-mapping vocabulary leaks into the rules-faithful catalog.
+      assert.ok(!('source' in f), `${f.path} must not carry the retired source tag`)
+      assert.ok(!('field' in f), `${f.path} must be keyed by path, not an ORCA field name`)
     }
   }
 })
 
-test('catalog covers both programs and drops compat-only carryovers', () => {
-  const doc = buildEngineInputs()
-  const all = doc.groups.flatMap((g) => g.fields)
+test('catalog covers both programs from their own writables', () => {
+  const all = buildEngineInputs().groups.flatMap((g) => g.fields)
   assert.ok(all.some((f) => f.programs.includes('SNAP')), 'has SNAP inputs')
   assert.ok(all.some((f) => f.programs.includes('Medicaid')), 'has Medicaid inputs')
-  // derived fields explain their derivation; applicant fields don't need one.
-  for (const f of all.filter((f) => f.kind === 'derived')) {
-    assert.ok(f.derivation, `derived field ${f.field} should explain its derivation`)
-  }
+  // Cross-references (member links) are tagged reference, not applicant values.
+  const spouse = all.find((f) => f.path === '/members/*/spouseId')
+  assert.ok(spouse && spouse.kind === 'reference', 'spouseId is a reference')
 })

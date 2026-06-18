@@ -354,7 +354,6 @@ const engineInputsHtml = `<!DOCTYPE html>
         <select id="kind">
           <option value="">All kinds</option>
           <option value="applicant">applicant</option>
-          <option value="derived">derived</option>
           <option value="reference">reference</option>
         </select>
         <span class="count" id="count"></span>
@@ -374,25 +373,24 @@ const engineInputsHtml = `<!DOCTYPE html>
         for (const f of group.fields) {
           const card = document.createElement('div')
           card.className = 'card'
-          card.dataset.text = (f.field + ' ' + (f.definition || '') + ' ' + (f.derivation || '')).toLowerCase()
+          card.dataset.text = (f.path + ' ' + f.name + ' ' + (f.definition || '')).toLowerCase()
           card.dataset.programs = f.programs.join(',')
           card.dataset.kind = f.kind
           const badges = [
             '<span class="badge">' + esc(f.type) + '</span>',
             ...f.programs.map((p) => '<span class="badge">' + p + '</span>'),
             '<span class="badge kind-' + f.kind + '">' + f.kind + '</span>',
-            f.alignsWithPartnerContract ? '<span class="badge aligns">also in partner contract</span>' : '',
-          ].filter(Boolean).join('')
+          ].join('')
           let values = ''
           if (f.values) {
             values = '<details class="values"><summary>' + f.values.length + ' allowed values</summary><p>' +
               f.values.map((v) => '<code>' + esc(v) + '</code>').join(' ') + '</p></details>'
           }
           card.innerHTML =
-            '<code class="field">' + esc(f.field) + '</code>' +
+            '<div><strong>' + esc(f.name) + '</strong></div>' +
+            '<code class="field">' + esc(f.path) + '</code>' +
             '<div class="badges">' + badges + '</div>' +
             (f.definition ? '<div class="def">' + esc(f.definition) + '</div>' : '') +
-            (f.derivation ? '<div class="note">Derived: ' + esc(f.derivation) + '</div>' : '') +
             values +
             (f.citations.length ? '<div class="cite">' + esc(citeText(f.citations)) + '</div>' : '')
           list.appendChild(card)
