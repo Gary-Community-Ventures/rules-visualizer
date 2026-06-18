@@ -32,6 +32,30 @@ type Maps = {
   enumByPath: Map<string, Map<string, string>>
 }
 
+/** Whole years between a date of birth and the evaluation date. */
+function ageFromDob(dob: string, asOf: Date): number | undefined {
+  const d = new Date(dob)
+  if (Number.isNaN(d.getTime())) return undefined
+  let age = asOf.getUTCFullYear() - d.getUTCFullYear()
+  const m = asOf.getUTCMonth() - d.getUTCMonth()
+  if (m < 0 || (m === 0 && asOf.getUTCDate() < d.getUTCDate())) age--
+  return age
+}
+
+/** Whole days between a date and the evaluation date. */
+function daysSince(date: string, asOf: Date): number | undefined {
+  const d = new Date(date)
+  if (Number.isNaN(d.getTime())) return undefined
+  return Math.floor((asOf.getTime() - d.getTime()) / 86_400_000)
+}
+
+/** Compute functions for the curated `derived` fields in field-index.ts,
+ *  keyed by the DTO field name. */
+const DERIVE: Record<string, (value: unknown, asOf: Date) => unknown> = {
+  dateOfBirth: (v, asOf) => ageFromDob(String(v), asOf),
+  pregnancyEndDate: (v, asOf) => daysSince(String(v), asOf),
+}
+
 function snake(s: string): string {
   return s
     .replace(/([a-z0-9])([A-Z])/g, '$1_$2')
@@ -72,8 +96,21 @@ function coerce(
   entry: FieldEntry,
   maps: Maps,
   indexOf: (callerId: unknown) => string | undefined,
+  asOf: Date,
   warnings: string[]
 ): unknown {
+  if (entry.kind === 'derived') {
+    const fn = DERIVE[entry.field]
+    if (!fn) {
+      warnings.push(`${entry.location}.${entry.field}: no derivation registered — ignored.`)
+      return undefined
+    }
+    const out = fn(value, asOf)
+    if (out === undefined) {
+      warnings.push(`${entry.location}.${entry.field}: ${JSON.stringify(value)} is not a valid date.`)
+    }
+    return out
+  }
   if (entry.kind === 'reference') {
     const ref = indexOf(value)
     if (ref === undefined) {
@@ -102,6 +139,7 @@ function mapObject(
   skip: Set<string>,
   maps: Maps,
   indexOf: (callerId: unknown) => string | undefined,
+  asOf: Date,
   warnings: string[]
 ): Record<string, unknown> {
   const out: Record<string, unknown> = {}
@@ -112,7 +150,7 @@ function mapObject(
       warnings.push(`${location}.${key}: not a recognised field — ignored.`)
       continue
     }
-    const v = coerce(value, entry, maps, indexOf, warnings)
+    const v = coerce(value, entry, maps, indexOf, asOf, warnings)
     if (v !== undefined) out[entry.enginePath] = v
   }
   return out
@@ -133,8 +171,9 @@ const MEMBER_SUBCOLLECTIONS: Array<[key: string, location: string]> = [
 ]
 const MEMBER_KEYS = new Set(['id', ...MEMBER_SUBCOLLECTIONS.map(([k]) => k)])
 
-/** Translate a friendly request into one ruleset's engine inputs (no-guess). */
-export function translateRequest(req: V2Request, model: Model): TranslateResult {
+/** Translate a friendly request into one ruleset's engine inputs (no-guess).
+ *  `asOf` is the evaluation date used by derived fields (age, days-since). */
+export function translateRequest(req: V2Request, model: Model, asOf: Date): TranslateResult {
   const maps = buildMaps(model)
   const warnings: string[] = []
   const members = req.members ?? []
@@ -154,7 +193,7 @@ export function translateRequest(req: V2Request, model: Model): TranslateResult 
     memberIds.push(memberId)
     const memberRow: Record<string, unknown> = {
       id: memberId,
-      ...mapObject(m, 'members[]', MEMBER_KEYS, maps, indexOf, warnings),
+      ...mapObject(m, 'members[]', MEMBER_KEYS, maps, indexOf, asOf, warnings),
     }
     ;(rowsByRoot['/members'] ??= []).push(memberRow)
 
@@ -167,7 +206,7 @@ export function translateRequest(req: V2Request, model: Model): TranslateResult 
         const row: Record<string, unknown> = {
           id: (r.id as string) ?? `${memberId}-${key}-${j}`,
           [`${root}/*/memberId`]: `#${i}`,
-          ...mapObject(r, location, new Set(['id']), maps, indexOf, warnings),
+          ...mapObject(r, location, new Set(['id']), maps, indexOf, asOf, warnings),
         }
         ;(rowsByRoot[root] ??= []).push(row)
       })
@@ -179,12 +218,12 @@ export function translateRequest(req: V2Request, model: Model): TranslateResult 
     if (!root) break
     ;(rowsByRoot[root] ??= []).push({
       id: (cr.id as string) ?? `caregiver-${(rowsByRoot[root]?.length ?? 0)}`,
-      ...mapObject(cr, 'caregiverRelationships[]', new Set(['id']), maps, indexOf, warnings),
+      ...mapObject(cr, 'caregiverRelationships[]', new Set(['id']), maps, indexOf, asOf, warnings),
     })
   }
 
   if (req.household) {
-    Object.assign(inputs, mapObject(req.household, 'household', new Set(), maps, indexOf, warnings))
+    Object.assign(inputs, mapObject(req.household, 'household', new Set(), maps, indexOf, asOf, warnings))
   }
 
   for (const [root, rows] of Object.entries(rowsByRoot)) inputs[root] = rows

@@ -36,7 +36,7 @@ test('every field is presented as the consumer sends it (friendly field + locati
       assert.ok(f.field && !f.field.includes('/'), `field for ${JSON.stringify(f)}`)
       assert.ok(f.location && !f.location.includes('*'), `location for ${f.field}`)
       assert.ok(f.name && f.name.length > 0, `name for ${f.field}`)
-      assert.ok(['applicant', 'reference'].includes(f.kind), `kind for ${f.field}`)
+      assert.ok(['applicant', 'reference', 'derived'].includes(f.kind), `kind for ${f.field}`)
       assert.ok(typeof f.type === 'string' && f.type.length > 0, `type for ${f.field}`)
       assert.ok(Array.isArray(f.programs) && f.programs.length > 0, `programs for ${f.field}`)
       assert.ok(Array.isArray(f.citations), `citations for ${f.field}`)
@@ -59,6 +59,10 @@ test('catalog covers both programs and presents friendly identities', () => {
   // back-links are implied (nesting) and omitted from the catalog.
   const spouse = all.find((f) => f.enginePath === '/members/*/spouseId')
   assert.ok(spouse && spouse.kind === 'reference', 'spouseId is a reference')
+  // The age writable is exposed as a derived dateOfBirth (a raw age goes stale).
+  const age = all.find((f) => f.enginePath === '/members/*/age')
+  assert.ok(age && age.kind === 'derived' && age.field === 'dateOfBirth', 'age → dateOfBirth (derived)')
+  assert.ok(age!.derivation, 'derived field explains its derivation')
   assert.ok(
     !all.some((f) => f.location === 'members[].income[]' && f.field === 'memberId'),
     'implied income memberId back-link is not a consumer field'

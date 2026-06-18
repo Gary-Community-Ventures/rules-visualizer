@@ -12,6 +12,18 @@ import './helpers.js'
 import { translateRequest } from '../src/translate/v2-request.js'
 
 const model = getRuleset('snap-complete')!
+const ASOF = new Date('2026-06-18T00:00:00Z')
+
+test('derived dateOfBirth computes age at the engine path', () => {
+  const { inputs } = translateRequest(
+    { members: [{ id: 'head', dateOfBirth: '1990-03-15' }] },
+    model,
+    ASOF
+  )
+  const head = (inputs['/members'] as Array<Record<string, unknown>>)[0]
+  assert.equal(head['/members/*/age'], 36) // born 1990-03-15, as of 2026-06-18
+  assert.ok(!('/members/*/dateOfBirth' in head), 'dateOfBirth is not an engine field')
+})
 
 test('member fields map to engine paths; enums are cased; no-guess', () => {
   const { inputs, memberIds } = translateRequest(
@@ -19,20 +31,19 @@ test('member fields map to engine paths; enums are cased; no-guess', () => {
       members: [
         {
           id: 'head',
-          age: 35,
           citizenshipImmigrationStatus: 'citizen',
           isHeadOfHousehold: true,
         },
       ],
     },
-    model
+    model,
+    ASOF
   )
   assert.deepEqual(memberIds, ['head'])
   const rows = inputs['/members'] as Array<Record<string, unknown>>
   assert.equal(rows.length, 1)
   const head = rows[0]
   assert.equal(head.id, 'head')
-  assert.equal(head['/members/*/age'], 35)
   // snake_case → engine PascalCase enum option.
   assert.equal(head['/members/*/citizenshipImmigrationStatus'], 'Citizen')
   assert.equal(head['/members/*/isHeadOfHousehold'], true)
@@ -48,7 +59,8 @@ test('references resolve to positional #N', () => {
         { id: 'spouse', spouseId: 'head' },
       ],
     },
-    model
+    model,
+    ASOF
   )
   const rows = inputs['/members'] as Array<Record<string, unknown>>
   assert.equal(rows[0]['/members/*/spouseId'], '#1') // head → spouse (index 1)
@@ -65,7 +77,8 @@ test('nested income rows flatten to /incomes with a memberId backlink', () => {
         },
       ],
     },
-    model
+    model,
+    ASOF
   )
   const incomes = inputs['/incomes'] as Array<Record<string, unknown>>
   assert.equal(incomes.length, 1)
@@ -78,7 +91,8 @@ test('nested income rows flatten to /incomes with a memberId backlink', () => {
 test('household scalars map to top-level inputs; unknown fields warn, not throw', () => {
   const { inputs, warnings } = translateRequest(
     { household: { livesInApplicationCounty: true, notARealField: 1 } },
-    model
+    model,
+    ASOF
   )
   assert.equal(inputs['/livesInApplicationCounty'], true)
   assert.ok(warnings.some((w) => w.includes('notARealField')), 'unknown field is warned')

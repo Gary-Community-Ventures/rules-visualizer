@@ -77,9 +77,11 @@ export type EngineInputField = {
   location: string
   /** The rule author's display name. */
   name: string
-  kind: 'applicant' | 'reference'
+  kind: 'applicant' | 'reference' | 'derived'
   type: string
   programs: string[]
+  /** For `derived` fields: how the engine computes its internal fact. */
+  derivation?: string
   definition?: string
   /** snake_case enum values when the input is enum-typed. */
   values?: string[]
@@ -134,9 +136,10 @@ export function buildEngineInputs(): EngineInputsDoc {
       field: entry.field,
       location: entry.location,
       name: entry.name,
-      kind: entry.kind as 'applicant' | 'reference',
+      kind: entry.kind as 'applicant' | 'reference' | 'derived',
       type: entry.type,
       programs: RULESETS.map((r) => r.program).filter((p) => programs.has(p)),
+      derivation: entry.derivation,
       definition: node.description?.replace(/\s+/g, ' ').trim(),
       values: entry.values,
       citations: citations(node),
@@ -160,7 +163,9 @@ export function buildEngineInputs(): EngineInputsDoc {
     coverage:
       'SNAP is a near-complete implementation of the program, so its inputs are exhaustive. Medicaid is a basic, illustrative subset — its input list is a sketch, not the full program. SNAP and Medicaid model some shared concepts (age, disability, income) with different facts, so a concept can appear under each program.',
     kinds: {
-      applicant: 'A value you provide.',
+      applicant: 'A value you provide as-is.',
+      derived:
+        'You send an applicant-natural form (e.g. a date of birth) and the engine computes its internal fact; see the field’s derivation note.',
       reference:
         'A link to another row by its id (e.g. a member’s spouse, or a caregiver/dependent pairing).',
     },

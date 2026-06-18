@@ -3,7 +3,8 @@
   "about": "Canonical catalog of every input the eligibility API accepts. The rules engine is the source of truth: build your data model to match these fields. Each field is shown as you send it — a friendly name in a request location — with the rule author’s name, definition, enum vocabulary, and policy citations taken directly from the rules. `enginePath` is the internal Fact Graph path it maps to, for traceability only.",
   "coverage": "SNAP is a near-complete implementation of the program, so its inputs are exhaustive. Medicaid is a basic, illustrative subset — its input list is a sketch, not the full program. SNAP and Medicaid model some shared concepts (age, disability, income) with different facts, so a concept can appear under each program.",
   "kinds": {
-    "applicant": "A value you provide.",
+    "applicant": "A value you provide as-is.",
+    "derived": "You send an applicant-natural form (e.g. a date of birth) and the engine computes its internal fact; see the field’s derivation note.",
     "reference": "A link to another row by its id (e.g. a member’s spouse, or a caregiver/dependent pairing)."
   },
   "groups": [
@@ -11,16 +12,17 @@
       "title": "Member",
       "fields": [
         {
-          "requestPath": "members[].age",
-          "field": "age",
+          "requestPath": "members[].dateOfBirth",
+          "field": "dateOfBirth",
           "location": "members[]",
-          "name": "Age",
-          "kind": "applicant",
-          "type": "Int",
+          "name": "Date of birth",
+          "kind": "derived",
+          "type": "Date",
           "programs": [
             "SNAP",
             "Medicaid"
           ],
+          "derivation": "You send a date of birth; the engine computes age in whole years as of the evaluation date (a raw age would go stale on re-evaluation).",
           "definition": "Age of this member in years. If their birthday occurs in the middle of a month, use the age they were when the month began (the last day of the previous month).",
           "citations": [],
           "enginePath": "/members/*/age"
@@ -1980,15 +1982,16 @@
           "enginePath": "/members/*/receivesSsi"
         },
         {
-          "requestPath": "members[].daysSincePregnancy",
-          "field": "daysSincePregnancy",
+          "requestPath": "members[].pregnancyEndDate",
+          "field": "pregnancyEndDate",
           "location": "members[]",
-          "name": "Days Since Pregnancy",
-          "kind": "applicant",
-          "type": "Int",
+          "name": "Pregnancy end date",
+          "kind": "derived",
+          "type": "Date",
           "programs": [
             "Medicaid"
           ],
+          "derivation": "You send the date the pregnancy ended; the engine computes days-since as of the evaluation date.",
           "definition": "Days since this member's pregnancy ended (used for postpartum coverage).",
           "citations": [],
           "enginePath": "/members/*/daysSincePregnancy"

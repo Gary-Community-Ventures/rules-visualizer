@@ -22,7 +22,7 @@
  */
 import type { Model, ModelNode } from 'rules-visualizer-shared-types'
 
-export type FieldKind = 'applicant' | 'reference' | 'implied'
+export type FieldKind = 'applicant' | 'reference' | 'implied' | 'derived'
 
 export type FieldEntry = {
   location: string
@@ -32,6 +32,36 @@ export type FieldEntry = {
   type: string
   kind: FieldKind
   values?: string[]
+  /** Present for `derived` fields: how the engine turns the applicant-natural
+   *  value into its internal fact. */
+  derivation?: string
+}
+
+/**
+ * Curated `derived` overrides: a few engine writables are awkward or unstable
+ * to send raw, so the DTO exposes an applicant-natural field instead and the
+ * adapter computes the writable. Kept deliberately tiny — only facts that would
+ * go stale if stored (a raw `age`) or that read better as a date. The matching
+ * compute functions live in v2-request.ts.
+ */
+const DERIVED_OVERRIDES: Record<
+  string,
+  { field: string; name: string; type: string; derivation: string }
+> = {
+  '/members/*/age': {
+    field: 'dateOfBirth',
+    name: 'Date of birth',
+    type: 'Date',
+    derivation:
+      'You send a date of birth; the engine computes age in whole years as of the evaluation date (a raw age would go stale on re-evaluation).',
+  },
+  '/members/*/daysSincePregnancy': {
+    field: 'pregnancyEndDate',
+    name: 'Pregnancy end date',
+    type: 'Date',
+    derivation:
+      'You send the date the pregnancy ended; the engine computes days-since as of the evaluation date.',
+  },
 }
 
 /** Engine collection prefix → request location. Most specific first. */
@@ -90,7 +120,21 @@ export function indexForModel(model: Model): FieldEntry[] {
       label?: string
     }
     if (c.type !== 'writable' || !c.path || c.typeName === 'Collection') continue
-    const { location, field } = locationAndField(c.path)
+    const { location } = locationAndField(c.path)
+    const override = DERIVED_OVERRIDES[c.path]
+    if (override) {
+      out.push({
+        location,
+        field: override.field,
+        enginePath: c.path,
+        name: override.name,
+        type: override.type,
+        kind: 'derived',
+        derivation: override.derivation,
+      })
+      continue
+    }
+    const { field } = locationAndField(c.path)
     out.push({
       location,
       field,

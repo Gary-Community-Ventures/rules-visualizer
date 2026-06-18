@@ -354,6 +354,7 @@ const engineInputsHtml = `<!DOCTYPE html>
         <select id="kind">
           <option value="">All kinds</option>
           <option value="applicant">applicant</option>
+          <option value="derived">derived</option>
           <option value="reference">reference</option>
         </select>
         <span class="count" id="count"></span>
@@ -392,6 +393,7 @@ const engineInputsHtml = `<!DOCTYPE html>
             '<code class="field">' + esc(apiField) + '</code>' +
             '<div class="badges">' + badges + '</div>' +
             (f.definition ? '<div class="def">' + esc(f.definition) + '</div>' : '') +
+            (f.derivation ? '<div class="note">Derived: ' + esc(f.derivation) + '</div>' : '') +
             values +
             (f.citations.length ? '<div class="cite">' + esc(citeText(f.citations)) + '</div>' : '') +
             '<div class="cite">engine path: <code>' + esc(f.enginePath) + '</code></div>'
