@@ -1,11 +1,11 @@
 /**
- * v2 draft-proposal surface.
+ * v2 engine-shaped surface.
  *
- * Serves the proposed contract revision (see v2-openapi.ts) at
- * /v2/eligibility/openapi.{json,yaml} + /docs — public, like the other
- * contract docs. The evaluate endpoints exist as 501 stubs (mounted behind
- * auth in server.ts) so a caller who tries the draft gets a clear pointer
- * to the implemented v1 surface rather than a 404.
+ * Serves the v2 contract (see v2-openapi.ts) at /v2/eligibility/openapi.{json,yaml}
+ * + /docs — public, like the other contract docs. /evaluate/determination is
+ * implemented (mounted ahead of these stubs in server.ts); the other evaluate
+ * tails (expedited-screening, medicaid-ex-parte) are not built yet and stub to
+ * 501 with a pointer to the implemented v1 surface.
  */
 import { Router } from 'express'
 import swaggerUi from 'swagger-ui-express'
@@ -33,28 +33,26 @@ v2DocsRouter.use(
   '/docs',
   swaggerUi.serveFiles(document),
   swaggerUi.setup(document, {
-    customSiteTitle: 'Eligibility Adapter API v2 (draft) — docs',
+    customSiteTitle: 'Eligibility API v2 (engine-shaped) — docs',
     swaggerOptions: { defaultModelsExpandDepth: -1, docExpansion: 'list' },
   })
 )
 
-/** Authed: the three evaluate endpoints, stubbed 501 until the proposal is
- *  reviewed and implemented. */
+/** Authed: the not-yet-built evaluate tails, stubbed 501. (/evaluate/determination
+ *  is the real endpoint, mounted ahead of this router in server.ts, so its
+ *  stub here is shadowed.) */
 export const v2StubsRouter = Router()
 
-for (const tail of [
-  '/evaluate/determination',
-  '/evaluate/expedited-screening',
-  '/evaluate/medicaid-ex-parte',
-]) {
+for (const tail of ['/evaluate/expedited-screening', '/evaluate/medicaid-ex-parte']) {
   v2StubsRouter.post(tail, (_req, res) => {
     res.status(501).json({
       type: 'https://tools.ietf.org/html/rfc9457',
-      title: 'Draft proposal — not implemented',
+      title: 'Not yet implemented',
       status: 501,
       detail:
-        'The v2 contract is a draft proposal under review (see /v2/eligibility/docs). ' +
-        'The implemented surface is /v1/eligibility' + tail + '.',
+        'This v2 endpoint is not built yet. The implemented surface is /v1/eligibility' +
+        tail +
+        '.',
     })
   })
 }

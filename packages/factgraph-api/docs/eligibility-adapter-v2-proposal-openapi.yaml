@@ -3,1098 +3,32 @@
 # Regenerate: npm run gen:openapi --workspace=rules-visualizer-factgraph-api
 openapi: 3.1.0
 info:
-  title: Eligibility Adapter API — v2 draft proposal
-  version: 2.0.0-draft.1
+  title: Eligibility API — v2 (engine-shaped)
+  version: 2.0.0
   description: |-
-    **Status: draft proposal for review — not an implemented surface.** The conformant v1 contract lives at `/v1/eligibility` and is unaffected.
+    The engine-shaped eligibility contract served at `/v2/eligibility`. The rules engine is the source of truth; build your data model to match these fields.
 
-    A proposed revision of the eligibility-adapter contract, addressing the gaps documented in `docs/contract-gap-analysis.md` and `docs/request-field-proposal.md`:
+    - **Friendly fields, no internals** — named fields in nested collections (`members[].income[]`), snake_case enums, no Fact Graph paths or wildcards.
+    - **One call, every program** — one household payload + `programs[]` → a unified `determinations[]` (household-scoped for SNAP, one per member for Medicaid).
+    - **No-guess** — nothing applicant-material is defaulted; what is missing comes back as `pending` + `missingInputs`, in the same request vocabulary, so you know exactly what to send next.
 
-    1. **No-guess policy** — applicant-material facts and verification findings are never defaulted; what is missing comes back as `pending` + `missingInformation`.
-    2. **The request can carry a real determination** — domain-shaped member, household, and application-context fields for everything the rules consume.
-    3. **Medicaid cardinality fixed** — household in, per-member decisions out (or one member via `subjectMemberId`).
-    4. **One response shape for every program** — a `DeterminationResponse` whose `decisions[]` entries carry a `scope` (`household` for SNAP, `member` for medicaid/chip). Callers never branch on program to know the schema.
-    5. **The response can express the outcome** — `benefitAmount`, `missingInformation`, `explanation` as first-class fields; `status` adds `not_supported`; `path` adds `ex_parte`.
-    6. **Ex parte fully specified** — including proposed serviceResult payload shapes where the upstream schemas are currently stubs.
-
-    Like v1, this contract is path-free: no rules-engine internals anywhere.
-
-    **Field semantics:** every request field is defined in the generated [input dictionary](https://github.com/Gary-Community-Ventures/rules-visualizer/blob/main/packages/factgraph-api/docs/input-dictionary.md) — rule-author-written definitions, full enum vocabularies (including the open-string `detailType` value sets), policy citations, and which programs consume each field. Group schemas carry a `Programs:` tag inline.
+    **Every field** — its type, enum vocabulary, and policy citation — is in the generated catalog: https://gary-community-ventures.github.io/rules-visualizer/engine-inputs.html (machine-readable JSON alongside it). This spec documents the request/response shape; the catalog is the field list, so they cannot drift.
   license:
     name: MPL-2.0
 servers:
   - url: https://rules-visualizer-factgraph-api-f0c14673cf3a.herokuapp.com
-    description: Production (serves this spec; endpoints return 501 until the
-      proposal is reviewed)
+    description: Production
   - url: http://localhost:5002
     description: Local dev
 tags:
-  - name: Eligibility v2 (draft)
-    description: Proposed revision — for review, not yet implemented.
+  - name: Eligibility v2
+    description: Engine-shaped eligibility determination.
 components:
   securitySchemes:
     bearerAuth:
       type: http
       scheme: bearer
-      description: Required on evaluate endpoints when a token is configured.
   schemas:
-    Pregnancy:
-      type: object
-      properties:
-        isPregnant:
-          type: boolean
-        expectedChildren:
-          type: integer
-          description: Children expected from the current pregnancy; adds to household
-            size for FPL.
-        endDate:
-          type: string
-          format: date
-          description: Date a recent pregnancy ended; drives postpartum coverage windows.
-      description: "Pregnancy status. Programs: SNAP, Medicaid. Absent fields are
-        unknown (never guessed) and may produce `pending`."
-    VeteranStatus:
-      type: object
-      properties:
-        isVeteran:
-          type: boolean
-        hasDisability:
-          type: boolean
-        needsAidAndAttendance:
-          type: boolean
-        survivorNeedsAidAndAttendance:
-          type: boolean
-        survivorHasDisability:
-          type: boolean
-      description: "Veteran status and related disability/survivor flags. Programs:
-        SNAP, Medicaid."
-    StudentStatus:
-      type: object
-      properties:
-        enrollment:
-          type: string
-          enum:
-            - full_time
-            - half_time
-            - less_than_half_time_or_not_enrolled
-        inK12:
-          type: boolean
-        inWorkStudy:
-          type: boolean
-        assignedByEmploymentTrainingProgram:
-          type: boolean
-        unfitForEmployment:
-          type: boolean
-      description: "Student enrollment status and student-eligibility exemption flags.
-        Programs: SNAP, Medicaid."
-    DisabilityDetails:
-      type: object
-      properties:
-        types:
-          type: array
-          items:
-            type: string
-            enum:
-              - physical
-              - mental
-        isIncapacitated:
-          type: boolean
-        unableToPrepareMeals:
-          type: boolean
-        receivesDisabilityBenefits:
-          type: boolean
-        receivesPublicDisabilityPension:
-          type: boolean
-        receivesRailroadRetirementDisability:
-          type: boolean
-        receivesInterimAssistance:
-          type: boolean
-        ssiApplicationPending:
-          type: boolean
-        inVocationalRehabilitation:
-          type: boolean
-        hasDisabledChild:
-          type: boolean
-      description: "Refines the coarse `isDisabled` with the distinctions program
-        rules require — isDisabled alone is ambiguous (SNAP and Medicaid use
-        different legal definitions of disability; both derive from these
-        facts). Programs: SNAP, Medicaid."
-    LivingSituation:
-      type: object
-      properties:
-        settings:
-          type: array
-          items:
-            type: string
-            enum:
-              - boarding_house
-              - institution
-              - federally_subsidized_elderly_housing
-              - substance_abuse_treatment_facility
-              - homeless_shelter
-              - group_living_arrangement
-              - battered_persons_shelter
-          description: Living settings that currently apply (several can co-occur).
-        isExperiencingHomelessness:
-          type: boolean
-        isBoarder:
-          type: boolean
-        isRoomer:
-          type: boolean
-        isLiveInAttendant:
-          type: boolean
-        isSeparateAndApart:
-          type: boolean
-        preparesFoodWithHousehold:
-          type: boolean
-        recentlyReleasedFromInstitution:
-          type: boolean
-        participatesInAnotherHousehold:
-          type: boolean
-      description: "Living arrangement facts that drive household-composition rules
-        (SNAP composes its household unit from these — e.g.
-        preparesFoodWithHousehold). Programs: SNAP."
-    StrikerStatus:
-      type: object
-      properties:
-        isStriker:
-          type: boolean
-        eligibleDayBeforeStrike:
-          type: boolean
-        exemptFromRegistrationDayBeforeStrike:
-          type: boolean
-      description: Labor-dispute status.
-    WorkRequirements:
-      type: object
-      properties:
-        registeredForWork:
-          type: boolean
-        providedEmploymentInfo:
-          type: boolean
-        reportedToReferredEmployer:
-          type: boolean
-        inEmploymentTrainingProgram:
-          type: boolean
-        appliedForOrReceivingUnemployment:
-          type: boolean
-        inDrugOrAlcoholTreatment:
-          type: boolean
-        complyingWithOtherWorkProgram:
-          type: boolean
-        abawdWaiverExempt:
-          type: boolean
-        abawdStateExemption:
-          type: boolean
-        abawdWorkProgramHoursPerWeek:
-          type: number
-        abawdCountableMonthsUsed:
-          type: integer
-        participatesInWorkfare:
-          type: boolean
-        unableToMaintainEmployment:
-          type: boolean
-        impactedByDomesticViolence:
-          type: boolean
-        temporaryConditionPreventsWork:
-          type: boolean
-        otherUnfitnessReason:
-          type: boolean
-        isMigrantFarmWorker:
-          type: boolean
-        striker:
-          $ref: "#/components/schemas/StrikerStatus"
-      description: "Work registration, ABAWD, and work-requirement exemption facts.
-        Programs: SNAP."
-    SponsorInfo:
-      type: object
-      properties:
-        memberId:
-          type: string
-          description: Sponsor, when a household member.
-        isOrganization:
-          type: boolean
-        dependentCount:
-          type: integer
-        otherSponsoredNonCitizens:
-          type: integer
-      description: Sponsor details for sponsored non-citizens (deeming rules).
-    ImmigrationDetails:
-      type: object
-      properties:
-        qualifiedYearsInUs:
-          type: integer
-        qualifyingWorkQuarters:
-          type: integer
-        lawfullyResidedSince1996Senior:
-          type: boolean
-        qualifyingMilitaryConnection:
-          type: boolean
-        sponsor:
-          $ref: "#/components/schemas/SponsorInfo"
-      description: "Immigration detail beyond status — waiting-period and deeming
-        inputs. Programs: SNAP."
-    Findings:
-      type: object
-      properties:
-        ipvDisqualification:
-          type: boolean
-        snapDrugFelonyConviction:
-          type: boolean
-        ssnNonCompliance:
-          type: boolean
-        workRequirementsNonCooperation:
-          type: boolean
-        voluntaryQuit:
-          type: boolean
-        voluntaryQuitReason:
-          type: string
-          enum:
-            - discrimination
-            - unreasonable_work_conditions
-            - new_employment_or_schooling
-            - household_move_for_job_or_schooling
-            - recognized_retirement_under_sixty
-            - unsuitable_employment
-            - accepted_full_time_employment_did_not_materialize
-            - patterns_of_employment
-            - illness_of_head_of_household
-            - illness_of_other_household_member
-            - household_emergency
-            - unavailable_transportation
-            - employer_demands_reduction
-            - lack_of_adequate_child_care
-            - striking_government_employee
-            - other
-        qualityAssuranceNonCooperation:
-          type: boolean
-        felonyNonCompliance:
-          type: boolean
-        paroleOrProbationViolation:
-          type: boolean
-        isFleeingFelon:
-          type: boolean
-        sanctionImposed:
-          type: boolean
-      description: "Caseworker/records-check verification OUTCOMES — these do not
-        exist until verified and are never defaulted. A determination that needs
-        one that is absent returns `pending` with the field in
-        `missingInformation`. (Open question: these could alternatively ride
-        `verificationSummary` with result values.) Programs: SNAP."
-    Income:
-      type: object
-      properties:
-        type:
-          type: string
-          enum:
-            - employed
-            - self_employed
-            - unearned
-        unearnedType:
-          type: string
-        incomeBasis:
-          type: string
-          enum:
-            - net
-            - gross
-          description: Carried from the published contract for compatibility; not consumed
-            by the rules today.
-        amount:
-          type: number
-        frequency:
-          type: string
-          enum: &a1
-            - hourly
-            - daily
-            - weekly
-            - every_2_weeks
-            - twice_a_month
-            - monthly
-            - yearly
-        payDate:
-          type: string
-          format: date
-        monthsIntended:
-          type: integer
-        receivedBeforeSnapParticipation:
-          type: boolean
-        isWorkSupplementation:
-          type: boolean
-        fromTerminatedSource:
-          type: boolean
-          description: Destitute-household income rules.
-        fromNewSource:
-          type: boolean
-        excludedIncomeType:
-          type: string
-          description: Specific excluded-income category from the rules vocabulary, when
-            applicable.
-        needBasedNonprofitCashDonationQuarterlyExclusionUsed:
-          type: number
-          description: Exclusion amount already used this quarter for need-based nonprofit
-            cash donations (case history).
-        indianTrustRestrictedLandInterestAnnualExclusionUsed:
-          type: number
-          description: Exclusion amount already used this year for Indian trust /
-            restricted-land interest income (case history).
-      required:
-        - type
-        - amount
-        - frequency
-      description: One income source. Absence of income rows means "no income
-        reported" (documented semantics, not a guess).
-    UtilityDetails:
-      type: object
-      properties:
-        separateHeatingCoolingCosts:
-          type: boolean
-        privateRentalBilledForHeatingCooling:
-          type: boolean
-        sharedResidencePaysPortion:
-          type: boolean
-        publicHousingExcessCosts:
-          type: boolean
-      description: Heating/cooling cost attribution — drives the utility allowance.
-    Expense:
-      type: object
-      properties:
-        category:
-          type: string
-          enum:
-            - housing
-            - utilities
-            - childcare
-            - medical
-            - dependent_care
-            - child_support_paid
-            - other
-        detailType:
-          type: string
-          description: Finer-grained expense type from the rules vocabulary (e.g.
-            heating_fuel, medicare_premium); overrides the coarse category
-            mapping.
-        amount:
-          type: number
-        frequency:
-          type: string
-          enum: *a1
-        reimbursementAmount:
-          type: number
-        shouldAverage:
-          type: boolean
-        monthsIntended:
-          type: integer
-        forWorkTrainingOrEducation:
-          type: boolean
-        paidOutsideHousehold:
-          type: boolean
-        forClaimableShelterResidence:
-          type: boolean
-        dependentCareMileage:
-          type: integer
-        medicalMileage:
-          type: integer
-        utilityDetails:
-          $ref: "#/components/schemas/UtilityDetails"
-      required:
-        - category
-        - amount
-        - frequency
-      description: One expense.
-    Asset:
-      type: object
-      properties:
-        type:
-          type: string
-          enum:
-            - liquid
-            - vehicle
-            - real_property
-            - retirement_account
-            - life_insurance
-            - other
-        detailType:
-          type: string
-          description: Finer-grained resource type from the rules vocabulary (e.g.
-            checking_account, roth_ira, burial_plot).
-        value:
-          type: number
-        excludedResourceType:
-          type: string
-        description:
-          type: string
-      required:
-        - type
-        - value
-      description: One asset/resource.
-    GoodCause:
-      type: object
-      properties:
-        wagesBelowApplicableMinimum:
-          type: boolean
-        pieceRateYieldBelowApplicableWage:
-          type: boolean
-        requiresLaborOrganizationAction:
-          type: boolean
-        worksiteSubjectToStrikeOrLockout:
-          type: boolean
-        unreasonableHealthSafetyRisk:
-          type: boolean
-        physicallyOrMentallyUnfit:
-          type: boolean
-        outsideMajorFieldDuringInitialThirtyDays:
-          type: boolean
-        unreasonableDistance:
-          type: boolean
-        dailyCommuteExceedsTwoHours:
-          type: boolean
-        noTransportationForNonWalkingDistance:
-          type: boolean
-        interferesWithReligiousObservance:
-          type: boolean
-        offerAccepted:
-          type: boolean
-      description: '"Good cause" job-refusal/quit conditions for work requirements.'
-    Employment:
-      type: object
-      properties:
-        status:
-          type: string
-          enum:
-            - full_time
-            - part_time
-            - seasonal
-            - self_employed
-            - not_employed
-        hoursPerWeek:
-          type: number
-        abawdWorkType:
-          type: string
-          enum:
-            - compensated_work
-            - in_kind_work
-            - verified_unpaid_work
-            - other
-        isAtFederalMinimumWage:
-          type: boolean
-        isOnTheJobTraining:
-          type: boolean
-        goodCause:
-          $ref: "#/components/schemas/GoodCause"
-      description: One job, with the work-requirement detail SNAP needs.
-    MemberContext:
-      type: object
-      properties:
-        id:
-          type: string
-          description: Caller's stable handle; echoed on per-member results.
-        dateOfBirth:
-          type: string
-          format: date
-        citizenshipStatus:
-          type: string
-          enum:
-            - us_citizen
-            - us_national
-            - non_citizen
-        immigrationStatus:
-          type: string
-          enum:
-            - lawful_permanent_resident
-            - refugee
-            - asylee
-            - deportation_withheld
-            - parolee
-            - conditional_entrant
-            - cuban_haitian_entrant
-            - amerasian
-            - battered_non_citizen
-            - trafficking_victim
-            - temporary_protected_status
-            - iraqi_or_afghan_special_immigrant
-            - american_indian_born_abroad
-            - hmong_or_highland_laotian_tribal_member
-            - other
-        immigrationDetails:
-          $ref: "#/components/schemas/ImmigrationDetails"
-        relationshipToHead:
-          type: string
-          enum:
-            - head_of_household
-            - spouse
-            - partner
-            - child
-            - parent
-            - sibling
-            - grandparent
-            - grandchild
-            - other_relative
-            - non_relative
-        spouseId:
-          type: string
-        isDisabled:
-          type: boolean
-          description: PROPOSED FOR CONSOLIDATION into `disabilityDetails`. A single
-            boolean is ambiguous across programs — SNAP and Medicaid apply
-            different legal definitions of disability — so we propose carrying
-            the observable facts each definition derives from instead. Still
-            accepted (and mapped coarsely, with the assumption disclosed) for
-            callers sending the published-contract shape.
-          x-supersededBy: disabilityDetails
-        disabilityDetails:
-          $ref: "#/components/schemas/DisabilityDetails"
-        pregnancy:
-          $ref: "#/components/schemas/Pregnancy"
-        veteranStatus:
-          $ref: "#/components/schemas/VeteranStatus"
-        studentStatus:
-          $ref: "#/components/schemas/StudentStatus"
-        livingSituation:
-          $ref: "#/components/schemas/LivingSituation"
-        workRequirements:
-          $ref: "#/components/schemas/WorkRequirements"
-        findings:
-          $ref: "#/components/schemas/Findings"
-        receivesTanf:
-          type: boolean
-        isEmancipated:
-          type: boolean
-        isFosterChild:
-          type: boolean
-        wasInFosterCareOn18thBirthday:
-          type: boolean
-        receivesFamilyPreservationServices:
-          type: boolean
-        programs:
-          type: array
-          items:
-            type: string
-            enum: &a2
-              - snap
-              - medicaid
-              - chip
-              - tanf
-              - ccdf
-        income:
-          type: array
-          items:
-            $ref: "#/components/schemas/Income"
-        expenses:
-          type: array
-          items:
-            $ref: "#/components/schemas/Expense"
-        assets:
-          type: array
-          items:
-            $ref: "#/components/schemas/Asset"
-        employment:
-          type: array
-          items:
-            $ref: "#/components/schemas/Employment"
-      required:
-        - id
-        - dateOfBirth
-      description: "A household member. Only `id` and `dateOfBirth` are required.
-        Every other field is optional — but under the no-guess policy, absent
-        applicant-material facts are UNKNOWN, not defaulted: if the
-        determination needs one, the response is `pending` with the field in
-        `missingInformation`."
-    CaregiverRelationship:
-      type: object
-      properties:
-        caregiverId:
-          type: string
-        dependentId:
-          type: string
-        isParent:
-          type: boolean
-        isNonparentParentalControl:
-          type: boolean
-        providesMostOfCare:
-          type: boolean
-        adequateChildcareUnavailable:
-          type: boolean
-        claimedForWorkExemption:
-          type: boolean
-      required:
-        - caregiverId
-        - dependentId
-      description: "A caregiver→dependent relationship (work-requirement exemptions).
-        Programs: SNAP."
-    Household:
-      type: object
-      properties:
-        size:
-          type: integer
-        housingCosts:
-          type: number
-          description: PROPOSED FOR CONSOLIDATION into per-member `expenses[]` (category
-            housing), which is what the rules consume. Still accepted — when
-            sent without a covering expense, the adapter applies it as a monthly
-            housing expense.
-          x-supersededBy: members[].expenses[] (category housing)
-        utilityCosts:
-          type: number
-          description: PROPOSED FOR CONSOLIDATION into per-member `expenses[]` (category
-            utilities / a utility detailType). Still accepted.
-          x-supersededBy: members[].expenses[] (category utilities)
-        isMigrantOrSeasonalFarmWorker:
-          type: boolean
-          description: PROPOSED FOR CONSOLIDATION into
-            `workRequirements.isMigrantFarmWorker` — the rules evaluate
-            migrant/seasonal status per member. Still accepted.
-          x-supersededBy: members[].workRequirements.isMigrantFarmWorker
-        expectsShelterCosts:
-          type: boolean
-        previousSubstantialLotteryWinnings:
-          type: boolean
-        participatesInCommodityFoodProgram:
-          type: boolean
-        receivesEnergyAssistance:
-          type: boolean
-        receivedEmergencyBenefits:
-          type: boolean
-        caregiverRelationships:
-          type: array
-          items:
-            $ref: "#/components/schemas/CaregiverRelationship"
-      description: Household-level data.
-    ApplicationContext:
-      type: object
-      properties:
-        filingDate:
-          type: string
-          format: date
-          description: "Absent: today."
-        benefitMonth:
-          type: string
-          format: date
-          description: "Absent: current month."
-        certificationPeriodStartDate:
-          type: string
-          format: date
-          description: "Absent: benefitMonth."
-        isRecertification:
-          type: boolean
-          description: "Absent: false (new application)."
-        receivedSnapInLast30Days:
-          type: boolean
-          description: "Absent: unknown → pending (case history the state system knows)."
-        normalIssuanceCycleDate:
-          type: string
-          format: date
-        livesInApplicationCounty:
-          type: boolean
-          description: "Absent: true."
-        hasNearbyCountyArrangement:
-          type: boolean
-        disasterDeclarationActive:
-          type: boolean
-          description: "Operating-environment flag; absent: false."
-        dSnapActive:
-          type: boolean
-        temporaryEmergencyActive:
-          type: boolean
-        inadvertentHouseholdErrorClaim:
-          type: boolean
-      description: Case metadata set by the integrating system — the one place absence
-        has DOCUMENTED default semantics ("evaluate as of now, new application,
-        normal operating conditions") rather than producing pending.
-    VerificationSummaryEntry:
-      type: object
-      properties:
-        memberId:
-          type: string
-        type:
-          type: string
-          description: The verification obligation this entry tracks.
-        status:
-          type: string
-          enum:
-            - pending
-            - inconclusive
-            - satisfied
-            - waived
-            - cannot_verify
-      required:
-        - status
-      description: Status of one verification obligation.
-    DeterminationRequest:
-      type: object
-      properties:
-        metadata:
-          type: object
-          additionalProperties: {}
-          description: Opaque correlation context, echoed back unchanged; never inspected.
-        program:
-          type: string
-          enum: *a2
-        applicationContext:
-          $ref: "#/components/schemas/ApplicationContext"
-        household:
-          $ref: "#/components/schemas/Household"
-        members:
-          type: array
-          items:
-            $ref: "#/components/schemas/MemberContext"
-          minItems: 1
-        subjectMemberId:
-          type: string
-          description: "Per-member programs (medicaid): return only this member's
-            decision, computed against the full household. Omit to receive every
-            member's decision."
-        verificationSummary:
-          type: array
-          items:
-            $ref: "#/components/schemas/VerificationSummaryEntry"
-      required:
-        - metadata
-        - program
-        - household
-        - members
-      description: Determination request. ALWAYS household-shaped — per-member
-        programs still require household context (MAGI eligibility depends on
-        household size + income).
-      example: &a3
-        metadata:
-          intake:
-            applicationId: app-123
-          eligibility:
-            caseId: case-456
-        program: snap
-        applicationContext:
-          filingDate: 2026-06-01
-          benefitMonth: 2026-06-01
-          isRecertification: false
-          receivedSnapInLast30Days: false
-        household:
-          size: 2
-          housingCosts: 800
-          utilityCosts: 150
-          expectsShelterCosts: true
-          caregiverRelationships:
-            - caregiverId: head
-              dependentId: child
-              isParent: true
-              providesMostOfCare: true
-        members:
-          - id: head
-            dateOfBirth: 1990-03-15
-            citizenshipStatus: us_citizen
-            relationshipToHead: head_of_household
-            isDisabled: false
-            pregnancy:
-              isPregnant: false
-            veteranStatus:
-              isVeteran: false
-            studentStatus:
-              enrollment: less_than_half_time_or_not_enrolled
-            livingSituation:
-              preparesFoodWithHousehold: true
-              isExperiencingHomelessness: false
-            workRequirements:
-              registeredForWork: true
-              abawdCountableMonthsUsed: 0
-            findings:
-              ipvDisqualification: false
-              isFleeingFelon: false
-            receivesTanf: false
-            income:
-              - type: employed
-                amount: 1200
-                frequency: monthly
-                incomeBasis: gross
-            employment:
-              - status: part_time
-                hoursPerWeek: 30
-                abawdWorkType: compensated_work
-            expenses:
-              - category: housing
-                amount: 800
-                frequency: monthly
-                forClaimableShelterResidence: true
-            assets:
-              - type: liquid
-                detailType: checking_account
-                value: 500
-          - id: child
-            dateOfBirth: 2020-01-01
-            citizenshipStatus: us_citizen
-            relationshipToHead: child
-            studentStatus:
-              inK12: false
-        verificationSummary: []
-    MissingInformation:
-      type: object
-      properties:
-        field:
-          type: string
-          description: Domain field still needed (never an engine-internal path).
-        memberId:
-          type: string
-          description: Present when the field is member-scoped.
-        dataType:
-          type: string
-        options:
-          type: array
-          items:
-            type: string
-      required:
-        - field
-        - dataType
-      description: One piece of information still needed to reach a determination.
-    ExplanationStep:
-      type: object
-      properties:
-        factor:
-          type: string
-        outcome: {}
-      required:
-        - factor
-      description: One step of the domain-summarized "why" behind an outcome.
-    Decision:
-      type: object
-      properties:
-        scope:
-          type: string
-          enum:
-            - household
-            - member
-          description: What this decision applies to. Household-unit programs (SNAP) emit
-            one household-scoped decision; per-member programs (medicaid/chip)
-            emit one member-scoped decision per member. The scope is a property
-            of the program rules, not the request.
-        memberId:
-          type: string
-          description: Present iff scope is member.
-        status:
-          type: string
-          enum:
-            - pending
-            - approved
-            - denied
-            - ineligible
-            - not_supported
-          description: approved · denied (failed a test; appeal rights) · ineligible
-            (categorical bar) · pending (information missing — see
-            missingInformation) · not_supported (program recognized but not
-            implemented by this adapter).
-        path:
-          type: string
-          enum:
-            - auto
-            - manual
-            - ex_parte
-          description: auto — rules engine; manual — caseworker; ex_parte — determined
-            from already-available information.
-        denialReasonCode:
-          type: string
-          example: failed_gross_income_test
-        benefitAmount:
-          type: number
-          description: Monthly benefit when status is approved, for benefit-amount
-            programs (SNAP allotment).
-        proratedFirstMonthAmount:
-          type: number
-        medicaidCategory:
-          type: string
-          description: "Medicaid only: Infant | YoungChild | OlderChild | Adult | Pregnant
-            | SsiRecipient | Ineligible."
-        chpEligible:
-          type: boolean
-          description: "Medicaid only: CHP+ alternative eligibility."
-        explanation:
-          type: array
-          items:
-            $ref: "#/components/schemas/ExplanationStep"
-      required:
-        - scope
-        - status
-        - path
-      description: One eligibility decision. A single schema covers every program —
-        what varies is the scope and which outcome fields apply (documented per
-        field). Program-specific values never change the shape.
-    DeterminationResponse:
-      type: object
-      properties:
-        metadata:
-          type: object
-          additionalProperties: {}
-          description: Opaque correlation context, echoed back unchanged; never inspected.
-        program:
-          type: string
-          enum: *a2
-        decisions:
-          type: array
-          items:
-            $ref: "#/components/schemas/Decision"
-          description: "The decisions this evaluation produced: exactly one
-            household-scoped entry for household-unit programs (SNAP); one
-            member-scoped entry per member for per-member programs (medicaid) —
-            or a single entry when subjectMemberId was supplied."
-        missingInformation:
-          type: array
-          items:
-            $ref: "#/components/schemas/MissingInformation"
-          description: "Present when any decision is pending — exactly what is still
-            needed. The progressive-disclosure loop: supply these and re-call."
-        translationNotes:
-          type: array
-          items:
-            type: string
-          description: Lossy derivations the determination relied on (e.g. SSI inferred
-            from a conflated SSI/SSDI income type). Under the no-guess policy,
-            nothing here is a guessed fact.
-      required:
-        - metadata
-        - program
-        - decisions
-      description: The one determination response shape for every program. Callers
-        never branch on program to know the schema; they iterate decisions[].
-    ExpeditedScreeningRequest:
-      type: object
-      properties:
-        metadata:
-          type: object
-          additionalProperties: {}
-          description: Opaque correlation context, echoed back unchanged; never inspected.
-        applicationContext:
-          $ref: "#/components/schemas/ApplicationContext"
-        household:
-          $ref: "#/components/schemas/Household"
-        members:
-          type: array
-          items:
-            $ref: "#/components/schemas/MemberContext"
-          minItems: 1
-      required:
-        - metadata
-        - household
-        - members
-      description: Expedited SNAP screening (7 CFR §273.2(i)). Member/resource context
-        is required — first-class here, not an overlay.
-    ExpeditedScreeningResponse:
-      type: object
-      properties:
-        metadata:
-          type: object
-          additionalProperties: {}
-          description: Opaque correlation context, echoed back unchanged; never inspected.
-        expedited:
-          type: boolean
-        missingInformation:
-          type: array
-          items:
-            $ref: "#/components/schemas/MissingInformation"
-      required:
-        - metadata
-        - expedited
-      description: Expedited screening result.
-    FdshFtiResult:
-      type: object
-      properties:
-        taxYear:
-          type: integer
-        filingStatus:
-          type: string
-        householdSize:
-          type: integer
-          description: Tax-unit size (MAGI household ≈ tax unit).
-        earnedIncomeMonthly:
-          type: number
-        unearnedIncomeMonthly:
-          type: number
-      description: PROPOSED shape — the upstream serviceResult schema for fdsh_fti is
-        currently an empty stub. Offered as a starting point for the
-        data-exchange contract discussion.
-    FdshSsaResult:
-      type: object
-      properties:
-        ssiRecipient:
-          type: boolean
-        ssdiRecipient:
-          type: boolean
-        monthlyBenefitAmount:
-          type: number
-      description: PROPOSED shape — upstream schema is currently an empty stub.
-    ElectronicCheckResult:
-      type: object
-      properties:
-        serviceType:
-          type: string
-          enum:
-            - fdsh_ssa
-            - fdsh_vlp
-            - fdsh_fti
-            - fdsh_medicare
-            - fdsh_vci
-            - ssa_ievs
-            - irs_ievs
-            - swica
-            - uib
-            - save
-            - enrollment_check
-            - incarceration_check
-        result:
-          type: string
-          enum:
-            - conclusive
-            - inconclusive
-            - partial
-            - error
-        receivedAt:
-          type: string
-          format: date-time
-        serviceResult:
-          type: object
-          additionalProperties: {}
-          description: Service-specific payload. Polymorphic on serviceType — see
-            FdshFtiResult / FdshSsaResult for the proposed shapes this adapter
-            would consume.
-      required:
-        - serviceType
-        - result
-      description: Outcome of one data-exchange service call.
-    MedicaidExParteRequest:
-      type: object
-      properties:
-        metadata:
-          type: object
-          additionalProperties: {}
-          description: Opaque correlation context, echoed back unchanged; never inspected.
-        program:
-          type: string
-          enum:
-            - medicaid
-        household:
-          allOf:
-            - $ref: "#/components/schemas/Household"
-            - description: "REQUIRED here (a v2 change): MAGI eligibility needs household size
-                + income even for a single applicant."
-        members:
-          type: array
-          items:
-            $ref: "#/components/schemas/MemberContext"
-          minItems: 1
-        subjectMemberId:
-          type: string
-          description: The applicant being evaluated ex parte.
-        electronicChecks:
-          type: array
-          items:
-            $ref: "#/components/schemas/ElectronicCheckResult"
-          minItems: 1
-      required:
-        - metadata
-        - program
-        - household
-        - members
-        - subjectMemberId
-        - electronicChecks
-      description: "Ex parte evaluation (42 CFR §435.916): same MAGI determination,
-        different evidentiary pathway. Semantics: every check relevant to a fact
-        the determination depends on must be `conclusive`; otherwise the
-        response is `pending` (the applicant cannot be asked for documentation
-        on this pathway) and the case falls to the regular process."
     ProblemDetails:
       type: object
       properties:
@@ -1110,23 +44,257 @@ components:
         - type
         - title
         - status
-        - detail
-      description: RFC 9457 Problem Details error.
+      description: RFC 9457 Problem Details.
+    IncomeRow:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Caller handle for response correlation.
+        type:
+          type: string
+          description: snake_case income source (e.g. wages_and_salaries, ssi). See catalog.
+        amount:
+          type: number
+        frequency:
+          type: string
+          description: snake_case e.g. monthly, weekly, annual.
+      description: One income source for the member it nests under.
+    ExpenseRow:
+      type: object
+      properties:
+        id:
+          type: string
+      description: One expense for the member it nests under (fields per catalog).
+    JobRow:
+      type: object
+      properties:
+        id:
+          type: string
+      description: One job for the member it nests under (fields per catalog).
+    AssetRow:
+      type: object
+      properties:
+        id:
+          type: string
+      description: One asset for the member it nests under (fields per catalog).
+    Member:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Caller-assigned id; echoed as memberId on member-scoped
+            determinations and used by reference fields (spouseId, etc.).
+        dateOfBirth:
+          type: string
+          format: date
+          description: The engine derives age from this.
+        citizenshipImmigrationStatus:
+          type: string
+          description: snake_case enum; see catalog.
+        income:
+          type: array
+          items:
+            $ref: "#/components/schemas/IncomeRow"
+        expenses:
+          type: array
+          items:
+            $ref: "#/components/schemas/ExpenseRow"
+        jobs:
+          type: array
+          items:
+            $ref: "#/components/schemas/JobRow"
+        assets:
+          type: array
+          items:
+            $ref: "#/components/schemas/AssetRow"
+      required:
+        - id
+      description: A household member. The fields shown are the common/derived ones;
+        the full set of member fields is in the catalog
+        (https://gary-community-ventures.github.io/rules-visualizer/engine-inputs.html).
+        Unknown fields are ignored with a warning; absent fields are never
+        guessed.
+    CaregiverRelationship:
+      type: object
+      properties:
+        caregiverId:
+          type: string
+          description: A member's id.
+        dependentId:
+          type: string
+          description: A member's id.
+      description: A caregiver→dependent link between two members (fields per catalog).
+    DeterminationRequest:
+      type: object
+      properties:
+        metadata:
+          type: object
+          additionalProperties: {}
+          description: Opaque; echoed back, never inspected.
+        programs:
+          type: array
+          items:
+            type: string
+          description: Programs to evaluate (e.g. ["snap","medicaid"]). Omit to run every
+            supported program.
+        asOf:
+          type: string
+          format: date
+          description: Evaluation date; defaults to now.
+        household:
+          type: object
+          properties: {}
+          description: Household/application-level fields (per catalog).
+        members:
+          type: array
+          items:
+            $ref: "#/components/schemas/Member"
+        caregiverRelationships:
+          type: array
+          items:
+            $ref: "#/components/schemas/CaregiverRelationship"
+      description: One household payload for every program. Everything is optional but
+        a member `id`; an empty body is valid and returns every program pending
+        with the inputs it needs.
+    MissingInput:
+      type: object
+      properties:
+        requestPath:
+          type: string
+          description: Where to set the value in the request.
+          example: members[].isPregnant
+        field:
+          type: string
+        location:
+          type: string
+          example: members[]
+        type:
+          type: string
+          example: Boolean
+        label:
+          type: string
+          description: The rule author's display name.
+        options:
+          type: array
+          items:
+            type: string
+          description: Allowed values when the field is an enum.
+      required:
+        - requestPath
+        - field
+        - location
+        - type
+        - label
+      description: An input that would unlock or refine this determination, in the
+        request vocabulary.
+    ExplanationStep:
+      type: object
+      properties:
+        factor:
+          type: string
+        outcome: {}
+      required:
+        - factor
+      description: One factor in a path-free "why".
+    Determination:
+      type: object
+      properties:
+        program:
+          type: string
+        scope:
+          type: string
+          enum:
+            - household
+            - member
+          description: household (SNAP) or member (Medicaid, one per member).
+        memberId:
+          type: string
+          description: Set when scope is member — the caller-assigned member id.
+        status:
+          type: string
+          enum:
+            - approved
+            - denied
+            - ineligible
+            - pending
+            - not_supported
+        path:
+          type: string
+          enum:
+            - auto
+            - manual
+          description: auto = decided by the rules; manual reserved for
+            caseworker-verified determinations.
+        benefitAmount:
+          type: number
+          description: Monthly benefit when approved (SNAP allotment).
+        proratedFirstMonthAmount:
+          type: number
+        isExpedited:
+          type: boolean
+          description: "SNAP: expedited processing also applies."
+        medicaidCategory:
+          type: string
+        chpEligible:
+          type: boolean
+        denialReasonCode:
+          type: string
+          description: snake_case; present on denied/ineligible.
+        explanation:
+          type: array
+          items:
+            $ref: "#/components/schemas/ExplanationStep"
+          description: Path-free "why" for denials.
+        missingInputs:
+          type: array
+          items:
+            $ref: "#/components/schemas/MissingInput"
+          description: "Present when pending: exactly which fields to fill."
+        notes:
+          type: array
+          items:
+            type: string
+          description: Assumptions/translation notes.
+      required:
+        - program
+        - scope
+        - status
+      description: One program decision. One shape for household- and member-scoped
+        programs (no oneOf).
+    DeterminationResponse:
+      type: object
+      properties:
+        metadata:
+          type: object
+          additionalProperties: {}
+          description: Echoed from the request when present.
+        asOf:
+          type: string
+          format: date
+        determinations:
+          type: array
+          items:
+            $ref: "#/components/schemas/Determination"
+      required:
+        - asOf
+        - determinations
+      description: One unified response for every requested program.
   parameters: {}
 paths:
   /v2/eligibility/evaluate/determination:
     post:
-      summary: Final eligibility determination (no-guess).
-      description: "Household-shaped for every program, and one response shape for
-        every program: a DeterminationResponse whose decisions[] carry one
-        household-scoped entry (SNAP) or one member-scoped entry per member
-        (medicaid; or a single member via subjectMemberId). Nothing
-        applicant-material is defaulted: anything needed-but-absent yields
-        status pending + missingInformation. **Draft proposal — not yet
-        implemented.** The conformant v1 endpoint remains available under
-        /v1/eligibility."
+      summary: Eligibility determination (engine-shaped, no-guess).
+      description: "One household payload plus a list of programs, returning a
+        determination per program — household-scoped for SNAP, one per member
+        for Medicaid. Nothing applicant-material is defaulted: anything
+        needed-but-absent yields status `pending` and `missingInputs` listing
+        the exact fields to fill, in this same request vocabulary. Field
+        definitions and enum vocabularies:
+        https://gary-community-ventures.github.io/rules-visualizer/engine-input\
+        s.html."
       tags:
-        - Eligibility v2 (draft)
+        - Eligibility v2
       security:
         - bearerAuth: []
       requestBody:
@@ -1136,54 +304,26 @@ paths:
             schema:
               $ref: "#/components/schemas/DeterminationRequest"
             examples:
-              snap-household:
-                summary: SNAP — working household of 2
-                value: *a3
-              medicaid-household:
-                summary: Medicaid — pregnant head, infant, LPR grandparent on SSI
+              one household, both programs:
                 value:
                   metadata:
-                    intake:
-                      applicationId: app-789
-                    eligibility:
-                      caseId: case-1011
-                  program: medicaid
-                  household:
-                    size: 3
+                    caseId: abc-123
+                  programs:
+                    - snap
+                    - medicaid
                   members:
-                    - id: mom
-                      dateOfBirth: 1992-04-10
-                      citizenshipStatus: us_citizen
-                      relationshipToHead: head_of_household
-                      pregnancy:
-                        isPregnant: true
-                        expectedChildren: 1
+                    - id: head
+                      dateOfBirth: 1990-03-15
+                      citizenshipImmigrationStatus: citizen
+                      isHeadOfHousehold: true
                       income:
-                        - type: employed
-                          amount: 1800
+                        - type: wages_and_salaries
+                          amount: 1200
                           frequency: monthly
-                          incomeBasis: gross
-                      employment:
-                        - status: full_time
-                          hoursPerWeek: 40
-                    - id: baby
-                      dateOfBirth: 2025-09-01
-                      citizenshipStatus: us_citizen
-                      relationshipToHead: child
-                    - id: gran
-                      dateOfBirth: 1952-07-22
-                      citizenshipStatus: non_citizen
-                      immigrationStatus: lawful_permanent_resident
-                      relationshipToHead: parent
-                      income:
-                        - type: unearned
-                          unearnedType: ssi_or_ssdi
-                          amount: 900
-                          frequency: monthly
-                  verificationSummary: []
       responses:
         "200":
-          description: The unified DeterminationResponse — same schema for every program.
+          description: The unified determinations[] — one entry per requested program (per
+            member for Medicaid).
           content:
             application/json:
               schema:
@@ -1196,99 +336,6 @@ paths:
                 $ref: "#/components/schemas/ProblemDetails"
         "401":
           description: Authentication required.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ProblemDetails"
-        "501":
-          description: Draft proposal — not yet implemented.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ProblemDetails"
-  /v2/eligibility/evaluate/expedited-screening:
-    post:
-      summary: Expedited SNAP screening (7 CFR §273.2(i)).
-      description: Member/resource context first-class; missingInformation on the
-        response when the screen cannot be decided. **Draft proposal — not yet
-        implemented.** The conformant v1 endpoint remains available under
-        /v1/eligibility.
-      tags:
-        - Eligibility v2 (draft)
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/ExpeditedScreeningRequest"
-      responses:
-        "200":
-          description: Screening result.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ExpeditedScreeningResponse"
-        "400":
-          description: Invalid request.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ProblemDetails"
-        "401":
-          description: Authentication required.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ProblemDetails"
-        "501":
-          description: Draft proposal — not yet implemented.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ProblemDetails"
-  /v2/eligibility/evaluate/medicaid-ex-parte:
-    post:
-      summary: Medicaid ex parte evaluation.
-      description: "Same MAGI determination via the electronic-evidence pathway:
-        household context required, every relevant check must be conclusive or
-        the response is pending, and path is ex_parte (added to the DecisionPath
-        enum — the published contract's example already uses it). **Draft
-        proposal — not yet implemented.** The conformant v1 endpoint remains
-        available under /v1/eligibility."
-      tags:
-        - Eligibility v2 (draft)
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/MedicaidExParteRequest"
-      responses:
-        "200":
-          description: DeterminationResponse with one member-scoped decision for the
-            subject applicant.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/DeterminationResponse"
-        "400":
-          description: Invalid request.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ProblemDetails"
-        "401":
-          description: Authentication required.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ProblemDetails"
-        "501":
-          description: Draft proposal — not yet implemented.
           content:
             application/json:
               schema:
