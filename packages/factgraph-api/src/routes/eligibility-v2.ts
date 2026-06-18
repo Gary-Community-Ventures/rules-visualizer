@@ -15,17 +15,10 @@ import { getRuleset, getRawFacts } from 'rules-visualizer-factgraph-core'
 import { z } from 'zod'
 
 import { runQuery, type QueryResponse } from '../evaluate.js'
-import {
-  SNAP_RULESET_ID,
-  SNAP_DETERMINATION_TARGETS,
-  translateHouseholdRequest,
-  type HouseholdDeterminationRequest,
-} from '../translate/snap.js'
-import {
-  MEDICAID_RULESET_ID,
-  MEDICAID_TARGETS,
-  translateMedicaidHousehold,
-} from '../translate/medicaid.js'
+import { SNAP_RULESET_ID, SNAP_DETERMINATION_TARGETS } from '../translate/snap.js'
+import { MEDICAID_RULESET_ID, MEDICAID_TARGETS } from '../translate/medicaid.js'
+import { translateRequest } from '../translate/v2-request.js'
+import { friendlyMissing } from '../translate/field-index.js'
 import {
   V2DeterminationRequestSchema,
   SUPPORTED_PROGRAMS,
@@ -106,8 +99,6 @@ router.post('/evaluate/determination', (req, res) => {
     problem(res, 400, 'Invalid asOf', `"${body.asOf}" is not a valid date.`)
     return
   }
-  const members = body.members ?? []
-  const household = body.household
   // Dedupe while preserving request order; default to every supported program.
   const programs = [...new Set(body.programs ?? SUPPORTED_PROGRAMS)]
 
@@ -115,23 +106,27 @@ router.post('/evaluate/determination', (req, res) => {
 
   for (const program of programs) {
     if (program === 'snap') {
-      const { inputs, notes } = translateHouseholdRequest({ members, household }, asOf)
-      // Trace is computed internally — it's the source of the denial reason and
-      // explanation — and never leaves as raw trace.
+      const model = getRuleset(SNAP_RULESET_ID)
+      if (!model) { problem(res, 503, 'Ruleset unavailable', `"${SNAP_RULESET_ID}" is not loaded.`); return }
+      // No-guess: only provided fields are translated; the rest come back missing.
+      const { inputs, warnings } = translateRequest(body, model, asOf)
+      // Trace is computed internally — the source of the denial reason + explanation.
       const query = run(res, SNAP_RULESET_ID, inputs, SNAP_DETERMINATION_TARGETS, ['trace'])
       if (!query) return
-      determinations.push(snapDetermination(query, metadata, notes))
+      const det = snapDetermination(query, metadata, warnings)
+      const missing = friendlyMissing(query.missingInputs ?? [], model)
+      if (missing.length) det.missingInputs = missing
+      determinations.push(det)
     } else if (program === 'medicaid') {
-      const reqShape = {
-        metadata,
-        program: 'medicaid',
-        household,
-        members,
-      } as unknown as HouseholdDeterminationRequest
-      const { inputs, memberIds, notes } = translateMedicaidHousehold(reqShape, asOf)
+      const model = getRuleset(MEDICAID_RULESET_ID)
+      if (!model) { problem(res, 503, 'Ruleset unavailable', `"${MEDICAID_RULESET_ID}" is not loaded.`); return }
+      const { inputs, memberIds, warnings } = translateRequest(body, model, asOf)
       const query = run(res, MEDICAID_RULESET_ID, inputs, MEDICAID_TARGETS, undefined)
       if (!query) return
-      determinations.push(...medicaidDeterminations(query, memberIds, metadata, notes))
+      const dets = medicaidDeterminations(query, memberIds, metadata, warnings)
+      const missing = friendlyMissing(query.missingInputs ?? [], model)
+      for (const det of dets) if (det.status === 'pending' && missing.length) det.missingInputs = missing
+      determinations.push(...dets)
     } else {
       determinations.push(unsupportedDetermination(program))
     }

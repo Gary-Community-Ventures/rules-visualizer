@@ -25,26 +25,23 @@ import { z } from 'zod'
 
 import { type QueryResponse } from '../evaluate.js'
 import {
-  MemberContextSchema,
   toProgramDecision,
   type ExplanationStep,
-  type MissingInformation,
 } from './snap.js'
 import { toMedicaidResponse } from './medicaid.js'
+import { type FriendlyMissing } from './field-index.js'
 
 export const SUPPORTED_PROGRAMS = ['snap', 'medicaid'] as const
 
-const HouseholdSchema = z
-  .object({
-    size: z.number().optional(),
-    housingCosts: z.number().optional(),
-    utilityCosts: z.number().optional(),
-  })
-  .passthrough()
+/** Each object is a bag of friendly fields (see the engine-input catalog);
+ *  the translator validates field-by-field against the rules, so the schema
+ *  stays permissive rather than re-declaring every field here. */
+const bag = () => z.object({}).passthrough()
 
 /**
- * The v2 request: everything optional but member `id`. Omit `programs` to run
- * every supported program; send an empty body to get every program back
+ * The v2 request: friendly fields, everything optional. Members carry their
+ * fields plus nested `income`/`expenses`/`jobs`/`assets`. Omit `programs` to
+ * run every supported program; send an empty body to get every program back
  * `pending` with the inputs each still needs. `asOf` sets the evaluation date
  * ("evaluate as of now" when omitted). `metadata` is opaque and echoed back.
  */
@@ -53,8 +50,9 @@ export const V2DeterminationRequestSchema = z
     metadata: z.record(z.string(), z.unknown()).optional(),
     programs: z.array(z.string()).optional(),
     asOf: z.string().optional(),
-    household: HouseholdSchema.optional(),
-    members: z.array(MemberContextSchema).optional(),
+    household: bag().optional(),
+    members: z.array(bag()).optional(),
+    caregiverRelationships: z.array(bag()).optional(),
   })
   .passthrough()
 
@@ -88,8 +86,9 @@ export type Determination = {
   denialReasonCode?: string
   /** Path-free "why" for denials. */
   explanation?: ExplanationStep[]
-  /** Inputs that would unlock or refine this determination, by field name. */
-  missingInputs?: MissingInformation[]
+  /** Inputs that would unlock or refine this determination, in the friendly
+   *  request vocabulary (set by the route via the field index). */
+  missingInputs?: FriendlyMissing[]
   /** Assumptions the determination is conditional on (defaulted/derived). */
   notes?: string[]
 }
@@ -124,7 +123,7 @@ export function snapDetermination(
     isExpedited: pd['x-expedited'],
     denialReasonCode: pd.denialReasonCode,
     explanation: pd['x-explanation'],
-    missingInputs: pd['x-missingInformation'],
+    // missingInputs is attached by the route in the friendly vocabulary.
     notes: pd['x-translationNotes'],
   })
 }
@@ -137,7 +136,6 @@ export function medicaidDeterminations(
   notes: string[]
 ): Determination[] {
   const mr = toMedicaidResponse(query, memberIds, metadata, notes)
-  const missing = mr['x-missingInformation']
   return mr.decisions.map((d) =>
     compact({
       program: 'medicaid',
@@ -148,7 +146,7 @@ export function medicaidDeterminations(
       medicaidCategory: d['x-medicaidCategory'],
       chpEligible: d['x-chpEligible'],
       denialReasonCode: d.denialReasonCode,
-      missingInputs: d.status === 'pending' ? missing : undefined,
+      // missingInputs is attached by the route in the friendly vocabulary.
       notes: mr['x-translationNotes'],
     })
   )
