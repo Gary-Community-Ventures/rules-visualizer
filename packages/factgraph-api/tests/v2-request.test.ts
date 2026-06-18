@@ -10,6 +10,7 @@ import { getRuleset } from 'rules-visualizer-factgraph-core'
 
 import './helpers.js'
 import { translateRequest } from '../src/translate/v2-request.js'
+import { friendlyMissing } from '../src/translate/field-index.js'
 
 const model = getRuleset('snap-complete')!
 const ASOF = new Date('2026-06-18T00:00:00Z')
@@ -99,7 +100,28 @@ test('household scalars map to top-level inputs; unknown fields warn, not throw'
 })
 
 test('an empty request produces empty inputs (engine will report everything missing)', () => {
-  const { inputs, memberIds } = translateRequest({}, model)
+  const { inputs, memberIds } = translateRequest({}, model, ASOF)
   assert.deepEqual(memberIds, [])
   assert.deepEqual(Object.keys(inputs), [])
+})
+
+test('friendlyMissing reverse-maps engine paths into request fields', () => {
+  const missing = friendlyMissing(
+    [
+      { path: '/members/*/age' }, // derived → dateOfBirth
+      { path: '/members/*/citizenshipImmigrationStatus', dataType: 'Enum' },
+      { path: '/members/*/isPregnant', dataType: 'Boolean' },
+      { path: '/incomes/*/memberId' }, // implied by nesting → dropped
+    ],
+    model
+  )
+  const byPath = Object.fromEntries(missing.map((m) => [m.requestPath, m]))
+  assert.ok(byPath['members[].dateOfBirth'], 'age missing → dateOfBirth')
+  const cit = byPath['members[].citizenshipImmigrationStatus']
+  assert.ok(cit && Array.isArray(cit.options) && cit.options.includes('citizen'))
+  assert.ok(byPath['members[].isPregnant'], 'plain boolean field surfaces')
+  assert.ok(
+    !missing.some((m) => m.location === 'members[].income[]' && m.field === 'memberId'),
+    'implied back-link dropped'
+  )
 })

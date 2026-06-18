@@ -108,6 +108,49 @@ function kindOf(location: string, field: string, typeName: string): FieldKind {
   return 'reference'
 }
 
+/** A still-needed input, expressed in the friendly request vocabulary so the
+ *  caller knows exactly which field to set and where. */
+export type FriendlyMissing = {
+  requestPath: string
+  field: string
+  location: string
+  type: string
+  label: string
+  options?: string[]
+}
+
+/**
+ * Reverse-map the engine's missing inputs (path-keyed) into the friendly
+ * request vocabulary, so a `pending` response tells the caller which DTO
+ * fields to fill. Implied member back-links are dropped (the caller sets them
+ * by nesting, not as fields); anything not in the index is skipped rather than
+ * leaked as a raw path.
+ */
+export function friendlyMissing(
+  missing: Array<{ path: string; name?: string; dataType?: string; enumOptions?: string[] }>,
+  model: Model
+): FriendlyMissing[] {
+  const byPath = new Map(indexForModel(model).map((e) => [e.enginePath, e]))
+  const out: FriendlyMissing[] = []
+  const seen = new Set<string>()
+  for (const m of missing) {
+    const entry = byPath.get(m.path)
+    if (!entry || entry.kind === 'implied') continue
+    const rp = requestPath(entry)
+    if (seen.has(rp)) continue
+    seen.add(rp)
+    out.push({
+      requestPath: rp,
+      field: entry.field,
+      location: entry.location,
+      type: entry.type,
+      label: entry.name,
+      ...(entry.values ? { options: entry.values } : {}),
+    })
+  }
+  return out
+}
+
 /** Build the field index for one ruleset's writable facts. */
 export function indexForModel(model: Model): FieldEntry[] {
   const out: FieldEntry[] = []
