@@ -2009,7 +2009,8 @@
           "kind": "applicant",
           "type": "Enum",
           "programs": [
-            "SNAP"
+            "SNAP",
+            "Medicaid"
           ],
           "definition": "The source/type of this income.",
           "values": [
@@ -2245,7 +2246,8 @@
           "kind": "applicant",
           "type": "Dollar",
           "programs": [
-            "SNAP"
+            "SNAP",
+            "Medicaid"
           ],
           "definition": "The average income amount for this income at its stated frequency.",
           "citations": [
@@ -2337,7 +2339,8 @@
           "kind": "applicant",
           "type": "Enum",
           "programs": [
-            "SNAP"
+            "SNAP",
+            "Medicaid"
           ],
           "definition": "How often this income amount is received or anticipated, used to convert the amount to a monthly amount (10 CCR 2506-1, 4.402).",
           "values": [
@@ -3850,34 +3853,6 @@
             }
           ],
           "enginePath": "/certificationPeriodStartDate"
-        },
-        {
-          "requestPath": "household.earnedIncome",
-          "field": "earnedIncome",
-          "location": "household",
-          "name": "Earned Income",
-          "kind": "applicant",
-          "type": "Dollar",
-          "programs": [
-            "Medicaid"
-          ],
-          "definition": "Annual household earned income (wages, salary, tips, self-employment).",
-          "citations": [],
-          "enginePath": "/earnedIncome"
-        },
-        {
-          "requestPath": "household.unearnedIncome",
-          "field": "unearnedIncome",
-          "location": "household",
-          "name": "Unearned Income",
-          "kind": "applicant",
-          "type": "Dollar",
-          "programs": [
-            "Medicaid"
-          ],
-          "definition": "Annual household unearned income (Social Security, pensions, unemployment, child support, investments).",
-          "citations": [],
-          "enginePath": "/unearnedIncome"
         }
       ]
     }

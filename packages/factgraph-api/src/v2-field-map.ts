@@ -185,11 +185,12 @@ export const FIELD_MAP: FieldGroup[] = [
   {
     title: 'Income (members[].income[])',
     entries: [
-      dv('members[].income[].type', '/incomes/*/type', ['/earnedIncome', '/unearnedIncome'], 'employed/self_employed → earned; unearned → unearned. Medicaid sums all members\' income to the household scalars, normalized to monthly.'),
-      dv('members[].income[].unearnedType', '/incomes/*/type', '/members/*/receivesSsi', 'Refines the SNAP income-source enum; ssi_or_ssdi also sets the medicaid SSI flag (note: ORCA conflates SSI with SSDI).'),
+      dv('members[].income[].type', '/incomes/*/type', '/incomes/*/type', 'Mapped to the rules income-source enum; both programs classify earned vs unearned and annualize from the itemized rows.'),
+      dv('members[].income[].unearnedType', '/incomes/*/type', '/members/*/receivesSsi', 'Refines the income-source enum; ssi_or_ssdi also sets the medicaid SSI flag (note: ORCA conflates SSI with SSDI).'),
       { field: 'members[].income[].incomeBasis', kind: 'compat', note: 'Carried for ORCA compatibility; the rules do not currently distinguish net vs gross at the income-row level.' },
-      d('members[].income[].amount', '/incomes/*/amount', ['/earnedIncome', '/unearnedIncome']),
-      d('members[].income[].frequency', '/incomes/*/frequency'),
+      d('members[].income[].amount', '/incomes/*/amount', '/incomes/*/amount'),
+      d('members[].income[].frequency', '/incomes/*/frequency', '/incomes/*/frequency'),
+      { field: 'members[].income[].memberId', snap: '/incomes/*/memberId', medicaid: '/incomes/*/memberId', kind: 'structural', note: 'Implied by nesting income under a member.' },
       d('members[].income[].payDate', '/incomes/*/targetPayDate'),
       d('members[].income[].monthsIntended', '/incomes/*/intendedMonths'),
       d('members[].income[].receivedBeforeSnapParticipation', '/incomes/*/receivedBeforeSnapParticipation'),

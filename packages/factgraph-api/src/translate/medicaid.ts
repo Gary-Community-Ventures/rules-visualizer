@@ -52,18 +52,6 @@ const IMMIGRATION_TO_IMMIGRANT: Record<string, string> = {
   temporary_protected_status: 'TemporaryProtectedStatus',
 }
 
-/** Approximate monthly multiplier per ORCA frequency. Hourly can't be
- *  converted without an hours count, so it's treated as already-monthly
- *  with a note. */
-const MONTHLY_MULTIPLIER: Record<string, number> = {
-  weekly: 52 / 12,
-  every_2_weeks: 26 / 12,
-  twice_a_month: 2,
-  monthly: 1,
-  yearly: 1 / 12,
-  daily: 30,
-}
-
 const HOURS_PER_WEEK_TO_MONTH = 52 / 12
 
 // ---------------------------------------------------------------------------
@@ -90,18 +78,24 @@ function ageFromDob(dob: string, asOf: Date): number | undefined {
   return age
 }
 
-function toMonthly(amount: number, frequency: string | undefined, notes: TranslationNote[], label: string): number {
-  if (frequency === undefined) return amount
-  if (frequency === 'hourly') {
-    notes.push(`${label}: hourly income can't be annualized without an hours count — treated as a monthly amount.`)
-    return amount
-  }
-  const m = MONTHLY_MULTIPLIER[frequency]
-  if (m === undefined) {
-    notes.push(`${label}: unrecognized frequency "${frequency}" — treated as monthly.`)
-    return amount
-  }
-  return amount * m
+/** Map an ORCA income type onto the rules' income-source enum. Earned vs
+ *  unearned is no longer decided here — the ruleset classifies each income row
+ *  itself — so we only need a type the engine will classify the same way:
+ *  employed to wages (earned), self_employed to self-employment (earned),
+ *  unearned to SSI when flagged, else a generic unearned source. */
+function medicaidIncomeType(inc: { type?: string; unearnedType?: string }): string {
+  if (inc.type === 'self_employed') return 'SelfEmployment'
+  if (inc.type === 'unearned') return inc.unearnedType === 'ssi_or_ssdi' ? 'Ssi' : 'Other'
+  return 'WagesAndSalaries'
+}
+
+/** ORCA frequency → the rules' income-frequency enum (which annualizes). */
+const MEDICAID_FREQUENCY: Record<string, string> = {
+  monthly: 'Monthly',
+  weekly: 'Weekly',
+  every_2_weeks: 'BiWeekly',
+  twice_a_month: 'SemiMonthly',
+  yearly: 'Annual',
 }
 
 function mapImmigrant(
@@ -139,8 +133,7 @@ export function translateMedicaidHousehold(
   const notes: TranslationNote[] = []
   const memberIds: string[] = []
   const members: Array<Record<string, unknown>> = []
-  let earned = 0
-  let unearned = 0
+  const incomes: Array<Record<string, unknown>> = []
 
   for (const [idx, m] of req.members.entries()) {
     // The contract's member has no id; positional fallback keeps per-member
@@ -148,11 +141,19 @@ export function translateMedicaidHousehold(
     const memberId = m.id ?? `member-${idx}`
     memberIds.push(memberId)
 
-    // Household income aggregation.
+    // Itemized income. The ruleset now classifies earned/unearned and
+    // annualizes each source (mirroring SNAP), so we emit /incomes rows rather
+    // than pre-summing — the earned/unearned split is decided in the rules.
     for (const [i, inc] of (m.income ?? []).entries()) {
-      const monthly = toMonthly(inc.amount, inc.frequency, notes, `member ${memberId} income[${i}]`)
-      if (inc.type === 'unearned') unearned += monthly
-      else earned += monthly // employed / self_employed (default earned)
+      incomes.push({
+        id: `${memberId}-income-${i}`,
+        '/incomes/*/memberId': `#${idx}`,
+        '/incomes/*/type': medicaidIncomeType(
+          inc as { type?: string; unearnedType?: string }
+        ),
+        '/incomes/*/amount': inc.amount,
+        '/incomes/*/frequency': MEDICAID_FREQUENCY[inc.frequency ?? 'monthly'] ?? 'Monthly',
+      })
     }
 
     // Derived: monthly hours worked from employment[].
@@ -205,9 +206,8 @@ export function translateMedicaidHousehold(
 
   return {
     inputs: {
-      '/earnedIncome': Math.round(earned),
-      '/unearnedIncome': Math.round(unearned),
       '/members': members,
+      '/incomes': incomes,
     },
     memberIds,
     notes,

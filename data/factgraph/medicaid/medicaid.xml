@@ -256,18 +256,171 @@
       <Writable><Collection /></Writable>
     </Fact>
 
+    <!-- Itemized income. Income is reported as a list of sources (the same
+         shape SNAP uses), and the engine classifies each as earned/unearned
+         and annualizes it — so /earnedIncome and /unearnedIncome below are
+         DERIVED, not entered directly. -->
+    <Fact path="/incomeSourceOptions">
+      <Name>Income source options</Name>
+      <Derived>
+        <EnumOptions>
+          <String>Tanf</String>
+          <String>OtherNeedsBasedAssistance</String>
+          <String>OldAgePension</String>
+          <String>AidToNeedyDisabled</String>
+          <String>AidToBlind</String>
+          <String>ColoradoSupplementSsi</String>
+          <String>Ssi</String>
+          <String>AnnuitiesPensionsRetirement</String>
+          <String>VeteransBenefits</String>
+          <String>DisabilityBenefits</String>
+          <String>WorkersCompensation</String>
+          <String>UnemploymentCompensation</String>
+          <String>OldAgeSurvivorsSocialSecurityBenefits</String>
+          <String>StrikeBenefits</String>
+          <String>SupportAndAlimony</String>
+          <String>RentalIncomeNotActivelyManaged</String>
+          <String>PostEmploymentVacationSickBonusPay</String>
+          <String>AnticipatedGifts</String>
+          <String>WagesAndSalaries</String>
+          <String>AgriculturalStabilizationConservationService</String>
+          <String>SelfEmployment</String>
+          <String>Vista</String>
+          <String>SickLeaveVacationBonusPay</String>
+          <String>VocationalRehabilitationTrainingAllowance</String>
+          <String>WioaOnTheJobTraining</String>
+          <String>TitleIVistaUniversityYearOfAction</String>
+          <String>LlcSCorporation</String>
+          <String>BoarderIncome</String>
+          <String>LotteryOrGamblingWinnings</String>
+          <String>VendorPayments</String>
+          <String>IrregularIncome</String>
+          <String>NonHouseholdMemberCarePayments</String>
+          <String>Recoupments</String>
+          <String>TitleIVDTransferredChildSupport</String>
+          <String>NonRecurringLumpSum</String>
+          <String>Loans</String>
+          <String>ReverseAnnuityMortgage</String>
+          <String>InKindBenefits</String>
+          <String>Reimbursements</String>
+          <String>EducationalAssistance</String>
+          <String>SponsorPayments</String>
+          <String>Other</String>
+        </EnumOptions>
+      </Derived>
+    </Fact>
+
+    <Fact path="/incomeFrequencyOptions">
+      <Name>Income frequency options</Name>
+      <Derived>
+        <EnumOptions>
+          <String>Monthly</String>
+          <String>Weekly</String>
+          <String>BiWeekly</String>
+          <String>SemiMonthly</String>
+          <String>EveryOtherMonth</String>
+          <String>Quarterly</String>
+          <String>TwiceAYear</String>
+          <String>Annual</String>
+          <String>OtherSpecificTimePeriod</String>
+        </EnumOptions>
+      </Derived>
+    </Fact>
+
+    <Fact path="/incomes">
+      <Name>Income list</Name>
+      <Description>Itemized household income sources; each is annualized by its frequency and classified as earned or unearned for the MAGI calculation.</Description>
+      <Writable><Collection /></Writable>
+    </Fact>
+
+    <Fact path="/incomes/*/memberId">
+      <Name>Member</Name>
+      <Description>The household member who receives this income.</Description>
+      <Writable><CollectionItem collection="/members" /></Writable>
+    </Fact>
+
+    <Fact path="/incomes/*/type">
+      <Name>Income type</Name>
+      <Description>The source/type of this income.</Description>
+      <Writable><Enum optionsPath="/incomeSourceOptions" /></Writable>
+    </Fact>
+
+    <Fact path="/incomes/*/amount">
+      <Name>Amount</Name>
+      <Description>The income amount at its stated frequency.</Description>
+      <Writable><Dollar /></Writable>
+    </Fact>
+
+    <Fact path="/incomes/*/frequency">
+      <Name>Income frequency</Name>
+      <Description>How often this income is received, used to annualize the amount.</Description>
+      <Writable><Enum optionsPath="/incomeFrequencyOptions" /></Writable>
+    </Fact>
+
+    <Fact path="/incomes/*/isEarned">
+      <Name>Is earned income</Name>
+      <Description>Whether this income type is treated as earned income for MAGI: wages and salaries, agricultural stabilization payments, VISTA wages, sick/vacation/bonus pay while employed, vocational rehabilitation training allowances, WIOA on-the-job training, Title I VISTA payments, self-employment, LLC/S-Corporation owner income, or boarder income (mirrors SNAP, 10 CCR 2506-1, 4.403).</Description>
+      <Derived>
+        <Any>
+          <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/incomeSourceOptions">WagesAndSalaries</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/incomeSourceOptions">AgriculturalStabilizationConservationService</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/incomeSourceOptions">Vista</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/incomeSourceOptions">SickLeaveVacationBonusPay</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/incomeSourceOptions">VocationalRehabilitationTrainingAllowance</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/incomeSourceOptions">WioaOnTheJobTraining</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/incomeSourceOptions">TitleIVistaUniversityYearOfAction</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/incomeSourceOptions">SelfEmployment</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/incomeSourceOptions">LlcSCorporation</Enum></Right></Equal>
+          <Equal><Left><Dependency path="../type" /></Left><Right><Enum optionsPath="/incomeSourceOptions">BoarderIncome</Enum></Right></Equal>
+        </Any>
+      </Derived>
+    </Fact>
+
+    <Fact path="/incomes/*/annualAmount">
+      <Name>Annualized amount</Name>
+      <Description>This income's amount converted to an annual figure based on its frequency.</Description>
+      <Derived>
+        <Multiply>
+          <Dependency path="../amount" />
+          <Switch>
+            <Case><When><Equal><Left><Dependency path="../frequency" /></Left><Right><Enum optionsPath="/incomeFrequencyOptions">Monthly</Enum></Right></Equal></When><Then><Rational>12/1</Rational></Then></Case>
+            <Case><When><Equal><Left><Dependency path="../frequency" /></Left><Right><Enum optionsPath="/incomeFrequencyOptions">Weekly</Enum></Right></Equal></When><Then><Rational>52/1</Rational></Then></Case>
+            <Case><When><Equal><Left><Dependency path="../frequency" /></Left><Right><Enum optionsPath="/incomeFrequencyOptions">BiWeekly</Enum></Right></Equal></When><Then><Rational>26/1</Rational></Then></Case>
+            <Case><When><Equal><Left><Dependency path="../frequency" /></Left><Right><Enum optionsPath="/incomeFrequencyOptions">SemiMonthly</Enum></Right></Equal></When><Then><Rational>24/1</Rational></Then></Case>
+            <Case><When><Equal><Left><Dependency path="../frequency" /></Left><Right><Enum optionsPath="/incomeFrequencyOptions">EveryOtherMonth</Enum></Right></Equal></When><Then><Rational>6/1</Rational></Then></Case>
+            <Case><When><Equal><Left><Dependency path="../frequency" /></Left><Right><Enum optionsPath="/incomeFrequencyOptions">Quarterly</Enum></Right></Equal></When><Then><Rational>4/1</Rational></Then></Case>
+            <Case><When><Equal><Left><Dependency path="../frequency" /></Left><Right><Enum optionsPath="/incomeFrequencyOptions">TwiceAYear</Enum></Right></Equal></When><Then><Rational>2/1</Rational></Then></Case>
+            <Case><When><Equal><Left><Dependency path="../frequency" /></Left><Right><Enum optionsPath="/incomeFrequencyOptions">Annual</Enum></Right></Equal></When><Then><Rational>1/1</Rational></Then></Case>
+            <Case><When><True /></When><Then><Rational>12/1</Rational></Then></Case>
+          </Switch>
+        </Multiply>
+      </Derived>
+    </Fact>
+
     <Fact path="/earnedIncome">
       <Name>Earned Income</Name>
-      <Description>Annual household earned income (wages, salary, tips, self-employment).</Description>
-      <Writable><Dollar /></Writable>
-      <Placeholder><Dollar>20000</Dollar></Placeholder>
+      <Description>Annual household earned income, summed from the itemized income list (wages, self-employment, and other earned sources), each annualized by its frequency.</Description>
+      <Derived>
+        <CollectionSum>
+          <Switch>
+            <Case><When><Dependency path="/incomes/*/isEarned" /></When><Then><Dependency path="/incomes/*/annualAmount" /></Then></Case>
+            <Case><When><True /></When><Then><Dollar>0</Dollar></Then></Case>
+          </Switch>
+        </CollectionSum>
+      </Derived>
     </Fact>
 
     <Fact path="/unearnedIncome">
       <Name>Unearned Income</Name>
-      <Description>Annual household unearned income (Social Security, pensions, unemployment, child support, investments).</Description>
-      <Writable><Dollar /></Writable>
-      <Placeholder><Dollar>0</Dollar></Placeholder>
+      <Description>Annual household unearned income, summed from the itemized income list (Social Security, pensions, unemployment, child support, investments, and other non-earned sources), each annualized by its frequency.</Description>
+      <Derived>
+        <CollectionSum>
+          <Switch>
+            <Case><When><Not><Dependency path="/incomes/*/isEarned" /></Not></When><Then><Dependency path="/incomes/*/annualAmount" /></Then></Case>
+            <Case><When><True /></When><Then><Dollar>0</Dollar></Then></Case>
+          </Switch>
+        </CollectionSum>
+      </Derived>
     </Fact>
 
 

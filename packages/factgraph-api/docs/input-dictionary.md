@@ -750,7 +750,7 @@ Policy: 10 CCR 2506-1 — Colorado SNAP Rules — p. 34
 
 The source/type of this income.
 
-> *Adapter mapping:* employed/self_employed → earned; unearned → unearned. Medicaid sums all members' income to the household scalars, normalized to monthly.
+> *Adapter mapping:* Mapped to the rules income-source enum; both programs classify earned vs unearned and annualize from the itemized rows.
 
 Allowed values: 42 — see [Vocabularies](#vocabularies).
 
@@ -762,7 +762,7 @@ Policy: 10 CCR 2506-1 — Colorado SNAP Rules — pp. 8, 11, 12, 92
 
 The source/type of this income.
 
-> *Adapter mapping:* Refines the SNAP income-source enum; ssi_or_ssdi also sets the medicaid SSI flag (note: ORCA conflates SSI with SSDI).
+> *Adapter mapping:* Refines the income-source enum; ssi_or_ssdi also sets the medicaid SSI flag (note: ORCA conflates SSI with SSDI).
 
 Allowed values: 42 — see [Vocabularies](#vocabularies).
 
@@ -784,13 +784,21 @@ Policy: 10 CCR 2506-1 — Colorado SNAP Rules — pp. 69, 86, 87, 90, 91, 92, 93
 
 #### `members[].income[].frequency`
 
-`Enum` · SNAP · direct · source: **applicant** · ✦ in the published worker-portal contract
+`Enum` · SNAP + Medicaid · direct · source: **applicant** · ✦ in the published worker-portal contract
 
 How often this income amount is received or anticipated, used to convert the amount to a monthly amount (10 CCR 2506-1, 4.402).
 
 Allowed values: `monthly` · `weekly` · `bi_weekly` · `semi_monthly` · `every_other_month` · `quarterly` · `twice_a_year` · `annual` · `other_specific_time_period`
 
 Policy: 10 CCR 2506-1 — Colorado SNAP Rules — pp. 85, 93
+
+#### `members[].income[].memberId`
+
+`reference` · SNAP + Medicaid · structural
+
+The household member to whom this income belongs
+
+> *Adapter mapping:* Implied by nesting income under a member.
 
 #### `members[].income[].payDate`
 
