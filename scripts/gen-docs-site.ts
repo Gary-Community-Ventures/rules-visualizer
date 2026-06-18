@@ -78,7 +78,7 @@ function redocPage(opts: {
       ${tab('./index.html', 'Eligibility contract', opts.here === 'consumer')}
       ${tab('./advanced.html', 'Advanced API', opts.here === 'advanced')}
       <a href="./engine-inputs.html">Engine inputs</a>
-      <a href="./dictionary.html">Input dictionary</a>
+      <a href="./dictionary.html">Legacy inputs</a>
       <span class="spacer"></span>
       <a href="./explore.html">Target explorer →</a>
     </nav>
@@ -110,7 +110,7 @@ writeFileSync(
   })
 )
 
-// Input dictionary — filterable HTML rendering of the same data that
+// Legacy inputs — filterable HTML rendering of the same data that
 // generates docs/input-dictionary.md. Cards (not a wide table) so the
 // rule-author definitions wrap; client-side text search + program/source
 // filters, no build step. Data is also emitted as dictionary.json for
@@ -121,7 +121,7 @@ writeFileSync(`${outDir}/dictionary.json`, JSON.stringify(dict, null, 2))
 const dictionaryHtml = `<!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>Input dictionary — Eligibility Adapter API</title>
+    <title>Legacy inputs — Eligibility Adapter API</title>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content="Every eligibility request field with its regulatory definition, enum vocabulary, policy citations, and realistic source." />
@@ -163,12 +163,18 @@ const dictionaryHtml = `<!DOCTYPE html>
     <nav class="docs-nav">
       <a href="./index.html">Eligibility contract</a>
       <a href="./advanced.html">Advanced API</a>
-      <strong>Input dictionary</strong>
+      <strong>Legacy inputs</strong>
       <span class="spacer"></span>
       <a href="./explore.html">Target explorer →</a>
     </nav>
     <main>
-      <h1>Input dictionary</h1>
+      <h1>Legacy inputs</h1>
+      <p style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:0.6rem 0.9rem;color:#92400e;">
+      <strong>Superseded.</strong> This documents the earlier ORCA-shaped v1 mapping
+      (a union of the partner's published contract and our engine inputs, with
+      best-guess source classifications). The current source of truth is
+      <a href="./engine-inputs.html">Engine inputs</a> — every input the engine
+      actually accepts, keyed as you send it. Kept here for reference only.</p>
       <p>Every request field in the <a href="./index.html">eligibility contract</a>
       and the v2 draft, with the rule authors' own definitions, enum vocabularies,
       and policy citations — generated from the rulesets.
@@ -329,7 +335,7 @@ const engineInputsHtml = `<!DOCTYPE html>
       <a href="./index.html">Eligibility contract</a>
       <a href="./advanced.html">Advanced API</a>
       <strong>Engine inputs</strong>
-      <a href="./dictionary.html">Input dictionary</a>
+      <a href="./dictionary.html">Legacy inputs</a>
       <span class="spacer"></span>
       <a href="./explore.html">Target explorer →</a>
     </nav>
