@@ -76,6 +76,11 @@ export type QueryResponse = {
    *  compact array of path-bearing nodes from the target down to the
    *  single deciding leaf. */
   decidingPaths?: Record<string, DecidingPath>
+  /** Present iff status === "incomplete" and a /members collection was
+   *  provided. Maps each member ID to the member-level writables still
+   *  unresolved for that member specifically. Scalar/household-level
+   *  missing inputs remain in the top-level `missingInputs` union only. */
+  missingInputsByMember?: Record<string, MissingInput[]>
 }
 
 /**
@@ -247,6 +252,36 @@ export function runQuery(
       }
     }
     response.missingInputs = [...allMissing.values()]
+
+    // Per-member attribution: run a member-aware walk for each member so
+    // a field provided by member A is not falsely omitted from member B's
+    // list. The cross-member providedPaths set can only tell us that *some*
+    // member provided a field — the per-slot execution result tells us
+    // whether THIS member still needs it.
+    const memberIds = memberIdsByCollection['/members'] ?? []
+    const perMemberTargets = targets.filter((t) => t.startsWith('/members/*/'))
+    if (memberIds.length > 0 && perMemberTargets.length > 0) {
+      const byMember: Record<string, MissingInput[]> = {}
+      for (let idx = 0; idx < memberIds.length; idx++) {
+        const memberId = memberIds[idx]
+        const memberMissing = new Map<string, MissingInput>()
+        for (const target of perMemberTargets) {
+          for (const m of collectMissingInputsForMember(
+            model,
+            target,
+            providedInputPaths,
+            effectiveResults,
+            idx
+          )) {
+            if (!memberMissing.has(m.path)) memberMissing.set(m.path, m)
+          }
+        }
+        if (memberMissing.size > 0) byMember[memberId] = [...memberMissing.values()]
+      }
+      if (Object.keys(byMember).length > 0) {
+        response.missingInputsByMember = byMember
+      }
+    }
   }
 
   return { ok: true, response }
@@ -417,6 +452,76 @@ function collectMissingInputs(
           enumOptions: content.enumOptions,
         })
       }
+      return
+    }
+
+    for (const depId of node.dependencies) {
+      const dep = model.nodes[depId]
+      if (dep) walk(dep)
+    }
+  }
+
+  walk(targetNode)
+  return missing
+}
+
+/**
+ * Member-aware variant of collectMissingInputs. For collection-scoped paths
+ * (paths with a wildcard segment) checks only the given member's positional
+ * slot in the executor's results array rather than the whole array. This
+ * correctly attributes a missing field to a specific member even when other
+ * members in the same collection have already provided that field.
+ *
+ * The cross-member `providedPaths` set can tell us that *some* member provided
+ * a path, but not which one. For collection paths we therefore rely solely on
+ * the per-slot execution result; for scalar paths the normal `providedPaths`
+ * check still applies.
+ */
+function collectMissingInputsForMember(
+  model: Model,
+  targetPath: string,
+  providedPaths: Set<string>,
+  executionResults: Record<string, unknown>,
+  memberIndex: number
+): MissingInput[] {
+  const MEMBER_PREFIX = '/members/*/'
+
+  const targetNode = findNodeByPath(model, targetPath)
+  if (!targetNode) return []
+
+  const visited = new Set<string>()
+  const missing: MissingInput[] = []
+
+  const walk = (node: ModelNode) => {
+    if (visited.has(node.id)) return
+    visited.add(node.id)
+
+    const content = node.content
+    if (content.type === 'entity' || !('path' in content)) return
+
+    const isMemberPath =
+      typeof content.path === 'string' && content.path.startsWith(MEMBER_PREFIX)
+    const raw = executionResults[content.path]
+    // Member-level paths: check this member's positional slot in the array.
+    // Other paths (scalars, other collection rows): use the value as-is so
+    // the walk can still prune resolved subtrees correctly.
+    const effectiveValue =
+      isMemberPath && Array.isArray(raw) ? raw[memberIndex] : raw
+    if (hasResolvedValue(effectiveValue)) return
+
+    if (content.type === 'writable') {
+      // Only report member-level writables here; income/expense/asset
+      // writables (other collections) belong to the household-level union.
+      if (!isMemberPath) return
+      // The shared providedPaths set can't tell us whether THIS member
+      // provided the field, so we rely solely on the per-slot result above.
+      missing.push({
+        path: content.path,
+        name: content.label ?? node.name,
+        description: node.description,
+        dataType: content.typeName,
+        enumOptions: content.enumOptions,
+      })
       return
     }
 

@@ -124,8 +124,27 @@ router.post('/evaluate/determination', (req, res) => {
       const query = run(res, MEDICAID_RULESET_ID, inputs, MEDICAID_TARGETS, undefined)
       if (!query) return
       const dets = medicaidDeterminations(query, memberIds, metadata, warnings)
-      const missing = friendlyMissing(query.missingInputs ?? [], model)
-      for (const det of dets) if (det.status === 'pending' && missing.length) det.missingInputs = missing
+      for (const det of dets) {
+        if (det.status !== 'pending') continue
+        // Per-member attribution: combine this member's specific member-level
+        // missing fields with any shared household-level inputs (income rows,
+        // etc.) from the top-level union. Falls back to the full union when no
+        // per-member breakdown is available.
+        const perMember =
+          det.memberId ? query.missingInputsByMember?.[det.memberId] : undefined
+        let raw: typeof query.missingInputs
+        if (perMember) {
+          // Member-specific fields, then shared (non-member-collection) fields.
+          const sharedMissing = (query.missingInputs ?? []).filter(
+            (m) => !m.path.startsWith('/members/*/')
+          )
+          raw = [...perMember, ...sharedMissing]
+        } else {
+          raw = query.missingInputs ?? []
+        }
+        const friendly = friendlyMissing(raw, model)
+        if (friendly.length) det.missingInputs = friendly
+      }
       determinations.push(...dets)
     } else {
       determinations.push(unsupportedDetermination(program))

@@ -432,7 +432,6 @@
       <Name>Age</Name>
       <Description>Age of this member in years. Determines eligibility category (Infant, Young Child, Older Child, Adult) and work-requirement applicability.</Description>
       <Writable><Int /></Writable>
-      <Placeholder><Int>30</Int></Placeholder>
     </Fact>
 
     <Fact path="/members/*/pregnant">
