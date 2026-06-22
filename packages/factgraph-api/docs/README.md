@@ -2,7 +2,7 @@
 
 Eleven files, three audiences. Start with the row that matches why you're here.
 
-## I'm integrating a caseworker tool / portal (the v1 adapter)
+## I'm integrating a caseworker tool / portal (the v1 adapter — frozen)
 
 | Read | What it is |
 |---|---|
@@ -11,16 +11,16 @@ Eleven files, three audiences. Start with the row that matches why you're here.
 | [`bruno/eligibility-adapter/`](./bruno/eligibility-adapter/) | Runnable requests for every adapter behavior — open in [Bruno](https://www.usebruno.com/), set the token, click Send |
 | [`changelog.md`](./changelog.md) | Public surface changes, with migration notes |
 
-## I'm reviewing the contract proposal (the v2 draft)
+## I'm integrating with the v2 engine-shaped API
 
-Read in this order — rationale, then the contract, then the field semantics:
+Read in this order — field catalog first, then the contract, then background if needed:
 
 | Read | What it is |
 |---|---|
-| [`contract-gap-analysis.md`](./contract-gap-analysis.md) | What the published contract carries vs. what the SNAP/Medicaid rules actually need, bucketed (covered / derivable / proposed addition / verification-only), plus the cardinality and response-vocabulary findings |
-| [`request-field-proposal.md`](./request-field-proposal.md) | The no-guess policy and the proposed domain-shaped request fields, with the reasoning per group |
-| [`eligibility-adapter-v2-proposal-openapi.yaml`](./eligibility-adapter-v2-proposal-openapi.yaml) | The proposal as an executable OpenAPI document — draft for review; live Swagger: `/v2/eligibility/docs` |
-| [`input-dictionary.md`](./input-dictionary.md) | **Generated** field semantics: rule-author-written definitions, full enum vocabularies, policy citations, and consuming programs for every v2 request field. Never hand-edited — regenerated from the rulesets |
+| [`eligibility-adapter-v2-proposal-openapi.yaml`](./eligibility-adapter-v2-proposal-openapi.yaml) | The v2 contract — per-program endpoints, no-guess, per-member `missingInputs`. Live Swagger: `/v2/eligibility/docs` |
+| [`input-dictionary.md`](./input-dictionary.md) | **Generated** field semantics: rule-author-written definitions, full enum vocabularies, policy citations, and consuming programs for every request field. Never hand-edited — regenerated from the rulesets |
+| [`request-field-proposal.md`](./request-field-proposal.md) | Background: the no-guess policy and the rationale for the domain-shaped request fields |
+| [`contract-gap-analysis.md`](./contract-gap-analysis.md) | Background: what the v1 ORCA contract carries vs. what the SNAP/Medicaid rules actually need (informed the v2 design) |
 
 ## I want direct access to the rules engine (the advanced API)
 

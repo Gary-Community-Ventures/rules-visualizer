@@ -1,12 +1,12 @@
 /**
  * v2 Eligibility API — the engine-shaped contract (implemented).
  *
- * This is the spec for the surface served at `/v2/eligibility`, and it matches
- * what the endpoint actually does. The rules engine is the source of truth:
- * the request carries friendly, named fields (no Fact Graph paths, no
- * wildcards), one determination call serves every program, and nothing
- * applicant-material is defaulted — anything needed-but-absent comes back as
- * `pending` with the exact fields to fill, in the same friendly vocabulary.
+ * This is the spec for the surface served at `/v2/eligibility`. The rules
+ * engine is the source of truth: the request carries friendly named fields
+ * (no Fact Graph paths, no wildcards), separate endpoints per program give
+ * each program an explicit, traceable boundary, and nothing applicant-material
+ * is defaulted — anything needed-but-absent comes back as `pending` with the
+ * exact fields to fill, in the same friendly vocabulary.
  *
  * The exhaustive field list (every input, its type, enum vocabulary, and
  * policy citation) is the generated catalog at docs/engine-inputs.json — this
@@ -93,18 +93,17 @@ export function buildV2OpenApiDocument() {
     }).passthrough().openapi({ description: 'A caregiver→dependent link between two members (fields per catalog).' })
   )
 
-  const DeterminationRequest = registry.register(
-    'DeterminationRequest',
+  const HouseholdRequest = registry.register(
+    'HouseholdRequest',
     z.object({
       metadata: z.record(z.string(), z.unknown()).optional().openapi({ description: 'Opaque; echoed back, never inspected.' }),
-      programs: z.array(z.string()).optional().openapi({ description: 'Programs to evaluate (e.g. ["snap","medicaid"]). Omit to run every supported program.' }),
       asOf: z.string().optional().openapi({ format: 'date', description: 'Evaluation date; defaults to now.' }),
       household: z.object({}).passthrough().optional().openapi({ description: 'Household/application-level fields (per catalog).' }),
       members: z.array(Member).optional(),
       caregiverRelationships: z.array(CaregiverRelationship).optional(),
     }).openapi({
       description:
-        'One household payload for every program. Everything is optional but a member `id`; an empty body is valid and returns every program pending with the inputs it needs.',
+        'One household payload. Everything is optional but a member `id`; an empty body is valid and returns the program pending with the inputs it needs.',
     })
   )
 
@@ -153,15 +152,43 @@ export function buildV2OpenApiDocument() {
       metadata: z.record(z.string(), z.unknown()).optional().openapi({ description: 'Echoed from the request when present.' }),
       asOf: z.string().openapi({ format: 'date' }),
       determinations: z.array(Determination),
-    }).openapi({ description: 'One unified response for every requested program.' })
+    }).openapi({ description: 'Program determination response.' })
   )
+
+  const ExpeditedScreeningResponse = registry.register(
+    'ExpeditedScreeningResponse',
+    z.object({
+      metadata: z.record(z.string(), z.unknown()).optional().openapi({ description: 'Echoed from the request when present.' }),
+      asOf: z.string().openapi({ format: 'date' }),
+      isExpedited: z.boolean().nullable().openapi({
+        description: 'true = qualifies for expedited processing; false = does not; null = inputs insufficient to screen.',
+      }),
+      missingInputs: z.array(MissingInput).optional().openapi({
+        description: 'Present when isExpedited is null — the inputs needed to complete the screen.',
+      }),
+      notes: z.array(z.string()).optional().openapi({ description: 'Translation warnings, if any.' }),
+    }).openapi({ description: 'Expedited screening result. isExpedited is null when inputs are insufficient to resolve the screen.' })
+  )
+
+  const commonResponses = {
+    400: { description: 'Invalid request.', content: { 'application/json': { schema: ProblemDetails } } },
+    401: { description: 'Authentication required.', content: { 'application/json': { schema: ProblemDetails } } },
+  }
+
+  const exampleMember = {
+    id: 'head',
+    dateOfBirth: '1990-03-15',
+    citizenshipImmigrationStatus: 'citizen',
+    isHeadOfHousehold: true,
+    income: [{ type: 'wages_and_salaries', amount: 1200, frequency: 'monthly' }],
+  }
 
   registry.registerPath({
     method: 'post',
-    path: '/v2/eligibility/evaluate/determination',
-    summary: 'Eligibility determination (engine-shaped, no-guess).',
+    path: '/v2/eligibility/snap/determination',
+    summary: 'SNAP eligibility determination (no-guess).',
     description:
-      `One household payload plus a list of programs, returning a determination per program — household-scoped for SNAP, one per member for Medicaid. Nothing applicant-material is defaulted: anything needed-but-absent yields status \`pending\` and \`missingInputs\` listing the exact fields to fill, in this same request vocabulary. Field definitions and enum vocabularies: ${CATALOG_URL}.`,
+      `One household payload; returns a single household-scoped determination. Nothing applicant-material is defaulted: anything needed-but-absent yields status \`pending\` and \`missingInputs\` listing the exact fields to fill, in this same request vocabulary. Expedited screening is included in the response (\`isExpedited\`). Field definitions and enum vocabularies: ${CATALOG_URL}.`,
     tags: ['Eligibility v2'],
     security: [{ [bearerAuth.name]: [] }],
     request: {
@@ -169,19 +196,50 @@ export function buildV2OpenApiDocument() {
         required: true,
         content: {
           'application/json': {
-            schema: DeterminationRequest,
+            schema: HouseholdRequest,
             examples: {
-              'one household, both programs': {
+              'single member household': {
+                value: { metadata: { caseId: 'abc-123' }, members: [exampleMember] },
+              },
+            },
+          } as never,
+        },
+      },
+    },
+    responses: {
+      200: {
+        description: 'A single household-scoped determination.',
+        content: { 'application/json': { schema: DeterminationResponse } },
+      },
+      ...commonResponses,
+    },
+  })
+
+  registry.registerPath({
+    method: 'post',
+    path: '/v2/eligibility/snap/expedited-screening',
+    summary: 'SNAP expedited processing screen (7 CFR §273.2(i)).',
+    description:
+      'Screens whether the household qualifies for expedited processing (benefits within 7 days). Faster than the full determination — only the inputs that affect the expedited screen are needed. No-guess: `isExpedited` is null when the screen cannot resolve, and `missingInputs` names exactly what to provide.',
+    tags: ['Eligibility v2'],
+    security: [{ [bearerAuth.name]: [] }],
+    request: {
+      body: {
+        required: true,
+        content: {
+          'application/json': {
+            schema: HouseholdRequest,
+            examples: {
+              'destitute household': {
                 value: {
                   metadata: { caseId: 'abc-123' },
-                  programs: ['snap', 'medicaid'],
                   members: [
                     {
                       id: 'head',
                       dateOfBirth: '1990-03-15',
                       citizenshipImmigrationStatus: 'citizen',
                       isHeadOfHousehold: true,
-                      income: [{ type: 'wages_and_salaries', amount: 1200, frequency: 'monthly' }],
+                      income: [{ type: 'wages_and_salaries', amount: 0, frequency: 'monthly' }],
                     },
                   ],
                 },
@@ -193,11 +251,48 @@ export function buildV2OpenApiDocument() {
     },
     responses: {
       200: {
-        description: 'The unified determinations[] — one entry per requested program (per member for Medicaid).',
+        description: 'Expedited screening result.',
+        content: { 'application/json': { schema: ExpeditedScreeningResponse } },
+      },
+      ...commonResponses,
+    },
+  })
+
+  registry.registerPath({
+    method: 'post',
+    path: '/v2/eligibility/medicaid/determination',
+    summary: 'Medicaid eligibility determination (no-guess, per member).',
+    description:
+      `One household payload; returns one member-scoped determination per household member. Nothing applicant-material is defaulted: anything needed-but-absent yields status \`pending\` and \`missingInputs\` attributed to that specific member. Field definitions and enum vocabularies: ${CATALOG_URL}.`,
+    tags: ['Eligibility v2'],
+    security: [{ [bearerAuth.name]: [] }],
+    request: {
+      body: {
+        required: true,
+        content: {
+          'application/json': {
+            schema: HouseholdRequest,
+            examples: {
+              'two-member household': {
+                value: {
+                  metadata: { caseId: 'abc-123' },
+                  members: [
+                    exampleMember,
+                    { id: 'spouse', dateOfBirth: '1992-07-20', citizenshipImmigrationStatus: 'citizen' },
+                  ],
+                },
+              },
+            },
+          } as never,
+        },
+      },
+    },
+    responses: {
+      200: {
+        description: 'One member-scoped determination per household member.',
         content: { 'application/json': { schema: DeterminationResponse } },
       },
-      400: { description: 'Invalid request.', content: { 'application/json': { schema: ProblemDetails } } },
-      401: { description: 'Authentication required.', content: { 'application/json': { schema: ProblemDetails } } },
+      ...commonResponses,
     },
   })
 
@@ -211,7 +306,7 @@ export function buildV2OpenApiDocument() {
         'The engine-shaped eligibility contract served at `/v2/eligibility`. The rules engine is the source of truth; build your data model to match these fields.',
         '',
         '- **Friendly fields, no internals** — named fields in nested collections (`members[].income[]`), snake_case enums, no Fact Graph paths or wildcards.',
-        '- **One call, every program** — one household payload + `programs[]` → a unified `determinations[]` (household-scoped for SNAP, one per member for Medicaid).',
+        '- **Per-program endpoints** — `/snap/determination` (household-scoped) and `/medicaid/determination` (one determination per member), explicit and independently traceable.',
         '- **No-guess** — nothing applicant-material is defaulted; what is missing comes back as `pending` + `missingInputs`, in the same request vocabulary, so you know exactly what to send next.',
         '',
         `**Every field** — its type, enum vocabulary, and policy citation — is in the generated catalog: ${CATALOG_URL} (machine-readable JSON alongside it). This spec documents the request/response shape; the catalog is the field list, so they cannot drift.`,

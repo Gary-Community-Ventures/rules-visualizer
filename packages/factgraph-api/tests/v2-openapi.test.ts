@@ -1,8 +1,9 @@
 /**
  * The v2 engine-shaped contract: served publicly, path-free, and matching the
- * implemented endpoint — a friendly request, a unified determinations[]
- * response, and missingInputs in the request vocabulary. /evaluate/determination
- * is implemented; the other evaluate tails are still 501 stubs.
+ * implemented endpoints — per-program (snap, medicaid), friendly request,
+ * per-determination response, and missingInputs in the request vocabulary.
+ * The not-yet-built operation tails (expedited-screening, ex-parte) are still
+ * 501 stubs.
  */
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -25,7 +26,7 @@ test('v2 spec carries the implemented request/response shape', async () => {
   const schemas = res.body.components.schemas
 
   // Friendly request schemas.
-  for (const name of ['DeterminationRequest', 'Member', 'IncomeRow', 'CaregiverRelationship']) {
+  for (const name of ['HouseholdRequest', 'Member', 'IncomeRow', 'CaregiverRelationship']) {
     assert.ok(schemas[name], `expected schema ${name}`)
   }
   assert.ok(schemas.Member.properties.id, 'member carries the caller id handle')
@@ -45,21 +46,28 @@ test('v2 spec carries the implemented request/response shape', async () => {
   const mi = schemas.MissingInput.properties
   assert.ok(mi.requestPath && mi.field && mi.location && mi.label)
 
-  const det200 =
-    res.body.paths['/v2/eligibility/evaluate/determination'].post.responses['200']
-  const detSchema = det200.content['application/json'].schema
-  assert.equal(detSchema.oneOf, undefined, 'determination 200 must not be a union')
-  assert.match(detSchema.$ref, /DeterminationResponse/)
+  // Both program paths are registered.
+  const snapPath = res.body.paths['/v2/eligibility/snap/determination']
+  const medicaidPath = res.body.paths['/v2/eligibility/medicaid/determination']
+  assert.ok(snapPath, 'SNAP determination path registered')
+  assert.ok(medicaidPath, 'Medicaid determination path registered')
+
+  const snap200 = snapPath.post.responses['200']
+  assert.equal(snap200.content['application/json'].schema.oneOf, undefined, 'no oneOf union')
+  assert.match(snap200.content['application/json'].schema.$ref, /DeterminationResponse/)
 })
 
-test('v2 request body ships a determination example', async () => {
+test('v2 request bodies ship determination examples', async () => {
   const res = await request(app).get('/v2/eligibility/openapi.json')
-  const examples =
-    res.body.paths['/v2/eligibility/evaluate/determination'].post.requestBody
+  const snapExamples =
+    res.body.paths['/v2/eligibility/snap/determination'].post.requestBody
       .content['application/json'].examples
-  const example = Object.values(examples)[0] as { value: { programs: string[] } }
-  assert.ok(example, 'expected a determination example')
-  assert.ok(Array.isArray(example.value.programs))
+  assert.ok(Object.values(snapExamples).length > 0, 'SNAP endpoint has examples')
+
+  const medicaidExamples =
+    res.body.paths['/v2/eligibility/medicaid/determination'].post.requestBody
+      .content['application/json'].examples
+  assert.ok(Object.values(medicaidExamples).length > 0, 'Medicaid endpoint has examples')
 })
 
 test('v2 spec is path-free (no rules-engine internals)', async () => {
@@ -68,18 +76,25 @@ test('v2 spec is path-free (no rules-engine internals)', async () => {
   assert.ok(!/eligibilityCategory|x-trace|TraceNode/.test(res.text), 'leaked engine internals')
 })
 
-test('v2 determination is implemented; the other evaluate tails are still 501 stubs', async () => {
-  const det = await request(app)
-    .post('/v2/eligibility/evaluate/determination')
-    .send({ programs: ['snap'], members: [] })
-  assert.equal(det.status, 200)
-  assert.ok(Array.isArray(det.body.determinations))
+test('per-program determination endpoints are implemented; operation tails are still 501 stubs', async () => {
+  const snap = await request(app)
+    .post('/v2/eligibility/snap/determination')
+    .send({ members: [] })
+  assert.equal(snap.status, 200)
+  assert.ok(Array.isArray(snap.body.determinations))
 
-  for (const tail of ['/evaluate/expedited-screening', '/evaluate/medicaid-ex-parte']) {
-    const res = await request(app).post(`/v2/eligibility${tail}`).send({})
-    assert.equal(res.status, 501, `${tail} should still be a stub`)
-    assert.match(res.body.detail, new RegExp(`/v1/eligibility${tail}`))
-  }
+  const medicaid = await request(app)
+    .post('/v2/eligibility/medicaid/determination')
+    .send({ members: [] })
+  assert.equal(medicaid.status, 200)
+  assert.ok(Array.isArray(medicaid.body.determinations))
+
+  const snapExpedited = await request(app).post('/v2/eligibility/snap/expedited-screening').send({})
+  assert.equal(snapExpedited.status, 200, 'expedited-screening is implemented, not a stub')
+
+  const medicaidExParte = await request(app).post('/v2/eligibility/medicaid/ex-parte').send({})
+  assert.equal(medicaidExParte.status, 501)
+  assert.match(medicaidExParte.body.detail, /\/v1\/eligibility\/evaluate\/medicaid-ex-parte/)
 })
 
 test('three Swagger UIs coexist without clobbering each other', async () => {

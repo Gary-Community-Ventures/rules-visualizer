@@ -9,7 +9,8 @@ import { v2DocsRouter, v2StubsRouter } from './routes/v2-openapi.js'
 import rulesetsRouter from './routes/rulesets.js'
 import queryRouter from './routes/query.js'
 import eligibilityRouter from './routes/eligibility.js'
-import eligibilityV2Router from './routes/eligibility-v2.js'
+import eligibilityV2SnapRouter from './routes/eligibility-v2-snap.js'
+import eligibilityV2MedicaidRouter from './routes/eligibility-v2-medicaid.js'
 
 /**
  * Build the Express app. Factored out of the listen call so it can be
@@ -47,11 +48,12 @@ export function buildApp() {
   // the authed eligibility routes so /v1/eligibility/openapi.* and /docs are
   // reachable without a token.
   app.use('/v1/eligibility', consumerOpenapiRouter)
-  // v2 contract — our own engine-shaped surface. Public spec/docs; the real
-  // determination endpoint is mounted before the stubs so it wins, while the
-  // not-yet-built tails (expedited-screening, medicaid-ex-parte) still 501.
+  // v2 contract — our own engine-shaped surface. Public spec/docs; per-program
+  // determination endpoints mounted before the stubs so they win, while the
+  // not-yet-built tails (expedited-screening, ex-parte) still 501.
   app.use('/v2/eligibility', v2DocsRouter)
-  app.use('/v2/eligibility', bearerAuth, eligibilityV2Router)
+  app.use('/v2/eligibility/snap', bearerAuth, eligibilityV2SnapRouter)
+  app.use('/v2/eligibility/medicaid', bearerAuth, eligibilityV2MedicaidRouter)
   app.use('/v2/eligibility', bearerAuth, v2StubsRouter)
 
   // Versioned API surface. Auth applies to everything under /v1.

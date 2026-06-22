@@ -25,10 +25,10 @@ import { z } from 'zod'
 
 import { type QueryResponse } from '../evaluate.js'
 import {
-  toProgramDecision,
+  deriveDenial,
+  toExplanation,
   type ExplanationStep,
 } from './snap.js'
-import { toMedicaidResponse } from './medicaid.js'
 import { type FriendlyMissing } from './field-index.js'
 
 export const SUPPORTED_PROGRAMS = ['snap', 'medicaid'] as const
@@ -39,22 +39,29 @@ export const SUPPORTED_PROGRAMS = ['snap', 'medicaid'] as const
 const bag = () => z.object({}).passthrough()
 
 /**
- * The v2 request: friendly fields, everything optional. Members carry their
- * fields plus nested `income`/`expenses`/`jobs`/`assets`. Omit `programs` to
- * run every supported program; send an empty body to get every program back
- * `pending` with the inputs each still needs. `asOf` sets the evaluation date
- * ("evaluate as of now" when omitted). `metadata` is opaque and echoed back.
+ * Per-program request: one household payload. Everything is optional except
+ * member `id`; an empty body is valid and returns the program pending with the
+ * inputs it needs. `asOf` sets the evaluation date ("evaluate as of now" when
+ * omitted). `metadata` is opaque and echoed back.
+ *
+ * Used by the per-program endpoints (/snap/determination, /medicaid/determination).
  */
-export const V2DeterminationRequestSchema = z
+export const V2HouseholdRequestSchema = z
   .object({
     metadata: z.record(z.string(), z.unknown()).optional(),
-    programs: z.array(z.string()).optional(),
     asOf: z.string().optional(),
     household: bag().optional(),
     members: z.array(bag()).optional(),
     caregiverRelationships: z.array(bag()).optional(),
   })
   .passthrough()
+
+export type V2HouseholdRequest = z.infer<typeof V2HouseholdRequestSchema>
+
+/** @deprecated Use V2HouseholdRequestSchema + per-program endpoints. */
+export const V2DeterminationRequestSchema = V2HouseholdRequestSchema.extend({
+  programs: z.array(z.string()).optional(),
+})
 
 export type V2DeterminationRequest = z.infer<typeof V2DeterminationRequestSchema>
 
@@ -105,51 +112,100 @@ function compact<T extends Record<string, unknown>>(obj: T): T {
   return obj
 }
 
-/** SNAP QueryResponse → one household-scoped Determination, by reshaping the
- *  v1 ProgramDecision (first-class fields instead of `x-` overlays). */
+/** Pull a per-member value from the positional array the engine returns for
+ *  collection facts (each element is a {memberId, value} pair). */
+function perMemberValue(
+  query: QueryResponse,
+  path: string,
+  memberId: string
+): unknown {
+  const arr = query.values[path]
+  if (!Array.isArray(arr)) return undefined
+  return (arr as Array<{ memberId: string; value: unknown }>).find(
+    (e) => e.memberId === memberId
+  )?.value
+}
+
+/** SNAP QueryResponse → one household-scoped Determination. */
 export function snapDetermination(
   query: QueryResponse,
-  metadata: Record<string, unknown>,
   notes: string[]
 ): Determination {
-  const pd = toProgramDecision(query, metadata, notes)
+  const category = query.values['/eligibilityCategory']
+  const allotment = query.values['/allotment']
+  const prorated = query.values['/proratedAllotment']
+  const expedited = query.values['/isExpedited']
+
+  let status: DeterminationStatus
+  let denialReasonCode: string | undefined
+  let explanation: ExplanationStep[] | undefined
+
+  if (category === 'Bce' || category === 'Ece' || category === 'Se') {
+    status = 'approved'
+  } else if (category === 'Ineligible') {
+    const denial = deriveDenial(query)
+    status = denial.status
+    denialReasonCode = denial.reasonCode
+    const steps = toExplanation(query)
+    if (steps.length > 0) explanation = steps
+  } else {
+    status = 'pending'
+  }
+
   return compact({
     program: 'snap',
     scope: 'household',
-    status: pd.status,
-    path: pd.path,
-    benefitAmount: pd['x-allotment'],
-    proratedFirstMonthAmount: pd['x-proratedAllotment'],
-    isExpedited: pd['x-expedited'],
-    denialReasonCode: pd.denialReasonCode,
-    explanation: pd['x-explanation'],
+    status,
+    path: 'auto',
+    benefitAmount: typeof allotment === 'number' ? allotment : undefined,
+    proratedFirstMonthAmount: typeof prorated === 'number' ? prorated : undefined,
+    isExpedited: typeof expedited === 'boolean' ? expedited : undefined,
+    denialReasonCode,
+    explanation,
     // missingInputs is attached by the route in the friendly vocabulary.
-    notes: pd['x-translationNotes'],
-  })
+    notes: notes.length > 0 ? notes : undefined,
+  } as Determination)
 }
 
 /** Medicaid QueryResponse → one member-scoped Determination per member. */
 export function medicaidDeterminations(
   query: QueryResponse,
   memberIds: string[],
-  metadata: Record<string, unknown>,
   notes: string[]
 ): Determination[] {
-  const mr = toMedicaidResponse(query, memberIds, metadata, notes)
-  return mr.decisions.map((d) =>
-    compact({
+  return memberIds.map((memberId) => {
+    const eligible = perMemberValue(query, '/members/*/medicaid', memberId)
+    const category = perMemberValue(query, '/members/*/medicaidCategory', memberId)
+    const chp = perMemberValue(query, '/members/*/chp', memberId)
+
+    let status: DeterminationStatus
+    let denialReasonCode: string | undefined
+
+    if (eligible === true) {
+      status = 'approved'
+    } else if (eligible === false) {
+      status = 'ineligible'
+      denialReasonCode =
+        category === 'Ineligible'
+          ? 'not_in_eligible_category'
+          : 'failed_work_or_legal_requirements'
+    } else {
+      status = 'pending'
+    }
+
+    return compact({
       program: 'medicaid',
       scope: 'member',
-      memberId: d.memberId,
-      status: d.status,
-      path: d.path,
-      medicaidCategory: d['x-medicaidCategory'],
-      chpEligible: d['x-chpEligible'],
-      denialReasonCode: d.denialReasonCode,
+      memberId,
+      status,
+      path: 'auto',
+      medicaidCategory: typeof category === 'string' ? category : undefined,
+      chpEligible: typeof chp === 'boolean' ? chp : undefined,
+      denialReasonCode,
       // missingInputs is attached by the route in the friendly vocabulary.
-      notes: mr['x-translationNotes'],
-    })
-  )
+      notes: notes.length > 0 ? notes : undefined,
+    } as Determination)
+  })
 }
 
 /** A determination for a program the engine doesn't implement yet — honest

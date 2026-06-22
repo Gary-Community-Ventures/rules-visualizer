@@ -27,19 +27,24 @@ without surface impact aren't logged here; see git history for those.
     accepted for medicaid, wrapped as a sole-applicant household with the
     assumption disclosed in `x-translationNotes`.
 
-- **v2 draft-proposal contract** at `GET /v2/eligibility/openapi.{json,yaml}`
-  + Swagger UI at `/v2/eligibility/docs` (committed snapshot:
-  `docs/eligibility-adapter-v2-proposal-openapi.yaml`). A proposed revision
-  of the eligibility-adapter contract — the executable form of
-  `docs/request-field-proposal.md` and the gap analysis: no-guess policy
-  (`pending` + first-class `missingInformation` instead of defaulting),
-  ~70 domain-shaped request fields, medicaid household-in/per-member-out
-  with `subjectMemberId`, first-class `benefitAmount` /
-  `proratedFirstMonthAmount` / `explanation`, `status: not_supported`,
-  `path: ex_parte`, and a fully-specified ex parte endpoint with proposed
-  FDSH serviceResult shapes. **Draft for review only** — the evaluate
-  endpoints return `501` pointing at the implemented `/v1/eligibility`
-  surface, which is frozen and unaffected.
+- **v2 engine-shaped eligibility surface** at `/v2/eligibility` — the rules
+  engine is the source of truth; send friendly named fields, get back
+  first-class outcome fields and per-member `missingInputs`. Spec at
+  `GET /v2/eligibility/openapi.{json,yaml}` + Swagger UI at
+  `/v2/eligibility/docs` (committed snapshot:
+  `docs/eligibility-adapter-v2-proposal-openapi.yaml`):
+  - `POST /v2/eligibility/snap/determination` — SNAP household determination,
+    no-guess. Returns a single household-scoped determination; expedited
+    screening folds in as `isExpedited`.
+  - `POST /v2/eligibility/medicaid/determination` — Medicaid determination,
+    no-guess, per member. Returns one member-scoped determination per
+    household member, each with `missingInputs` attributed to that specific
+    member.
+  - `POST /v2/eligibility/snap/expedited-screening` — purpose-built
+    expedited screening (7 CFR §273.2(i)). Returns `{ isExpedited: boolean |
+    null }` — `null` when inputs are insufficient; `missingInputs` lists
+    exactly what's needed to resolve the screen.
+  - `/medicaid/ex-parte` returns `501` pointing at the frozen v1 surface.
 
 - **Eligibility adapter endpoints** (`/v1/eligibility/evaluate/*`) —
   domain-oriented wrappers conforming to the partner team's

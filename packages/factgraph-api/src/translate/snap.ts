@@ -728,7 +728,7 @@ type FailedGate = { path: string; name?: string; code: string; categorical: bool
  *  the first failed gate decisive. Because only the five gates in
  *  DENIAL_REASON_BY_GATE are recognized, the categorical-eligibility internals
  *  (TANF/SSI checks, etc.) are walked past rather than reported as reasons. */
-function collectFailedGates(root: TraceNode | undefined): FailedGate[] {
+export function collectFailedGates(root: TraceNode | undefined): FailedGate[] {
   const out: FailedGate[] = []
   const seen = new Set<string>()
   const visit = (node: TraceNode | undefined): void => {
@@ -751,7 +751,7 @@ function collectFailedGates(root: TraceNode | undefined): FailedGate[] {
  *  Prefers a financial test for the headline code when several gates failed,
  *  since those carry appeal rights and are the substantive denial. Defaults to
  *  `denied`/`other` when no recognized gate is on the decisive path. */
-function deriveDenial(query: QueryResponse): {
+export function deriveDenial(query: QueryResponse): {
   status: 'denied' | 'ineligible'
   reasonCode: string
 } {
@@ -782,7 +782,7 @@ export function toMissingInformation(
  *  each gate becomes a factor named by the rule's own display name (never a
  *  path), with its boolean outcome. Falls back to the top-level category node
  *  when no recognized gate is on the decisive path. */
-function toExplanation(query: QueryResponse): ExplanationStep[] {
+export function toExplanation(query: QueryResponse): ExplanationStep[] {
   const gates = collectFailedGates(query.traces?.['/eligibilityCategory'])
   if (gates.length > 0) {
     return gates.map((g) => ({ factor: g.name ?? g.path, outcome: false }))

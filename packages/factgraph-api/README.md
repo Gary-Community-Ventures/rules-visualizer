@@ -1,14 +1,17 @@
 # rules-visualizer-factgraph-api
 
 Partner-facing HTTP adapter for [Fact Graph](https://github.com/IRS-Public/direct-file)
-rulesets. Two API surfaces, each with its own OpenAPI contract:
+rulesets. Three API surfaces, each with its own OpenAPI contract:
 
-- **Eligibility adapter (consumer-facing)** — domain-oriented determination
+- **Eligibility v2 (engine-shaped)** — per-program determination endpoints
+  (`/v2/eligibility/snap/determination`, `/v2/eligibility/medicaid/determination`).
+  The rules engine is the source of truth: send friendly named fields, nothing
+  is defaulted, anything missing comes back as `pending` + `missingInputs` in
+  the same request vocabulary. **Start here for new integrations.**
+- **Eligibility adapter v1 (ORCA-shaped)** — domain-oriented determination
   endpoints (`/v1/eligibility/evaluate/*`) conforming to the
   [safety-net-blueprint eligibility-adapter contract](https://github.com/codeforamerica/safety-net-blueprint/blob/main/packages/contracts/eligibility-adapter-openapi.yaml).
-  Send an ORCA-shaped household; get back a program decision. No Fact Graph
-  internals anywhere in the contract. **Start here if you're integrating a
-  caseworker tool or portal.**
+  Send an ORCA-shaped household; get back a `ProgramDecision`. Frozen.
 - **Fact Graph query (advanced)** — a ruleset-agnostic API for evaluating any
   fact-graph target against partial input, with structured "missing inputs"
   feedback, traces, and policy citations. For tooling, exploration, and
@@ -26,17 +29,18 @@ advanced/direct API users).
 |                                                            |                                                                                                                                            |
 | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
 | **API base**                                               | `https://rules-visualizer-factgraph-api-f0c14673cf3a.herokuapp.com`                                                                        |
-| **Eligibility contract — Swagger UI**                      | [`/v1/eligibility/docs`](https://rules-visualizer-factgraph-api-f0c14673cf3a.herokuapp.com/v1/eligibility/docs)                            |
-| **Eligibility contract — OpenAPI 3.1 (for codegen/diff)**  | [`/v1/eligibility/openapi.yaml`](https://rules-visualizer-factgraph-api-f0c14673cf3a.herokuapp.com/v1/eligibility/openapi.yaml)            |
+| **Eligibility v2 — Swagger UI**                            | [`/v2/eligibility/docs`](https://rules-visualizer-factgraph-api-f0c14673cf3a.herokuapp.com/v2/eligibility/docs)                            |
+| **Eligibility v2 — OpenAPI 3.1 (for codegen/diff)**        | [`/v2/eligibility/openapi.yaml`](https://rules-visualizer-factgraph-api-f0c14673cf3a.herokuapp.com/v2/eligibility/openapi.yaml)            |
+| **Eligibility v1 (frozen) — Swagger UI**                   | [`/v1/eligibility/docs`](https://rules-visualizer-factgraph-api-f0c14673cf3a.herokuapp.com/v1/eligibility/docs)                            |
+| **Eligibility v1 (frozen) — OpenAPI 3.1**                  | [`/v1/eligibility/openapi.yaml`](https://rules-visualizer-factgraph-api-f0c14673cf3a.herokuapp.com/v1/eligibility/openapi.yaml)            |
 | **Advanced API — Swagger UI (paste-token-and-try)**        | [`/v1/factgraph/docs`](https://rules-visualizer-factgraph-api-f0c14673cf3a.herokuapp.com/v1/factgraph/docs)                                |
 | **Static docs site (Redoc, doesn't need API up)**          | [gary-community-ventures.github.io/rules-visualizer](https://gary-community-ventures.github.io/rules-visualizer/)                          |
 | **Target explorer (pick a fact, see its required inputs)** | [gary-community-ventures.github.io/rules-visualizer/explore.html](https://gary-community-ventures.github.io/rules-visualizer/explore.html) |
 | **OpenAPI 3.1 spec (for codegen)**                         | [`/v1/factgraph/openapi.yaml`](https://rules-visualizer-factgraph-api-f0c14673cf3a.herokuapp.com/v1/factgraph/openapi.yaml)                |
 
-Every `/v1/*` request needs `Authorization: Bearer <token>`. Get the token from
-whoever set up your access. `/health`, the OpenAPI specs, and the docs pages
-(`/v1/eligibility/openapi.{json,yaml}`, `/v1/eligibility/docs`,
-`/v1/factgraph/openapi.{json,yaml}`, `/v1/factgraph/docs`) are unauthenticated.
+Every `/v1/*` and `/v2/*` determination request needs `Authorization: Bearer <token>`.
+Get the token from whoever set up your access. `/health`, OpenAPI specs, and Swagger UI
+pages are unauthenticated.
 
 ```sh
 # Sanity check
@@ -76,20 +80,30 @@ and prod. Install Bruno, open that folder, click Send.
 
 ## Endpoints
 
-**Eligibility adapter (consumer contract):**
+**Eligibility v2 (engine-shaped, no-guess):**
+
+| Method | Path                                                  | Purpose                                                     |
+| ------ | ----------------------------------------------------- | ----------------------------------------------------------- |
+| `POST` | `/v2/eligibility/snap/determination`                  | SNAP determination — one household-scoped decision          |
+| `POST` | `/v2/eligibility/medicaid/determination`              | Medicaid determination — one decision per member            |
+| `POST` | `/v2/eligibility/snap/expedited-screening`            | SNAP expedited processing screen (7 CFR §273.2(i))          |
+| `POST` | `/v2/eligibility/medicaid/ex-parte`                   | Reserved — returns `501` (use v1 for now)                   |
+| `GET`  | `/v2/eligibility/openapi.{json,yaml}` · `/docs`       | Engine-shaped contract + Swagger UI — public                |
+
+The committed contract snapshot lives at `docs/eligibility-adapter-v2-proposal-openapi.yaml`.
+Field semantics, enum vocabularies, and policy citations are in `docs/input-dictionary.md`.
+
+**Eligibility adapter v1 (ORCA-shaped, frozen):**
 
 | Method | Path                                            | Purpose                                                          |
 | ------ | ----------------------------------------------- | ---------------------------------------------------------------- |
-| `POST` | `/v1/eligibility/evaluate/determination`        | Final determination — SNAP (household decision) or Medicaid (one decision per member) |
+| `POST` | `/v1/eligibility/evaluate/determination`        | Final determination — SNAP (household) or Medicaid (per-member) |
 | `POST` | `/v1/eligibility/evaluate/expedited-screening`  | Expedited SNAP screening (7 CFR §273.2(i))                       |
 | `POST` | `/v1/eligibility/evaluate/medicaid-ex-parte`    | Reserved — returns `501` (not yet modeled)                        |
 | `GET`  | `/v1/eligibility/openapi.{json,yaml}` · `/docs` | Consumer contract + Swagger UI — public                           |
 
-The committed contract snapshot lives at
-`docs/eligibility-adapter-openapi.yaml`. Related reading:
-`docs/contract-gap-analysis.md` (what the contract carries vs. what the
-rulesets need) and `docs/request-field-proposal.md` (the proposed fields to
-close that gap, and the defaulting policy).
+The committed contract snapshot lives at `docs/eligibility-adapter-openapi.yaml`.
+Conformance matrix: `docs/v1-conformance.md`.
 
 **Fact Graph query (advanced):**
 
@@ -185,9 +199,8 @@ before we land them.
 | ✅     | Structured trace/explanation API via `include: ["trace"]` (recursive TraceNode tree with deciding-branch semantics + inline citations)        |
 | ✅     | Eligibility adapter (`/v1/eligibility/evaluate/*`): SNAP + Medicaid determinations and expedited screening, conformant to the published contract ([matrix](./docs/v1-conformance.md)) |
 | ✅     | Separate consumer-facing OpenAPI contract + Swagger UI per surface                                                                            |
-| ✅     | v2 draft-proposal contract (`/v2/eligibility/docs`) — no-guess policy, full input surface, unified `decisions[]` response                     |
+| ✅     | v2 engine-shaped surface (`/v2/eligibility/snap/determination`, `/v2/eligibility/medicaid/determination`, `/v2/eligibility/snap/expedited-screening`) — no-guess, per-program, per-member `missingInputs` |
 | ✅     | Generated [input dictionary](./docs/input-dictionary.md) — rules-sourced definitions, enums, policy citations per field                       |
-| ⏳     | v2 implementation (pending partner review of the draft contract)                                                                              |
 | ⏳     | Medicaid ex parte (pending contract clarifications — see the [gap analysis](./docs/contract-gap-analysis.md))                                 |
 | ⏳     | Alternation in `missingInputs` (express "one-of" relationships when an `Any` could be satisfied by any of several inputs)                     |
 | ⏳     | Trace v2: walk arithmetic + Switch ops, per-member traces for collection-scoped targets                                                       |
