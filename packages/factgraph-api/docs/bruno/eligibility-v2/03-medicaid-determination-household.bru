@@ -1,0 +1,51 @@
+meta {
+  name: 03 Medicaid determination — two-member household
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{base_url}}/v2/eligibility/medicaid/determination
+  body: json
+  auth: bearer
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{api_token}}
+}
+
+body:json {
+  {
+    "metadata": { "caseId": "v2-medicaid-household" },
+    "members": [
+      {
+        "id": "head",
+        "dateOfBirth": "1990-03-15",
+        "citizenshipImmigrationStatus": "citizen",
+        "isHeadOfHousehold": true,
+        "income": [{ "type": "wages_and_salaries", "amount": 1200, "frequency": "monthly" }]
+      },
+      {
+        "id": "spouse",
+        "dateOfBirth": "1992-07-20",
+        "citizenshipImmigrationStatus": "citizen",
+        "spouseId": "head",
+        "income": []
+      }
+    ]
+  }
+}
+
+docs {
+  Two-member household — one earner, one non-earner. Medicaid is
+  member-scoped: the response has one determination per member.
+
+  Expected: determinations[] with two entries, each with memberId
+  matching the ids above ("head", "spouse"). Each may be "pending"
+  or "approved"/"denied" depending on the household's MAGI
+  relative to the FPL.
+}

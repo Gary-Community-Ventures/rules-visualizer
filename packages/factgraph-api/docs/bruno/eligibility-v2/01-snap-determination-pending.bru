@@ -1,0 +1,46 @@
+meta {
+  name: 01 SNAP determination — pending (partial inputs)
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{base_url}}/v2/eligibility/snap/determination
+  body: json
+  auth: bearer
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{api_token}}
+}
+
+body:json {
+  {
+    "metadata": { "caseId": "v2-snap-pending" },
+    "members": [
+      {
+        "id": "head",
+        "dateOfBirth": "1990-03-15",
+        "citizenshipImmigrationStatus": "citizen",
+        "isHeadOfHousehold": true,
+        "income": [{ "type": "wages_and_salaries", "amount": 1200, "frequency": "monthly" }]
+      }
+    ]
+  }
+}
+
+docs {
+  Partial inputs — demographics + income, nothing else. Under the
+  no-guess policy the engine cannot resolve the full determination,
+  so the response is status "pending" with missingInputs listing
+  the exact fields (in this same request vocabulary) needed to
+  complete the screen.
+
+  Expected: determinations[0].status "pending", missingInputs[]
+  present, requestPath values like "members[].hasPhysicalDisability"
+  (never a Fact Graph path like /members/*/hasPhysicalDisability).
+}

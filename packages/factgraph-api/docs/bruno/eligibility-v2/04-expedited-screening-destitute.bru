@@ -1,0 +1,43 @@
+meta {
+  name: 04 SNAP expedited screening — destitute household
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{base_url}}/v2/eligibility/snap/expedited-screening
+  body: json
+  auth: bearer
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{api_token}}
+}
+
+body:json {
+  {
+    "metadata": { "caseId": "v2-expedited-destitute" },
+    "members": [
+      {
+        "id": "head",
+        "dateOfBirth": "1990-03-15",
+        "citizenshipImmigrationStatus": "citizen",
+        "isHeadOfHousehold": true,
+        "income": [{ "type": "wages_and_salaries", "amount": 0, "frequency": "monthly" }],
+        "assets": [{ "type": "checking_account", "amount": 0 }]
+      }
+    ]
+  }
+}
+
+docs {
+  A household with no income and no liquid resources — should qualify
+  for expedited processing (7 CFR §273.2(i): gross monthly income < $150
+  AND liquid resources < $100).
+
+  Expected: isExpedited true, no missingInputs.
+}

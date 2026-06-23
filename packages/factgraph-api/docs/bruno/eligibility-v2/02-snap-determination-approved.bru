@@ -1,0 +1,56 @@
+meta {
+  name: 02 SNAP determination — approved household
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{base_url}}/v2/eligibility/snap/determination
+  body: json
+  auth: bearer
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{api_token}}
+}
+
+body:json {
+  {
+    "metadata": { "caseId": "v2-snap-approved" },
+    "members": [
+      {
+        "id": "head",
+        "dateOfBirth": "1990-03-15",
+        "citizenshipImmigrationStatus": "citizen",
+        "isHeadOfHousehold": true,
+        "hasPhysicalDisability": false,
+        "isStudent": false,
+        "isSelfEmployed": false,
+        "isFleeingFelony": false,
+        "isViolatingProbationOrParole": false,
+        "isDisqualifiedForFraud": false,
+        "hasWorkRequirementExemption": true,
+        "income": [{ "type": "wages_and_salaries", "amount": 1200, "frequency": "monthly" }],
+        "expenses": [{ "type": "rent", "amount": 800, "frequency": "monthly" }],
+        "assets": [{ "type": "checking_account", "amount": 500 }]
+      }
+    ],
+    "household": {
+      "hasUtilityExpenses": true
+    }
+  }
+}
+
+docs {
+  A fully-specified single-member household that should resolve to
+  "approved". Disqualifier flags are explicitly false (no-guess: they
+  are never defaulted).
+
+  Expected: determinations[0].status "approved", benefitAmount set,
+  proratedFirstMonthAmount set (prorated from today, so the value
+  varies with the calendar).
+}

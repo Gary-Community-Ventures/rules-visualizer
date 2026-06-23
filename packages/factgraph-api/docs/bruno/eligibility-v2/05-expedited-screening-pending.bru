@@ -1,0 +1,43 @@
+meta {
+  name: 05 SNAP expedited screening — pending (inputs needed)
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{base_url}}/v2/eligibility/snap/expedited-screening
+  body: json
+  auth: bearer
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{api_token}}
+}
+
+body:json {
+  {
+    "metadata": { "caseId": "v2-expedited-pending" },
+    "members": [
+      {
+        "id": "head",
+        "dateOfBirth": "1990-03-15",
+        "citizenshipImmigrationStatus": "citizen",
+        "isHeadOfHousehold": true,
+        "income": [{ "type": "wages_and_salaries", "amount": 1200, "frequency": "monthly" }]
+      }
+    ]
+  }
+}
+
+docs {
+  Income provided but assets/resources not — the engine cannot rule
+  out all expedited criteria without knowing liquid resources.
+
+  Expected: isExpedited null, missingInputs[] listing what's needed
+  (e.g. assets or liquid resource fields). No missingInputs if the
+  screen resolves.
+}

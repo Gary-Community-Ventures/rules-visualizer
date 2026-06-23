@@ -19,10 +19,22 @@ any request — no copy-paste, no JSON formatting.
 
 ## What's in here
 
-Two folders, by API surface. If you're integrating a caseworker tool or
-portal, start with `eligibility-adapter/`.
+Three folders, by API surface. If you're integrating a caseworker tool or
+portal, start with `eligibility-v2/` (the engine-shaped surface). The
+`eligibility-adapter/` folder covers the frozen v1 contract; `advanced-query/`
+covers the raw Fact Graph query API.
 
-### `eligibility-adapter/` — the consumer-facing adapter (`/v1/eligibility`)
+### `eligibility-v2/` — the engine-shaped surface (`/v2/eligibility`) — start here
+
+| #   | Request                                   | Shows                                                                                             |
+| --- | ----------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| 01  | SNAP determination — pending              | Partial inputs → `status "pending"` + `missingInputs` in the friendly request vocabulary          |
+| 02  | SNAP determination — approved             | Fully-specified household → `status "approved"`, benefit amounts                                  |
+| 03  | Medicaid determination — two-member       | Household-in / per-member-out: one determination per member, each with its own `missingInputs`    |
+| 04  | Expedited screening — destitute household | $0 income + $0 assets → `isExpedited true` (7 CFR §273.2(i))                                      |
+| 05  | Expedited screening — pending             | Income provided, assets missing → `isExpedited null` + `missingInputs`                           |
+
+### `eligibility-adapter/` — the frozen v1 adapter (`/v1/eligibility`)
 
 | #   | Request                                  | Shows                                                                                       |
 | --- | ---------------------------------------- | -------------------------------------------------------------------------------------------- |
@@ -89,8 +101,8 @@ Pick the environment in Bruno's top-right dropdown before clicking Send.
 
 ## Bearer-token auth
 
-Every `/v1/*` request in the collection uses `auth: bearer` with the
-`{{api_token}}` variable. The token is declared as a **secret variable**
+Every `/v1/*` and `/v2/*` request in the collection uses `auth: bearer` with
+the `{{api_token}}` variable. The token is declared as a **secret variable**
 in each environment file, which means Bruno stores its actual value in a
 gitignored local file (`environments/local.env.local`, etc.) — never in
 the committed `.bru`.
@@ -107,7 +119,7 @@ The value is stored locally and gets sent on every request via the
 **Don't have a token?** Ask whoever set up the deploy. For `local`, the
 API is open by default (server reads `API_BEARER_TOKEN` from its env
 and skips auth when unset), so you can leave `api_token` empty and
-requests still succeed.
+all requests still succeed.
 
 ## Editing or extending the collection
 
