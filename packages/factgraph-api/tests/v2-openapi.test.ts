@@ -2,8 +2,8 @@
  * The v2 engine-shaped contract: served publicly, path-free, and matching the
  * implemented endpoints — per-program (snap, medicaid), friendly request,
  * per-determination response, and missingInputs in the request vocabulary.
- * The not-yet-built operation tails (expedited-screening, ex-parte) are still
- * 501 stubs.
+ * /snap/expedited-screening is implemented; only /medicaid/ex-parte is still
+ * a 501 stub.
  */
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -76,7 +76,7 @@ test('v2 spec is path-free (no rules-engine internals)', async () => {
   assert.ok(!/eligibilityCategory|x-trace|TraceNode/.test(res.text), 'leaked engine internals')
 })
 
-test('per-program determination endpoints are implemented; operation tails are still 501 stubs', async () => {
+test('per-program determination and expedited-screening endpoints are implemented; only medicaid/ex-parte is a 501 stub', async () => {
   const snap = await request(app)
     .post('/v2/eligibility/snap/determination')
     .send({ members: [] })

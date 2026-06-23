@@ -3,9 +3,9 @@
  *
  * Serves the v2 contract (see v2-openapi.ts) at /v2/eligibility/openapi.{json,yaml}
  * + /docs — public, like the other contract docs. The per-program determination
- * endpoints (/snap/determination, /medicaid/determination) are implemented and
- * mounted in server.ts; the not-yet-built operation tails (expedited-screening,
- * ex-parte) stub to 501 with a pointer to the implemented v1 surface.
+ * endpoints (/snap/determination, /medicaid/determination,
+ * /snap/expedited-screening) are implemented and mounted in server.ts;
+ * only /medicaid/ex-parte stubs to 501.
  */
 import { Router } from 'express'
 import swaggerUi from 'swagger-ui-express'

@@ -49,8 +49,8 @@ export function buildApp() {
   // reachable without a token.
   app.use('/v1/eligibility', consumerOpenapiRouter)
   // v2 contract — our own engine-shaped surface. Public spec/docs; per-program
-  // determination endpoints mounted before the stubs so they win, while the
-  // not-yet-built tails (expedited-screening, ex-parte) still 501.
+  // determination + expedited-screening endpoints mounted before the stubs;
+  // only /medicaid/ex-parte still 501.
   app.use('/v2/eligibility', v2DocsRouter)
   app.use('/v2/eligibility/snap', bearerAuth, eligibilityV2SnapRouter)
   app.use('/v2/eligibility/medicaid', bearerAuth, eligibilityV2MedicaidRouter)
