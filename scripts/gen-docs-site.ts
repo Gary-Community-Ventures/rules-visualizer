@@ -1,17 +1,18 @@
 /**
  * Generate the static docs site for GitHub Pages.
  *
- * Renders TWO OpenAPI documents, the same ones the running API serves:
- *   - the consumer-facing Eligibility Adapter contract (the partner-facing
- *     page; /v1/eligibility/openapi.yaml) → index.html
- *   - the advanced Fact Graph query/discovery API (/v1/factgraph/openapi.yaml)
- *     → advanced.html
+ * Renders THREE OpenAPI documents, the same ones the running API serves:
+ *   - the v2 engine-shaped eligibility API (/v2/eligibility/openapi.yaml) → eligibility-v2.html
+ *   - the v1 frozen eligibility adapter (/v1/eligibility/openapi.yaml) → index.html
+ *   - the advanced Fact Graph query/discovery API (/v1/factgraph/openapi.yaml) → advanced.html
  *
  * Outputs (into the directory passed as the first argument):
+ *   - eligibility-v2-openapi.{json,yaml}
  *   - eligibility-openapi.{json,yaml}, openapi.{json,yaml}
- *   - index.html       — Redoc over the eligibility contract (primary)
- *   - advanced.html    — Redoc over the advanced API
- *   - explore.html     — interactive target explorer (drives the live API)
+ *   - eligibility-v2.html — Redoc over the v2 engine-shaped contract (primary)
+ *   - index.html          — Redoc over the v1 frozen contract
+ *   - advanced.html       — Redoc over the advanced API
+ *   - explore.html        — interactive target explorer (drives the live API)
  *
  * Runs in CI via tsx (.github/workflows/docs.yml). Doesn't start the server.
  */
@@ -23,6 +24,7 @@ import yaml from 'yaml'
 
 import { buildOpenApiDocument } from '../packages/factgraph-api/src/openapi.js'
 import { buildConsumerOpenApiDocument } from '../packages/factgraph-api/src/consumer-openapi.js'
+import { buildV2OpenApiDocument } from '../packages/factgraph-api/src/v2-openapi.js'
 import { buildDictionaryData } from '../packages/factgraph-api/scripts/generate-input-dictionary.js'
 import { buildEngineInputs, DICTIONARY_SCHEMA_VERSION } from '../packages/factgraph-api/scripts/generate-engine-inputs.js'
 
@@ -32,16 +34,19 @@ mkdirSync(outDir, { recursive: true })
 
 const consumerDoc = buildConsumerOpenApiDocument()
 const advancedDoc = buildOpenApiDocument()
+const v2Doc = buildV2OpenApiDocument()
 writeFileSync(`${outDir}/eligibility-openapi.json`, JSON.stringify(consumerDoc, null, 2))
 writeFileSync(`${outDir}/eligibility-openapi.yaml`, yaml.stringify(consumerDoc))
+writeFileSync(`${outDir}/eligibility-v2-openapi.json`, JSON.stringify(v2Doc, null, 2))
+writeFileSync(`${outDir}/eligibility-v2-openapi.yaml`, yaml.stringify(v2Doc))
 writeFileSync(`${outDir}/openapi.json`, JSON.stringify(advancedDoc, null, 2))
 writeFileSync(`${outDir}/openapi.yaml`, yaml.stringify(advancedDoc))
 
 // Redoc is loaded from a CDN — no build step. A small nav strip above the
-// viewport links across the two contracts and the interactive explorer.
+// viewport links across the contracts and the interactive explorer.
 function redocPage(opts: {
   title: string
-  here: 'consumer' | 'advanced'
+  here: 'v2' | 'v1' | 'advanced'
   specUrl: string
   description: string
 }): string {
@@ -75,8 +80,9 @@ function redocPage(opts: {
   </head>
   <body>
     <nav class="docs-nav">
-      ${tab('./index.html', 'Eligibility contract', opts.here === 'consumer')}
+      ${tab('./eligibility-v2.html', 'v2 API', opts.here === 'v2')}
       <a href="./engine-inputs.html">Engine inputs</a>
+      ${tab('./index.html', 'v1 API (frozen)', opts.here === 'v1')}
       <a href="./dictionary.html">Legacy inputs</a>
       <span class="spacer"></span>
       ${tab('./advanced.html', 'Advanced API', opts.here === 'advanced')}
@@ -90,13 +96,23 @@ function redocPage(opts: {
 }
 
 writeFileSync(
+  `${outDir}/eligibility-v2.html`,
+  redocPage({
+    title: 'Eligibility API v2 (engine-shaped) — docs',
+    here: 'v2',
+    specUrl: './eligibility-v2-openapi.yaml',
+    description:
+      'Engine-shaped eligibility determination API — per-program endpoints, no-guess, friendly fields.',
+  })
+)
+writeFileSync(
   `${outDir}/index.html`,
   redocPage({
-    title: 'Eligibility Adapter API — docs',
-    here: 'consumer',
+    title: 'Eligibility Adapter API v1 (frozen) — docs',
+    here: 'v1',
     specUrl: './eligibility-openapi.yaml',
     description:
-      'Consumer-facing eligibility determination contract — ORCA-shaped, no Fact Graph internals.',
+      'Consumer-facing eligibility determination contract v1 — ORCA-shaped, frozen.',
   })
 )
 writeFileSync(
@@ -161,8 +177,9 @@ const dictionaryHtml = `<!DOCTYPE html>
   </head>
   <body>
     <nav class="docs-nav">
-      <a href="./index.html">Eligibility contract</a>
+      <a href="./eligibility-v2.html">v2 API</a>
       <a href="./engine-inputs.html">Engine inputs</a>
+      <a href="./index.html">v1 API (frozen)</a>
       <strong>Legacy inputs</strong>
       <span class="spacer"></span>
       <a href="./advanced.html">Advanced API</a>
@@ -176,8 +193,8 @@ const dictionaryHtml = `<!DOCTYPE html>
       best-guess source classifications). The current source of truth is
       <a href="./engine-inputs.html">Engine inputs</a> — every input the engine
       actually accepts, keyed as you send it. Kept here for reference only.</p>
-      <p>Every request field in the <a href="./index.html">eligibility contract</a>
-      and the v2 draft, with the rule authors' own definitions, enum vocabularies,
+      <p>Every request field in the <a href="./index.html">v1 API contract</a>,
+      with the rule authors' own definitions, enum vocabularies,
       and policy citations — generated from the rulesets.
       <strong>Source</strong> is our best guess at where each value realistically
       originates, offered for the partner teams to correct. The purple
@@ -386,7 +403,7 @@ const engineInputsHtml = `<!DOCTYPE html>
   </head>
   <body>
     <nav class="docs-nav">
-      <a href="./index.html">Eligibility contract</a>
+      <a href="./eligibility-v2.html">v2 API</a>
       <strong>Engine inputs</strong>
       <a href="./dictionary.html">Legacy inputs</a>
       <span class="spacer"></span>
