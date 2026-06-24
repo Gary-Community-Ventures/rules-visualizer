@@ -13,10 +13,19 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import './helpers.js'
-import { renderEngineInputs, buildEngineInputs } from '../scripts/generate-engine-inputs.js'
+import { renderEngineInputs, buildEngineInputs, DICTIONARY_SCHEMA_VERSION } from '../scripts/generate-engine-inputs.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const FILE = path.resolve(__dirname, '..', 'docs', 'engine-inputs.json')
+
+test('catalog carries a schemaVersion matching DICTIONARY_SCHEMA_VERSION', () => {
+  const doc = buildEngineInputs()
+  assert.ok(typeof doc.schemaVersion === 'string' && doc.schemaVersion.length > 0, 'schemaVersion present')
+  assert.equal(doc.schemaVersion, DICTIONARY_SCHEMA_VERSION)
+  // Confirm it also landed in the committed file.
+  const committed = JSON.parse(readFileSync(FILE, 'utf-8'))
+  assert.equal(committed.schemaVersion, DICTIONARY_SCHEMA_VERSION)
+})
 
 test('engine-inputs.json is in sync with the generator', () => {
   const committed = readFileSync(FILE, 'utf-8')

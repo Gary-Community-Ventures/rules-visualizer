@@ -24,7 +24,7 @@ import yaml from 'yaml'
 import { buildOpenApiDocument } from '../packages/factgraph-api/src/openapi.js'
 import { buildConsumerOpenApiDocument } from '../packages/factgraph-api/src/consumer-openapi.js'
 import { buildDictionaryData } from '../packages/factgraph-api/scripts/generate-input-dictionary.js'
-import { buildEngineInputs } from '../packages/factgraph-api/scripts/generate-engine-inputs.js'
+import { buildEngineInputs, DICTIONARY_SCHEMA_VERSION } from '../packages/factgraph-api/scripts/generate-engine-inputs.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const outDir = resolve(process.argv[2] ?? 'build')
@@ -328,6 +328,9 @@ const engineInputsHtml = `<!DOCTYPE html>
       details.values { margin-top: 0.4rem; font-size: 13px; }
       details.values code { background: #f3f4f6; padding: 0 0.3rem; border-radius: 4px; }
       .hidden { display: none; }
+      .schema-version { display: inline-block; font-size: 13px; font-weight: 500;
+        padding: 0.15rem 0.55rem; border-radius: 999px; background: #dbeafe;
+        color: #1e40af; margin-left: 0.6rem; vertical-align: middle; }
     </style>
   </head>
   <body>
@@ -340,7 +343,7 @@ const engineInputsHtml = `<!DOCTYPE html>
       <a href="./explore.html">Target explorer →</a>
     </nav>
     <main>
-      <h1>Engine inputs</h1>
+      <h1>Engine inputs <span class="schema-version">Schema __VERSION__</span></h1>
       <p class="lede">Every input the rules engine accepts, with the rule authors'
       own definitions, enum vocabularies, and policy citations — generated from
       the rulesets. The rules engine is the source of truth: build a data model
@@ -441,6 +444,7 @@ const engineInputsHtml = `<!DOCTYPE html>
 writeFileSync(
   `${outDir}/engine-inputs.html`,
   engineInputsHtml
+    .replace('__VERSION__', DICTIONARY_SCHEMA_VERSION)
     .replace('__COVERAGE__', engine.coverage)
     .replace('__DATA__', JSON.stringify(engine).replace(/</g, '\\u003c'))
 )

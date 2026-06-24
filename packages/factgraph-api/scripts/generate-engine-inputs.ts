@@ -33,6 +33,14 @@ import type { Model, ModelNode } from 'rules-visualizer-shared-types'
 
 import { indexForModel, requestPath, type FieldEntry } from '../src/translate/field-index.js'
 
+/**
+ * Bump this when the field list changes (fields added, removed, renamed, or
+ * enum values changed). Patch = additions; minor = removals/renames/type
+ * changes; major = structural reshaping. Consumers embed this in their own
+ * data model to detect when they need to re-sync.
+ */
+export const DICTIONARY_SCHEMA_VERSION = '1.0.0'
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const DATA_DIR = path.resolve(__dirname, '..', '..', '..', 'data', 'factgraph')
 const OUT = path.resolve(__dirname, '..', 'docs', 'engine-inputs.json')
@@ -94,6 +102,7 @@ export type EngineInputGroup = { title: string; fields: EngineInputField[] }
 
 export type EngineInputsDoc = {
   $comment: string
+  schemaVersion: string
   about: string
   coverage: string
   kinds: Record<string, string>
@@ -158,8 +167,9 @@ export function buildEngineInputs(): EngineInputsDoc {
   return {
     $comment:
       'GENERATED FILE — do not edit by hand. Source: scripts/generate-engine-inputs.ts (built from the rulesets via the adapter field index). Regenerate: npm run gen:engine-inputs.',
+    schemaVersion: DICTIONARY_SCHEMA_VERSION,
     about:
-      'Canonical catalog of every input the eligibility API accepts. The rules engine is the source of truth: build your data model to match these fields. Each field is shown as you send it — a friendly name in a request location — with the rule author’s name, definition, enum vocabulary, and policy citations taken directly from the rules. `enginePath` is the internal Fact Graph path it maps to, for traceability only.',
+      "Canonical catalog of every input the eligibility API accepts. The rules engine is the source of truth: build your data model to match these fields. Each field is shown as you send it — a friendly name in a request location — with the rule author’s name, definition, enum vocabulary, and policy citations taken directly from the rules. `enginePath` is the internal Fact Graph path it maps to, for traceability only. `schemaVersion` increments when the field list changes (additions: patch bump; removals/renames/type changes: minor bump) — compare it to detect whether to re-sync your data model.",
     coverage:
       'SNAP is a near-complete implementation of the program, so its inputs are exhaustive. Medicaid is a basic, illustrative subset — its input list is a sketch, not the full program. SNAP and Medicaid model some shared concepts (age, disability, income) with different facts, so a concept can appear under each program.',
     kinds: {
