@@ -15,7 +15,7 @@
  *
  * Runs in CI via tsx (.github/workflows/docs.yml). Doesn't start the server.
  */
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -76,10 +76,10 @@ function redocPage(opts: {
   <body>
     <nav class="docs-nav">
       ${tab('./index.html', 'Eligibility contract', opts.here === 'consumer')}
-      ${tab('./advanced.html', 'Advanced API', opts.here === 'advanced')}
       <a href="./engine-inputs.html">Engine inputs</a>
       <a href="./dictionary.html">Legacy inputs</a>
       <span class="spacer"></span>
+      ${tab('./advanced.html', 'Advanced API', opts.here === 'advanced')}
       <a href="./explore.html">Target explorer →</a>
     </nav>
     <redoc spec-url="${opts.specUrl}"></redoc>
@@ -162,9 +162,10 @@ const dictionaryHtml = `<!DOCTYPE html>
   <body>
     <nav class="docs-nav">
       <a href="./index.html">Eligibility contract</a>
-      <a href="./advanced.html">Advanced API</a>
+      <a href="./engine-inputs.html">Engine inputs</a>
       <strong>Legacy inputs</strong>
       <span class="spacer"></span>
+      <a href="./advanced.html">Advanced API</a>
       <a href="./explore.html">Target explorer →</a>
     </nav>
     <main>
@@ -289,10 +290,52 @@ writeFileSync(
 const engine = buildEngineInputs()
 writeFileSync(`${outDir}/engine-inputs.json`, JSON.stringify(engine, null, 2))
 
+// Historical versioned snapshots — committed alongside each version bump by
+// the generate-engine-inputs script. Discovered at build time so the docs
+// site grows automatically when a new snapshot is committed.
+const apiDocsDir = resolve(__dirname, '../packages/factgraph-api/docs')
+type EngineSnapshot = { version: string; data: typeof engine }
+const versionedSnapshots: EngineSnapshot[] = readdirSync(apiDocsDir)
+  .filter((f) => /^engine-inputs-v\d+\.\d+\.\d+\.json$/.test(f))
+  .map((f) => ({
+    version: f.match(/v(\d+\.\d+\.\d+)/)![1],
+    data: JSON.parse(readFileSync(resolve(apiDocsDir, f), 'utf-8')) as typeof engine,
+  }))
+  .sort((a, b) => {
+    const [am, an, ap] = a.version.split('.').map(Number)
+    const [bm, bn, bp] = b.version.split('.').map(Number)
+    return bm - am || bn - an || bp - ap
+  })
+
+const allSnapshotVersions = versionedSnapshots.map((s) => s.version)
+
+const CHANGELOG_URL =
+  'https://github.com/Gary-Community-Ventures/rules-visualizer/blob/main/packages/factgraph-api/docs/engine-inputs-changelog.md'
+
+function buildVersionNav(activeKey: 'latest' | string): string {
+  const sep = ' <span class="vn-sep">·</span> '
+  const parts: string[] = ['<span class="vn-label">Version:</span>']
+  parts.push(
+    activeKey === 'latest'
+      ? '<strong class="vn-active">latest</strong>'
+      : '<a href="./engine-inputs.html">latest</a>'
+  )
+  for (const v of allSnapshotVersions) {
+    parts.push(
+      activeKey === v
+        ? `<strong class="vn-active">v${v}</strong>`
+        : `<a href="./engine-inputs-v${v}.html">v${v}</a>`
+    )
+  }
+  parts.push(`<a href="${CHANGELOG_URL}" class="vn-changelog">changelog &#x2192;</a>`)
+  return `<nav class="version-nav">${parts.join(sep)}</nav>`
+}
+
+
 const engineInputsHtml = `<!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>Engine inputs — Eligibility Adapter API</title>
+    <title>__PAGE_TITLE__</title>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content="Every input the rules engine accepts, with its definition, type, enum vocabulary, and policy citations — the source of truth to build a data model against." />
@@ -331,19 +374,28 @@ const engineInputsHtml = `<!DOCTYPE html>
       .schema-version { display: inline-block; font-size: 13px; font-weight: 500;
         padding: 0.15rem 0.55rem; border-radius: 999px; background: #dbeafe;
         color: #1e40af; margin-left: 0.6rem; vertical-align: middle; }
+      .version-nav { font-size: 13px; color: #6b7280; margin: 0.5rem 0 1rem;
+        display: flex; flex-wrap: wrap; gap: 0.3rem; align-items: center; }
+      .version-nav a { color: #2563eb; text-decoration: none; }
+      .version-nav a:hover { text-decoration: underline; }
+      .vn-label { font-weight: 500; color: #374151; }
+      .vn-active { font-weight: 600; color: #1f2937; }
+      .vn-sep { color: #d1d5db; }
+      .vn-changelog { color: #6b7280 !important; }
     </style>
   </head>
   <body>
     <nav class="docs-nav">
       <a href="./index.html">Eligibility contract</a>
-      <a href="./advanced.html">Advanced API</a>
       <strong>Engine inputs</strong>
       <a href="./dictionary.html">Legacy inputs</a>
       <span class="spacer"></span>
+      <a href="./advanced.html">Advanced API</a>
       <a href="./explore.html">Target explorer →</a>
     </nav>
     <main>
       <h1>Engine inputs <span class="schema-version">Schema __VERSION__</span></h1>
+      __VERSION_NAV__
       <p class="lede">Every input the rules engine accepts, with the rule authors'
       own definitions, enum vocabularies, and policy citations — generated from
       the rulesets. The rules engine is the source of truth: build a data model
@@ -351,7 +403,7 @@ const engineInputsHtml = `<!DOCTYPE html>
       it), <strong>derived</strong> (you send an applicant-natural form like a
       date of birth and the engine computes its internal fact), or
       <strong>reference</strong> (an id/link). Also available as
-      <a href="./engine-inputs.json">JSON</a>.</p>
+      <a href="__JSON_HREF__">JSON</a>.</p>
       <p class="coverage">__COVERAGE__</p>
       <div class="controls">
         <input id="q" type="search" placeholder="Search fields and definitions…" />
@@ -441,13 +493,40 @@ const engineInputsHtml = `<!DOCTYPE html>
   </body>
 </html>
 `
+function renderEngineInputsPage(
+  data: typeof engine,
+  opts: { pageTitle: string; activeKey: 'latest' | string; jsonHref: string }
+): string {
+  return engineInputsHtml
+    .replace('__PAGE_TITLE__', opts.pageTitle)
+    .replace('__VERSION__', data.schemaVersion)
+    .replace('__VERSION_NAV__', buildVersionNav(opts.activeKey))
+    .replace('__COVERAGE__', data.coverage)
+    .replace('__JSON_HREF__', opts.jsonHref)
+    .replace('__DATA__', JSON.stringify(data).replace(/</g, '\\u003c'))
+}
+
 writeFileSync(
   `${outDir}/engine-inputs.html`,
-  engineInputsHtml
-    .replace('__VERSION__', DICTIONARY_SCHEMA_VERSION)
-    .replace('__COVERAGE__', engine.coverage)
-    .replace('__DATA__', JSON.stringify(engine).replace(/</g, '\\u003c'))
+  renderEngineInputsPage(engine, {
+    pageTitle: 'Engine inputs — Eligibility Adapter API',
+    activeKey: 'latest',
+    jsonHref: './engine-inputs.json',
+  })
 )
+
+// Historical versioned pages — one per committed snapshot.
+for (const { version, data } of versionedSnapshots) {
+  writeFileSync(`${outDir}/engine-inputs-v${version}.json`, JSON.stringify(data, null, 2))
+  writeFileSync(
+    `${outDir}/engine-inputs-v${version}.html`,
+    renderEngineInputsPage(data, {
+      pageTitle: `Engine inputs v${version} — Eligibility Adapter API`,
+      activeKey: version,
+      jsonHref: `./engine-inputs-v${version}.json`,
+    })
+  )
+}
 
 // Lift the explorer template into the build output. Sourced from
 // scripts/docs-site-templates/explore.html so it can be edited as a

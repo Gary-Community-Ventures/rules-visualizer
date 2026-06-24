@@ -1,0 +1,3861 @@
+{
+  "$comment": "GENERATED FILE — do not edit by hand. Source: scripts/generate-engine-inputs.ts (built from the rulesets via the adapter field index). Regenerate: npm run gen:engine-inputs.",
+  "schemaVersion": "1.0.0",
+  "about": "Canonical catalog of every input the eligibility API accepts. The rules engine is the source of truth: build your data model to match these fields. Each field is shown as you send it — a friendly name in a request location — with the rule author’s name, definition, enum vocabulary, and policy citations taken directly from the rules. `enginePath` is the internal Fact Graph path it maps to, for traceability only. `schemaVersion` increments when the field list changes (additions: patch bump; removals/renames/type changes: minor bump) — compare it to detect whether to re-sync your data model.",
+  "coverage": "SNAP is a near-complete implementation of the program, so its inputs are exhaustive. Medicaid is a basic, illustrative subset — its input list is a sketch, not the full program. SNAP and Medicaid model some shared concepts (age, disability, income) with different facts, so a concept can appear under each program.",
+  "kinds": {
+    "applicant": "A value you provide as-is.",
+    "derived": "You send an applicant-natural form (e.g. a date of birth) and the engine computes its internal fact; see the field’s derivation note.",
+    "reference": "A link to another row by its id (e.g. a member’s spouse, or a caregiver/dependent pairing)."
+  },
+  "groups": [
+    {
+      "title": "Member",
+      "fields": [
+        {
+          "requestPath": "members[].dateOfBirth",
+          "field": "dateOfBirth",
+          "location": "members[]",
+          "name": "Date of birth",
+          "kind": "derived",
+          "type": "Date",
+          "programs": [
+            "SNAP",
+            "Medicaid"
+          ],
+          "derivation": "You send a date of birth; the engine computes age in whole years as of the evaluation date (a raw age would go stale on re-evaluation).",
+          "definition": "Age of this member in years. If their birthday occurs in the middle of a month, use the age they were when the month began (the last day of the previous month).",
+          "citations": [],
+          "enginePath": "/members/*/age"
+        },
+        {
+          "requestPath": "members[].hasPhysicalDisability",
+          "field": "hasPhysicalDisability",
+          "location": "members[]",
+          "name": "Has physical disability",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether this member has a physical disability",
+          "citations": [],
+          "enginePath": "/members/*/hasPhysicalDisability"
+        },
+        {
+          "requestPath": "members[].hasMentalDisability",
+          "field": "hasMentalDisability",
+          "location": "members[]",
+          "name": "Has mental disability",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether this member has a mental disability",
+          "citations": [],
+          "enginePath": "/members/*/hasMentalDisability"
+        },
+        {
+          "requestPath": "members[].isIncapacitated",
+          "field": "isIncapacitated",
+          "location": "members[]",
+          "name": "Is incapacitated",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether this member is an incapacitated person whose care may qualify one parent or other household member for the SNAP work-requirements exemption (10 CCR 2506-1, 4.310).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                75
+              ]
+            }
+          ],
+          "enginePath": "/members/*/isIncapacitated"
+        },
+        {
+          "requestPath": "members[].isVeteranWithDisability",
+          "field": "isVeteranWithDisability",
+          "location": "members[]",
+          "name": "Is veteran with service-connected or non-service-connected disability",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether this member is a veteran with a service-connected disability rated or paid as a total disability under Title 38 of the United States Code, or is a veteran receiving a pension for a non-service-connected disability (10 CCR 2506-1, 4.000.1)",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                9
+              ]
+            }
+          ],
+          "enginePath": "/members/*/isVeteranWithDisability"
+        },
+        {
+          "requestPath": "members[].isVeteranNeedingAidAndAttendance",
+          "field": "isVeteranNeedingAidAndAttendance",
+          "location": "members[]",
+          "name": "Is veteran needing aid and attendance or permanently housebound",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether this member is a veteran considered by the Veterans Affairs (VA) to be in need of regular aid and attendance or permanently housebound under Title 38 of the United States Code (10 CCR 2506-1, 4.000.1)",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                9
+              ]
+            }
+          ],
+          "enginePath": "/members/*/isVeteranNeedingAidAndAttendance"
+        },
+        {
+          "requestPath": "members[].isVeteranSurvivorNeedingAidAndAttendance",
+          "field": "isVeteranSurvivorNeedingAidAndAttendance",
+          "location": "members[]",
+          "name": "Is veteran's surviving spouse or child needing aid and attendance",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether this member is a surviving spouse of a veteran and considered in need of aid and attendance or permanently housebound, or a surviving child of a veteran and considered by the VA to be permanently incapable of self-support under Title 38 of the United States Code (10 CCR 2506-1, 4.000.1)",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                9
+              ]
+            }
+          ],
+          "enginePath": "/members/*/isVeteranSurvivorNeedingAidAndAttendance"
+        },
+        {
+          "requestPath": "members[].isVeteranSurvivorWithDisability",
+          "field": "isVeteranSurvivorWithDisability",
+          "location": "members[]",
+          "name": "Is veteran's surviving spouse or child with permanent disability",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether this member is a surviving spouse or child of a veteran considered by the VA to be entitled to compensation for a service-connected death or pension benefits for a non-service-connected death under Title 38 of the United States Code, and has a disability considered permanent under Section 221(i) of the Social Security Act. \"Entitled\" refers to those veterans' surviving spouses and children who are receiving the compensation or benefits or have been approved for such benefits but are not yet receiving them (10 CCR 2506-1, 4.000.1)",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                9
+              ]
+            }
+          ],
+          "enginePath": "/members/*/isVeteranSurvivorWithDisability"
+        },
+        {
+          "requestPath": "members[].receivesPublicDisabilityRetirementPension",
+          "field": "receivesPublicDisabilityRetirementPension",
+          "location": "members[]",
+          "name": "Receives public disability retirement pension",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether this member has a disability considered permanent under Section 221(i) of the Social Security Act and receives a federal, state, or local public disability retirement pension (10 CCR 2506-1, 4.000.1)",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                9
+              ]
+            }
+          ],
+          "enginePath": "/members/*/receivesPublicDisabilityRetirementPension"
+        },
+        {
+          "requestPath": "members[].receivesRailroadRetirementDisability",
+          "field": "receivesRailroadRetirementDisability",
+          "location": "members[]",
+          "name": "Receives railroad retirement disability annuity",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether this member receives an annuity for disability from the railroad retirement board and is considered as a person with disabilities by the SSA, or qualifies for Medicare as determined by the railroad retirement board (10 CCR 2506-1, 4.000.1)",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                9
+              ]
+            }
+          ],
+          "enginePath": "/members/*/receivesRailroadRetirementDisability"
+        },
+        {
+          "requestPath": "members[].receivesInterimAssistanceForDisability",
+          "field": "receivesInterimAssistanceForDisability",
+          "location": "members[]",
+          "name": "Receives interim assistance pending SSI/disability benefits",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether this member is a recipient of interim assistance benefits pending the receipt of Supplemental Security Income (SSI), disability-related medical assistance under Title XIX of the Social Security Act, or disability-based state assistance benefits, provided that eligibility for those benefits is based on disability or blindness criteria at least as stringent as those used under Title XVI of the Social Security Act (10 CCR 2506-1, 4.000.1)",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                9
+              ]
+            }
+          ],
+          "enginePath": "/members/*/receivesInterimAssistanceForDisability"
+        },
+        {
+          "requestPath": "members[].isBoarder",
+          "field": "isBoarder",
+          "location": "members[]",
+          "name": "Is boarder",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether this member is a boarder of the client's household. Boarders are only considered members of a client's SNAP household if the household requests that they be considered household members (10 CCR 2506-1, 4.304.1).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                2,
+                49
+              ]
+            }
+          ],
+          "enginePath": "/members/*/isBoarder"
+        },
+        {
+          "requestPath": "members[].isRoomer",
+          "field": "isRoomer",
+          "location": "members[]",
+          "name": "Is roomer",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether this member is an individual to whom a household furnishes lodging, but not meals, for compensation (10 CCR 2506-1, 4.000.1)",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                11,
+                50
+              ]
+            }
+          ],
+          "enginePath": "/members/*/isRoomer"
+        },
+        {
+          "requestPath": "members[].livesInBoardingHouse",
+          "field": "livesInBoardingHouse",
+          "location": "members[]",
+          "name": "Lives in boarding house",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether this member lives in an establishment that is licensed as a commercial enterprise and which offers meals and lodging for compensation, as described in 7 C.F.R 273.1(b)(3)(i) (10 CCR 2506-1, 4.000.1)",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                2,
+                52
+              ]
+            }
+          ],
+          "enginePath": "/members/*/livesInBoardingHouse"
+        },
+        {
+          "requestPath": "members[].livesInInstitution",
+          "field": "livesInInstitution",
+          "location": "members[]",
+          "name": "Lives in an institution",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether this member lives in a place which has not been authorized by FNS to accept SNAP benefits, but which provides its residents with more than fifty percent (50%) of their daily meals as part of its normal services. Residents of a halfway house for persons with a disability are residents of an institution if they are provided meals as part of their regular service. Students who purchase meal plans through an institution of higher education are residents of an institution if the meal plan provides them more than fifty percent (50%) of their meals (10 CCR 2506-1, 4.304.4)",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                52,
+                69
+              ]
+            }
+          ],
+          "enginePath": "/members/*/livesInInstitution"
+        },
+        {
+          "requestPath": "members[].livesInFederallySubsidizedElderlyHousing",
+          "field": "livesInFederallySubsidizedElderlyHousing",
+          "location": "members[]",
+          "name": "Lives in federally subsidized housing for persons aged 60 and older",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether this member is a resident of federally subsidized housing for persons aged sixty (60) and older under 12 U.S.C. 1701Q or 12 U.S.C. 1715Z-1 (10 CCR 2506-1, 4.304.41)",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                52
+              ]
+            }
+          ],
+          "enginePath": "/members/*/livesInFederallySubsidizedElderlyHousing"
+        },
+        {
+          "requestPath": "members[].residesAtSubstanceAbuseTreatmentFacility",
+          "field": "residesAtSubstanceAbuseTreatmentFacility",
+          "location": "members[]",
+          "name": "Resides at a drug or alcohol treatment and rehabilitation facility",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether this member is a narcotic addict or alcoholic, or the child of one, who resides at a facility or treatment center for purposes of regular participation in a drug or alcoholic treatment and rehabilitation program (10 CCR 2506-1, 4.304.41)",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                52,
+                70
+              ]
+            }
+          ],
+          "enginePath": "/members/*/residesAtSubstanceAbuseTreatmentFacility"
+        },
+        {
+          "requestPath": "members[].livesInHomelessShelter",
+          "field": "livesInHomelessShelter",
+          "location": "members[]",
+          "name": "Resident of a homeless shelter",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether this member is a resident of a public or private nonprofit shelter for the homeless (10 CCR 2506-1, 4.304.41)",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                53
+              ]
+            }
+          ],
+          "enginePath": "/members/*/livesInHomelessShelter"
+        },
+        {
+          "requestPath": "members[].preparesFoodWithHousehold",
+          "field": "preparesFoodWithHousehold",
+          "location": "members[]",
+          "name": "Prepares food with household",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether this member customarily purchases and prepares food together with the rest of the household for home consumption (10 CCR 2506-1, 4.000.1)",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                6,
+                69
+              ]
+            }
+          ],
+          "enginePath": "/members/*/preparesFoodWithHousehold"
+        },
+        {
+          "requestPath": "members[].livesInGroupLivingArrangement",
+          "field": "livesInGroupLivingArrangement",
+          "location": "members[]",
+          "name": "Lives in group living arrangement",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether this member lives in a public or private non-profit facility certified under Section 1616(e) of the Social Security Act which serves no more than sixteen (16) people (10 CCR 2506-1, 4.000.1)",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                5,
+                52,
+                72
+              ]
+            }
+          ],
+          "enginePath": "/members/*/livesInGroupLivingArrangement"
+        },
+        {
+          "requestPath": "members[].isLiveInAttendant",
+          "field": "isLiveInAttendant",
+          "location": "members[]",
+          "name": "Is live-in attendant",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether this member resides with the household to provide child-care or other personal services (10 CCR 2506-1, 4.000.1)",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                7,
+                50
+              ]
+            }
+          ],
+          "enginePath": "/members/*/isLiveInAttendant"
+        },
+        {
+          "requestPath": "members[].isSeparateAndApart",
+          "field": "isSeparateAndApart",
+          "location": "members[]",
+          "name": "Is separate and apart",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether this member, who would otherwise be a mandatory household member, has established a residence separate and apart from the other mandatory household members. A residence is only considered established as separate and apart when the individual pays shelter expenses, supports the maintenance of the other residence (e.g., paying rent/mortgage, utilities, insurance, or other charges necessary to maintain the residence), or has provided that separate address to other governmental organizations or an employer as their primary residence. When true, the member is not required to be considered part of the SNAP household, and any monies that person provides to the SNAP household should be considered unearned income (10 CCR 2506-1, 4.304.1).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                50,
+                51
+              ]
+            }
+          ],
+          "enginePath": "/members/*/isSeparateAndApart"
+        },
+        {
+          "requestPath": "members[].isHeadOfHousehold",
+          "field": "isHeadOfHousehold",
+          "location": "members[]",
+          "name": "Is head of household",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether this member is the head of the SNAP household — the person to whom the local office addresses correspondence and notices about the household's case, generally the individual who completes the application process and is responsible for obtaining and using the household's EBT card (10 CCR 2506-1, 4.304).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                5,
+                25
+              ]
+            }
+          ],
+          "enginePath": "/members/*/isHeadOfHousehold"
+        },
+        {
+          "requestPath": "members[].spouseId",
+          "field": "spouseId",
+          "location": "members[]",
+          "name": "Spouse",
+          "kind": "reference",
+          "type": "CollectionItem",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "The household member who is this member's spouse — either a person married to this member under state law, or a person living together with this member who is free to marry and is representing themselves as a spouse to relatives, friends, neighbors, or the larger community (10 CCR 2506-1, 4.304.1).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                47
+              ]
+            }
+          ],
+          "enginePath": "/members/*/spouseId"
+        },
+        {
+          "requestPath": "members[].isEmancipated",
+          "field": "isEmancipated",
+          "location": "members[]",
+          "name": "Is emancipated minor",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether this member is a minor who has been emancipated as defined by state law. An emancipated minor is not considered to be under another household member's parental control for purposes of the mandatory-child SNAP household rule (10 CCR 2506-1, 4.304.1).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                47
+              ]
+            }
+          ],
+          "enginePath": "/members/*/isEmancipated"
+        },
+        {
+          "requestPath": "members[].isFosterChild",
+          "field": "isFosterChild",
+          "location": "members[]",
+          "name": "Is foster child",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether this member is a foster child. Foster children are explicitly excluded from the rule requiring a child under eighteen (18) who lives under the parental control of a non-parent household member to be a mandatory household member (10 CCR 2506-1, 4.304.1).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                47
+              ]
+            }
+          ],
+          "enginePath": "/members/*/isFosterChild"
+        },
+        {
+          "requestPath": "members[].isUnableToPurchaseAndPrepareOwnMealsDueToDisability",
+          "field": "isUnableToPurchaseAndPrepareOwnMealsDueToDisability",
+          "location": "members[]",
+          "name": "Is unable to purchase and prepare own meals due to a disability",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether this member is experiencing a disability and, as a result of that disability, is unable to purchase and prepare their own meals. This captures the functional disability condition for the elderly/disabled household-composition rule and is distinct from the broader disability definition used elsewhere in SNAP eligibility (10 CCR 2506-1, 4.304.1).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                47,
+                84
+              ]
+            }
+          ],
+          "enginePath": "/members/*/isUnableToPurchaseAndPrepareOwnMealsDueToDisability"
+        },
+        {
+          "requestPath": "members[].isMigrantFarmWorker",
+          "field": "isMigrantFarmWorker",
+          "location": "members[]",
+          "name": "Is migrant farm worker",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether this member travels away from home on a regular basis to follow the flow of seasonal agricultural work (10 CCR 2506-1, 4.000.1)",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                7
+              ]
+            }
+          ],
+          "enginePath": "/members/*/isMigrantFarmWorker"
+        },
+        {
+          "requestPath": "members[].receivesFamilyPreservationServices",
+          "field": "receivesFamilyPreservationServices",
+          "location": "members[]",
+          "name": "Receives Family Preservation services",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether this member receives services from the Family Preservation Program. This determination must be documented in the case record (10 CCR 2506-1, 4.206).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                34
+              ]
+            }
+          ],
+          "enginePath": "/members/*/receivesFamilyPreservationServices"
+        },
+        {
+          "requestPath": "members[].countableMonths",
+          "field": "countableMonths",
+          "location": "members[]",
+          "name": "Countable months",
+          "kind": "applicant",
+          "type": "Int",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "The number of countable months accrued by this member within the past 36 months. A countable month is a month in which an ABAWD received a full SNAP allotment but did not meet work requirements or have an exemption from those requirements. ABAWDs who accrue three countable months within a 36-month period become disqualified from SNAP unless they meet an exemption or ABAWD work requirements (10 CCR 2506-1, 4.000.1).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                3,
+                4,
+                81,
+                82
+              ]
+            }
+          ],
+          "enginePath": "/members/*/countableMonths"
+        },
+        {
+          "requestPath": "members[].disqualifiedForIPV",
+          "field": "disqualifiedForIPV",
+          "location": "members[]",
+          "name": "Disqualified for IPV/fraud",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether this member has been disqualified for an Intentional Program Violation/fraud (10 CCR 2506-1, 4.000.1)",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                4,
+                5,
+                6,
+                177,
+                205,
+                208,
+                209
+              ]
+            }
+          ],
+          "enginePath": "/members/*/disqualifiedForIPV"
+        },
+        {
+          "requestPath": "members[].convictedOfDrugRelatedFelonyWithSnap",
+          "field": "convictedOfDrugRelatedFelonyWithSnap",
+          "location": "members[]",
+          "name": "Convicted of drug-related felony involving SNAP",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether this member has been convicted of a drug-related felony where SNAP benefits were used to purchase drugs. Drug-related felony has the same meaning as in 7 C.F.R. 273.11(m) (10 CCR 2506-1, 4.206).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                35
+              ]
+            }
+          ],
+          "enginePath": "/members/*/convictedOfDrugRelatedFelonyWithSnap"
+        },
+        {
+          "requestPath": "members[].failedToProvideOrObtainSSN",
+          "field": "failedToProvideOrObtainSSN",
+          "location": "members[]",
+          "name": "Failed to provide or obtain SSN",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether this member has failed to provide or obtain a Social Security Number (10 CCR 2506-1, 4.000.1)",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                4,
+                44,
+                45,
+                46
+              ]
+            }
+          ],
+          "enginePath": "/members/*/failedToProvideOrObtainSSN"
+        },
+        {
+          "requestPath": "members[].isParticipatingInWorkStudy",
+          "field": "isParticipatingInWorkStudy",
+          "location": "members[]",
+          "name": "Is participating in work-study",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether this member is participating in a work-study program for purposes of the SNAP student eligibility exemption. The work-study shall be approved for the school term and the student shall anticipate working during that time. The student qualifies for this exemption the month the school term in which the work-study will occur begins or the month work-study is approved, whichever is later. The exemption continues until the end of the school term or until it becomes known that the student has refused an assignment. The exemption shall not continue between terms when there is a break of one (1) full month or longer unless the student is participating in work-study during the break (10 CCR 2506-1, 4.306.1).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                65
+              ]
+            }
+          ],
+          "enginePath": "/members/*/isParticipatingInWorkStudy"
+        },
+        {
+          "requestPath": "members[].isAssignedToHigherEducationThroughEmploymentTrainingProgram",
+          "field": "isAssignedToHigherEducationThroughEmploymentTrainingProgram",
+          "location": "members[]",
+          "name": "Is assigned to higher education through an employment and training program",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether this member qualifies for the SNAP student eligibility exemption as a student assigned to or placed in an institution of higher education through a program under the Workforce Innovation and Opportunity Act (WIOA), Employment First (EF), a program under Section 236 of the Trade Act of 1974 (19 U.S.C. 2296), another program for the purpose of employment and training operated by the state or local government (program shall have at least one (1) component equivalent to the SNAP EF Program), or as a result of participating in the JOBS program under Title IV of the Social Security Act (10 CCR 2506-1, 4.306.1, G).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                65,
+                66
+              ]
+            }
+          ],
+          "enginePath": "/members/*/isAssignedToHigherEducationThroughEmploymentTrainingProgram"
+        },
+        {
+          "requestPath": "members[].isInK12",
+          "field": "isInK12",
+          "location": "members[]",
+          "name": "Is in K-12",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether this member is attending a K-12 school (kindergarten through twelfth grade). Persons attending high school are not considered under SNAP student eligibility criteria (10 CCR 2506-1, 4.306, B, 5).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                64
+              ]
+            }
+          ],
+          "enginePath": "/members/*/isInK12"
+        },
+        {
+          "requestPath": "members[].disqualifiedForWorkRequirementsCooperation",
+          "field": "disqualifiedForWorkRequirementsCooperation",
+          "location": "members[]",
+          "name": "Disqualified for failure to cooperate with work requirements",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether this member has been disqualified for failure to cooperate with work requirements (10 CCR 2506-1, 4.000.1)",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                4
+              ]
+            }
+          ],
+          "enginePath": "/members/*/disqualifiedForWorkRequirementsCooperation"
+        },
+        {
+          "requestPath": "members[].voluntarilyQuitOrReducedWorkEffort",
+          "field": "voluntarilyQuitOrReducedWorkEffort",
+          "location": "members[]",
+          "name": "Voluntarily quit or reduced work effort",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether this member has voluntarily quit a job or reduced their work effort to less than 30 hours a week. Whether the quit or reduction was with good cause is captured separately on /members/*/voluntaryQuitReason (10 CCR 2506-1, 4.000.1; 4.308).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                13,
+                66,
+                67,
+                77
+              ]
+            }
+          ],
+          "enginePath": "/members/*/voluntarilyQuitOrReducedWorkEffort"
+        },
+        {
+          "requestPath": "members[].voluntaryQuitReason",
+          "field": "voluntaryQuitReason",
+          "location": "members[]",
+          "name": "Voluntary quit reason",
+          "kind": "applicant",
+          "type": "Enum",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "The reason for this member's voluntary quit of employment or reduction in work hours from the list enumerated in /voluntaryQuitReasonOptions. Selecting one of the 4.308.1 enumerated good-cause reasons indicates good cause; selecting Other or StrikingGovernmentEmployee indicates there is no good cause and — combined with /members/*/voluntarilyQuitOrReducedWorkEffort — drives the ineligible-voluntary-quit determination (10 CCR 2506-1, 4.308.1).",
+          "values": [
+            "discrimination",
+            "unreasonable_work_conditions",
+            "new_employment_or_schooling",
+            "household_move_for_job_or_schooling",
+            "recognized_retirement_under_sixty",
+            "unsuitable_employment",
+            "accepted_full_time_employment_did_not_materialize",
+            "patterns_of_employment",
+            "illness_of_head_of_household",
+            "illness_of_other_household_member",
+            "household_emergency",
+            "unavailable_transportation",
+            "employer_demands_reduction",
+            "lack_of_adequate_child_care",
+            "striking_government_employee",
+            "other"
+          ],
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                68,
+                77,
+                78,
+                79
+              ]
+            }
+          ],
+          "enginePath": "/members/*/voluntaryQuitReason"
+        },
+        {
+          "requestPath": "members[].registeredForWork",
+          "field": "registeredForWork",
+          "location": "members[]",
+          "name": "Registered for work",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether this non-exempt member registered for work at initial application and at every recertification by signing the application for assistance or recertification, either personally or through an authorized representative or another adult household member (10 CCR 2506-1, 4.310).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                74
+              ]
+            }
+          ],
+          "enginePath": "/members/*/registeredForWork"
+        },
+        {
+          "requestPath": "members[].providedEmploymentStatusOrAvailabilityInfo",
+          "field": "providedEmploymentStatusOrAvailabilityInfo",
+          "location": "members[]",
+          "name": "Provided employment status or availability information",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether this non-exempt member provided the eligibility technician sufficient information regarding employment status or availability for work (10 CCR 2506-1, 4.310).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                74
+              ]
+            }
+          ],
+          "enginePath": "/members/*/providedEmploymentStatusOrAvailabilityInfo"
+        },
+        {
+          "requestPath": "members[].reportedToReferredSuitableEmployer",
+          "field": "reportedToReferredSuitableEmployer",
+          "location": "members[]",
+          "name": "Reported to referred suitable employer",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether this non-exempt member reported to an employer when referred by the local office and the potential employment was suitable employment (10 CCR 2506-1, 4.310).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                74
+              ]
+            }
+          ],
+          "enginePath": "/members/*/reportedToReferredSuitableEmployer"
+        },
+        {
+          "requestPath": "members[].isApplyingForOrReceivingUnemploymentInsuranceBenefits",
+          "field": "isApplyingForOrReceivingUnemploymentInsuranceBenefits",
+          "location": "members[]",
+          "name": "Applying for or receiving unemployment insurance benefits",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether this member is applying for or receiving Unemployment Insurance Benefits (UIB), including a person denied UIB who is appealing the decision, for purposes of the SNAP general work requirement exemption (10 CCR 2506-1, 4.310).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                76
+              ]
+            }
+          ],
+          "enginePath": "/members/*/isApplyingForOrReceivingUnemploymentInsuranceBenefits"
+        },
+        {
+          "requestPath": "members[].isRegularParticipantInDrugOrAlcoholTreatment",
+          "field": "isRegularParticipantInDrugOrAlcoholTreatment",
+          "location": "members[]",
+          "name": "Regular participant in drug or alcohol treatment",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether this member is a regular participant in a drug or alcohol treatment or rehabilitation program for purposes of the SNAP general work requirement exemption (10 CCR 2506-1, 4.310).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                76
+              ]
+            }
+          ],
+          "enginePath": "/members/*/isRegularParticipantInDrugOrAlcoholTreatment"
+        },
+        {
+          "requestPath": "members[].isComplyingWithColoradoWorksOrRefugeeServicesWorkProgram",
+          "field": "isComplyingWithColoradoWorksOrRefugeeServicesWorkProgram",
+          "location": "members[]",
+          "name": "Complying with Colorado Works or refugee services work program",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether this member is subject to and complying with Colorado Works (CW) or the Colorado Refugee Services Program (CRSP) work programs for purposes of the SNAP general work requirement exemption (10 CCR 2506-1, 4.310).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                76
+              ]
+            }
+          ],
+          "enginePath": "/members/*/isComplyingWithColoradoWorksOrRefugeeServicesWorkProgram"
+        },
+        {
+          "requestPath": "members[].disqualifiedForQualityAssuranceCooperation",
+          "field": "disqualifiedForQualityAssuranceCooperation",
+          "location": "members[]",
+          "name": "Disqualified for failure to cooperate with QA division",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether this member has been disqualified for failure to cooperate with the state quality assurance division (10 CCR 2506-1, 4.000.1)",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                4,
+                8,
+                222
+              ]
+            }
+          ],
+          "enginePath": "/members/*/disqualifiedForQualityAssuranceCooperation"
+        },
+        {
+          "requestPath": "members[].isPhysicallyOrMentallyUnfitForEmploymentForStudentEligibility",
+          "field": "isPhysicallyOrMentallyUnfitForEmploymentForStudentEligibility",
+          "location": "members[]",
+          "name": "Physically or mentally unfit for employment for student eligibility",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether this member is physically or mentally unfit for employment for purposes of the SNAP student eligibility exemption. This student-specific flag is separate from the work-requirements unfitness determination so the two policy contexts can be captured independently (10 CCR 2506-1, 4.306.1).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                64,
+                65,
+                75,
+                76
+              ]
+            }
+          ],
+          "enginePath": "/members/*/isPhysicallyOrMentallyUnfitForEmploymentForStudentEligibility"
+        },
+        {
+          "requestPath": "members[].recentlyReleasedFromInstitution",
+          "field": "recentlyReleasedFromInstitution",
+          "location": "members[]",
+          "name": "Recently released from an institution",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether this member was recently released from an institution, which is an example of being physically or mentally unfit for employment for SNAP work-requirements purposes (10 CCR 2506-1, 4.310).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                75
+              ]
+            }
+          ],
+          "enginePath": "/members/*/recentlyReleasedFromInstitution"
+        },
+        {
+          "requestPath": "members[].hasSelfDeclaredTemporaryConditionPreventingWorkActivities",
+          "field": "hasSelfDeclaredTemporaryConditionPreventingWorkActivities",
+          "location": "members[]",
+          "name": "Has self-declared temporary condition preventing work activities",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether this member has a self-declared temporary condition that would prevent successful participation in work activities, which is an example of being physically or mentally unfit for employment for SNAP work-requirements purposes (10 CCR 2506-1, 4.310).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                76
+              ]
+            }
+          ],
+          "enginePath": "/members/*/hasSelfDeclaredTemporaryConditionPreventingWorkActivities"
+        },
+        {
+          "requestPath": "members[].receivesTemporaryOrPermanentDisabilityBenefits",
+          "field": "receivesTemporaryOrPermanentDisabilityBenefits",
+          "location": "members[]",
+          "name": "Receives temporary or permanent disability benefits",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether this member receives temporary or permanent disability benefits issued by government or private sources, which is an example of being physically or mentally unfit for employment for SNAP work-requirements purposes (10 CCR 2506-1, 4.310).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                76,
+                80
+              ]
+            }
+          ],
+          "enginePath": "/members/*/receivesTemporaryOrPermanentDisabilityBenefits"
+        },
+        {
+          "requestPath": "members[].isParticipatingInVocationalRehabilitation",
+          "field": "isParticipatingInVocationalRehabilitation",
+          "location": "members[]",
+          "name": "Is participating in vocational rehabilitation",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether this member is participating in vocational rehabilitation, which is an example of being physically or mentally unfit for employment for SNAP work-requirements purposes (10 CCR 2506-1, 4.310).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                76
+              ]
+            }
+          ],
+          "enginePath": "/members/*/isParticipatingInVocationalRehabilitation"
+        },
+        {
+          "requestPath": "members[].isApplyingForOrAppealingSsiBenefits",
+          "field": "isApplyingForOrAppealingSsiBenefits",
+          "location": "members[]",
+          "name": "Is applying for or appealing SSI benefits",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether this member is applying for and/or appealing Supplemental Security Income (SSI) benefits, which is an example of being physically or mentally unfit for employment for SNAP work-requirements purposes (10 CCR 2506-1, 4.310).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                76
+              ]
+            }
+          ],
+          "enginePath": "/members/*/isApplyingForOrAppealingSsiBenefits"
+        },
+        {
+          "requestPath": "members[].isUnableToMaintainEmployment",
+          "field": "isUnableToMaintainEmployment",
+          "location": "members[]",
+          "name": "Is unable to maintain employment",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether this member is unable to maintain employment, which is an example of being physically or mentally unfit for employment for SNAP work-requirements purposes (10 CCR 2506-1, 4.310).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                76
+              ]
+            }
+          ],
+          "enginePath": "/members/*/isUnableToMaintainEmployment"
+        },
+        {
+          "requestPath": "members[].isImpactedByDomesticViolence",
+          "field": "isImpactedByDomesticViolence",
+          "location": "members[]",
+          "name": "Is impacted by domestic violence",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether this member is impacted by domestic violence, which is an example of being physically or mentally unfit for employment for SNAP work-requirements purposes (10 CCR 2506-1, 4.310).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                76
+              ]
+            }
+          ],
+          "enginePath": "/members/*/isImpactedByDomesticViolence"
+        },
+        {
+          "requestPath": "members[].hasOtherValidReasonForWorkRequirementsUnfitness",
+          "field": "hasOtherValidReasonForWorkRequirementsUnfitness",
+          "location": "members[]",
+          "name": "Has other valid reason for work-requirements unfitness",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether this member has another valid reason, not otherwise listed, for being physically or mentally unfit for employment for SNAP work-requirements purposes. The listed examples of unfitness are not exhaustive (10 CCR 2506-1, 4.310).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                75
+              ]
+            }
+          ],
+          "enginePath": "/members/*/hasOtherValidReasonForWorkRequirementsUnfitness"
+        },
+        {
+          "requestPath": "members[].isEnrolledInEmploymentTrainingProgram",
+          "field": "isEnrolledInEmploymentTrainingProgram",
+          "location": "members[]",
+          "name": "Enrolled in Employment and Training Program",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether this member is enrolled in the Employment and Training Program (Employment First/EF), a program operated by the Department of Human Services consisting of work, training, education, work experience, and/or job search activities designed to help clients obtain gainful employment (10 CCR 2506-1, 4.000.1)",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                4
+              ]
+            }
+          ],
+          "enginePath": "/members/*/isEnrolledInEmploymentTrainingProgram"
+        },
+        {
+          "requestPath": "members[].isParticipatingInAnotherHousehold",
+          "field": "isParticipatingInAnotherHousehold",
+          "location": "members[]",
+          "name": "Is already participating in another household",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether this member is already receiving SNAP benefits as part of another SNAP household or in another state in the same calendar month (10 CCR 2506-1, 4.000.1)",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                4
+              ]
+            }
+          ],
+          "enginePath": "/members/*/isParticipatingInAnotherHousehold"
+        },
+        {
+          "requestPath": "members[].isResidentOfBatteredWomensShelter",
+          "field": "isResidentOfBatteredWomensShelter",
+          "location": "members[]",
+          "name": "Resident of a shelter for battered women and children",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether this member is a resident of a public or private nonprofit residential facility that serves battered women and their children (10 CCR 2506-1)",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                11,
+                52,
+                69
+              ]
+            }
+          ],
+          "enginePath": "/members/*/isResidentOfBatteredWomensShelter"
+        },
+        {
+          "requestPath": "members[].disqualifiedForFelonyNonCompliance",
+          "field": "disqualifiedForFelonyNonCompliance",
+          "location": "members[]",
+          "name": "Disqualified for felony conviction non-compliance",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether this member is a person with a felony conviction who is not in compliance with the terms of their sentence and was convicted as an adult for conduct that occurred after February 7, 2014 for any of the following crimes: aggravated sexual abuse under Section 2241 of Title 18, United States Code; murder under Section 1111 of Title 18, United States Code; an offense under Chapter 110 of Title 18, United States Code; a federal or state offense involving sexual assault, as defined in Section 40002(a) of the Violence Against Women Act of 1994 (42 U.S.C. 13925(a)); or an offense under state law determined by the attorney general to be substantially similar to the foregoing (10 CCR 2506-1)",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                51
+              ]
+            }
+          ],
+          "enginePath": "/members/*/disqualifiedForFelonyNonCompliance"
+        },
+        {
+          "requestPath": "members[].disqualifiedForParoleOrProbationViolation",
+          "field": "disqualifiedForParoleOrProbationViolation",
+          "location": "members[]",
+          "name": "Disqualified for parole or probation violation",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether this member is disqualified as a parole or probation violator. An impartial party designated by the agency must determine that the individual violated a condition of probation or parole imposed under federal or state law, and that federal, state, or local law enforcement authorities are actively seeking the individual to enforce those conditions. Active pursuit is established when a law enforcement agency informs the local office it intends to enforce an outstanding felony warrant or arrest the individual for a probation or parole violation within 20 days of submitting a request for information about the individual; presents a felony arrest warrant as provided in 4.304.4, B, 1; or states it intends to enforce an outstanding felony warrant or arrest the individual for a probation or parole violation within 30 days of the date of a request from a local office about a specific outstanding felony warrant or probation or parole violation (10 CCR 2506-1, 4.304.4)",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                52
+              ]
+            }
+          ],
+          "enginePath": "/members/*/disqualifiedForParoleOrProbationViolation"
+        },
+        {
+          "requestPath": "members[].isPregnant",
+          "field": "isPregnant",
+          "location": "members[]",
+          "name": "Is pregnant",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether this member is pregnant for purposes of the ABAWD exemption from the ABAWD work requirement (10 CCR 2506-1, 4.311.1).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                81
+              ]
+            }
+          ],
+          "enginePath": "/members/*/isPregnant"
+        },
+        {
+          "requestPath": "members[].isVeteran",
+          "field": "isVeteran",
+          "location": "members[]",
+          "name": "Is veteran",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether this member is a veteran for purposes of the ABAWD exemption from the ABAWD work requirement (10 CCR 2506-1, 4.311.1).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                81
+              ]
+            }
+          ],
+          "enginePath": "/members/*/isVeteran"
+        },
+        {
+          "requestPath": "members[].wasInFosterCareOn18thBirthday",
+          "field": "wasInFosterCareOn18thBirthday",
+          "location": "members[]",
+          "name": "Was in foster care on 18th birthday",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether this member was in foster care on their eighteenth (18th) birthday for purposes of the ABAWD exemption for individuals aged twenty-four (24) years and younger (10 CCR 2506-1, 4.311.1).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                81
+              ]
+            }
+          ],
+          "enginePath": "/members/*/wasInFosterCareOn18thBirthday"
+        },
+        {
+          "requestPath": "members[].isExemptUnderAbawdWaiver",
+          "field": "isExemptUnderAbawdWaiver",
+          "location": "members[]",
+          "name": "Exempt under ABAWD waiver",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether this member is exempt from the ABAWD work requirement under a waiver approved by USDA FNS (10 CCR 2506-1, 4.311.1).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                81
+              ]
+            }
+          ],
+          "enginePath": "/members/*/isExemptUnderAbawdWaiver"
+        },
+        {
+          "requestPath": "members[].isExemptUnderColoradoAbawdStateExemption",
+          "field": "isExemptUnderColoradoAbawdStateExemption",
+          "location": "members[]",
+          "name": "Exempt under Colorado ABAWD state exemption",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether this member is exempt from the ABAWD work requirement using a Colorado-defined state exemption identified in the current SNAP Employment and Training State Plan (10 CCR 2506-1, 4.311.1).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                81
+              ]
+            }
+          ],
+          "enginePath": "/members/*/isExemptUnderColoradoAbawdStateExemption"
+        },
+        {
+          "requestPath": "members[].abawdWorkProgramHoursPerWeek",
+          "field": "abawdWorkProgramHoursPerWeek",
+          "location": "members[]",
+          "name": "ABAWD work program hours per week",
+          "kind": "applicant",
+          "type": "Int",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "This member's weekly hours participating in and complying with a qualifying ABAWD work program, including a CDHS-operated or supervised employment and training program other than job search or job-search training, a WIOA program, or a Trade Act Section 236 program (10 CCR 2506-1, 4.000.1).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                80
+              ]
+            }
+          ],
+          "enginePath": "/members/*/abawdWorkProgramHoursPerWeek"
+        },
+        {
+          "requestPath": "members[].participatesInColoradoWorkfare",
+          "field": "participatesInColoradoWorkfare",
+          "location": "members[]",
+          "name": "Participates in Colorado Workfare",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether this member is participating in and complying with the Colorado Workfare program for purposes of fulfilling the ABAWD work requirement (10 CCR 2506-1, 4.000.1).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                80
+              ]
+            }
+          ],
+          "enginePath": "/members/*/participatesInColoradoWorkfare"
+        },
+        {
+          "requestPath": "members[].isExperiencingHomelessness",
+          "field": "isExperiencingHomelessness",
+          "location": "members[]",
+          "name": "Is experiencing homelessness",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether this member lacks a fixed and regular nighttime residence or whose primary residence is a supervised shelter designed for temporary accommodations; a halfway house or similar facility that provides temporary residence; a place not designed for or ordinarily used as regular sleeping accommodations for human beings; or a temporary accommodation in the residence of another individual for ninety (90) days or less (10 CCR 2506-1, 4.000.1)",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                9
+              ]
+            }
+          ],
+          "enginePath": "/members/*/isExperiencingHomelessness"
+        },
+        {
+          "requestPath": "members[].isFleeingFelon",
+          "field": "isFleeingFelon",
+          "location": "members[]",
+          "name": "Is fleeing felon",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether this member is fleeing to avoid prosecution or custody for a crime, or an attempt to commit a crime, that would be classified as a felony under a state or federal law (10 CCR 2506-1, 4.000.1)",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                5,
+                51,
+                52
+              ]
+            }
+          ],
+          "enginePath": "/members/*/isFleeingFelon"
+        },
+        {
+          "requestPath": "members[].isStriker",
+          "field": "isStriker",
+          "location": "members[]",
+          "name": "Is striker",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether this member is involved in a strike or other concerted stoppage of work by employees, including a stoppage by reason of the expiration of a collective bargaining agreement and any concerted slowdown or other concerted interruption of operations by employees (10 CCR 2506-1, 4.000.1)",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                12,
+                66
+              ]
+            }
+          ],
+          "enginePath": "/members/*/isStriker"
+        },
+        {
+          "requestPath": "members[].wasEligibleForSnapDayBeforeStrike",
+          "field": "wasEligibleForSnapDayBeforeStrike",
+          "location": "members[]",
+          "name": "Was eligible for SNAP the day before the strike",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether the household containing this striking member was eligible for SNAP the day before the strike. A household containing a striker is only eligible for SNAP if the household was eligible the day before the strike and is otherwise eligible at the time of the strike (10 CCR 2506-1, 4.305).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                66
+              ]
+            }
+          ],
+          "enginePath": "/members/*/wasEligibleForSnapDayBeforeStrike"
+        },
+        {
+          "requestPath": "members[].wasExemptFromWorkRegistrationDayBeforeStrike",
+          "field": "wasExemptFromWorkRegistrationDayBeforeStrike",
+          "location": "members[]",
+          "name": "Was exempt from work registration the day before the strike",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether this striking member was exempt from work registration the day before the strike, such as the caretaker of a child under six (6) years of age, other than persons exempt solely on the ground that they were employed. Households where the striking member was so exempt are not subject to the striker eligibility restriction (10 CCR 2506-1, 4.305, A and D).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                66
+              ]
+            }
+          ],
+          "enginePath": "/members/*/wasExemptFromWorkRegistrationDayBeforeStrike"
+        },
+        {
+          "requestPath": "members[].studentEnrollmentStatus",
+          "field": "studentEnrollmentStatus",
+          "location": "members[]",
+          "name": "Student enrollment status",
+          "kind": "applicant",
+          "type": "Enum",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "This member's enrollment status in an institution of higher education — an institution that normally requires a high school diploma or equivalency certificate for a student to enroll, such as a college, university, or vocational or technical school: full time (a school schedule equivalent to a full-time curriculum as defined by the institution of higher education the person is attending), at least half time but less than full time, or less than half time / not enrolled (10 CCR 2506-1, 4.000.1).",
+          "values": [
+            "full_time",
+            "half_time",
+            "less_than_half_time_or_not_enrolled"
+          ],
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                5,
+                6,
+                9
+              ]
+            }
+          ],
+          "enginePath": "/members/*/studentEnrollmentStatus"
+        },
+        {
+          "requestPath": "members[].citizenshipImmigrationStatus",
+          "field": "citizenshipImmigrationStatus",
+          "location": "members[]",
+          "name": "Citizenship/immigration status",
+          "kind": "applicant",
+          "type": "Enum",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "This member's selected citizenship or immigration status for SNAP citizenship and non-citizenship eligibility (10 CCR 2506-1, 4.305).",
+          "values": [
+            "citizen",
+            "non_citizen_national",
+            "lawful_permanent_resident",
+            "parolee",
+            "asylee",
+            "refugee",
+            "withholding_of_deportation_or_removal",
+            "conditional_entrant",
+            "cuban_or_haitian_entrant",
+            "battered_immigrant",
+            "victim_of_trafficking",
+            "amerasian",
+            "iraqi_or_afghan_special_immigrant",
+            "american_indian_born_abroad",
+            "hmong_or_highland_laotian_tribal_member",
+            "other_non_citizen"
+          ],
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                7,
+                8,
+                10,
+                12,
+                53,
+                54,
+                55,
+                56,
+                57
+              ]
+            }
+          ],
+          "enginePath": "/members/*/citizenshipImmigrationStatus"
+        },
+        {
+          "requestPath": "members[].qualifiedYearsInUs",
+          "field": "qualifiedYearsInUs",
+          "location": "members[]",
+          "name": "Qualified years in the U.S.",
+          "kind": "applicant",
+          "type": "Int",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "The number of years this non-citizen has lived in the U.S. in a qualified non-citizen status. The waiting period begins on the date the non-citizen obtains status as a qualified non-citizen or enters the U.S. in a qualifying status (10 CCR 2506-1, 4.305, B, 3, a).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                57
+              ]
+            }
+          ],
+          "enginePath": "/members/*/qualifiedYearsInUs"
+        },
+        {
+          "requestPath": "members[].qualifyingWorkQuarters",
+          "field": "qualifyingWorkQuarters",
+          "location": "members[]",
+          "name": "Qualifying work quarters",
+          "kind": "applicant",
+          "type": "Int",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "The total number of qualifying work quarters credited to this non-citizen under Title II of the Social Security Act. The sum may include the non-citizen's own quarters, quarters credited from the work of a parent while the non-citizen was under eighteen (18), and quarters credited from the work of the non-citizen's spouse, subject to the restrictions in 4.305, B, 3, b (10 CCR 2506-1, 4.305, B, 3, b).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                57,
+                58
+              ]
+            }
+          ],
+          "enginePath": "/members/*/qualifyingWorkQuarters"
+        },
+        {
+          "requestPath": "members[].wasBornOnOrBeforeAug221931AndLawfullyResidedAug221996",
+          "field": "wasBornOnOrBeforeAug221931AndLawfullyResidedAug221996",
+          "location": "members[]",
+          "name": "Born on or before August 22, 1931 and lawfully resided in the U.S. on August 22, 1996",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether this non-citizen was born on or before August 22, 1931 and lawfully resided in the U.S. on August 22, 1996 (10 CCR 2506-1, 4.305, B, 3, e).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                58
+              ]
+            }
+          ],
+          "enginePath": "/members/*/wasBornOnOrBeforeAug221931AndLawfullyResidedAug221996"
+        },
+        {
+          "requestPath": "members[].hasQualifyingMilitaryConnection",
+          "field": "hasQualifyingMilitaryConnection",
+          "location": "members[]",
+          "name": "Has qualifying military connection",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether this qualified non-citizen has a qualifying military connection: an individual lawfully residing in a state on active duty (other than training) in the military, excluding national guard; an honorably discharged veteran (as defined in Section 101 of Title 38, U.S.C.) whose discharge is not because of immigration status and who fulfills the minimum active-duty service requirements, including an individual who died in active military, naval, or air service; or the spouse, un-remarried surviving spouse, or unmarried dependent child of such a person, as further defined in 4.305, B, 3, f (10 CCR 2506-1, 4.305, B, 3, f).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                58,
+                59
+              ]
+            }
+          ],
+          "enginePath": "/members/*/hasQualifyingMilitaryConnection"
+        },
+        {
+          "requestPath": "members[].sponsorAndSpouseDependentCount",
+          "field": "sponsorAndSpouseDependentCount",
+          "location": "members[]",
+          "name": "Sponsor and spouse dependent count",
+          "kind": "applicant",
+          "type": "Int",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "The number of other people who are claimed or could be claimed for federal income tax purposes as a dependent by this sponsored non-citizen's sponsor or the sponsor's spouse, used to size the sponsor's tax household in sponsor income deeming (10 CCR 2506-1, 4.000.1, D, 2, b).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                60
+              ]
+            }
+          ],
+          "enginePath": "/members/*/sponsorAndSpouseDependentCount"
+        },
+        {
+          "requestPath": "members[].sponsoredNonCitizenCountOutsideHousehold",
+          "field": "sponsoredNonCitizenCountOutsideHousehold",
+          "location": "members[]",
+          "name": "Sponsored non-citizen count outside household",
+          "kind": "applicant",
+          "type": "Int",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "The number of sponsored non-citizens this member sponsors who are not members of this SNAP household, as demonstrated by a sponsored non-citizen in this household to the local office's satisfaction (10 CCR 2506-1, 4.000.1, D, 2, c).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                61
+              ]
+            }
+          ],
+          "enginePath": "/members/*/sponsoredNonCitizenCountOutsideHousehold"
+        },
+        {
+          "requestPath": "members[].sponsorId",
+          "field": "sponsorId",
+          "location": "members[]",
+          "name": "Sponsor",
+          "kind": "reference",
+          "type": "CollectionItem",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "The household member who executed an affidavit of support (USCIS form I-864A) or another form deemed legally binding by the Department of Homeland Security on behalf of this non-citizen as a condition of the non-citizen's entry or admission into the United States as a permanent resident (10 CCR 2506-1, 4.000.1)",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                11,
+                60
+              ]
+            }
+          ],
+          "enginePath": "/members/*/sponsorId"
+        },
+        {
+          "requestPath": "members[].isSponsoredByOrganization",
+          "field": "isSponsoredByOrganization",
+          "location": "members[]",
+          "name": "Is sponsored by organization",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether this non-citizen is sponsored by an organization or group as opposed to an individual, which exempts the non-citizen from sponsor income and resource deeming (10 CCR 2506-1, 4.000.1, E, 2).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                61
+              ]
+            }
+          ],
+          "enginePath": "/members/*/isSponsoredByOrganization"
+        },
+        {
+          "requestPath": "members[].receivesTanf",
+          "field": "receivesTanf",
+          "location": "members[]",
+          "name": "Receives TANF/Colorado Works",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether this member receives a cash grant from the Temporary Assistance for Needy Families (TANF) or Colorado Works (CW) cash program, also known as Title IV-A of the Social Security Act (10 CCR 2506-1, 4.000.1).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                8,
+                12,
+                65
+              ]
+            }
+          ],
+          "enginePath": "/members/*/receivesTanf"
+        },
+        {
+          "requestPath": "members[].hasLevelSanctionImposed",
+          "field": "hasLevelSanctionImposed",
+          "location": "members[]",
+          "name": "Has level sanction imposed",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether a specified period of ineligibility has been imposed against this member for failing to take a required action as part of his or her eligibility for SNAP (10 CCR 2506-1, 4.000.1)",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                7,
+                11,
+                79
+              ]
+            }
+          ],
+          "enginePath": "/members/*/hasLevelSanctionImposed"
+        },
+        {
+          "requestPath": "members[].pregnant",
+          "field": "pregnant",
+          "location": "members[]",
+          "name": "Children Due",
+          "kind": "applicant",
+          "type": "Int",
+          "programs": [
+            "Medicaid"
+          ],
+          "definition": "Number of children expected from this member's current pregnancy (0 if not pregnant). Adds to household size for FPL.",
+          "citations": [],
+          "enginePath": "/members/*/pregnant"
+        },
+        {
+          "requestPath": "members[].disabled",
+          "field": "disabled",
+          "location": "members[]",
+          "name": "Disabled",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "Medicaid"
+          ],
+          "definition": "Whether this member has a qualifying disability.",
+          "citations": [],
+          "enginePath": "/members/*/disabled"
+        },
+        {
+          "requestPath": "members[].veteran",
+          "field": "veteran",
+          "location": "members[]",
+          "name": "Veteran",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "Medicaid"
+          ],
+          "definition": "Whether this member is a military veteran.",
+          "citations": [],
+          "enginePath": "/members/*/veteran"
+        },
+        {
+          "requestPath": "members[].hasDisabledChild",
+          "field": "hasDisabledChild",
+          "location": "members[]",
+          "name": "Has Disabled Child",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "Medicaid"
+          ],
+          "definition": "Whether this member has a child with a disability in the household.",
+          "citations": [],
+          "enginePath": "/members/*/hasDisabledChild"
+        },
+        {
+          "requestPath": "members[].isFullTimeStudent",
+          "field": "isFullTimeStudent",
+          "location": "members[]",
+          "name": "Is Full-Time Student",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "Medicaid"
+          ],
+          "definition": "Whether this member is enrolled as a full-time student.",
+          "citations": [],
+          "enginePath": "/members/*/isFullTimeStudent"
+        },
+        {
+          "requestPath": "members[].monthlyHoursWorked",
+          "field": "monthlyHoursWorked",
+          "location": "members[]",
+          "name": "Monthly Hours Worked",
+          "kind": "applicant",
+          "type": "Int",
+          "programs": [
+            "Medicaid"
+          ],
+          "definition": "Hours per month this member works.",
+          "citations": [],
+          "enginePath": "/members/*/monthlyHoursWorked"
+        },
+        {
+          "requestPath": "members[].immigrantStatus",
+          "field": "immigrantStatus",
+          "location": "members[]",
+          "name": "Immigrant Status",
+          "kind": "applicant",
+          "type": "Enum",
+          "programs": [
+            "Medicaid"
+          ],
+          "definition": "This member's immigration / citizenship status.",
+          "values": [
+            "citizen",
+            "legal_permanent_resident",
+            "refugee",
+            "asylee",
+            "deportation_withheld",
+            "cuban_haitian_entrant",
+            "conditional_entrant",
+            "paroled_for_at_least_one_year",
+            "undocumented",
+            "daca",
+            "temporary_protected_status"
+          ],
+          "citations": [],
+          "enginePath": "/members/*/immigrantStatus"
+        },
+        {
+          "requestPath": "members[].receivesSsi",
+          "field": "receivesSsi",
+          "location": "members[]",
+          "name": "Receives SSI",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "Medicaid"
+          ],
+          "definition": "Whether this member receives Supplemental Security Income.",
+          "citations": [],
+          "enginePath": "/members/*/receivesSsi"
+        },
+        {
+          "requestPath": "members[].pregnancyEndDate",
+          "field": "pregnancyEndDate",
+          "location": "members[]",
+          "name": "Pregnancy end date",
+          "kind": "derived",
+          "type": "Date",
+          "programs": [
+            "Medicaid"
+          ],
+          "derivation": "You send the date the pregnancy ended; the engine computes days-since as of the evaluation date.",
+          "definition": "Days since this member's pregnancy ended (used for postpartum coverage).",
+          "citations": [],
+          "enginePath": "/members/*/daysSincePregnancy"
+        }
+      ]
+    },
+    {
+      "title": "Income (nested under each member)",
+      "fields": [
+        {
+          "requestPath": "members[].income[].type",
+          "field": "type",
+          "location": "members[].income[]",
+          "name": "Income type",
+          "kind": "applicant",
+          "type": "Enum",
+          "programs": [
+            "SNAP",
+            "Medicaid"
+          ],
+          "definition": "The source/type of this income.",
+          "values": [
+            "tanf",
+            "other_needs_based_assistance",
+            "old_age_pension",
+            "aid_to_needy_disabled",
+            "aid_to_blind",
+            "colorado_supplement_ssi",
+            "ssi",
+            "annuities_pensions_retirement",
+            "veterans_benefits",
+            "disability_benefits",
+            "workers_compensation",
+            "unemployment_compensation",
+            "old_age_survivors_social_security_benefits",
+            "strike_benefits",
+            "support_and_alimony",
+            "rental_income_not_actively_managed",
+            "post_employment_vacation_sick_bonus_pay",
+            "anticipated_gifts",
+            "wages_and_salaries",
+            "agricultural_stabilization_conservation_service",
+            "self_employment",
+            "vista",
+            "sick_leave_vacation_bonus_pay",
+            "vocational_rehabilitation_training_allowance",
+            "wioa_on_the_job_training",
+            "title_i_vista_university_year_of_action",
+            "llc_s_corporation",
+            "boarder_income",
+            "lottery_or_gambling_winnings",
+            "vendor_payments",
+            "irregular_income",
+            "non_household_member_care_payments",
+            "recoupments",
+            "title_ivd_transferred_child_support",
+            "non_recurring_lump_sum",
+            "loans",
+            "reverse_annuity_mortgage",
+            "in_kind_benefits",
+            "reimbursements",
+            "educational_assistance",
+            "sponsor_payments",
+            "other"
+          ],
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                8,
+                11,
+                12,
+                92
+              ]
+            }
+          ],
+          "enginePath": "/incomes/*/type"
+        },
+        {
+          "requestPath": "members[].income[].otherExcludedIncomeType",
+          "field": "otherExcludedIncomeType",
+          "location": "members[].income[]",
+          "name": "Other excluded income type",
+          "kind": "applicant",
+          "type": "Enum",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "The specific type of other federally excluded income under 10 CCR 2506-1, 4.405.2. Use when /incomes/*/type is Other and the payment matches one of the listed statutory exclusions; several option names include required qualifying facts such as age, program participation, disaster/emergency status, quarterly limits, deployment status, or tribal/statutory payment limits.",
+          "values": [
+            "child_nutrition_act_assistance",
+            "uniform_relocation_act_reimbursement",
+            "domestic_volunteer_services_title_ii_payment",
+            "national_community_service_act_payment",
+            "presidential_disaster_or_emergency_assistance",
+            "wioa_payment_not_on_the_job_training",
+            "wioa_summer_youth_employment_training_payment",
+            "federal_energy_assistance_weatherization_or_emergency_heating_cooling_payment",
+            "youth_incentive_or_ceta_title_iv_payment",
+            "older_americans_act_title_v_age_55_or_older_payment",
+            "need_based_nonprofit_cash_donation",
+            "military_retirement_payment_to_ex_spouse_by_divorce_decree",
+            "military_combat_additional_pay_during_designated_combat_zone_deployment",
+            "mandatory_military_education_deduction",
+            "japanese_american_or_aleut_civil_liberties_payment",
+            "migrant_seasonal_farmworker_emergency_assistance",
+            "wic_benefit",
+            "title_iv_a_child_care_payment",
+            "agent_orange_settlement_fund_payment",
+            "at_risk_block_grant_child_care_payment",
+            "earned_income_tax_credit",
+            "employment_first_participation_cost_payment",
+            "pass_plan_amount",
+            "radiation_exposure_compensation_trust_fund_payment",
+            "child_care_development_block_grant_care_payment_or_service",
+            "public_housing_family_investment_center_service",
+            "hud_demonstration_project_earned_income_increase",
+            "nazi_persecution_victim_payment",
+            "crime_victim_compensation_payment",
+            "vietnam_veteran_child_spina_bifida_allowance",
+            "alaska_native_claims_settlement_act_payment",
+            "indian_judgment_or_trust_per_capita_payment",
+            "indian_trust_restricted_land_interest",
+            "navajo_hopi_relocation_assistance_payment",
+            "indian_submarginal_land_income_for_listed_tribe",
+            "sac_and_fox_per_capita_or_trust_fund_payment",
+            "grand_river_band_ottawa_payment",
+            "yakima_or_mescalero_apache_claims_payment",
+            "maine_indian_claims_settlement_payment",
+            "turtle_mountain_band_chippewas_payment",
+            "blackfeet_grosventre_assiniboine_or_papago_payment",
+            "red_lake_band_chippewa_payment",
+            "assiniboine_fort_belknap_or_fort_peck_payment",
+            "old_age_assistance_claims_settlement_heir_payment",
+            "chippewas_of_lake_superior_payment",
+            "white_earth_reservation_land_settlement_payment",
+            "saginaw_chippewa_indian_tribe_payment",
+            "chippewas_of_mississippi_payment",
+            "puyallup_tribe_settlement_payment",
+            "seminole_indian_claims_payment",
+            "seneca_nation_settlement_payment",
+            "colville_reservation_grand_coulee_dam_settlement_payment",
+            "migrant_farm_worker_employer_relocation_travel_advance_reimbursement"
+          ],
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                99,
+                100,
+                101,
+                102,
+                103,
+                104,
+                105,
+                106
+              ]
+            }
+          ],
+          "enginePath": "/incomes/*/otherExcludedIncomeType"
+        },
+        {
+          "requestPath": "members[].income[].needBasedNonprofitCashDonationQuarterlyExclusionUsed",
+          "field": "needBasedNonprofitCashDonationQuarterlyExclusionUsed",
+          "location": "members[].income[]",
+          "name": "Need-based nonprofit cash donation quarterly exclusion used",
+          "kind": "applicant",
+          "type": "Dollar",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "The amount of the three hundred dollar ($300) aggregate fiscal-quarter exclusion for need-based cash donations from private nonprofit charitable organizations that has already been used by other donations in the same fiscal quarter (10 CCR 2506-1, 4.405.2, A, 10).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                100
+              ]
+            }
+          ],
+          "enginePath": "/incomes/*/needBasedNonprofitCashDonationQuarterlyExclusionUsed"
+        },
+        {
+          "requestPath": "members[].income[].indianTrustRestrictedLandInterestAnnualExclusionUsed",
+          "field": "indianTrustRestrictedLandInterestAnnualExclusionUsed",
+          "location": "members[].income[]",
+          "name": "Indian trust or restricted land interest annual exclusion used",
+          "kind": "applicant",
+          "type": "Dollar",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "The amount of the two thousand dollar ($2,000) calendar-year exclusion for income derived from an individual Indian's interest in trust or restricted lands that has already been used by other such income in the same calendar year (10 CCR 2506-1, 4.405.2, B, 2).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                103
+              ]
+            }
+          ],
+          "enginePath": "/incomes/*/indianTrustRestrictedLandInterestAnnualExclusionUsed"
+        },
+        {
+          "requestPath": "members[].income[].receivedBeforeSnapParticipation",
+          "field": "receivedBeforeSnapParticipation",
+          "location": "members[].income[]",
+          "name": "Received before SNAP participation",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether this income source was received before SNAP participation for exclusions that depend on the income's timing relative to SNAP participation. VISTA payments and earned income tax credits count as income when this is true, and are excluded only when this is false (10 CCR 2506-1, 4.405.2, A, 3 and A, 20).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                88,
+                101
+              ]
+            }
+          ],
+          "enginePath": "/incomes/*/receivedBeforeSnapParticipation"
+        },
+        {
+          "requestPath": "members[].income[].isWorkSupplementationOrWorkSupportPublicAssistancePortion",
+          "field": "isWorkSupplementationOrWorkSupportPublicAssistancePortion",
+          "location": "members[].income[]",
+          "name": "Is work supplementation or work support public assistance portion",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether this income is the portion earned under a work supplementation or work support program that is attributable to a federal, state, or local public assistance program, so it is not eligible for the earned income deduction (10 CCR 2506-1, 4.407.2, B).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                108
+              ]
+            }
+          ],
+          "enginePath": "/incomes/*/isWorkSupplementationOrWorkSupportPublicAssistancePortion"
+        },
+        {
+          "requestPath": "members[].income[].amount",
+          "field": "amount",
+          "location": "members[].income[]",
+          "name": "Amount",
+          "kind": "applicant",
+          "type": "Dollar",
+          "programs": [
+            "SNAP",
+            "Medicaid"
+          ],
+          "definition": "The average income amount for this income at its stated frequency.",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                69,
+                86,
+                87,
+                90,
+                91,
+                92,
+                93,
+                180
+              ]
+            }
+          ],
+          "enginePath": "/incomes/*/amount"
+        },
+        {
+          "requestPath": "members[].income[].targetPayDate",
+          "field": "targetPayDate",
+          "location": "members[].income[]",
+          "name": "Target pay date",
+          "kind": "applicant",
+          "type": "Day",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "The date this income was received or is expected to be received, used to test whether terminated-source income was received prior to the date of application and whether new-source income will be received within the applicable tenth-day destitute-income deadline (10 CCR 2506-1, 4.406, A, 1-3).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                106,
+                107
+              ]
+            }
+          ],
+          "enginePath": "/incomes/*/targetPayDate"
+        },
+        {
+          "requestPath": "members[].income[].isFromTerminatedSourceForDestituteIncome",
+          "field": "isFromTerminatedSourceForDestituteIncome",
+          "location": "members[].income[]",
+          "name": "Is from terminated source for destitute income",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether this income source meets the terminated-source definition for destitute-of-income rules: income normally received monthly or more often that is not expected again from the same source during the remainder of the application month or the following month, or income normally received less often than monthly that is not anticipated in the month it would normally be received (10 CCR 2506-1, 4.406, A, 1).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                106
+              ]
+            }
+          ],
+          "enginePath": "/incomes/*/isFromTerminatedSourceForDestituteIncome"
+        },
+        {
+          "requestPath": "members[].income[].isFromNewSourceForDestituteIncome",
+          "field": "isFromNewSourceForDestituteIncome",
+          "location": "members[].income[]",
+          "name": "Is from new source for destitute income",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether this income source meets the new-source definition for destitute-of-income rules: income normally received monthly or more often but not received from that source within thirty (30) calendar days before the application filing date, or income normally received less often than monthly but not received within the last normal interval between payments (10 CCR 2506-1, 4.406, A, 2).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                107
+              ]
+            }
+          ],
+          "enginePath": "/incomes/*/isFromNewSourceForDestituteIncome"
+        },
+        {
+          "requestPath": "members[].income[].frequency",
+          "field": "frequency",
+          "location": "members[].income[]",
+          "name": "Income frequency",
+          "kind": "applicant",
+          "type": "Enum",
+          "programs": [
+            "SNAP",
+            "Medicaid"
+          ],
+          "definition": "How often this income amount is received or anticipated, used to convert the amount to a monthly amount (10 CCR 2506-1, 4.402).",
+          "values": [
+            "monthly",
+            "weekly",
+            "bi_weekly",
+            "semi_monthly",
+            "every_other_month",
+            "quarterly",
+            "twice_a_year",
+            "annual",
+            "other_specific_time_period"
+          ],
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                85,
+                93
+              ]
+            }
+          ],
+          "enginePath": "/incomes/*/frequency"
+        },
+        {
+          "requestPath": "members[].income[].intendedMonths",
+          "field": "intendedMonths",
+          "location": "members[].income[]",
+          "name": "Months intended to cover",
+          "kind": "applicant",
+          "type": "Int",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "The number of months this income amount is intended to cover when the income is for another specific period of time; that income is divided by this number of months to obtain average monthly income (10 CCR 2506-1, 4.402.2).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                87
+              ]
+            }
+          ],
+          "enginePath": "/incomes/*/intendedMonths"
+        }
+      ]
+    },
+    {
+      "title": "Expenses (nested under each member)",
+      "fields": [
+        {
+          "requestPath": "members[].expenses[].type",
+          "field": "type",
+          "location": "members[].expenses[]",
+          "name": "Expense type",
+          "kind": "applicant",
+          "type": "Enum",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "The type of household expense. Select ChildSupport for legally obligated child support, which is considered an income exclusion (10 CCR 2506-1, 4.405, D).",
+          "values": [
+            "child_support",
+            "dependent_care_provider_or_facility",
+            "dependent_care_transportation",
+            "dependent_care_activity_or_other_fees",
+            "rent",
+            "mortgage",
+            "condo_fees",
+            "association_fees",
+            "mobile_home_purchase_loan_repayment",
+            "reverse_mortgage_repayment",
+            "second_mortgage_or_home_equity_loan_payment",
+            "property_taxes",
+            "state_and_local_assessments",
+            "structure_insurance",
+            "natural_disaster_repair_or_rebuild",
+            "heating_fuel",
+            "cooling_costs",
+            "space_heater",
+            "electric_blanket",
+            "heat_lamp",
+            "cooking_stove_used_for_heat",
+            "electricity",
+            "cooking_fuel",
+            "water",
+            "sewer",
+            "well_installation_or_maintenance",
+            "septic_tank_installation_or_maintenance",
+            "garbage_or_trash_collection",
+            "utility_initial_installation_fee",
+            "landline_telephone_service",
+            "cellular_telephone_service",
+            "disposable_cell_phone_service",
+            "voice_over_internet_protocol_service",
+            "pet_expense_billed_separately_from_rent",
+            "unsecured_or_personal_loan_payment",
+            "furniture_or_personal_belongings_insurance",
+            "pay_phone",
+            "phone_card_not_associated_with_specific_device",
+            "one_time_deposit",
+            "internet_connectivity_fee",
+            "cable_or_internet_fee",
+            "medical_dental_care",
+            "psychotherapy_rehabilitation_services",
+            "hospitalization_outpatient_treatment",
+            "nursing_care",
+            "nursing_home_care",
+            "prescription_drug",
+            "practitioner_approved_over_the_counter_medication",
+            "medical_supplies",
+            "sickroom_equipment",
+            "prescribed_medical_equipment",
+            "health_hospitalization_insurance_premium",
+            "medicare_premium",
+            "medical_cost_sharing_expense",
+            "dentures",
+            "hearing_aids",
+            "prosthetics",
+            "eyeglasses",
+            "service_animal",
+            "medical_transportation",
+            "medical_lodging",
+            "attendant_care",
+            "homemaker",
+            "home_health_aide",
+            "medical_child_care_services",
+            "medical_housekeeper",
+            "attendant_meal_allowance",
+            "special_diet_expense",
+            "health_accident_policy_premium",
+            "income_maintenance_policy_premium",
+            "reimbursable_medical_expense",
+            "medical_marijuana",
+            "vitamins_or_supplements_not_prescribed",
+            "past_billing_period_medical_expense",
+            "past_medical_expense_pending_reimbursement_information",
+            "past_medical_expense_renegotiated_installment_plan",
+            "pure_ssi_household_past_medical_expense",
+            "previously_unreported_medical_expense"
+          ],
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                108,
+                110,
+                111
+              ]
+            }
+          ],
+          "enginePath": "/expenses/*/type"
+        },
+        {
+          "requestPath": "members[].expenses[].amount",
+          "field": "amount",
+          "location": "members[].expenses[]",
+          "name": "Amount",
+          "kind": "applicant",
+          "type": "Dollar",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "The expense amount at its stated frequency or, when the household does not elect averaging, the monthly expense amount.",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                69,
+                108
+              ]
+            }
+          ],
+          "enginePath": "/expenses/*/amount"
+        },
+        {
+          "requestPath": "members[].expenses[].milesDrivenToDependentCareFacility",
+          "field": "milesDrivenToDependentCareFacility",
+          "location": "members[].expenses[]",
+          "name": "Miles driven to dependent care facility",
+          "kind": "applicant",
+          "type": "Int",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "The miles driven to and from the dependent care facility at this expense's stated frequency. Mileage expenses are calculated at the stated frequency by multiplying these miles by the dependent care mileage rate, then converted to a monthly amount using the expense frequency (10 CCR 2506-1, 4.407.4).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                113
+              ]
+            }
+          ],
+          "enginePath": "/expenses/*/milesDrivenToDependentCareFacility"
+        },
+        {
+          "requestPath": "members[].expenses[].milesDrivenForMedicalTreatment",
+          "field": "milesDrivenForMedicalTreatment",
+          "location": "members[].expenses[]",
+          "name": "Miles driven for medical treatment",
+          "kind": "applicant",
+          "type": "Int",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "The reasonable miles driven to obtain medical treatment or services at this expense's stated frequency. Mileage expenses are calculated at the stated frequency by multiplying these miles by the medical mileage rate, then converted to a monthly amount using the expense frequency (10 CCR 2506-1, 4.407.6).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                114
+              ]
+            }
+          ],
+          "enginePath": "/expenses/*/milesDrivenForMedicalTreatment"
+        },
+        {
+          "requestPath": "members[].expenses[].isNecessaryDependentCareForWorkTrainingOrEducation",
+          "field": "isNecessaryDependentCareForWorkTrainingOrEducation",
+          "location": "members[].expenses[]",
+          "name": "Is necessary dependent care for work, training, or education",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether this dependent care expense is necessary for a household member to accept or continue employment, seek employment, or attend training or pursue education that is preparatory to employment (10 CCR 2506-1, 4.407.4).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                112
+              ]
+            }
+          ],
+          "enginePath": "/expenses/*/isNecessaryDependentCareForWorkTrainingOrEducation"
+        },
+        {
+          "requestPath": "members[].expenses[].isDirectMonetaryPaymentToAgencyOrPersonOutsideHousehold",
+          "field": "isDirectMonetaryPaymentToAgencyOrPersonOutsideHousehold",
+          "location": "members[].expenses[]",
+          "name": "Is direct monetary payment outside household",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether this dependent care expense is a direct monetary payment to an agency or a person outside of the household. Only direct monetary payments to an agency or a person outside the household are allowable for the dependent care deduction, and in-kind benefits paid to an attendant are not considered (10 CCR 2506-1, 4.407.4).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                113
+              ]
+            }
+          ],
+          "enginePath": "/expenses/*/isDirectMonetaryPaymentToAgencyOrPersonOutsideHousehold"
+        },
+        {
+          "requestPath": "members[].expenses[].reimbursementAmount",
+          "field": "reimbursementAmount",
+          "location": "members[].expenses[]",
+          "name": "Reimbursement amount",
+          "kind": "applicant",
+          "type": "Dollar",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "The amount of this expense reimbursed or expected to be reimbursed from another source at the expense's stated frequency. Allowable medical costs are reduced by reimbursements from another source (10 CCR 2506-1, 4.407.6).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                113
+              ]
+            }
+          ],
+          "enginePath": "/expenses/*/reimbursementAmount"
+        },
+        {
+          "requestPath": "members[].expenses[].isForClaimableShelterResidence",
+          "field": "isForClaimableShelterResidence",
+          "location": "members[].expenses[]",
+          "name": "Is for claimable shelter residence",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether this expense is for a residence whose shelter costs may be claimed by the household: either the household's actual residence, or a home not occupied by the household because of employment or training away from home, illness, natural disaster, or casualty loss where the household intends to return, current occupants are not claiming the shelter costs for SNAP, and the home is not leased or rented during the household's absence (10 CCR 2506-1, 4.407.3, D).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                109
+              ]
+            }
+          ],
+          "enginePath": "/expenses/*/isForClaimableShelterResidence"
+        },
+        {
+          "requestPath": "members[].expenses[].incursOrAnticipatesSeparateHeatingCoolingCosts",
+          "field": "incursOrAnticipatesSeparateHeatingCoolingCosts",
+          "location": "members[].expenses[]",
+          "name": "Incurs or anticipates separate heating/cooling costs",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether this heating or cooling expense is incurred or anticipated separate and apart from the household's rent or mortgage (10 CCR 2506-1, 4.407.31).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                111
+              ]
+            }
+          ],
+          "enginePath": "/expenses/*/incursOrAnticipatesSeparateHeatingCoolingCosts"
+        },
+        {
+          "requestPath": "members[].expenses[].privateRentalBilledForHeatingCooling",
+          "field": "privateRentalBilledForHeatingCooling",
+          "location": "members[].expenses[]",
+          "name": "Private rental billed for heating/cooling",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether this heating or cooling expense is for private rental housing and is billed by the landlord on the basis of individual usage, or is charged as a flat rate separately from rent (10 CCR 2506-1, 4.407.31).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                111
+              ]
+            }
+          ],
+          "enginePath": "/expenses/*/privateRentalBilledForHeatingCooling"
+        },
+        {
+          "requestPath": "members[].expenses[].sharedResidencePaysHeatingCoolingPortion",
+          "field": "sharedResidencePaysHeatingCoolingPortion",
+          "location": "members[].expenses[]",
+          "name": "Shared residence pays heating/cooling portion",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether this heating or cooling expense is for a shared residence where the household incurs at least a portion of the heating or cooling cost, entitling each household to the full Heating and Cooling Utility Allowance (HCUA) (10 CCR 2506-1, 4.407.31).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                111
+              ]
+            }
+          ],
+          "enginePath": "/expenses/*/sharedResidencePaysHeatingCoolingPortion"
+        },
+        {
+          "requestPath": "members[].expenses[].publicHousingResponsibleForExcessHeatingCoolingCosts",
+          "field": "publicHousingResponsibleForExcessHeatingCoolingCosts",
+          "location": "members[].expenses[]",
+          "name": "Public housing responsible for excess heating/cooling costs",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether this heating or cooling expense is for public housing where the household is responsible for excess heating or cooling costs (10 CCR 2506-1, 4.407.31).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                111
+              ]
+            }
+          ],
+          "enginePath": "/expenses/*/publicHousingResponsibleForExcessHeatingCoolingCosts"
+        },
+        {
+          "requestPath": "members[].expenses[].frequency",
+          "field": "frequency",
+          "location": "members[].expenses[]",
+          "name": "Expense frequency",
+          "kind": "applicant",
+          "type": "Enum",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "How often this expense is billed or incurred. Weekly, bi-weekly, and semi-monthly expenses are converted to monthly amounts; other non-monthly frequencies are averaged only when the household elects to average the expense over the period it is intended to cover (10 CCR 2506-1, 4.407, B).",
+          "values": [
+            "monthly",
+            "weekly",
+            "bi_weekly",
+            "semi_monthly",
+            "every_other_month",
+            "quarterly",
+            "twice_a_year",
+            "annual",
+            "other_specific_time_period"
+          ],
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                108,
+                146
+              ]
+            }
+          ],
+          "enginePath": "/expenses/*/frequency"
+        },
+        {
+          "requestPath": "members[].expenses[].shouldAverage",
+          "field": "shouldAverage",
+          "location": "members[].expenses[]",
+          "name": "Should average expense",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether the household elects to average this fluctuating monthly expense or expense billed less often than monthly over the applicable period. This election controls optional averaging frequencies other than weekly, bi-weekly, and semi-monthly, which are converted to monthly amounts regardless of this election (10 CCR 2506-1, 4.407, B).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                108
+              ]
+            }
+          ],
+          "enginePath": "/expenses/*/shouldAverage"
+        },
+        {
+          "requestPath": "members[].expenses[].intendedMonths",
+          "field": "intendedMonths",
+          "location": "members[].expenses[]",
+          "name": "Months intended to cover",
+          "kind": "applicant",
+          "type": "Int",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "The number of months this expense amount is intended to cover when the household elects to average an expense over a specific period not represented by another frequency option (10 CCR 2506-1, 4.407, B).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                108
+              ]
+            }
+          ],
+          "enginePath": "/expenses/*/intendedMonths"
+        }
+      ]
+    },
+    {
+      "title": "Jobs (nested under each member)",
+      "fields": [
+        {
+          "requestPath": "members[].jobs[].hoursPerWeek",
+          "field": "hoursPerWeek",
+          "location": "members[].jobs[]",
+          "name": "Hours per week",
+          "kind": "applicant",
+          "type": "Int",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "The average number of hours per week worked in this job. Employed or self-employed individuals may be exempt from SNAP work requirements when they work at least thirty (30) hours per week (10 CCR 2506-1, 4.310).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                65,
+                76
+              ]
+            }
+          ],
+          "enginePath": "/jobs/*/hoursPerWeek"
+        },
+        {
+          "requestPath": "members[].jobs[].abawdWorkType",
+          "field": "abawdWorkType",
+          "location": "members[].jobs[]",
+          "name": "ABAWD work type",
+          "kind": "applicant",
+          "type": "Enum",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "The type of work performed in this job for ABAWD work-requirement purposes. Compensated work, in-kind work, and unpaid work verified by the provider of the unpaid work count toward ABAWD work hours (10 CCR 2506-1, 4.000.1).",
+          "values": [
+            "compensated_work",
+            "in_kind_work",
+            "verified_unpaid_work",
+            "other"
+          ],
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                80
+              ]
+            }
+          ],
+          "enginePath": "/jobs/*/abawdWorkType"
+        },
+        {
+          "requestPath": "members[].jobs[].isSelfEmployed",
+          "field": "isSelfEmployed",
+          "location": "members[].jobs[]",
+          "name": "Is self-employed",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether this job is self-employment. The work-requirement employment exemption applies to employed or self-employed individuals who meet the hours or weekly-earnings threshold (10 CCR 2506-1, 4.310).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                65,
+                76,
+                90
+              ]
+            }
+          ],
+          "enginePath": "/jobs/*/isSelfEmployed"
+        },
+        {
+          "requestPath": "members[].jobs[].isAtFederalMinimumWage",
+          "field": "isAtFederalMinimumWage",
+          "location": "members[].jobs[]",
+          "name": "Is at federal minimum wage",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether this job is paid at least the federal minimum wage for the hours worked. For self-employment, this means earnings after allowable business expenses are deducted are at least equal to the federal minimum wage for the hours worked. Used to add up hours that count toward the student self-employment wage requirement and the work-requirement employment earnings threshold (10 CCR 2506-1, 4.306.1, B; 4.310).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                65,
+                76
+              ]
+            }
+          ],
+          "enginePath": "/jobs/*/isAtFederalMinimumWage"
+        },
+        {
+          "requestPath": "members[].jobs[].isOnTheJobTraining",
+          "field": "isOnTheJobTraining",
+          "location": "members[].jobs[]",
+          "name": "Is on-the-job training",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether this job is on-the-job training (OJT), meaning training provided to an employee after they are hired and designed for individuals who do not have the necessary work experience required for the job (10 CCR 2506-1, 4.000.1).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                8
+              ]
+            }
+          ],
+          "enginePath": "/jobs/*/isOnTheJobTraining"
+        },
+        {
+          "requestPath": "members[].jobs[].offerAccepted",
+          "field": "offerAccepted",
+          "location": "members[].jobs[]",
+          "name": "Offer accepted",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether the member accepted this offered job.",
+          "citations": [],
+          "enginePath": "/jobs/*/offerAccepted"
+        },
+        {
+          "requestPath": "members[].jobs[].wagesBelowApplicableMinimum",
+          "field": "wagesBelowApplicableMinimum",
+          "location": "members[].jobs[]",
+          "name": "Wages below applicable minimum",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether the wages offered for this employment are less than the higher of the applicable federal or state minimum wage, or less than eighty percent (80%) of the federal minimum wage if neither the federal nor state minimum wage is applicable (10 CCR 2506-1, 4.310.7).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                77
+              ]
+            }
+          ],
+          "enginePath": "/jobs/*/wagesBelowApplicableMinimum"
+        },
+        {
+          "requestPath": "members[].jobs[].pieceRateYieldBelowApplicableWage",
+          "field": "pieceRateYieldBelowApplicableWage",
+          "location": "members[].jobs[]",
+          "name": "Piece-rate yield below applicable wage",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether this employment is offered on a piece-rate basis and the average hourly yield the employee can reasonably be expected to earn is less than the applicable hourly wage for suitable employment (10 CCR 2506-1, 4.310.7).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                77
+              ]
+            }
+          ],
+          "enginePath": "/jobs/*/pieceRateYieldBelowApplicableWage"
+        },
+        {
+          "requestPath": "members[].jobs[].requiresLaborOrganizationAction",
+          "field": "requiresLaborOrganizationAction",
+          "location": "members[].jobs[]",
+          "name": "Requires labor organization action",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether the member is required, as a condition of this employment, to join, resign from, or refrain from joining any legitimate labor organization (10 CCR 2506-1, 4.310.7).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                77
+              ]
+            }
+          ],
+          "enginePath": "/jobs/*/requiresLaborOrganizationAction"
+        },
+        {
+          "requestPath": "members[].jobs[].worksiteSubjectToStrikeOrLockout",
+          "field": "worksiteSubjectToStrikeOrLockout",
+          "location": "members[].jobs[]",
+          "name": "Worksite subject to strike or lockout",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether this employment is at a site subject to a strike or lockout at the time of the offer, unless the strike has been enjoined under the Labor Management Relations Act or Railway Labor Act (10 CCR 2506-1, 4.310.7).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                77
+              ]
+            }
+          ],
+          "enginePath": "/jobs/*/worksiteSubjectToStrikeOrLockout"
+        },
+        {
+          "requestPath": "members[].jobs[].unreasonableHealthSafetyRisk",
+          "field": "unreasonableHealthSafetyRisk",
+          "location": "members[].jobs[]",
+          "name": "Unreasonable health or safety risk",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether the member can demonstrate, or the local office becomes aware, that this employment presents an unreasonable degree of risk to health and safety (10 CCR 2506-1, 4.310.7).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                77
+              ]
+            }
+          ],
+          "enginePath": "/jobs/*/unreasonableHealthSafetyRisk"
+        },
+        {
+          "requestPath": "members[].jobs[].memberPhysicallyOrMentallyUnfit",
+          "field": "memberPhysicallyOrMentallyUnfit",
+          "location": "members[].jobs[]",
+          "name": "Member physically or mentally unfit",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether the member is physically or mentally unfit to perform this employment, as established by documentary medical evidence or reliable information obtained from other sources (10 CCR 2506-1, 4.310.7).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                77
+              ]
+            }
+          ],
+          "enginePath": "/jobs/*/memberPhysicallyOrMentallyUnfit"
+        },
+        {
+          "requestPath": "members[].jobs[].outsideMajorFieldDuringInitialThirtyDays",
+          "field": "outsideMajorFieldDuringInitialThirtyDays",
+          "location": "members[].jobs[]",
+          "name": "Outside major field during initial thirty days",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether this employment is not in the member's major field of experience and job opportunities in that major field have not failed to be offered after thirty (30) calendar days from registration (10 CCR 2506-1, 4.310.7).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                78
+              ]
+            }
+          ],
+          "enginePath": "/jobs/*/outsideMajorFieldDuringInitialThirtyDays"
+        },
+        {
+          "requestPath": "members[].jobs[].unreasonableDistance",
+          "field": "unreasonableDistance",
+          "location": "members[].jobs[]",
+          "name": "Unreasonable distance",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether the distance from the member's home to the place of employment is unreasonable considering the expected wage and the time and cost of commuting (10 CCR 2506-1, 4.310.7).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                78
+              ]
+            }
+          ],
+          "enginePath": "/jobs/*/unreasonableDistance"
+        },
+        {
+          "requestPath": "members[].jobs[].dailyCommuteExceedsTwoHours",
+          "field": "dailyCommuteExceedsTwoHours",
+          "location": "members[].jobs[]",
+          "name": "Daily commute exceeds two hours",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether the daily commuting time for this employment exceeds two (2) hours per day, not including the time needed to transport a child or children to and from a child care facility (10 CCR 2506-1, 4.310.7).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                78
+              ]
+            }
+          ],
+          "enginePath": "/jobs/*/dailyCommuteExceedsTwoHours"
+        },
+        {
+          "requestPath": "members[].jobs[].noTransportationForNonWalkingDistance",
+          "field": "noTransportationForNonWalkingDistance",
+          "location": "members[].jobs[]",
+          "name": "No transportation for non-walking distance",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether the distance to the place of employment prohibits walking and neither public nor private transportation is available to transport the member to the job site (10 CCR 2506-1, 4.310.7).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                78
+              ]
+            }
+          ],
+          "enginePath": "/jobs/*/noTransportationForNonWalkingDistance"
+        },
+        {
+          "requestPath": "members[].jobs[].interferesWithReligiousObservance",
+          "field": "interferesWithReligiousObservance",
+          "location": "members[].jobs[]",
+          "name": "Interferes with religious observance",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether the working hours or nature of this employment interferes with the member's religious observances, convictions, or beliefs (10 CCR 2506-1, 4.310.7).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                78
+              ]
+            }
+          ],
+          "enginePath": "/jobs/*/interferesWithReligiousObservance"
+        }
+      ]
+    },
+    {
+      "title": "Assets (nested under each member)",
+      "fields": [
+        {
+          "requestPath": "members[].assets[].type",
+          "field": "type",
+          "location": "members[].assets[]",
+          "name": "Resource type",
+          "kind": "applicant",
+          "type": "Enum",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "The type of household resource item, including liquid resources such as cash on hand, money in checking or savings accounts, saving certificates, stocks or bonds, and exempt resources identified in 10 CCR 2506-1, 4.410.",
+          "values": [
+            "cash_on_hand",
+            "checking_account",
+            "savings_account",
+            "saving_certificate",
+            "stocks",
+            "bonds",
+            "automobile",
+            "motorcycle",
+            "vehicle",
+            "recreational_vehicle",
+            "seasonal_vehicle",
+            "home_and_surrounding_property",
+            "future_home_property",
+            "prorated_income",
+            "prorated_student_income",
+            "prorated_self_employment_income",
+            "household_goods",
+            "personal_effects",
+            "burial_plot",
+            "life_insurance_cash_value",
+            "livestock",
+            "federal_tax_preferred_retirement_account",
+            "pension_or_defined_benefit_plan",
+            "traditional_defined_benefit_plan",
+            "traditional_401k_plan",
+            "simple_401k_plan",
+            "section_501c_18_plan",
+            "section_403a_plan",
+            "section_403b_plan",
+            "section_408_plan",
+            "traditional_ira",
+            "roth_ira",
+            "simple_ira",
+            "my_ra",
+            "traditional_individual_retirement_annuity",
+            "section_457_plan",
+            "federal_employee_thrift_savings_plan",
+            "keogh_plan",
+            "section_529a_able_program_funds",
+            "simplified_employer_plan",
+            "profit_sharing_plan",
+            "cash_balance_plan",
+            "tax_deferred_education_account",
+            "section_529_qualified_tuition_program",
+            "coverdell_education_savings_account",
+            "pre_purchased_funeral_agreement",
+            "income_producing_property",
+            "farmland",
+            "rental_home",
+            "work_related_equipment",
+            "tools_of_tradesman",
+            "farm_machinery",
+            "income_producing_vehicle",
+            "installment_contract_producing_fair_market_income",
+            "former_farming_self_employment_essential_property",
+            "inaccessible_resource",
+            "irrevocable_trust_fund",
+            "property_in_probate",
+            "property_prohibited_from_sale_by_creditor_lien",
+            "real_property_good_faith_effort_to_sell",
+            "non_liquid_resource_net_return_1500_or_less",
+            "qualifying_trust_funds",
+            "no_significant_return_resource",
+            "battered_shelter_resident_inaccessible_resource",
+            "other"
+          ],
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                69,
+                120,
+                121,
+                122,
+                123
+              ]
+            }
+          ],
+          "enginePath": "/resourceItems/*/type"
+        },
+        {
+          "requestPath": "members[].assets[].otherExcludedResourceType",
+          "field": "otherExcludedResourceType",
+          "location": "members[].assets[]",
+          "name": "Other excluded resource type",
+          "kind": "applicant",
+          "type": "Enum",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "The specific type of other government payment received for a specific purpose or services and excluded as a resource under 10 CCR 2506-1, 4.410, J. Use when /resourceItems/*/type is Other and the resource matches one of the listed statutory exclusions.",
+          "values": [
+            "child_nutrition_act_assistance",
+            "youth_incentive_entitlement_or_youth_community_conservation_or_youth_employment_training_payment",
+            "disaster_home_restoration_payment_with_legal_sanction",
+            "presidential_disaster_or_emergency_assistance",
+            "uniform_relocation_act_reimbursement",
+            "wic_benefit",
+            "federal_energy_assistance_weatherization_or_emergency_heating_cooling_payment",
+            "hud_rental_refund_payment",
+            "mandatory_military_education_deduction",
+            "japanese_american_or_aleut_civil_liberties_payment",
+            "wic_farmers_market_demonstration_project_benefit",
+            "agent_orange_settlement_fund_payment",
+            "earned_income_tax_credit",
+            "radiation_exposure_compensation_trust_fund_payment",
+            "nazi_persecution_victim_payment",
+            "crime_victim_compensation_payment",
+            "vietnam_veteran_child_spina_bifida_allowance",
+            "federal_income_tax_refund"
+          ],
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                124,
+                125
+              ]
+            }
+          ],
+          "enginePath": "/resourceItems/*/otherExcludedResourceType"
+        },
+        {
+          "requestPath": "members[].assets[].value",
+          "field": "value",
+          "location": "members[].assets[]",
+          "name": "Resource value",
+          "kind": "applicant",
+          "type": "Dollar",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "The countable value of this resource item: for liquid resources, the current redemption rate less encumbrances; for non-liquid resources, the fair market value (or real property value) less verified encumbrances (10 CCR 2506-1, 4.408.1).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                69,
+                118,
+                119,
+                120
+              ]
+            }
+          ],
+          "enginePath": "/resourceItems/*/value"
+        }
+      ]
+    },
+    {
+      "title": "Caregiver relationships",
+      "fields": [
+        {
+          "requestPath": "caregiverRelationships[].caregiverId",
+          "field": "caregiverId",
+          "location": "caregiverRelationships[]",
+          "name": "Caregiver",
+          "kind": "reference",
+          "type": "CollectionItem",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "The household member who is either a natural, adoptive, or stepparent in this relationship, or a non-parent household member exercising parental control over the child. When the relationship is a natural, adoptive, or stepparent relationship to a child aged twenty-one (21) years or younger living in the same home, this member must be included in the SNAP household (10 CCR 2506-1, 4.304.1).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                47
+              ]
+            }
+          ],
+          "enginePath": "/caregiverRelationships/*/caregiverId"
+        },
+        {
+          "requestPath": "caregiverRelationships[].dependentId",
+          "field": "dependentId",
+          "location": "caregiverRelationships[]",
+          "name": "Dependent",
+          "kind": "reference",
+          "type": "CollectionItem",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "The household member who is the child or dependent in this caregiver relationship — either the natural, adoptive, or stepchild of the caregiver, or a child under the parental control of a non-parent household member (10 CCR 2506-1, 4.304.1).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                47
+              ]
+            }
+          ],
+          "enginePath": "/caregiverRelationships/*/dependentId"
+        },
+        {
+          "requestPath": "caregiverRelationships[].isParent",
+          "field": "isParent",
+          "location": "caregiverRelationships[]",
+          "name": "Is parent relationship",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether the caregiver-side member is the child's natural, adoptive, or stepparent, rather than a non-parent household member exercising parental control over the child. A child under eighteen (18) is considered to be under parental control of a household member when financially or otherwise dependent on that member (10 CCR 2506-1, 4.304.1).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                47
+              ]
+            }
+          ],
+          "enginePath": "/caregiverRelationships/*/isParent"
+        },
+        {
+          "requestPath": "caregiverRelationships[].isNonparentParentalControl",
+          "field": "isNonparentParentalControl",
+          "location": "caregiverRelationships[]",
+          "name": "Is non-parent parental-control relationship",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether this caregiver relationship is the non-parent parental-control kind: the dependent-side member is a child under the parental control of a caregiver-side member who is not the child's natural, adoptive, or stepparent. A child under eighteen (18) is considered to be under parental control of a household member when financially or otherwise dependent on that member (10 CCR 2506-1, 4.304.1).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                47
+              ]
+            }
+          ],
+          "enginePath": "/caregiverRelationships/*/isNonparentParentalControl"
+        },
+        {
+          "requestPath": "caregiverRelationships[].caregiverProvidesMoreThanHalfOfPhysicalCare",
+          "field": "caregiverProvidesMoreThanHalfOfPhysicalCare",
+          "location": "caregiverRelationships[]",
+          "name": "Caregiver provides more than half of physical care",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether the caregiver-side member in this relationship is responsible for more than half of the physical care of the child. Used by the SNAP student-eligibility exemption for a student responsible for the physical care of a dependent household member aged six (6) to under twelve (12) (10 CCR 2506-1, 4.306.1, E).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                65
+              ]
+            }
+          ],
+          "enginePath": "/caregiverRelationships/*/caregiverProvidesMoreThanHalfOfPhysicalCare"
+        },
+        {
+          "requestPath": "caregiverRelationships[].adequateChildcareUnavailable",
+          "field": "adequateChildcareUnavailable",
+          "location": "caregiverRelationships[]",
+          "name": "Adequate childcare is unavailable",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether the local office has determined that adequate childcare is not available for the dependent-side member in this relationship to enable the caregiver-side member to attend class and satisfy the requirement of item B or item C of 4.306.1 (10 CCR 2506-1, 4.306.1, E).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                65
+              ]
+            }
+          ],
+          "enginePath": "/caregiverRelationships/*/adequateChildcareUnavailable"
+        },
+        {
+          "requestPath": "caregiverRelationships[].claimedForWorkRequirementsCareExemption",
+          "field": "claimedForWorkRequirementsCareExemption",
+          "location": "caregiverRelationships[]",
+          "name": "Claimed for work-requirements care exemption",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether this caregiver relationship is the one claimed for the SNAP work-requirements exemption for a parent or other household member responsible for the care of this dependent child under six (6) or incapacitated person. This per-relationship flag identifies which caregiver claims the exemption when multiple caregivers are associated with the same dependent (10 CCR 2506-1, 4.310).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                75
+              ]
+            }
+          ],
+          "enginePath": "/caregiverRelationships/*/claimedForWorkRequirementsCareExemption"
+        }
+      ]
+    },
+    {
+      "title": "Household & application",
+      "fields": [
+        {
+          "requestPath": "household.isPresidentiallyDeclaredDisasterOrEmergency",
+          "field": "isPresidentiallyDeclaredDisasterOrEmergency",
+          "location": "household",
+          "name": "Is presidentially declared disaster or emergency",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether there is a major disaster or emergency declared by the President. Disaster or emergency assistance is excluded under 10 CCR 2506-1, 4.405.2 only when precipitated by an emergency or major disaster as defined in the Disaster Relief Act; FEMA-funded homeless rent, mortgage, food, or utility assistance when there is no major disaster or emergency is not excluded under this provision.",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                100
+              ]
+            }
+          ],
+          "enginePath": "/isPresidentiallyDeclaredDisasterOrEmergency"
+        },
+        {
+          "requestPath": "household.hasInadvertentHouseholdErrorClaimDueToEarnedIncomeCalculation",
+          "field": "hasInadvertentHouseholdErrorClaimDueToEarnedIncomeCalculation",
+          "location": "household",
+          "name": "Has inadvertent household error claim due to earned income calculation",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether an Inadvertent Household Error (IHE) claim is due to earned income being reported in an untimely manner, so the claim is calculated without allowing the twenty percent (20%) earned income deduction (10 CCR 2506-1, 4.000.1).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                6,
+                109,
+                177,
+                180
+              ]
+            }
+          ],
+          "enginePath": "/hasInadvertentHouseholdErrorClaimDueToEarnedIncomeCalculation"
+        },
+        {
+          "requestPath": "household.applicationFilingDate",
+          "field": "applicationFilingDate",
+          "location": "household",
+          "name": "Application filing date",
+          "kind": "applicant",
+          "type": "Day",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "The date an application for public assistance is received by the county office, used as the application date for destitute-of-income timing (10 CCR 2506-1, 4.000.1; 4.406)",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                1,
+                106
+              ]
+            }
+          ],
+          "enginePath": "/applicationFilingDate"
+        },
+        {
+          "requestPath": "household.isApplicationForRecertification",
+          "field": "isApplicationForRecertification",
+          "location": "household",
+          "name": "Application for recertification",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether this application was submitted prior to the last month of the certification period to determine the household's continued eligibility for the next certification period (10 CCR 2506-1, 4.000.1)",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                1
+              ]
+            }
+          ],
+          "enginePath": "/isApplicationForRecertification"
+        },
+        {
+          "requestPath": "household.normalIssuanceCycleDate",
+          "field": "normalIssuanceCycleDate",
+          "location": "household",
+          "name": "Normal issuance cycle date",
+          "kind": "applicant",
+          "type": "Day",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "The household's normal issuance cycle date, used for recertification applications when determining whether new-source income will be received by the tenth (10th) calendar day after that normal issuance cycle for destitute-of-income treatment (10 CCR 2506-1, 4.406, A, 2-3).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                107
+              ]
+            }
+          ],
+          "enginePath": "/normalIssuanceCycleDate"
+        },
+        {
+          "requestPath": "household.receivedSnapInLast30Days",
+          "field": "receivedSnapInLast30Days",
+          "location": "household",
+          "name": "Received SNAP in the last 30 days",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether the household received SNAP benefits within the thirty (30) days preceding the current application. Used to determine whether a migrant or seasonal farm worker household's break in participation does not exceed thirty (30) days, which exempts the household from initial-month allotment proration (10 CCR 2506-1, 4.207.2).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                38
+              ]
+            }
+          ],
+          "enginePath": "/receivedSnapInLast30Days"
+        },
+        {
+          "requestPath": "household.receivesLeapInLast12Months",
+          "field": "receivesLeapInLast12Months",
+          "location": "household",
+          "name": "Receives LEAP in last 12 months",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether the household received a Low-Income Energy Assistance Program (LEAP) payment within the previous twelve (12) month period, which qualifies the household for the Heating and Cooling Utility Allowance (HCUA) (10 CCR 2506-1, 4.407.31).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                7,
+                111
+              ]
+            }
+          ],
+          "enginePath": "/receivesLeapInLast12Months"
+        },
+        {
+          "requestPath": "household.dSnapActive",
+          "field": "dSnapActive",
+          "location": "household",
+          "name": "D-SNAP active",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether the Disaster Supplemental Nutrition Assistance Program (D-SNAP) is active for the affected county, following a Presidential disaster declaration for individual assistance and at the county's discretion in coordination with the state SNAP office and FNS (10 CCR 2506-1, 4.000.1).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                3,
+                223,
+                224
+              ]
+            }
+          ],
+          "enginePath": "/dSnapActive"
+        },
+        {
+          "requestPath": "household.temporaryEmergencyActive",
+          "field": "temporaryEmergencyActive",
+          "location": "household",
+          "name": "Temporary emergency active",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether a temporary emergency is active — an emergency caused by any natural or human-caused disaster, other than a major disaster declared by the President of the United States under the Disaster Relief Act of 1974, which is determined by FNS to have disrupted commercial channels of food distribution (10 CCR 2506-1, 4.000.1).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                12,
+                223,
+                224
+              ]
+            }
+          ],
+          "enginePath": "/temporaryEmergencyActive"
+        },
+        {
+          "requestPath": "household.hasEebtInLast12Months",
+          "field": "hasEebtInLast12Months",
+          "location": "household",
+          "name": "Has E-EBT in last 12 months",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether the household received an Energy Electronic Benefit Transfer (E-EBT) payment within the previous twelve (12) month period, which qualifies the household for the Heating and Cooling Utility Allowance (HCUA) (10 CCR 2506-1, 4.407.31).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                4,
+                111
+              ]
+            }
+          ],
+          "enginePath": "/hasEebtInLast12Months"
+        },
+        {
+          "requestPath": "household.hasOrExpectsShelterCosts",
+          "field": "hasOrExpectsShelterCosts",
+          "location": "household",
+          "name": "Has or expects shelter costs",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether the household incurs, or reasonably expects to incur, shelter costs during the month. Households experiencing homelessness that incur no shelter costs during the month are not eligible for the homeless shelter deduction estimate (10 CCR 2506-1, 4.407.3, C).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                109
+              ]
+            }
+          ],
+          "enginePath": "/hasOrExpectsShelterCosts"
+        },
+        {
+          "requestPath": "household.hadPreviousSubstantialLotteryOrGamblingWinnings",
+          "field": "hadPreviousSubstantialLotteryOrGamblingWinnings",
+          "location": "household",
+          "name": "Had previous substantial lottery or gambling winnings",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether the SNAP household previously lost eligibility because a member received substantial lottery or gambling winnings. The next time such a household reapplies and is certified for SNAP after losing eligibility, the household must be considered under Standard Eligibility (SE) guidelines; after receiving SNAP as an SE household, the household will be re-evaluated for categorical eligibility at the next eligible certification period (10 CCR 2506-1, 4.206).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                37
+              ]
+            }
+          ],
+          "enginePath": "/hadPreviousSubstantialLotteryOrGamblingWinnings"
+        },
+        {
+          "requestPath": "household.participatesInCommodityFoodDistributionProgram",
+          "field": "participatesInCommodityFoodDistributionProgram",
+          "location": "household",
+          "name": "Participates in Commodity Food Distribution Program",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether the household is on an Indian reservation and participating in the Commodity Food Distribution Program for the current period. Participation must be limited to either the Commodity Food Distribution Program or SNAP, not both (10 CCR 2506-1, 4.304.4).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                46
+              ]
+            }
+          ],
+          "enginePath": "/participatesInCommodityFoodDistributionProgram"
+        },
+        {
+          "requestPath": "household.livesInApplicationCounty",
+          "field": "livesInApplicationCounty",
+          "location": "household",
+          "name": "Lives in application county or district",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether the household lives in the county or district in which they make application for the Program (10 CCR 2506-1, 4.303).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                46
+              ]
+            }
+          ],
+          "enginePath": "/livesInApplicationCounty"
+        },
+        {
+          "requestPath": "household.hasNearbyCountyArrangement",
+          "field": "hasNearbyCountyArrangement",
+          "location": "household",
+          "name": "Has nearby county/district filing arrangement",
+          "kind": "applicant",
+          "type": "Boolean",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "Whether the local office has made arrangements to allow this household to file an application in a nearby specified county/district office (10 CCR 2506-1, 4.303).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                46
+              ]
+            }
+          ],
+          "enginePath": "/hasNearbyCountyArrangement"
+        },
+        {
+          "requestPath": "household.benefitMonth",
+          "field": "benefitMonth",
+          "location": "household",
+          "name": "Benefit month",
+          "kind": "applicant",
+          "type": "Day",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "The specific calendar month for which the engine is currently calculating benefits and eligibility, used to determine whether the household is in the first month of the certification period for destitute-of-income treatment (10 CCR 2506-1, 4.406).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                7,
+                106
+              ]
+            }
+          ],
+          "enginePath": "/benefitMonth"
+        },
+        {
+          "requestPath": "household.certificationPeriodStartDate",
+          "field": "certificationPeriodStartDate",
+          "location": "household",
+          "name": "Certification period start date",
+          "kind": "applicant",
+          "type": "Day",
+          "programs": [
+            "SNAP"
+          ],
+          "definition": "The official first day of the household's approved initial certification or recertification period, used to determine whether the benefit month is the first month of the certification period for destitute-of-income treatment (10 CCR 2506-1, 4.406).",
+          "citations": [
+            {
+              "document": "10 CCR 2506-1 — Colorado SNAP Rules",
+              "pages": [
+                106
+              ]
+            }
+          ],
+          "enginePath": "/certificationPeriodStartDate"
+        }
+      ]
+    }
+  ]
+}

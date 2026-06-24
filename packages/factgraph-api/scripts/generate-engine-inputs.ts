@@ -191,6 +191,11 @@ if (
   process.argv[1] &&
   fileURLToPath(import.meta.url) === path.resolve(process.argv[1])
 ) {
-  writeFileSync(OUT, renderEngineInputs())
+  const content = renderEngineInputs()
+  writeFileSync(OUT, content)
   console.log(`Wrote ${OUT}`)
+  // Also write a versioned snapshot so the docs site can generate historical pages.
+  const versionedOut = path.resolve(__dirname, '..', 'docs', `engine-inputs-v${DICTIONARY_SCHEMA_VERSION}.json`)
+  writeFileSync(versionedOut, content)
+  console.log(`Wrote ${versionedOut}`)
 }
