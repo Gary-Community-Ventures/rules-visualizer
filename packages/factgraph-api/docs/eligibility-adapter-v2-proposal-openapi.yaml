@@ -4,7 +4,7 @@
 openapi: 3.1.0
 info:
   title: Eligibility API — v2 (engine-shaped)
-  version: 2.0.0
+  version: 1.0.0
   description: |-
     The engine-shaped eligibility contract served at `/v2/eligibility`. The rules engine is the source of truth; build your data model to match these fields.
 

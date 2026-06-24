@@ -67,9 +67,9 @@ function buildDocsNav(active: NavPage): string {
     font: inherit; font-size: 14px; color: #2563eb; display: flex; align-items: center; gap: 0.2rem; }
   .nav-group-btn:hover { text-decoration: underline; }
   .nav-group-btn.in-group { font-weight: 600; color: #1f2937; }
-  .nav-group-menu { display: none; position: absolute; top: calc(100% + 6px); left: 0;
+  .nav-group-menu { display: none; position: absolute; top: 100%; left: 0;
     background: #fff; border: 1px solid #e5e7eb; border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08); padding: 0.3rem 0; min-width: 150px; z-index: 20; }
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08); padding: 0.6rem 0 0.3rem; min-width: 150px; z-index: 20; }
   .nav-group:hover .nav-group-menu,
   .nav-group:focus-within .nav-group-menu { display: block; }
   .nav-group-menu a, .nav-group-menu .nav-current { display: block;
@@ -84,21 +84,21 @@ function buildDocsNav(active: NavPage): string {
 <nav class="docs-nav">
   <div class="nav-group">
     <button class="nav-group-btn${inV2 ? ' in-group' : ''}" type="button">
-      v2 <span aria-hidden="true">▾</span>
+      API <span aria-hidden="true">▾</span>
     </button>
     <div class="nav-group-menu">
-      ${item('./eligibility-v2.html', 'API reference', 'v2')}
-      ${item('./engine-inputs.html', 'Engine inputs', 'engine-inputs')}
+      ${item('./eligibility-v2.html', 'Reference', 'v2')}
+      ${item('./engine-inputs.html', 'Inputs', 'engine-inputs')}
     </div>
   </div>
   <span class="nav-sep">│</span>
   <div class="nav-group">
     <button class="nav-group-btn${inV1 ? ' in-group' : ''}" type="button">
-      v1 (frozen) <span aria-hidden="true">▾</span>
+      Legacy API <span aria-hidden="true">▾</span>
     </button>
     <div class="nav-group-menu">
-      ${item('./index.html', 'API reference', 'v1')}
-      ${item('./dictionary.html', 'Legacy inputs', 'legacy-inputs')}
+      ${item('./index.html', 'Reference', 'v1')}
+      ${item('./dictionary.html', 'Inputs', 'legacy-inputs')}
     </div>
   </div>
   <span class="spacer"></span>

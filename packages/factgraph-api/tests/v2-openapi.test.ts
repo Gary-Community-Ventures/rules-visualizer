@@ -10,6 +10,7 @@ import assert from 'node:assert/strict'
 import request from 'supertest'
 
 import { app } from './helpers.js'
+import { V2_API_VERSION } from '../src/v2-openapi.js'
 
 test('v2 spec is served unauthenticated and labeled the engine-shaped contract', async () => {
   const res = await request(app).get('/v2/eligibility/openapi.json')
@@ -17,7 +18,7 @@ test('v2 spec is served unauthenticated and labeled the engine-shaped contract',
   assert.match(res.body.openapi, /^3\.1/)
   assert.match(res.body.info.title, /v2/)
   assert.match(res.body.info.title, /engine-shaped/i)
-  assert.equal(res.body.info.version, '2.0.0')
+  assert.equal(res.body.info.version, V2_API_VERSION)
   assert.match(res.body.info.description, /no-guess/i)
 })
 

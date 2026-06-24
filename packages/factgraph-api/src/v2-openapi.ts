@@ -22,7 +22,7 @@ import { z } from 'zod'
 
 extendZodWithOpenApi(z)
 
-export const V2_API_VERSION = '2.0.0'
+export const V2_API_VERSION = '1.0.0'
 
 const CATALOG_URL =
   'https://gary-community-ventures.github.io/rules-visualizer/engine-inputs.html'
