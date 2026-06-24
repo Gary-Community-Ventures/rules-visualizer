@@ -42,16 +42,80 @@ writeFileSync(`${outDir}/eligibility-v2-openapi.yaml`, yaml.stringify(v2Doc))
 writeFileSync(`${outDir}/openapi.json`, JSON.stringify(advancedDoc, null, 2))
 writeFileSync(`${outDir}/openapi.yaml`, yaml.stringify(advancedDoc))
 
-// Redoc is loaded from a CDN — no build step. A small nav strip above the
-// viewport links across the contracts and the interactive explorer.
+// ---------------------------------------------------------------------------
+// Shared nav — identical structure on every page. Grouped into two
+// dropdowns (v2, v1 frozen) + right-side dev tools.
+// ---------------------------------------------------------------------------
+type NavPage = 'v2' | 'engine-inputs' | 'v1' | 'legacy-inputs' | 'advanced'
+
+function buildDocsNav(active: NavPage): string {
+  const inV2 = active === 'v2' || active === 'engine-inputs'
+  const inV1 = active === 'v1' || active === 'legacy-inputs'
+  const item = (href: string, label: string, key: NavPage) =>
+    active === key
+      ? `<strong class="nav-current">${label}</strong>`
+      : `<a href="${href}">${label}</a>`
+  return `<style>
+  .docs-nav { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size: 14px; padding: 0.6rem 1.25rem; background: #f3f4f6;
+    border-bottom: 1px solid #e5e7eb; display: flex; gap: 0.75rem; align-items: center; }
+  .docs-nav a { color: #2563eb; text-decoration: none; }
+  .docs-nav a:hover { text-decoration: underline; }
+  .docs-nav .spacer { flex: 1; }
+  .nav-group { position: relative; display: inline-block; }
+  .nav-group-btn { background: none; border: none; cursor: pointer; padding: 0;
+    font: inherit; font-size: 14px; color: #2563eb; display: flex; align-items: center; gap: 0.2rem; }
+  .nav-group-btn:hover { text-decoration: underline; }
+  .nav-group-btn.in-group { font-weight: 600; color: #1f2937; }
+  .nav-group-menu { display: none; position: absolute; top: calc(100% + 6px); left: 0;
+    background: #fff; border: 1px solid #e5e7eb; border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08); padding: 0.3rem 0; min-width: 150px; z-index: 20; }
+  .nav-group:hover .nav-group-menu,
+  .nav-group:focus-within .nav-group-menu { display: block; }
+  .nav-group-menu a, .nav-group-menu .nav-current { display: block;
+    padding: 0.4rem 0.85rem; font-size: 13.5px; white-space: nowrap; }
+  .nav-group-menu a { color: #2563eb; text-decoration: none; }
+  .nav-group-menu a:hover { background: #f9fafb; }
+  .nav-group-menu .nav-current { color: #111827; font-weight: 600; }
+  .nav-sep { color: #d1d5db; user-select: none; }
+  .nav-advanced a { color: #6b7280; }
+  .nav-advanced a:hover { color: #374151; text-decoration: underline; }
+</style>
+<nav class="docs-nav">
+  <div class="nav-group">
+    <button class="nav-group-btn${inV2 ? ' in-group' : ''}" type="button">
+      v2 <span aria-hidden="true">▾</span>
+    </button>
+    <div class="nav-group-menu">
+      ${item('./eligibility-v2.html', 'API reference', 'v2')}
+      ${item('./engine-inputs.html', 'Engine inputs', 'engine-inputs')}
+    </div>
+  </div>
+  <span class="nav-sep">│</span>
+  <div class="nav-group">
+    <button class="nav-group-btn${inV1 ? ' in-group' : ''}" type="button">
+      v1 (frozen) <span aria-hidden="true">▾</span>
+    </button>
+    <div class="nav-group-menu">
+      ${item('./index.html', 'API reference', 'v1')}
+      ${item('./dictionary.html', 'Legacy inputs', 'legacy-inputs')}
+    </div>
+  </div>
+  <span class="spacer"></span>
+  <span class="nav-advanced">
+    ${item('./advanced.html', 'Advanced API', 'advanced')}
+    <a href="./explore.html">Target explorer →</a>
+  </span>
+</nav>`
+}
+
+// Redoc is loaded from a CDN — no build step.
 function redocPage(opts: {
   title: string
-  here: 'v2' | 'v1' | 'advanced'
+  here: NavPage
   specUrl: string
   description: string
 }): string {
-  const tab = (href: string, label: string, active: boolean) =>
-    active ? `<strong>${label}</strong>` : `<a href="${href}">${label}</a>`
   return `<!DOCTYPE html>
 <html lang="en">
   <head>
@@ -63,31 +127,11 @@ function redocPage(opts: {
     <link href="https://fonts.googleapis.com/css?family=Montserrat:300,400,700|Roboto:300,400,700" rel="stylesheet" />
     <style>
       html, body { margin: 0; padding: 0; height: 100%; }
-      .docs-nav {
-        font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-        font-size: 14px;
-        padding: 0.6rem 1.25rem;
-        background: #f3f4f6;
-        border-bottom: 1px solid #e5e7eb;
-        display: flex; gap: 1rem; align-items: center;
-      }
-      .docs-nav strong { color: #1f2937; }
-      .docs-nav a { color: #2563eb; text-decoration: none; }
-      .docs-nav a:hover { text-decoration: underline; }
-      .docs-nav .spacer { flex: 1; }
-      redoc { display: block; height: calc(100vh - 2.6rem); }
+      redoc { display: block; height: calc(100vh - 2.75rem); }
     </style>
   </head>
   <body>
-    <nav class="docs-nav">
-      ${tab('./eligibility-v2.html', 'v2 API', opts.here === 'v2')}
-      <a href="./engine-inputs.html">Engine inputs</a>
-      ${tab('./index.html', 'v1 API (frozen)', opts.here === 'v1')}
-      <a href="./dictionary.html">Legacy inputs</a>
-      <span class="spacer"></span>
-      ${tab('./advanced.html', 'Advanced API', opts.here === 'advanced')}
-      <a href="./explore.html">Target explorer →</a>
-    </nav>
+    ${buildDocsNav(opts.here)}
     <redoc spec-url="${opts.specUrl}"></redoc>
     <script src="https://cdn.redoc.ly/redoc/latest/bundles/redoc.standalone.js"></script>
   </body>
@@ -144,13 +188,6 @@ const dictionaryHtml = `<!DOCTYPE html>
     <style>
       :root { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
       body { margin: 0; color: #1f2937; }
-      .docs-nav {
-        font-size: 14px; padding: 0.6rem 1.25rem; background: #f3f4f6;
-        border-bottom: 1px solid #e5e7eb; display: flex; gap: 1rem; align-items: center;
-      }
-      .docs-nav strong { color: #1f2937; }
-      .docs-nav a { color: #2563eb; text-decoration: none; }
-      .docs-nav .spacer { flex: 1; }
       main { max-width: 56rem; margin: 0 auto; padding: 1rem 1.25rem 4rem; }
       .controls { display: flex; gap: 0.6rem; flex-wrap: wrap; align-items: center;
         position: sticky; top: 0; background: #fff; padding: 0.75rem 0; border-bottom: 1px solid #e5e7eb; z-index: 2; }
@@ -176,15 +213,7 @@ const dictionaryHtml = `<!DOCTYPE html>
     </style>
   </head>
   <body>
-    <nav class="docs-nav">
-      <a href="./eligibility-v2.html">v2 API</a>
-      <a href="./engine-inputs.html">Engine inputs</a>
-      <a href="./index.html">v1 API (frozen)</a>
-      <strong>Legacy inputs</strong>
-      <span class="spacer"></span>
-      <a href="./advanced.html">Advanced API</a>
-      <a href="./explore.html">Target explorer →</a>
-    </nav>
+    ${buildDocsNav('legacy-inputs')}
     <main>
       <h1>Legacy inputs</h1>
       <p style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:0.6rem 0.9rem;color:#92400e;">
@@ -359,11 +388,6 @@ const engineInputsHtml = `<!DOCTYPE html>
     <style>
       :root { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
       body { margin: 0; color: #1f2937; }
-      .docs-nav { font-size: 14px; padding: 0.6rem 1.25rem; background: #f3f4f6;
-        border-bottom: 1px solid #e5e7eb; display: flex; gap: 1rem; align-items: center; }
-      .docs-nav strong { color: #1f2937; }
-      .docs-nav a { color: #2563eb; text-decoration: none; }
-      .docs-nav .spacer { flex: 1; }
       main { max-width: 56rem; margin: 0 auto; padding: 1rem 1.25rem 4rem; }
       .lede { font-size: 14px; line-height: 1.55; color: #374151; }
       .coverage { background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px;
@@ -402,14 +426,7 @@ const engineInputsHtml = `<!DOCTYPE html>
     </style>
   </head>
   <body>
-    <nav class="docs-nav">
-      <a href="./eligibility-v2.html">v2 API</a>
-      <strong>Engine inputs</strong>
-      <a href="./dictionary.html">Legacy inputs</a>
-      <span class="spacer"></span>
-      <a href="./advanced.html">Advanced API</a>
-      <a href="./explore.html">Target explorer →</a>
-    </nav>
+    __NAV__
     <main>
       <h1>Engine inputs <span class="schema-version">Schema __VERSION__</span></h1>
       __VERSION_NAV__
@@ -516,6 +533,7 @@ function renderEngineInputsPage(
 ): string {
   return engineInputsHtml
     .replace('__PAGE_TITLE__', opts.pageTitle)
+    .replace('__NAV__', buildDocsNav('engine-inputs'))
     .replace('__VERSION__', data.schemaVersion)
     .replace('__VERSION_NAV__', buildVersionNav(opts.activeKey))
     .replace('__COVERAGE__', data.coverage)
