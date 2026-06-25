@@ -968,13 +968,20 @@ const guideHtml = `<!DOCTYPE html>
         catch (e) { statusEl.textContent = 'Invalid JSON: ' + e.message; return }
 
         btn.disabled = true
-        statusEl.textContent = 'Sending…'
+        statusEl.textContent = 'Sending...'
         respEl.style.color = '#6b7280'
         respEl.textContent = ''
 
         try {
           const headers = { 'Content-Type': 'application/json' }
-          if (token) headers['Authorization'] = 'Bearer ' + token
+          if (token) {
+            if ([...token].some(c => c.charCodeAt(0) > 255)) {
+              statusEl.textContent = 'Token contains non-ASCII characters -- check for copy-paste artifacts (curly quotes, Unicode dashes)'
+              btn.disabled = false
+              return
+            }
+            headers['Authorization'] = 'Bearer ' + token
+          }
           const res = await fetch(base + path, { method: 'POST', headers, body: JSON.stringify(body) })
           statusEl.textContent = 'HTTP ' + res.status + (res.ok ? ' OK' : ' ' + res.statusText)
           const text = await res.text()
@@ -989,7 +996,7 @@ const guideHtml = `<!DOCTYPE html>
         } catch (e) {
           statusEl.textContent = 'Network error'
           respEl.style.color = '#991b1b'
-          respEl.textContent = e.message + '\n\nIf the server is not responding, it may be waking up — wait a moment and try again.'
+          respEl.textContent = e.message + '\n\nIf the server is not responding, it may be waking up -- wait a moment and try again.'
         } finally {
           btn.disabled = false
         }
