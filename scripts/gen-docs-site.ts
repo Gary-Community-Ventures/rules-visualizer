@@ -49,7 +49,7 @@ writeFileSync(`${outDir}/openapi.yaml`, yaml.stringify(advancedDoc))
 type NavPage = 'v2' | 'engine-inputs' | 'v1' | 'legacy-inputs' | 'advanced' | 'guide'
 
 function buildDocsNav(active: NavPage): string {
-  const inV2 = active === 'v2' || active === 'engine-inputs'
+  const inV2 = active === 'v2' || active === 'engine-inputs' || active === 'guide'
   const inV1 = active === 'v1' || active === 'legacy-inputs'
   const item = (href: string, label: string, key: NavPage) =>
     active === key
@@ -82,13 +82,12 @@ function buildDocsNav(active: NavPage): string {
   .nav-advanced a:hover { color: #374151; text-decoration: underline; }
 </style>
 <nav class="docs-nav">
-  ${item('./guide.html', 'Guide', 'guide')}
-  <span class="nav-sep">│</span>
   <div class="nav-group">
     <button class="nav-group-btn${inV2 ? ' in-group' : ''}" type="button">
       API <span aria-hidden="true">▾</span>
     </button>
     <div class="nav-group-menu">
+      ${item('./guide.html', 'Guide', 'guide')}
       ${item('./eligibility-v2.html', 'Reference', 'v2')}
       ${item('./engine-inputs.html', 'Inputs', 'engine-inputs')}
     </div>
@@ -651,7 +650,8 @@ const guideHtml = `<!DOCTYPE html>
       button#send-btn:hover { background: #1d4ed8; }
       button#send-btn:disabled { background: #93c5fd; cursor: default; }
       #resp-status { font-size: 12px; color: #6b7280; }
-      pre#resp-body { height: 280px; overflow-y: auto; margin: 0; font-size: 0.78rem; }
+      pre#resp-body { height: 280px; overflow-y: auto; overflow-x: hidden; margin: 0;
+        font-size: 0.78rem; white-space: pre-wrap; word-break: break-word; }
     </style>
   </head>
   <body>
