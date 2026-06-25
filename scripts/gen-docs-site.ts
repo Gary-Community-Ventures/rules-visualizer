@@ -1122,6 +1122,38 @@ const demoHtml = `<!DOCTYPE html>
     pre#raw-resp { font-size: 0.72rem; background: #f8fafc; border: 1px solid #e5e7eb;
       border-radius: 6px; padding: 0.75rem; overflow-x: hidden; white-space: pre-wrap;
       word-break: break-word; max-height: 300px; overflow-y: auto; margin-top: 0.5rem; }
+
+    /* member / collection layout */
+    .member-section { border: 1px solid #e5e7eb; border-radius: 8px; background: #fff;
+      margin-bottom: 1.25rem; }
+    .member-header { display: flex; justify-content: space-between; align-items: center;
+      padding: 0.6rem 0.85rem; border-bottom: 1px solid #f3f4f6; }
+    .member-count-label { font-size: 0.8rem; font-weight: 700; color: #374151; }
+    .member-fields { padding: 0.7rem 0.75rem 0.3rem; }
+    .subcoll-section { border-top: 1px solid #f3f4f6; padding: 0.6rem 0.75rem 0.45rem; }
+    .subcoll-header { display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 0.4rem; }
+    .subcoll-label { font-size: 0.68rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.07em; color: #9ca3af; }
+    .row-section { border: 1px solid #e5e7eb; border-radius: 6px; margin-bottom: 0.4rem; }
+    .row-header { display: flex; justify-content: space-between; align-items: center;
+      padding: 0.3rem 0.6rem; background: #f9fafb; border-radius: 6px 6px 0 0;
+      border-bottom: 1px solid #f3f4f6; }
+    .row-header-label { font-size: 0.72rem; font-weight: 600; color: #6b7280; }
+    .row-fields { padding: 0.5rem 0.6rem 0.25rem; }
+    .household-section { margin-bottom: 1.25rem; }
+    .household-label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.07em; color: #9ca3af; margin: 0 0 0.5rem; }
+    .add-person-btn { display: block; width: 100%; box-sizing: border-box;
+      padding: 0.6rem; border: 2px dashed #d1d5db; border-radius: 8px; background: transparent;
+      cursor: pointer; font-size: 13px; color: #6b7280; text-align: center; margin-top: 0.25rem; }
+    .add-person-btn:hover { border-color: #93c5fd; color: #2563eb; background: #eff6ff; }
+    .add-row-btn { padding: 0.25rem 0.65rem; border: 1px solid #d1d5db; border-radius: 5px;
+      background: #fff; cursor: pointer; font-size: 12px; color: #374151; }
+    .add-row-btn:hover { background: #f3f4f6; }
+    .remove-btn { padding: 0.2rem 0.5rem; border: 1px solid #e5e7eb; border-radius: 4px;
+      background: #fff; cursor: pointer; font-size: 11px; color: #9ca3af; }
+    .remove-btn:hover { border-color: #fca5a5; color: #dc2626; background: #fff1f2; }
   </style>
 </head>
 <body>
@@ -1169,62 +1201,81 @@ const demoHtml = `<!DOCTYPE html>
     medicaid:  '/v2/eligibility/medicaid/determination',
     expedited: '/v2/eligibility/snap/expedited-screening'
   }
-  var LOC_LABELS = {
-    'members[]':           'Person',
-    'household':           'Household',
-    'members[].income[]':  'Income',
-    'members[].expenses[]':'Expenses',
-    'members[].jobs[]':    'Jobs',
-    'members[].assets[]':  'Assets'
-  }
-  var LOC_ORDER = Object.keys(LOC_LABELS)
+  var SUBCOLL_KEYS  = ['income', 'expenses', 'jobs', 'assets']
+  var SUBCOLL_LABELS = { income: 'Income', expenses: 'Expenses', jobs: 'Jobs', assets: 'Assets' }
   var SKIP_LOCS = { 'caregiverRelationships[]': true }
 
   // ---- state ----------------------------------------------------------------
-  var program    = 'snap'
-  var values     = {}    // requestPath -> coerced value
-  var fieldCache = {}    // requestPath -> {field,label,location,type,options}
-  var allSeen    = []    // requestPath in first-seen order
-  var curMissing = new Set()
-  var curStatus  = null
-  var curDet     = null
-  var debounce   = null
-  var inflight   = false
+  var program       = 'snap'
+  var numMembers    = 1
+  var memberIds     = ['person-1']
+  var memberVals    = [{}]
+  var collCounts    = [{ income: 0, expenses: 0, jobs: 0, assets: 0 }]
+  var collVals      = [{ income: [], expenses: [], jobs: [], assets: [] }]
+  var householdVals = {}
+  var fieldCache    = {}
+  var allSeen       = []
+  var curMissing    = new Set()
+  var curStatus     = null
+  var curDet        = null
+  var debounce      = null
+  var inflight      = false
+  var memberSeq     = 1
 
   // ---- helpers --------------------------------------------------------------
   function esc(s) {
     return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
   }
-
   function coerce(raw, type) {
     if (type === 'Boolean') return raw === 'true'
     if (type === 'Int' || type === 'Dollar' || type === 'Percent') {
-      var n = parseFloat(raw)
-      return isNaN(n) ? undefined : n
+      var n = parseFloat(raw); return isNaN(n) ? undefined : n
     }
     return raw
   }
+  function scopeOf(cpath) {
+    var meta = fieldCache[cpath]; if (!meta) return null
+    var loc = meta.location
+    if (loc === 'household') return 'household'
+    if (loc === 'members[]') return 'member'
+    for (var i = 0; i < SUBCOLL_KEYS.length; i++) {
+      if (loc === 'members[].' + SUBCOLL_KEYS[i] + '[]') return SUBCOLL_KEYS[i]
+    }
+    return null
+  }
+  function cpathFor(scope, field) {
+    if (scope === 'household') return 'household.' + field
+    if (scope === 'member')    return 'members[].' + field
+    return 'members[].' + scope + '[].' + field
+  }
+  function getVal(scope, mi, ri, field) {
+    if (scope === 'household') return householdVals[field]
+    if (scope === 'member')    return memberVals[mi] && memberVals[mi][field]
+    var cv = collVals[mi] && collVals[mi][scope] && collVals[mi][scope][ri]
+    return cv ? cv[field] : undefined
+  }
 
+  // ---- request builder ------------------------------------------------------
   function buildRequest() {
-    var req = { members: [{ id: 'demo' }], caregiverRelationships: [] }
-    Object.keys(values).forEach(function(path) {
-      var val = values[path]
-      if (val === undefined || val === null || val === '') return
-      if (path.indexOf('household.') === 0) {
-        req.household = req.household || {}
-        req.household[path.slice(10)] = val
-      } else if (path.indexOf('members[].') === 0) {
-        var rest = path.slice(10)
-        var m = rest.match(/^(\\w+)\\[\\]\\.(.+)$/)
-        if (m) {
-          var coll = m[1], field = m[2]
-          req.members[0][coll] = req.members[0][coll] || [{}]
-          req.members[0][coll][0][field] = val
-        } else {
-          req.members[0][rest] = val
+    var req = { members: [], caregiverRelationships: [] }
+    var hk = Object.keys(householdVals)
+    if (hk.length > 0) {
+      req.household = {}; hk.forEach(function(k) { req.household[k] = householdVals[k] })
+    }
+    for (var i = 0; i < numMembers; i++) {
+      var mReq = { id: memberIds[i] }
+      Object.keys(memberVals[i] || {}).forEach(function(k) { mReq[k] = memberVals[i][k] })
+      for (var ci = 0; ci < SUBCOLL_KEYS.length; ci++) {
+        var key = SUBCOLL_KEYS[ci]
+        var cnt = (collCounts[i] && collCounts[i][key]) || 0
+        mReq[key] = []
+        for (var j = 0; j < cnt; j++) {
+          var row = (collVals[i] && collVals[i][key] && collVals[i][key][j]) || {}
+          var r = {}; Object.keys(row).forEach(function(k) { r[k] = row[k] }); mReq[key].push(r)
         }
       }
-    })
+      req.members.push(mReq)
+    }
     return req
   }
 
@@ -1233,24 +1284,22 @@ const demoHtml = `<!DOCTYPE html>
     var base = document.getElementById('base-url').value.replace(/\\/$/, '')
     var tok  = document.getElementById('api-token').value.trim()
     if (tok) {
-      var bad = false
-      for (var i = 0; i < tok.length; i++) { if (tok.charCodeAt(i) > 255) { bad = true; break } }
-      if (bad) { showError('Token contains non-ASCII characters — check for copy-paste artifacts.'); return }
+      for (var i = 0; i < tok.length; i++) {
+        if (tok.charCodeAt(i) > 255) { showError('Token contains non-ASCII characters.'); return }
+      }
     }
-    inflight = true
-    renderStatus()
+    inflight = true; renderStatus()
     var headers = { 'Content-Type': 'application/json' }
     if (tok) headers['Authorization'] = 'Bearer ' + tok
     fetch(base + ENDPOINTS[program], { method: 'POST', headers: headers, body: JSON.stringify(buildRequest()) })
-      .then(function(r) { return r.json() })
-      .then(function(data) {
+      .then(function(r) { return r.text() })
+      .then(function(text) {
+        var data; try { data = JSON.parse(text) } catch(e) { data = { _raw: text } }
         document.getElementById('raw-resp').textContent = JSON.stringify(data, null, 2)
         var det = (data.determinations && data.determinations[0]) ? data.determinations[0] : data
-        curDet = det
-        curStatus = det.status || null
-
+        curDet = det; curStatus = det.status || null
         var missing = det.missingInputs || data.missingInputs || []
-        var newSet = new Set()
+        var newSet = new Set(), prevCount = allSeen.length
         missing.forEach(function(m) {
           newSet.add(m.requestPath)
           if (!fieldCache[m.requestPath]) {
@@ -1258,167 +1307,235 @@ const demoHtml = `<!DOCTYPE html>
             fieldCache[m.requestPath] = { field: m.field, label: m.label, location: m.location, type: m.type, options: m.options || [] }
           }
         })
-        curMissing = newSet
-        inflight = false
-        render()
+        curMissing = newSet; inflight = false
+        if (allSeen.length > prevCount) renderNewCards()
+        else updateStates()
+        renderStatus()
       })
-      .catch(function(e) {
-        inflight = false
-        showError(e.message)
-      })
+      .catch(function(e) { inflight = false; showError(e.message) })
   }
 
   function showError(msg) {
-    curStatus = 'error'
-    document.getElementById('status-badge').className = 'status-badge s-error'
-    document.getElementById('status-badge').textContent = msg
+    curStatus = 'error'; inflight = false
+    var badge = document.getElementById('status-badge')
+    badge.className = 'status-badge s-error'; badge.textContent = msg
     document.getElementById('progress-line').textContent = ''
-    inflight = false
   }
 
-  // ---- field actions --------------------------------------------------------
-  function setField(path, rawVal) {
-    var meta = fieldCache[path]
+  // ---- value setters --------------------------------------------------------
+  function setVal(scope, mi, ri, field, rawVal) {
+    var cp = cpathFor(scope, field), meta = fieldCache[cp]
     var coerced = (rawVal === '__clear__' || rawVal === '' || rawVal === undefined)
       ? undefined : meta ? coerce(rawVal, meta.type) : rawVal
-    if (coerced === undefined) delete values[path]
-    else values[path] = coerced
-    // Update boolean button active states immediately
-    var card = document.querySelector('[data-card="' + path + '"]')
-    if (card) {
-      card.querySelectorAll('.bool-btn[data-bval]').forEach(function(b) {
-        var v = b.dataset.bval
-        var cur = values[path]
-        b.classList.toggle('active', (v === 'true' && cur === true) || (v === 'false' && cur === false))
-      })
+    if (scope === 'household') {
+      if (coerced === undefined) delete householdVals[field]; else householdVals[field] = coerced
+    } else if (scope === 'member') {
+      memberVals[mi] = memberVals[mi] || {}
+      if (coerced === undefined) delete memberVals[mi][field]; else memberVals[mi][field] = coerced
+    } else {
+      collVals[mi] = collVals[mi] || {}
+      collVals[mi][scope] = collVals[mi][scope] || []
+      collVals[mi][scope][ri] = collVals[mi][scope][ri] || {}
+      if (coerced === undefined) delete collVals[mi][scope][ri][field]; else collVals[mi][scope][ri][field] = coerced
     }
-    clearTimeout(debounce)
-    debounce = setTimeout(callApi, 500)
+    document.querySelectorAll('button.bool-btn[data-scope="' + scope + '"][data-member="' + mi + '"][data-row="' + ri + '"][data-field="' + field + '"]').forEach(function(b) {
+      b.classList.toggle('active', (b.dataset.bval === 'true' && coerced === true) || (b.dataset.bval === 'false' && coerced === false))
+    })
+    clearTimeout(debounce); debounce = setTimeout(callApi, 500)
   }
-
-  function clearField(path) { setField(path, '__clear__') }
 
   // ---- program switch -------------------------------------------------------
   function setProgram(prog) {
-    program = prog
-    values = {}; fieldCache = {}; allSeen = []; curMissing = new Set()
+    program = prog; numMembers = 1; memberSeq = 1
+    memberIds = ['person-1']; memberVals = [{}]
+    collCounts = [{ income: 0, expenses: 0, jobs: 0, assets: 0 }]
+    collVals   = [{ income: [], expenses: [], jobs: [], assets: [] }]
+    householdVals = {}; fieldCache = {}; allSeen = []; curMissing = new Set()
     curStatus = null; curDet = null
-    document.querySelectorAll('.prog-tab').forEach(function(b) {
-      b.classList.toggle('active', b.dataset.prog === prog)
-    })
-    document.getElementById('fields-container').innerHTML = '<p class="fields-hint">Loading...</p>'
-    callApi()
+    document.querySelectorAll('.prog-tab').forEach(function(b) { b.classList.toggle('active', b.dataset.prog === prog) })
+    fullRender(); callApi()
   }
 
-  // ---- rendering ------------------------------------------------------------
-  function fieldState(path) {
-    var inMissing = curMissing.has(path)
-    var hasVal = path in values
-    if (inMissing && !hasVal)  return 'needed'
-    if (inMissing &&  hasVal)  return 'still-needed'
-    if (!inMissing && hasVal)  return 'resolved'
-    if (!inMissing && !hasVal) return 'auto-resolved'
-    return 'unknown'
+  // ---- field state ----------------------------------------------------------
+  function fieldStateFor(cpath, scope, mi, ri) {
+    if (!fieldCache[cpath]) return 'needed'
+    var inM = curMissing.has(cpath)
+    var hasV = getVal(scope, mi, ri, fieldCache[cpath].field) !== undefined
+    if (inM && !hasV)  return 'needed'
+    if (inM &&  hasV)  return 'still-needed'
+    if (!inM && hasV)  return 'resolved'
+    return 'auto-resolved'
   }
-
   function badgeText(s) {
-    return s === 'needed'        ? 'needed'
-      : s === 'still-needed'    ? 'still needed'
-      : s === 'resolved'        ? '\\u2713 provided'
-      : s === 'auto-resolved'   ? 'not needed'
-      : ''
+    return s === 'needed'      ? 'needed'
+      : s === 'still-needed'  ? 'still needed'
+      : s === 'resolved'      ? '\\u2713 provided'
+      : s === 'auto-resolved' ? 'not needed' : ''
   }
 
-  function buildInputHTML(path) {
-    var m = fieldCache[path]
-    if (!m) return ''
-    var val = values[path]
-    if (m.type === 'Boolean') {
+  // ---- input HTML -----------------------------------------------------------
+  function dA(scope, mi, ri, field) {
+    return 'data-scope="' + scope + '" data-member="' + mi + '" data-row="' + ri + '" data-field="' + esc(field) + '"'
+  }
+  function buildInputHTML(scope, mi, ri, cpath) {
+    var meta = fieldCache[cpath]; if (!meta) return ''
+    var field = meta.field, type = meta.type, opts = meta.options, val = getVal(scope, mi, ri, field)
+    var da = dA(scope, mi, ri, field)
+    if (type === 'Boolean') {
       var t = val === true, f = val === false
       return '<div class="bool-btns">' +
-        '<button class="bool-btn' + (t ? ' active' : '') + '" data-path="' + path + '" data-bval="true">Yes</button>' +
-        '<button class="bool-btn' + (f ? ' active' : '') + '" data-path="' + path + '" data-bval="false">No</button>' +
-        (val !== undefined ? '<button class="bool-btn clr" data-path="' + path + '" data-bval="__clear__">✕</button>' : '') +
+        '<button class="bool-btn' + (t ? ' active' : '') + '" ' + da + ' data-bval="true">Yes</button>' +
+        '<button class="bool-btn' + (f ? ' active' : '') + '" ' + da + ' data-bval="false">No</button>' +
+        (val !== undefined ? '<button class="bool-btn clr" ' + da + ' data-bval="__clear__">&#x2715;</button>' : '') +
         '</div>'
     }
-    if (m.type === 'Enum' && m.options && m.options.length) {
-      var opts = '<option value="">-- select --</option>'
-      m.options.forEach(function(o) { opts += '<option value="' + esc(o) + '"' + (val === o ? ' selected' : '') + '>' + esc(o) + '</option>' })
-      return '<select data-path="' + path + '">' + opts + '</select>'
+    if (type === 'Enum' && opts && opts.length) {
+      var o = '<option value="">-- select --</option>'
+      opts.forEach(function(x) { o += '<option value="' + esc(x) + '"' + (val === x ? ' selected' : '') + '>' + esc(x) + '</option>' })
+      return '<select ' + da + '>' + o + '</select>'
     }
-    if (m.type === 'Date' || m.type === 'Day') {
-      return '<input type="date" data-path="' + path + '" value="' + esc(val || '') + '" />'
+    if (type === 'Date' || type === 'Day') return '<input type="date" ' + da + ' value="' + esc(val || '') + '" />'
+    if (type === 'Int' || type === 'Dollar' || type === 'Percent') {
+      var pre = type === 'Dollar' ? '<span class="num-affix pre">$</span>' : ''
+      var suf = type === 'Percent' ? '<span class="num-affix suf">%</span>' : ''
+      var step = type === 'Dollar' ? '0.01' : '1'
+      return '<div class="num-wrap">' + pre + '<input type="number" min="0" step="' + step + '" ' + da + ' value="' + esc(val !== undefined ? val : '') + '" />' + suf + '</div>'
     }
-    if (m.type === 'Int' || m.type === 'Dollar' || m.type === 'Percent') {
-      var pre = m.type === 'Dollar'   ? '<span class="num-affix pre">$</span>' : ''
-      var suf = m.type === 'Percent'  ? '<span class="num-affix suf">%</span>' : ''
-      var step = m.type === 'Dollar'  ? '0.01' : '1'
-      return '<div class="num-wrap">' + pre + '<input type="number" min="0" step="' + step + '" data-path="' + path + '" value="' + esc(val !== undefined ? val : '') + '" />' + suf + '</div>'
-    }
-    if (m.type === 'CollectionItem') return '<span class="field-note">member reference (use API directly)</span>'
-    return '<input type="text" data-path="' + path + '" value="' + esc(val || '') + '" />'
+    if (type === 'CollectionItem') return '<span class="field-note">member reference</span>'
+    return '<input type="text" ' + da + ' value="' + esc(val || '') + '" />'
   }
 
-  function getOrCreateGroup(loc) {
-    var gid = 'grp-' + loc.replace(/[^a-z0-9]/gi, '-')
-    var g = document.getElementById(gid)
-    if (!g) {
-      var container = document.getElementById('fields-container')
-      var hint = container.querySelector('.fields-hint')
-      if (hint) hint.remove()
-      g = document.createElement('div')
-      g.className = 'field-group'
-      g.id = gid
-      var lbl = LOC_LABELS[loc] || loc
-      g.innerHTML = '<h3 class="field-group-label">' + esc(lbl) + '</h3><div class="field-cards" id="cards-' + gid + '"></div>'
-      // Insert in LOC_ORDER order
-      var pos = LOC_ORDER.indexOf(loc)
-      var inserted = false
-      var groups = container.querySelectorAll('.field-group')
-      for (var i = 0; i < groups.length; i++) {
-        var otherLoc = groups[i].id.replace('grp-', '').replace(/-/g, function(_, o, s) {
-          // reconstruct loc from id is fragile — just append
-          return '-'
-        })
-        // simplified: just append in order groups appear
-        if (!inserted && pos >= 0) {
-          var otherPos = LOC_ORDER.findIndex(function(l) { return 'grp-' + l.replace(/[^a-z0-9]/gi, '-') === groups[i].id })
-          if (otherPos > pos) { container.insertBefore(g, groups[i]); inserted = true; break }
+  // ---- card HTML ------------------------------------------------------------
+  function buildCardHTML(cpath, scope, mi, ri) {
+    var meta = fieldCache[cpath]; if (!meta) return ''
+    var state = fieldStateFor(cpath, scope, mi, ri)
+    return '<div class="field-card field-card-' + state + '" data-cpath="' + esc(cpath) + '" data-scope="' + scope + '" data-member="' + mi + '" data-row="' + ri + '">' +
+      '<div class="field-card-header">' +
+        '<span class="field-label">' + esc(meta.label || cpath) + '</span>' +
+        '<span class="field-badge b-' + state + '">' + badgeText(state) + '</span>' +
+      '</div>' +
+      '<div class="field-input' + (state === 'resolved' ? ' input-resolved' : state === 'auto-resolved' ? ' input-auto-resolved' : '') + '">' + buildInputHTML(scope, mi, ri, cpath) + '</div>' +
+    '</div>'
+  }
+
+  // ---- section builders -----------------------------------------------------
+  function cardsForLoc(loc, scope, mi, ri) {
+    var html = ''
+    allSeen.forEach(function(cp) {
+      var m = fieldCache[cp]
+      if (m && m.location === loc && !SKIP_LOCS[m.location]) html += buildCardHTML(cp, scope, mi, ri)
+    })
+    return html
+  }
+  function rowSectionHTML(mi, collKey, ri) {
+    var lbl = SUBCOLL_LABELS[collKey], loc = 'members[].' + collKey + '[]'
+    var cardsHTML = cardsForLoc(loc, collKey, mi, ri)
+    return '<div class="row-section" id="row-' + mi + '-' + collKey + '-' + ri + '">' +
+      '<div class="row-header">' +
+        '<span class="row-header-label">' + esc(lbl) + ' row ' + (ri + 1) + '</span>' +
+        '<button class="remove-btn" data-remove-coll="' + collKey + '" data-member="' + mi + '" data-row="' + ri + '">&#x2715;</button>' +
+      '</div>' +
+      '<div class="row-fields"><div class="field-cards" id="row-' + mi + '-' + collKey + '-' + ri + '-cards">' + cardsHTML + '</div></div>' +
+    '</div>'
+  }
+  function subCollHTML(mi) {
+    var html = ''
+    for (var ci = 0; ci < SUBCOLL_KEYS.length; ci++) {
+      var key = SUBCOLL_KEYS[ci], lbl = SUBCOLL_LABELS[key]
+      var cnt = (collCounts[mi] && collCounts[mi][key]) || 0
+      html += '<div class="subcoll-section" id="member-' + mi + '-' + key + '-section">' +
+        '<div class="subcoll-header">' +
+          '<span class="subcoll-label">' + esc(lbl) + '</span>' +
+          '<button class="add-row-btn" data-add-coll="' + key + '" data-member="' + mi + '">+ Add ' + esc(lbl.toLowerCase()) + ' row</button>' +
+        '</div>' +
+        '<div id="member-' + mi + '-' + key + '-rows">'
+      for (var j = 0; j < cnt; j++) html += rowSectionHTML(mi, key, j)
+      html += '</div></div>'
+    }
+    return html
+  }
+  function memberSectionHTML(mi) {
+    var lbl = 'Person ' + (mi + 1)
+    var cardsHTML = cardsForLoc('members[]', 'member', mi, 0)
+    return '<div class="member-section" id="member-section-' + mi + '">' +
+      '<div class="member-header">' +
+        '<span class="member-count-label">' + esc(lbl) + '</span>' +
+        (numMembers > 1 ? '<button class="remove-btn" data-remove-member="' + mi + '">Remove</button>' : '') +
+      '</div>' +
+      '<div class="member-fields"><div class="field-cards" id="member-' + mi + '-cards">' + cardsHTML + '</div></div>' +
+      subCollHTML(mi) +
+    '</div>'
+  }
+
+  // ---- full render ----------------------------------------------------------
+  function fullRender() {
+    var fc2 = document.getElementById('fields-container'), html = ''
+    var hCards = cardsForLoc('household', 'household', 0, 0)
+    if (hCards) html += '<div class="household-section"><h3 class="household-label">Household</h3><div class="field-cards" id="household-cards">' + hCards + '</div></div>'
+    for (var i = 0; i < numMembers; i++) html += memberSectionHTML(i)
+    html += '<button class="add-person-btn" id="add-person-btn">+ Add person</button>'
+    if (!hCards && !allSeen.length) html = '<p class="fields-hint">Loading...</p>' + html
+    fc2.innerHTML = html
+  }
+
+  // ---- render new cards (incremental, preserves inputs) ---------------------
+  function renderNewCards() {
+    var hint = document.querySelector('#fields-container .fields-hint')
+    if (hint) hint.remove()
+    allSeen.forEach(function(cp) {
+      var meta = fieldCache[cp]; if (!meta || SKIP_LOCS[meta.location]) return
+      var scope = scopeOf(cp); if (!scope) return
+
+      if (scope === 'household') {
+        var found = false
+        document.querySelectorAll('.field-card[data-scope="household"]').forEach(function(el) { if (el.dataset.cpath === cp) found = true })
+        if (found) return
+        var cardsEl = document.getElementById('household-cards')
+        if (!cardsEl) {
+          var fc3 = document.getElementById('fields-container')
+          var addBtn = document.getElementById('add-person-btn')
+          var hsec = document.createElement('div')
+          hsec.className = 'household-section'
+          hsec.innerHTML = '<h3 class="household-label">Household</h3><div class="field-cards" id="household-cards"></div>'
+          fc3.insertBefore(hsec, addBtn || fc3.firstChild)
+          cardsEl = document.getElementById('household-cards')
+        }
+        if (cardsEl) cardsEl.insertAdjacentHTML('beforeend', buildCardHTML(cp, 'household', 0, 0))
+
+      } else if (scope === 'member') {
+        for (var i = 0; i < numMembers; i++) {
+          var f2 = false
+          document.querySelectorAll('.field-card[data-scope="member"][data-member="' + i + '"]').forEach(function(el) { if (el.dataset.cpath === cp) f2 = true })
+          if (!f2) {
+            var ce = document.getElementById('member-' + i + '-cards')
+            if (ce) ce.insertAdjacentHTML('beforeend', buildCardHTML(cp, 'member', i, 0))
+          }
+        }
+
+      } else {
+        var collKey = scope
+        for (var mi = 0; mi < numMembers; mi++) {
+          var cnt = (collCounts[mi] && collCounts[mi][collKey]) || 0
+          for (var ri = 0; ri < cnt; ri++) {
+            var f3 = false
+            document.querySelectorAll('.field-card[data-scope="' + collKey + '"][data-member="' + mi + '"][data-row="' + ri + '"]').forEach(function(el) { if (el.dataset.cpath === cp) f3 = true })
+            if (!f3) {
+              var rce = document.getElementById('row-' + mi + '-' + collKey + '-' + ri + '-cards')
+              if (rce) rce.insertAdjacentHTML('beforeend', buildCardHTML(cp, collKey, mi, ri))
+            }
+          }
         }
       }
-      if (!inserted) container.appendChild(g)
-    }
-    return document.getElementById('cards-' + gid)
-  }
-
-  function renderNewFields() {
-    var existing = new Set()
-    document.querySelectorAll('[data-card]').forEach(function(el) { existing.add(el.dataset.card) })
-    allSeen.forEach(function(path) {
-      if (SKIP_LOCS[fieldCache[path] && fieldCache[path].location]) return
-      if (existing.has(path)) return
-      var loc = fieldCache[path] && fieldCache[path].location
-      if (!loc) return
-      var meta = fieldCache[path]
-      var state = fieldState(path)
-      var cardsEl = getOrCreateGroup(loc)
-      var card = document.createElement('div')
-      card.className = 'field-card field-card-' + state
-      card.dataset.card = path
-      card.innerHTML =
-        '<div class="field-card-header">' +
-          '<span class="field-label">' + esc(meta.label || path) + '</span>' +
-          '<span class="field-badge b-' + state + '">' + badgeText(state) + '</span>' +
-        '</div>' +
-        '<div class="field-input' + (state === 'resolved' ? ' input-resolved' : state === 'auto-resolved' ? ' input-auto-resolved' : '') + '">' + buildInputHTML(path) + '</div>'
-      cardsEl.appendChild(card)
     })
+    updateStates()
   }
 
-  function updateFieldStates() {
-    document.querySelectorAll('[data-card]').forEach(function(card) {
-      var path = card.dataset.card
-      var state = fieldState(path)
+  // ---- update states (CSS only, no DOM rebuild) -----------------------------
+  function updateStates() {
+    document.querySelectorAll('.field-card[data-cpath]').forEach(function(card) {
+      var cpath = card.dataset.cpath, scope = card.dataset.scope
+      var mi = parseInt(card.dataset.member || '0'), ri = parseInt(card.dataset.row || '0')
+      var state = fieldStateFor(cpath, scope, mi, ri)
       card.className = 'field-card field-card-' + state
       var badge = card.querySelector('.field-badge')
       if (badge) { badge.className = 'field-badge b-' + state; badge.textContent = badgeText(state) }
@@ -1427,77 +1544,116 @@ const demoHtml = `<!DOCTYPE html>
     })
   }
 
+  // ---- status row -----------------------------------------------------------
   function renderStatus() {
-    var badge = document.getElementById('status-badge')
-    var prog  = document.getElementById('progress-line')
+    var badge = document.getElementById('status-badge'), prog = document.getElementById('progress-line')
     if (inflight) { badge.className = 'status-badge s-loading'; badge.textContent = 'Loading...'; prog.textContent = ''; return }
     var s = curStatus || 'null'
     badge.className = 'status-badge s-' + s
     if (s === 'approved') {
-      badge.textContent = 'Approved' + (curDet && curDet.benefitAmount ? ' — $' + curDet.benefitAmount + '/mo' : '')
+      badge.textContent = 'Approved' + (curDet && curDet.benefitAmount ? ' -- $' + curDet.benefitAmount + '/mo' : '')
     } else if (s === 'denied' || s === 'ineligible') {
-      var code = curDet && curDet.denialReasonCode ? ': ' + curDet.denialReasonCode.replace(/_/g, ' ') : ''
-      badge.textContent = (s === 'denied' ? 'Denied' : 'Ineligible') + code
-    } else if (s === 'pending') {
-      badge.textContent = 'Pending'
-    } else if (s === 'null') {
-      badge.textContent = '—'
-    } else {
-      badge.textContent = s
-    }
-    var provided     = allSeen.filter(function(p) { return !curMissing.has(p) && (p in values) && fieldCache[p] && !SKIP_LOCS[fieldCache[p].location] }).length
-    var autoResolved = allSeen.filter(function(p) { return !curMissing.has(p) && !(p in values) && fieldCache[p] && !SKIP_LOCS[fieldCache[p].location] }).length
-    var needed       = curMissing.size
+      badge.textContent = (s === 'denied' ? 'Denied' : 'Ineligible') + (curDet && curDet.denialReasonCode ? ': ' + curDet.denialReasonCode.replace(/_/g, ' ') : '')
+    } else if (s === 'pending') { badge.textContent = 'Pending'
+    } else if (s === 'null')    { badge.textContent = '--'
+    } else                      { badge.textContent = s }
+    var provided = 0, autoRes = 0
+    document.querySelectorAll('.field-card[data-cpath]').forEach(function(card) {
+      var st = fieldStateFor(card.dataset.cpath, card.dataset.scope, parseInt(card.dataset.member||'0'), parseInt(card.dataset.row||'0'))
+      if (st === 'resolved') provided++
+      else if (st === 'auto-resolved') autoRes++
+    })
     var parts = []
-    if (provided > 0)     parts.push('<span class="prog-res">\\u2713 ' + provided + ' provided</span>')
-    if (autoResolved > 0) parts.push('<span style="color:#9ca3af">' + autoResolved + ' not needed</span>')
-    if (needed > 0)       parts.push('<span class="prog-need">' + needed + ' still needed</span>')
-    if (parts.length > 0) {
-      prog.innerHTML = parts.join(' &nbsp;&middot;&nbsp; ')
-    } else {
-      prog.textContent = ''
-    }
+    if (provided > 0) parts.push('<span class="prog-res">\\u2713 ' + provided + ' provided</span>')
+    if (autoRes > 0)  parts.push('<span style="color:#9ca3af">' + autoRes + ' not needed</span>')
+    if (curMissing.size > 0) parts.push('<span class="prog-need">' + curMissing.size + ' still needed</span>')
+    prog.innerHTML = parts.length ? parts.join(' &nbsp;&middot;&nbsp; ') : ''
   }
 
-  function render() {
-    renderStatus()
-    renderNewFields()
-    updateFieldStates()
+  // ---- member / row management ----------------------------------------------
+  function addMember() {
+    memberSeq++
+    var newIdx = numMembers; numMembers++
+    memberIds.push('person-' + memberSeq); memberVals.push({})
+    collCounts.push({ income: 0, expenses: 0, jobs: 0, assets: 0 })
+    collVals.push({ income: [], expenses: [], jobs: [], assets: [] })
+    var addBtn = document.getElementById('add-person-btn')
+    var div = document.createElement('div')
+    div.innerHTML = memberSectionHTML(newIdx)
+    addBtn.parentNode.insertBefore(div.firstChild, addBtn)
+    refreshRemoveBtns()
+  }
+  function removeMember(mi) {
+    memberIds.splice(mi, 1); memberVals.splice(mi, 1)
+    collCounts.splice(mi, 1); collVals.splice(mi, 1); numMembers--
+    fullRender(); callApi()
+  }
+  function refreshRemoveBtns() {
+    for (var i = 0; i < numMembers; i++) {
+      var hdr = document.querySelector('#member-section-' + i + ' .member-header')
+      if (!hdr) continue
+      var ex = hdr.querySelector('.remove-btn')
+      if (numMembers > 1 && !ex) {
+        var btn = document.createElement('button')
+        btn.className = 'remove-btn'; btn.dataset.removeMember = i; btn.textContent = 'Remove'
+        hdr.appendChild(btn)
+      } else if (numMembers === 1 && ex) { ex.remove() }
+    }
+  }
+  function addRow(mi, collKey) {
+    collCounts[mi] = collCounts[mi] || {}
+    var ri = collCounts[mi][collKey] || 0; collCounts[mi][collKey] = ri + 1
+    collVals[mi] = collVals[mi] || {}
+    collVals[mi][collKey] = collVals[mi][collKey] || []; collVals[mi][collKey][ri] = {}
+    var rowsEl = document.getElementById('member-' + mi + '-' + collKey + '-rows')
+    if (rowsEl) {
+      var div = document.createElement('div')
+      div.innerHTML = rowSectionHTML(mi, collKey, ri); rowsEl.appendChild(div.firstChild)
+    }
+    callApi()
+  }
+  function removeRow(mi, collKey, ri) {
+    collCounts[mi][collKey] = Math.max(0, (collCounts[mi][collKey] || 1) - 1)
+    if (collVals[mi] && collVals[mi][collKey]) collVals[mi][collKey].splice(ri, 1)
+    fullRender(); callApi()
   }
 
   // ---- event delegation -----------------------------------------------------
   var fc = document.getElementById('fields-container')
   fc.addEventListener('change', function(e) {
-    var path = e.target.dataset && e.target.dataset.path
-    if (!path) return
-    setField(path, e.target.value)
+    var scope = e.target.dataset && e.target.dataset.scope
+    var field = e.target.dataset && e.target.dataset.field
+    if (!scope || !field) return
+    setVal(scope, parseInt(e.target.dataset.member||'0'), parseInt(e.target.dataset.row||'0'), field, e.target.value)
   })
   fc.addEventListener('input', function(e) {
-    var path = e.target.dataset && e.target.dataset.path
-    if (!path || e.target.type !== 'number') return
+    var scope = e.target.dataset && e.target.dataset.scope
+    var field = e.target.dataset && e.target.dataset.field
+    if (!scope || !field || e.target.type !== 'number') return
     clearTimeout(debounce)
-    debounce = setTimeout(function() { setField(path, e.target.value) }, 500)
+    var cap = { scope: scope, mi: parseInt(e.target.dataset.member||'0'), ri: parseInt(e.target.dataset.row||'0'), field: field, val: e.target.value }
+    debounce = setTimeout(function() { setVal(cap.scope, cap.mi, cap.ri, cap.field, cap.val) }, 500)
   })
   fc.addEventListener('click', function(e) {
-    var btn = e.target.closest && e.target.closest('button[data-bval]')
-    if (!btn) return
-    var path = btn.dataset.path, bval = btn.dataset.bval
-    setField(path, bval)
+    var btn = e.target.closest && e.target.closest('button'); if (!btn) return
+    if (btn.dataset.bval !== undefined) {
+      var scope = btn.dataset.scope, field = btn.dataset.field
+      if (scope && field) setVal(scope, parseInt(btn.dataset.member||'0'), parseInt(btn.dataset.row||'0'), field, btn.dataset.bval)
+      return
+    }
+    if (btn.dataset.addColl) { addRow(parseInt(btn.dataset.member||'0'), btn.dataset.addColl); return }
+    if (btn.dataset.removeColl) { removeRow(parseInt(btn.dataset.member||'0'), btn.dataset.removeColl, parseInt(btn.dataset.row||'0')); return }
+    if (btn.dataset.removeMember !== undefined) { removeMember(parseInt(btn.dataset.removeMember)); return }
+    if (btn.id === 'add-person-btn') { addMember(); return }
   })
 
-  // program tabs
   document.querySelector('.prog-tabs').addEventListener('click', function(e) {
-    var btn = e.target.closest('.prog-tab')
-    if (!btn) return
-    setProgram(btn.dataset.prog)
+    var btn = e.target.closest('.prog-tab'); if (!btn) return; setProgram(btn.dataset.prog)
   })
-
-  // reset
-  document.getElementById('reset-btn').addEventListener('click', function() {
-    setProgram(program)
-  })
+  document.getElementById('reset-btn').addEventListener('click', function() { setProgram(program) })
 
   // ---- init -----------------------------------------------------------------
+  fullRender()
   callApi()
 </script>
 </body>
