@@ -996,7 +996,7 @@ const guideHtml = `<!DOCTYPE html>
         } catch (e) {
           statusEl.textContent = 'Network error'
           respEl.style.color = '#991b1b'
-          respEl.textContent = e.message + '\n\nIf the server is not responding, it may be waking up -- wait a moment and try again.'
+          respEl.textContent = e.message + '\\n\\nIf the server is not responding, it may be waking up -- wait a moment and try again.'
         } finally {
           btn.disabled = false
         }
