@@ -377,10 +377,11 @@ paths:
     post:
       summary: SNAP expedited processing screen (7 CFR §273.2(i)).
       description: "Screens whether the household qualifies for expedited processing
-        (benefits within 7 days). Faster than the full determination — only the
-        inputs that affect the expedited screen are needed. No-guess:
-        `isExpedited` is null when the screen cannot resolve, and
-        `missingInputs` names exactly what to provide."
+        (benefits within 7 days). Same no-guess semantics as the full
+        determination: `isExpedited` is null when the screen cannot resolve, and
+        `missingInputs` names exactly what to provide. The missing-input list
+        reflects the full transitive dependency of the expedited screen —
+        provide income and household fields to resolve it."
       tags:
         - Eligibility v2
       security:
