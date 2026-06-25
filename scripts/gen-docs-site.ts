@@ -1111,8 +1111,8 @@ const demoHtml = `<!DOCTYPE html>
     .num-wrap input { border-radius: 0; flex: 1; min-width: 0; }
     .num-wrap:not(:has(.pre)) input { border-radius: 5px 0 0 5px; }
     .field-note { font-size: 0.78rem; color: #9ca3af; font-style: italic; }
-    .input-resolved input, .input-resolved select, .input-resolved .bool-btn { pointer-events: none; }
-    .input-auto-resolved input, .input-auto-resolved select, .input-auto-resolved .bool-btn { pointer-events: none; }
+    .field-path { font-size: 0.67rem; color: #9ca3af; font-family: ui-monospace, monospace;
+      margin: 0.1rem 0 0.35rem; word-break: break-all; }
     .fields-hint { color: #9ca3af; font-size: 0.9rem; text-align: center; padding: 2.5rem 0; }
 
     /* response details */
@@ -1144,10 +1144,13 @@ const demoHtml = `<!DOCTYPE html>
     .household-section { margin-bottom: 1.25rem; }
     .household-label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
       letter-spacing: 0.07em; color: #9ca3af; margin: 0 0 0.5rem; }
-    .add-person-btn { display: block; width: 100%; box-sizing: border-box;
-      padding: 0.6rem; border: 2px dashed #d1d5db; border-radius: 8px; background: transparent;
-      cursor: pointer; font-size: 13px; color: #6b7280; text-align: center; margin-top: 0.25rem; }
-    .add-person-btn:hover { border-color: #93c5fd; color: #2563eb; background: #eff6ff; }
+    .members-bar { display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 0.65rem; }
+    .members-bar-label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.07em; color: #9ca3af; }
+    .add-person-btn { padding: 0.28rem 0.7rem; border: 1px solid #d1d5db; border-radius: 5px;
+      background: #fff; cursor: pointer; font-size: 12px; color: #374151; }
+    .add-person-btn:hover { background: #eff6ff; border-color: #93c5fd; color: #2563eb; }
     .add-row-btn { padding: 0.25rem 0.65rem; border: 1px solid #d1d5db; border-radius: 5px;
       background: #fff; cursor: pointer; font-size: 12px; color: #374151; }
     .add-row-btn:hover { background: #f3f4f6; }
@@ -1414,7 +1417,8 @@ const demoHtml = `<!DOCTYPE html>
         '<span class="field-label">' + esc(meta.label || cpath) + '</span>' +
         '<span class="field-badge b-' + state + '">' + badgeText(state) + '</span>' +
       '</div>' +
-      '<div class="field-input' + (state === 'resolved' ? ' input-resolved' : state === 'auto-resolved' ? ' input-auto-resolved' : '') + '">' + buildInputHTML(scope, mi, ri, cpath) + '</div>' +
+      '<div class="field-path">' + esc(cpath) + '</div>' +
+      '<div class="field-input">' + buildInputHTML(scope, mi, ri, cpath) + '</div>' +
     '</div>'
   }
 
@@ -1472,8 +1476,8 @@ const demoHtml = `<!DOCTYPE html>
     var fc2 = document.getElementById('fields-container'), html = ''
     var hCards = cardsForLoc('household', 'household', 0, 0)
     if (hCards) html += '<div class="household-section"><h3 class="household-label">Household</h3><div class="field-cards" id="household-cards">' + hCards + '</div></div>'
+    html += '<div class="members-bar"><span class="members-bar-label">Members</span><button class="add-person-btn" id="add-person-btn">+ Add person</button></div>'
     for (var i = 0; i < numMembers; i++) html += memberSectionHTML(i)
-    html += '<button class="add-person-btn" id="add-person-btn">+ Add person</button>'
     if (!hCards && !allSeen.length) html = '<p class="fields-hint">Loading...</p>' + html
     fc2.innerHTML = html
   }
@@ -1539,8 +1543,6 @@ const demoHtml = `<!DOCTYPE html>
       card.className = 'field-card field-card-' + state
       var badge = card.querySelector('.field-badge')
       if (badge) { badge.className = 'field-badge b-' + state; badge.textContent = badgeText(state) }
-      var inp = card.querySelector('.field-input')
-      if (inp) inp.className = 'field-input' + (state === 'resolved' ? ' input-resolved' : state === 'auto-resolved' ? ' input-auto-resolved' : '')
     })
   }
 
@@ -1577,10 +1579,13 @@ const demoHtml = `<!DOCTYPE html>
     memberIds.push('person-' + memberSeq); memberVals.push({})
     collCounts.push({ income: 0, expenses: 0, jobs: 0, assets: 0 })
     collVals.push({ income: [], expenses: [], jobs: [], assets: [] })
-    var addBtn = document.getElementById('add-person-btn')
+    var prevSec = document.getElementById('member-section-' + (newIdx - 1))
     var div = document.createElement('div')
     div.innerHTML = memberSectionHTML(newIdx)
-    addBtn.parentNode.insertBefore(div.firstChild, addBtn)
+    var newSec = div.firstChild
+    if (prevSec && prevSec.nextSibling) prevSec.parentNode.insertBefore(newSec, prevSec.nextSibling)
+    else if (prevSec) prevSec.parentNode.appendChild(newSec)
+    else document.getElementById('fields-container').appendChild(newSec)
     refreshRemoveBtns()
   }
   function removeMember(mi) {
