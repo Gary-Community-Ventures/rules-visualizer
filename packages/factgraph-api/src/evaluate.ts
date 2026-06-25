@@ -602,15 +602,16 @@ function collectMissingInputsForMember(
  * Whether an execution-results value counts as "this fact resolved."
  *
  * Scalars: any defined, non-null value is resolved.
- * Collection-item arrays: resolved only when every element has a value —
- * a partially-populated collection means at least one member is still
- * missing input, and the underlying writable should remain in the
- * missing list.
+ * Collection-item arrays: resolved when every element has a value, including
+ * the vacuous case of zero elements. An empty array can only reach this
+ * function when the collection was explicitly provided as empty (e.g.
+ * income: []) — clearUnprovidedCollectionSubtrees deletes unprovided
+ * collection facts entirely, leaving undefined rather than []. A partially-
+ * populated collection ([value, null, value]) is not resolved.
  */
 function hasResolvedValue(value: unknown): boolean {
   if (value === undefined || value === null) return false
   if (Array.isArray(value)) {
-    if (value.length === 0) return false
     return value.every((v) => v !== null && v !== undefined)
   }
   return true

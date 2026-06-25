@@ -189,6 +189,42 @@ test('expense row attribution follows the same logic as income rows', async () =
   assert.ok(!bobFields.includes('amount'),  'bob: expense amount not attributed (no expense rows)')
 })
 
+// ---------------------------------------------------------------------------
+// Explicit empty collections ("no income" / "no expenses")
+// ---------------------------------------------------------------------------
+
+test('income: [] asserts no income — income fields do not appear in missingInputs', async () => {
+  // An absent income field means "unknown"; income: [] means "no income rows".
+  // The second form should not prompt the caller to provide income fields.
+  const withEmpty = await request(app).post(URL).send({
+    members: [{ id: 'alice', dateOfBirth: '1990-01-01', income: [] }],
+  })
+  const withAbsent = await request(app).post(URL).send({
+    members: [{ id: 'alice', dateOfBirth: '1990-01-01' }],
+  })
+  assert.equal(withEmpty.status, 200)
+  assert.equal(withAbsent.status, 200)
+
+  const emptyMissing = (withEmpty.body.determinations[0].missingInputs ?? []) as Array<{ location: string }>
+  const absentMissing = (withAbsent.body.determinations[0].missingInputs ?? []) as Array<{ location: string }>
+
+  const incomeInEmpty  = emptyMissing.filter((m) => m.location === 'members[].income[]').length
+  const incomeInAbsent = absentMissing.filter((m) => m.location === 'members[].income[]').length
+
+  assert.equal(incomeInEmpty, 0, 'income: [] — no income fields in missingInputs')
+  assert.ok(incomeInAbsent > 0, 'omitted income — income fields appear as missing')
+})
+
+test('expenses: [] asserts no expenses — expense fields do not appear in missingInputs', async () => {
+  const res = await request(app).post(URL).send({
+    members: [{ id: 'alice', dateOfBirth: '1990-01-01', income: [], expenses: [] }],
+  })
+  assert.equal(res.status, 200)
+  const missing = (res.body.determinations[0].missingInputs ?? []) as Array<{ location: string }>
+  const expenseFields = missing.filter((m) => m.location === 'members[].expenses[]').length
+  assert.equal(expenseFields, 0, 'expenses: [] — no expense fields in missingInputs')
+})
+
 test('an empty body is valid — returns pending with inputs needed', async () => {
   const res = await request(app).post(URL).send({})
   assert.equal(res.status, 200)

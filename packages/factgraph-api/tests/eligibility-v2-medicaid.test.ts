@@ -180,6 +180,29 @@ test('pending member — income fields appear in missingInputs when no household
   assert.ok(missing.some((m) => m.field === 'amount'), 'income amount in missingInputs when no income rows provided')
 })
 
+test('income: [] asserts no income — resolves without income fields in missingInputs', async () => {
+  // income: [] (explicit empty) should be treated as "no income" and resolve,
+  // unlike omitting the field which leaves income unknown (pending).
+  const withEmpty = await request(app).post(URL).send({
+    members: [{ id: 'alice', dateOfBirth: '1990-01-01', income: [] }],
+  })
+  const withAbsent = await request(app).post(URL).send({
+    members: [{ id: 'alice', dateOfBirth: '1990-01-01' }],
+  })
+  assert.equal(withEmpty.status, 200)
+  assert.equal(withAbsent.status, 200)
+
+  const emptyDet  = withEmpty.body.determinations[0] as Record<string, unknown>
+  const absentDet = withAbsent.body.determinations[0] as Record<string, unknown>
+
+  assert.equal(emptyDet.status, 'approved', 'income: [] resolves to approved (zero household income)')
+  assert.equal(absentDet.status, 'pending',  'omitted income stays pending')
+
+  const incomeInEmpty = ((emptyDet.missingInputs ?? []) as Array<{ location: string }>)
+    .filter((m) => m.location === 'members[].income[]').length
+  assert.equal(incomeInEmpty, 0, 'income: [] — no income fields in missingInputs')
+})
+
 // ---------------------------------------------------------------------------
 // Validation and errors
 // ---------------------------------------------------------------------------

@@ -200,15 +200,20 @@ export function translateRequest(req: V2Request, model: Model, asOf: Date): Tran
     for (const [key, location] of MEMBER_SUBCOLLECTIONS) {
       const rows = m[key]
       if (!Array.isArray(rows)) continue
+      // Register the collection root even when rows is empty so that an explicit
+      // empty array (e.g. income: []) is treated as "no income" rather than
+      // "income unknown". Without this, an empty array and an absent field are
+      // indistinguishable and both result in pending.
+      const root = anyEntryRoot(maps, location)
+      if (!root) continue
+      rowsByRoot[root] ??= []
       rows.forEach((r: Record<string, unknown>, j) => {
-        const root = anyEntryRoot(maps, location)
-        if (!root) return
         const row: Record<string, unknown> = {
           id: (r.id as string) ?? `${memberId}-${key}-${j}`,
           [`${root}/*/memberId`]: `#${i}`,
           ...mapObject(r, location, new Set(['id']), maps, indexOf, asOf, warnings),
         }
-        ;(rowsByRoot[root] ??= []).push(row)
+        rowsByRoot[root].push(row)
       })
     }
   })
