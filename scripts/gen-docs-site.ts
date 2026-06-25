@@ -1072,16 +1072,18 @@ const demoHtml = `<!DOCTYPE html>
     .field-card { border: 1px solid #e5e7eb; border-radius: 8px; padding: 0.65rem 0.8rem;
       background: #fff; transition: border-color 0.2s, background 0.2s, opacity 0.3s; }
     .field-card-needed     { border-color: #93c5fd; background: #eff6ff; }
-    .field-card-still-needed { border-color: #fcd34d; background: #fffbeb; }
-    .field-card-resolved   { border-color: #a7f3d0; background: #f0fdf4; opacity: 0.72; }
+    .field-card-still-needed  { border-color: #fcd34d; background: #fffbeb; }
+    .field-card-resolved      { border-color: #a7f3d0; background: #f0fdf4; }
+    .field-card-auto-resolved { border-color: #e5e7eb; background: #f9fafb; opacity: 0.55; }
     .field-card-header { display: flex; justify-content: space-between; align-items: flex-start;
       gap: 0.4rem; margin-bottom: 0.45rem; }
     .field-label { font-size: 0.81rem; font-weight: 600; color: #111827; line-height: 1.3; }
     .field-badge { font-size: 0.62rem; font-weight: 700; text-transform: uppercase;
       letter-spacing: 0.04em; padding: 0.13rem 0.38rem; border-radius: 4px; white-space: nowrap; flex-shrink: 0; }
     .b-needed      { background: #dbeafe; color: #1e40af; }
-    .b-still-needed{ background: #fef3c7; color: #92400e; }
-    .b-resolved    { background: #d1fae5; color: #065f46; }
+    .b-still-needed   { background: #fef3c7; color: #92400e; }
+    .b-resolved       { background: #d1fae5; color: #065f46; }
+    .b-auto-resolved  { background: #f3f4f6; color: #9ca3af; }
 
     /* inputs */
     .field-card input[type=text],
@@ -1092,7 +1094,9 @@ const demoHtml = `<!DOCTYPE html>
       border: 1px solid #d1d5db; border-radius: 5px; font-size: 13px;
       background: #fff; color: #111827; font-family: inherit; }
     .field-card-resolved input,
-    .field-card-resolved select { background: #f9fafb; color: #6b7280; }
+    .field-card-resolved select { background: #f0fdf4; }
+    .field-card-auto-resolved input,
+    .field-card-auto-resolved select { background: #f9fafb; color: #9ca3af; }
     .bool-btns { display: flex; gap: 0.35rem; flex-wrap: wrap; }
     .bool-btn { padding: 0.28rem 0.7rem; border: 1px solid #d1d5db; border-radius: 5px;
       background: #fff; cursor: pointer; font-size: 12px; color: #374151; }
@@ -1108,6 +1112,7 @@ const demoHtml = `<!DOCTYPE html>
     .num-wrap:not(:has(.pre)) input { border-radius: 5px 0 0 5px; }
     .field-note { font-size: 0.78rem; color: #9ca3af; font-style: italic; }
     .input-resolved input, .input-resolved select, .input-resolved .bool-btn { pointer-events: none; }
+    .input-auto-resolved input, .input-auto-resolved select, .input-auto-resolved .bool-btn { pointer-events: none; }
     .fields-hint { color: #9ca3af; font-size: 0.9rem; text-align: center; padding: 2.5rem 0; }
 
     /* response details */
@@ -1311,12 +1316,17 @@ const demoHtml = `<!DOCTYPE html>
     var hasVal = path in values
     if (inMissing && !hasVal)  return 'needed'
     if (inMissing &&  hasVal)  return 'still-needed'
-    if (!inMissing && fieldCache[path]) return 'resolved'
+    if (!inMissing && hasVal)  return 'resolved'
+    if (!inMissing && !hasVal) return 'auto-resolved'
     return 'unknown'
   }
 
   function badgeText(s) {
-    return s === 'needed' ? 'needed' : s === 'still-needed' ? 'still needed' : s === 'resolved' ? '\\u2713 resolved' : ''
+    return s === 'needed'        ? 'needed'
+      : s === 'still-needed'    ? 'still needed'
+      : s === 'resolved'        ? '\\u2713 provided'
+      : s === 'auto-resolved'   ? 'not needed'
+      : ''
   }
 
   function buildInputHTML(path) {
@@ -1400,7 +1410,7 @@ const demoHtml = `<!DOCTYPE html>
           '<span class="field-label">' + esc(meta.label || path) + '</span>' +
           '<span class="field-badge b-' + state + '">' + badgeText(state) + '</span>' +
         '</div>' +
-        '<div class="field-input' + (state === 'resolved' ? ' input-resolved' : '') + '">' + buildInputHTML(path) + '</div>'
+        '<div class="field-input' + (state === 'resolved' ? ' input-resolved' : state === 'auto-resolved' ? ' input-auto-resolved' : '') + '">' + buildInputHTML(path) + '</div>'
       cardsEl.appendChild(card)
     })
   }
@@ -1413,7 +1423,7 @@ const demoHtml = `<!DOCTYPE html>
       var badge = card.querySelector('.field-badge')
       if (badge) { badge.className = 'field-badge b-' + state; badge.textContent = badgeText(state) }
       var inp = card.querySelector('.field-input')
-      if (inp) inp.className = 'field-input' + (state === 'resolved' ? ' input-resolved' : '')
+      if (inp) inp.className = 'field-input' + (state === 'resolved' ? ' input-resolved' : state === 'auto-resolved' ? ' input-auto-resolved' : '')
     })
   }
 
@@ -1435,13 +1445,15 @@ const demoHtml = `<!DOCTYPE html>
     } else {
       badge.textContent = s
     }
-    var resolved = allSeen.filter(function(p) { return !curMissing.has(p) && fieldCache[p] && !SKIP_LOCS[fieldCache[p].location] }).length
-    var needed   = curMissing.size
-    if (resolved > 0 || needed > 0) {
-      prog.innerHTML =
-        (resolved > 0 ? '<span class="prog-res">\\u2713 ' + resolved + ' resolved</span>' : '') +
-        (resolved > 0 && needed > 0 ? ' &nbsp;&middot;&nbsp; ' : '') +
-        (needed   > 0 ? '<span class="prog-need">' + needed + ' still needed</span>' : '')
+    var provided     = allSeen.filter(function(p) { return !curMissing.has(p) && (p in values) && fieldCache[p] && !SKIP_LOCS[fieldCache[p].location] }).length
+    var autoResolved = allSeen.filter(function(p) { return !curMissing.has(p) && !(p in values) && fieldCache[p] && !SKIP_LOCS[fieldCache[p].location] }).length
+    var needed       = curMissing.size
+    var parts = []
+    if (provided > 0)     parts.push('<span class="prog-res">\\u2713 ' + provided + ' provided</span>')
+    if (autoResolved > 0) parts.push('<span style="color:#9ca3af">' + autoResolved + ' not needed</span>')
+    if (needed > 0)       parts.push('<span class="prog-need">' + needed + ' still needed</span>')
+    if (parts.length > 0) {
+      prog.innerHTML = parts.join(' &nbsp;&middot;&nbsp; ')
     } else {
       prog.textContent = ''
     }
