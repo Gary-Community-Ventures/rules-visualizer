@@ -53,6 +53,142 @@ test('pending determination lists missingInputs in the friendly request vocabula
   }
 })
 
+test('missingInputsByMember attributes member-level fields to specific members', async () => {
+  // Alice provides citizenship; Bob does not. Per-member breakdown should show
+  // citizenship missing only for Bob, not Alice.
+  const res = await request(app).post(URL).send({
+    members: [
+      { id: 'alice', dateOfBirth: '1990-01-01', citizenshipImmigrationStatus: 'citizen' },
+      { id: 'bob',   dateOfBirth: '1985-06-15' },
+    ],
+    household: { applicationFilingDate: '2026-06-25' },
+  })
+  assert.equal(res.status, 200)
+  const det = res.body.determinations[0] as Record<string, unknown>
+  const byMember = det.missingInputsByMember as Record<string, Array<Record<string, unknown>>>
+  assert.ok(byMember && typeof byMember === 'object', 'missingInputsByMember present')
+  assert.ok('alice' in byMember && 'bob' in byMember, 'both member ids present')
+  const aliceCitizenship = byMember.alice?.some((m) => m.field === 'citizenshipImmigrationStatus')
+  const bobCitizenship = byMember.bob?.some((m) => m.field === 'citizenshipImmigrationStatus')
+  assert.ok(!aliceCitizenship, 'alice provided citizenship — not in her list')
+  assert.ok(bobCitizenship, 'bob did not provide citizenship — in his list')
+  // All entries use friendly paths, not engine paths.
+  for (const entries of Object.values(byMember)) {
+    for (const m of entries) {
+      assert.ok(!(m.requestPath as string).startsWith('/'), 'requestPath is friendly')
+    }
+  }
+})
+
+test('missingInputsByMember is absent when no members are sent', async () => {
+  const res = await request(app).post(URL).send({})
+  assert.equal(res.status, 200)
+  const det = res.body.determinations[0] as Record<string, unknown>
+  assert.ok(!('missingInputsByMember' in det), 'no byMember when no members provided')
+})
+
+// ---------------------------------------------------------------------------
+// Sub-collection (income, expenses) attribution
+// ---------------------------------------------------------------------------
+
+test('income row with a missing field is attributed to the member who owns that row', async () => {
+  // Alice sends an income row but omits `amount`. Bob sends no income rows.
+  // Only Alice should have `amount` in her per-member list; Bob should not,
+  // because the missing income amount is not specifically attributable to him.
+  const res = await request(app).post(URL).send({
+    members: [
+      { id: 'alice', dateOfBirth: '1990-01-01',
+        income: [{ type: 'wages_and_salaries', frequency: 'monthly' }] },
+      { id: 'bob', dateOfBirth: '1985-06-15' },
+    ],
+  })
+  assert.equal(res.status, 200)
+  const det = res.body.determinations[0] as Record<string, unknown>
+  const byMember = det.missingInputsByMember as Record<string, Array<Record<string, unknown>>>
+  assert.ok(byMember, 'missingInputsByMember present')
+
+  const aliceFields = (byMember.alice ?? []).map((m) => m.field as string)
+  const bobFields   = (byMember.bob   ?? []).map((m) => m.field as string)
+  assert.ok(aliceFields.includes('amount'), 'alice: income amount missing in her list')
+  assert.ok(!bobFields.includes('amount'), 'bob: income amount not in his list (no income rows)')
+
+  // The household-level union should still surface amount so the caller knows
+  // the overall request is incomplete.
+  const topLevel = (det.missingInputs as Array<Record<string, unknown>> ?? [])
+  const topLevelHasAmount = topLevel.some((m) => m.field === 'amount')
+  assert.ok(topLevelHasAmount, 'top-level missingInputs still includes amount')
+})
+
+test('complete income row produces no income fields in that member\'s per-member list', async () => {
+  // Alice provides a fully-populated income row; Bob has no income rows.
+  // Neither should have income fields in their per-member list.
+  const res = await request(app).post(URL).send({
+    members: [
+      { id: 'alice', dateOfBirth: '1990-01-01',
+        income: [{ type: 'wages_and_salaries', amount: 1200, frequency: 'monthly' }] },
+      { id: 'bob', dateOfBirth: '1985-06-15' },
+    ],
+  })
+  assert.equal(res.status, 200)
+  const det = res.body.determinations[0] as Record<string, unknown>
+  const byMember = det.missingInputsByMember as Record<string, Array<Record<string, unknown>>> | undefined
+
+  const incomeFields = ['amount', 'type', 'frequency']
+  for (const [memberId, entries] of Object.entries(byMember ?? {})) {
+    const fields = entries.map((m) => m.field as string)
+    const leaked = fields.filter((f) => incomeFields.includes(f))
+    assert.deepEqual(leaked, [], `${memberId}: no income fields in per-member list when income is complete`)
+  }
+})
+
+test('two members with different income gaps each receive their own attribution', async () => {
+  // Alice: income row missing `amount`. Bob: income row missing `type` and `frequency`.
+  // Each member's per-member list should reflect only their own gap.
+  const res = await request(app).post(URL).send({
+    members: [
+      { id: 'alice', dateOfBirth: '1990-01-01',
+        income: [{ type: 'wages_and_salaries', frequency: 'monthly' }] },  // missing: amount
+      { id: 'bob', dateOfBirth: '1985-06-15',
+        income: [{ amount: 800 }] },                                       // missing: type, frequency
+    ],
+  })
+  assert.equal(res.status, 200)
+  const det = res.body.determinations[0] as Record<string, unknown>
+  const byMember = det.missingInputsByMember as Record<string, Array<Record<string, unknown>>>
+  assert.ok(byMember?.alice && byMember?.bob, 'both members present in byMember')
+
+  const aliceFields = byMember.alice.map((m) => m.field as string)
+  const bobFields   = byMember.bob.map((m) => m.field as string)
+
+  assert.ok(aliceFields.includes('amount'),    'alice: amount missing')
+  assert.ok(!aliceFields.includes('type'),     'alice: type provided — not in her list')
+  assert.ok(!aliceFields.includes('frequency'),'alice: frequency provided — not in her list')
+
+  assert.ok(!bobFields.includes('amount'),     'bob: amount provided — not in his list')
+  assert.ok(bobFields.includes('type'),        'bob: type missing')
+  assert.ok(bobFields.includes('frequency'),   'bob: frequency missing')
+})
+
+test('expense row attribution follows the same logic as income rows', async () => {
+  // Alice has an expense row missing `amount`; Bob has no expense rows.
+  const res = await request(app).post(URL).send({
+    members: [
+      { id: 'alice', dateOfBirth: '1990-01-01',
+        expenses: [{ type: 'shelter' }] },  // missing: amount
+      { id: 'bob', dateOfBirth: '1985-06-15' },
+    ],
+  })
+  assert.equal(res.status, 200)
+  const det = res.body.determinations[0] as Record<string, unknown>
+  const byMember = det.missingInputsByMember as Record<string, Array<Record<string, unknown>>>
+  assert.ok(byMember, 'missingInputsByMember present')
+
+  const aliceFields = (byMember.alice ?? []).map((m) => m.field as string)
+  const bobFields   = (byMember.bob   ?? []).map((m) => m.field as string)
+  assert.ok(aliceFields.includes('amount'), 'alice: expense amount in her per-member list')
+  assert.ok(!bobFields.includes('amount'),  'bob: expense amount not attributed (no expense rows)')
+})
+
 test('an empty body is valid — returns pending with inputs needed', async () => {
   const res = await request(app).post(URL).send({})
   assert.equal(res.status, 200)

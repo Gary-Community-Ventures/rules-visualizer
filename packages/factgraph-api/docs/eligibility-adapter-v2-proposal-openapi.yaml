@@ -244,7 +244,17 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/MissingInput"
-          description: "Present when pending: exactly which fields to fill."
+          description: "Present when pending: exactly which fields to fill, across all
+            members."
+        missingInputsByMember:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              $ref: "#/components/schemas/MissingInput"
+          description: "Present when pending and members were provided: the member-level
+            subset of missingInputs keyed by member id. Shared inputs (income
+            rows, expenses) appear only in the top-level missingInputs."
         notes:
           type: array
           items:

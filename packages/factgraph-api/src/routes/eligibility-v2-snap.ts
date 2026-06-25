@@ -16,7 +16,7 @@ import {
   SNAP_EXPEDITED_TARGET,
 } from '../translate/snap.js'
 import { translateRequest } from '../translate/v2-request.js'
-import { friendlyMissing } from '../translate/field-index.js'
+import { friendlyMissing, friendlyMissingByMember } from '../translate/field-index.js'
 import {
   V2HouseholdRequestSchema,
   snapDetermination,
@@ -65,6 +65,8 @@ router.post('/determination', (req, res) => {
   const det = snapDetermination(query, warnings)
   const missing = friendlyMissing(query.missingInputs ?? [], model)
   if (missing.length) det.missingInputs = missing
+  const missingByMember = friendlyMissingByMember(query.missingInputsByMember ?? {}, model)
+  if (Object.keys(missingByMember).length) det.missingInputsByMember = missingByMember
 
   res.json({
     ...(body.metadata !== undefined ? { metadata: body.metadata } : {}),

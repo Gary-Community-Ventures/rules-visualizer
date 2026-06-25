@@ -161,6 +161,28 @@ export function runQuery(
     entitiesForExecutor[collPath] = cleaned
   }
 
+  // For sub-collections that have a memberId foreign key (income, assets,
+  // expenses, jobs), build a map: collection root → member index → their row
+  // indices. This lets the per-member missing-inputs walker check only rows
+  // belonging to a given member rather than treating the flat row array as
+  // member-indexed.
+  const subCollMemberRows = new Map<string, Map<number, number[]>>()
+  for (const [collPath, rows] of Object.entries(entitiesForExecutor)) {
+    if (collPath === '/members') continue
+    const memberToRows = new Map<number, number[]>()
+    rows.forEach((row, rowIdx) => {
+      const memberIdKey = Object.keys(row).find((k) => k.endsWith('/memberId'))
+      if (!memberIdKey) return
+      const ref = row[memberIdKey] as string // '#0', '#1', …
+      const memberIdx = parseInt(ref.slice(1), 10)
+      if (isNaN(memberIdx)) return
+      const existing = memberToRows.get(memberIdx) ?? []
+      existing.push(rowIdx)
+      memberToRows.set(memberIdx, existing)
+    })
+    if (memberToRows.size > 0) subCollMemberRows.set(collPath, memberToRows)
+  }
+
   const executionResults = executeFactGraph(
     rulesetId,
     facts,
@@ -258,20 +280,32 @@ export function runQuery(
     // list. The cross-member providedPaths set can only tell us that *some*
     // member provided a field — the per-slot execution result tells us
     // whether THIS member still needs it.
+    //
+    // Walk from ALL unresolved targets (not just per-member ones): for
+    // programs like SNAP whose targets are household-level aggregates,
+    // the walker still reaches member-level writables transitively and
+    // correctly attributes them per slot.
     const memberIds = memberIdsByCollection['/members'] ?? []
-    const perMemberTargets = targets.filter((t) => t.startsWith('/members/*/'))
-    if (memberIds.length > 0 && perMemberTargets.length > 0) {
+    if (memberIds.length > 0) {
+      const unresolvedTargets = targets.filter((t) => values[t] === null)
       const byMember: Record<string, MissingInput[]> = {}
       for (let idx = 0; idx < memberIds.length; idx++) {
         const memberId = memberIds[idx]
+        // Slice subCollMemberRows to this member's row indices only.
+        const memberSubCollRows = new Map<string, number[]>()
+        for (const [root, memberMap] of subCollMemberRows) {
+          const rows = memberMap.get(idx)
+          if (rows && rows.length > 0) memberSubCollRows.set(root, rows)
+        }
         const memberMissing = new Map<string, MissingInput>()
-        for (const target of perMemberTargets) {
+        for (const target of unresolvedTargets) {
           for (const m of collectMissingInputsForMember(
             model,
             target,
             providedInputPaths,
             effectiveResults,
-            idx
+            idx,
+            memberSubCollRows
           )) {
             if (!memberMissing.has(m.path)) memberMissing.set(m.path, m)
           }
@@ -482,7 +516,8 @@ function collectMissingInputsForMember(
   targetPath: string,
   providedPaths: Set<string>,
   executionResults: Record<string, unknown>,
-  memberIndex: number
+  memberIndex: number,
+  memberSubCollRows?: Map<string, number[]>
 ): MissingInput[] {
   const MEMBER_PREFIX = '/members/*/'
 
@@ -499,24 +534,52 @@ function collectMissingInputsForMember(
     const content = node.content
     if (content.type === 'entity' || !('path' in content)) return
 
-    const isMemberPath =
-      typeof content.path === 'string' && content.path.startsWith(MEMBER_PREFIX)
-    const raw = executionResults[content.path]
-    // Member-level paths: check this member's positional slot in the array.
-    // Other paths (scalars, other collection rows): use the value as-is so
-    // the walk can still prune resolved subtrees correctly.
-    const effectiveValue =
-      isMemberPath && Array.isArray(raw) ? raw[memberIndex] : raw
+    const path = content.path as string
+    const isMemberPath = path.startsWith(MEMBER_PREFIX)
+
+    // Collection root for sub-collection paths: /incomes/*/amount → /incomes.
+    // Undefined for top-level scalars/aggregates that have no second slash.
+    const collRootSlash = path.indexOf('/', 1)
+    const collRoot = !isMemberPath && collRootSlash > 0 ? path.slice(0, collRootSlash) : undefined
+
+    const raw = executionResults[path]
+    let effectiveValue: unknown
+
+    if (isMemberPath && Array.isArray(raw)) {
+      // Direct member field — check this member's positional slot.
+      effectiveValue = raw[memberIndex]
+    } else if (collRoot !== undefined && memberSubCollRows) {
+      // Sub-collection field (income, assets, etc.).
+      // Only attribute to this member if they contributed rows; if they have
+      // no rows for this collection it is not their field to fill.
+      const memberRows = memberSubCollRows.get(collRoot)
+      if (memberRows !== undefined) {
+        // Resolved for this member only when all of their rows have a value.
+        const allResolved =
+          Array.isArray(raw) &&
+          memberRows.every((i) => hasResolvedValue((raw as unknown[])[i]))
+        effectiveValue = allResolved ? memberRows : null
+      } else {
+        // Member has no rows for this collection — treat as resolved so we
+        // skip this subtree (their income/assets are not missing, they just
+        // didn't provide any rows).
+        effectiveValue = true
+      }
+    } else {
+      // Scalar or household-level aggregate — use the raw execution result so
+      // the walker can continue descending into its dependencies normally.
+      effectiveValue = raw
+    }
+
     if (hasResolvedValue(effectiveValue)) return
 
     if (content.type === 'writable') {
-      // Only report member-level writables here; income/expense/asset
-      // writables (other collections) belong to the household-level union.
-      if (!isMemberPath) return
-      // The shared providedPaths set can't tell us whether THIS member
-      // provided the field, so we rely solely on the per-slot result above.
+      // Only attribute writables that belong to this member's scope:
+      //   - direct /members/*/ fields, or
+      //   - sub-collection rows this member contributed
+      if (!isMemberPath && !(collRoot !== undefined && memberSubCollRows?.has(collRoot))) return
       missing.push({
-        path: content.path,
+        path,
         name: content.label ?? node.name,
         description: node.description,
         dataType: content.typeName,

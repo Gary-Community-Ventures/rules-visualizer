@@ -96,6 +96,10 @@ export type Determination = {
   /** Inputs that would unlock or refine this determination, in the friendly
    *  request vocabulary (set by the route via the field index). */
   missingInputs?: FriendlyMissing[]
+  /** Per-member breakdown of member-level missing inputs (same vocabulary).
+   *  Keyed by member id. Subset of missingInputs; shared household-level
+   *  fields (income rows, expenses) appear only in the top-level union. */
+  missingInputsByMember?: Record<string, FriendlyMissing[]>
   /** Assumptions the determination is conditional on (defaulted/derived). */
   notes?: string[]
 }

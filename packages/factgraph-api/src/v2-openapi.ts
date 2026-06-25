@@ -141,7 +141,8 @@ export function buildV2OpenApiDocument() {
       chpEligible: z.boolean().optional(),
       denialReasonCode: z.string().optional().openapi({ description: 'snake_case; present on denied/ineligible.' }),
       explanation: z.array(ExplanationStep).optional().openapi({ description: 'Path-free "why" for denials.' }),
-      missingInputs: z.array(MissingInput).optional().openapi({ description: 'Present when pending: exactly which fields to fill.' }),
+      missingInputs: z.array(MissingInput).optional().openapi({ description: 'Present when pending: exactly which fields to fill, across all members.' }),
+      missingInputsByMember: z.record(z.string(), z.array(MissingInput)).optional().openapi({ description: 'Present when pending and members were provided: the member-level subset of missingInputs keyed by member id. Shared inputs (income rows, expenses) appear only in the top-level missingInputs.' }),
       notes: z.array(z.string()).optional().openapi({ description: 'Assumptions/translation notes.' }),
     }).openapi({ description: 'One program decision. One shape for household- and member-scoped programs (no oneOf).' })
   )

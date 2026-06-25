@@ -151,6 +151,19 @@ export function friendlyMissing(
   return out
 }
 
+/** Apply friendlyMissing to each member's missing-input list. */
+export function friendlyMissingByMember(
+  byMember: Record<string, Array<{ path: string; name?: string; dataType?: string; enumOptions?: string[] }>>,
+  model: Model
+): Record<string, FriendlyMissing[]> {
+  const out: Record<string, FriendlyMissing[]> = {}
+  for (const [memberId, missing] of Object.entries(byMember)) {
+    const friendly = friendlyMissing(missing, model)
+    if (friendly.length > 0) out[memberId] = friendly
+  }
+  return out
+}
+
 /** Build the field index for one ruleset's writable facts. */
 export function indexForModel(model: Model): FieldEntry[] {
   const out: FieldEntry[] = []
