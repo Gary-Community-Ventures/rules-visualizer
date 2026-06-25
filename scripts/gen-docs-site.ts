@@ -878,8 +878,8 @@ const guideHtml = `<!DOCTYPE html>
       <p>
         Send a real request to the API from your browser. The production endpoint is
         pre-filled; swap in <code>http://localhost:5002</code> to test against a local
-        server. The API does not require auth in its default configuration — leave the
-        token field blank unless your deployment has <code>API_BEARER_TOKEN</code> set.
+        server. Local dev does not require auth — leave the token blank. The production
+        server requires a bearer token; enter it below if you have one.
       </p>
       <div class="sandbox">
         <div class="sandbox-head">
@@ -976,14 +976,20 @@ const guideHtml = `<!DOCTYPE html>
           const headers = { 'Content-Type': 'application/json' }
           if (token) headers['Authorization'] = 'Bearer ' + token
           const res = await fetch(base + path, { method: 'POST', headers, body: JSON.stringify(body) })
-          const data = await res.json()
           statusEl.textContent = 'HTTP ' + res.status + (res.ok ? ' OK' : ' ' + res.statusText)
+          const text = await res.text()
+          let display
+          try {
+            display = JSON.stringify(JSON.parse(text), null, 2)
+          } catch {
+            display = text || '(empty response body)'
+          }
           respEl.style.color = res.ok ? '#1f2937' : '#991b1b'
-          respEl.textContent = JSON.stringify(data, null, 2)
+          respEl.textContent = display
         } catch (e) {
-          statusEl.textContent = 'Error: ' + e.message
+          statusEl.textContent = 'Network error'
           respEl.style.color = '#991b1b'
-          respEl.textContent = String(e)
+          respEl.textContent = e.message + '\n\nIf the server is not responding, it may be waking up — wait a moment and try again.'
         } finally {
           btn.disabled = false
         }
