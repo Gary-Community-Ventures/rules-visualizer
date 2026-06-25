@@ -46,10 +46,10 @@ writeFileSync(`${outDir}/openapi.yaml`, yaml.stringify(advancedDoc))
 // Shared nav — identical structure on every page. Grouped into two
 // dropdowns (v2, v1 frozen) + right-side dev tools.
 // ---------------------------------------------------------------------------
-type NavPage = 'v2' | 'engine-inputs' | 'v1' | 'legacy-inputs' | 'advanced' | 'guide'
+type NavPage = 'v2' | 'engine-inputs' | 'v1' | 'legacy-inputs' | 'advanced' | 'guide' | 'demo'
 
 function buildDocsNav(active: NavPage): string {
-  const inV2 = active === 'v2' || active === 'engine-inputs' || active === 'guide'
+  const inV2 = active === 'v2' || active === 'engine-inputs' || active === 'guide' || active === 'demo'
   const inV1 = active === 'v1' || active === 'legacy-inputs'
   const item = (href: string, label: string, key: NavPage) =>
     active === key
@@ -88,6 +88,7 @@ function buildDocsNav(active: NavPage): string {
     </button>
     <div class="nav-group-menu">
       ${item('./guide.html', 'Guide', 'guide')}
+      ${item('./demo.html', 'Demo', 'demo')}
       ${item('./eligibility-v2.html', 'Reference', 'v2')}
       ${item('./engine-inputs.html', 'Inputs', 'engine-inputs')}
     </div>
@@ -1006,6 +1007,491 @@ const guideHtml = `<!DOCTYPE html>
 </html>
 `
 writeFileSync(`${outDir}/guide.html`, guideHtml)
+
+// ---------------------------------------------------------------------------
+// Convergence demo — interactive walkthrough that reveals missingInputs
+// progressively as the user fills fields, showing resolved vs still-needed
+// in real time.
+// ---------------------------------------------------------------------------
+const demoHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Eligibility demo</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  ${buildDocsNav('demo')}
+  <style>
+    body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      background: #f9fafb; margin: 0; }
+    .demo-wrap { max-width: 860px; margin: 0 auto; padding: 1.5rem 1rem 3rem; }
+    h1 { font-size: 1.45rem; font-weight: 700; margin: 0 0 0.3rem; color: #111827; }
+    .lede { font-size: 0.95rem; color: #4b5563; margin: 0 0 1.25rem; }
+
+    /* config bar */
+    .config-bar { display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: flex-end;
+      background: #fff; border: 1px solid #e5e7eb; border-radius: 8px;
+      padding: 0.75rem 1rem; margin-bottom: 1.25rem; font-size: 13px; }
+    .config-bar label { display: flex; flex-direction: column; gap: 3px; color: #374151; font-weight: 500; }
+    .config-bar input { padding: 0.3rem 0.55rem; border: 1px solid #d1d5db;
+      border-radius: 5px; font-size: 12px; font-family: ui-monospace, monospace; }
+    .config-bar .url-in { width: 22rem; }
+    .config-bar .tok-in { width: 14rem; }
+    .config-bar button { padding: 0.35rem 0.9rem; border: 1px solid #d1d5db; border-radius: 5px;
+      background: #fff; cursor: pointer; font-size: 13px; color: #374151; align-self: flex-end; }
+    .config-bar button:hover { background: #f3f4f6; }
+
+    /* program tabs */
+    .prog-tabs { display: flex; gap: 0.5rem; margin-bottom: 1.25rem; }
+    .prog-tab { padding: 0.4rem 1rem; border: 1px solid #d1d5db; border-radius: 6px;
+      background: #fff; cursor: pointer; font-size: 13px; font-weight: 500; color: #374151; }
+    .prog-tab.active { background: #2563eb; color: #fff; border-color: #2563eb; }
+    .prog-tab:hover:not(.active) { background: #f3f4f6; }
+
+    /* status row */
+    .status-row { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.25rem;
+      min-height: 2rem; }
+    .status-badge { font-size: 0.82rem; font-weight: 700; padding: 0.3rem 0.85rem;
+      border-radius: 6px; text-transform: uppercase; letter-spacing: 0.05em; }
+    .s-pending  { background: #dbeafe; color: #1d4ed8; }
+    .s-approved { background: #d1fae5; color: #065f46; }
+    .s-denied, .s-ineligible { background: #fee2e2; color: #991b1b; }
+    .s-null, .s-loading { background: #f3f4f6; color: #9ca3af; }
+    .s-error    { background: #fff7ed; color: #92400e; }
+    .progress-line { font-size: 0.85rem; color: #6b7280; }
+    .prog-res  { color: #059669; font-weight: 600; }
+    .prog-need { color: #2563eb; }
+
+    /* field groups */
+    .field-group { margin-bottom: 1.5rem; }
+    .field-group-label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.07em; color: #9ca3af; margin: 0 0 0.55rem; }
+    .field-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 0.55rem; }
+
+    /* field cards */
+    .field-card { border: 1px solid #e5e7eb; border-radius: 8px; padding: 0.65rem 0.8rem;
+      background: #fff; transition: border-color 0.2s, background 0.2s, opacity 0.3s; }
+    .field-card-needed     { border-color: #93c5fd; background: #eff6ff; }
+    .field-card-still-needed { border-color: #fcd34d; background: #fffbeb; }
+    .field-card-resolved   { border-color: #a7f3d0; background: #f0fdf4; opacity: 0.72; }
+    .field-card-header { display: flex; justify-content: space-between; align-items: flex-start;
+      gap: 0.4rem; margin-bottom: 0.45rem; }
+    .field-label { font-size: 0.81rem; font-weight: 600; color: #111827; line-height: 1.3; }
+    .field-badge { font-size: 0.62rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.04em; padding: 0.13rem 0.38rem; border-radius: 4px; white-space: nowrap; flex-shrink: 0; }
+    .b-needed      { background: #dbeafe; color: #1e40af; }
+    .b-still-needed{ background: #fef3c7; color: #92400e; }
+    .b-resolved    { background: #d1fae5; color: #065f46; }
+
+    /* inputs */
+    .field-card input[type=text],
+    .field-card input[type=date],
+    .field-card input[type=number],
+    .field-card select {
+      width: 100%; box-sizing: border-box; padding: 0.28rem 0.45rem;
+      border: 1px solid #d1d5db; border-radius: 5px; font-size: 13px;
+      background: #fff; color: #111827; font-family: inherit; }
+    .field-card-resolved input,
+    .field-card-resolved select { background: #f9fafb; color: #6b7280; }
+    .bool-btns { display: flex; gap: 0.35rem; flex-wrap: wrap; }
+    .bool-btn { padding: 0.28rem 0.7rem; border: 1px solid #d1d5db; border-radius: 5px;
+      background: #fff; cursor: pointer; font-size: 12px; color: #374151; }
+    .bool-btn.active { background: #2563eb; color: #fff; border-color: #2563eb; }
+    .bool-btn:hover:not(.active) { background: #f3f4f6; }
+    .bool-btn.clr { border-color: #e5e7eb; color: #9ca3af; padding: 0.28rem 0.45rem; }
+    .num-wrap { display: flex; align-items: stretch; }
+    .num-affix { font-size: 13px; color: #6b7280; background: #f3f4f6;
+      border: 1px solid #d1d5db; padding: 0.28rem 0.4rem; display: flex; align-items: center; }
+    .num-affix.pre { border-right: none; border-radius: 5px 0 0 5px; }
+    .num-affix.suf { border-left: none; border-radius: 0 5px 5px 0; }
+    .num-wrap input { border-radius: 0; flex: 1; min-width: 0; }
+    .num-wrap:not(:has(.pre)) input { border-radius: 5px 0 0 5px; }
+    .field-note { font-size: 0.78rem; color: #9ca3af; font-style: italic; }
+    .input-resolved input, .input-resolved select, .input-resolved .bool-btn { pointer-events: none; }
+    .fields-hint { color: #9ca3af; font-size: 0.9rem; text-align: center; padding: 2.5rem 0; }
+
+    /* response details */
+    details { margin-top: 1.5rem; }
+    details summary { font-size: 0.82rem; color: #6b7280; cursor: pointer; user-select: none; }
+    details summary:hover { color: #374151; }
+    pre#raw-resp { font-size: 0.72rem; background: #f8fafc; border: 1px solid #e5e7eb;
+      border-radius: 6px; padding: 0.75rem; overflow-x: hidden; white-space: pre-wrap;
+      word-break: break-word; max-height: 300px; overflow-y: auto; margin-top: 0.5rem; }
+  </style>
+</head>
+<body>
+<div class="demo-wrap">
+  <h1>Eligibility walkthrough</h1>
+  <p class="lede">
+    Fill in fields and watch the determination converge. Each API call returns exactly which
+    inputs are still needed — resolved fields turn green, new ones may appear as others are filled.
+  </p>
+
+  <div class="config-bar">
+    <label>Base URL
+      <input id="base-url" class="url-in" value="${PROD_API}" />
+    </label>
+    <label>Bearer token
+      <input id="api-token" class="tok-in" type="password" placeholder="leave blank for local dev" />
+    </label>
+    <button id="reset-btn" title="Clear all values and restart">Reset</button>
+  </div>
+
+  <div class="prog-tabs">
+    <button class="prog-tab active" data-prog="snap">SNAP</button>
+    <button class="prog-tab" data-prog="medicaid">Medicaid</button>
+    <button class="prog-tab" data-prog="expedited">SNAP expedited screen</button>
+  </div>
+
+  <div class="status-row">
+    <span id="status-badge" class="status-badge s-null">—</span>
+    <span id="progress-line" class="progress-line"></span>
+  </div>
+
+  <div id="fields-container">
+    <p class="fields-hint">Loading initial inputs...</p>
+  </div>
+
+  <details>
+    <summary>Last API response</summary>
+    <pre id="raw-resp"></pre>
+  </details>
+</div>
+<script>
+  var PROD = '${PROD_API}'
+  var ENDPOINTS = {
+    snap:      '/v2/eligibility/snap/determination',
+    medicaid:  '/v2/eligibility/medicaid/determination',
+    expedited: '/v2/eligibility/snap/expedited-screening'
+  }
+  var LOC_LABELS = {
+    'members[]':           'Person',
+    'household':           'Household',
+    'members[].income[]':  'Income',
+    'members[].expenses[]':'Expenses',
+    'members[].jobs[]':    'Jobs',
+    'members[].assets[]':  'Assets'
+  }
+  var LOC_ORDER = Object.keys(LOC_LABELS)
+  var SKIP_LOCS = { 'caregiverRelationships[]': true }
+
+  // ---- state ----------------------------------------------------------------
+  var program    = 'snap'
+  var values     = {}    // requestPath -> coerced value
+  var fieldCache = {}    // requestPath -> {field,label,location,type,options}
+  var allSeen    = []    // requestPath in first-seen order
+  var curMissing = new Set()
+  var curStatus  = null
+  var curDet     = null
+  var debounce   = null
+  var inflight   = false
+
+  // ---- helpers --------------------------------------------------------------
+  function esc(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
+  }
+
+  function coerce(raw, type) {
+    if (type === 'Boolean') return raw === 'true'
+    if (type === 'Int' || type === 'Dollar' || type === 'Percent') {
+      var n = parseFloat(raw)
+      return isNaN(n) ? undefined : n
+    }
+    return raw
+  }
+
+  function buildRequest() {
+    var req = { members: [{ id: 'demo' }], caregiverRelationships: [] }
+    Object.keys(values).forEach(function(path) {
+      var val = values[path]
+      if (val === undefined || val === null || val === '') return
+      if (path.indexOf('household.') === 0) {
+        req.household = req.household || {}
+        req.household[path.slice(10)] = val
+      } else if (path.indexOf('members[].') === 0) {
+        var rest = path.slice(10)
+        var m = rest.match(/^(\\w+)\\[\\]\\.(.+)$/)
+        if (m) {
+          var coll = m[1], field = m[2]
+          req.members[0][coll] = req.members[0][coll] || [{}]
+          req.members[0][coll][0][field] = val
+        } else {
+          req.members[0][rest] = val
+        }
+      }
+    })
+    return req
+  }
+
+  // ---- API call -------------------------------------------------------------
+  function callApi() {
+    var base = document.getElementById('base-url').value.replace(/\\/$/, '')
+    var tok  = document.getElementById('api-token').value.trim()
+    if (tok) {
+      var bad = false
+      for (var i = 0; i < tok.length; i++) { if (tok.charCodeAt(i) > 255) { bad = true; break } }
+      if (bad) { showError('Token contains non-ASCII characters — check for copy-paste artifacts.'); return }
+    }
+    inflight = true
+    renderStatus()
+    var headers = { 'Content-Type': 'application/json' }
+    if (tok) headers['Authorization'] = 'Bearer ' + tok
+    fetch(base + ENDPOINTS[program], { method: 'POST', headers: headers, body: JSON.stringify(buildRequest()) })
+      .then(function(r) { return r.json() })
+      .then(function(data) {
+        document.getElementById('raw-resp').textContent = JSON.stringify(data, null, 2)
+        var det = (data.determinations && data.determinations[0]) ? data.determinations[0] : data
+        curDet = det
+        curStatus = det.status || null
+
+        var missing = det.missingInputs || data.missingInputs || []
+        var newSet = new Set()
+        missing.forEach(function(m) {
+          newSet.add(m.requestPath)
+          if (!fieldCache[m.requestPath]) {
+            allSeen.push(m.requestPath)
+            fieldCache[m.requestPath] = { field: m.field, label: m.label, location: m.location, type: m.type, options: m.options || [] }
+          }
+        })
+        curMissing = newSet
+        inflight = false
+        render()
+      })
+      .catch(function(e) {
+        inflight = false
+        showError(e.message)
+      })
+  }
+
+  function showError(msg) {
+    curStatus = 'error'
+    document.getElementById('status-badge').className = 'status-badge s-error'
+    document.getElementById('status-badge').textContent = msg
+    document.getElementById('progress-line').textContent = ''
+    inflight = false
+  }
+
+  // ---- field actions --------------------------------------------------------
+  function setField(path, rawVal) {
+    var meta = fieldCache[path]
+    var coerced = (rawVal === '__clear__' || rawVal === '' || rawVal === undefined)
+      ? undefined : meta ? coerce(rawVal, meta.type) : rawVal
+    if (coerced === undefined) delete values[path]
+    else values[path] = coerced
+    // Update boolean button active states immediately
+    var card = document.querySelector('[data-card="' + path + '"]')
+    if (card) {
+      card.querySelectorAll('.bool-btn[data-bval]').forEach(function(b) {
+        var v = b.dataset.bval
+        var cur = values[path]
+        b.classList.toggle('active', (v === 'true' && cur === true) || (v === 'false' && cur === false))
+      })
+    }
+    clearTimeout(debounce)
+    debounce = setTimeout(callApi, 500)
+  }
+
+  function clearField(path) { setField(path, '__clear__') }
+
+  // ---- program switch -------------------------------------------------------
+  function setProgram(prog) {
+    program = prog
+    values = {}; fieldCache = {}; allSeen = []; curMissing = new Set()
+    curStatus = null; curDet = null
+    document.querySelectorAll('.prog-tab').forEach(function(b) {
+      b.classList.toggle('active', b.dataset.prog === prog)
+    })
+    document.getElementById('fields-container').innerHTML = '<p class="fields-hint">Loading...</p>'
+    callApi()
+  }
+
+  // ---- rendering ------------------------------------------------------------
+  function fieldState(path) {
+    var inMissing = curMissing.has(path)
+    var hasVal = path in values
+    if (inMissing && !hasVal)  return 'needed'
+    if (inMissing &&  hasVal)  return 'still-needed'
+    if (!inMissing && fieldCache[path]) return 'resolved'
+    return 'unknown'
+  }
+
+  function badgeText(s) {
+    return s === 'needed' ? 'needed' : s === 'still-needed' ? 'still needed' : s === 'resolved' ? '\\u2713 resolved' : ''
+  }
+
+  function buildInputHTML(path) {
+    var m = fieldCache[path]
+    if (!m) return ''
+    var val = values[path]
+    if (m.type === 'Boolean') {
+      var t = val === true, f = val === false
+      return '<div class="bool-btns">' +
+        '<button class="bool-btn' + (t ? ' active' : '') + '" data-path="' + path + '" data-bval="true">Yes</button>' +
+        '<button class="bool-btn' + (f ? ' active' : '') + '" data-path="' + path + '" data-bval="false">No</button>' +
+        (val !== undefined ? '<button class="bool-btn clr" data-path="' + path + '" data-bval="__clear__">✕</button>' : '') +
+        '</div>'
+    }
+    if (m.type === 'Enum' && m.options && m.options.length) {
+      var opts = '<option value="">-- select --</option>'
+      m.options.forEach(function(o) { opts += '<option value="' + esc(o) + '"' + (val === o ? ' selected' : '') + '>' + esc(o) + '</option>' })
+      return '<select data-path="' + path + '">' + opts + '</select>'
+    }
+    if (m.type === 'Date' || m.type === 'Day') {
+      return '<input type="date" data-path="' + path + '" value="' + esc(val || '') + '" />'
+    }
+    if (m.type === 'Int' || m.type === 'Dollar' || m.type === 'Percent') {
+      var pre = m.type === 'Dollar'   ? '<span class="num-affix pre">$</span>' : ''
+      var suf = m.type === 'Percent'  ? '<span class="num-affix suf">%</span>' : ''
+      var step = m.type === 'Dollar'  ? '0.01' : '1'
+      return '<div class="num-wrap">' + pre + '<input type="number" min="0" step="' + step + '" data-path="' + path + '" value="' + esc(val !== undefined ? val : '') + '" />' + suf + '</div>'
+    }
+    if (m.type === 'CollectionItem') return '<span class="field-note">member reference (use API directly)</span>'
+    return '<input type="text" data-path="' + path + '" value="' + esc(val || '') + '" />'
+  }
+
+  function getOrCreateGroup(loc) {
+    var gid = 'grp-' + loc.replace(/[^a-z0-9]/gi, '-')
+    var g = document.getElementById(gid)
+    if (!g) {
+      var container = document.getElementById('fields-container')
+      var hint = container.querySelector('.fields-hint')
+      if (hint) hint.remove()
+      g = document.createElement('div')
+      g.className = 'field-group'
+      g.id = gid
+      var lbl = LOC_LABELS[loc] || loc
+      g.innerHTML = '<h3 class="field-group-label">' + esc(lbl) + '</h3><div class="field-cards" id="cards-' + gid + '"></div>'
+      // Insert in LOC_ORDER order
+      var pos = LOC_ORDER.indexOf(loc)
+      var inserted = false
+      var groups = container.querySelectorAll('.field-group')
+      for (var i = 0; i < groups.length; i++) {
+        var otherLoc = groups[i].id.replace('grp-', '').replace(/-/g, function(_, o, s) {
+          // reconstruct loc from id is fragile — just append
+          return '-'
+        })
+        // simplified: just append in order groups appear
+        if (!inserted && pos >= 0) {
+          var otherPos = LOC_ORDER.findIndex(function(l) { return 'grp-' + l.replace(/[^a-z0-9]/gi, '-') === groups[i].id })
+          if (otherPos > pos) { container.insertBefore(g, groups[i]); inserted = true; break }
+        }
+      }
+      if (!inserted) container.appendChild(g)
+    }
+    return document.getElementById('cards-' + gid)
+  }
+
+  function renderNewFields() {
+    var existing = new Set()
+    document.querySelectorAll('[data-card]').forEach(function(el) { existing.add(el.dataset.card) })
+    allSeen.forEach(function(path) {
+      if (SKIP_LOCS[fieldCache[path] && fieldCache[path].location]) return
+      if (existing.has(path)) return
+      var loc = fieldCache[path] && fieldCache[path].location
+      if (!loc) return
+      var meta = fieldCache[path]
+      var state = fieldState(path)
+      var cardsEl = getOrCreateGroup(loc)
+      var card = document.createElement('div')
+      card.className = 'field-card field-card-' + state
+      card.dataset.card = path
+      card.innerHTML =
+        '<div class="field-card-header">' +
+          '<span class="field-label">' + esc(meta.label || path) + '</span>' +
+          '<span class="field-badge b-' + state + '">' + badgeText(state) + '</span>' +
+        '</div>' +
+        '<div class="field-input' + (state === 'resolved' ? ' input-resolved' : '') + '">' + buildInputHTML(path) + '</div>'
+      cardsEl.appendChild(card)
+    })
+  }
+
+  function updateFieldStates() {
+    document.querySelectorAll('[data-card]').forEach(function(card) {
+      var path = card.dataset.card
+      var state = fieldState(path)
+      card.className = 'field-card field-card-' + state
+      var badge = card.querySelector('.field-badge')
+      if (badge) { badge.className = 'field-badge b-' + state; badge.textContent = badgeText(state) }
+      var inp = card.querySelector('.field-input')
+      if (inp) inp.className = 'field-input' + (state === 'resolved' ? ' input-resolved' : '')
+    })
+  }
+
+  function renderStatus() {
+    var badge = document.getElementById('status-badge')
+    var prog  = document.getElementById('progress-line')
+    if (inflight) { badge.className = 'status-badge s-loading'; badge.textContent = 'Loading...'; prog.textContent = ''; return }
+    var s = curStatus || 'null'
+    badge.className = 'status-badge s-' + s
+    if (s === 'approved') {
+      badge.textContent = 'Approved' + (curDet && curDet.benefitAmount ? ' — $' + curDet.benefitAmount + '/mo' : '')
+    } else if (s === 'denied' || s === 'ineligible') {
+      var code = curDet && curDet.denialReasonCode ? ': ' + curDet.denialReasonCode.replace(/_/g, ' ') : ''
+      badge.textContent = (s === 'denied' ? 'Denied' : 'Ineligible') + code
+    } else if (s === 'pending') {
+      badge.textContent = 'Pending'
+    } else if (s === 'null') {
+      badge.textContent = '—'
+    } else {
+      badge.textContent = s
+    }
+    var resolved = allSeen.filter(function(p) { return !curMissing.has(p) && fieldCache[p] && !SKIP_LOCS[fieldCache[p].location] }).length
+    var needed   = curMissing.size
+    if (resolved > 0 || needed > 0) {
+      prog.innerHTML =
+        (resolved > 0 ? '<span class="prog-res">\\u2713 ' + resolved + ' resolved</span>' : '') +
+        (resolved > 0 && needed > 0 ? ' &nbsp;&middot;&nbsp; ' : '') +
+        (needed   > 0 ? '<span class="prog-need">' + needed + ' still needed</span>' : '')
+    } else {
+      prog.textContent = ''
+    }
+  }
+
+  function render() {
+    renderStatus()
+    renderNewFields()
+    updateFieldStates()
+  }
+
+  // ---- event delegation -----------------------------------------------------
+  var fc = document.getElementById('fields-container')
+  fc.addEventListener('change', function(e) {
+    var path = e.target.dataset && e.target.dataset.path
+    if (!path) return
+    setField(path, e.target.value)
+  })
+  fc.addEventListener('input', function(e) {
+    var path = e.target.dataset && e.target.dataset.path
+    if (!path || e.target.type !== 'number') return
+    clearTimeout(debounce)
+    debounce = setTimeout(function() { setField(path, e.target.value) }, 500)
+  })
+  fc.addEventListener('click', function(e) {
+    var btn = e.target.closest && e.target.closest('button[data-bval]')
+    if (!btn) return
+    var path = btn.dataset.path, bval = btn.dataset.bval
+    setField(path, bval)
+  })
+
+  // program tabs
+  document.querySelector('.prog-tabs').addEventListener('click', function(e) {
+    var btn = e.target.closest('.prog-tab')
+    if (!btn) return
+    setProgram(btn.dataset.prog)
+  })
+
+  // reset
+  document.getElementById('reset-btn').addEventListener('click', function() {
+    setProgram(program)
+  })
+
+  // ---- init -----------------------------------------------------------------
+  callApi()
+</script>
+</body>
+</html>
+`
+writeFileSync(`${outDir}/demo.html`, demoHtml)
 
 // 404 page that points lost visitors at the index.
 const notFound = `<!DOCTYPE html>
