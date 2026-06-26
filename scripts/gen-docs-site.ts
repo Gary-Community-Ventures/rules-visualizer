@@ -1553,11 +1553,10 @@ const demoHtml = `<!DOCTYPE html>
         var cardsEl = document.getElementById('household-cards')
         if (!cardsEl) {
           var fc3 = document.getElementById('fields-container')
-          var addBtn = document.getElementById('add-person-btn')
           var hsec = document.createElement('div')
           hsec.className = 'household-section'
           hsec.innerHTML = '<h3 class="household-label">Household</h3><div class="field-cards" id="household-cards"></div>'
-          fc3.insertBefore(hsec, addBtn || fc3.firstChild)
+          fc3.insertBefore(hsec, fc3.querySelector('.members-bar') || fc3.firstChild)
           cardsEl = document.getElementById('household-cards')
         }
         if (cardsEl) cardsEl.insertAdjacentHTML('beforeend', buildCardHTML(cp, 'household', 0, 0))
