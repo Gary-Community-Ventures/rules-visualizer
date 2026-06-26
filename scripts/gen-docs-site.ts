@@ -1747,6 +1747,15 @@ const demoHtml = `<!DOCTYPE html>
   })
   document.getElementById('reset-btn').addEventListener('click', function() { setProgram(program) })
 
+  var tokIn = document.getElementById('api-token')
+  var saved = localStorage.getItem('demo-bearer-token')
+  if (saved) tokIn.value = saved
+  tokIn.addEventListener('input', function() {
+    var v = tokIn.value.trim()
+    if (v) localStorage.setItem('demo-bearer-token', v)
+    else   localStorage.removeItem('demo-bearer-token')
+  })
+
   // ---- init -----------------------------------------------------------------
   fullRender()
   callApi()
