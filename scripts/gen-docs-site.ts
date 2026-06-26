@@ -1556,7 +1556,8 @@ const demoHtml = `<!DOCTYPE html>
     if (hCards) html += '<div class="household-section"><h3 class="household-label">Household</h3><div class="field-cards" id="household-cards">' + hCards + '</div></div>'
     html += '<div class="members-bar"><span class="members-bar-label">Members</span><button class="add-person-btn" id="add-person-btn">+ Add person</button></div>'
     for (var i = 0; i < numMembers; i++) html += memberSectionHTML(i)
-    html += caregiverRelSectionHTML()
+    var hasCaregiverFields = allSeen.some(function(cp) { var m = fieldCache[cp]; return m && m.location === 'caregiverRelationships[]' })
+    if (hasCaregiverFields || caregiverRelCount > 0) html += caregiverRelSectionHTML()
     if (!hCards && !allSeen.length) html = '<p class="fields-hint">Loading...</p>' + html
     fc2.innerHTML = html
   }
@@ -1595,6 +1596,12 @@ const demoHtml = `<!DOCTYPE html>
         }
 
       } else if (scope === 'caregiverRel') {
+        if (!document.getElementById('caregiver-section')) {
+          var fc2b = document.getElementById('fields-container')
+          var csec = document.createElement('div')
+          csec.innerHTML = caregiverRelSectionHTML()
+          fc2b.appendChild(csec.firstChild)
+        }
         for (var cri = 0; cri < caregiverRelCount; cri++) {
           var fc4 = false
           document.querySelectorAll('.field-card[data-scope="caregiverRel"][data-row="' + cri + '"]').forEach(function(el) { if (el.dataset.cpath === cp) fc4 = true })
