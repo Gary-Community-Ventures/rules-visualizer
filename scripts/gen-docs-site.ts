@@ -1013,6 +1013,14 @@ writeFileSync(`${outDir}/guide.html`, guideHtml)
 // progressively as the user fills fields, showing resolved vs still-needed
 // in real time.
 // ---------------------------------------------------------------------------
+const fieldDescMap: Record<string, string> = {}
+for (const group of engine.groups) {
+  for (const f of (group as { fields: Array<{ requestPath: string; definition?: string; derivation?: string }> }).fields) {
+    const desc = f.definition || f.derivation || ''
+    if (desc) fieldDescMap[f.requestPath] = desc
+  }
+}
+
 const demoHtml = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1113,6 +1121,15 @@ const demoHtml = `<!DOCTYPE html>
     .field-note { font-size: 0.78rem; color: #9ca3af; font-style: italic; }
     .field-path { font-size: 0.67rem; color: #9ca3af; font-family: ui-monospace, monospace;
       margin: 0.1rem 0 0.35rem; word-break: break-all; }
+    .field-def { margin: 0 0 0.3rem; border: none; }
+    .field-def summary { font-size: 0.72rem; color: #9ca3af; cursor: pointer; user-select: none;
+      list-style: none; display: inline-flex; align-items: center; gap: 0.2rem; }
+    .field-def summary::-webkit-details-marker { display: none; }
+    .field-def summary::before { content: '\\2139'; font-style: normal; }
+    .field-def[open] summary { color: #6b7280; }
+    .field-def .def-body { font-size: 0.75rem; color: #6b7280; margin-top: 0.2rem;
+      line-height: 1.45; padding: 0.4rem 0.5rem; background: #f8fafc;
+      border-radius: 5px; border: 1px solid #e5e7eb; }
     .fields-hint { color: #9ca3af; font-size: 0.9rem; text-align: center; padding: 2.5rem 0; }
 
     /* response details */
@@ -1218,6 +1235,7 @@ const demoHtml = `<!DOCTYPE html>
   }
   var SUBCOLL_KEYS  = ['income', 'expenses', 'jobs', 'assets']
   var SUBCOLL_LABELS = { income: 'Income', expenses: 'Expenses', jobs: 'Jobs', assets: 'Assets' }
+  var FIELD_DESCS = ${JSON.stringify(fieldDescMap)}
   var SKIP_LOCS = {}
 
   // ---- state ----------------------------------------------------------------
@@ -1445,12 +1463,17 @@ const demoHtml = `<!DOCTYPE html>
     var state = fieldStateFor(cpath, scope, mi, ri)
     var hint = meta.type
     if (meta.options && meta.options.length) hint += ': ' + meta.options.join(', ')
+    var desc = FIELD_DESCS[cpath] || ''
+    var defHtml = desc
+      ? '<details class="field-def"><summary> what is this?</summary><div class="def-body">' + esc(desc) + '</div></details>'
+      : ''
     return '<div class="field-card field-card-' + state + '" data-cpath="' + esc(cpath) + '" data-scope="' + scope + '" data-member="' + mi + '" data-row="' + ri + '">' +
       '<div class="field-card-header">' +
         '<span class="field-label" title="' + esc(hint) + '">' + esc(meta.label || cpath) + '</span>' +
         '<span class="field-badge b-' + state + '">' + badgeText(state) + '</span>' +
       '</div>' +
       '<div class="field-path">' + esc(cpath) + '</div>' +
+      defHtml +
       '<div class="field-input">' + buildInputHTML(scope, mi, ri, cpath) + '</div>' +
     '</div>'
   }
