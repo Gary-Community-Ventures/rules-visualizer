@@ -724,6 +724,19 @@ const guideHtml = `<!DOCTYPE html>
 }</pre>
         </div>
       </div>
+      <div class="callout">
+        <strong>This top-level <code>missingInputs</code> is a household-wide
+        union, not a per-person list.</strong> It is a single de-duplicated
+        checklist of every field still needed <em>somewhere</em> in the
+        household, written in the request vocabulary — so a path like
+        <code>members[].income[].type</code> names the <em>field</em>, not a
+        specific member. The <code>[]</code> is the collection-row shape from
+        the request, not an index. To see <em>which person</em> each
+        member-level field belongs to, read
+        <a href="#per-member"><code>missingInputsByMember</code></a> below.
+        (With a single member it is unambiguous; with several, the per-member
+        breakdown is what you want.)
+      </div>
 
       <h2>Reading a missingInputs entry</h2>
       <p>Each entry in <code>missingInputs</code> tells you where to set the value:</p>
@@ -783,12 +796,20 @@ const guideHtml = `<!DOCTYPE html>
         </div>
       </div>
 
-      <h2>Per-member inputs — missingInputsByMember</h2>
+      <h2 id="per-member">Per-member inputs — missingInputsByMember</h2>
       <p>
         When members are provided, the response also includes
         <code>missingInputsByMember</code>: a breakdown of which fields are missing
         for each specific member. This lets you show targeted prompts per person rather
         than a flat combined list.
+      </p>
+      <p>
+        Member-level fields appear in <em>both</em> places: once in the top-level
+        <code>missingInputs</code> union (the household-wide checklist) and again,
+        attributed to the owner, under <code>missingInputsByMember</code>. Treat the
+        per-member map as the source of truth for who-needs-what, and the top-level
+        union as the home for household-scoped fields (<code>household.*</code>) that
+        belong to no single member.
       </p>
       <div class="example">
         <div class="example-col">
@@ -839,6 +860,17 @@ const guideHtml = `<!DOCTYPE html>
         of his own). Until every member has acknowledged a sub-collection, the collection
         stays unprovided and its fields surface in the top-level <code>missingInputs</code>
         union rather than per-member.
+      </div>
+      <div class="callout">
+        <strong>Granularity stops at the member.</strong> Attribution is per
+        <em>member</em>, not per <em>row</em>: if a member has two income rows and one
+        is missing <code>amount</code>, the gap is reported once as
+        <code>members[].income[].amount</code> under that member — the response does not
+        say <em>which</em> row. Since you sent the rows, you already know which one is
+        incomplete. We may refine this later (e.g. tagging the entry with the
+        contributing row's <code>id</code>, or splitting the top-level union so it
+        carries only household-scoped fields); for now treat both behaviours as
+        subject to change.
       </div>
 
       <h2>Resolved determinations</h2>
