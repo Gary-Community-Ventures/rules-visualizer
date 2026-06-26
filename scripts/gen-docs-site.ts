@@ -1202,7 +1202,7 @@ const demoHtml = `<!DOCTYPE html>
   <h1>Eligibility walkthrough</h1>
   <p class="lede">
     Fill in fields and watch the determination converge. Each API call returns exactly which
-    inputs are still needed — resolved fields turn green, new ones may appear as others are filled.
+    inputs are missing — resolved fields turn green, new ones may appear as others are filled.
   </p>
 
   <div class="config-bar">
@@ -1436,8 +1436,8 @@ const demoHtml = `<!DOCTYPE html>
     return 'auto-resolved'
   }
   function badgeText(s) {
-    return s === 'needed'      ? 'needed'
-      : s === 'still-needed'  ? 'still needed'
+    return s === 'needed'      ? 'missing'
+      : s === 'still-needed'  ? 'still missing'
       : s === 'resolved'      ? '\\u2713 provided'
       : s === 'auto-resolved' ? 'not needed' : ''
   }
@@ -1694,7 +1694,7 @@ const demoHtml = `<!DOCTYPE html>
           var m = fieldCache[cp]
           if (m && m.location === loc && curMissing.has(cp)) needed++
         })
-        hint.textContent = needed > 0 ? needed + ' field' + (needed === 1 ? '' : 's') + ' needed — add a row' : ''
+        hint.textContent = needed > 0 ? needed + ' field' + (needed === 1 ? '' : 's') + ' missing — add a row' : ''
       }
     }
   }
@@ -1724,7 +1724,7 @@ const demoHtml = `<!DOCTYPE html>
     var parts = []
     if (provided > 0) parts.push('<span class="prog-res">\\u2713 ' + provided + ' provided</span>')
     if (autoRes > 0)  parts.push('<span style="color:#9ca3af">' + autoRes + ' not needed</span>')
-    if (curMissing.size > 0) parts.push('<span class="prog-need">' + curMissing.size + ' still needed</span>')
+    if (curMissing.size > 0) parts.push('<span class="prog-need">' + curMissing.size + ' missing</span>')
     prog.innerHTML = parts.length ? parts.join(' &nbsp;&middot;&nbsp; ') : ''
   }
 
