@@ -1335,6 +1335,7 @@ const demoHtml = `<!DOCTYPE html>
 
   // ---- API call -------------------------------------------------------------
   function callApi() {
+    saveState()
     var base = document.getElementById('base-url').value.replace(/\\/$/, '')
     var tok  = document.getElementById('api-token').value.trim()
     if (tok) {
@@ -1787,7 +1788,11 @@ const demoHtml = `<!DOCTYPE html>
     var btn = e.target.closest && e.target.closest('button'); if (!btn) return
     if (btn.dataset.bval !== undefined) {
       var scope = btn.dataset.scope, field = btn.dataset.field
-      if (scope && field) setVal(scope, parseInt(btn.dataset.member||'0'), parseInt(btn.dataset.row||'0'), field, btn.dataset.bval)
+      if (scope && field) {
+        var alreadyActive = btn.classList.contains('active')
+        var bval = (alreadyActive && btn.dataset.bval !== '__clear__') ? '__clear__' : btn.dataset.bval
+        setVal(scope, parseInt(btn.dataset.member||'0'), parseInt(btn.dataset.row||'0'), field, bval)
+      }
       return
     }
     if (btn.dataset.addColl) { addRow(parseInt(btn.dataset.member||'0'), btn.dataset.addColl); return }
@@ -1802,7 +1807,10 @@ const demoHtml = `<!DOCTYPE html>
   document.querySelector('.prog-tabs').addEventListener('click', function(e) {
     var btn = e.target.closest('.prog-tab'); if (!btn) return; setProgram(btn.dataset.prog)
   })
-  document.getElementById('reset-btn').addEventListener('click', function() { setProgram(program) })
+  document.getElementById('reset-btn').addEventListener('click', function() {
+    try { localStorage.removeItem('demo-state') } catch(e) {}
+    setProgram(program)
+  })
 
   var tokIn = document.getElementById('api-token')
   var saved = localStorage.getItem('demo-bearer-token')
@@ -1813,7 +1821,37 @@ const demoHtml = `<!DOCTYPE html>
     else   localStorage.removeItem('demo-bearer-token')
   })
 
+  // ---- state persistence ----------------------------------------------------
+  function saveState() {
+    try {
+      localStorage.setItem('demo-state', JSON.stringify({
+        program: program, numMembers: numMembers, memberSeq: memberSeq,
+        memberIds: memberIds, memberVals: memberVals,
+        collCounts: collCounts, collVals: collVals, householdVals: householdVals,
+        caregiverRelCount: caregiverRelCount, caregiverRelVals: caregiverRelVals,
+        noCaregiverRels: noCaregiverRels
+      }))
+    } catch(e) {}
+  }
+  function loadState() {
+    try {
+      var raw = localStorage.getItem('demo-state'); if (!raw) return false
+      var s = JSON.parse(raw); if (!s || typeof s !== 'object') return false
+      program = s.program || 'snap'
+      numMembers = s.numMembers || 1; memberSeq = s.memberSeq || 1
+      memberIds = s.memberIds || ['person-1']; memberVals = s.memberVals || [{}]
+      collCounts = s.collCounts || [{ income: 0, expenses: 0, jobs: 0, assets: 0 }]
+      collVals   = s.collVals   || [{ income: [], expenses: [], jobs: [], assets: [] }]
+      householdVals = s.householdVals || {}
+      caregiverRelCount = s.caregiverRelCount || 0; caregiverRelVals = s.caregiverRelVals || []
+      noCaregiverRels = !!s.noCaregiverRels
+      document.querySelectorAll('.prog-tab').forEach(function(b) { b.classList.toggle('active', b.dataset.prog === program) })
+      return true
+    } catch(e) { return false }
+  }
+
   // ---- init -----------------------------------------------------------------
+  loadState()
   fullRender()
   callApi()
 </script>
