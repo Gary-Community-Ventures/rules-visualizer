@@ -1320,10 +1320,12 @@ const demoHtml = `<!DOCTYPE html>
       for (var ci = 0; ci < SUBCOLL_KEYS.length; ci++) {
         var key = SUBCOLL_KEYS[ci]
         var cnt = (collCounts[i] && collCounts[i][key]) || 0
-        mReq[key] = []
-        for (var jj = 0; jj < cnt; jj++) {
-          var row = (collVals[i] && collVals[i][key] && collVals[i][key][jj]) || {}
-          var r = {}; Object.keys(row).forEach(function(k) { r[k] = row[k] }); mReq[key].push(r)
+        if (cnt > 0) {
+          mReq[key] = []
+          for (var jj = 0; jj < cnt; jj++) {
+            var row = (collVals[i] && collVals[i][key] && collVals[i][key][jj]) || {}
+            var r = {}; Object.keys(row).forEach(function(k) { r[k] = row[k] }); mReq[key].push(r)
+          }
         }
       }
       req.members.push(mReq)
