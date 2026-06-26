@@ -225,6 +225,29 @@ test('expenses: [] asserts no expenses — expense fields do not appear in missi
   assert.equal(expenseFields, 0, 'expenses: [] — no expense fields in missingInputs')
 })
 
+test('caregiverRelationships: [] does not cause a false denial when member flags are incomplete', async () => {
+  // Providing caregiverRelationships: [] marks the collection as "no relationships"
+  // but household-membership flags (isSeparateAndApart, isRoomer, etc.) are still
+  // absent — the engine cannot determine householdSize and the Switch's default
+  // True → Ineligible fires spuriously. The determination must stay pending, not denied.
+  const res = await request(app).post(URL).send({
+    members: [
+      {
+        id: 'head',
+        dateOfBirth: '1990-03-15',
+        citizenshipImmigrationStatus: 'citizen',
+        isHeadOfHousehold: true,
+        income: [{ type: 'wages_and_salaries', amount: 1200, frequency: 'monthly' }],
+      },
+    ],
+    caregiverRelationships: [],
+  })
+  assert.equal(res.status, 200)
+  const det = res.body.determinations[0] as Record<string, unknown>
+  assert.equal(det.status, 'pending', 'caregiverRelationships: [] alone must not produce a denial')
+  assert.ok(Array.isArray(det.missingInputs) && (det.missingInputs as unknown[]).length > 0, 'missingInputs present')
+})
+
 test('an empty body is valid — returns pending with inputs needed', async () => {
   const res = await request(app).post(URL).send({})
   assert.equal(res.status, 200)

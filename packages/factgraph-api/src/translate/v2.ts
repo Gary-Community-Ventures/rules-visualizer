@@ -148,10 +148,21 @@ export function snapDetermination(
     status = 'approved'
   } else if (category === 'Ineligible') {
     const denial = deriveDenial(query)
-    status = denial.status
-    denialReasonCode = denial.reasonCode
-    const steps = toExplanation(query)
-    if (steps.length > 0) explanation = steps
+    // The Switch's default `True → Ineligible` case fires when every preceding
+    // When condition (BCE, ECE, SE) is null/pending rather than definitively
+    // false — for example when household-membership flags like isSeparateAndApart
+    // are absent and the engine can't compute householdSize. A real denial always
+    // has a recognized gate on the decisive path (reasonCode ≠ 'other'). If the
+    // trace has no recognized gate AND the query is still incomplete, treat the
+    // result as pending rather than committed denial.
+    if (denial.reasonCode === 'other' && query.status === 'incomplete') {
+      status = 'pending'
+    } else {
+      status = denial.status
+      denialReasonCode = denial.reasonCode
+      const steps = toExplanation(query)
+      if (steps.length > 0) explanation = steps
+    }
   } else {
     status = 'pending'
   }
