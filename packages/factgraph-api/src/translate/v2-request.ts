@@ -218,13 +218,18 @@ export function translateRequest(req: V2Request, model: Model, asOf: Date): Tran
     }
   })
 
-  for (const cr of req.caregiverRelationships ?? []) {
-    const root = anyEntryRoot(maps, 'caregiverRelationships[]')
-    if (!root) break
-    ;(rowsByRoot[root] ??= []).push({
-      id: (cr.id as string) ?? `caregiver-${(rowsByRoot[root]?.length ?? 0)}`,
-      ...mapObject(cr, 'caregiverRelationships[]', new Set(['id']), maps, indexOf, asOf, warnings),
-    })
+  if (Array.isArray(req.caregiverRelationships)) {
+    // Provided (even as []) means "this is the complete list" — seed the root
+    // so the engine sees an empty collection rather than an unknown one.
+    const crRoot = anyEntryRoot(maps, 'caregiverRelationships[]')
+    if (crRoot) rowsByRoot[crRoot] ??= []
+    for (const cr of req.caregiverRelationships) {
+      if (!crRoot) break
+      rowsByRoot[crRoot].push({
+        id: (cr.id as string) ?? `caregiver-${rowsByRoot[crRoot].length}`,
+        ...mapObject(cr, 'caregiverRelationships[]', new Set(['id']), maps, indexOf, asOf, warnings),
+      })
+    }
   }
 
   if (req.household) {
