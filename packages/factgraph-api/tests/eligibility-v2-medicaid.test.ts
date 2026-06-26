@@ -203,6 +203,34 @@ test('income: [] asserts no income — resolves without income fields in missing
   assert.equal(incomeInEmpty, 0, 'income: [] — no income fields in missingInputs')
 })
 
+test('a member pending only on shared fields is not blamed for another member\'s gaps', async () => {
+  // alice fully specifies her own member-level fields (dateOfBirth) but neither
+  // member acknowledges income, so the household income is unknown and both are
+  // pending on that shared field. bob is additionally missing dateOfBirth.
+  // alice's per-member list must NOT include bob's member-level dateOfBirth.
+  const res = await request(app).post(URL).send({
+    members: [
+      { id: 'alice', dateOfBirth: '1990-01-01' },
+      { id: 'bob' },
+    ],
+  })
+  assert.equal(res.status, 200)
+  const dets = res.body.determinations as Array<Record<string, unknown>>
+  const alice = dets.find((d) => d.memberId === 'alice')!
+  const bob = dets.find((d) => d.memberId === 'bob')!
+  assert.equal(alice.status, 'pending')
+  assert.equal(bob.status, 'pending')
+
+  const aliceFields = ((alice.missingInputs ?? []) as Array<{ field: string }>).map((m) => m.field)
+  const bobFields = ((bob.missingInputs ?? []) as Array<{ field: string }>).map((m) => m.field)
+  // alice provided her dateOfBirth; she must not be told to provide it again.
+  assert.ok(!aliceFields.includes('dateOfBirth'), `alice should not need dateOfBirth; got: ${aliceFields.join(', ')}`)
+  // the shared income gap still surfaces for alice.
+  assert.ok(aliceFields.includes('amount'), `alice should still need shared income; got: ${aliceFields.join(', ')}`)
+  // bob's own member-level gap is attributed to bob.
+  assert.ok(bobFields.includes('dateOfBirth'), `bob should need dateOfBirth; got: ${bobFields.join(', ')}`)
+})
+
 // ---------------------------------------------------------------------------
 // Validation and errors
 // ---------------------------------------------------------------------------

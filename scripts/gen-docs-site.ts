@@ -815,10 +815,7 @@ const guideHtml = `<!DOCTYPE html>
   <span class="k">"determinations"</span>: [{
     <span class="k">"status"</span>: <span class="s">"pending"</span>,
     <span class="k">"missingInputsByMember"</span>: {
-      <span class="k">"alice"</span>: [
-        <span class="c">// citizenshipImmigrationStatus not here</span>
-        <span class="c">// (alice already provided it)</span>
-      ],
+      <span class="c">// "alice" absent — only members with gaps appear</span>
       <span class="k">"bob"</span>: [
         {
           <span class="k">"requestPath"</span>:
@@ -837,9 +834,11 @@ const guideHtml = `<!DOCTYPE html>
       <div class="callout">
         <strong>Income rows are attributed to the member who contributed them.</strong>
         If alice provides an income row missing <code>amount</code>, that field appears in
-        <code>missingInputsByMember.alice</code> but not in bob's list. A member with no
-        income rows at all does not receive income-row fields — they appear only in the
-        top-level <code>missingInputs</code> union.
+        <code>missingInputsByMember.alice</code> but not in bob's list — but only once
+        bob has explicitly acknowledged his income status (<code>income: []</code> or rows
+        of his own). Until every member has acknowledged a sub-collection, the collection
+        stays unprovided and its fields surface in the top-level <code>missingInputs</code>
+        union rather than per-member.
       </div>
 
       <h2>Resolved determinations</h2>
@@ -1262,6 +1261,7 @@ const demoHtml = `<!DOCTYPE html>
   var fieldCache        = {}
   var allSeen           = []
   var curMissing        = new Set()
+  var curMissingByMember = new Map()
   var curStatus         = null
   var curDet            = null
   var debounce          = null
@@ -1366,12 +1366,20 @@ const demoHtml = `<!DOCTYPE html>
         var newSet = new Set(), prevCount = allSeen.length
         missing.forEach(function(m) {
           newSet.add(m.requestPath)
-          if (!fieldCache[m.requestPath]) {
-            allSeen.push(m.requestPath)
-            fieldCache[m.requestPath] = { field: m.field, label: m.label, location: m.location, type: m.type, options: m.options || [] }
-          }
+          if (!fieldCache[m.requestPath]) allSeen.push(m.requestPath)
+          // Always refresh metadata so a persisted (possibly stale) cache entry
+          // picks up the latest label/type/options from the live response.
+          fieldCache[m.requestPath] = { field: m.field, label: m.label, location: m.location, type: m.type, options: m.options || [] }
         })
-        curMissing = newSet; inflight = false
+        curMissing = newSet
+        curMissingByMember = new Map()
+        var byMember = det.missingInputsByMember || {}
+        Object.keys(byMember).forEach(function(mid) {
+          var s = new Set()
+          ;(byMember[mid] || []).forEach(function(m) { s.add(m.requestPath) })
+          curMissingByMember.set(mid, s)
+        })
+        inflight = false
         if (allSeen.length > prevCount) renderNewCards()
         else updateStates()
         renderStatus()
@@ -1419,7 +1427,7 @@ const demoHtml = `<!DOCTYPE html>
     collVals   = [{ income: [], expenses: [], jobs: [], assets: [] }]
     householdVals = {}; caregiverRelCount = 0; caregiverRelVals = []; noCaregiverRels = false
     noSubcoll = [{ income: false, expenses: false, jobs: false, assets: false }]
-    fieldCache = {}; allSeen = []; curMissing = new Set()
+    fieldCache = {}; allSeen = []; curMissing = new Set(); curMissingByMember = new Map()
     curStatus = null; curDet = null
     document.querySelectorAll('.prog-tab').forEach(function(b) { b.classList.toggle('active', b.dataset.prog === prog) })
     fullRender(); callApi()
@@ -1428,8 +1436,15 @@ const demoHtml = `<!DOCTYPE html>
   // ---- field state ----------------------------------------------------------
   function fieldStateFor(cpath, scope, mi, ri) {
     if (!fieldCache[cpath]) return 'needed'
-    var inM = curMissing.has(cpath)
     var hasV = getVal(scope, mi, ri, fieldCache[cpath].field) !== undefined
+    var inM
+    var isMemberOwned = scope === 'member' || SUBCOLL_KEYS.indexOf(scope) !== -1
+    if (isMemberOwned && curMissingByMember.size > 0) {
+      var memberSet = curMissingByMember.get(memberIds[mi])
+      inM = memberSet ? memberSet.has(cpath) : false
+    } else {
+      inM = curMissing.has(cpath)
+    }
     if (inM && !hasV)  return 'needed'
     if (inM &&  hasV)  return 'still-needed'
     if (!inM && hasV)  return 'resolved'
@@ -1878,7 +1893,8 @@ const demoHtml = `<!DOCTYPE html>
         memberIds: memberIds, memberVals: memberVals,
         collCounts: collCounts, collVals: collVals, householdVals: householdVals,
         caregiverRelCount: caregiverRelCount, caregiverRelVals: caregiverRelVals,
-        noCaregiverRels: noCaregiverRels, noSubcoll: noSubcoll
+        noCaregiverRels: noCaregiverRels, noSubcoll: noSubcoll,
+        allSeen: allSeen, fieldCache: fieldCache
       }))
     } catch(e) {}
   }
@@ -1895,6 +1911,8 @@ const demoHtml = `<!DOCTYPE html>
       caregiverRelCount = s.caregiverRelCount || 0; caregiverRelVals = s.caregiverRelVals || []
       noCaregiverRels = !!s.noCaregiverRels
       noSubcoll = s.noSubcoll || Array.from({length: numMembers}, function() { return { income: false, expenses: false, jobs: false, assets: false } })
+      if (Array.isArray(s.allSeen)) allSeen = s.allSeen
+      if (s.fieldCache && typeof s.fieldCache === 'object') Object.assign(fieldCache, s.fieldCache)
       document.querySelectorAll('.prog-tab').forEach(function(b) { b.classList.toggle('active', b.dataset.prog === program) })
       return true
     } catch(e) { return false }

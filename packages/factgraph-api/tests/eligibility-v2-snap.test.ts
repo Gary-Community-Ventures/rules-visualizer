@@ -92,14 +92,14 @@ test('missingInputsByMember is absent when no members are sent', async () => {
 // ---------------------------------------------------------------------------
 
 test('income row with a missing field is attributed to the member who owns that row', async () => {
-  // Alice sends an income row but omits `amount`. Bob sends no income rows.
-  // Only Alice should have `amount` in her per-member list; Bob should not,
-  // because the missing income amount is not specifically attributable to him.
+  // Alice sends an income row but omits `amount`. Bob sends income: [] (no income).
+  // Both members have acknowledged income, so the collection is provided.
+  // Only Alice should have `amount` in her per-member list; Bob should not.
   const res = await request(app).post(URL).send({
     members: [
       { id: 'alice', dateOfBirth: '1990-01-01',
         income: [{ type: 'wages_and_salaries', frequency: 'monthly' }] },
-      { id: 'bob', dateOfBirth: '1985-06-15' },
+      { id: 'bob', dateOfBirth: '1985-06-15', income: [] },
     ],
   })
   assert.equal(res.status, 200)
@@ -120,13 +120,13 @@ test('income row with a missing field is attributed to the member who owns that 
 })
 
 test('complete income row produces no income fields in that member\'s per-member list', async () => {
-  // Alice provides a fully-populated income row; Bob has no income rows.
+  // Alice provides a fully-populated income row; Bob explicitly has no income.
   // Neither should have income fields in their per-member list.
   const res = await request(app).post(URL).send({
     members: [
       { id: 'alice', dateOfBirth: '1990-01-01',
         income: [{ type: 'wages_and_salaries', amount: 1200, frequency: 'monthly' }] },
-      { id: 'bob', dateOfBirth: '1985-06-15' },
+      { id: 'bob', dateOfBirth: '1985-06-15', income: [] },
     ],
   })
   assert.equal(res.status, 200)
@@ -170,12 +170,12 @@ test('two members with different income gaps each receive their own attribution'
 })
 
 test('expense row attribution follows the same logic as income rows', async () => {
-  // Alice has an expense row missing `amount`; Bob has no expense rows.
+  // Alice has an expense row missing `amount`; Bob explicitly has no expenses.
   const res = await request(app).post(URL).send({
     members: [
       { id: 'alice', dateOfBirth: '1990-01-01',
         expenses: [{ type: 'shelter' }] },  // missing: amount
-      { id: 'bob', dateOfBirth: '1985-06-15' },
+      { id: 'bob', dateOfBirth: '1985-06-15', expenses: [] },
     ],
   })
   assert.equal(res.status, 200)
@@ -187,6 +187,33 @@ test('expense row attribution follows the same logic as income rows', async () =
   const bobFields   = (byMember.bob   ?? []).map((m) => m.field as string)
   assert.ok(aliceFields.includes('amount'), 'alice: expense amount in her per-member list')
   assert.ok(!bobFields.includes('amount'),  'bob: expense amount not attributed (no expense rows)')
+})
+
+test('income collection is treated as unprovided when not all members acknowledge it', async () => {
+  // Alice provides complete income; Bob says nothing about income.
+  // Because Bob hasn't acknowledged the collection, the whole /incomes
+  // collection is withheld from the engine (treating Bob as "zero income"
+  // would be wrong). Income fields surface in the global missingInputs but
+  // are not attributed to any specific member.
+  const res = await request(app).post(URL).send({
+    members: [
+      { id: 'alice', dateOfBirth: '1990-01-01',
+        income: [{ type: 'wages_and_salaries', amount: 1200, frequency: 'monthly' }] },
+      { id: 'bob', dateOfBirth: '1985-06-15' },
+    ],
+  })
+  assert.equal(res.status, 200)
+  const det = res.body.determinations[0] as Record<string, unknown>
+
+  const topLevel = (det.missingInputs ?? []) as Array<{ location: string }>
+  const incomeGlobal = topLevel.filter((m) => m.location === 'members[].income[]').length
+  assert.ok(incomeGlobal > 0, 'income fields surface globally when not all members acknowledged income')
+
+  const byMember = det.missingInputsByMember as Record<string, Array<{ location: string }>> | undefined
+  for (const entries of Object.values(byMember ?? {})) {
+    const incomeInMember = entries.filter((m) => m.location === 'members[].income[]').length
+    assert.equal(incomeInMember, 0, 'income fields not attributed per-member when collection is unprovided')
+  }
 })
 
 // ---------------------------------------------------------------------------

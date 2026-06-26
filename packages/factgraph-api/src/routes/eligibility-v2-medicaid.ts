@@ -58,17 +58,18 @@ router.post('/determination', (req, res) => {
     // Per-member attribution: combine this member's member-level missing fields
     // with shared household-level inputs (income rows, etc.) from the top-level
     // union. Falls back to the full union when no per-member breakdown exists.
+    // Shared (non-member-level) fields apply to every member; member-level
+    // fields (/members/*/…) belong only to the member who still needs them.
+    // Combine this member's own missing fields with the shared ones. When this
+    // member has no member-level gaps (perMember undefined) they get the shared
+    // fields ONLY — never another member's member-level fields, which is what a
+    // naive fallback to the full union would wrongly attribute here.
     const perMember =
       det.memberId ? query.missingInputsByMember?.[det.memberId] : undefined
-    let raw: typeof query.missingInputs
-    if (perMember) {
-      const sharedMissing = (query.missingInputs ?? []).filter(
-        (m) => !m.path.startsWith('/members/*/')
-      )
-      raw = [...perMember, ...sharedMissing]
-    } else {
-      raw = query.missingInputs ?? []
-    }
+    const sharedMissing = (query.missingInputs ?? []).filter(
+      (m) => !m.path.startsWith('/members/*/')
+    )
+    const raw = [...(perMember ?? []), ...sharedMissing]
     const friendly = friendlyMissing(raw, model)
     if (friendly.length) det.missingInputs = friendly
   }

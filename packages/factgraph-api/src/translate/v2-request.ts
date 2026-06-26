@@ -188,6 +188,16 @@ export function translateRequest(req: V2Request, model: Model, asOf: Date): Tran
   const memberIds: string[] = []
   const rowsByRoot: Record<string, Array<Record<string, unknown>>> = {}
 
+  // Sub-collection rows are staged here rather than written directly to rowsByRoot.
+  // A collection is only committed to inputs when every member has explicitly
+  // acknowledged it — either with rows or with an empty array (income: []).
+  // If any member omits a collection key entirely, their data is unknown: treating
+  // them as zero rows would silently give the engine a wrong number. Leaving the
+  // collection unprovided lets clearUnprovidedCollectionSubtrees mark those facts
+  // as still-needed and surface them in missingInputs.
+  const collAcknowledgedBy = new Map<string, number>()
+  const collRowsStaging = new Map<string, Array<Record<string, unknown>>>()
+
   members.forEach((m, i) => {
     const memberId = (m.id as string) ?? `member-${i}`
     memberIds.push(memberId)
@@ -200,23 +210,27 @@ export function translateRequest(req: V2Request, model: Model, asOf: Date): Tran
     for (const [key, location] of MEMBER_SUBCOLLECTIONS) {
       const rows = m[key]
       if (!Array.isArray(rows)) continue
-      // Register the collection root even when rows is empty so that an explicit
-      // empty array (e.g. income: []) is treated as "no income" rather than
-      // "income unknown". Without this, an empty array and an absent field are
-      // indistinguishable and both result in pending.
       const root = anyEntryRoot(maps, location)
       if (!root) continue
-      rowsByRoot[root] ??= []
-      rows.forEach((r: Record<string, unknown>, j) => {
-        const row: Record<string, unknown> = {
+      collAcknowledgedBy.set(root, (collAcknowledgedBy.get(root) ?? 0) + 1)
+      if (!collRowsStaging.has(root)) collRowsStaging.set(root, [])
+      for (const [j, r] of (rows as Record<string, unknown>[]).entries()) {
+        collRowsStaging.get(root)!.push({
           id: (r.id as string) ?? `${memberId}-${key}-${j}`,
           [`${root}/*/memberId`]: `#${i}`,
           ...mapObject(r, location, new Set(['id']), maps, indexOf, asOf, warnings),
-        }
-        rowsByRoot[root].push(row)
-      })
+        })
+      }
     }
   })
+
+  // Commit each staged sub-collection only when every member acknowledged it.
+  const totalMembers = members.length
+  for (const [root, staging] of collRowsStaging) {
+    if ((collAcknowledgedBy.get(root) ?? 0) >= totalMembers) {
+      rowsByRoot[root] = staging
+    }
+  }
 
   if (Array.isArray(req.caregiverRelationships)) {
     // Provided (even as []) means "this is the complete list" — seed the root

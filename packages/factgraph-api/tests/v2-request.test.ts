@@ -89,6 +89,39 @@ test('nested income rows flatten to /incomes with a memberId backlink', () => {
   assert.equal(incomes[0]['/incomes/*/frequency'], 'Monthly')
 })
 
+test('sub-collection rows are only emitted when all members acknowledge the collection', () => {
+  // Alice provides income; Bob omits the key — the whole collection stays
+  // unprovided so the engine does not silently treat Bob as having zero income.
+  const { inputs: partial } = translateRequest(
+    {
+      members: [
+        { id: 'alice', income: [{ type: 'wages_and_salaries', amount: 1200, frequency: 'monthly' }] },
+        { id: 'bob' },
+      ],
+    },
+    model,
+    ASOF
+  )
+  assert.ok(!('/incomes' in partial), '/incomes absent when bob has not acknowledged income')
+
+  // Once Bob explicitly provides income: [], both members have acknowledged it
+  // and Alice's rows are included.
+  const { inputs: both } = translateRequest(
+    {
+      members: [
+        { id: 'alice', income: [{ type: 'wages_and_salaries', amount: 1200, frequency: 'monthly' }] },
+        { id: 'bob', income: [] },
+      ],
+    },
+    model,
+    ASOF
+  )
+  const incomes = both['/incomes'] as Array<Record<string, unknown>>
+  assert.ok(Array.isArray(incomes), '/incomes present when both members acknowledge')
+  assert.equal(incomes.length, 1)
+  assert.equal(incomes[0]['/incomes/*/memberId'], '#0')
+})
+
 test('household scalars map to top-level inputs; unknown fields warn, not throw', () => {
   const { inputs, warnings } = translateRequest(
     { household: { livesInApplicationCounty: true, notARealField: 1 } },
