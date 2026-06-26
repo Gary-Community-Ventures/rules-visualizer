@@ -1157,6 +1157,18 @@ const demoHtml = `<!DOCTYPE html>
     .remove-btn { padding: 0.2rem 0.5rem; border: 1px solid #e5e7eb; border-radius: 4px;
       background: #fff; cursor: pointer; font-size: 11px; color: #9ca3af; }
     .remove-btn:hover { border-color: #fca5a5; color: #dc2626; background: #fff1f2; }
+    .row-empty-note { font-size: 0.78rem; color: #9ca3af; font-style: italic; margin: 0.25rem 0 0; }
+    .caregiver-section { border: 1px solid #fde68a; border-radius: 8px; background: #fffbeb;
+      margin-bottom: 1.25rem; }
+    .caregiver-header { display: flex; justify-content: space-between; align-items: center;
+      padding: 0.6rem 0.85rem; border-bottom: 1px solid #fde68a; }
+    .caregiver-section-label { font-size: 0.8rem; font-weight: 700; color: #92400e; }
+    .caregiver-row-section { border: 1px solid #fde68a; border-radius: 6px; margin-bottom: 0.4rem; }
+    .caregiver-row-header { display: flex; justify-content: space-between; align-items: center;
+      padding: 0.3rem 0.6rem; background: #fef9c3; border-radius: 6px 6px 0 0;
+      border-bottom: 1px solid #fde68a; }
+    .caregiver-row-label { font-size: 0.72rem; font-weight: 600; color: #92400e; }
+    .caregiver-rows { padding: 0 0.75rem; }
   </style>
 </head>
 <body>
@@ -1206,24 +1218,26 @@ const demoHtml = `<!DOCTYPE html>
   }
   var SUBCOLL_KEYS  = ['income', 'expenses', 'jobs', 'assets']
   var SUBCOLL_LABELS = { income: 'Income', expenses: 'Expenses', jobs: 'Jobs', assets: 'Assets' }
-  var SKIP_LOCS = { 'caregiverRelationships[]': true }
+  var SKIP_LOCS = {}
 
   // ---- state ----------------------------------------------------------------
-  var program       = 'snap'
-  var numMembers    = 1
-  var memberIds     = ['person-1']
-  var memberVals    = [{}]
-  var collCounts    = [{ income: 0, expenses: 0, jobs: 0, assets: 0 }]
-  var collVals      = [{ income: [], expenses: [], jobs: [], assets: [] }]
-  var householdVals = {}
-  var fieldCache    = {}
-  var allSeen       = []
-  var curMissing    = new Set()
-  var curStatus     = null
-  var curDet        = null
-  var debounce      = null
-  var inflight      = false
-  var memberSeq     = 1
+  var program           = 'snap'
+  var numMembers        = 1
+  var memberIds         = ['person-1']
+  var memberVals        = [{}]
+  var collCounts        = [{ income: 0, expenses: 0, jobs: 0, assets: 0 }]
+  var collVals          = [{ income: [], expenses: [], jobs: [], assets: [] }]
+  var householdVals     = {}
+  var caregiverRelCount = 0
+  var caregiverRelVals  = []
+  var fieldCache        = {}
+  var allSeen           = []
+  var curMissing        = new Set()
+  var curStatus         = null
+  var curDet            = null
+  var debounce          = null
+  var inflight          = false
+  var memberSeq         = 1
 
   // ---- helpers --------------------------------------------------------------
   function esc(s) {
@@ -1241,29 +1255,38 @@ const demoHtml = `<!DOCTYPE html>
     var loc = meta.location
     if (loc === 'household') return 'household'
     if (loc === 'members[]') return 'member'
+    if (loc === 'caregiverRelationships[]') return 'caregiverRel'
     for (var i = 0; i < SUBCOLL_KEYS.length; i++) {
       if (loc === 'members[].' + SUBCOLL_KEYS[i] + '[]') return SUBCOLL_KEYS[i]
     }
     return null
   }
   function cpathFor(scope, field) {
-    if (scope === 'household') return 'household.' + field
-    if (scope === 'member')    return 'members[].' + field
+    if (scope === 'household')    return 'household.' + field
+    if (scope === 'member')       return 'members[].' + field
+    if (scope === 'caregiverRel') return 'caregiverRelationships[].' + field
     return 'members[].' + scope + '[].' + field
   }
   function getVal(scope, mi, ri, field) {
-    if (scope === 'household') return householdVals[field]
-    if (scope === 'member')    return memberVals[mi] && memberVals[mi][field]
+    if (scope === 'household')    return householdVals[field]
+    if (scope === 'member')       return memberVals[mi] && memberVals[mi][field]
+    if (scope === 'caregiverRel') { var crv = caregiverRelVals[ri]; return crv ? crv[field] : undefined }
     var cv = collVals[mi] && collVals[mi][scope] && collVals[mi][scope][ri]
     return cv ? cv[field] : undefined
   }
 
   // ---- request builder ------------------------------------------------------
   function buildRequest() {
-    var req = { members: [], caregiverRelationships: [] }
+    var req = { members: [] }
     var hk = Object.keys(householdVals)
     if (hk.length > 0) {
       req.household = {}; hk.forEach(function(k) { req.household[k] = householdVals[k] })
+    }
+    req.caregiverRelationships = []
+    for (var j = 0; j < caregiverRelCount; j++) {
+      var relRow = caregiverRelVals[j] || {}
+      var rr = {}; Object.keys(relRow).forEach(function(k) { rr[k] = relRow[k] })
+      req.caregiverRelationships.push(rr)
     }
     for (var i = 0; i < numMembers; i++) {
       var mReq = { id: memberIds[i] }
@@ -1272,8 +1295,8 @@ const demoHtml = `<!DOCTYPE html>
         var key = SUBCOLL_KEYS[ci]
         var cnt = (collCounts[i] && collCounts[i][key]) || 0
         mReq[key] = []
-        for (var j = 0; j < cnt; j++) {
-          var row = (collVals[i] && collVals[i][key] && collVals[i][key][j]) || {}
+        for (var jj = 0; jj < cnt; jj++) {
+          var row = (collVals[i] && collVals[i][key] && collVals[i][key][jj]) || {}
           var r = {}; Object.keys(row).forEach(function(k) { r[k] = row[k] }); mReq[key].push(r)
         }
       }
@@ -1335,6 +1358,9 @@ const demoHtml = `<!DOCTYPE html>
     } else if (scope === 'member') {
       memberVals[mi] = memberVals[mi] || {}
       if (coerced === undefined) delete memberVals[mi][field]; else memberVals[mi][field] = coerced
+    } else if (scope === 'caregiverRel') {
+      caregiverRelVals[ri] = caregiverRelVals[ri] || {}
+      if (coerced === undefined) delete caregiverRelVals[ri][field]; else caregiverRelVals[ri][field] = coerced
     } else {
       collVals[mi] = collVals[mi] || {}
       collVals[mi][scope] = collVals[mi][scope] || []
@@ -1353,7 +1379,8 @@ const demoHtml = `<!DOCTYPE html>
     memberIds = ['person-1']; memberVals = [{}]
     collCounts = [{ income: 0, expenses: 0, jobs: 0, assets: 0 }]
     collVals   = [{ income: [], expenses: [], jobs: [], assets: [] }]
-    householdVals = {}; fieldCache = {}; allSeen = []; curMissing = new Set()
+    householdVals = {}; caregiverRelCount = 0; caregiverRelVals = []
+    fieldCache = {}; allSeen = []; curMissing = new Set()
     curStatus = null; curDet = null
     document.querySelectorAll('.prog-tab').forEach(function(b) { b.classList.toggle('active', b.dataset.prog === prog) })
     fullRender(); callApi()
@@ -1404,7 +1431,11 @@ const demoHtml = `<!DOCTYPE html>
       var step = type === 'Dollar' ? '0.01' : '1'
       return '<div class="num-wrap">' + pre + '<input type="number" min="0" step="' + step + '" ' + da + ' value="' + esc(val !== undefined ? val : '') + '" />' + suf + '</div>'
     }
-    if (type === 'CollectionItem') return '<span class="field-note">member reference</span>'
+    if (type === 'CollectionItem') {
+      var o2 = '<option value="">-- select member --</option>'
+      memberIds.forEach(function(id) { o2 += '<option value="' + esc(id) + '"' + (val === id ? ' selected' : '') + '>' + esc(id) + '</option>' })
+      return '<select ' + da + '>' + o2 + '</select>'
+    }
     return '<input type="text" ' + da + ' value="' + esc(val || '') + '" />'
   }
 
@@ -1412,9 +1443,11 @@ const demoHtml = `<!DOCTYPE html>
   function buildCardHTML(cpath, scope, mi, ri) {
     var meta = fieldCache[cpath]; if (!meta) return ''
     var state = fieldStateFor(cpath, scope, mi, ri)
+    var hint = meta.type
+    if (meta.options && meta.options.length) hint += ': ' + meta.options.join(', ')
     return '<div class="field-card field-card-' + state + '" data-cpath="' + esc(cpath) + '" data-scope="' + scope + '" data-member="' + mi + '" data-row="' + ri + '">' +
       '<div class="field-card-header">' +
-        '<span class="field-label">' + esc(meta.label || cpath) + '</span>' +
+        '<span class="field-label" title="' + esc(hint) + '">' + esc(meta.label || cpath) + '</span>' +
         '<span class="field-badge b-' + state + '">' + badgeText(state) + '</span>' +
       '</div>' +
       '<div class="field-path">' + esc(cpath) + '</div>' +
@@ -1471,6 +1504,28 @@ const demoHtml = `<!DOCTYPE html>
     '</div>'
   }
 
+  function caregiverRelRowHTML(ri) {
+    var cardsHTML = cardsForLoc('caregiverRelationships[]', 'caregiverRel', 0, ri)
+    return '<div class="caregiver-row-section" id="caregiver-row-' + ri + '">' +
+      '<div class="caregiver-row-header">' +
+        '<span class="caregiver-row-label">Relationship ' + (ri + 1) + '</span>' +
+        '<button class="remove-btn" data-remove-rel="' + ri + '">&#x2715;</button>' +
+      '</div>' +
+      '<div class="row-fields"><div class="field-cards" id="caregiver-row-' + ri + '-cards">' + cardsHTML + '</div></div>' +
+    '</div>'
+  }
+  function caregiverRelSectionHTML() {
+    var html = '<div class="caregiver-section" id="caregiver-section">' +
+      '<div class="caregiver-header">' +
+        '<span class="caregiver-section-label">Caregiver relationships</span>' +
+        '<button class="add-row-btn" id="add-rel-btn">+ Add relationship</button>' +
+      '</div>' +
+      '<div class="caregiver-rows" id="caregiver-rows">'
+    for (var j = 0; j < caregiverRelCount; j++) html += caregiverRelRowHTML(j)
+    html += '</div></div>'
+    return html
+  }
+
   // ---- full render ----------------------------------------------------------
   function fullRender() {
     var fc2 = document.getElementById('fields-container'), html = ''
@@ -1478,6 +1533,7 @@ const demoHtml = `<!DOCTYPE html>
     if (hCards) html += '<div class="household-section"><h3 class="household-label">Household</h3><div class="field-cards" id="household-cards">' + hCards + '</div></div>'
     html += '<div class="members-bar"><span class="members-bar-label">Members</span><button class="add-person-btn" id="add-person-btn">+ Add person</button></div>'
     for (var i = 0; i < numMembers; i++) html += memberSectionHTML(i)
+    html += caregiverRelSectionHTML()
     if (!hCards && !allSeen.length) html = '<p class="fields-hint">Loading...</p>' + html
     fc2.innerHTML = html
   }
@@ -1516,22 +1572,41 @@ const demoHtml = `<!DOCTYPE html>
           }
         }
 
+      } else if (scope === 'caregiverRel') {
+        for (var cri = 0; cri < caregiverRelCount; cri++) {
+          var fc4 = false
+          document.querySelectorAll('.field-card[data-scope="caregiverRel"][data-row="' + cri + '"]').forEach(function(el) { if (el.dataset.cpath === cp) fc4 = true })
+          if (!fc4) {
+            var rce2 = document.getElementById('caregiver-row-' + cri + '-cards')
+            if (rce2) rce2.insertAdjacentHTML('beforeend', buildCardHTML(cp, 'caregiverRel', 0, cri))
+          }
+        }
       } else {
         var collKey = scope
-        for (var mi = 0; mi < numMembers; mi++) {
-          var cnt = (collCounts[mi] && collCounts[mi][collKey]) || 0
-          for (var ri = 0; ri < cnt; ri++) {
+        for (var mi2 = 0; mi2 < numMembers; mi2++) {
+          var cnt2 = (collCounts[mi2] && collCounts[mi2][collKey]) || 0
+          for (var ri2 = 0; ri2 < cnt2; ri2++) {
             var f3 = false
-            document.querySelectorAll('.field-card[data-scope="' + collKey + '"][data-member="' + mi + '"][data-row="' + ri + '"]').forEach(function(el) { if (el.dataset.cpath === cp) f3 = true })
+            document.querySelectorAll('.field-card[data-scope="' + collKey + '"][data-member="' + mi2 + '"][data-row="' + ri2 + '"]').forEach(function(el) { if (el.dataset.cpath === cp) f3 = true })
             if (!f3) {
-              var rce = document.getElementById('row-' + mi + '-' + collKey + '-' + ri + '-cards')
-              if (rce) rce.insertAdjacentHTML('beforeend', buildCardHTML(cp, collKey, mi, ri))
+              var rce3 = document.getElementById('row-' + mi2 + '-' + collKey + '-' + ri2 + '-cards')
+              if (rce3) rce3.insertAdjacentHTML('beforeend', buildCardHTML(cp, collKey, mi2, ri2))
             }
           }
         }
       }
     })
+    markEmptyRows()
     updateStates()
+  }
+
+  function markEmptyRows() {
+    document.querySelectorAll('.row-section, .caregiver-row-section').forEach(function(rowSec) {
+      var rce = rowSec.querySelector('.field-cards')
+      if (rce && !rce.children.length && !rowSec.querySelector('.row-empty-note')) {
+        rce.insertAdjacentHTML('afterend', '<p class="row-empty-note">No fields required for this row in the current program.</p>')
+      }
+    })
   }
 
   // ---- update states (CSS only, no DOM rebuild) -----------------------------
@@ -1622,6 +1697,19 @@ const demoHtml = `<!DOCTYPE html>
     if (collVals[mi] && collVals[mi][collKey]) collVals[mi][collKey].splice(ri, 1)
     fullRender(); callApi()
   }
+  function addCaregiverRel() {
+    var ri = caregiverRelCount; caregiverRelCount++; caregiverRelVals[ri] = {}
+    var rowsEl = document.getElementById('caregiver-rows')
+    if (rowsEl) {
+      var div = document.createElement('div')
+      div.innerHTML = caregiverRelRowHTML(ri); rowsEl.appendChild(div.firstChild)
+    }
+    callApi()
+  }
+  function removeCaregiverRel(ri) {
+    caregiverRelVals.splice(ri, 1); caregiverRelCount = Math.max(0, caregiverRelCount - 1)
+    fullRender(); callApi()
+  }
 
   // ---- event delegation -----------------------------------------------------
   var fc = document.getElementById('fields-container')
@@ -1650,6 +1738,8 @@ const demoHtml = `<!DOCTYPE html>
     if (btn.dataset.removeColl) { removeRow(parseInt(btn.dataset.member||'0'), btn.dataset.removeColl, parseInt(btn.dataset.row||'0')); return }
     if (btn.dataset.removeMember !== undefined) { removeMember(parseInt(btn.dataset.removeMember)); return }
     if (btn.id === 'add-person-btn') { addMember(); return }
+    if (btn.id === 'add-rel-btn') { addCaregiverRel(); return }
+    if (btn.dataset.removeRel !== undefined) { removeCaregiverRel(parseInt(btn.dataset.removeRel)); return }
   })
 
   document.querySelector('.prog-tabs').addEventListener('click', function(e) {
