@@ -1300,11 +1300,14 @@ const demoHtml = `<!DOCTYPE html>
     if (hk.length > 0) {
       req.household = {}; hk.forEach(function(k) { req.household[k] = householdVals[k] })
     }
-    req.caregiverRelationships = []
-    for (var j = 0; j < caregiverRelCount; j++) {
-      var relRow = caregiverRelVals[j] || {}
-      var rr = {}; Object.keys(relRow).forEach(function(k) { rr[k] = relRow[k] })
-      if (Object.keys(rr).length > 0) req.caregiverRelationships.push(rr)
+    var cgAsked = allSeen.some(function(cp) { var m = fieldCache[cp]; return m && m.location === 'caregiverRelationships[]' })
+    if (caregiverRelCount > 0 || cgAsked) {
+      req.caregiverRelationships = []
+      for (var j = 0; j < caregiverRelCount; j++) {
+        var relRow = caregiverRelVals[j] || {}
+        var rr = {}; Object.keys(relRow).forEach(function(k) { rr[k] = relRow[k] })
+        if (Object.keys(rr).length > 0) req.caregiverRelationships.push(rr)
+      }
     }
     for (var i = 0; i < numMembers; i++) {
       var mReq = { id: memberIds[i] }
