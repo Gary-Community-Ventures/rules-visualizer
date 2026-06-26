@@ -1153,6 +1153,7 @@ const demoHtml = `<!DOCTYPE html>
       margin-bottom: 0.4rem; }
     .subcoll-label { font-size: 0.68rem; font-weight: 700; text-transform: uppercase;
       letter-spacing: 0.07em; color: #9ca3af; }
+    .subcoll-needed-hint { font-size: 0.72rem; color: #1d4ed8; font-weight: 600; }
     .row-section { border: 1px solid #e5e7eb; border-radius: 6px; margin-bottom: 0.4rem; }
     .row-header { display: flex; justify-content: space-between; align-items: center;
       padding: 0.3rem 0.6rem; background: #f9fafb; border-radius: 6px 6px 0 0;
@@ -1517,6 +1518,7 @@ const demoHtml = `<!DOCTYPE html>
       html += '<div class="subcoll-section" id="member-' + mi + '-' + key + '-section">' +
         '<div class="subcoll-header">' +
           '<span class="subcoll-label">' + esc(lbl) + '</span>' +
+          '<span id="member-' + mi + '-' + key + '-hint" class="subcoll-needed-hint"></span>' +
           '<button class="add-row-btn" data-add-coll="' + key + '" data-member="' + mi + '">+ Add ' + esc(lbl.toLowerCase()) + ' row</button>' +
         '</div>' +
         '<div id="member-' + mi + '-' + key + '-rows">'
@@ -1663,6 +1665,25 @@ const demoHtml = `<!DOCTYPE html>
       var badge = card.querySelector('.field-badge')
       if (badge) { badge.className = 'field-badge b-' + state; badge.textContent = badgeText(state) }
     })
+    updateSubcollHints()
+  }
+  function updateSubcollHints() {
+    for (var mi = 0; mi < numMembers; mi++) {
+      for (var ci = 0; ci < SUBCOLL_KEYS.length; ci++) {
+        var key = SUBCOLL_KEYS[ci]
+        var hint = document.getElementById('member-' + mi + '-' + key + '-hint')
+        if (!hint) continue
+        var cnt = (collCounts[mi] && collCounts[mi][key]) || 0
+        if (cnt > 0) { hint.textContent = ''; continue }
+        var loc = 'members[].' + key + '[]'
+        var needed = 0
+        allSeen.forEach(function(cp) {
+          var m = fieldCache[cp]
+          if (m && m.location === loc && curMissing.has(cp)) needed++
+        })
+        hint.textContent = needed > 0 ? needed + ' field' + (needed === 1 ? '' : 's') + ' needed — add a row' : ''
+      }
+    }
   }
 
   // ---- status row -----------------------------------------------------------
