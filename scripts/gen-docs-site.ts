@@ -1063,6 +1063,7 @@ const demoHtml = `<!DOCTYPE html>
     .s-pending  { background: #dbeafe; color: #1d4ed8; }
     .s-approved { background: #d1fae5; color: #065f46; }
     .s-denied, .s-ineligible { background: #fee2e2; color: #991b1b; }
+    .s-denied-partial, .s-ineligible-partial { background: #fef3c7; color: #92400e; }
     .s-null, .s-loading { background: #f3f4f6; color: #9ca3af; }
     .s-error    { background: #fff7ed; color: #92400e; }
     .progress-line { font-size: 0.85rem; color: #6b7280; }
@@ -1186,6 +1187,10 @@ const demoHtml = `<!DOCTYPE html>
       border-bottom: 1px solid #fde68a; }
     .caregiver-row-label { font-size: 0.72rem; font-weight: 600; color: #92400e; }
     .caregiver-rows { padding: 0 0.75rem; }
+    .caregiver-note { font-size: 0.78rem; color: #92400e; padding: 0.35rem 0.85rem 0; }
+    .no-rel-btn { padding: 0.25rem 0.6rem; font-size: 0.78rem; border-radius: 4px; cursor: pointer;
+      border: 1px solid #d97706; background: #fff; color: #92400e; }
+    .no-rel-btn.active { background: #d97706; color: #fff; border-color: #d97706; }
   </style>
 </head>
 <body>
@@ -1248,6 +1253,7 @@ const demoHtml = `<!DOCTYPE html>
   var householdVals     = {}
   var caregiverRelCount = 0
   var caregiverRelVals  = []
+  var noCaregiverRels   = false
   var fieldCache        = {}
   var allSeen           = []
   var curMissing        = new Set()
@@ -1300,8 +1306,7 @@ const demoHtml = `<!DOCTYPE html>
     if (hk.length > 0) {
       req.household = {}; hk.forEach(function(k) { req.household[k] = householdVals[k] })
     }
-    var cgAsked = allSeen.some(function(cp) { var m = fieldCache[cp]; return m && m.location === 'caregiverRelationships[]' })
-    if (caregiverRelCount > 0 || cgAsked) {
+    if (caregiverRelCount > 0 || noCaregiverRels) {
       req.caregiverRelationships = []
       for (var j = 0; j < caregiverRelCount; j++) {
         var relRow = caregiverRelVals[j] || {}
@@ -1400,7 +1405,7 @@ const demoHtml = `<!DOCTYPE html>
     memberIds = ['person-1']; memberVals = [{}]
     collCounts = [{ income: 0, expenses: 0, jobs: 0, assets: 0 }]
     collVals   = [{ income: [], expenses: [], jobs: [], assets: [] }]
-    householdVals = {}; caregiverRelCount = 0; caregiverRelVals = []
+    householdVals = {}; caregiverRelCount = 0; caregiverRelVals = []; noCaregiverRels = false
     fieldCache = {}; allSeen = []; curMissing = new Set()
     curStatus = null; curDet = null
     document.querySelectorAll('.prog-tab').forEach(function(b) { b.classList.toggle('active', b.dataset.prog === prog) })
@@ -1544,8 +1549,12 @@ const demoHtml = `<!DOCTYPE html>
     var html = '<div class="caregiver-section" id="caregiver-section">' +
       '<div class="caregiver-header">' +
         '<span class="caregiver-section-label">Caregiver relationships</span>' +
-        '<button class="add-row-btn" id="add-rel-btn">+ Add relationship</button>' +
+        '<span style="display:flex;gap:0.4rem;align-items:center">' +
+          '<button class="no-rel-btn' + (noCaregiverRels ? ' active' : '') + '" id="no-rel-btn">' + (noCaregiverRels ? '✓ No relationships' : 'No relationships') + '</button>' +
+          '<button class="add-row-btn" id="add-rel-btn">+ Add relationship</button>' +
+        '</span>' +
       '</div>' +
+      '<p class="caregiver-note">Affects work requirement exemptions. Add a relationship if applicable, or click “No relationships” to answer that there are none.</p>' +
       '<div class="caregiver-rows" id="caregiver-rows">'
     for (var j = 0; j < caregiverRelCount; j++) html += caregiverRelRowHTML(j)
     html += '</div></div>'
@@ -1658,11 +1667,14 @@ const demoHtml = `<!DOCTYPE html>
     var badge = document.getElementById('status-badge'), prog = document.getElementById('progress-line')
     if (inflight) { badge.className = 'status-badge s-loading'; badge.textContent = 'Loading...'; prog.textContent = ''; return }
     var s = curStatus || 'null'
-    badge.className = 'status-badge s-' + s
+    var hasMissing = curMissing && curMissing.size > 0
+    var isPartial = hasMissing && (s === 'denied' || s === 'ineligible')
+    badge.className = 'status-badge s-' + (isPartial ? s + '-partial' : s)
     if (s === 'approved') {
       badge.textContent = 'Approved' + (curDet && curDet.benefitAmount ? ' -- $' + curDet.benefitAmount + '/mo' : '')
     } else if (s === 'denied' || s === 'ineligible') {
-      badge.textContent = (s === 'denied' ? 'Denied' : 'Ineligible') + (curDet && curDet.denialReasonCode ? ': ' + curDet.denialReasonCode.replace(/_/g, ' ') : '')
+      var label = (s === 'denied' ? 'Denied' : 'Ineligible') + (curDet && curDet.denialReasonCode ? ': ' + curDet.denialReasonCode.replace(/_/g, ' ') : '')
+      badge.textContent = isPartial ? label + ' (partial)' : label
     } else if (s === 'pending') { badge.textContent = 'Pending'
     } else if (s === 'null')    { badge.textContent = '--'
     } else                      { badge.textContent = s }
@@ -1730,12 +1742,22 @@ const demoHtml = `<!DOCTYPE html>
     fullRender(); callApi()
   }
   function addCaregiverRel() {
+    noCaregiverRels = false
     var ri = caregiverRelCount; caregiverRelCount++; caregiverRelVals[ri] = {}
+    if (!document.getElementById('caregiver-section')) { fullRender(); return }
+    var noBtn = document.getElementById('no-rel-btn')
+    if (noBtn) { noBtn.classList.remove('active'); noBtn.textContent = 'No relationships' }
     var rowsEl = document.getElementById('caregiver-rows')
     if (rowsEl) {
       var div = document.createElement('div')
       div.innerHTML = caregiverRelRowHTML(ri); rowsEl.appendChild(div.firstChild)
     }
+    callApi()
+  }
+  function toggleNoCaregiverRels() {
+    noCaregiverRels = !noCaregiverRels
+    var noBtn = document.getElementById('no-rel-btn')
+    if (noBtn) { noBtn.classList.toggle('active', noCaregiverRels); noBtn.textContent = noCaregiverRels ? '✓ No relationships' : 'No relationships' }
     callApi()
   }
   function removeCaregiverRel(ri) {
@@ -1771,6 +1793,7 @@ const demoHtml = `<!DOCTYPE html>
     if (btn.dataset.removeMember !== undefined) { removeMember(parseInt(btn.dataset.removeMember)); return }
     if (btn.id === 'add-person-btn') { addMember(); return }
     if (btn.id === 'add-rel-btn') { addCaregiverRel(); return }
+    if (btn.id === 'no-rel-btn') { toggleNoCaregiverRels(); return }
     if (btn.dataset.removeRel !== undefined) { removeCaregiverRel(parseInt(btn.dataset.removeRel)); return }
   })
 
