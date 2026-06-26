@@ -612,6 +612,7 @@ const guideHtml = `<!DOCTYPE html>
         border-radius: 999px; font-weight: 600; }
       .pill-pending  { background: #fef3c7; color: #92400e; }
       .pill-approved { background: #d1fae5; color: #065f46; }
+      .pill-denied   { background: #fee2e2; color: #991b1b; }
       .pill-ineligible { background: #fee2e2; color: #991b1b; }
       .callout { background: #eff6ff; border-left: 3px solid #2563eb; border-radius: 0 6px 6px 0;
         padding: 0.75rem 1rem; margin: 1rem 0; font-size: 0.94rem; }
@@ -678,7 +679,8 @@ const guideHtml = `<!DOCTYPE html>
         This means you can drive your own intake form from the API response rather than
         maintaining a separate field list. Start with whatever you have, read the
         <code>missingInputs</code>, and iterate until the status is
-        <span class="pill pill-approved">approved</span> or
+        <span class="pill pill-approved">approved</span>,
+        <span class="pill pill-denied">denied</span>, or
         <span class="pill pill-ineligible">ineligible</span>.
       </p>
 
@@ -843,8 +845,9 @@ const guideHtml = `<!DOCTYPE html>
       <h2>Resolved determinations</h2>
       <p>
         Once the engine has enough information the status moves to
-        <span class="pill pill-approved">approved</span> or
-        <span class="pill pill-ineligible">ineligible</span>/<code>denied</code>.
+        <span class="pill pill-approved">approved</span>,
+        <span class="pill pill-denied">denied</span>, or
+        <span class="pill pill-ineligible">ineligible</span>.
         At that point <code>missingInputs</code> is absent.
       </p>
       <div class="example">
@@ -861,14 +864,14 @@ const guideHtml = `<!DOCTYPE html>
 }</pre>
         </div>
         <div class="example-col">
-          <h4>Ineligible — over income limit</h4>
+          <h4>Denied — over income limit</h4>
           <pre>{
   <span class="k">"determinations"</span>: [{
     <span class="k">"program"</span>: <span class="s">"snap"</span>,
     <span class="k">"scope"</span>: <span class="s">"household"</span>,
-    <span class="k">"status"</span>: <span class="s">"ineligible"</span>,
+    <span class="k">"status"</span>: <span class="s">"denied"</span>,
     <span class="k">"denialReasonCode"</span>:
-      <span class="s">"gross_income_over_limit"</span>,
+      <span class="s">"failed_gross_income_test"</span>,
     <span class="k">"explanation"</span>: [...]
   }]
 }</pre>
@@ -1255,6 +1258,7 @@ const demoHtml = `<!DOCTYPE html>
   var caregiverRelCount = 0
   var caregiverRelVals  = []
   var noCaregiverRels   = false
+  var noSubcoll         = [{ income: false, expenses: false, jobs: false, assets: false }]
   var fieldCache        = {}
   var allSeen           = []
   var curMissing        = new Set()
@@ -1321,12 +1325,16 @@ const demoHtml = `<!DOCTYPE html>
       for (var ci = 0; ci < SUBCOLL_KEYS.length; ci++) {
         var key = SUBCOLL_KEYS[ci]
         var cnt = (collCounts[i] && collCounts[i][key]) || 0
-        if (cnt > 0) {
+        if (noSubcoll[i] && noSubcoll[i][key]) {
           mReq[key] = []
+        } else if (cnt > 0) {
+          var filledRows = []
           for (var jj = 0; jj < cnt; jj++) {
             var row = (collVals[i] && collVals[i][key] && collVals[i][key][jj]) || {}
-            var r = {}; Object.keys(row).forEach(function(k) { r[k] = row[k] }); mReq[key].push(r)
+            var r = {}; Object.keys(row).forEach(function(k) { r[k] = row[k] })
+            if (Object.keys(r).length > 0) filledRows.push(r)
           }
+          if (filledRows.length > 0) mReq[key] = filledRows
         }
       }
       req.members.push(mReq)
@@ -1410,6 +1418,7 @@ const demoHtml = `<!DOCTYPE html>
     collCounts = [{ income: 0, expenses: 0, jobs: 0, assets: 0 }]
     collVals   = [{ income: [], expenses: [], jobs: [], assets: [] }]
     householdVals = {}; caregiverRelCount = 0; caregiverRelVals = []; noCaregiverRels = false
+    noSubcoll = [{ income: false, expenses: false, jobs: false, assets: false }]
     fieldCache = {}; allSeen = []; curMissing = new Set()
     curStatus = null; curDet = null
     document.querySelectorAll('.prog-tab').forEach(function(b) { b.classList.toggle('active', b.dataset.prog === prog) })
@@ -1515,11 +1524,15 @@ const demoHtml = `<!DOCTYPE html>
     for (var ci = 0; ci < SUBCOLL_KEYS.length; ci++) {
       var key = SUBCOLL_KEYS[ci], lbl = SUBCOLL_LABELS[key]
       var cnt = (collCounts[mi] && collCounts[mi][key]) || 0
+      var isNo = (noSubcoll[mi] && noSubcoll[mi][key]) || false
       html += '<div class="subcoll-section" id="member-' + mi + '-' + key + '-section">' +
         '<div class="subcoll-header">' +
           '<span class="subcoll-label">' + esc(lbl) + '</span>' +
           '<span id="member-' + mi + '-' + key + '-hint" class="subcoll-needed-hint"></span>' +
-          '<button class="add-row-btn" data-add-coll="' + key + '" data-member="' + mi + '">+ Add ' + esc(lbl.toLowerCase()) + ' row</button>' +
+          '<span style="display:flex;gap:0.4rem;align-items:center">' +
+            '<button class="no-rel-btn' + (isNo ? ' active' : '') + '" data-no-subcoll="' + key + '" data-member="' + mi + '">' + (isNo ? '✓ No ' : 'No ') + esc(lbl.toLowerCase()) + '</button>' +
+            '<button class="add-row-btn" data-add-coll="' + key + '" data-member="' + mi + '">+ Add ' + esc(lbl.toLowerCase()) + ' row</button>' +
+          '</span>' +
         '</div>' +
         '<div id="member-' + mi + '-' + key + '-rows">'
       for (var j = 0; j < cnt; j++) html += rowSectionHTML(mi, key, j)
@@ -1674,7 +1687,7 @@ const demoHtml = `<!DOCTYPE html>
         var hint = document.getElementById('member-' + mi + '-' + key + '-hint')
         if (!hint) continue
         var cnt = (collCounts[mi] && collCounts[mi][key]) || 0
-        if (cnt > 0) { hint.textContent = ''; continue }
+        if (cnt > 0 || (noSubcoll[mi] && noSubcoll[mi][key])) { hint.textContent = ''; continue }
         var loc = 'members[].' + key + '[]'
         var needed = 0
         allSeen.forEach(function(cp) {
@@ -1722,6 +1735,7 @@ const demoHtml = `<!DOCTYPE html>
     memberIds.push('person-' + memberSeq); memberVals.push({})
     collCounts.push({ income: 0, expenses: 0, jobs: 0, assets: 0 })
     collVals.push({ income: [], expenses: [], jobs: [], assets: [] })
+    noSubcoll.push({ income: false, expenses: false, jobs: false, assets: false })
     var prevSec = document.getElementById('member-section-' + (newIdx - 1))
     var div = document.createElement('div')
     div.innerHTML = memberSectionHTML(newIdx)
@@ -1733,7 +1747,7 @@ const demoHtml = `<!DOCTYPE html>
   }
   function removeMember(mi) {
     memberIds.splice(mi, 1); memberVals.splice(mi, 1)
-    collCounts.splice(mi, 1); collVals.splice(mi, 1); numMembers--
+    collCounts.splice(mi, 1); collVals.splice(mi, 1); noSubcoll.splice(mi, 1); numMembers--
     fullRender(); callApi()
   }
   function refreshRemoveBtns() {
@@ -1749,6 +1763,11 @@ const demoHtml = `<!DOCTYPE html>
     }
   }
   function addRow(mi, collKey) {
+    if (noSubcoll[mi] && noSubcoll[mi][collKey]) {
+      noSubcoll[mi][collKey] = false
+      var noBtn = document.querySelector('[data-no-subcoll="' + collKey + '"][data-member="' + mi + '"]')
+      if (noBtn) { noBtn.classList.remove('active'); noBtn.textContent = 'No ' + SUBCOLL_LABELS[collKey].toLowerCase() }
+    }
     collCounts[mi] = collCounts[mi] || {}
     var ri = collCounts[mi][collKey] || 0; collCounts[mi][collKey] = ri + 1
     collVals[mi] = collVals[mi] || {}
@@ -1782,6 +1801,14 @@ const demoHtml = `<!DOCTYPE html>
     noCaregiverRels = !noCaregiverRels
     var noBtn = document.getElementById('no-rel-btn')
     if (noBtn) { noBtn.classList.toggle('active', noCaregiverRels); noBtn.textContent = noCaregiverRels ? '✓ No relationships' : 'No relationships' }
+    callApi()
+  }
+  function toggleNoSubcoll(mi, key) {
+    noSubcoll[mi] = noSubcoll[mi] || {}
+    noSubcoll[mi][key] = !noSubcoll[mi][key]
+    var isNo = noSubcoll[mi][key]
+    var noBtn = document.querySelector('[data-no-subcoll="' + key + '"][data-member="' + mi + '"]')
+    if (noBtn) { noBtn.classList.toggle('active', isNo); noBtn.textContent = isNo ? '✓ No ' + SUBCOLL_LABELS[key].toLowerCase() : 'No ' + SUBCOLL_LABELS[key].toLowerCase() }
     callApi()
   }
   function removeCaregiverRel(ri) {
@@ -1823,6 +1850,7 @@ const demoHtml = `<!DOCTYPE html>
     if (btn.id === 'add-rel-btn') { addCaregiverRel(); return }
     if (btn.id === 'no-rel-btn') { toggleNoCaregiverRels(); return }
     if (btn.dataset.removeRel !== undefined) { removeCaregiverRel(parseInt(btn.dataset.removeRel)); return }
+    if (btn.dataset.noSubcoll) { toggleNoSubcoll(parseInt(btn.dataset.member||'0'), btn.dataset.noSubcoll); return }
   })
 
   document.querySelector('.prog-tabs').addEventListener('click', function(e) {
@@ -1850,7 +1878,7 @@ const demoHtml = `<!DOCTYPE html>
         memberIds: memberIds, memberVals: memberVals,
         collCounts: collCounts, collVals: collVals, householdVals: householdVals,
         caregiverRelCount: caregiverRelCount, caregiverRelVals: caregiverRelVals,
-        noCaregiverRels: noCaregiverRels
+        noCaregiverRels: noCaregiverRels, noSubcoll: noSubcoll
       }))
     } catch(e) {}
   }
@@ -1866,6 +1894,7 @@ const demoHtml = `<!DOCTYPE html>
       householdVals = s.householdVals || {}
       caregiverRelCount = s.caregiverRelCount || 0; caregiverRelVals = s.caregiverRelVals || []
       noCaregiverRels = !!s.noCaregiverRels
+      noSubcoll = s.noSubcoll || Array.from({length: numMembers}, function() { return { income: false, expenses: false, jobs: false, assets: false } })
       document.querySelectorAll('.prog-tab').forEach(function(b) { b.classList.toggle('active', b.dataset.prog === program) })
       return true
     } catch(e) { return false }
