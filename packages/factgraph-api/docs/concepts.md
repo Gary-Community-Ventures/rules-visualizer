@@ -76,6 +76,13 @@ At least one target couldn't be computed. Unresolved targets appear as
 `missingInputs` contains the union of writables still needed across all
 unresolved targets (deduped by path).
 
+> **Per-instance addressing.** The union names *fields*, not owners. Add
+> `include: ["missingInputInstances"]` to also get one entry per concrete
+> (field, row) instance, each carrying a hop-chain address down to the
+> member/row that owes the value. The v2 eligibility endpoints serve that
+> instanced shape as their only `missingInputs` format — see the
+> [integration guide](https://gary-community-ventures.github.io/rules-visualizer/guide.html).
+
 ## Per-member values
 
 Collection-scoped facts (paths whose middle segment is the wildcard,

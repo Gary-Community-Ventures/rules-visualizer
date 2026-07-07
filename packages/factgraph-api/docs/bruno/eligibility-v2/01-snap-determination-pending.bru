@@ -41,6 +41,11 @@ docs {
   complete the screen.
 
   Expected: determinations[0].status "pending", missingInputs[]
-  present, requestPath values like "members[].hasPhysicalDisability"
-  (never a Fact Graph path like /members/*/hasPhysicalDisability).
+  present. Each entry carries two addresses: requestPath says WHICH
+  field ("members[].hasPhysicalDisability" — never a Fact Graph path
+  like /members/*/hasPhysicalDisability) and "at" says WHERE — hops
+  like [{"in":"members","id":"head"}] naming the member/row that owes
+  the value. kind "unacknowledged" entries are whole-collection
+  questions (answer with rows or []): expect them for expenses/jobs/
+  assets here, since this member only acknowledged income.
 }
