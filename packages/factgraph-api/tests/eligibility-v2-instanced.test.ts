@@ -1,12 +1,12 @@
 /**
- * EXPERIMENTAL instanced missing-inputs format
- * (`missingInputsFormat: "instanced"` on the v2 determination endpoints).
+ * Instanced missing-inputs — THE v2 missingInputs shape.
  *
  * Pins the two-address design: `requestPath` (schema address — which
  * question) + `at` (instance address — hop chain of {in, id} down to the
  * owing row), and the `unacknowledged` entry kind that makes the
  * rows-or-[] acknowledgment rule visible in the response, recursing to the
- * root for an empty request.
+ * root for an empty request. The pre-instanced `missingInputsFormat` flag
+ * is deprecated and ignored.
  */
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -41,7 +41,7 @@ const ALICE = {
   assets: [],
 }
 
-test('default format is unchanged — no kind/at fields, deduped per field', async () => {
+test('instanced is the default — entries carry kind and at without any flag', async () => {
   const res = await request(app)
     .post(SNAP_URL)
     .send({ members: [{ id: 'alice' }, { id: 'bob' }] })
@@ -49,18 +49,36 @@ test('default format is unchanged — no kind/at fields, deduped per field', asy
   const mi = res.body.determinations[0].missingInputs as Array<Record<string, unknown>>
   assert.ok(mi.length > 0, 'pending with missing inputs')
   for (const m of mi) {
-    assert.ok(!('kind' in m), 'no kind in default format')
-    assert.ok(!('at' in m), 'no at in default format')
+    assert.ok('kind' in m, 'every entry has a kind')
+    assert.ok(Array.isArray(m.at), 'every entry has an at address')
   }
-  // Deduped: dateOfBirth appears once even though both members lack it.
-  const dobs = mi.filter((m) => m.field === 'dateOfBirth')
-  assert.equal(dobs.length, 1, 'default format dedupes by field')
+  // Per-instance: dateOfBirth appears once per member that owes it.
+  const dobs = mi.filter((m) => m.field === 'dateOfBirth') as Array<Entry>
+  assert.equal(dobs.length, 2, 'one entry per owing member')
+  assert.deepEqual(
+    dobs.map((m) => m.at),
+    [[{ in: 'members', id: 'alice' }], [{ in: 'members', id: 'bob' }]]
+  )
+})
+
+test('missingInputsFormat is deprecated and ignored; "fields" earns a migration note', async () => {
+  const withFlag = await request(app)
+    .post(SNAP_URL)
+    .send({ missingInputsFormat: 'fields', members: [{ id: 'alice' }] })
+  assert.equal(withFlag.status, 200)
+  const det = withFlag.body.determinations[0]
+  const mi = det.missingInputs as Array<Record<string, unknown>>
+  assert.ok(mi.every((m) => 'kind' in m && 'at' in m), 'response is instanced regardless of the flag')
+  assert.ok(
+    (det.notes as string[]).some((n) => n.includes('has been replaced')),
+    'requesting the retired format earns a migration note'
+  )
 })
 
 test('empty request: the first missing input is the members list itself', async () => {
   const res = await request(app)
     .post(SNAP_URL)
-    .send({ missingInputsFormat: 'instanced' })
+    .send({})
   assert.equal(res.status, 200)
   const det = res.body.determinations[0]
   assert.equal(det.status, 'pending')
@@ -87,7 +105,6 @@ test('member fields address the member that owes them — not the one that answe
   const res = await request(app)
     .post(SNAP_URL)
     .send({
-      missingInputsFormat: 'instanced',
       members: [ALICE, { id: 'bob', income: [], expenses: [], jobs: [], assets: [] }],
     })
   assert.equal(res.status, 200)
@@ -108,7 +125,6 @@ test('unacknowledged sub-collection is asked per member, and withheld rows are n
   const res = await request(app)
     .post(SNAP_URL)
     .send({
-      missingInputsFormat: 'instanced',
       members: [ALICE, { id: 'bob', dateOfBirth: '1992-07-20', expenses: [], jobs: [], assets: [] }],
     })
   assert.equal(res.status, 200)
@@ -128,7 +144,6 @@ test('incomplete row: two-hop address down to the owing row', async () => {
   const res = await request(app)
     .post(SNAP_URL)
     .send({
-      missingInputsFormat: 'instanced',
       members: [
         {
           ...ALICE,
@@ -153,7 +168,6 @@ test('medicaid: entries slice per determination by address', async () => {
   const res = await request(app)
     .post(MEDICAID_URL)
     .send({
-      missingInputsFormat: 'instanced',
       members: [
         { id: 'alice', dateOfBirth: '1990-03-15', income: [], expenses: [], jobs: [], assets: [] },
         { id: 'bob', income: [], expenses: [], jobs: [], assets: [] },
@@ -184,7 +198,6 @@ test('missingInputsByMember stays attached in instanced format (deprecation wind
   const res = await request(app)
     .post(SNAP_URL)
     .send({
-      missingInputsFormat: 'instanced',
       members: [ALICE, { id: 'bob', income: [], expenses: [], jobs: [], assets: [] }],
     })
   assert.equal(res.status, 200)

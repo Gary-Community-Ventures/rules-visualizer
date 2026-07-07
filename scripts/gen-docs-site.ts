@@ -711,51 +711,70 @@ const guideHtml = `<!DOCTYPE html>
     <span class="k">"status"</span>: <span class="s">"pending"</span>,
     <span class="k">"missingInputs"</span>: [
       {
-        <span class="k">"requestPath"</span>: <span class="s">"members[].income[].type"</span>,
-        <span class="k">"field"</span>: <span class="s">"type"</span>,
-        <span class="k">"location"</span>: <span class="s">"members[].income[]"</span>,
-        <span class="k">"label"</span>: <span class="s">"Income type"</span>,
-        <span class="k">"type"</span>: <span class="s">"Enum"</span>,
-        <span class="k">"options"</span>: [<span class="s">"wages_and_salaries"</span>, ...]
+        <span class="k">"kind"</span>: <span class="s">"unacknowledged"</span>,
+        <span class="k">"requestPath"</span>: <span class="s">"members[].income"</span>,
+        <span class="k">"field"</span>: <span class="s">"income"</span>,
+        <span class="k">"at"</span>: [{ <span class="k">"in"</span>: <span class="s">"members"</span>, <span class="k">"id"</span>: <span class="s">"alice"</span> }],
+        <span class="k">"memberId"</span>: <span class="s">"alice"</span>,
+        <span class="k">"hint"</span>: <span class="s">"Send income rows for this member, or [] if they have none."</span>
       },
-      <span class="c">// … more fields</span>
+      {
+        <span class="k">"kind"</span>: <span class="s">"field"</span>,
+        <span class="k">"requestPath"</span>: <span class="s">"household.applicationFilingDate"</span>,
+        <span class="k">"field"</span>: <span class="s">"applicationFilingDate"</span>,
+        <span class="k">"label"</span>: <span class="s">"Application filing date"</span>,
+        <span class="k">"type"</span>: <span class="s">"Day"</span>,
+        <span class="k">"at"</span>: []
+      },
+      <span class="c">// … more entries</span>
     ]
   }]
 }</pre>
         </div>
       </div>
       <div class="callout">
-        <strong>This top-level <code>missingInputs</code> is a household-wide
-        union, not a per-person list.</strong> It is a single de-duplicated
-        checklist of every field still needed <em>somewhere</em> in the
-        household, written in the request vocabulary — so a path like
-        <code>members[].income[].type</code> names the <em>field</em>, not a
-        specific member. The <code>[]</code> is the collection-row shape from
-        the request, not an index. To see <em>which person</em> each
-        member-level field belongs to, read
-        <a href="#per-member"><code>missingInputsByMember</code></a> below.
-        (With a single member it is unambiguous; with several, the per-member
-        breakdown is what you want.)
+        <strong>Every entry answers two questions.</strong>
+        <code>requestPath</code> says <em>which</em> field is unanswered
+        (<code>members[].income[].amount</code> — the <code>[]</code> is the
+        collection-row shape, not an index). <code>at</code> says <em>where</em>:
+        an ordered chain of <code>{in, id}</code> hops from the top of your
+        request down to the exact member or row that owes the value. An empty
+        <code>at</code> means household-level; one hop means a specific member;
+        two hops means a specific row inside a member's collection. One entry
+        per owing instance — if two members both lack a date of birth, you get
+        two entries, each addressed to its member.
       </div>
 
       <h2>Reading a missingInputs entry</h2>
-      <p>Each entry in <code>missingInputs</code> tells you where to set the value:</p>
+      <p>Each entry in <code>missingInputs</code> tells you what is unanswered and exactly where:</p>
       <table class="field-table">
         <thead><tr><th>Field</th><th>What it means</th><th>Example</th></tr></thead>
         <tbody>
-          <tr><td>requestPath</td><td>Dot-bracket path in the request where this value lives.</td><td><code>members[].income[].amount</code></td></tr>
+          <tr><td>kind</td><td><code>field</code>: a concrete value is missing. <code>unacknowledged</code>: a whole collection question is unanswered — answer with rows or <code>[]</code>.</td><td><code>field</code></td></tr>
+          <tr><td>requestPath</td><td>Dot-bracket path in the request where this value lives (the schema address).</td><td><code>members[].income[].amount</code></td></tr>
+          <tr><td>at</td><td>The instance address: hops of <code>{in, id}</code> down to the owing member/row. Empty = household-level.</td><td><code>[{"in":"members","id":"alice"}, {"in":"income","id":"pay-1"}]</code></td></tr>
           <tr><td>field</td><td>The leaf field name.</td><td><code>amount</code></td></tr>
-          <tr><td>location</td><td>The collection or object that contains this field.</td><td><code>members[].income[]</code></td></tr>
-          <tr><td>label</td><td>Human-readable display name from the rule author.</td><td><code>Gross income amount</code></td></tr>
-          <tr><td>type</td><td>Data type: <code>Dollar</code>, <code>Boolean</code>, <code>Enum</code>, <code>Int</code>, etc.</td><td><code>Dollar</code></td></tr>
-          <tr><td>options</td><td>Present when type is <code>Enum</code> — the allowed values.</td><td><code>["wages_and_salaries", "self_employment", …]</code></td></tr>
+          <tr><td>label</td><td>Human-readable display name from the rule author (on <code>field</code> entries).</td><td><code>Gross income amount</code></td></tr>
+          <tr><td>type</td><td>Data type: <code>Dollar</code>, <code>Boolean</code>, <code>Enum</code>, <code>Int</code>, etc. (on <code>field</code> entries).</td><td><code>Dollar</code></td></tr>
+          <tr><td>options</td><td>Present when type is <code>Enum</code> — the allowed values.</td><td><code>["wages_and_salaries", …]</code></td></tr>
+          <tr><td>memberId</td><td>Convenience echo of <code>at[0].id</code> when the first hop is <code>members</code> — group entries by it for a per-person view.</td><td><code>alice</code></td></tr>
+          <tr><td>hint</td><td>On <code>unacknowledged</code> entries: how to answer the collection question.</td><td><code>Send income rows…, or []</code></td></tr>
         </tbody>
       </table>
       <div class="callout">
-        <strong>Setting a value at requestPath</strong> — for a path like
-        <code>members[].income[].amount</code>, add an <code>income</code> row to the
-        relevant member object with <code>"amount": 1200</code>. The brackets indicate
-        the value lives inside a collection row.
+        <strong>Setting a value at requestPath</strong> — for an entry with
+        <code>requestPath: "members[].income[].amount"</code> and
+        <code>at: [{"in":"members","id":"alice"}, {"in":"income","id":"pay-1"}]</code>,
+        set <code>"amount"</code> on alice's income row whose <code>id</code> is
+        <code>pay-1</code>. The <code>at</code> chain uses the same <code>id</code>s
+        you sent, so it points into your own request document.
+      </div>
+      <div class="callout">
+        <strong>The shape recurses to the root.</strong> An empty request's
+        first missing input is literally
+        <code>{"kind":"unacknowledged","field":"members","at":[]}</code> —
+        "tell me who is in the household", asked in the same vocabulary as
+        every other gap.
       </div>
 
       <h2>Iterating toward a determination</h2>
@@ -796,20 +815,12 @@ const guideHtml = `<!DOCTYPE html>
         </div>
       </div>
 
-      <h2 id="per-member">Per-member inputs — missingInputsByMember</h2>
+      <h2 id="per-member">Per-person views — group by the first hop</h2>
       <p>
-        When members are provided, the response also includes
-        <code>missingInputsByMember</code>: a breakdown of which fields are missing
-        for each specific member. This lets you show targeted prompts per person rather
-        than a flat combined list.
-      </p>
-      <p>
-        Member-level fields appear in <em>both</em> places: once in the top-level
-        <code>missingInputs</code> union (the household-wide checklist) and again,
-        attributed to the owner, under <code>missingInputsByMember</code>. Treat the
-        per-member map as the source of truth for who-needs-what, and the top-level
-        union as the home for household-scoped fields (<code>household.*</code>) that
-        belong to no single member.
+        Because every entry carries its owner in <code>at</code>, a per-person
+        checklist is a one-liner: group entries by <code>at[0].id</code> (or the
+        <code>memberId</code> echo). Entries with an empty <code>at</code> are
+        household-level and apply to the case, not a person.
       </p>
       <div class="example">
         <div class="example-col">
@@ -831,46 +842,43 @@ const guideHtml = `<!DOCTYPE html>
 }</pre>
         </div>
         <div class="example-col">
-          <h4>Response — bob needs citizenship, alice does not</h4>
+          <h4>Response — the gap is addressed to bob</h4>
           <pre>{
   <span class="k">"determinations"</span>: [{
     <span class="k">"status"</span>: <span class="s">"pending"</span>,
-    <span class="k">"missingInputsByMember"</span>: {
-      <span class="c">// "alice" absent — only members with gaps appear</span>
-      <span class="k">"bob"</span>: [
-        {
-          <span class="k">"requestPath"</span>:
-            <span class="s">"members[].citizenshipImmigrationStatus"</span>,
-          <span class="k">"field"</span>: <span class="s">"citizenshipImmigrationStatus"</span>,
-          <span class="k">"label"</span>: <span class="s">"Citizenship / immigration status"</span>,
-          <span class="k">"type"</span>: <span class="s">"Enum"</span>,
-          <span class="k">"options"</span>: [<span class="s">"citizen"</span>, ...]
-        }
-      ]
-    }
+    <span class="k">"missingInputs"</span>: [
+      {
+        <span class="k">"kind"</span>: <span class="s">"field"</span>,
+        <span class="k">"requestPath"</span>:
+          <span class="s">"members[].citizenshipImmigrationStatus"</span>,
+        <span class="k">"field"</span>: <span class="s">"citizenshipImmigrationStatus"</span>,
+        <span class="k">"label"</span>: <span class="s">"Citizenship / immigration status"</span>,
+        <span class="k">"type"</span>: <span class="s">"Enum"</span>,
+        <span class="k">"options"</span>: [<span class="s">"citizen"</span>, ...],
+        <span class="k">"at"</span>: [{ <span class="k">"in"</span>: <span class="s">"members"</span>, <span class="k">"id"</span>: <span class="s">"bob"</span> }],
+        <span class="k">"memberId"</span>: <span class="s">"bob"</span>
+      }
+      <span class="c">// no alice entry — she answered</span>
+    ]
   }]
 }</pre>
         </div>
       </div>
       <div class="callout">
-        <strong>Income rows are attributed to the member who contributed them.</strong>
-        If alice provides an income row missing <code>amount</code>, that field appears in
-        <code>missingInputsByMember.alice</code> but not in bob's list — but only once
-        bob has explicitly acknowledged his income status (<code>income: []</code> or rows
-        of his own). Until every member has acknowledged a sub-collection, the collection
-        stays unprovided and its fields surface in the top-level <code>missingInputs</code>
-        union rather than per-member.
+        <strong>Row-level precision.</strong> If alice sends two income rows and
+        one lacks <code>amount</code>, the entry's address names the exact row:
+        <code>at: [{"in":"members","id":"alice"}, {"in":"income","id":"pay-2"}]</code>.
+        Unanswered collection questions are their own entries: until bob carries
+        an <code>income</code> key (rows or <code>[]</code>), his determination
+        shows <code>{"kind":"unacknowledged","field":"income","at":[…bob]}</code>
+        rather than a pile of per-field income gaps for rows that don't exist.
       </div>
       <div class="callout">
-        <strong>Granularity stops at the member.</strong> Attribution is per
-        <em>member</em>, not per <em>row</em>: if a member has two income rows and one
-        is missing <code>amount</code>, the gap is reported once as
-        <code>members[].income[].amount</code> under that member — the response does not
-        say <em>which</em> row. Since you sent the rows, you already know which one is
-        incomplete. We may refine this later (e.g. tagging the entry with the
-        contributing row's <code>id</code>, or splitting the top-level union so it
-        carries only household-scoped fields); for now treat both behaviours as
-        subject to change.
+        <strong>Deprecated: <code>missingInputsByMember</code>.</strong> Responses
+        still include the old per-member map so earlier integrations keep working,
+        but it is derivable from <code>missingInputs</code> by grouping on
+        <code>at[0].id</code> and will be removed once integrators have migrated.
+        New code should read the entries' <code>at</code> addresses.
       </div>
 
       <h2>Resolved determinations</h2>
@@ -1243,9 +1251,6 @@ const demoHtml = `<!DOCTYPE html>
     <label>Bearer token
       <input id="api-token" class="tok-in" type="password" placeholder="leave blank for local dev" />
     </label>
-    <label class="instanced-toggle" title="Experimental: one missingInputs entry per concrete instance, each with an 'at' hop-chain address, plus 'unacknowledged' entries for unanswered collection questions. See the raw response panel.">
-      <input id="instanced-fmt" type="checkbox" /> instanced missingInputs (experimental)
-    </label>
     <button id="reset-btn" title="Clear all values and restart">Reset</button>
   </div>
 
@@ -1343,11 +1348,6 @@ const demoHtml = `<!DOCTYPE html>
   // ---- request builder ------------------------------------------------------
   function buildRequest() {
     var req = { members: [] }
-    // Experimental instanced missing-inputs format (determination endpoints
-    // only; the flag is ignored by the expedited screen).
-    if (document.getElementById('instanced-fmt').checked) {
-      req.missingInputsFormat = 'instanced'
-    }
     var hk = Object.keys(householdVals)
     if (hk.length > 0) {
       req.household = {}; hk.forEach(function(k) { req.household[k] = householdVals[k] })
@@ -1404,10 +1404,10 @@ const demoHtml = `<!DOCTYPE html>
         var det = (data.determinations && data.determinations[0]) ? data.determinations[0] : data
         curDet = det; curStatus = det.status || null
         var missing = det.missingInputs || data.missingInputs || []
-        // Instanced format: kind:"unacknowledged" entries are whole-collection
-        // questions, not fields — surface them on their own line and keep the
-        // field cards driven by kind:"field" (or default-format) entries.
-        // Instanced entries repeat per instance; the Set dedupes for the cards.
+        // kind:"unacknowledged" entries are whole-collection questions, not
+        // fields — surface them on their own line and keep the field cards
+        // driven by kind:"field" entries. Entries repeat per owing instance;
+        // the Set dedupes for the field cards.
         var unack = missing.filter(function(m) { return m.kind === 'unacknowledged' })
         var unackLine = document.getElementById('unack-line')
         if (unack.length > 0) {

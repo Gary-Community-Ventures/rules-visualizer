@@ -5,6 +5,60 @@ without surface impact aren't logged here; see git history for those.
 
 ## Unreleased
 
+### 2026-07-07 — missingInputs is now instanced (BREAKING)
+
+The instanced shape introduced below as an opt-in experiment is now the
+**only** `missingInputs` shape on the v2 surface (both determination
+endpoints and the expedited screen). Spec version bumped to 2.0.0.
+
+**What changed for a consumer.** Each entry now answers two questions:
+`requestPath` says *which* field is unanswered (unchanged from before);
+`at` says *where* — an ordered chain of `{in, id}` hops from the top of
+your request down to the exact member or row that owes the value (empty =
+household-level). Entries repeat per owing instance instead of being
+deduped per field, and unanswered *collection questions* are their own
+`kind: "unacknowledged"` entries instead of a pile of per-field gaps.
+
+Before (one deduped entry per field, owner unknown):
+
+```json
+"missingInputs": [
+  { "requestPath": "members[].dateOfBirth", "field": "dateOfBirth",
+    "location": "members[]", "type": "Date", "label": "Date of birth" }
+]
+```
+
+After (one entry per owing instance, addressed):
+
+```json
+"missingInputs": [
+  { "kind": "field", "requestPath": "members[].dateOfBirth",
+    "field": "dateOfBirth", "location": "members[]", "type": "Date",
+    "label": "Date of birth",
+    "at": [ { "in": "members", "id": "bob" } ], "memberId": "bob" },
+  { "kind": "unacknowledged", "requestPath": "members[].income",
+    "field": "income",
+    "at": [ { "in": "members", "id": "bob" } ], "memberId": "bob",
+    "hint": "Send income rows for this member, or [] if they have none." }
+]
+```
+
+**Migration:**
+
+- If you only read `requestPath`/`field`/`label`/`type`/`options`, field
+  entries still carry all of those — but the same field can now appear
+  once per owing row, so dedupe on `requestPath` if you want the old
+  one-prompt-per-field view.
+- Branch on `kind`: `unacknowledged` entries have no `location`/`type`/
+  `label`; they carry a `hint` and mean "answer this collection with rows
+  or []".
+- For a per-person checklist, group entries on `at[0].id` (or the
+  `memberId` echo). `missingInputsByMember` is now **deprecated** — still
+  attached so existing code keeps working, but it is derivable from the
+  entries and will be removed once integrators have migrated.
+- The evaluation-window request flag `missingInputsFormat` is deprecated
+  and ignored; sending `"fields"` earns a migration note in `notes`.
+
 ### 2026-07-07 — instanced missing-inputs (experimental, opt-in) + medicaid pending guard
 
 #### Added (opt-in — no default-behavior change)

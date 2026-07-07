@@ -47,8 +47,12 @@ test('pending determination lists missingInputs in the friendly request vocabula
   for (const m of missing) {
     assert.ok(typeof m.requestPath === 'string' && m.requestPath.length > 0)
     assert.ok(typeof m.field === 'string' && !(m.field as string).includes('/'))
-    assert.ok(typeof m.location === 'string', 'has a location')
-    assert.ok(typeof m.label === 'string', 'has a human label')
+    assert.ok(m.kind === 'field' || m.kind === 'unacknowledged', 'has a kind')
+    assert.ok(Array.isArray(m.at), 'has an at address')
+    if (m.kind === 'field') {
+      assert.ok(typeof m.location === 'string', 'field entries have a location')
+      assert.ok(typeof m.label === 'string', 'field entries have a human label')
+    }
     assert.ok(!(m.requestPath as string).startsWith('/'), 'requestPath is friendly, not a path')
   }
 })
@@ -205,9 +209,22 @@ test('income collection is treated as unprovided when not all members acknowledg
   assert.equal(res.status, 200)
   const det = res.body.determinations[0] as Record<string, unknown>
 
-  const topLevel = (det.missingInputs ?? []) as Array<{ location: string }>
-  const incomeGlobal = topLevel.filter((m) => m.location === 'members[].income[]').length
-  assert.ok(incomeGlobal > 0, 'income fields surface globally when not all members acknowledged income')
+  const topLevel = (det.missingInputs ?? []) as Array<{
+    kind: string
+    field: string
+    location?: string
+    at: Array<{ in: string; id: string }>
+  }>
+  // The withheld collection surfaces as the income QUESTION addressed to the
+  // member who hasn't answered it — not as per-field row entries.
+  const asks = topLevel.filter((m) => m.kind === 'unacknowledged' && m.field === 'income')
+  assert.deepEqual(
+    asks.map((m) => m.at),
+    [[{ in: 'members', id: 'bob' }]],
+    'the income question is asked of bob only — alice acknowledged with rows'
+  )
+  const incomeFieldEntries = topLevel.filter((m) => m.location === 'members[].income[]').length
+  assert.equal(incomeFieldEntries, 0, 'no per-field income entries while the collection is withheld')
 
   const byMember = det.missingInputsByMember as Record<string, Array<{ location: string }>> | undefined
   for (const entries of Object.values(byMember ?? {})) {
@@ -232,14 +249,26 @@ test('income: [] asserts no income — income fields do not appear in missingInp
   assert.equal(withEmpty.status, 200)
   assert.equal(withAbsent.status, 200)
 
-  const emptyMissing = (withEmpty.body.determinations[0].missingInputs ?? []) as Array<{ location: string }>
-  const absentMissing = (withAbsent.body.determinations[0].missingInputs ?? []) as Array<{ location: string }>
+  const emptyMissing = (withEmpty.body.determinations[0].missingInputs ?? []) as Array<{
+    kind: string
+    field: string
+    location?: string
+  }>
+  const absentMissing = (withAbsent.body.determinations[0].missingInputs ?? []) as Array<{
+    kind: string
+    field: string
+    location?: string
+  }>
 
-  const incomeInEmpty  = emptyMissing.filter((m) => m.location === 'members[].income[]').length
-  const incomeInAbsent = absentMissing.filter((m) => m.location === 'members[].income[]').length
+  const incomeInEmpty = emptyMissing.filter(
+    (m) => m.location === 'members[].income[]' || (m.kind === 'unacknowledged' && m.field === 'income')
+  ).length
+  const incomeAskInAbsent = absentMissing.filter(
+    (m) => m.kind === 'unacknowledged' && m.field === 'income'
+  ).length
 
-  assert.equal(incomeInEmpty, 0, 'income: [] — no income fields in missingInputs')
-  assert.ok(incomeInAbsent > 0, 'omitted income — income fields appear as missing')
+  assert.equal(incomeInEmpty, 0, 'income: [] — the income question is answered; nothing income-shaped is missing')
+  assert.ok(incomeAskInAbsent > 0, 'omitted income — the income question appears as unacknowledged')
 })
 
 test('expenses: [] asserts no expenses — expense fields do not appear in missingInputs', async () => {

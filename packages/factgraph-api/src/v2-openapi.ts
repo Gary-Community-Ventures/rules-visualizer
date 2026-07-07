@@ -22,7 +22,7 @@ import { z } from 'zod'
 
 extendZodWithOpenApi(z)
 
-export const V2_API_VERSION = '1.0.0'
+export const V2_API_VERSION = '2.0.0'
 
 const CATALOG_URL =
   'https://gary-community-ventures.github.io/rules-visualizer/engine-inputs.html'
@@ -99,8 +99,9 @@ export function buildV2OpenApiDocument() {
       metadata: z.record(z.string(), z.unknown()).optional().openapi({ description: 'Opaque; echoed back, never inspected.' }),
       asOf: z.string().optional().openapi({ format: 'date', description: 'Evaluation date; defaults to now.' }),
       missingInputsFormat: z.enum(['fields', 'instanced']).optional().openapi({
+        deprecated: true,
         description:
-          'EXPERIMENTAL — under evaluation with integrators; may change or become the default. `"instanced"` switches `missingInputs` to one entry per concrete instance (each with an `at` hop-chain address and a `kind`), including `unacknowledged` entries for unanswered collection questions. Default `"fields"` is the current deduped-per-field shape. `missingInputsByMember` is attached unchanged in both formats during the evaluation window. Determination endpoints only; ignored by expedited screening.',
+          'DEPRECATED and ignored — `missingInputs` is always instanced now. Accepted so earlier requests don\'t 400; sending `"fields"` earns a migration note in the response.',
       }),
       household: z.object({}).passthrough().optional().openapi({ description: 'Household/application-level fields (per catalog).' }),
       members: z.array(Member).optional(),
@@ -118,35 +119,35 @@ export function buildV2OpenApiDocument() {
     z.object({
       in: z.string().openapi({ example: 'income', description: 'Request-vocabulary collection key: members, income, expenses, jobs, assets, caregiverRelationships.' }),
       id: z.string().openapi({ example: 'alice-income-0', description: 'The caller-assigned row id (positional fallback when the row had none).' }),
-    }).openapi({ description: 'EXPERIMENTAL — one hop of an instance address: which collection, which row.' })
+    }).openapi({ description: 'One hop of an instance address: which collection, which row.' })
   )
 
   const MissingInput = registry.register(
     'MissingInput',
     z.object({
-      kind: z.enum(['field', 'unacknowledged']).optional().openapi({
+      kind: z.enum(['field', 'unacknowledged']).openapi({
         description:
-          'EXPERIMENTAL — present when the request opted into `missingInputsFormat: "instanced"`. `field`: a concrete value is missing at `at`. `unacknowledged`: a whole collection question is unanswered at `at` — answer with rows, or [] for none.',
+          '`field`: a concrete value is missing at `at`. `unacknowledged`: a whole collection question is unanswered at `at` — answer with rows, or [] for none.',
       }),
-      requestPath: z.string().openapi({ example: 'members[].isPregnant', description: 'Where to set the value in the request.' }),
+      requestPath: z.string().openapi({ example: 'members[].isPregnant', description: 'The schema address: where the field lives in the request body.' }),
       field: z.string(),
       location: z.string().optional().openapi({ example: 'members[]', description: 'Omitted on `unacknowledged` entries.' }),
       type: z.string().optional().openapi({ example: 'Boolean', description: 'Omitted on `unacknowledged` entries.' }),
       label: z.string().optional().openapi({ description: "The rule author's display name. Omitted on `unacknowledged` entries." }),
       options: z.array(z.string()).optional().openapi({ description: 'Allowed values when the field is an enum.' }),
-      at: z.array(InstanceHop).optional().openapi({
+      at: z.array(InstanceHop).openapi({
         description:
-          'EXPERIMENTAL (instanced format only) — the instance address: ordered hops from the request root down to the row that owes the value. Empty = household-level. Household = 0 hops, member = 1, sub-collection row = 2.',
+          'The instance address: ordered hops from the request root down to the row that owes the value. Empty = household-level. Household = 0 hops, member = 1, sub-collection row = 2. Group entries by `at[0].id` for a per-member view.',
       }),
       memberId: z.string().optional().openapi({
-        description: 'Instanced format only: echo of `at[0].id` when the first hop is members — convenience for groupBy-by-member consumers.',
+        description: 'Echo of `at[0].id` when the first hop is members — convenience for groupBy-by-member consumers.',
       }),
       hint: z.string().optional().openapi({
         description: 'On `unacknowledged` entries: how to answer the collection question.',
       }),
     }).openapi({
       description:
-        'An input that would unlock or refine this determination, in the request vocabulary. Default format: one deduped entry per field (`location`/`type`/`label` always present). With `missingInputsFormat: "instanced"`: one entry per concrete instance, each carrying an `at` hop-chain address, plus `unacknowledged` entries for unanswered collection questions — an empty request\'s first missing input is literally `{field: "members", at: []}`.',
+        'One still-needed input, addressed twice: `requestPath` says WHICH question is unanswered; `at` says WHERE — the concrete member/row that owes it. One entry per instance (the same field can appear once per owing row). `unacknowledged` entries surface unanswered collection questions — an empty request\'s first missing input is literally `{field: "members", at: []}`.',
     })
   )
 
@@ -170,8 +171,8 @@ export function buildV2OpenApiDocument() {
       chpEligible: z.boolean().optional(),
       denialReasonCode: z.string().optional().openapi({ description: 'snake_case; present on denied/ineligible.' }),
       explanation: z.array(ExplanationStep).optional().openapi({ description: 'Path-free "why" for denials.' }),
-      missingInputs: z.array(MissingInput).optional().openapi({ description: 'Present whenever needed inputs remain unfilled (always when pending; may also accompany a decided status when side outputs such as the benefit amount could not resolve): exactly which fields to fill. On member-scoped determinations (medicaid) this is that member\'s own gaps plus the shared household-level gaps; on household-scoped determinations (SNAP) it is the union across members.' }),
-      missingInputsByMember: z.record(z.string(), z.array(MissingInput)).optional().openapi({ description: 'Household-scoped determinations (SNAP) only: the member-level subset of missingInputs keyed by member id. Shared inputs (income rows, expenses) appear only in the top-level missingInputs. Member-scoped determinations carry their member\'s gaps directly in missingInputs instead.' }),
+      missingInputs: z.array(MissingInput).optional().openapi({ description: 'Present whenever needed inputs remain unfilled (always when pending; may also accompany a decided status when side outputs such as the benefit amount could not resolve). One entry per concrete instance, each addressed by `at`. On member-scoped determinations (medicaid) this is that member\'s own entries plus the household-level ones (empty `at`); on household-scoped determinations (SNAP) it covers every member.' }),
+      missingInputsByMember: z.record(z.string(), z.array(z.object({ requestPath: z.string(), field: z.string(), location: z.string(), type: z.string(), label: z.string(), options: z.array(z.string()).optional() }).openapi({ description: 'Pre-instanced field entry (no kind/at).' }))).optional().openapi({ deprecated: true, description: 'DEPRECATED — derivable from missingInputs by grouping entries on `at[0].id`; will be removed once integrators have migrated. Household-scoped determinations (SNAP) only.' }),
       notes: z.array(z.string()).optional().openapi({ description: 'Assumptions/translation notes.' }),
     }).openapi({ description: 'One program decision. One shape for household- and member-scoped programs (no oneOf).' })
   )

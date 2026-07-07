@@ -16,13 +16,13 @@ import {
   SNAP_EXPEDITED_TARGET,
 } from '../translate/snap.js'
 import { translateRequest } from '../translate/v2-request.js'
-import { friendlyMissing, friendlyMissingByMember } from '../translate/field-index.js'
+import { friendlyMissingByMember } from '../translate/field-index.js'
 import { composeInstancedMissing } from '../translate/instanced-missing.js'
 import {
   V2HouseholdRequestSchema,
   snapDetermination,
 } from '../translate/v2.js'
-import { problem, run, isoDay } from './v2-helpers.js'
+import { problem, run, isoDay, FIELDS_FORMAT_GONE } from './v2-helpers.js'
 
 const router = Router()
 
@@ -59,26 +59,21 @@ router.post('/determination', (req, res) => {
     problem(res, 503, 'Ruleset unavailable', `"${SNAP_RULESET_ID}" is not loaded.`)
     return
   }
-  const instanced = body.missingInputsFormat === 'instanced'
   const { inputs, memberIds, warnings, acknowledgment } = translateRequest(body, model, asOf)
-  const query = run(
-    res,
-    SNAP_RULESET_ID,
-    inputs,
-    SNAP_DETERMINATION_TARGETS,
-    instanced ? ['trace', 'missingInputInstances'] : ['trace']
-  )
+  if (body.missingInputsFormat === 'fields') {
+    warnings.unshift(FIELDS_FORMAT_GONE)
+  }
+  const query = run(res, SNAP_RULESET_ID, inputs, SNAP_DETERMINATION_TARGETS, [
+    'trace',
+    'missingInputInstances',
+  ])
   if (!query) return
 
   const det = snapDetermination(query, warnings)
-  if (instanced) {
-    const missing = composeInstancedMissing(query, memberIds, acknowledgment, model)
-    if (missing.length) det.missingInputs = missing
-  } else {
-    const missing = friendlyMissing(query.missingInputs ?? [], model)
-    if (missing.length) det.missingInputs = missing
-  }
-  // Attached in both formats during the instanced-format evaluation window.
+  const missing = composeInstancedMissing(query, memberIds, acknowledgment, model)
+  if (missing.length) det.missingInputs = missing
+  // DEPRECATED — derivable from missingInputs by grouping on at[0].id; kept
+  // while integrators move to the instanced entries. Remove after migration.
   const missingByMember = friendlyMissingByMember(query.missingInputsByMember ?? {}, model)
   if (Object.keys(missingByMember).length) det.missingInputsByMember = missingByMember
 
@@ -107,13 +102,20 @@ router.post('/expedited-screening', (req, res) => {
     problem(res, 503, 'Ruleset unavailable', `"${SNAP_RULESET_ID}" is not loaded.`)
     return
   }
-  const { inputs, warnings } = translateRequest(body, model, asOf)
-  const query = run(res, SNAP_RULESET_ID, inputs, [SNAP_EXPEDITED_TARGET], undefined)
+  const { inputs, memberIds, warnings, acknowledgment } = translateRequest(body, model, asOf)
+  if (body.missingInputsFormat === 'fields') {
+    warnings.unshift(FIELDS_FORMAT_GONE)
+  }
+  const query = run(res, SNAP_RULESET_ID, inputs, [SNAP_EXPEDITED_TARGET], [
+    'missingInputInstances',
+  ])
   if (!query) return
 
   const isExpedited = query.values[SNAP_EXPEDITED_TARGET]
   const resolved = typeof isExpedited === 'boolean'
-  const missing = resolved ? [] : friendlyMissing(query.missingInputs ?? [], model)
+  const missing = resolved
+    ? []
+    : composeInstancedMissing(query, memberIds, acknowledgment, model)
 
   res.json({
     ...(body.metadata !== undefined ? { metadata: body.metadata } : {}),

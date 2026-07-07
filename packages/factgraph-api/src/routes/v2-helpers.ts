@@ -60,3 +60,10 @@ export function run(
 export function isoDay(d: Date): string {
   return d.toISOString().slice(0, 10)
 }
+
+/** Note returned when a caller asks for the retired pre-instanced format. */
+export const FIELDS_FORMAT_GONE =
+  'missingInputsFormat "fields" has been replaced: missingInputs now always ' +
+  'uses the instanced shape (one entry per concrete instance, addressed by ' +
+  '`at` hops, plus "unacknowledged" collection questions). The flag is ' +
+  'ignored. See docs/changelog.md for the migration.'

@@ -139,8 +139,14 @@ test('pending member — missingInputs in the friendly request vocabulary', asyn
     assert.ok(typeof m.requestPath === 'string', 'requestPath present')
     assert.ok(!(m.requestPath as string).startsWith('/'), 'requestPath is friendly, not an engine path')
     assert.ok(typeof m.field === 'string', 'field present')
-    assert.ok(typeof m.label === 'string', 'label present')
-    assert.ok(typeof m.location === 'string', 'location present')
+    assert.ok(m.kind === 'field' || m.kind === 'unacknowledged', 'kind present')
+    assert.ok(Array.isArray(m.at), 'at address present')
+    if (m.kind === 'field') {
+      assert.ok(typeof m.label === 'string', 'label present on field entries')
+      assert.ok(typeof m.location === 'string', 'location present on field entries')
+    } else {
+      assert.ok(typeof m.hint === 'string', 'hint present on unacknowledged entries')
+    }
   }
 })
 
@@ -167,17 +173,25 @@ test('per-member missingInputs — each member gets only their own unresolved fi
   assert.ok(spouseFields.includes('dateOfBirth'), `spouse should need dateOfBirth; got: ${spouseFields.join(', ')}`)
 })
 
-test('pending member — income fields appear in missingInputs when no household income provided', async () => {
+test('pending member — the unanswered income question appears in missingInputs', async () => {
   // Medicaid income is household-scoped: if NO member provides income rows,
-  // the determination cannot resolve and income fields appear in missingInputs.
+  // the determination cannot resolve. The response asks the income QUESTION
+  // (an `unacknowledged` entry — send rows or []) rather than listing the
+  // fields of rows that don't exist yet.
   const res = await request(app).post(URL).send({
     members: [{ id: 'alice', dateOfBirth: '1990-01-01' }],
   })
   assert.equal(res.status, 200)
   const det = res.body.determinations[0] as Record<string, unknown>
   assert.equal(det.status, 'pending')
-  const missing = (det.missingInputs ?? []) as Array<{ field: string }>
-  assert.ok(missing.some((m) => m.field === 'amount'), 'income amount in missingInputs when no income rows provided')
+  const missing = (det.missingInputs ?? []) as Array<{
+    kind: string
+    field: string
+    at: Array<{ in: string; id: string }>
+  }>
+  const incomeAsk = missing.find((m) => m.kind === 'unacknowledged' && m.field === 'income')
+  assert.ok(incomeAsk, 'unacknowledged income question present')
+  assert.deepEqual(incomeAsk!.at, [{ in: 'members', id: 'alice' }])
 })
 
 test('income: [] asserts no income — resolves without income fields in missingInputs', async () => {
@@ -225,8 +239,8 @@ test('a member pending only on shared fields is not blamed for another member\'s
   const bobFields = ((bob.missingInputs ?? []) as Array<{ field: string }>).map((m) => m.field)
   // alice provided her dateOfBirth; she must not be told to provide it again.
   assert.ok(!aliceFields.includes('dateOfBirth'), `alice should not need dateOfBirth; got: ${aliceFields.join(', ')}`)
-  // the shared income gap still surfaces for alice.
-  assert.ok(aliceFields.includes('amount'), `alice should still need shared income; got: ${aliceFields.join(', ')}`)
+  // the income question still surfaces for alice (she never acknowledged it).
+  assert.ok(aliceFields.includes('income'), `alice should still owe the income question; got: ${aliceFields.join(', ')}`)
   // bob's own member-level gap is attributed to bob.
   assert.ok(bobFields.includes('dateOfBirth'), `bob should need dateOfBirth; got: ${bobFields.join(', ')}`)
 })

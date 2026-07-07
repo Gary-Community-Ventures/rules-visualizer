@@ -4,7 +4,7 @@
 openapi: 3.1.0
 info:
   title: Eligibility API — v2 (engine-shaped)
-  version: 1.0.0
+  version: 2.0.0
   description: |-
     The engine-shaped eligibility contract served at `/v2/eligibility`. The rules engine is the source of truth; build your data model to match these fields.
 
@@ -142,14 +142,10 @@ components:
           enum:
             - fields
             - instanced
-          description: EXPERIMENTAL — under evaluation with integrators; may change or
-            become the default. `"instanced"` switches `missingInputs` to one
-            entry per concrete instance (each with an `at` hop-chain address and
-            a `kind`), including `unacknowledged` entries for unanswered
-            collection questions. Default `"fields"` is the current
-            deduped-per-field shape. `missingInputsByMember` is attached
-            unchanged in both formats during the evaluation window.
-            Determination endpoints only; ignored by expedited screening.
+          description: DEPRECATED and ignored — `missingInputs` is always instanced now.
+            Accepted so earlier requests don't 400; sending `"fields"` earns a
+            migration note in the response.
+          deprecated: true
         household:
           type: object
           properties: {}
@@ -180,8 +176,7 @@ components:
       required:
         - in
         - id
-      description: "EXPERIMENTAL — one hop of an instance address: which collection,
-        which row."
+      description: "One hop of an instance address: which collection, which row."
     MissingInput:
       type: object
       properties:
@@ -190,13 +185,12 @@ components:
           enum:
             - field
             - unacknowledged
-          description: 'EXPERIMENTAL — present when the request opted into
-            `missingInputsFormat: "instanced"`. `field`: a concrete value is
-            missing at `at`. `unacknowledged`: a whole collection question is
-            unanswered at `at` — answer with rows, or [] for none.'
+          description: "`field`: a concrete value is missing at `at`. `unacknowledged`: a
+            whole collection question is unanswered at `at` — answer with rows,
+            or [] for none."
         requestPath:
           type: string
-          description: Where to set the value in the request.
+          description: "The schema address: where the field lives in the request body."
           example: members[].isPregnant
         field:
           type: string
@@ -220,27 +214,28 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/InstanceHop"
-          description: "EXPERIMENTAL (instanced format only) — the instance address:
-            ordered hops from the request root down to the row that owes the
-            value. Empty = household-level. Household = 0 hops, member = 1,
-            sub-collection row = 2."
+          description: "The instance address: ordered hops from the request root down to
+            the row that owes the value. Empty = household-level. Household = 0
+            hops, member = 1, sub-collection row = 2. Group entries by
+            `at[0].id` for a per-member view."
         memberId:
           type: string
-          description: "Instanced format only: echo of `at[0].id` when the first hop is
-            members — convenience for groupBy-by-member consumers."
+          description: Echo of `at[0].id` when the first hop is members — convenience for
+            groupBy-by-member consumers.
         hint:
           type: string
           description: "On `unacknowledged` entries: how to answer the collection question."
       required:
+        - kind
         - requestPath
         - field
-      description: "An input that would unlock or refine this determination, in the
-        request vocabulary. Default format: one deduped entry per field
-        (`location`/`type`/`label` always present). With `missingInputsFormat:
-        \"instanced\"`: one entry per concrete instance, each carrying an `at`
-        hop-chain address, plus `unacknowledged` entries for unanswered
-        collection questions — an empty request's first missing input is
-        literally `{field: \"members\", at: []}`."
+        - at
+      description: "One still-needed input, addressed twice: `requestPath` says WHICH
+        question is unanswered; `at` says WHERE — the concrete member/row that
+        owes it. One entry per instance (the same field can appear once per
+        owing row). `unacknowledged` entries surface unanswered collection
+        questions — an empty request's first missing input is literally `{field:
+        \"members\", at: []}`."
     ExplanationStep:
       type: object
       properties:
@@ -304,24 +299,45 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/MissingInput"
-          description: "Present whenever needed inputs remain unfilled (always when
+          description: Present whenever needed inputs remain unfilled (always when
             pending; may also accompany a decided status when side outputs such
-            as the benefit amount could not resolve): exactly which fields to
-            fill. On member-scoped determinations (medicaid) this is that
-            member's own gaps plus the shared household-level gaps; on
-            household-scoped determinations (SNAP) it is the union across
-            members."
+            as the benefit amount could not resolve). One entry per concrete
+            instance, each addressed by `at`. On member-scoped determinations
+            (medicaid) this is that member's own entries plus the
+            household-level ones (empty `at`); on household-scoped
+            determinations (SNAP) it covers every member.
         missingInputsByMember:
           type: object
           additionalProperties:
             type: array
             items:
-              $ref: "#/components/schemas/MissingInput"
-          description: "Household-scoped determinations (SNAP) only: the member-level
-            subset of missingInputs keyed by member id. Shared inputs (income
-            rows, expenses) appear only in the top-level missingInputs.
-            Member-scoped determinations carry their member's gaps directly in
-            missingInputs instead."
+              type: object
+              properties:
+                requestPath:
+                  type: string
+                field:
+                  type: string
+                location:
+                  type: string
+                type:
+                  type: string
+                label:
+                  type: string
+                options:
+                  type: array
+                  items:
+                    type: string
+              required:
+                - requestPath
+                - field
+                - location
+                - type
+                - label
+              description: Pre-instanced field entry (no kind/at).
+          description: DEPRECATED — derivable from missingInputs by grouping entries on
+            `at[0].id`; will be removed once integrators have migrated.
+            Household-scoped determinations (SNAP) only.
+          deprecated: true
         notes:
           type: array
           items:

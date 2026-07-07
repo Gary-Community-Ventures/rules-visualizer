@@ -60,10 +60,9 @@ export const V2HouseholdRequestSchema = z
   .object({
     metadata: z.record(z.string(), z.unknown()).optional(),
     asOf: z.string().optional(),
-    /** EXPERIMENTAL. "instanced" switches missingInputs to one entry per
-     *  concrete instance with an `at` hop-chain address, plus
-     *  "unacknowledged" entries for unanswered collection questions.
-     *  Default "fields" is the current deduped-per-field shape. */
+    /** DEPRECATED and ignored — missingInputs is always instanced now.
+     *  Still accepted so requests written during the evaluation window
+     *  don't 400; sending "fields" earns a note explaining the migration. */
     missingInputsFormat: z.enum(['fields', 'instanced']).optional(),
     household: bag().optional(),
     members: z.array(memberBag()).optional(),
@@ -118,14 +117,12 @@ export type Determination = {
   denialReasonCode?: string
   /** Path-free "why" for denials. */
   explanation?: ExplanationStep[]
-  /** Inputs that would unlock or refine this determination, in the friendly
-   *  request vocabulary (set by the route via the field index). Entries are
-   *  InstancedMissing when the request opted into
-   *  `missingInputsFormat: "instanced"`. */
-  missingInputs?: FriendlyMissing[] | InstancedMissing[]
-  /** Per-member breakdown of member-level missing inputs (same vocabulary).
-   *  Keyed by member id. Subset of missingInputs; shared household-level
-   *  fields (income rows, expenses) appear only in the top-level union. */
+  /** Inputs that would unlock or refine this determination: one entry per
+   *  concrete instance, addressed by `at` hops, plus "unacknowledged"
+   *  collection questions (set by the route via the composer). */
+  missingInputs?: InstancedMissing[]
+  /** DEPRECATED — derivable from missingInputs by grouping entries on
+   *  `at[0].id`. Kept while integrators migrate; will be removed. */
   missingInputsByMember?: Record<string, FriendlyMissing[]>
   /** Assumptions the determination is conditional on (defaulted/derived). */
   notes?: string[]
