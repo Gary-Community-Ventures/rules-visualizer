@@ -1,11 +1,11 @@
 # Changelog
 
-Public-facing changes to the Fact Graph adapter API. Internal refactors
-without surface impact aren't logged here; see git history for those.
+Public-facing changes to the Fact Graph adapter API. The API deploys
+continuously rather than by tagged release, so entries are dated: a
+section's changes are live on the production API as of its date. Internal
+refactors without surface impact aren't logged here; see git history.
 
-## Unreleased
-
-### 2026-07-07 — missingInputs is now instanced (BREAKING)
+## 2026-07-07 — missingInputs is now instanced (BREAKING)
 
 The instanced shape introduced below as an opt-in experiment is now the
 **only** `missingInputs` shape on the v2 surface (both determination
@@ -59,9 +59,9 @@ After (one entry per owing instance, addressed):
 - The evaluation-window request flag `missingInputsFormat` is deprecated
   and ignored; sending `"fields"` earns a migration note in `notes`.
 
-### 2026-07-07 — instanced missing-inputs (experimental, opt-in) + medicaid pending guard
+## 2026-07-07 — instanced missing-inputs (experimental, opt-in) + medicaid pending guard
 
-#### Added (opt-in — no default-behavior change)
+### Added (opt-in — no default-behavior change)
 
 - **`missingInputsFormat: "instanced"`** on the v2 determination requests
   switches `missingInputs` to the shape under evaluation to replace the
@@ -82,7 +82,7 @@ After (one entry per owing instance, addressed):
 - The advanced `/query` endpoint exposes the raw layer as
   `include: ["missingInputInstances"]` (engine paths + hop chains).
 
-#### Fixed (behavior corrections observable on the wire)
+### Fixed (behavior corrections observable on the wire)
 
 - **Medicaid no longer returns a committed `ineligible` for members whose
   age never resolved.** The category Switch's catch-all yields `Ineligible`
@@ -96,9 +96,9 @@ After (one entry per owing instance, addressed):
   previously counted as resolved, so `/query` could report `complete`
   while a member's value was null and list no missing inputs for it.
 
-### 2026-07-06 — trace correctness, error handling, contract cleanup
+## 2026-07-06 — trace correctness, error handling, contract cleanup
 
-#### Changed (breaking — flagged for consumers)
+### Changed (breaking — flagged for consumers)
 
 - **v2 `medicaidCategory` values are now snake_case** (`adult`, `infant`,
   `older_child`, `ssi_recipient`, `ineligible`, …), matching the stated
@@ -121,7 +121,7 @@ After (one entry per owing instance, addressed):
 - **`/v1/eligibility` "ruleset unavailable" is now 503** (was 500),
   matching v2. Callers treating any 5xx as retryable are unaffected.
 
-#### Fixed (behavior corrections observable on the wire)
+### Fixed (behavior corrections observable on the wire)
 
 - **Traces: comparison nodes now report their own result.** Inline
   comparisons inside `Any`/`All`/`When` previously echoed the enclosing
@@ -151,7 +151,7 @@ After (one entry per owing instance, addressed):
 - **v1: expedited screening now carries `x-translationNotes`** — the
   household-only-shape disclosure was generated but dropped by the route.
 
-#### Added
+### Added
 
 - **RFC 9457 everywhere.** A global error boundary replaces Express's
   default HTML error page: malformed JSON → 400 Problem Details, body
@@ -181,7 +181,7 @@ After (one entry per owing instance, addressed):
   medicaid determinations attach `missingInputs` whenever any needed
   inputs remain (as SNAP already did), not only on `pending`.
 
-#### Docs
+### Docs
 
 - `docs/input-dictionary.md` is demoted to a **field-grouping proposal**
   with a banner: its field names follow the earlier proposal routing
@@ -190,6 +190,8 @@ After (one entry per owing instance, addressed):
   is the authoritative field list for the live endpoints.
 - The stale "Known limitations" tail (claiming no traces and no OpenAPI
   spec existed) is corrected.
+
+## 2026-06 and earlier — initial adapter build-out
 
 ### Added
 
