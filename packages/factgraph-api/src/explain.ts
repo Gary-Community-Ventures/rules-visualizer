@@ -14,15 +14,27 @@
  * as they stick to the supported operator vocabulary.
  *
  * Scope: All, Any, Not, the six comparisons, Switch/Case/When, Dependency
- * references, and the common literal types (including Enum). Switch is the
- * branch-selection operator behind every categorical decision, so descending
- * it is what lets a denial trace reach the gate that actually failed rather
- * than stopping at the top-level category node. Arithmetic and collection
- * operators (Multiply, Round, Subtract, GreaterOf, Filter, Count, etc.) are
- * still surfaced as "opaque" — the computed value is in the trace but we
- * don't descend into the sub-expressions. Callers wanting that deeper
- * value-composition detail can target those intermediate facts directly via
- * a second /query call.
+ * references (absolute, `../sibling`, `^` escape, and bare sibling names —
+ * matching the parser's resolution rules), and the common literal types
+ * (including Enum). Switch is the branch-selection operator behind every
+ * categorical decision, so descending it is what lets a denial trace reach
+ * the gate that actually failed rather than stopping at the top-level
+ * category node. Collection-scoped facts (paths with a `/*` segment) are
+ * traced once per row, with each sub-trace tagged by the caller's row id
+ * (`memberId`). Arithmetic and collection operators (Multiply, Round,
+ * Subtract, GreaterOf, Filter, Count, etc.) are still surfaced as "opaque"
+ * — the computed value is in the trace but we don't descend into the
+ * sub-expressions. Dependency paths that traverse a collection reference
+ * (e.g. `relatedTo/isHeadOfHousehold`) are likewise surfaced but not
+ * descended. Callers wanting that deeper value-composition detail can
+ * target those intermediate facts directly via a second /query call.
+ *
+ * Value semantics: each sub-expression's `value` is derived from its own
+ * operands (a comparison computes its comparison, a nested All derives
+ * from its children), falling back to `null` when operands are opaque or
+ * unresolved. The one exception is the root expression of a fact, whose
+ * value is the engine's computed result for that fact — ground truth wins
+ * where we have it.
  */
 import { XMLParser } from 'fast-xml-parser'
 import type {
@@ -59,12 +71,17 @@ export type TraceNode = {
   name?: string
   /** XML description for the fact at `path`. */
   description?: string
-  /** Operator tag — All, Any, Not, GreaterThan, Dependency, Int, Opaque, etc. */
+  /** Operator tag — All, Any, Not, GreaterThan, Dependency, Int, Opaque,
+   *  PerMember, etc. */
   op: string
   /** Computed value for this node, or null if it didn't resolve. */
   value: unknown
   /** One-sentence summary of how this value was decided. */
   reason: string
+  /** On the per-row children of a `PerMember` node: the caller-provided
+   *  row id this sub-trace belongs to (`member-N` fallback when the
+   *  request row carried no id). */
+  memberId?: string
   /** When this node appears inside its parent's `children` array, indicates
    *  whether it contributed to the parent's value. For an `All` that's
    *  false, only the first false child is decisive. For an `Any` that's
@@ -85,10 +102,11 @@ export type TraceNode = {
  * Compact summary of the path-bearing nodes that drove a trace's
  * outcome — `[target, deciding child, …, deepest single-leaf cause]`.
  * Stops at the first branch point (`All`-true with multiple operands,
- * `Any`-false where every operand failed) since beyond that the
- * causation fans out and a flat list misrepresents it. The full trace
- * is still available via `TraceNode.children` for callers that want to
- * drill into branched chains.
+ * `Any`-false where every operand failed, a multi-row `PerMember`
+ * wrapper) since beyond that the causation fans out and a flat list
+ * misrepresents it. The full trace is still available via
+ * `TraceNode.children` for callers that want to drill into branched
+ * chains.
  */
 export type DecidingPathStep = {
   path: string
@@ -96,6 +114,8 @@ export type DecidingPathStep = {
   value: unknown
   /** Operator at this point — useful for picking icons or color in a UI. */
   op: string
+  /** Set on steps inside a per-row sub-trace: the row this step belongs to. */
+  memberId?: string
 }
 
 export type DecidingPath = DecidingPathStep[]
@@ -195,22 +215,88 @@ const LITERAL_OPS = new Set([
   'Enum',
 ])
 
+/** Everything a walk needs besides the node at hand. `memberIdx` +
+ *  `memberRoot` are set when tracing one row's slice of a collection-
+ *  scoped target: any fact under `<memberRoot>/*` whose execution result
+ *  is a positional array is read at that row's index. */
+type WalkCtx = {
+  model: Model
+  index: ModelIndex
+  results: Record<string, unknown>
+  stack: Set<string>
+  memberIdx?: number
+  memberRoot?: string
+}
+
+/** The execution-results value for a fact, sliced to the current row when
+ *  the walk is scoped to one member of a collection. */
+function factValue(path: string, ctx: WalkCtx): unknown {
+  const raw = ctx.results[path]
+  if (
+    ctx.memberIdx !== undefined &&
+    ctx.memberRoot !== undefined &&
+    Array.isArray(raw) &&
+    path.startsWith(ctx.memberRoot + '/*/')
+  ) {
+    return raw[ctx.memberIdx]
+  }
+  return raw
+}
+
 /**
  * Build a trace tree for the given target fact. Returns null if the
  * fact doesn't exist in the model.
+ *
+ * Collection-scoped targets (whose execution result is a positional
+ * array) get a `PerMember` root with one fully-walked sub-trace per row,
+ * each tagged with the caller's row id from `memberIdsByCollection`
+ * (same ids the response's `values` arrays use).
  */
 export function buildTrace(
   model: Model,
   index: ModelIndex,
   results: Record<string, unknown>,
-  targetPath: string
+  targetPath: string,
+  memberIdsByCollection?: Record<string, string[]>
 ): TraceNode | null {
   const node = index.pathToNode.get(targetPath)
   if (!node) return null
 
+  const collMatch = targetPath.match(/^(\/[^*]+?)\/\*\//)
+  const raw = results[targetPath]
+  if (collMatch && Array.isArray(raw)) {
+    const root = collMatch[1]
+    const ids = memberIdsByCollection?.[root] ?? []
+    const children = raw.map((_, idx) => {
+      const child = walkFact(
+        node,
+        { model, index, results, stack: new Set(), memberIdx: idx, memberRoot: root },
+        0
+      )
+      child.memberId = ids[idx] ?? `member-${idx}`
+      // Each row's value stands on its own — mark all decisive (like
+      // All-true: every child contributed equally). With a single row the
+      // deciding path continues into that row's chain.
+      child.decisive = true
+      return child
+    })
+    return {
+      path: targetPath,
+      name: getDisplayName(node),
+      description: node.description,
+      op: 'PerMember',
+      value: raw,
+      reason:
+        children.length === 1
+          ? 'Collection-scoped fact — traced for the single row.'
+          : `Collection-scoped fact — traced separately for each of the ${children.length} rows.`,
+      children,
+      citations: toCitations(node.references),
+    }
+  }
+
   // Guard runaway recursion (cycles, deeply-nested rulesets).
-  const stack = new Set<string>()
-  return walkFact(node, model, index, results, stack, 0)
+  return walkFact(node, { model, index, results, stack: new Set() }, 0)
 }
 
 /**
@@ -228,14 +314,17 @@ export function buildDecidingPath(root: TraceNode): DecidingPath {
   const out: DecidingPath = []
   let cursor: TraceNode | undefined = root
   const visited = new Set<TraceNode>()
+  let memberId: string | undefined
   while (cursor && !visited.has(cursor)) {
     visited.add(cursor)
+    if (cursor.memberId) memberId = cursor.memberId
     if (cursor.path) {
       out.push({
         path: cursor.path,
         name: cursor.name,
         value: cursor.value,
         op: cursor.op,
+        ...(memberId ? { memberId } : {}),
       })
     }
     const deciders: TraceNode[] = (cursor.children ?? []).filter(
@@ -248,21 +337,14 @@ export function buildDecidingPath(root: TraceNode): DecidingPath {
 
 const MAX_DEPTH = 24
 
-function walkFact(
-  node: ModelNode,
-  model: Model,
-  index: ModelIndex,
-  results: Record<string, unknown>,
-  stack: Set<string>,
-  depth: number
-): TraceNode {
+function walkFact(node: ModelNode, ctx: WalkCtx, depth: number): TraceNode {
   const content = node.content
   if (content.type === 'entity' || !('path' in content)) {
     // Should never happen — caller filters entities. Defensive.
-    return makeUnsupported(node, results)
+    return makeUnsupported(node, ctx.results)
   }
   const path = content.path
-  const value = results[path]
+  const value = factValue(path, ctx)
   const base: TraceNode = {
     path,
     name: getDisplayName(node),
@@ -273,7 +355,7 @@ function walkFact(
     citations: toCitations(node.references),
   }
 
-  if (depth >= MAX_DEPTH || stack.has(node.id)) {
+  if (depth >= MAX_DEPTH || ctx.stack.has(node.id)) {
     base.op = 'Truncated'
     base.reason =
       depth >= MAX_DEPTH
@@ -304,9 +386,11 @@ function walkFact(
     return base
   }
 
-  stack.add(node.id)
-  const inner = walkLogic(logic, node, model, index, results, stack, depth + 1)
-  stack.delete(node.id)
+  ctx.stack.add(node.id)
+  // The fact's own execution result is ground truth for its root
+  // expression — sub-expressions derive their values from their operands.
+  const inner = walkLogic(logic, node, ctx, depth + 1, value ?? null)
+  ctx.stack.delete(node.id)
 
   // Lift the inner expression's op/reason/children onto the fact node so
   // the trace doesn't double up "/eligible → All". This keeps the path-
@@ -317,26 +401,43 @@ function walkFact(
   return base
 }
 
+/**
+ * Walk one logic sub-expression. `rootValue` is the engine's computed
+ * value for the enclosing fact and is only passed for the fact's
+ * top-level expression — nested sub-expressions receive `undefined` and
+ * derive their value from their own operands (the engine does not expose
+ * per-sub-expression results).
+ */
 function walkLogic(
   logic: LogicNode,
   parentNode: ModelNode,
-  model: Model,
-  index: ModelIndex,
-  results: Record<string, unknown>,
-  stack: Set<string>,
-  depth: number
+  ctx: WalkCtx,
+  depth: number,
+  rootValue?: unknown
 ): TraceNode {
   if (logic.op === 'Dependency') {
-    const path = logic.attrs.path ?? ''
-    const ref = index.pathToNode.get(path)
+    const rawPath = logic.attrs.path ?? ''
+    const parentPath =
+      parentNode.content.type !== 'entity' && 'path' in parentNode.content
+        ? parentNode.content.path
+        : undefined
+    const resolved = resolveDependencyPath(rawPath, parentPath)
+    const ref = resolved ? ctx.index.pathToNode.get(resolved) : undefined
     if (!ref) {
+      // Multi-segment relative paths traverse a collection reference
+      // (e.g. `relatedTo/isHeadOfHousehold`) — dereferencing happens in
+      // the engine per row and isn't walkable statically.
+      const isReferenceHop =
+        resolved === undefined && rawPath.includes('/') && !rawPath.startsWith('/')
       return {
         op: 'Dependency',
         value: null,
-        reason: `Unresolved dependency: ${path}`,
+        reason: isReferenceHop
+          ? `Follows a collection reference (${rawPath}) — not traced; query the referenced fact directly.`
+          : `Unresolved dependency: ${rawPath}`,
       }
     }
-    return walkFact(ref, model, index, results, stack, depth + 1)
+    return walkFact(ref, ctx, depth + 1)
   }
 
   if (LITERAL_OPS.has(logic.op)) {
@@ -349,23 +450,15 @@ function walkLogic(
   }
 
   if (BOOLEAN_OPS.has(logic.op)) {
-    return walkBoolean(logic, parentNode, model, index, results, stack, depth)
+    return walkBoolean(logic, parentNode, ctx, depth, rootValue)
   }
 
   if (COMPARISON_OPS.has(logic.op)) {
-    return walkComparison(
-      logic,
-      parentNode,
-      model,
-      index,
-      results,
-      stack,
-      depth
-    )
+    return walkComparison(logic, parentNode, ctx, depth, rootValue)
   }
 
   if (logic.op === 'Switch') {
-    return walkSwitch(logic, parentNode, model, index, results, stack, depth)
+    return walkSwitch(logic, parentNode, ctx, depth, rootValue)
   }
 
   // Anything else: opaque sub-expression. We can't observe its value
@@ -378,21 +471,71 @@ function walkLogic(
   }
 }
 
+/**
+ * Resolve a Dependency path against its enclosing fact's path, mirroring
+ * the parser's rules (see resolvePaths in factgraph-core/src/parser.ts):
+ *   - absolute paths pass through;
+ *   - `../foo` is a sibling: pop the fact's own leaf;
+ *   - `^`/`^^…` pops one segment per caret (the SelfStack escape);
+ *   - a bare name is a sibling resolved from the fact's parent.
+ * Multi-segment relative paths traverse collection references and return
+ * undefined — the caller reports them as untraced rather than unresolved.
+ */
+function resolveDependencyPath(
+  depPath: string,
+  factPath: string | undefined
+): string | undefined {
+  if (depPath.startsWith('/')) return depPath
+  if (!factPath || depPath.length === 0) return undefined
+  const segs = factPath.split('/').filter(Boolean)
+
+  if (/^\^+(\/|$)/.test(depPath)) {
+    const slashIdx = depPath.indexOf('/')
+    const head = slashIdx === -1 ? depPath : depPath.slice(0, slashIdx)
+    const tail = slashIdx === -1 ? '' : depPath.slice(slashIdx + 1)
+    for (let i = 0; i < head.length; i++) segs.pop()
+    const base = segs.length === 0 ? '' : '/' + segs.join('/')
+    if (tail.length === 0) return base === '' ? '/' : base
+    return (base === '' ? '' : base) + '/' + tail
+  }
+
+  if (depPath.startsWith('../')) {
+    segs.pop()
+    let rest = depPath
+    while (rest.startsWith('../')) rest = rest.slice(3)
+    return '/' + [...segs, rest].join('/')
+  }
+
+  if (!depPath.includes('/')) {
+    // Bare sibling name, resolved from the fact's parent.
+    segs.pop()
+    return '/' + [...segs, depPath].join('/')
+  }
+
+  return undefined
+}
+
+/** Derive a boolean operator's value from its children's values. Null when
+ *  the resolved children don't determine the outcome (opaque operands). */
+function deriveBoolValue(op: string, childValues: unknown[]): boolean | null {
+  if (op === 'All') {
+    if (childValues.some((v) => v === false)) return false
+    if (childValues.length > 0 && childValues.every((v) => v === true)) return true
+    return null
+  }
+  // Any
+  if (childValues.some((v) => v === true)) return true
+  if (childValues.length > 0 && childValues.every((v) => v === false)) return false
+  return null
+}
+
 function walkBoolean(
   logic: LogicNode,
   parentNode: ModelNode,
-  model: Model,
-  index: ModelIndex,
-  results: Record<string, unknown>,
-  stack: Set<string>,
-  depth: number
+  ctx: WalkCtx,
+  depth: number,
+  rootValue?: unknown
 ): TraceNode {
-  const parentPath =
-    parentNode.content.type !== 'entity' && 'path' in parentNode.content
-      ? parentNode.content.path
-      : undefined
-  const parentValue = parentPath != null ? results[parentPath] : undefined
-
   // Special-case Not: walk the single child and report the inversion
   // factually — no value judgment about whether the result is desirable.
   if (logic.op === 'Not') {
@@ -400,27 +543,22 @@ function walkBoolean(
     if (!child) {
       return {
         op: 'Not',
-        value: parentValue ?? null,
+        value: typeof rootValue === 'boolean' ? rootValue : null,
         reason: 'NOT with no operand.',
       }
     }
-    const childTrace = walkLogic(
-      child,
-      parentNode,
-      model,
-      index,
-      results,
-      stack,
-      depth
-    )
+    const childTrace = walkLogic(child, parentNode, ctx, depth)
     childTrace.decisive = true
+    const derived =
+      childTrace.value === true ? false : childTrace.value === false ? true : null
+    const value = typeof rootValue === 'boolean' ? rootValue : derived
     return {
       op: 'Not',
-      value: parentValue ?? null,
+      value,
       reason:
-        parentValue === true
+        value === true
           ? 'Operand did not hold, so Not held.'
-          : parentValue === false
+          : value === false
             ? 'Operand held, so Not did not hold.'
             : 'Operand has not yet evaluated.',
       children: [childTrace],
@@ -428,9 +566,8 @@ function walkBoolean(
   }
 
   // All / Any: evaluate each child's contribution by looking at its
-  // computed value. Boolean values are resolved either through a
-  // Dependency reference (recurse and read the child fact's value) or
-  // through a True/False/Boolean literal.
+  // computed value — a recursed Dependency reads the child fact's
+  // execution result; an inline comparison computes from its operands.
   //
   // Reason phrasing is intentionally neutral: "held" / "did not hold"
   // describe the truth value of the operator without judging whether
@@ -440,11 +577,18 @@ function walkBoolean(
   // outcomes despite their boolean polarity flipping. The walker reports
   // the math; the UI interprets it.
   const childTraces: TraceNode[] = logic.children.map((c) =>
-    walkLogic(c, parentNode, model, index, results, stack, depth)
+    walkLogic(c, parentNode, ctx, depth)
   )
+  const derived = deriveBoolValue(
+    logic.op,
+    childTraces.map((c) => c.value)
+  )
+  // The engine's result is ground truth at the fact's root expression;
+  // nested operators rely on the derivation.
+  const value = typeof rootValue === 'boolean' ? rootValue : derived
 
   if (logic.op === 'All') {
-    if (parentValue === true) {
+    if (value === true) {
       // Every operand had to hold — they're all decisive.
       markAllDecisive(childTraces)
       return {
@@ -457,7 +601,7 @@ function walkBoolean(
         children: childTraces,
       }
     }
-    if (parentValue === false) {
+    if (value === false) {
       // First false child is decisive; everything else is context.
       const failingIdx = childTraces.findIndex((c) => c.value === false)
       markOneDecisive(childTraces, failingIdx)
@@ -480,7 +624,7 @@ function walkBoolean(
   }
 
   // Any
-  if (parentValue === true) {
+  if (value === true) {
     // First true child is decisive; the others sat alongside but
     // didn't drive the outcome.
     const passingIdx = childTraces.findIndex((c) => c.value === true)
@@ -495,7 +639,7 @@ function walkBoolean(
       children: childTraces,
     }
   }
-  if (parentValue === false) {
+  if (value === false) {
     // Every operand had to fail — they're all decisive.
     markAllDecisive(childTraces)
     return {
@@ -545,17 +689,14 @@ function markOneDecisive(nodes: TraceNode[], idx: number): void {
 function walkSwitch(
   logic: LogicNode,
   parentNode: ModelNode,
-  model: Model,
-  index: ModelIndex,
-  results: Record<string, unknown>,
-  stack: Set<string>,
-  depth: number
+  ctx: WalkCtx,
+  depth: number,
+  rootValue?: unknown
 ): TraceNode {
-  const parentPath =
-    parentNode.content.type !== 'entity' && 'path' in parentNode.content
-      ? parentNode.content.path
-      : undefined
-  const parentValue = parentPath != null ? results[parentPath] : undefined
+  // A Switch's own value is the selected Then expression, which we don't
+  // descend — so only the engine's result (available at the fact's root
+  // expression) can supply it.
+  const value = rootValue !== undefined ? rootValue : null
 
   const cases = logic.children.filter((c) => c.op === 'Case')
   const whenTraces: TraceNode[] = []
@@ -564,7 +705,7 @@ function walkSwitch(
     const whenLogic = cases[i].children.find((x) => x.op === 'When')
       ?.children[0]
     const whenTrace = whenLogic
-      ? walkLogic(whenLogic, parentNode, model, index, results, stack, depth)
+      ? walkLogic(whenLogic, parentNode, ctx, depth)
       : ({
           op: 'Unknown',
           value: null,
@@ -587,8 +728,8 @@ function walkSwitch(
     markOneDecisive(whenTraces, takenIdx)
     return {
       op: 'Switch',
-      value: parentValue ?? null,
-      reason: `${describeOperand(taken!)} held, selecting ${formatValue(parentValue)}.`,
+      value,
+      reason: `${describeOperand(taken!)} held, selecting ${formatValue(value)}.`,
       children: whenTraces,
     }
   }
@@ -600,10 +741,10 @@ function walkSwitch(
   const failedCount = whenTraces.filter((w) => w.decisive).length
   return {
     op: 'Switch',
-    value: parentValue ?? null,
+    value,
     reason: failedCount
-      ? `No case applied; ${failedCount === 1 ? 'the condition' : `all ${failedCount} conditions`} did not hold, so the result is ${formatValue(parentValue)}.`
-      : `Resolved to ${formatValue(parentValue)}.`,
+      ? `No case applied; ${failedCount === 1 ? 'the condition' : `all ${failedCount} conditions`} did not hold, so the result is ${formatValue(value)}.`
+      : `Resolved to ${formatValue(value)}.`,
     children: whenTraces,
   }
 }
@@ -611,11 +752,9 @@ function walkSwitch(
 function walkComparison(
   logic: LogicNode,
   parentNode: ModelNode,
-  model: Model,
-  index: ModelIndex,
-  results: Record<string, unknown>,
-  stack: Set<string>,
-  depth: number
+  ctx: WalkCtx,
+  depth: number,
+  rootValue?: unknown
 ): TraceNode {
   // Comparison ops wrap operands in <Left> and <Right> elements.
   const leftWrap = logic.children.find((c) => c.op === 'Left')
@@ -624,33 +763,34 @@ function walkComparison(
   const rightLogic = rightWrap?.children[0]
 
   const leftTrace = leftLogic
-    ? walkLogic(leftLogic, parentNode, model, index, results, stack, depth)
+    ? walkLogic(leftLogic, parentNode, ctx, depth)
     : ({
         op: 'Unknown',
         value: null,
         reason: 'Missing left operand',
       } as TraceNode)
   const rightTrace = rightLogic
-    ? walkLogic(rightLogic, parentNode, model, index, results, stack, depth)
+    ? walkLogic(rightLogic, parentNode, ctx, depth)
     : ({
         op: 'Unknown',
         value: null,
         reason: 'Missing right operand',
       } as TraceNode)
 
-  const parentValue =
-    parentNode.content.type !== 'entity' && 'path' in parentNode.content
-      ? results[parentNode.content.path]
-      : undefined
+  // The comparison's value is computed from its own operands. The engine's
+  // result (ground truth) takes precedence at the fact's root expression —
+  // nested comparisons have no per-sub-expression engine result to read.
+  const computed = compareValues(logic.op, leftTrace.value, rightTrace.value)
+  const value = typeof rootValue === 'boolean' ? rootValue : computed
 
   const symbol = COMPARISON_SYMBOLS[logic.op] ?? logic.op
   const lhs = formatValue(leftTrace.value)
   const rhs = formatValue(rightTrace.value)
 
   let reason: string
-  if (parentValue === true) {
+  if (value === true) {
     reason = `${describeOperand(leftTrace)} (${lhs}) ${symbol} ${describeOperand(rightTrace)} (${rhs}) — held.`
-  } else if (parentValue === false) {
+  } else if (value === false) {
     reason = `${describeOperand(leftTrace)} (${lhs}) ${symbol} ${describeOperand(rightTrace)} (${rhs}) — did not hold.`
   } else {
     reason = `${describeOperand(leftTrace)} ${symbol} ${describeOperand(rightTrace)} — pending.`
@@ -661,10 +801,29 @@ function walkComparison(
   rightTrace.decisive = true
   return {
     op: logic.op,
-    value: parentValue ?? null,
+    value,
     reason,
     children: [leftTrace, rightTrace],
   }
+}
+
+/** Apply a comparison operator to two resolved operand values. Returns null
+ *  when either operand is unresolved or the operand types don't support the
+ *  operator (e.g. ordering booleans). Strings compare lexically, which is
+ *  correct for the engine's ISO `Day` values. */
+function compareValues(op: string, l: unknown, r: unknown): boolean | null {
+  if (l == null || r == null) return null
+  if (op === 'Equal') return l === r
+  if (op === 'NotEqual') return l !== r
+  const comparable =
+    (typeof l === 'number' && typeof r === 'number') ||
+    (typeof l === 'string' && typeof r === 'string')
+  if (!comparable) return null
+  if (op === 'GreaterThan') return l > r
+  if (op === 'GreaterThanOrEqual') return l >= r
+  if (op === 'LessThan') return l < r
+  if (op === 'LessThanOrEqual') return l <= r
+  return null
 }
 
 const COMPARISON_SYMBOLS: Record<string, string> = {

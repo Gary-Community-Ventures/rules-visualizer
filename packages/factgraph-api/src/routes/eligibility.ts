@@ -97,9 +97,11 @@ function evaluateRuleset(
   const model = getRuleset(rulesetId)
   const facts = getRawFacts(rulesetId)
   if (!model || !facts) {
+    // 503 (matching the v2 surface): a server-state fault the caller can
+    // retry, not a permanent failure of the request.
     problem(
       res,
-      500,
+      503,
       'Ruleset unavailable',
       `The "${rulesetId}" ruleset is not loaded or not executable on this server.`
     )
@@ -147,7 +149,7 @@ router.post('/evaluate/expedited-screening', (req, res) => {
   const body = parsed.data
   const metadata = body.metadata ?? {}
 
-  const { inputs } = translateHouseholdRequest(body, new Date())
+  const { inputs, notes } = translateHouseholdRequest(body, new Date())
   const query = evaluateRuleset(
     res,
     SNAP_RULESET_ID,
@@ -162,6 +164,8 @@ router.post('/evaluate/expedited-screening', (req, res) => {
   // could not actually be computed (e.g. the contract's household-only shape
   // carries no income or liquid resources), we answer a conservative `false`
   // and say what was missing rather than presenting an unknown as a result.
+  // Translation notes (defaulted flags, the household-only disclosure) ride
+  // the same x- overlay as on the determination endpoints.
   const expedited = query.values[SNAP_EXPEDITED_TARGET]
   res.json({
     metadata,
@@ -169,6 +173,7 @@ router.post('/evaluate/expedited-screening', (req, res) => {
     ...(expedited === null || expedited === undefined
       ? { 'x-missingInformation': toMissingInformation(query.missingInputs) }
       : {}),
+    ...(notes.length > 0 ? { 'x-translationNotes': notes } : {}),
   })
 })
 

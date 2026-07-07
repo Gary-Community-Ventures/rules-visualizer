@@ -25,11 +25,16 @@ import {
 
 export const MEDICAID_RULESET_ID = 'medicaid'
 
-/** Per-member targets that build the medicaid decisions. */
+/** Per-member targets that build the medicaid decisions. `age` is included
+ *  not for the response but as the pending guard's signal: the category
+ *  Switch's catch-all yields `Ineligible` when the age-gated Whens are
+ *  unknown rather than false, so an unresolved age slot means "cannot yet
+ *  determine", not "determined ineligible" (see medicaidDeterminations). */
 export const MEDICAID_TARGETS = [
   '/members/*/medicaid',
   '/members/*/medicaidCategory',
   '/members/*/chp',
+  '/members/*/age',
 ] as const
 
 // ---------------------------------------------------------------------------

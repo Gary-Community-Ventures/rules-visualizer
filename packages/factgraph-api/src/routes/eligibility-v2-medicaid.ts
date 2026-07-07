@@ -15,6 +15,10 @@ import { MEDICAID_RULESET_ID, MEDICAID_TARGETS } from '../translate/medicaid.js'
 import { translateRequest } from '../translate/v2-request.js'
 import { friendlyMissing } from '../translate/field-index.js'
 import {
+  composeInstancedMissing,
+  instancedForMember,
+} from '../translate/instanced-missing.js'
+import {
   V2HouseholdRequestSchema,
   medicaidDeterminations,
 } from '../translate/v2.js'
@@ -48,22 +52,48 @@ router.post('/determination', (req, res) => {
     problem(res, 503, 'Ruleset unavailable', `"${MEDICAID_RULESET_ID}" is not loaded.`)
     return
   }
-  const { inputs, memberIds, warnings } = translateRequest(body, model, asOf)
-  const query = run(res, MEDICAID_RULESET_ID, inputs, MEDICAID_TARGETS, undefined)
+  const instanced = body.missingInputsFormat === 'instanced'
+  const { inputs, memberIds, warnings, acknowledgment } = translateRequest(body, model, asOf)
+  const query = run(
+    res,
+    MEDICAID_RULESET_ID,
+    inputs,
+    MEDICAID_TARGETS,
+    instanced ? ['missingInputInstances'] : undefined
+  )
   if (!query) return
 
   const dets = medicaidDeterminations(query, memberIds, warnings)
+  if (instanced) {
+    // One instanced list, sliced per determination: household-level entries
+    // (empty `at`) plus the entries whose first hop is that member — the
+    // same own-plus-shared rule as the default format, expressed by address.
+    const all = composeInstancedMissing(query, memberIds, acknowledgment, model)
+    for (const det of dets) {
+      if (!det.memberId) continue
+      const mine = instancedForMember(all, det.memberId)
+      if (mine.length) det.missingInputs = mine
+    }
+    res.json({
+      ...(body.metadata !== undefined ? { metadata } : {}),
+      asOf: isoDay(asOf),
+      determinations: dets,
+    })
+    return
+  }
+
   for (const det of dets) {
-    if (det.status !== 'pending') continue
     // Per-member attribution: combine this member's member-level missing fields
     // with shared household-level inputs (income rows, etc.) from the top-level
-    // union. Falls back to the full union when no per-member breakdown exists.
-    // Shared (non-member-level) fields apply to every member; member-level
-    // fields (/members/*/…) belong only to the member who still needs them.
-    // Combine this member's own missing fields with the shared ones. When this
-    // member has no member-level gaps (perMember undefined) they get the shared
-    // fields ONLY — never another member's member-level fields, which is what a
-    // naive fallback to the full union would wrongly attribute here.
+    // union. Attached whenever non-empty — on `pending` these are what blocks
+    // the determination; on a decided status they are inputs that would refine
+    // it (matching the SNAP endpoint's behavior, so the two v2 endpoints share
+    // one rule). Shared (non-member-level) fields apply to every member;
+    // member-level fields (/members/*/…) belong only to the member who still
+    // needs them. When this member has no member-level gaps (perMember
+    // undefined) they get the shared fields ONLY — never another member's
+    // member-level fields, which is what a naive fallback to the full union
+    // would wrongly attribute here.
     const perMember =
       det.memberId ? query.missingInputsByMember?.[det.memberId] : undefined
     const sharedMissing = (query.missingInputs ?? []).filter(

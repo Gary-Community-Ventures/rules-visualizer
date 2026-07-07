@@ -33,11 +33,17 @@ export function run(
     problem(res, 503, 'Ruleset unavailable', `"${rulesetId}" is not loaded.`)
     return null
   }
-  const result = runQuery(rulesetId, model, facts, {
-    targets: [...targets],
-    inputs,
-    include,
-  })
+  let result
+  try {
+    result = runQuery(rulesetId, model, facts, {
+      targets: [...targets],
+      inputs,
+      include,
+    })
+  } catch (e) {
+    problem(res, 500, 'Execution failed', (e as Error).message)
+    return null
+  }
   if (!result.ok) {
     problem(
       res,

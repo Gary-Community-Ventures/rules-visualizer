@@ -91,7 +91,9 @@ and prod. Install Bruno, open that folder, click Send.
 | `GET`  | `/v2/eligibility/openapi.{json,yaml}` · `/docs`       | Engine-shaped contract + Swagger UI — public                |
 
 The committed contract snapshot lives at `docs/eligibility-adapter-v2-proposal-openapi.yaml`.
-Field semantics, enum vocabularies, and policy citations are in `docs/input-dictionary.md`.
+The accepted fields, enum vocabularies, and policy citations are in the
+[engine-input catalog](https://gary-community-ventures.github.io/rules-visualizer/engine-inputs.html)
+(`docs/engine-inputs.json`).
 
 **Eligibility adapter v1 (ORCA-shaped, frozen):**
 
@@ -200,10 +202,11 @@ before we land them.
 | ✅     | Eligibility adapter (`/v1/eligibility/evaluate/*`): SNAP + Medicaid determinations and expedited screening, conformant to the published contract ([matrix](./docs/v1-conformance.md)) |
 | ✅     | Separate consumer-facing OpenAPI contract + Swagger UI per surface                                                                            |
 | ✅     | v2 engine-shaped surface (`/v2/eligibility/snap/determination`, `/v2/eligibility/medicaid/determination`, `/v2/eligibility/snap/expedited-screening`) — no-guess, per-program, per-member `missingInputs` |
-| ✅     | Generated [input dictionary](./docs/input-dictionary.md) — rules-sourced definitions, enums, policy citations per field                       |
+| ✅     | Generated [engine-input catalog](https://gary-community-ventures.github.io/rules-visualizer/engine-inputs.html) — the accepted fields with rules-sourced definitions, enums, policy citations                       |
 | ⏳     | Medicaid ex parte (pending contract clarifications — see the [gap analysis](./docs/contract-gap-analysis.md))                                 |
 | ⏳     | Alternation in `missingInputs` (express "one-of" relationships when an `Any` could be satisfied by any of several inputs)                     |
-| ⏳     | Trace v2: walk arithmetic + Switch ops, per-member traces for collection-scoped targets                                                       |
+| ✅     | Per-member traces for collection-scoped targets (`PerMember` roots, `memberId`-tagged sub-traces, relative dependency resolution)             |
+| ⏳     | Trace v2: walk arithmetic ops and `Switch` `Then` values                                                                                      |
 | ⏳     | Typed client packages (`@npm` consumer) generated from the OpenAPI                                                                            |
 | ⏳     | Rate limiting                                                                                                                                 |
 

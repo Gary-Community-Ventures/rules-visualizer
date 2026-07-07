@@ -9,17 +9,13 @@
  * missing-inputs are FIRST-CLASS fields here, not `x-` overlays, because this
  * is our contract to shape.
  *
- * This layer is a reshape + dispatch over the existing per-program translators
- * and result mappers in ./snap and ./medicaid: it runs each requested program
- * on the same engine core and folds the per-program outputs into the unified
- * envelope. The translation/defaulting still lives in those modules.
- *
- * KNOWN FIRST-CUT LIMITATION: this reuses the v1 translators, which map the
- * common applicant fields and default the rest. A pure no-guess request (every
- * absent field comes back as `pending` + missingInputs rather than defaulted)
- * needs the catalog-driven translator that lets a caller set ALL writable
- * fields; that is the next iteration. See docs/engine-inputs.json for the full
- * field set the no-guess surface will accept.
+ * Requests are translated by the catalog-driven no-guess translator
+ * (./v2-request.ts, driven by ./field-index.ts): only fields the caller
+ * provided reach the engine, and anything absent comes back as `pending` +
+ * missingInputs in the request vocabulary. Nothing is defaulted — that is
+ * the deliberate contrast with the v1 ORCA adapter, which fills the fields
+ * its contract can't carry. This module holds the shared response shapes and
+ * the per-program result mappers (QueryResponse → Determination).
  */
 import { z } from 'zod'
 
@@ -29,7 +25,8 @@ import {
   toExplanation,
   type ExplanationStep,
 } from './snap.js'
-import { type FriendlyMissing } from './field-index.js'
+import { snakeEnum, type FriendlyMissing } from './field-index.js'
+import { type InstancedMissing } from './instanced-missing.js'
 
 export const SUPPORTED_PROGRAMS = ['snap', 'medicaid'] as const
 
@@ -37,6 +34,19 @@ export const SUPPORTED_PROGRAMS = ['snap', 'medicaid'] as const
  *  the translator validates field-by-field against the rules, so the schema
  *  stays permissive rather than re-declaring every field here. */
 const bag = () => z.object({}).passthrough()
+
+/** A member: an open bag, except the sub-collections (income, expenses,
+ *  jobs, assets) must be arrays of row objects when present — a null or
+ *  primitive row is a caller error the translator can't interpret. */
+const memberBag = () =>
+  z
+    .object({
+      income: z.array(bag()).optional(),
+      expenses: z.array(bag()).optional(),
+      jobs: z.array(bag()).optional(),
+      assets: z.array(bag()).optional(),
+    })
+    .passthrough()
 
 /**
  * Per-program request: one household payload. Everything is optional except
@@ -50,27 +60,42 @@ export const V2HouseholdRequestSchema = z
   .object({
     metadata: z.record(z.string(), z.unknown()).optional(),
     asOf: z.string().optional(),
+    /** EXPERIMENTAL. "instanced" switches missingInputs to one entry per
+     *  concrete instance with an `at` hop-chain address, plus
+     *  "unacknowledged" entries for unanswered collection questions.
+     *  Default "fields" is the current deduped-per-field shape. */
+    missingInputsFormat: z.enum(['fields', 'instanced']).optional(),
     household: bag().optional(),
-    members: z.array(bag()).optional(),
+    members: z.array(memberBag()).optional(),
     caregiverRelationships: z.array(bag()).optional(),
   })
   .passthrough()
+  // Member ids correlate determinations, per-member missing inputs, and
+  // reference fields (spouseId etc.) back to request rows — duplicates
+  // would silently merge two people, so reject them outright.
+  .superRefine((body, ctx) => {
+    const seen = new Set<string>()
+    ;(body.members ?? []).forEach((m, i) => {
+      const id = (m as Record<string, unknown>).id
+      if (typeof id !== 'string') return
+      if (seen.has(id)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['members', i, 'id'],
+          message: `duplicate member id "${id}" — member ids must be unique`,
+        })
+      }
+      seen.add(id)
+    })
+  })
 
 export type V2HouseholdRequest = z.infer<typeof V2HouseholdRequestSchema>
-
-/** @deprecated Use V2HouseholdRequestSchema + per-program endpoints. */
-export const V2DeterminationRequestSchema = V2HouseholdRequestSchema.extend({
-  programs: z.array(z.string()).optional(),
-})
-
-export type V2DeterminationRequest = z.infer<typeof V2DeterminationRequestSchema>
 
 export type DeterminationStatus =
   | 'approved'
   | 'denied'
   | 'ineligible'
   | 'pending'
-  | 'not_supported'
 
 /** One program's decision. `scope` says whether it is a household-level
  *  decision (SNAP) or a per-member one (Medicaid); `memberId` is set only when
@@ -94,8 +119,10 @@ export type Determination = {
   /** Path-free "why" for denials. */
   explanation?: ExplanationStep[]
   /** Inputs that would unlock or refine this determination, in the friendly
-   *  request vocabulary (set by the route via the field index). */
-  missingInputs?: FriendlyMissing[]
+   *  request vocabulary (set by the route via the field index). Entries are
+   *  InstancedMissing when the request opted into
+   *  `missingInputsFormat: "instanced"`. */
+  missingInputs?: FriendlyMissing[] | InstancedMissing[]
   /** Per-member breakdown of member-level missing inputs (same vocabulary).
    *  Keyed by member id. Subset of missingInputs; shared household-level
    *  fields (income rows, expenses) appear only in the top-level union. */
@@ -192,6 +219,7 @@ export function medicaidDeterminations(
     const eligible = perMemberValue(query, '/members/*/medicaid', memberId)
     const category = perMemberValue(query, '/members/*/medicaidCategory', memberId)
     const chp = perMemberValue(query, '/members/*/chp', memberId)
+    const age = perMemberValue(query, '/members/*/age', memberId)
 
     let status: DeterminationStatus
     let denialReasonCode: string | undefined
@@ -199,11 +227,20 @@ export function medicaidDeterminations(
     if (eligible === true) {
       status = 'approved'
     } else if (eligible === false) {
-      status = 'ineligible'
-      denialReasonCode =
-        category === 'Ineligible'
-          ? 'not_in_eligible_category'
-          : 'failed_work_or_legal_requirements'
+      // Pending guard (mirrors the SNAP one): the category Switch's default
+      // case yields `Ineligible` when the age-gated category checks are
+      // unknown rather than definitively false. If this member's age never
+      // resolved, the "ineligible" is an artifact of missing input, not a
+      // committed determination.
+      if (category === 'Ineligible' && (age === null || age === undefined)) {
+        status = 'pending'
+      } else {
+        status = 'ineligible'
+        denialReasonCode =
+          category === 'Ineligible'
+            ? 'not_in_eligible_category'
+            : 'failed_work_or_legal_requirements'
+      }
     } else {
       status = 'pending'
     }
@@ -214,17 +251,18 @@ export function medicaidDeterminations(
       memberId,
       status,
       path: 'auto',
-      medicaidCategory: typeof category === 'string' ? category : undefined,
-      chpEligible: typeof chp === 'boolean' ? chp : undefined,
+      // Engine enum options are PascalCase internally; the wire convention
+      // is snake_case (matching request enum values and reason codes).
+      // Suppressed on pending — a category that exists only because the
+      // Switch defaulted on missing input would misread as a finding.
+      medicaidCategory:
+        status !== 'pending' && typeof category === 'string'
+          ? snakeEnum(category)
+          : undefined,
+      chpEligible: status !== 'pending' && typeof chp === 'boolean' ? chp : undefined,
       denialReasonCode,
       // missingInputs is attached by the route in the friendly vocabulary.
       notes: notes.length > 0 ? notes : undefined,
     } as Determination)
   })
-}
-
-/** A determination for a program the engine doesn't implement yet — honest
- *  rather than a fabricated decision or a whole-request failure. */
-export function unsupportedDetermination(program: string): Determination {
-  return { program, scope: 'household', status: 'not_supported' }
 }

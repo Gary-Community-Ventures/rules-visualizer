@@ -59,3 +59,20 @@ for (const [v2Tail, v1Tail] of Object.entries(STUBS)) {
     })
   })
 }
+
+// Unknown program: a Problem Details 404 naming the supported programs,
+// instead of Express's default HTML "Cannot POST" page. Mounted after the
+// real per-program routers, so this only sees programs we don't serve.
+v2StubsRouter.post(
+  ['/:program/determination', '/:program/expedited-screening'],
+  (req, res) => {
+    res.status(404).json({
+      type: 'https://tools.ietf.org/html/rfc9457',
+      title: 'Unknown operation',
+      status: 404,
+      detail:
+        `POST /v2/eligibility/${req.params.program}${req.path.replace(`/${req.params.program}`, '')} does not exist. ` +
+        'Available operations: POST /v2/eligibility/snap/determination, POST /v2/eligibility/snap/expedited-screening, POST /v2/eligibility/medicaid/determination.',
+    })
+  }
+)

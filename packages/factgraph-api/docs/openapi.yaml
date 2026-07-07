@@ -68,6 +68,10 @@ components:
           type: string
           description: Operator at this point in the chain — useful for picking icons or
             color in a UI.
+        memberId:
+          type: string
+          description: "Set on steps inside a per-row sub-trace (collection-scoped
+            targets): the row the step belongs to."
     DecidingPath: {}
     QueryRequest:
       type: object
@@ -233,8 +237,61 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/MissingInput"
-          description: Present iff status === "incomplete". Union of writables still
-            needed across all unresolved targets, deduped by path.
+          description: 'Present iff status === "incomplete". Union of writables still
+            needed across all unresolved targets, deduped by path. This is a
+            may-be-needed set, not a guaranteed-minimal one: for short-circuit
+            operators (Any, Switch) it lists the inputs of every unresolved
+            branch, any one of which might settle the target.'
+        missingInputsByMember:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              $ref: "#/components/schemas/MissingInput"
+          description: Present iff status === "incomplete" and a /members collection was
+            provided. Maps each member id to the member-level writables still
+            unresolved for that member specifically — the per-member source of
+            truth when different members miss different fields.
+            Scalar/household-level missing inputs remain in the top-level
+            missingInputs union only.
+        missingInputInstances:
+          type: array
+          items:
+            type: object
+            properties:
+              path:
+                type: string
+              name:
+                type: string
+              dataType:
+                type: string
+              hops:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    root:
+                      type: string
+                      example: /incomes
+                    id:
+                      type: string
+                      example: alice-income-0
+                  required:
+                    - root
+                    - id
+            required:
+              - path
+              - name
+              - dataType
+              - hops
+          description: 'EXPERIMENTAL — present iff status === "incomplete" and
+            request.include contained "missingInputInstances". The
+            missing-inputs union re-expressed per concrete instance: one entry
+            per (field, row), each with a hop-chain address from the household
+            root down to the owing row (empty hops = household scalar). Entries
+            the engine cannot attribute to an instance (e.g. member fields when
+            no /members rows were provided) are omitted here and remain only in
+            missingInputs.'
         supportingFacts:
           type: array
           items:
@@ -454,6 +511,19 @@ paths:
         "404":
           description: Ruleset or target not found. `detail` lists every bad path so the
             client can fix typos in one shot.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "413":
+          description: Request body over the 10 MB limit.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "500":
+          description: The engine failed to execute (a server-side fault, not your input).
+            `detail` carries the engine error.
           content:
             application/json:
               schema:

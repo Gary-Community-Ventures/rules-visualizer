@@ -178,7 +178,7 @@ export function buildOpenApiDocument() {
   registry.registerComponent('schemas', 'TraceNode', {
     type: 'object',
     description:
-      "One step in the explanation tree for a queried fact. The walker produces a recursive structure: the top-level node is the queried target; children are the operands or dependencies that contributed to its value. For boolean operators (All/Any) the walker visits every operand so the caller sees both the deciding branch and the alternatives — use `decisive` on each child to tell them apart. Switch/Case conditions are walked too, so categorical denials descend into the gate that actually failed. Arithmetic and collection operators (Multiply, Add, Filter, Count) report the computed value but don't recurse — query those facts directly to drill in.",
+      "One step in the explanation tree for a queried fact. The walker produces a recursive structure: the top-level node is the queried target; children are the operands or dependencies that contributed to its value. For boolean operators (All/Any) the walker visits every operand so the caller sees both the deciding branch and the alternatives — use `decisive` on each child to tell them apart. Switch/Case conditions are walked too, so categorical denials descend into the gate that actually failed. Collection-scoped targets (paths with a `/*` segment) get a `PerMember` root whose children are one full sub-trace per row, each tagged with `memberId`. Arithmetic and collection operators (Multiply, Add, Filter, Count) report the computed value but don't recurse — query those facts directly to drill in.",
     required: ['op', 'value', 'reason'],
     properties: {
       path: {
@@ -191,7 +191,12 @@ export function buildOpenApiDocument() {
       op: {
         type: 'string',
         description:
-          'Operator tag — All, Any, Not, GreaterThan, LessThanOrEqual, Switch, Dependency, Int, Dollar, Enum, True, False, Writable, Opaque, etc.',
+          'Operator tag — All, Any, Not, GreaterThan, LessThanOrEqual, Switch, Dependency, Int, Dollar, Enum, True, False, Writable, Opaque, PerMember, etc.',
+      },
+      memberId: {
+        type: 'string',
+        description:
+          'On the per-row children of a PerMember node: the caller-provided row id this sub-trace belongs to (member-N fallback when the request row carried no id). Matches the memberId used in `values`.',
       },
       value: {
         description: 'Computed value at this node, or null if unresolved.',
@@ -230,6 +235,11 @@ export function buildOpenApiDocument() {
         type: 'string',
         description:
           'Operator at this point in the chain — useful for picking icons or color in a UI.',
+      },
+      memberId: {
+        type: 'string',
+        description:
+          'Set on steps inside a per-row sub-trace (collection-scoped targets): the row the step belongs to.',
       },
     },
   })
@@ -271,8 +281,36 @@ export function buildOpenApiDocument() {
         }),
         missingInputs: z.array(MissingInput).optional().openapi({
           description:
-            'Present iff status === "incomplete". Union of writables still needed across all unresolved targets, deduped by path.',
+            'Present iff status === "incomplete". Union of writables still needed across all unresolved targets, deduped by path. This is a may-be-needed set, not a guaranteed-minimal one: for short-circuit operators (Any, Switch) it lists the inputs of every unresolved branch, any one of which might settle the target.',
         }),
+        missingInputsByMember: z
+          .record(z.string(), z.array(MissingInput))
+          .optional()
+          .openapi({
+            description:
+              'Present iff status === "incomplete" and a /members collection was provided. Maps each member id to the member-level writables still unresolved for that member specifically — the per-member source of truth when different members miss different fields. Scalar/household-level missing inputs remain in the top-level missingInputs union only.',
+          }),
+        missingInputInstances: z
+          .array(
+            z
+              .object({
+                path: z.string(),
+                name: z.string(),
+                dataType: z.string(),
+                hops: z.array(
+                  z.object({
+                    root: z.string().openapi({ example: '/incomes' }),
+                    id: z.string().openapi({ example: 'alice-income-0' }),
+                  })
+                ),
+              })
+              .passthrough()
+          )
+          .optional()
+          .openapi({
+            description:
+              'EXPERIMENTAL — present iff status === "incomplete" and request.include contained "missingInputInstances". The missing-inputs union re-expressed per concrete instance: one entry per (field, row), each with a hop-chain address from the household root down to the owing row (empty hops = household scalar). Entries the engine cannot attribute to an instance (e.g. member fields when no /members rows were provided) are omitted here and remain only in missingInputs.',
+          }),
         supportingFacts: z.array(SupportingFact).optional().openapi({
           description:
             'Present iff request.include contained "supportingFacts". Every fact in the targets\' dependency trees that resolved.',
@@ -453,6 +491,15 @@ export function buildOpenApiDocument() {
       404: {
         description:
           'Ruleset or target not found. `detail` lists every bad path so the client can fix typos in one shot.',
+        content: { 'application/json': { schema: ProblemDetails } },
+      },
+      413: {
+        description: 'Request body over the 10 MB limit.',
+        content: { 'application/json': { schema: ProblemDetails } },
+      },
+      500: {
+        description:
+          'The engine failed to execute (a server-side fault, not your input). `detail` carries the engine error.',
         content: { 'application/json': { schema: ProblemDetails } },
       },
     },

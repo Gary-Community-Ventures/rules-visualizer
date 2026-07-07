@@ -1,13 +1,26 @@
-# Input dictionary — v2 eligibility adapter request
+# Input dictionary — v2 field-grouping proposal
 
 <!-- GENERATED FILE — do not edit by hand. -->
 <!-- Source: scripts/generate-input-dictionary.ts joining src/v2-field-map.ts with the rulesets. -->
 <!-- Regenerate: npm run gen:dictionary --workspace=rules-visualizer-factgraph-api -->
 
-Authoritative definitions for every field in the [v2 draft contract](./eligibility-adapter-v2-proposal-openapi.yaml).
+> **⚠️ Not the request vocabulary the live v2 endpoints accept.** This
+> document follows the earlier [proposal](./eligibility-adapter-v2-proposal-openapi.yaml)
+> routing table, whose field names and groupings (e.g. `citizenshipStatus`,
+> nested `workRequirements.*`, `applicationContext.*`) differ from what the
+> implemented `/v2/eligibility/*` endpoints recognize — sending these names
+> gets a "not a recognised field" warning. For the fields the API actually
+> accepts — names, types, enum values — use the
+> **[engine-input catalog](https://gary-community-ventures.github.io/rules-visualizer/engine-inputs.html)**
+> (machine-readable: `engine-inputs.json`). This document remains useful for
+> its rule-authored *definitions*, policy citations, and the field-grouping/
+> consolidation proposals under discussion. Note also that the live v2
+> responses call the still-needed list `missingInputs`; `missingInformation`
+> below is the v1 name.
+
 Definitions, data types, enum vocabularies, and policy citations are pulled
 directly from the rulesets — the same text the rule authors wrote against
-the regulations — so this document cannot drift from what the rules
+the regulations — so the *definitions* cannot drift from what the rules
 actually mean. A filterable version lives on the
 [docs site](https://gary-community-ventures.github.io/rules-visualizer/dictionary.html).
 

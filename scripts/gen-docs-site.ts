@@ -1243,6 +1243,9 @@ const demoHtml = `<!DOCTYPE html>
     <label>Bearer token
       <input id="api-token" class="tok-in" type="password" placeholder="leave blank for local dev" />
     </label>
+    <label class="instanced-toggle" title="Experimental: one missingInputs entry per concrete instance, each with an 'at' hop-chain address, plus 'unacknowledged' entries for unanswered collection questions. See the raw response panel.">
+      <input id="instanced-fmt" type="checkbox" /> instanced missingInputs (experimental)
+    </label>
     <button id="reset-btn" title="Clear all values and restart">Reset</button>
   </div>
 
@@ -1256,6 +1259,7 @@ const demoHtml = `<!DOCTYPE html>
     <span id="status-badge" class="status-badge s-null">—</span>
     <span id="progress-line" class="progress-line"></span>
   </div>
+  <div id="unack-line" class="progress-line" style="display:none"></div>
 
   <div id="fields-container">
     <p class="fields-hint">Loading initial inputs...</p>
@@ -1339,6 +1343,11 @@ const demoHtml = `<!DOCTYPE html>
   // ---- request builder ------------------------------------------------------
   function buildRequest() {
     var req = { members: [] }
+    // Experimental instanced missing-inputs format (determination endpoints
+    // only; the flag is ignored by the expedited screen).
+    if (document.getElementById('instanced-fmt').checked) {
+      req.missingInputsFormat = 'instanced'
+    }
     var hk = Object.keys(householdVals)
     if (hk.length > 0) {
       req.household = {}; hk.forEach(function(k) { req.household[k] = householdVals[k] })
@@ -1395,6 +1404,22 @@ const demoHtml = `<!DOCTYPE html>
         var det = (data.determinations && data.determinations[0]) ? data.determinations[0] : data
         curDet = det; curStatus = det.status || null
         var missing = det.missingInputs || data.missingInputs || []
+        // Instanced format: kind:"unacknowledged" entries are whole-collection
+        // questions, not fields — surface them on their own line and keep the
+        // field cards driven by kind:"field" (or default-format) entries.
+        // Instanced entries repeat per instance; the Set dedupes for the cards.
+        var unack = missing.filter(function(m) { return m.kind === 'unacknowledged' })
+        var unackLine = document.getElementById('unack-line')
+        if (unack.length > 0) {
+          unackLine.style.display = ''
+          unackLine.textContent = 'unanswered collection questions: ' + unack.map(function(m) {
+            return (m.at && m.at.length ? m.at.map(function(h) { return h.id }).join(' → ') + ' → ' : '') + m.field
+          }).join('  ·  ')
+        } else {
+          unackLine.style.display = 'none'
+          unackLine.textContent = ''
+        }
+        missing = missing.filter(function(m) { return m.kind !== 'unacknowledged' })
         var newSet = new Set(), prevCount = allSeen.length
         missing.forEach(function(m) {
           newSet.add(m.requestPath)

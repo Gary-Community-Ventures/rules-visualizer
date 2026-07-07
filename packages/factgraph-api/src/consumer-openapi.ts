@@ -156,7 +156,7 @@ export function buildConsumerOpenApiDocument() {
   const HouseholdDeterminationRequest = registry.register(
     'HouseholdDeterminationRequest',
     z.object({
-      metadata: metadata,
+      metadata: metadata.optional(),
       program: z.enum(PROGRAM),
       household: Household,
       members: z.array(MemberContext).min(1),
@@ -169,7 +169,7 @@ export function buildConsumerOpenApiDocument() {
   const ExpeditedScreeningRequest = registry.register(
     'ExpeditedScreeningRequest',
     z.object({
-      metadata: metadata,
+      metadata: metadata.optional(),
       household: Household,
       members: z.array(MemberContext).optional().openapi({
         description: 'Overlay: member/income/resource context. The published contract is household-only, but its household object carries no income or liquid-resource fields, so without members the §273.2(i) comparison cannot be computed and the response is a conservative `expedited: false` with x-missingInformation.',
@@ -260,6 +260,13 @@ export function buildConsumerOpenApiDocument() {
       title: z.string(),
       status: z.number().int(),
       detail: z.string(),
+      errors: z
+        .array(z.object({ path: z.string(), message: z.string() }))
+        .optional()
+        .openapi({
+          description:
+            'On validation 400s: one entry per offending request field, so machine consumers can branch on field paths.',
+        }),
     }).openapi({ description: 'RFC 9457 Problem Details error.' })
   )
 
@@ -283,7 +290,10 @@ export function buildConsumerOpenApiDocument() {
       },
       400: { description: 'Invalid or unknown program.', content: { 'application/json': { schema: ProblemDetails } } },
       401: { description: 'Authentication required.', content: { 'application/json': { schema: ProblemDetails } } },
+      413: { description: 'Request body over the 10 MB limit.', content: { 'application/json': { schema: ProblemDetails } } },
+      500: { description: 'Evaluation failed server-side (not caused by your input).', content: { 'application/json': { schema: ProblemDetails } } },
       501: { description: 'Program recognized but not yet implemented.', content: { 'application/json': { schema: ProblemDetails } } },
+      503: { description: 'Ruleset not loaded (server starting or misconfigured). Retry later.', content: { 'application/json': { schema: ProblemDetails } } },
     },
   })
 
@@ -298,6 +308,9 @@ export function buildConsumerOpenApiDocument() {
       200: { description: 'Expedited screening result.', content: { 'application/json': { schema: ExpeditedScreeningResponse } } },
       400: { description: 'Invalid request.', content: { 'application/json': { schema: ProblemDetails } } },
       401: { description: 'Authentication required.', content: { 'application/json': { schema: ProblemDetails } } },
+      413: { description: 'Request body over the 10 MB limit.', content: { 'application/json': { schema: ProblemDetails } } },
+      500: { description: 'Evaluation failed server-side (not caused by your input).', content: { 'application/json': { schema: ProblemDetails } } },
+      503: { description: 'Ruleset not loaded (server starting or misconfigured). Retry later.', content: { 'application/json': { schema: ProblemDetails } } },
     },
   })
 

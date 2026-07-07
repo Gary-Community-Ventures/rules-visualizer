@@ -51,6 +51,17 @@ export type MissingInput = {
   enumOptions?: string[]
 }
 
+/** One hop of an instance address: which collection, which row. `root` is the
+ *  engine collection root (`/members`, `/incomes`, …); `id` is the caller's
+ *  row id (or the positional fallback). */
+export type MissingInputHop = { root: string; id: string }
+
+/** A missing input addressed to a concrete instance — the same field metadata
+ *  as MissingInput plus WHERE: an ordered hop chain from the household root
+ *  down to the row that lacks the value. Empty hops = a household-level
+ *  scalar. Experimental (include: "missingInputInstances"). */
+export type MissingInputInstance = MissingInput & { hops: MissingInputHop[] }
+
 export type SupportingFact = {
   path: string
   name: string
@@ -81,6 +92,13 @@ export type QueryResponse = {
    *  unresolved for that member specifically. Scalar/household-level
    *  missing inputs remain in the top-level `missingInputs` union only. */
   missingInputsByMember?: Record<string, MissingInput[]>
+  /** EXPERIMENTAL — present iff status === "incomplete" and request.include
+   *  contains "missingInputInstances". The union re-expressed per concrete
+   *  instance: one entry per (field, row) with a hop-chain address, instead
+   *  of one deduped entry per field. Fields the engine cannot attribute to
+   *  any instance (e.g. member fields when no members were provided) are
+   *  omitted here — they remain in `missingInputs`. */
+  missingInputInstances?: MissingInputInstance[]
 }
 
 /**
@@ -199,17 +217,22 @@ export function runQuery(
 
   // Compose the values map: one entry per requested target. Null if
   // the engine couldn't resolve that target with the provided inputs.
+  // A per-member target with unresolved slots ([36, null]) is shaped and
+  // returned, but still counts as unresolved for `status` — "complete"
+  // must mean every requested value, for every row.
   const values: Record<string, FactValue | null> = {}
-  let allResolved = true
+  const unresolvedTargetSet = new Set<string>()
   for (const target of targets) {
     const raw = effectiveResults[target]
     if (raw === undefined || raw === null) {
       values[target] = null
-      allResolved = false
+      unresolvedTargetSet.add(target)
     } else {
       values[target] = shapeFactValue(target, raw, memberIdsByCollection)
+      if (!hasResolvedValue(raw)) unresolvedTargetSet.add(target)
     }
   }
+  const allResolved = unresolvedTargetSet.size === 0
 
   // Set of paths the caller explicitly supplied — used by the missing-
   // inputs walker so we don't list inputs the caller already provided.
@@ -247,7 +270,13 @@ export function runQuery(
     const traces: Record<string, TraceNode> = {}
     const decidingPaths: Record<string, DecidingPath> = {}
     for (const target of targets) {
-      const t = buildTrace(model, index, effectiveResults, target)
+      const t = buildTrace(
+        model,
+        index,
+        effectiveResults,
+        target,
+        memberIdsByCollection
+      )
       if (t) {
         traces[target] = t
         decidingPaths[target] = buildDecidingPath(t)
@@ -263,7 +292,7 @@ export function runQuery(
     // the UI only needs one prompt per field.
     const allMissing = new Map<string, MissingInput>()
     for (const target of targets) {
-      if (values[target] !== null) continue
+      if (!unresolvedTargetSet.has(target)) continue
       for (const m of collectMissingInputs(
         model,
         target,
@@ -286,9 +315,9 @@ export function runQuery(
     // the walker still reaches member-level writables transitively and
     // correctly attributes them per slot.
     const memberIds = memberIdsByCollection['/members'] ?? []
+    const byMember: Record<string, MissingInput[]> = {}
     if (memberIds.length > 0) {
-      const unresolvedTargets = targets.filter((t) => values[t] === null)
-      const byMember: Record<string, MissingInput[]> = {}
+      const unresolvedTargets = targets.filter((t) => unresolvedTargetSet.has(t))
       for (let idx = 0; idx < memberIds.length; idx++) {
         const memberId = memberIds[idx]
         // Slice subCollMemberRows to this member's row indices only.
@@ -316,9 +345,112 @@ export function runQuery(
         response.missingInputsByMember = byMember
       }
     }
+
+    if (includeSet.has('missingInputInstances')) {
+      response.missingInputInstances = buildMissingInputInstances(
+        allMissing,
+        byMember,
+        collections,
+        memberIdsByCollection,
+        effectiveResults
+      )
+    }
   }
 
   return { ok: true, response }
+}
+
+/**
+ * Re-express the missing-inputs union per concrete instance: one entry per
+ * (field, row) with a hop-chain address instead of one deduped entry per
+ * field. Experimental — behind include: "missingInputInstances".
+ *
+ * Three sources, disjoint by construction:
+ *   - household scalars: union entries with no collection wildcard → hops [];
+ *   - member fields: the per-member walk's `/members/*\/…` entries → one hop;
+ *   - sub-collection row fields: a per-row pass over the provided rows —
+ *     a row owes a field when it didn't supply the key AND its executor slot
+ *     is unresolved — attributed through the row's memberId back-link → two
+ *     hops (one when the collection has no member back-link, e.g.
+ *     caregiver relationships).
+ *
+ * Union entries the engine cannot attribute to any instance (member fields
+ * when no members were provided, fields of withheld collections) are omitted;
+ * the caller composes "unacknowledged" entries for those from the request's
+ * acknowledgment state.
+ */
+function buildMissingInputInstances(
+  union: Map<string, MissingInput>,
+  byMember: Record<string, MissingInput[]>,
+  collections: Record<string, Array<Record<string, unknown>>>,
+  memberIdsByCollection: Record<string, string[]>,
+  executionResults: Record<string, unknown>
+): MissingInputInstance[] {
+  const out: MissingInputInstance[] = []
+  const collectionRootOf = (path: string): string | undefined =>
+    path.match(/^(\/[^*]+?)\/\*\//)?.[1]
+
+  for (const m of union.values()) {
+    if (collectionRootOf(m.path) === undefined) out.push({ ...m, hops: [] })
+  }
+
+  for (const [memberId, list] of Object.entries(byMember)) {
+    for (const m of list) {
+      if (m.path.startsWith('/members/*/')) {
+        out.push({ ...m, hops: [{ root: '/members', id: memberId }] })
+      }
+    }
+  }
+
+  // Candidate row-field paths must come from the member-aware walk, not the
+  // union: the union dedupes at path level, so a field that SOME rows
+  // provided (providedInputPaths has it) never enters the union even though
+  // other rows still owe it. The per-member walk is slot-aware and lists
+  // those. Union entries are merged in as a fallback for /query callers
+  // that provided a sub-collection without /members.
+  const rowCandidates = new Map<string, MissingInput>()
+  for (const list of Object.values(byMember)) {
+    for (const m of list) {
+      const r = collectionRootOf(m.path)
+      if (r && r !== '/members') rowCandidates.set(m.path, m)
+    }
+  }
+  for (const m of union.values()) {
+    const r = collectionRootOf(m.path)
+    if (r && r !== '/members' && !rowCandidates.has(m.path)) {
+      rowCandidates.set(m.path, m)
+    }
+  }
+
+  const memberIds = memberIdsByCollection['/members'] ?? []
+  for (const [root, rows] of Object.entries(collections)) {
+    if (root === '/members') continue
+    const rowIds = memberIdsByCollection[root] ?? []
+    const paths = [...rowCandidates.keys()].filter((p) =>
+      p.startsWith(root + '/*/')
+    )
+    if (paths.length === 0) continue
+    rows.forEach((row, rowIdx) => {
+      for (const p of paths) {
+        if (p in row) continue
+        const raw = executionResults[p]
+        const slot = Array.isArray(raw) ? raw[rowIdx] : undefined
+        if (slot !== null && slot !== undefined) continue
+        const hops: MissingInputHop[] = []
+        const fk = row[`${root}/*/memberId`]
+        if (typeof fk === 'string' && fk.startsWith('#')) {
+          const mIdx = parseInt(fk.slice(1), 10)
+          if (!isNaN(mIdx)) {
+            hops.push({ root: '/members', id: memberIds[mIdx] ?? `member-${mIdx}` })
+          }
+        }
+        hops.push({ root, id: rowIds[rowIdx] ?? `member-${rowIdx}` })
+        out.push({ ...rowCandidates.get(p)!, hops })
+      }
+    })
+  }
+
+  return out
 }
 
 // ---------------------------------------------------------------------------

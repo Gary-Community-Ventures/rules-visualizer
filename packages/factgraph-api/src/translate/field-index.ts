@@ -89,6 +89,21 @@ export function snakeEnum(s: string): string {
     .toLowerCase()
 }
 
+/** Engine collection root → the request key used in instance-hop addresses
+ *  (`/members` → `members`, `/incomes` → `income`, `/caregiverRelationships`
+ *  → `caregiverRelationships`). Derived from LOCATIONS so the hop vocabulary
+ *  can't drift from the request vocabulary. */
+export function requestKeyForRoot(root: string): string | undefined {
+  if (root === '/members') return 'members'
+  for (const [prefix, location] of LOCATIONS) {
+    if (prefix === root + '/*/') {
+      const last = location.split('.').pop() ?? location
+      return last.replace('[]', '')
+    }
+  }
+  return undefined
+}
+
 /** Split an engine path into its request (location, field). The ONLY place
  *  that turns a path into a short field name. */
 export function locationAndField(enginePath: string): { location: string; field: string } {

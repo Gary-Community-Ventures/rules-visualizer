@@ -439,7 +439,12 @@ function ageFromDob(dob: string, asOf: Date): number | undefined {
 export function translateHouseholdRequest(
   req: {
     members?: MemberContext[]
-    household?: { housingCosts?: number; utilityCosts?: number }
+    household?: {
+      size?: number
+      housingCosts?: number
+      utilityCosts?: number
+      isMigrantOrSeasonalFarmWorker?: boolean
+    }
   },
   asOf: Date
 ): TranslatedQuery {
@@ -515,6 +520,16 @@ export function translateHouseholdRequest(
     }
     if (m.isDisabled !== undefined) {
       row['/members/*/hasPhysicalDisability'] = m.isDisabled
+    }
+    // The contract carries migrant/seasonal-farmworker status at the
+    // household level; the rules track it per member (it feeds the
+    // destitute-household expedited screen via /hasMigrantFarmWorker,
+    // which is an any-member aggregate). Apply the household-level flag
+    // to every member — the aggregate only needs one, but we don't know
+    // which member it describes.
+    if (req.household?.isMigrantOrSeasonalFarmWorker !== undefined) {
+      row['/members/*/isMigrantFarmWorker'] =
+        req.household.isMigrantOrSeasonalFarmWorker
     }
     members.push(row)
 
@@ -626,6 +641,19 @@ export function translateHouseholdRequest(
     })
     notes.push(
       'household.utilityCosts was applied as a monthly utility (electricity) expense.'
+    )
+  }
+
+  // household.size is informational in this adapter: the rules derive
+  // household size from the member roster, so a `size` that disagrees with
+  // the number of member objects can't be honored — disclose rather than
+  // silently ignore.
+  if (
+    req.household?.size !== undefined &&
+    req.household.size !== req.members.length
+  ) {
+    notes.push(
+      `household.size (${req.household.size}) does not match the number of members provided (${req.members.length}); the determination uses the member roster. Add a member object per person for a correct household size.`
     )
   }
 

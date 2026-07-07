@@ -18,7 +18,8 @@ Read in this order — field catalog first, then the contract, then background i
 | Read | What it is |
 |---|---|
 | [`eligibility-adapter-v2-proposal-openapi.yaml`](./eligibility-adapter-v2-proposal-openapi.yaml) | The v2 contract — per-program endpoints, no-guess, per-member `missingInputs`. Live Swagger: `/v2/eligibility/docs` |
-| [`input-dictionary.md`](./input-dictionary.md) | **Generated** field semantics: rule-author-written definitions, full enum vocabularies, policy citations, and consuming programs for every request field. Never hand-edited — regenerated from the rulesets |
+| [engine-input catalog](https://gary-community-ventures.github.io/rules-visualizer/engine-inputs.html) | **The authoritative field list for the live v2 endpoints** — every accepted field, its type, enum values, and citations (machine-readable: `engine-inputs.json`) |
+| [`input-dictionary.md`](./input-dictionary.md) | **Proposal document** — field-grouping/consolidation proposals with rule-authored definitions and citations. Its field names follow the earlier proposal, *not* the live v2 vocabulary (see its banner) |
 | [`request-field-proposal.md`](./request-field-proposal.md) | Background: the no-guess policy and the rationale for the domain-shaped request fields |
 | [`contract-gap-analysis.md`](./contract-gap-analysis.md) | Background: what the v1 ORCA contract carries vs. what the SNAP/Medicaid rules actually need (informed the v2 design) |
 

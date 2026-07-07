@@ -40,7 +40,11 @@ test('v2 spec carries the implemented request/response shape', async () => {
   assert.ok(det.benefitAmount, 'benefitAmount is first-class')
   assert.ok(det.medicaidCategory, 'one Determination schema covers both programs')
   assert.equal(det['x-allotment'], undefined, 'no x- overlays')
-  assert.ok(det.status.enum.includes('not_supported'))
+  assert.deepEqual(
+    det.status.enum,
+    ['approved', 'denied', 'ineligible', 'pending'],
+    'every documented status is reachable (not_supported was dead vocabulary)'
+  )
   assert.ok(schemas.DeterminationResponse.properties.determinations)
 
   // missingInputs is in the friendly request vocabulary.

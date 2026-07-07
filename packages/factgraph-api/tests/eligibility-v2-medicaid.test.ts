@@ -78,12 +78,12 @@ test('approved adult — status, medicaidCategory, no missingInputs', async () =
   assert.ok(!('benefitAmount' in det), 'no benefitAmount on Medicaid (not a cash benefit)')
 })
 
-test('approved child — OlderChild category', async () => {
+test('approved child — older_child category (snake_case wire value)', async () => {
   const res = await request(app).post(URL).send({ members: [childMember('bob')] })
   assert.equal(res.status, 200)
   const det = res.body.determinations[0] as Record<string, unknown>
   assert.equal(det.status, 'approved')
-  assert.equal(det.medicaidCategory, 'OlderChild')
+  assert.equal(det.medicaidCategory, 'older_child')
   assert.ok('chpEligible' in det, 'chpEligible present on approved')
 })
 

@@ -17,6 +17,7 @@ import {
 } from '../translate/snap.js'
 import { translateRequest } from '../translate/v2-request.js'
 import { friendlyMissing, friendlyMissingByMember } from '../translate/field-index.js'
+import { composeInstancedMissing } from '../translate/instanced-missing.js'
 import {
   V2HouseholdRequestSchema,
   snapDetermination,
@@ -58,13 +59,26 @@ router.post('/determination', (req, res) => {
     problem(res, 503, 'Ruleset unavailable', `"${SNAP_RULESET_ID}" is not loaded.`)
     return
   }
-  const { inputs, warnings } = translateRequest(body, model, asOf)
-  const query = run(res, SNAP_RULESET_ID, inputs, SNAP_DETERMINATION_TARGETS, ['trace'])
+  const instanced = body.missingInputsFormat === 'instanced'
+  const { inputs, memberIds, warnings, acknowledgment } = translateRequest(body, model, asOf)
+  const query = run(
+    res,
+    SNAP_RULESET_ID,
+    inputs,
+    SNAP_DETERMINATION_TARGETS,
+    instanced ? ['trace', 'missingInputInstances'] : ['trace']
+  )
   if (!query) return
 
   const det = snapDetermination(query, warnings)
-  const missing = friendlyMissing(query.missingInputs ?? [], model)
-  if (missing.length) det.missingInputs = missing
+  if (instanced) {
+    const missing = composeInstancedMissing(query, memberIds, acknowledgment, model)
+    if (missing.length) det.missingInputs = missing
+  } else {
+    const missing = friendlyMissing(query.missingInputs ?? [], model)
+    if (missing.length) det.missingInputs = missing
+  }
+  // Attached in both formats during the instanced-format evaluation window.
   const missingByMember = friendlyMissingByMember(query.missingInputsByMember ?? {}, model)
   if (Object.keys(missingByMember).length) det.missingInputsByMember = missingByMember
 

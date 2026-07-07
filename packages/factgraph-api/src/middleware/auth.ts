@@ -10,13 +10,28 @@ import { timingSafeEqual } from 'node:crypto'
  * and the earliest prototype phase. In any deployed environment, set
  * `API_BEARER_TOKEN` and share it with the partner team out of band.
  *
+ * An *empty* `API_BEARER_TOKEN` (e.g. a bare `API_BEARER_TOKEN=` line in
+ * a .env file) is treated as a misconfiguration and fails closed with a
+ * 503 — the operator intended auth to be on, so silently running open
+ * would be the worst possible reading of the mistake.
+ *
  * Uses `timingSafeEqual` to compare so token-validation latency doesn't
  * leak information.
  */
 export function bearerAuth(req: Request, res: Response, next: NextFunction) {
   const expected = process.env.API_BEARER_TOKEN
-  if (!expected) {
+  if (expected === undefined) {
     next()
+    return
+  }
+  if (expected === '') {
+    res.status(503).json({
+      type: 'https://tools.ietf.org/html/rfc9457',
+      title: 'Authentication misconfigured',
+      status: 503,
+      detail:
+        'API_BEARER_TOKEN is set but empty on the server. Set a real token (auth on) or remove the variable entirely (auth off).',
+    })
     return
   }
 

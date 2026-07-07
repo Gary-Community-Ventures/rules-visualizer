@@ -245,7 +245,6 @@ components:
           description: "Status of verification obligations (status enum: pending |
             inconclusive | satisfied | waived | cannot_verify)."
       required:
-        - metadata
         - program
         - household
         - members
@@ -313,7 +312,6 @@ components:
             cannot be computed and the response is a conservative `expedited:
             false` with x-missingInformation."
       required:
-        - metadata
         - household
       description: Expedited SNAP screening request (7 CFR §273.2(i)). Household-only
         requests (the contract-exact shape) are accepted.
@@ -505,6 +503,20 @@ components:
           type: integer
         detail:
           type: string
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              path:
+                type: string
+              message:
+                type: string
+            required:
+              - path
+              - message
+          description: "On validation 400s: one entry per offending request field, so
+            machine consumers can branch on field paths."
       required:
         - type
         - title
@@ -551,8 +563,26 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ProblemDetails"
+        "413":
+          description: Request body over the 10 MB limit.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "500":
+          description: Evaluation failed server-side (not caused by your input).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
         "501":
           description: Program recognized but not yet implemented.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "503":
+          description: Ruleset not loaded (server starting or misconfigured). Retry later.
           content:
             application/json:
               schema:
@@ -585,6 +615,24 @@ paths:
                 $ref: "#/components/schemas/ProblemDetails"
         "401":
           description: Authentication required.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "413":
+          description: Request body over the 10 MB limit.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "500":
+          description: Evaluation failed server-side (not caused by your input).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "503":
+          description: Ruleset not loaded (server starting or misconfigured). Retry later.
           content:
             application/json:
               schema:

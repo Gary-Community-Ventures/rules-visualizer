@@ -5,6 +5,138 @@ without surface impact aren't logged here; see git history for those.
 
 ## Unreleased
 
+### 2026-07-07 — instanced missing-inputs (experimental, opt-in) + medicaid pending guard
+
+#### Added (opt-in — no default-behavior change)
+
+- **`missingInputsFormat: "instanced"`** on the v2 determination requests
+  switches `missingInputs` to the shape under evaluation to replace the
+  current one: **one entry per concrete instance**, each carrying two
+  orthogonal addresses — `requestPath` (the schema address: which question)
+  and `at` (the instance address: ordered `{in, id}` hops from the request
+  root down to the row that owes the value; empty = household-level).
+  Household = 0 hops, member = 1, sub-collection row = 2; depth N and
+  member-less collections (caregiverRelationships) address uniformly.
+  A second entry kind, **`unacknowledged`**, makes the rows-or-`[]`
+  acknowledgment rule visible instead of doc-only ("does this member have
+  any income?"), and recurses to the root: an empty request's first missing
+  input is literally `{field: "members", at: []}`. `memberId` echoes
+  `at[0].id` (groupBy convenience) and `missingInputsByMember` stays
+  attached unchanged in both formats during the evaluation window.
+  Feedback welcome — this may become the default in a future rev, with
+  notice. The demo page has an "instanced missingInputs" toggle.
+- The advanced `/query` endpoint exposes the raw layer as
+  `include: ["missingInputInstances"]` (engine paths + hop chains).
+
+#### Fixed (behavior corrections observable on the wire)
+
+- **Medicaid no longer returns a committed `ineligible` for members whose
+  age never resolved.** The category Switch's catch-all yields `Ineligible`
+  when the age-gated category checks are unknown rather than false — a
+  member with no data came back confidently ineligible
+  (`not_in_eligible_category`). Such members are now `pending` with their
+  missing inputs listed, mirroring the SNAP pending guard. The artifact
+  `medicaidCategory`/`chpEligible` values are suppressed on pending.
+- **`status: "complete"` now means every requested value resolved for
+  every row.** A per-member target with unresolved slots (`[36, null]`)
+  previously counted as resolved, so `/query` could report `complete`
+  while a member's value was null and list no missing inputs for it.
+
+### 2026-07-06 — trace correctness, error handling, contract cleanup
+
+#### Changed (breaking — flagged for consumers)
+
+- **v2 `medicaidCategory` values are now snake_case** (`adult`, `infant`,
+  `older_child`, `ssi_recipient`, `ineligible`, …), matching the stated
+  wire convention and the request-side enum casing. Previously leaked the
+  engine's PascalCase (`Adult`, `OlderChild`). Migration: lowercase +
+  underscore your comparisons. v1's `x-medicaidCategory` is unchanged
+  (frozen contract, documented PascalCase).
+- **v2 duplicate member `id`s are rejected with a 400.** Previously two
+  members sharing an id were silently merged (their per-member missing
+  inputs collapsed under one key; reference fields resolved to the later
+  member). If you send ids, make them unique.
+- **v2 malformed sub-collection rows are rejected with a 400.** A `null`
+  or non-object entry in `members[].income[]` (and expenses/jobs/assets)
+  previously crashed with an HTML 500; now it's a Problem Details 400
+  naming the offending row.
+- **v2 `status` enum no longer includes `not_supported`** — it was
+  documented but unreachable (no route ever produced it). Unknown
+  programs now get a Problem Details 404 naming the available operations
+  (previously an HTML "Cannot POST" page).
+- **`/v1/eligibility` "ruleset unavailable" is now 503** (was 500),
+  matching v2. Callers treating any 5xx as retryable are unaffected.
+
+#### Fixed (behavior corrections observable on the wire)
+
+- **Traces: comparison nodes now report their own result.** Inline
+  comparisons inside `Any`/`All`/`When` previously echoed the enclosing
+  fact's value — a trace could claim `99999 ≤ 1695.2 — held.` when the
+  parent `Any` was true via a different branch, and the decisive flag
+  could land on the wrong operand. Comparisons now compute from their own
+  operand values (and stay `pending` when an operand is unresolved), so
+  decisive-branch selection and `x-explanation`/`explanation` derivation
+  are grounded in the actual math.
+- **Traces: relative dependency paths resolve.** `../age`-style and
+  bare-sibling dependency references (most member-level logic) previously
+  dead-ended as "Unresolved dependency"; they now resolve like the engine
+  resolves them. Paths that traverse collection references
+  (`relatedTo/...`) are reported as such rather than as unresolved.
+- **Traces: collection-scoped targets are traced per row.** A per-member
+  target now returns a `PerMember` root with one fully-walked sub-trace
+  per row, tagged `memberId` (previously the walker read the positional
+  array as an unevaluated scalar and reported "No operand has held yet"
+  on resolved facts). `decidingPaths` steps inside a row's sub-trace
+  carry the `memberId`.
+- **v1: `household.isMigrantOrSeasonalFarmWorker` is now applied** to the
+  member rows (it feeds the destitute-household expedited screen).
+  Previously accepted and silently ignored.
+- **v1: a `household.size` that disagrees with the member roster is now
+  disclosed** in `x-translationNotes` (size is derived from the roster
+  and cannot be honored directly). Previously silently ignored.
+- **v1: expedited screening now carries `x-translationNotes`** — the
+  household-only-shape disclosure was generated but dropped by the route.
+
+#### Added
+
+- **RFC 9457 everywhere.** A global error boundary replaces Express's
+  default HTML error page: malformed JSON → 400 Problem Details, body
+  over 10 MB → 413, unexpected faults → 500 with a generic detail (no
+  stack traces or filesystem paths leak to clients; details go to server
+  logs). The v2 routes' engine calls are also guarded (previously an
+  engine throw returned HTML with a stack).
+- **Empty `API_BEARER_TOKEN` fails closed.** A set-but-empty token env
+  var (e.g. a bare `API_BEARER_TOKEN=` line in `.env`) now yields 503
+  "Authentication misconfigured" on protected routes instead of silently
+  running the server open.
+- **v2 partial sub-collection acknowledgment is disclosed.** When some
+  members carry `income: [...]` but another member omits the key
+  entirely, the withheld rows are now reported in `notes` (previously
+  the provided rows were silently not evaluated). Reminder: every member
+  must acknowledge each sub-collection, `[]` meaning "none".
+- **Specs document the full failure surface**: 413/500/503 responses,
+  the `errors[]` field on validation 400s, and the
+  `missingInputsByMember` response field on `/query` (already live, was
+  undocumented). The v1 spec's request `metadata` is now correctly
+  optional (the server never required it). The v2 medicaid example now
+  uses medicaid-catalog field names (`immigrantStatus`, …) instead of
+  SNAP ones. `/v2/eligibility/medicaid/ex-parte` (501 stub) is now in
+  the spec. v2 `Member.id` is documented as optional-but-recommended
+  with the `member-N` fallback described, matching the implementation.
+- **v2 missing-inputs attachment is now uniform across programs**:
+  medicaid determinations attach `missingInputs` whenever any needed
+  inputs remain (as SNAP already did), not only on `pending`.
+
+#### Docs
+
+- `docs/input-dictionary.md` is demoted to a **field-grouping proposal**
+  with a banner: its field names follow the earlier proposal routing
+  table, not the implemented v2 vocabulary — the
+  [engine-input catalog](https://gary-community-ventures.github.io/rules-visualizer/engine-inputs.html)
+  is the authoritative field list for the live endpoints.
+- The stale "Known limitations" tail (claiming no traces and no OpenAPI
+  spec existed) is corrected.
+
 ### Added
 
 - **Contract-exact conformance** (verified against the published adapter
@@ -217,7 +349,9 @@ value}` objects so callers can correlate output to specific rows
 - The smart walker doesn't yet model **alternation** — when an `Any`
   needs _one of_ N branches, both branches appear in `missingInputs`
   without indicating "either of these would do." Requires a richer
-  response shape; tracked for future work.
-- No structured explanation/trace yet (beyond the flat
-  `supportingFacts` list).
-- No published OpenAPI spec yet.
+  response shape; tracked for future work. Corollary: `missingInputs`
+  is a *may-be-needed* set, not a guaranteed-minimal one.
+- Traces don't descend arithmetic/collection operators (Multiply,
+  Filter, Count, …) or `Switch` `Then` values — those nodes report
+  their computed value but not their sub-expressions. Query the
+  intermediate facts directly to drill in.

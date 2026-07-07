@@ -84,7 +84,10 @@ components:
         id:
           type: string
           description: Caller-assigned id; echoed as memberId on member-scoped
-            determinations and used by reference fields (spouseId, etc.).
+            determinations, used to key missingInputsByMember, and referenced by
+            reference fields (spouseId, etc.). Strongly recommended — when
+            absent, the member is addressed by the positional fallback
+            `member-N`. Duplicate ids are rejected with a 400.
         dateOfBirth:
           type: string
           format: date
@@ -108,8 +111,6 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/AssetRow"
-      required:
-        - id
       description: A household member. The fields shown are the common/derived ones;
         the full set of member fields is in the catalog
         (https://gary-community-ventures.github.io/rules-visualizer/engine-inputs.html).
@@ -136,6 +137,19 @@ components:
           type: string
           format: date
           description: Evaluation date; defaults to now.
+        missingInputsFormat:
+          type: string
+          enum:
+            - fields
+            - instanced
+          description: EXPERIMENTAL — under evaluation with integrators; may change or
+            become the default. `"instanced"` switches `missingInputs` to one
+            entry per concrete instance (each with an `at` hop-chain address and
+            a `kind`), including `unacknowledged` entries for unanswered
+            collection questions. Default `"fields"` is the current
+            deduped-per-field shape. `missingInputsByMember` is attached
+            unchanged in both formats during the evaluation window.
+            Determination endpoints only; ignored by expedited screening.
         household:
           type: object
           properties: {}
@@ -148,12 +162,38 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/CaregiverRelationship"
-      description: One household payload. Everything is optional but a member `id`; an
-        empty body is valid and returns the program pending with the inputs it
-        needs.
+      description: One household payload. Everything is optional; an empty body is
+        valid and returns the program pending with the inputs it needs.
+    InstanceHop:
+      type: object
+      properties:
+        in:
+          type: string
+          description: "Request-vocabulary collection key: members, income, expenses,
+            jobs, assets, caregiverRelationships."
+          example: income
+        id:
+          type: string
+          description: The caller-assigned row id (positional fallback when the row had
+            none).
+          example: alice-income-0
+      required:
+        - in
+        - id
+      description: "EXPERIMENTAL — one hop of an instance address: which collection,
+        which row."
     MissingInput:
       type: object
       properties:
+        kind:
+          type: string
+          enum:
+            - field
+            - unacknowledged
+          description: 'EXPERIMENTAL — present when the request opted into
+            `missingInputsFormat: "instanced"`. `field`: a concrete value is
+            missing at `at`. `unacknowledged`: a whole collection question is
+            unanswered at `at` — answer with rows, or [] for none.'
         requestPath:
           type: string
           description: Where to set the value in the request.
@@ -162,26 +202,45 @@ components:
           type: string
         location:
           type: string
+          description: Omitted on `unacknowledged` entries.
           example: members[]
         type:
           type: string
+          description: Omitted on `unacknowledged` entries.
           example: Boolean
         label:
           type: string
-          description: The rule author's display name.
+          description: The rule author's display name. Omitted on `unacknowledged` entries.
         options:
           type: array
           items:
             type: string
           description: Allowed values when the field is an enum.
+        at:
+          type: array
+          items:
+            $ref: "#/components/schemas/InstanceHop"
+          description: "EXPERIMENTAL (instanced format only) — the instance address:
+            ordered hops from the request root down to the row that owes the
+            value. Empty = household-level. Household = 0 hops, member = 1,
+            sub-collection row = 2."
+        memberId:
+          type: string
+          description: "Instanced format only: echo of `at[0].id` when the first hop is
+            members — convenience for groupBy-by-member consumers."
+        hint:
+          type: string
+          description: "On `unacknowledged` entries: how to answer the collection question."
       required:
         - requestPath
         - field
-        - location
-        - type
-        - label
-      description: An input that would unlock or refine this determination, in the
-        request vocabulary.
+      description: "An input that would unlock or refine this determination, in the
+        request vocabulary. Default format: one deduped entry per field
+        (`location`/`type`/`label` always present). With `missingInputsFormat:
+        \"instanced\"`: one entry per concrete instance, each carrying an `at`
+        hop-chain address, plus `unacknowledged` entries for unanswered
+        collection questions — an empty request's first missing input is
+        literally `{field: \"members\", at: []}`."
     ExplanationStep:
       type: object
       properties:
@@ -212,7 +271,6 @@ components:
             - denied
             - ineligible
             - pending
-            - not_supported
         path:
           type: string
           enum:
@@ -230,6 +288,8 @@ components:
           description: "SNAP: expedited processing also applies."
         medicaidCategory:
           type: string
+          description: snake_case MAGI category (e.g. adult, infant, older_child,
+            ssi_recipient, ineligible).
         chpEligible:
           type: boolean
         denialReasonCode:
@@ -244,7 +304,12 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/MissingInput"
-          description: "Present when pending: exactly which fields to fill, across all
+          description: "Present whenever needed inputs remain unfilled (always when
+            pending; may also accompany a decided status when side outputs such
+            as the benefit amount could not resolve): exactly which fields to
+            fill. On member-scoped determinations (medicaid) this is that
+            member's own gaps plus the shared household-level gaps; on
+            household-scoped determinations (SNAP) it is the union across
             members."
         missingInputsByMember:
           type: object
@@ -252,9 +317,11 @@ components:
             type: array
             items:
               $ref: "#/components/schemas/MissingInput"
-          description: "Present when pending and members were provided: the member-level
+          description: "Household-scoped determinations (SNAP) only: the member-level
             subset of missingInputs keyed by member id. Shared inputs (income
-            rows, expenses) appear only in the top-level missingInputs."
+            rows, expenses) appear only in the top-level missingInputs.
+            Member-scoped determinations carry their member's gaps directly in
+            missingInputs instead."
         notes:
           type: array
           items:
@@ -345,8 +412,7 @@ paths:
                   metadata:
                     caseId: abc-123
                   members:
-                    - &a1
-                      id: head
+                    - id: head
                       dateOfBirth: 1990-03-15
                       citizenshipImmigrationStatus: citizen
                       isHeadOfHousehold: true
@@ -362,13 +428,34 @@ paths:
               schema:
                 $ref: "#/components/schemas/DeterminationResponse"
         "400":
-          description: Invalid request.
+          description: Invalid request (malformed JSON, bad field shapes, duplicate member
+            ids, invalid asOf).
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ProblemDetails"
         "401":
           description: Authentication required.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "413":
+          description: Request body over the 10 MB limit.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "500":
+          description: Evaluation failed server-side. Not caused by your input; safe to
+            retry after the fault is fixed.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "503":
+          description: The ruleset for this program is not loaded (server starting or
+            misconfigured). Retry later.
           content:
             application/json:
               schema:
@@ -414,13 +501,34 @@ paths:
               schema:
                 $ref: "#/components/schemas/ExpeditedScreeningResponse"
         "400":
-          description: Invalid request.
+          description: Invalid request (malformed JSON, bad field shapes, duplicate member
+            ids, invalid asOf).
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ProblemDetails"
         "401":
           description: Authentication required.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "413":
+          description: Request body over the 10 MB limit.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "500":
+          description: Evaluation failed server-side. Not caused by your input; safe to
+            retry after the fault is fixed.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "503":
+          description: The ruleset for this program is not loaded (server starting or
+            misconfigured). Retry later.
           content:
             application/json:
               schema:
@@ -450,10 +558,17 @@ paths:
                   metadata:
                     caseId: abc-123
                   members:
-                    - *a1
+                    - id: head
+                      dateOfBirth: 1990-03-15
+                      immigrantStatus: citizen
+                      disabled: false
+                      income:
+                        - type: wages_and_salaries
+                          amount: 1200
+                          frequency: monthly
                     - id: spouse
                       dateOfBirth: 1992-07-20
-                      citizenshipImmigrationStatus: citizen
+                      immigrantStatus: citizen
       responses:
         "200":
           description: One member-scoped determination per household member.
@@ -462,13 +577,56 @@ paths:
               schema:
                 $ref: "#/components/schemas/DeterminationResponse"
         "400":
-          description: Invalid request.
+          description: Invalid request (malformed JSON, bad field shapes, duplicate member
+            ids, invalid asOf).
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ProblemDetails"
         "401":
           description: Authentication required.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "413":
+          description: Request body over the 10 MB limit.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "500":
+          description: Evaluation failed server-side. Not caused by your input; safe to
+            retry after the fault is fixed.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "503":
+          description: The ruleset for this program is not loaded (server starting or
+            misconfigured). Retry later.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+  /v2/eligibility/medicaid/ex-parte:
+    post:
+      summary: Medicaid ex-parte renewal (not yet implemented).
+      description: Reserved for the ex-parte renewal flow. Currently responds 501 with
+        a pointer to the v1 surface.
+      tags:
+        - Eligibility v2
+      security:
+        - bearerAuth: []
+      responses:
+        "401":
+          description: Authentication required.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "501":
+          description: Not yet implemented.
           content:
             application/json:
               schema:

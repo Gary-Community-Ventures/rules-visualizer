@@ -46,8 +46,10 @@ export const QueryRequestSchema = z
       .record(z.string(), z.union([z.array(EntityRowSchema), z.unknown()]))
       .optional(),
 
-    /** Opt-in response sections. Today: `"supportingFacts"`, `"trace"`.
-     *  Unknown values are ignored. */
+    /** Opt-in response sections. Today: `"supportingFacts"`, `"trace"`,
+     *  and the experimental `"missingInputInstances"` (per-instance
+     *  missing-inputs with hop-chain addresses). Unknown values are
+     *  ignored. */
     include: z.array(z.string()).optional(),
 
     /** Opaque correlation context echoed back unchanged in the response.

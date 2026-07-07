@@ -72,7 +72,7 @@ export function buildV2OpenApiDocument() {
   const Member = registry.register(
     'Member',
     z.object({
-      id: z.string().openapi({ description: 'Caller-assigned id; echoed as memberId on member-scoped determinations and used by reference fields (spouseId, etc.).' }),
+      id: z.string().optional().openapi({ description: 'Caller-assigned id; echoed as memberId on member-scoped determinations, used to key missingInputsByMember, and referenced by reference fields (spouseId, etc.). Strongly recommended — when absent, the member is addressed by the positional fallback `member-N`. Duplicate ids are rejected with a 400.' }),
       dateOfBirth: z.string().optional().openapi({ format: 'date', description: 'The engine derives age from this.' }),
       citizenshipImmigrationStatus: z.string().optional().openapi({ description: 'snake_case enum; see catalog.' }),
       income: z.array(IncomeRow).optional(),
@@ -98,27 +98,56 @@ export function buildV2OpenApiDocument() {
     z.object({
       metadata: z.record(z.string(), z.unknown()).optional().openapi({ description: 'Opaque; echoed back, never inspected.' }),
       asOf: z.string().optional().openapi({ format: 'date', description: 'Evaluation date; defaults to now.' }),
+      missingInputsFormat: z.enum(['fields', 'instanced']).optional().openapi({
+        description:
+          'EXPERIMENTAL — under evaluation with integrators; may change or become the default. `"instanced"` switches `missingInputs` to one entry per concrete instance (each with an `at` hop-chain address and a `kind`), including `unacknowledged` entries for unanswered collection questions. Default `"fields"` is the current deduped-per-field shape. `missingInputsByMember` is attached unchanged in both formats during the evaluation window. Determination endpoints only; ignored by expedited screening.',
+      }),
       household: z.object({}).passthrough().optional().openapi({ description: 'Household/application-level fields (per catalog).' }),
       members: z.array(Member).optional(),
       caregiverRelationships: z.array(CaregiverRelationship).optional(),
     }).openapi({
       description:
-        'One household payload. Everything is optional but a member `id`; an empty body is valid and returns the program pending with the inputs it needs.',
+        'One household payload. Everything is optional; an empty body is valid and returns the program pending with the inputs it needs.',
     })
   )
 
   // ---- response ------------------------------------------------------------
 
+  const InstanceHop = registry.register(
+    'InstanceHop',
+    z.object({
+      in: z.string().openapi({ example: 'income', description: 'Request-vocabulary collection key: members, income, expenses, jobs, assets, caregiverRelationships.' }),
+      id: z.string().openapi({ example: 'alice-income-0', description: 'The caller-assigned row id (positional fallback when the row had none).' }),
+    }).openapi({ description: 'EXPERIMENTAL — one hop of an instance address: which collection, which row.' })
+  )
+
   const MissingInput = registry.register(
     'MissingInput',
     z.object({
+      kind: z.enum(['field', 'unacknowledged']).optional().openapi({
+        description:
+          'EXPERIMENTAL — present when the request opted into `missingInputsFormat: "instanced"`. `field`: a concrete value is missing at `at`. `unacknowledged`: a whole collection question is unanswered at `at` — answer with rows, or [] for none.',
+      }),
       requestPath: z.string().openapi({ example: 'members[].isPregnant', description: 'Where to set the value in the request.' }),
       field: z.string(),
-      location: z.string().openapi({ example: 'members[]' }),
-      type: z.string().openapi({ example: 'Boolean' }),
-      label: z.string().openapi({ description: "The rule author's display name." }),
+      location: z.string().optional().openapi({ example: 'members[]', description: 'Omitted on `unacknowledged` entries.' }),
+      type: z.string().optional().openapi({ example: 'Boolean', description: 'Omitted on `unacknowledged` entries.' }),
+      label: z.string().optional().openapi({ description: "The rule author's display name. Omitted on `unacknowledged` entries." }),
       options: z.array(z.string()).optional().openapi({ description: 'Allowed values when the field is an enum.' }),
-    }).openapi({ description: 'An input that would unlock or refine this determination, in the request vocabulary.' })
+      at: z.array(InstanceHop).optional().openapi({
+        description:
+          'EXPERIMENTAL (instanced format only) — the instance address: ordered hops from the request root down to the row that owes the value. Empty = household-level. Household = 0 hops, member = 1, sub-collection row = 2.',
+      }),
+      memberId: z.string().optional().openapi({
+        description: 'Instanced format only: echo of `at[0].id` when the first hop is members — convenience for groupBy-by-member consumers.',
+      }),
+      hint: z.string().optional().openapi({
+        description: 'On `unacknowledged` entries: how to answer the collection question.',
+      }),
+    }).openapi({
+      description:
+        'An input that would unlock or refine this determination, in the request vocabulary. Default format: one deduped entry per field (`location`/`type`/`label` always present). With `missingInputsFormat: "instanced"`: one entry per concrete instance, each carrying an `at` hop-chain address, plus `unacknowledged` entries for unanswered collection questions — an empty request\'s first missing input is literally `{field: "members", at: []}`.',
+    })
   )
 
   const ExplanationStep = registry.register(
@@ -132,17 +161,17 @@ export function buildV2OpenApiDocument() {
       program: z.string(),
       scope: z.enum(['household', 'member']).openapi({ description: 'household (SNAP) or member (Medicaid, one per member).' }),
       memberId: z.string().optional().openapi({ description: 'Set when scope is member — the caller-assigned member id.' }),
-      status: z.enum(['approved', 'denied', 'ineligible', 'pending', 'not_supported']),
+      status: z.enum(['approved', 'denied', 'ineligible', 'pending']),
       path: z.enum(['auto', 'manual']).optional().openapi({ description: 'auto = decided by the rules; manual reserved for caseworker-verified determinations.' }),
       benefitAmount: z.number().optional().openapi({ description: 'Monthly benefit when approved (SNAP allotment).' }),
       proratedFirstMonthAmount: z.number().optional(),
       isExpedited: z.boolean().optional().openapi({ description: 'SNAP: expedited processing also applies.' }),
-      medicaidCategory: z.string().optional(),
+      medicaidCategory: z.string().optional().openapi({ description: 'snake_case MAGI category (e.g. adult, infant, older_child, ssi_recipient, ineligible).' }),
       chpEligible: z.boolean().optional(),
       denialReasonCode: z.string().optional().openapi({ description: 'snake_case; present on denied/ineligible.' }),
       explanation: z.array(ExplanationStep).optional().openapi({ description: 'Path-free "why" for denials.' }),
-      missingInputs: z.array(MissingInput).optional().openapi({ description: 'Present when pending: exactly which fields to fill, across all members.' }),
-      missingInputsByMember: z.record(z.string(), z.array(MissingInput)).optional().openapi({ description: 'Present when pending and members were provided: the member-level subset of missingInputs keyed by member id. Shared inputs (income rows, expenses) appear only in the top-level missingInputs.' }),
+      missingInputs: z.array(MissingInput).optional().openapi({ description: 'Present whenever needed inputs remain unfilled (always when pending; may also accompany a decided status when side outputs such as the benefit amount could not resolve): exactly which fields to fill. On member-scoped determinations (medicaid) this is that member\'s own gaps plus the shared household-level gaps; on household-scoped determinations (SNAP) it is the union across members.' }),
+      missingInputsByMember: z.record(z.string(), z.array(MissingInput)).optional().openapi({ description: 'Household-scoped determinations (SNAP) only: the member-level subset of missingInputs keyed by member id. Shared inputs (income rows, expenses) appear only in the top-level missingInputs. Member-scoped determinations carry their member\'s gaps directly in missingInputs instead.' }),
       notes: z.array(z.string()).optional().openapi({ description: 'Assumptions/translation notes.' }),
     }).openapi({ description: 'One program decision. One shape for household- and member-scoped programs (no oneOf).' })
   )
@@ -172,15 +201,28 @@ export function buildV2OpenApiDocument() {
   )
 
   const commonResponses = {
-    400: { description: 'Invalid request.', content: { 'application/json': { schema: ProblemDetails } } },
+    400: { description: 'Invalid request (malformed JSON, bad field shapes, duplicate member ids, invalid asOf).', content: { 'application/json': { schema: ProblemDetails } } },
     401: { description: 'Authentication required.', content: { 'application/json': { schema: ProblemDetails } } },
+    413: { description: 'Request body over the 10 MB limit.', content: { 'application/json': { schema: ProblemDetails } } },
+    500: { description: 'Evaluation failed server-side. Not caused by your input; safe to retry after the fault is fixed.', content: { 'application/json': { schema: ProblemDetails } } },
+    503: { description: 'The ruleset for this program is not loaded (server starting or misconfigured). Retry later.', content: { 'application/json': { schema: ProblemDetails } } },
   }
 
-  const exampleMember = {
+  // Examples use each program's own catalog vocabulary — the SNAP member
+  // fields (citizenshipImmigrationStatus, isHeadOfHousehold, …) and the
+  // medicaid ones (immigrantStatus, disabled, …) are different field sets.
+  const exampleSnapMember = {
     id: 'head',
     dateOfBirth: '1990-03-15',
     citizenshipImmigrationStatus: 'citizen',
     isHeadOfHousehold: true,
+    income: [{ type: 'wages_and_salaries', amount: 1200, frequency: 'monthly' }],
+  }
+  const exampleMedicaidMember = {
+    id: 'head',
+    dateOfBirth: '1990-03-15',
+    immigrantStatus: 'citizen',
+    disabled: false,
     income: [{ type: 'wages_and_salaries', amount: 1200, frequency: 'monthly' }],
   }
 
@@ -200,7 +242,7 @@ export function buildV2OpenApiDocument() {
             schema: HouseholdRequest,
             examples: {
               'single member household': {
-                value: { metadata: { caseId: 'abc-123' }, members: [exampleMember] },
+                value: { metadata: { caseId: 'abc-123' }, members: [exampleSnapMember] },
               },
             },
           } as never,
@@ -278,8 +320,8 @@ export function buildV2OpenApiDocument() {
                 value: {
                   metadata: { caseId: 'abc-123' },
                   members: [
-                    exampleMember,
-                    { id: 'spouse', dateOfBirth: '1992-07-20', citizenshipImmigrationStatus: 'citizen' },
+                    exampleMedicaidMember,
+                    { id: 'spouse', dateOfBirth: '1992-07-20', immigrantStatus: 'citizen' },
                   ],
                 },
               },
@@ -294,6 +336,24 @@ export function buildV2OpenApiDocument() {
         content: { 'application/json': { schema: DeterminationResponse } },
       },
       ...commonResponses,
+    },
+  })
+
+  registry.registerPath({
+    method: 'post',
+    path: '/v2/eligibility/medicaid/ex-parte',
+    summary: 'Medicaid ex-parte renewal (not yet implemented).',
+    description:
+      'Reserved for the ex-parte renewal flow. Currently responds 501 with a pointer to the v1 surface.',
+    tags: ['Eligibility v2'],
+    security: [{ [bearerAuth.name]: [] }],
+    request: {},
+    responses: {
+      501: {
+        description: 'Not yet implemented.',
+        content: { 'application/json': { schema: ProblemDetails } },
+      },
+      401: commonResponses[401],
     },
   })
 

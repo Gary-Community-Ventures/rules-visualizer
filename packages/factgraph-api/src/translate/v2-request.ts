@@ -23,6 +23,17 @@ export type TranslateResult = {
   memberIds: string[]
   /** Non-fatal notes: unknown fields, unmapped enum values. */
   warnings: string[]
+  /** Which parts of the request were acknowledged — the raw material for
+   *  "unacknowledged" entries in the experimental instanced missing-inputs
+   *  format. A member acknowledges a sub-collection by carrying its key
+   *  (rows or an explicit []). */
+  acknowledgment: {
+    /** Sub-collection request key (income, expenses, jobs, assets) →
+     *  member ids that included the key. */
+    byKey: Record<string, string[]>
+    /** True when the request carried a caregiverRelationships array. */
+    caregiverRelationshipsProvided: boolean
+  }
 }
 
 type Maps = {
@@ -197,6 +208,10 @@ export function translateRequest(req: V2Request, model: Model, asOf: Date): Tran
   // as still-needed and surface them in missingInputs.
   const collAcknowledgedBy = new Map<string, number>()
   const collRowsStaging = new Map<string, Array<Record<string, unknown>>>()
+  /** Engine root → the request key it came from, for warning text. */
+  const collRequestKey = new Map<string, string>()
+
+  const ackByKey: Record<string, string[]> = {}
 
   members.forEach((m, i) => {
     const memberId = (m.id as string) ?? `member-${i}`
@@ -210,8 +225,10 @@ export function translateRequest(req: V2Request, model: Model, asOf: Date): Tran
     for (const [key, location] of MEMBER_SUBCOLLECTIONS) {
       const rows = m[key]
       if (!Array.isArray(rows)) continue
+      ;(ackByKey[key] ??= []).push(memberId)
       const root = anyEntryRoot(maps, location)
       if (!root) continue
+      collRequestKey.set(root, key)
       collAcknowledgedBy.set(root, (collAcknowledgedBy.get(root) ?? 0) + 1)
       if (!collRowsStaging.has(root)) collRowsStaging.set(root, [])
       for (const [j, r] of (rows as Record<string, unknown>[]).entries()) {
@@ -225,10 +242,18 @@ export function translateRequest(req: V2Request, model: Model, asOf: Date): Tran
   })
 
   // Commit each staged sub-collection only when every member acknowledged it.
+  // Withheld rows are disclosed: silently discarding data a caller sent is
+  // worse than the pending it causes.
   const totalMembers = members.length
   for (const [root, staging] of collRowsStaging) {
-    if ((collAcknowledgedBy.get(root) ?? 0) >= totalMembers) {
+    const acknowledged = collAcknowledgedBy.get(root) ?? 0
+    if (acknowledged >= totalMembers) {
       rowsByRoot[root] = staging
+    } else if (staging.length > 0) {
+      const key = collRequestKey.get(root) ?? root
+      warnings.push(
+        `${key}: ${staging.length} row(s) were provided but ${totalMembers - acknowledged} member(s) did not include a "${key}" array, so the collection is incomplete and was not evaluated. Every member must carry "${key}" — send an empty array ([]) for members with none — and the rows will count.`
+      )
     }
   }
 
@@ -251,7 +276,15 @@ export function translateRequest(req: V2Request, model: Model, asOf: Date): Tran
   }
 
   for (const [root, rows] of Object.entries(rowsByRoot)) inputs[root] = rows
-  return { inputs, memberIds, warnings }
+  return {
+    inputs,
+    memberIds,
+    warnings,
+    acknowledgment: {
+      byKey: ackByKey,
+      caregiverRelationshipsProvided: Array.isArray(req.caregiverRelationships),
+    },
+  }
 }
 
 /** The engine collection root for a request location (e.g. members[].income[]
