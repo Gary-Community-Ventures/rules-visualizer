@@ -887,7 +887,10 @@ const guideHtml = `<!DOCTYPE html>
         <span class="pill pill-approved">approved</span>,
         <span class="pill pill-denied">denied</span>, or
         <span class="pill pill-ineligible">ineligible</span>.
-        At that point <code>missingInputs</code> is absent.
+        A decided status can still carry <code>missingInputs</code> when
+        answers would refine the result — e.g. the eligibility gate failed
+        decisively but the benefit-amount side outputs are still unresolved.
+        <code>missingInputs</code> disappears only when nothing is left to ask.
       </p>
       <div class="example">
         <div class="example-col">
@@ -1401,9 +1404,42 @@ const demoHtml = `<!DOCTYPE html>
       .then(function(text) {
         var data; try { data = JSON.parse(text) } catch(e) { data = { _raw: text } }
         document.getElementById('raw-resp').textContent = JSON.stringify(data, null, 2)
-        var det = (data.determinations && data.determinations[0]) ? data.determinations[0] : data
+        var dets = Array.isArray(data.determinations) ? data.determinations : null
+        var det, missing
+        if (dets && dets.length > 1) {
+          // Member-scoped determinations (medicaid): derive one overall badge
+          // status — pending if ANY member is still pending, else the worst
+          // decided outcome (denied beats ineligible), else approved.
+          var statuses = dets.map(function(d) { return d.status })
+          var overall = statuses.indexOf('pending') !== -1 ? 'pending'
+            : statuses.indexOf('denied') !== -1 ? 'denied'
+            : statuses.indexOf('ineligible') !== -1 ? 'ineligible'
+            : 'approved'
+          det = { status: overall }
+          // Aggregate every determination's missingInputs, deduping shared
+          // (household-level) entries that repeat across members.
+          missing = []
+          var seenEntry = {}
+          dets.forEach(function(d) {
+            ;(d.missingInputs || []).forEach(function(m) {
+              var k = m.requestPath + '|' + (m.at || []).map(function(h) { return h.id }).join('/')
+              if (seenEntry[k]) return
+              seenEntry[k] = true
+              missing.push(m)
+            })
+          })
+        } else {
+          det = dets && dets[0] ? dets[0] : data
+          missing = det.missingInputs || data.missingInputs || []
+        }
         curDet = det; curStatus = det.status || null
-        var missing = det.missingInputs || data.missingInputs || []
+        if (!dets && data.isExpedited !== undefined) {
+          // Expedited screen: no determinations[] — map the tri-state answer
+          // onto the badge (true/false render as decided, null keeps asking).
+          curStatus = data.isExpedited === true ? 'expedited-yes'
+            : data.isExpedited === false ? 'expedited-no'
+            : 'pending'
+        }
         // kind:"unacknowledged" entries are whole-collection questions, not
         // fields — surface them on their own line and keep the field cards
         // driven by kind:"field" entries. Entries repeat per owing instance;
@@ -1430,12 +1466,26 @@ const demoHtml = `<!DOCTYPE html>
         })
         curMissing = newSet
         curMissingByMember = new Map()
-        var byMember = det.missingInputsByMember || {}
-        Object.keys(byMember).forEach(function(mid) {
-          var s = new Set()
-          ;(byMember[mid] || []).forEach(function(m) { s.add(m.requestPath) })
-          curMissingByMember.set(mid, s)
-        })
+        if (dets && dets.length > 1) {
+          // Per-member gaps from the instanced entries: group on at[0].id
+          // (fall back to entry.memberId for older responses). Entries with
+          // no member address are household-level and stay global-only.
+          missing.forEach(function(m) {
+            var mid = (m.at && m.at[0] && m.at[0].id) || m.memberId
+            if (!mid) return
+            if (!curMissingByMember.has(mid)) curMissingByMember.set(mid, new Set())
+            curMissingByMember.get(mid).add(m.requestPath)
+          })
+        } else {
+          // Single determination (SNAP): the deprecated per-member map is
+          // still served — keep consuming it as the fallback.
+          var byMember = det.missingInputsByMember || {}
+          Object.keys(byMember).forEach(function(mid) {
+            var s = new Set()
+            ;(byMember[mid] || []).forEach(function(m) { s.add(m.requestPath) })
+            curMissingByMember.set(mid, s)
+          })
+        }
         inflight = false
         if (allSeen.length > prevCount) renderNewCards()
         else updateStates()
@@ -1778,12 +1828,18 @@ const demoHtml = `<!DOCTYPE html>
     var s = curStatus || 'null'
     var hasMissing = curMissing && curMissing.size > 0
     var isPartial = hasMissing && (s === 'denied' || s === 'ineligible')
-    badge.className = 'status-badge s-' + (isPartial ? s + '-partial' : s)
+    // The expedited tri-state reuses the decided badge styles.
+    var cls = s === 'expedited-yes' ? 'approved'
+      : s === 'expedited-no' ? 'denied'
+      : (isPartial ? s + '-partial' : s)
+    badge.className = 'status-badge s-' + cls
     if (s === 'approved') {
       badge.textContent = 'Approved' + (curDet && curDet.benefitAmount ? ' -- $' + curDet.benefitAmount + '/mo' : '')
     } else if (s === 'denied' || s === 'ineligible') {
       var label = (s === 'denied' ? 'Denied' : 'Ineligible') + (curDet && curDet.denialReasonCode ? ': ' + curDet.denialReasonCode.replace(/_/g, ' ') : '')
       badge.textContent = isPartial ? label + ' (partial)' : label
+    } else if (s === 'expedited-yes') { badge.textContent = 'Expedited: yes'
+    } else if (s === 'expedited-no')  { badge.textContent = 'Expedited: no'
     } else if (s === 'pending') { badge.textContent = 'Pending'
     } else if (s === 'null')    { badge.textContent = '--'
     } else                      { badge.textContent = s }

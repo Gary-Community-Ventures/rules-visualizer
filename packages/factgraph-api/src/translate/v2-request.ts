@@ -24,9 +24,9 @@ export type TranslateResult = {
   /** Non-fatal notes: unknown fields, unmapped enum values. */
   warnings: string[]
   /** Which parts of the request were acknowledged — the raw material for
-   *  "unacknowledged" entries in the experimental instanced missing-inputs
-   *  format. A member acknowledges a sub-collection by carrying its key
-   *  (rows or an explicit []). */
+   *  the "unacknowledged" entries in the instanced missing-inputs shape.
+   *  A member acknowledges a sub-collection by carrying its key (rows or
+   *  an explicit []). */
   acknowledgment: {
     /** Sub-collection request key (income, expenses, jobs, assets) →
      *  member ids that included the key. */
@@ -261,13 +261,20 @@ export function translateRequest(req: V2Request, model: Model, asOf: Date): Tran
     // Provided (even as []) means "this is the complete list" — seed the root
     // so the engine sees an empty collection rather than an unknown one.
     const crRoot = anyEntryRoot(maps, 'caregiverRelationships[]')
-    if (crRoot) rowsByRoot[crRoot] ??= []
-    for (const cr of req.caregiverRelationships) {
-      if (!crRoot) break
-      rowsByRoot[crRoot].push({
-        id: (cr.id as string) ?? `caregiver-${rowsByRoot[crRoot].length}`,
-        ...mapObject(cr, 'caregiverRelationships[]', new Set(['id']), maps, indexOf, asOf, warnings),
-      })
+    if (crRoot) {
+      rowsByRoot[crRoot] ??= []
+      for (const cr of req.caregiverRelationships) {
+        rowsByRoot[crRoot].push({
+          id: (cr.id as string) ?? `caregiver-${rowsByRoot[crRoot].length}`,
+          ...mapObject(cr, 'caregiverRelationships[]', new Set(['id']), maps, indexOf, asOf, warnings),
+        })
+      }
+    } else if (req.caregiverRelationships.length > 0) {
+      // Disclosure over silence: this ruleset has no caregiver fields, so
+      // the provided rows cannot influence the determination.
+      warnings.push(
+        'caregiverRelationships: this program\'s rules have no caregiver-relationship fields — the provided rows were ignored.'
+      )
     }
   }
 

@@ -438,63 +438,54 @@
       <Name>Children Due</Name>
       <Description>Number of children expected from this member's current pregnancy (0 if not pregnant). Adds to household size for FPL.</Description>
       <Writable><Int /></Writable>
-      <Placeholder><Int>0</Int></Placeholder>
     </Fact>
 
     <Fact path="/members/*/disabled">
       <Name>Disabled</Name>
       <Description>Whether this member has a qualifying disability.</Description>
       <Writable><Boolean /></Writable>
-      <Placeholder><False/></Placeholder>
     </Fact>
 
     <Fact path="/members/*/veteran">
       <Name>Veteran</Name>
       <Description>Whether this member is a military veteran.</Description>
       <Writable><Boolean /></Writable>
-      <Placeholder><False/></Placeholder>
     </Fact>
 
     <Fact path="/members/*/hasDisabledChild">
       <Name>Has Disabled Child</Name>
       <Description>Whether this member has a child with a disability in the household.</Description>
       <Writable><Boolean /></Writable>
-      <Placeholder><False/></Placeholder>
     </Fact>
 
     <Fact path="/members/*/isFullTimeStudent">
       <Name>Is Full-Time Student</Name>
       <Description>Whether this member is enrolled as a full-time student.</Description>
       <Writable><Boolean /></Writable>
-      <Placeholder><False/></Placeholder>
     </Fact>
 
     <Fact path="/members/*/monthlyHoursWorked">
       <Name>Monthly Hours Worked</Name>
       <Description>Hours per month this member works.</Description>
       <Writable><Int /></Writable>
-      <Placeholder><Int>80</Int></Placeholder>
     </Fact>
 
     <Fact path="/members/*/immigrantStatus">
       <Name>Immigrant Status</Name>
       <Description>This member's immigration / citizenship status.</Description>
       <Writable><Enum optionsPath="/immigrantStatusOptions" /></Writable>
-      <Placeholder><Enum optionsPath="/immigrantStatusOptions">Citizen</Enum></Placeholder>
     </Fact>
 
     <Fact path="/members/*/receivesSsi">
       <Name>Receives SSI</Name>
       <Description>Whether this member receives Supplemental Security Income.</Description>
       <Writable><Boolean /></Writable>
-      <Placeholder><False/></Placeholder>
     </Fact>
 
     <Fact path="/members/*/daysSincePregnancy">
       <Name>Days Since Pregnancy</Name>
       <Description>Days since this member's pregnancy ended (used for postpartum coverage).</Description>
       <Writable><Int /></Writable>
-      <Placeholder><Int>999999999</Int></Placeholder>
     </Fact>
 
     <Fact path="/members/*/isMember">

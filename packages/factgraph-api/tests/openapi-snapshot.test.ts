@@ -41,12 +41,12 @@ test('committed eligibility-adapter-openapi.yaml matches the generator output', 
 
 test('committed v2 proposal snapshot matches the generator output', () => {
   const committed = readFileSync(
-    path.join(docs, 'eligibility-adapter-v2-proposal-openapi.yaml'),
+    path.join(docs, 'eligibility-v2-openapi.yaml'),
     'utf-8'
   )
   assert.equal(
     committed,
     renderV2OpenApiYaml(),
-    'docs/eligibility-adapter-v2-proposal-openapi.yaml is stale — run `npm run gen:openapi`'
+    'docs/eligibility-v2-openapi.yaml is stale — run `npm run gen:openapi`'
   )
 })

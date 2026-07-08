@@ -38,7 +38,7 @@ POST /v1/factgraph/snap-fy2026/query
 | ---------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
 | `targets`  | yes      | Array of fact paths to evaluate. Single-value queries use a one-element array.                                                             |
 | `inputs`   | no       | Caller-provided values, keyed by fact path. Scalar facts take a primitive value; collection roots (e.g. `/members`) take an array of rows. |
-| `include`  | no       | Opt-in response sections. Today: `"supportingFacts"`, `"trace"`. Unknown values ignored.                                                   |
+| `include`  | no       | Opt-in response sections. Today: `"supportingFacts"`, `"trace"`, `"missingInputInstances"`. Unknown values ignored.                        |
 | `metadata` | no       | Opaque correlation context. Echoed back unchanged; never inspected or logged.                                                              |
 
 Scalar values and collection rows share the `inputs` map so the
@@ -138,8 +138,8 @@ express the alternation relationship. Tracked for future work.
 By default the response carries the values of the requested targets
 only. Pass `"include": ["supportingFacts"]` to additionally receive
 every fact in the targets' dependency trees that resolved, along with
-its display name and CCR citations (where mapped). Useful for "why"
-explanations and audit trails; skip it when you only need the answer.
+its display name. Useful for "why" explanations and audit trails; skip
+it when you only need the answer.
 
 The supporting-facts list is capped at 200 entries per response so it
 doesn't return the entire graph for shallow targets.
@@ -173,8 +173,12 @@ trace descends into the gate that actually failed instead of stopping at
 the category node. Arithmetic operators (`Multiply`, `Add`, `Subtract`,
 ...) and collection operators (`Filter`, `Count`) still report the
 computed value without recursing — query those facts directly for their
-value breakdown. Per-member trace for collection-scoped targets is
-planned; ask for a scalar parent instead today.
+value breakdown. Collection-scoped targets (per-member value arrays)
+get a `PerMember` root node with one fully-walked sub-trace per row,
+each tagged with the caller's row `id` as `memberId`; relative
+dependency paths inside a row resolve against that same row, and
+`decidingPaths` entries carry the row's `memberId` through the
+`PerMember` wrapper.
 
 ### Finding the deciding nodes
 
@@ -228,8 +232,10 @@ depend on the documented public outputs, not every internal path.
 
 Many facts carry policy citations resolved from each ruleset's
 `references.json` — CCR sections, CFR clauses, statutes. These appear
-on the schema endpoint per node and will appear inline on
-supporting-facts trace items as the structured-trace work lands.
+per node on the schema endpoint, and inline on the structured trace:
+each `TraceNode` carries a `citations` array for the fact it explains
+(the flat `supportingFacts` list stays citation-free — walk the trace
+or the schema when you need the policy reference).
 
 ## What's NOT in this API
 

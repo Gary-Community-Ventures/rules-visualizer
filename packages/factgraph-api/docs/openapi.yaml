@@ -254,6 +254,22 @@ components:
             truth when different members miss different fields.
             Scalar/household-level missing inputs remain in the top-level
             missingInputs union only.
+        conditionalTargets:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: object
+              properties:
+                memberId:
+                  type: string
+          description: "Targets whose engine value resolved but is CONDITIONAL: the
+            decisive path stepped past unresolved facts (the engine skips Switch
+            cases it cannot evaluate and sums/counts past unknown collection
+            rows). Conditional targets count as unresolved for `status`, and
+            their blocking inputs are included in `missingInputs`. Entries carry
+            `memberId` when the conditionality is specific to one member of a
+            per-member target; an empty object means household-level."
         missingInputInstances:
           type: array
           items:

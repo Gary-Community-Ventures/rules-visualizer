@@ -172,7 +172,7 @@ test('eligible household: trace shows Any-true short-circuit through meetsCatego
   )
 })
 
-test('opaque ops (Multiply, Subtract, etc.) report the computed value without children', async () => {
+test('opaque ops (Multiply, Subtract, etc.) report the computed value without walking operands', async () => {
   const res = await request(app)
     .post(QUERY_URL)
     .send({
@@ -182,18 +182,21 @@ test('opaque ops (Multiply, Subtract, etc.) report the computed value without ch
     })
   const root = res.body.traces['/eligible'] as TraceNode
   const limit = findByPath(root, '/grossIncomeLimit')
-  // /grossIncomeLimit is a Multiply — V1 reports the value but doesn't
-  // recurse into FPL × rate. The value is real (computed by the engine)
-  // and the reason explains the limitation.
+  // /grossIncomeLimit is a Multiply — the walker reports the value but
+  // doesn't recurse into FPL × rate. The value is real (computed by the
+  // engine) and the reason explains the limitation. The only children an
+  // opaque node may carry are CollectionRead leaves — the per-row facts
+  // the expression reads (directly or behind scalar hops), surfaced for
+  // the finality gate; never a walked operand tree.
   assert.ok(limit)
   assert.equal(limit!.op, 'Multiply')
   assert.equal(typeof limit!.value, 'number')
   assert.match(limit!.reason, /Multiply/)
-  // No children because we don't descend into arithmetic.
-  assert.ok(
-    !limit!.children || limit!.children.length === 0,
-    'Multiply should not have children in V1'
-  )
+  for (const child of limit!.children ?? []) {
+    assert.equal(child.op, 'CollectionRead', 'opaque children are CollectionRead leaves only')
+    assert.ok(child.path, 'CollectionRead leaves are path-bearing')
+    assert.ok(!child.children, 'CollectionRead leaves are not walked further')
+  }
 })
 
 test('multi-target requests get one trace per target', async () => {

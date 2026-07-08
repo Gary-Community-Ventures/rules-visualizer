@@ -1,15 +1,9 @@
 /**
- * EXPERIMENTAL — instanced missing-inputs (opt-in via
- * `missingInputsFormat: "instanced"` on the v2 determination requests).
- *
- * The default missing-inputs shape is field-addressed: one deduped entry per
- * field, with the member dimension bolted on separately
- * (`missingInputsByMember`). This module composes the shape under
- * evaluation to replace it: one entry per concrete INSTANCE, where each
- * entry carries two orthogonal addresses —
+ * Instanced missing-inputs — THE v2 `missingInputs` shape: one entry per
+ * concrete INSTANCE, where each entry carries two orthogonal addresses —
  *
  *   `requestPath` — the schema address: which question is unanswered
- *                   (`members[].income[].amount`), unchanged from today;
+ *                   (`members[].income[].amount`);
  *   `at`          — the instance address: an ordered chain of
  *                   `{in: <collection>, id: <row id>}` hops from the root of
  *                   the request document down to the row that owes the value.
@@ -26,10 +20,9 @@
  * recurses to the root: an empty request's first missing input is literally
  * `{ field: "members", at: [] }`.
  *
- * Deprecation crutch: `memberId` echoes `at[0].id` when the first hop is
- * members, so existing groupBy code keeps working while the shape is
- * evaluated. `missingInputsByMember` stays attached unchanged in both
- * formats during the window.
+ * Migration crutches (remove once integrators confirm they're off them):
+ * `memberId` echoes `at[0].id` when the first hop is members, and the
+ * deprecated `missingInputsByMember` response field stays attached.
  */
 import type { Model } from 'rules-visualizer-shared-types'
 

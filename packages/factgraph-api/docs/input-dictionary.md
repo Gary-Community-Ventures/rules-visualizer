@@ -5,7 +5,7 @@
 <!-- Regenerate: npm run gen:dictionary --workspace=rules-visualizer-factgraph-api -->
 
 > **⚠️ Not the request vocabulary the live v2 endpoints accept.** This
-> document follows the earlier [proposal](./eligibility-adapter-v2-proposal-openapi.yaml)
+> document follows the earlier [proposal](./eligibility-v2-openapi.yaml)
 > routing table, whose field names and groupings (e.g. `citizenshipStatus`,
 > nested `workRequirements.*`, `applicationContext.*`) differ from what the
 > implemented `/v2/eligibility/*` endpoints recognize — sending these names

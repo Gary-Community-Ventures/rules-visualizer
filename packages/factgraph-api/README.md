@@ -90,7 +90,7 @@ and prod. Install Bruno, open that folder, click Send.
 | `POST` | `/v2/eligibility/medicaid/ex-parte`                   | Reserved — returns `501` (use v1 for now)                   |
 | `GET`  | `/v2/eligibility/openapi.{json,yaml}` · `/docs`       | Engine-shaped contract + Swagger UI — public                |
 
-The committed contract snapshot lives at `docs/eligibility-adapter-v2-proposal-openapi.yaml`.
+The committed contract snapshot lives at `docs/eligibility-v2-openapi.yaml`.
 The accepted fields, enum vocabularies, and policy citations are in the
 [engine-input catalog](https://gary-community-ventures.github.io/rules-visualizer/engine-inputs.html)
 (`docs/engine-inputs.json`).
@@ -138,7 +138,8 @@ on every push that touches the API package.
 ## Authentication
 
 Set `API_BEARER_TOKEN` to require `Authorization: Bearer <token>` on every
-`/v1/*` request. If unset, the API is open — appropriate for local
+`/v1/*` and `/v2/*` request (OpenAPI specs, Swagger UI pages, and `/health`
+stay open). If unset, the API is open — appropriate for local
 development and an early-prototype deploy where partner teams need an easy
 on-ramp.
 
@@ -155,7 +156,7 @@ By default, all origins are allowed. To restrict, set
 | Env var                | Default        | Purpose                                     |
 | ---------------------- | -------------- | ------------------------------------------- |
 | `PORT`                 | `5002`         | TCP port to listen on                       |
-| `API_BEARER_TOKEN`     | _unset_        | When set, required on every `/v1/*` request |
+| `API_BEARER_TOKEN`     | _unset_        | When set, required on every `/v1/*` and `/v2/*` request |
 | `CORS_ALLOWED_ORIGINS` | _unset (open)_ | Comma-separated allowlist                   |
 
 ## Architecture

@@ -20,20 +20,42 @@ auth:bearer {
 
 body:json {
   {
-    "metadata": { "caseId": "v2-medicaid-household" },
+    "metadata": {
+      "caseId": "v2-medicaid-household"
+    },
     "members": [
       {
         "id": "head",
         "dateOfBirth": "1990-03-15",
-        "citizenshipImmigrationStatus": "citizen",
-        "isHeadOfHousehold": true,
-        "income": [{ "type": "wages_and_salaries", "amount": 1200, "frequency": "monthly" }]
+        "immigrantStatus": "citizen",
+        "disabled": false,
+        "pregnant": 0,
+        "pregnancyEndDate": "2000-01-01",
+        "receivesSsi": false,
+        "isFullTimeStudent": false,
+        "veteran": false,
+        "hasDisabledChild": false,
+        "monthlyHoursWorked": 80,
+        "income": [
+          {
+            "type": "wages_and_salaries",
+            "amount": 1200,
+            "frequency": "monthly"
+          }
+        ]
       },
       {
         "id": "spouse",
         "dateOfBirth": "1992-07-20",
-        "citizenshipImmigrationStatus": "citizen",
-        "spouseId": "head",
+        "immigrantStatus": "citizen",
+        "disabled": false,
+        "pregnant": 0,
+        "pregnancyEndDate": "2000-01-01",
+        "receivesSsi": false,
+        "isFullTimeStudent": false,
+        "veteran": false,
+        "hasDisabledChild": false,
+        "monthlyHoursWorked": 80,
         "income": []
       }
     ]
@@ -42,10 +64,22 @@ body:json {
 
 docs {
   Two-member household — one earner, one non-earner. Medicaid is
-  member-scoped: the response has one determination per member.
+  member-scoped: the response has one determination per member. Field
+  names come from the Medicaid rows of the engine-input catalog
+  (immigrantStatus, disabled, ...) — the SNAP vocabulary
+  (citizenshipImmigrationStatus, isHeadOfHousehold) is a different
+  program's and would be rejected here. The spouse's explicit
+  "income": [] answers the income question with "none"; omitting it
+  would leave that determination pending.
 
-  Expected: determinations[] with two entries, each with memberId
-  matching the ids above ("head", "spouse"). Each may be "pending"
-  or "approved"/"denied" depending on the household's MAGI
-  relative to the FPL.
+  Expected: determinations[] with two entries, memberId "head" and
+  "spouse", both status "approved" with medicaidCategory "adult" and
+  chpEligible false (household MAGI of $1200/mo is under the adult
+  limit for a household of two). Raise the income to see both members
+  come back "ineligible"; drop the spouse's income key to see just that
+  member go "pending" with its own missingInputs.
+  Both members answer the category questions (pregnant, pregnancyEndDate,
+  receivesSsi), work hours, and legal status: medicaid is no-guess end to
+  end, and the pregnancy count feeds MAGI household size, so every
+  member's FPL% waits on every member's pregnancy answer.
 }

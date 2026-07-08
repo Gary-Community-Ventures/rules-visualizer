@@ -4,7 +4,7 @@
 Worker Portal team.**
 
 > **Now expressed as an OpenAPI document:** this proposal is authored in full
-> as the [v2 draft contract](./eligibility-adapter-v2-proposal-openapi.yaml)
+> as the [v2 draft contract](./eligibility-v2-openapi.yaml)
 > (served live at `/v2/eligibility/docs`). This file remains the rationale;
 > the v2 spec is the reviewable/diffable artifact.
 

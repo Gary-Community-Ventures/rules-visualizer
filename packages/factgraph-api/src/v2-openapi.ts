@@ -72,7 +72,7 @@ export function buildV2OpenApiDocument() {
   const Member = registry.register(
     'Member',
     z.object({
-      id: z.string().optional().openapi({ description: 'Caller-assigned id; echoed as memberId on member-scoped determinations, used to key missingInputsByMember, and referenced by reference fields (spouseId, etc.). Strongly recommended — when absent, the member is addressed by the positional fallback `member-N`. Duplicate ids are rejected with a 400.' }),
+      id: z.string().optional().openapi({ description: 'Caller-assigned id; echoed as memberId on member-scoped determinations, used in `at` instance addresses, and referenced by reference fields (spouseId, etc.). Strongly recommended — when absent, the member is addressed by the positional fallback `member-N`. Must be a non-empty string; duplicates (including collisions with another member\'s positional fallback) are rejected with a 400. Row ids within a member\'s sub-collections must likewise be unique.' }),
       dateOfBirth: z.string().optional().openapi({ format: 'date', description: 'The engine derives age from this.' }),
       citizenshipImmigrationStatus: z.string().optional().openapi({ description: 'snake_case enum; see catalog.' }),
       income: z.array(IncomeRow).optional(),
@@ -97,7 +97,7 @@ export function buildV2OpenApiDocument() {
     'HouseholdRequest',
     z.object({
       metadata: z.record(z.string(), z.unknown()).optional().openapi({ description: 'Opaque; echoed back, never inspected.' }),
-      asOf: z.string().optional().openapi({ format: 'date', description: 'Evaluation date; defaults to now.' }),
+      asOf: z.string().optional().openapi({ format: 'date', description: 'Evaluation date as strict `yyyy-mm-dd`; defaults to now. Nonexistent days (2026-02-30) are rejected with a 400 rather than rolled over.' }),
       missingInputsFormat: z.enum(['fields', 'instanced']).optional().openapi({
         deprecated: true,
         description:
@@ -307,7 +307,7 @@ export function buildV2OpenApiDocument() {
     path: '/v2/eligibility/medicaid/determination',
     summary: 'Medicaid eligibility determination (no-guess, per member).',
     description:
-      `One household payload; returns one member-scoped determination per household member. Nothing applicant-material is defaulted: anything needed-but-absent yields status \`pending\` and \`missingInputs\` attributed to that specific member. Field definitions and enum vocabularies: ${CATALOG_URL}.`,
+      `One household payload; returns one member-scoped determination per household member. Nothing applicant-material is defaulted: anything needed-but-absent yields status \`pending\` and \`missingInputs\` attributed to that specific member. A request with no members yet returns a single household-scoped \`pending\` determination whose first missing input asks for the members list. Field definitions and enum vocabularies: ${CATALOG_URL}.`,
     tags: ['Eligibility v2'],
     security: [{ [bearerAuth.name]: [] }],
     request: {
@@ -370,6 +370,7 @@ export function buildV2OpenApiDocument() {
         '- **Friendly fields, no internals** — named fields in nested collections (`members[].income[]`), snake_case enums, no Fact Graph paths or wildcards.',
         '- **Per-program endpoints** — `/snap/determination` (household-scoped) and `/medicaid/determination` (one determination per member), explicit and independently traceable.',
         '- **No-guess** — nothing applicant-material is defaulted; what is missing comes back as `pending` + `missingInputs`, in the same request vocabulary, so you know exactly what to send next.',
+        '- **Final means final** — a decided status (`approved`/`denied`/`ineligible`) is only returned when no unanswered question could change it. When the rules can technically compute a value past an unknown (a skipped eligibility tier, an incomplete income row), the determination is `pending` with those questions listed instead of a decision that would flip on the next answer.',
         '',
         `**Every field** — its type, enum vocabulary, and policy citation — is in the generated catalog: ${CATALOG_URL} (machine-readable JSON alongside it). This spec documents the request/response shape; the catalog is the field list, so they cannot drift.`,
       ].join('\n'),

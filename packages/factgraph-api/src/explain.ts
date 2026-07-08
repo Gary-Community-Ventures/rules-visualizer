@@ -335,6 +335,131 @@ export function buildDecidingPath(root: TraceNode): DecidingPath {
   return out
 }
 
+/**
+ * Conditional-resolution detector ("the finality gate").
+ *
+ * The engine resolves values THROUGH unknowns: a Switch skips a When it
+ * cannot evaluate, and collection aggregates skip unknown rows. Both engine
+ * implementations inherit this from upstream Fact Graph, whose interview
+ * flow never evaluates partial data — but this API does, so a fact can
+ * resolve to a decision that would change once an unasked question is
+ * answered. This walk finds the unresolved facts a trace's justification
+ * quietly stepped past.
+ *
+ * Recursion rules (soundness of short-circuits is respected):
+ *   - a path-bearing node with a null engine value blocks — record it and
+ *     stop (the missing-inputs walker expands it to writables);
+ *   - a path-bearing node whose value is an array with null slots blocks —
+ *     a per-row fact was partially unresolved and whatever consumed it
+ *     resolved by skipping rows;
+ *   - Switch: every walked When must be checked — a null When means the
+ *     engine skipped a case that might have applied;
+ *   - All=true / Any=false: every operand justified the result — check all;
+ *   - Any=true / All=false / informative Switch: only the decisive branch
+ *     carried the result — a true branch is sound regardless of unknown
+ *     siblings, so check just the decisive child(ren);
+ *   - comparisons: operands are always checked (a resolved comparison over
+ *     a summed-past aggregate is not sound);
+ *   - anonymous null nodes: recurse to find the path-bearing null;
+ *   - opaque nodes resolved to `true` are accepted (an existential
+ *     aggregate that found its row is right regardless of unknown
+ *     siblings); any other resolved opaque checks only the per-row
+ *     CollectionRead inputs it exposed; Truncated nodes are accepted.
+ *
+ * Returns one group per member sub-trace (memberId undefined for scalar
+ * targets), each listing the unresolved fact paths the value depends on.
+ * Empty result = the value is fully supported.
+ */
+export type UnsupportedGroup = { memberId?: string; blockers: string[] }
+
+export function collectUnsupported(root: TraceNode): UnsupportedGroup[] {
+  const groups: UnsupportedGroup[] = []
+
+  const gather = (node: TraceNode, sink: Set<string>): void => {
+    if (node.op === 'Truncated') return
+
+    if (node.path && (node.value === null || node.value === undefined)) {
+      sink.add(node.path)
+      return
+    }
+    // A per-row/per-member fact with unresolved slots: whatever consumed
+    // it resolved by skipping those slots.
+    if (
+      node.path &&
+      Array.isArray(node.value) &&
+      node.value.some((v) => v === null || v === undefined)
+    ) {
+      sink.add(node.path)
+      return
+    }
+
+    const children = node.children ?? []
+    if (children.length === 0) return
+
+    if (node.op === 'Switch') {
+      // Whens are only walked up to the taken case; every one of them had
+      // to be decidable for the selection to be sound.
+      for (const c of children) gather(c, sink)
+      return
+    }
+    if (node.op === 'All') {
+      if (node.value === false) {
+        for (const c of children) if (c.decisive) gather(c, sink)
+      } else {
+        for (const c of children) gather(c, sink)
+      }
+      return
+    }
+    if (node.op === 'Any') {
+      if (node.value === true) {
+        for (const c of children) if (c.decisive) gather(c, sink)
+      } else {
+        for (const c of children) gather(c, sink)
+      }
+      return
+    }
+    if (node.op === 'Not') {
+      gather(children[0], sink)
+      return
+    }
+    if (COMPARISON_OPS.has(node.op)) {
+      // A resolved comparison is sound only as far as its operands are —
+      // an aggregate operand may have summed/counted past unknown rows,
+      // so operands are always checked. A null comparison additionally
+      // hunts the path-bearing null underneath.
+      for (const c of children) gather(c, sink)
+      return
+    }
+    // Anonymous/opaque nodes. Unresolved → hunt the path-bearing null
+    // underneath. Resolved to `true` → sound (an existential aggregate
+    // that found a true row is right regardless of unknown siblings).
+    // Any other resolved value (numbers, false, strings) → check the
+    // per-row CollectionRead inputs the aggregate exposed: unknown slots
+    // there mean the value was computed by skipping rows.
+    if (node.value === null || node.value === undefined) {
+      for (const c of children) gather(c, sink)
+    } else if (node.value !== true) {
+      for (const c of children) if (c.op === 'CollectionRead') gather(c, sink)
+    }
+  }
+
+  if (root.op === 'PerMember') {
+    for (const child of root.children ?? []) {
+      const sink = new Set<string>()
+      gather(child, sink)
+      if (sink.size > 0) {
+        groups.push({ memberId: child.memberId, blockers: [...sink] })
+      }
+    }
+    return groups
+  }
+
+  const sink = new Set<string>()
+  gather(root, sink)
+  if (sink.size > 0) groups.push({ blockers: [...sink] })
+  return groups
+}
+
 const MAX_DEPTH = 24
 
 function walkFact(node: ModelNode, ctx: WalkCtx, depth: number): TraceNode {
@@ -464,11 +589,91 @@ function walkLogic(
   // Anything else: opaque sub-expression. We can't observe its value
   // without re-executing, so report it as unknown rather than echoing
   // the parent's value (which is just wrong for sub-expressions).
+  // Collection aggregates (Count, CollectionSum, Filter, …) do expose one
+  // thing worth surfacing: the per-row facts they read. Their slot arrays
+  // are ground truth, and a null slot inside them is exactly what the
+  // finality gate needs to see — the engine sums/counts past unknown rows.
+  const reads = collectCollectionReads(logic, parentNode, ctx)
   return {
     op: logic.op,
     value: null,
     reason: `Computed via ${logic.op} (full breakdown not yet supported — query this subtree directly to see its values).`,
+    ...(reads.length > 0 ? { children: reads } : {}),
   }
+}
+
+/** The collection-scoped facts (`/incomes/*\/amount`-style) read anywhere
+ *  inside an opaque expression — directly, or transitively behind scalar
+ *  hops (a comparison over `/medicaidFplPercent` reaches `/totalIncome`
+ *  reaches the per-row `annualAmount` slots). Surfaced as slim path-bearing
+ *  nodes carrying their per-row slot arrays; not walked further. They exist
+ *  so callers (and the finality gate) can see per-row unknowns behind an
+ *  aggregate. */
+function collectCollectionReads(
+  logic: LogicNode,
+  parentNode: ModelNode,
+  ctx: WalkCtx
+): TraceNode[] {
+  const parentPath =
+    parentNode.content.type !== 'entity' && 'path' in parentNode.content
+      ? parentNode.content.path
+      : undefined
+
+  const collectionPaths = new Set<string>()
+  const visitedNodes = new Set<string>()
+
+  // Transitive expansion through the model's dependency graph: a scalar
+  // dependency's own inputs may be collection-scoped.
+  const expand = (node: ModelNode): void => {
+    if (visitedNodes.has(node.id)) return
+    visitedNodes.add(node.id)
+    const c = node.content
+    if (c.type !== 'entity' && 'path' in c && /^\/[^/]+\/\*\//.test(c.path)) {
+      collectionPaths.add(c.path)
+      return
+    }
+    for (const depId of node.dependencies) {
+      const dep = ctx.model.nodes[depId]
+      if (dep) expand(dep)
+    }
+  }
+
+  // Collection ops (Filter/Find/…) carry a `path` attribute naming the
+  // collection their inner expression is scoped to: bare dependency names
+  // inside resolve against that collection's rows, mirroring the parser's
+  // scope rule (factgraph-core parser.ts resolvePaths).
+  const visit = (n: LogicNode, scope: string | undefined): void => {
+    let nextScope = scope
+    if (n.op !== 'Dependency' && n.attrs.path && /^\/[^/]+$/.test(n.attrs.path)) {
+      nextScope = n.attrs.path
+    }
+    if (n.op === 'Dependency') {
+      const raw = n.attrs.path ?? ''
+      let resolved = resolveDependencyPath(raw, parentPath)
+      let node = resolved ? ctx.index.pathToNode.get(resolved) : undefined
+      if (!node && scope && !raw.startsWith('/')) {
+        resolved = `${scope}/*/${raw.replace(/^(\.\.\/)+/, '')}`
+        node = ctx.index.pathToNode.get(resolved)
+      }
+      if (node) expand(node)
+    }
+    for (const c of n.children) visit(c, nextScope)
+  }
+  visit(logic, undefined)
+
+  const out: TraceNode[] = []
+  for (const p of collectionPaths) {
+    const node = ctx.index.pathToNode.get(p)
+    if (!node) continue
+    out.push({
+      path: p,
+      name: getDisplayName(node),
+      op: 'CollectionRead',
+      value: factValue(p, ctx) ?? null,
+      reason: `Read per row by ${logic.op}.`,
+    })
+  }
+  return out
 }
 
 /**

@@ -21,23 +21,58 @@ auth:bearer {
 body:json {
   {
     "metadata": { "caseId": "v2-expedited-destitute" },
+    "asOf": "2026-06-15",
     "members": [
       {
         "id": "head",
         "dateOfBirth": "1990-03-15",
-        "citizenshipImmigrationStatus": "citizen",
         "isHeadOfHousehold": true,
-        "income": [{ "type": "wages_and_salaries", "amount": 0, "frequency": "monthly" }],
-        "assets": [{ "type": "checking_account", "amount": 0 }]
+        "isRoomer": false,
+        "livesInBoardingHouse": false,
+        "livesInInstitution": false,
+        "isLiveInAttendant": false,
+        "isSeparateAndApart": false,
+        "isParticipatingInAnotherHousehold": false,
+        "citizenshipImmigrationStatus": "citizen",
+        "studentEnrollmentStatus": "less_than_half_time_or_not_enrolled",
+        "isFleeingFelon": false,
+        "isStriker": false,
+        "disqualifiedForIPV": false,
+        "convictedOfDrugRelatedFelonyWithSnap": false,
+        "failedToProvideOrObtainSSN": false,
+        "disqualifiedForWorkRequirementsCooperation": false,
+        "disqualifiedForQualityAssuranceCooperation": false,
+        "disqualifiedForFelonyNonCompliance": false,
+        "disqualifiedForParoleOrProbationViolation": false,
+        "hasLevelSanctionImposed": false,
+        "income": [
+          {
+            "type": "wages_and_salaries",
+            "amount": 0,
+            "isWorkSupplementationOrWorkSupportPublicAssistancePortion": false
+          }
+        ],
+        "expenses": [],
+        "jobs": [],
+        "assets": [{ "type": "checking_account", "value": 0 }]
       }
-    ]
+    ],
+    "household": {
+      "applicationFilingDate": "2026-06-15",
+      "hadPreviousSubstantialLotteryOrGamblingWinnings": false
+    },
+    "caregiverRelationships": []
   }
 }
 
 docs {
-  A household with no income and no liquid resources — should qualify
-  for expedited processing (7 CFR §273.2(i): gross monthly income < $150
-  AND liquid resources < $100).
+  A household with no income and no liquid resources — qualifies for
+  expedited processing (7 CFR §273.2(i): gross monthly income < $150
+  AND liquid resources ≤ $100). Same fully-answered member as request
+  02 with the money zeroed out: under the no-guess policy the screen
+  only resolves once the household-composition and disqualifier
+  questions that feed gross income are answered too — send request 05
+  to see the partial version stay null.
 
   Expected: isExpedited true, no missingInputs.
 }

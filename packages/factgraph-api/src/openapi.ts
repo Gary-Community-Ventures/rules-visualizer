@@ -290,6 +290,16 @@ export function buildOpenApiDocument() {
             description:
               'Present iff status === "incomplete" and a /members collection was provided. Maps each member id to the member-level writables still unresolved for that member specifically — the per-member source of truth when different members miss different fields. Scalar/household-level missing inputs remain in the top-level missingInputs union only.',
           }),
+        conditionalTargets: z
+          .record(
+            z.string(),
+            z.array(z.object({ memberId: z.string().optional() }))
+          )
+          .optional()
+          .openapi({
+            description:
+              'Targets whose engine value resolved but is CONDITIONAL: the decisive path stepped past unresolved facts (the engine skips Switch cases it cannot evaluate and sums/counts past unknown collection rows). Conditional targets count as unresolved for `status`, and their blocking inputs are included in `missingInputs`. Entries carry `memberId` when the conditionality is specific to one member of a per-member target; an empty object means household-level.',
+          }),
         missingInputInstances: z
           .array(
             z

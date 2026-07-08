@@ -61,6 +61,17 @@ export function isoDay(d: Date): string {
   return d.toISOString().slice(0, 10)
 }
 
+/** Parse a strict `yyyy-mm-dd` evaluation date. Returns null when the
+ *  string is malformed OR when JS date rollover would silently shift it
+ *  (`2026-02-30` parses as March 2) — a typo'd date must not silently
+ *  skew age derivation. */
+export function parseAsOf(raw: string): Date | null {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(raw)) return null
+  const d = new Date(raw)
+  if (Number.isNaN(d.getTime()) || isoDay(d) !== raw) return null
+  return d
+}
+
 /** Note returned when a caller asks for the retired pre-instanced format. */
 export const FIELDS_FORMAT_GONE =
   'missingInputsFormat "fields" has been replaced: missingInputs now always ' +

@@ -13,17 +13,38 @@ import { app } from './helpers.js'
 const URL = '/v2/eligibility/medicaid/determination'
 
 /** Minimal member with enough to get an approved Adult determination. */
+/** A fully-answered adult. The medicaid ruleset is no-guess end to end
+ *  (its writables carry no placeholder defaults), so an adult must answer
+ *  the category questions (pregnant, SSI), the work-requirement hours, and
+ *  legal status for a determination to be final. */
 const adultMember = (id: string, over: Record<string, unknown> = {}) => ({
   id,
   dateOfBirth: '1990-03-15',
+  pregnant: 0,
+  // Postpartum coverage runs 60 days past a pregnancy, so "not pregnant"
+  // alone doesn't settle the pregnancy category — the end date does.
+  pregnancyEndDate: '2000-01-01',
+  receivesSsi: false,
+  disabled: false,
+  veteran: false,
+  hasDisabledChild: false,
+  isFullTimeStudent: false,
+  monthlyHoursWorked: 80,
+  immigrantStatus: 'citizen',
   income: [{ type: 'wages_and_salaries', amount: 500, frequency: 'monthly' }],
   ...over,
 })
 
-/** Minimal child member — income zero so household FPL is low. */
+/** A child — the age-based category and work-requirement exemptions apply,
+ *  so beyond age and income only legal status and the pregnancy count need
+ *  answering (a pregnancy adds to the MAGI household size, so household
+ *  FPL% is unresolved for EVERY member until each member's `pregnant` is
+ *  known). */
 const childMember = (id: string) => ({
   id,
   dateOfBirth: '2018-01-01',
+  immigrantStatus: 'citizen',
+  pregnant: 0,
   income: [{ type: 'wages_and_salaries', amount: 0, frequency: 'monthly' }],
 })
 
@@ -56,10 +77,20 @@ test('memberId matches the caller-assigned id', async () => {
   assert.equal(det.memberId, 'alice-uuid-123')
 })
 
-test('empty body returns an empty determinations array (no members = no decisions)', async () => {
+test('empty body returns one household-scoped pending determination asking for the members list', async () => {
   const res = await request(app).post(URL).send({})
   assert.equal(res.status, 200)
-  assert.deepEqual(res.body.determinations, [], 'no members → no determinations')
+  const dets = res.body.determinations as Array<Record<string, unknown>>
+  assert.equal(dets.length, 1, 'a valid empty request is pending, not a dead end')
+  assert.equal(dets[0].scope, 'household')
+  assert.equal(dets[0].status, 'pending')
+  assert.equal(dets[0].memberId, undefined)
+  const missing = dets[0].missingInputs as Array<{ kind: string; field: string; at: unknown[] }>
+  assert.deepEqual(
+    { kind: missing[0].kind, field: missing[0].field, at: missing[0].at },
+    { kind: 'unacknowledged', field: 'members', at: [] },
+    'the root ask leads the list'
+  )
   assert.equal(res.body.metadata, undefined)
 })
 
@@ -196,12 +227,13 @@ test('pending member — the unanswered income question appears in missingInputs
 
 test('income: [] asserts no income — resolves without income fields in missingInputs', async () => {
   // income: [] (explicit empty) should be treated as "no income" and resolve,
-  // unlike omitting the field which leaves income unknown (pending).
+  // unlike omitting the field which leaves income unknown (pending). Every
+  // other question is answered so income is the only variable.
   const withEmpty = await request(app).post(URL).send({
-    members: [{ id: 'alice', dateOfBirth: '1990-01-01', income: [] }],
+    members: [adultMember('alice', { income: [] })],
   })
   const withAbsent = await request(app).post(URL).send({
-    members: [{ id: 'alice', dateOfBirth: '1990-01-01' }],
+    members: [(() => { const m: Record<string, unknown> = adultMember('alice'); delete m.income; return m })()],
   })
   assert.equal(withEmpty.status, 200)
   assert.equal(withAbsent.status, 200)

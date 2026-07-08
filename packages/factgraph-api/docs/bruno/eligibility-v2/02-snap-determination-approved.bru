@@ -20,37 +20,87 @@ auth:bearer {
 
 body:json {
   {
-    "metadata": { "caseId": "v2-snap-approved" },
+    "metadata": {
+      "caseId": "v2-snap-approved"
+    },
+    "asOf": "2026-06-15",
     "members": [
       {
         "id": "head",
         "dateOfBirth": "1990-03-15",
-        "citizenshipImmigrationStatus": "citizen",
         "isHeadOfHousehold": true,
-        "hasPhysicalDisability": false,
-        "isStudent": false,
-        "isSelfEmployed": false,
-        "isFleeingFelony": false,
-        "isViolatingProbationOrParole": false,
-        "isDisqualifiedForFraud": false,
-        "hasWorkRequirementExemption": true,
-        "income": [{ "type": "wages_and_salaries", "amount": 1200, "frequency": "monthly" }],
-        "expenses": [{ "type": "rent", "amount": 800, "frequency": "monthly" }],
-        "assets": [{ "type": "checking_account", "amount": 500 }]
+        "isRoomer": false,
+        "livesInBoardingHouse": false,
+        "livesInInstitution": false,
+        "isLiveInAttendant": false,
+        "isSeparateAndApart": false,
+        "isParticipatingInAnotherHousehold": false,
+        "citizenshipImmigrationStatus": "citizen",
+        "studentEnrollmentStatus": "less_than_half_time_or_not_enrolled",
+        "isFleeingFelon": false,
+        "isStriker": false,
+        "disqualifiedForIPV": false,
+        "convictedOfDrugRelatedFelonyWithSnap": false,
+        "failedToProvideOrObtainSSN": false,
+        "disqualifiedForWorkRequirementsCooperation": false,
+        "disqualifiedForQualityAssuranceCooperation": false,
+        "disqualifiedForFelonyNonCompliance": false,
+        "disqualifiedForParoleOrProbationViolation": false,
+        "hasLevelSanctionImposed": false,
+        "receivesTanf": false,
+        "receivesFamilyPreservationServices": false,
+        "isVeteranWithDisability": false,
+        "isVeteranNeedingAidAndAttendance": false,
+        "isVeteranSurvivorNeedingAidAndAttendance": false,
+        "isVeteranSurvivorWithDisability": false,
+        "receivesPublicDisabilityRetirementPension": false,
+        "receivesRailroadRetirementDisability": false,
+        "receivesInterimAssistanceForDisability": false,
+        "income": [
+          {
+            "type": "wages_and_salaries",
+            "amount": 1200,
+            "isWorkSupplementationOrWorkSupportPublicAssistancePortion": false
+          }
+        ],
+        "expenses": [
+          {
+            "type": "rent",
+            "amount": 800,
+            "isForClaimableShelterResidence": true
+          }
+        ],
+        "jobs": [],
+        "assets": []
       }
     ],
     "household": {
-      "hasUtilityExpenses": true
-    }
+      "applicationFilingDate": "2026-06-15",
+      "hadPreviousSubstantialLotteryOrGamblingWinnings": false,
+      "receivedSnapInLast30Days": false
+    },
+    "caregiverRelationships": []
   }
 }
 
 docs {
-  A fully-specified single-member household that should resolve to
-  "approved". Disqualifier flags are explicitly false (no-guess: they
-  are never defaulted).
+  A single-member household with enough answered to fully resolve.
+  Every field name comes from the engine-input catalog
+  (docs/engine-inputs.json); disqualifier flags are explicitly false
+  (no-guess: they are never defaulted), and the empty jobs/assets/
+  caregiverRelationships arrays are explicit "none" answers — omitting
+  them would leave those collections unacknowledged and the
+  determination pending.
 
-  Expected: determinations[0].status "approved", benefitAmount set,
-  proratedFirstMonthAmount set (prorated from today, so the value
-  varies with the calendar).
+  asOf pins the evaluation date to the application filing date so the
+  amounts below are reproducible; drop it and proration follows
+  today's date instead.
+
+  Expected: determinations[0].status "approved", benefitAmount 200,
+  proratedFirstMonthAmount 106 (prorated from the June 15 filing
+  date), isExpedited false. No missingInputs.
+  Every disqualifier/composition question is answered explicitly:
+  under the finality gate a decided status is only returned when no
+  unanswered question could change it, so an approved demo must leave
+  nothing unanswered.
 }

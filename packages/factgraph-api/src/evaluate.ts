@@ -23,6 +23,7 @@ import type { Model, ModelNode } from 'rules-visualizer-shared-types'
 import {
   buildTrace,
   buildDecidingPath,
+  collectUnsupported,
   type TraceNode,
   type DecidingPath,
 } from './explain.js'
@@ -99,6 +100,15 @@ export type QueryResponse = {
    *  any instance (e.g. member fields when no members were provided) are
    *  omitted here — they remain in `missingInputs`. */
   missingInputInstances?: MissingInputInstance[]
+  /** Targets whose engine value resolved but is CONDITIONAL: the decisive
+   *  path stepped past unresolved facts (the engine skips Switch cases it
+   *  cannot evaluate and sums past unknown collection rows), or a provided
+   *  row in the targets' dependency closure is incomplete. Conditional
+   *  targets count as unresolved for `status`; their blocking inputs are in
+   *  `missingInputs`. Entries carry `memberId` when the conditionality is
+   *  specific to one member of a per-member target; an empty object means
+   *  household-level. */
+  conditionalTargets?: Record<string, Array<{ memberId?: string }>>
 }
 
 /**
@@ -232,7 +242,6 @@ export function runQuery(
       if (!hasResolvedValue(raw)) unresolvedTargetSet.add(target)
     }
   }
-  const allResolved = unresolvedTargetSet.size === 0
 
   // Set of paths the caller explicitly supplied — used by the missing-
   // inputs walker so we don't list inputs the caller already provided.
@@ -246,10 +255,50 @@ export function runQuery(
     }
   }
 
+  // ---- Finality gate -------------------------------------------------------
+  // The engine resolves values THROUGH unknowns (a Switch skips a When it
+  // can't evaluate; collection aggregates sum/count past unknown slots —
+  // inherited upstream semantics, identical in both engines; upstream's
+  // interview flow never evaluates partial data, this API does). A resolved
+  // target can therefore be CONDITIONAL: its value could change once an
+  // unasked question is answered. The trace support check walks each
+  // resolved target's justification for unknowns it stepped past —
+  // including the per-row inputs that collection aggregates read, which
+  // the walker exposes as CollectionRead children. Conditional targets
+  // count as unresolved for `status`, their blocking facts are expanded
+  // into the missing-inputs pipeline, and `conditionalTargets` tells
+  // decision mappers to withhold finality.
+  const index = getModelIndex(model)
+  const tracesByTarget: Record<string, TraceNode> = {}
+  for (const target of targets) {
+    const t = buildTrace(model, index, effectiveResults, target, memberIdsByCollection)
+    if (t) tracesByTarget[target] = t
+  }
+
+  const conditionalTargets: Record<string, Array<{ memberId?: string }>> = {}
+  const blockerGroups: Array<{ memberId?: string; blockers: string[] }> = []
+  for (const target of targets) {
+    if (unresolvedTargetSet.has(target)) continue
+    const trace = tracesByTarget[target]
+    if (!trace) continue
+    const groups = collectUnsupported(trace)
+    if (groups.length === 0) continue
+    conditionalTargets[target] = groups.map((g) =>
+      g.memberId !== undefined ? { memberId: g.memberId } : {}
+    )
+    blockerGroups.push(...groups)
+    unresolvedTargetSet.add(target)
+  }
+
+  const allResolved = unresolvedTargetSet.size === 0
+
   const response: QueryResponse = {
     status: allResolved ? 'complete' : 'incomplete',
     rulesetVersion: rulesetId,
     values,
+  }
+  if (Object.keys(conditionalTargets).length > 0) {
+    response.conditionalTargets = conditionalTargets
   }
 
   if (input.metadata !== undefined) {
@@ -266,23 +315,11 @@ export function runQuery(
   }
 
   if (wantTraces) {
-    const index = getModelIndex(model)
-    const traces: Record<string, TraceNode> = {}
     const decidingPaths: Record<string, DecidingPath> = {}
-    for (const target of targets) {
-      const t = buildTrace(
-        model,
-        index,
-        effectiveResults,
-        target,
-        memberIdsByCollection
-      )
-      if (t) {
-        traces[target] = t
-        decidingPaths[target] = buildDecidingPath(t)
-      }
+    for (const [target, t] of Object.entries(tracesByTarget)) {
+      decidingPaths[target] = buildDecidingPath(t)
     }
-    response.traces = traces
+    response.traces = tracesByTarget
     response.decidingPaths = decidingPaths
   }
 
@@ -302,7 +339,6 @@ export function runQuery(
         if (!allMissing.has(m.path)) allMissing.set(m.path, m)
       }
     }
-    response.missingInputs = [...allMissing.values()]
 
     // Per-member attribution: run a member-aware walk for each member so
     // a field provided by member A is not falsely omitted from member B's
@@ -341,9 +377,119 @@ export function runQuery(
         }
         if (memberMissing.size > 0) byMember[memberId] = [...memberMissing.values()]
       }
-      if (Object.keys(byMember).length > 0) {
-        response.missingInputsByMember = byMember
+    }
+
+    // Finality-gate seeds. The union walk prunes at any fact the engine
+    // resolved — including conditionally-resolved ones — so blocker facts
+    // (the unknowns the engine stepped past) are expanded here explicitly,
+    // and row gaps merged directly.
+    const addByMember = (memberId: string, m: MissingInput) => {
+      const list = (byMember[memberId] ??= [])
+      if (!list.some((x) => x.path === m.path)) list.push(m)
+    }
+    // A blocker under a sub-collection root (e.g. an annualAmount slot the
+    // engine summed past) expands row-wise: the writables in its dependency
+    // closure that each provided row failed to supply. Returns false when
+    // the blocker isn't row-shaped so the caller falls through to the
+    // member/scalar expansion.
+    const expandRowBlocker = (blockerPath: string): boolean => {
+      const rootMatch = blockerPath.match(/^(\/[^*]+?)\/\*\//)
+      if (!rootMatch || rootMatch[1] === '/members') return false
+      const root = rootMatch[1]
+      const rows = collections[root]
+      const start = index.pathToNode.get(blockerPath)
+      if (!rows || !start) return true
+      const rootWritables = new Set<string>()
+      const queue = [start.id]
+      const seen = new Set(queue)
+      while (queue.length > 0) {
+        const node = model.nodes[queue.shift()!]
+        if (!node) continue
+        const c = node.content
+        if (c.type === 'writable' && 'path' in c && c.path.startsWith(root + '/*/')) {
+          rootWritables.add(c.path)
+        }
+        for (const dep of node.dependencies) {
+          if (!seen.has(dep)) {
+            seen.add(dep)
+            queue.push(dep)
+          }
+        }
       }
+      rows.forEach((row, rowIdx) => {
+        for (const p of rootWritables) {
+          if (p in row) continue
+          const raw = effectiveResults[p]
+          const slot = Array.isArray(raw) ? raw[rowIdx] : undefined
+          if (slot !== null && slot !== undefined) continue
+          if (allMissing.has(p)) continue
+          const node = index.pathToNode.get(p)
+          if (!node || node.content.type !== 'writable') continue
+          const content = node.content
+          allMissing.set(p, {
+            path: p,
+            name: content.label ?? node.name,
+            description: node.description,
+            dataType: content.typeName,
+            enumOptions: content.enumOptions,
+          })
+        }
+      })
+      return true
+    }
+    for (const group of blockerGroups) {
+      if (group.memberId !== undefined) {
+        const idx = memberIds.indexOf(group.memberId)
+        if (idx < 0) continue
+        const memberSubCollRows = new Map<string, number[]>()
+        for (const [root, memberMap] of subCollMemberRows) {
+          const rows = memberMap.get(idx)
+          if (rows && rows.length > 0) memberSubCollRows.set(root, rows)
+        }
+        for (const blocker of group.blockers) {
+          if (expandRowBlocker(blocker)) continue
+          for (const m of collectMissingInputsForMember(
+            model,
+            blocker,
+            providedInputPaths,
+            effectiveResults,
+            idx,
+            memberSubCollRows
+          )) {
+            if (!allMissing.has(m.path)) allMissing.set(m.path, m)
+            addByMember(group.memberId, m)
+          }
+        }
+      } else {
+        for (const blocker of group.blockers) {
+          if (expandRowBlocker(blocker)) continue
+          for (const m of collectMissingInputs(
+            model,
+            blocker,
+            providedInputPaths,
+            effectiveResults
+          )) {
+            if (!allMissing.has(m.path)) allMissing.set(m.path, m)
+            // A household-level blocker can expand to member-scoped
+            // writables (e.g. receivesTanf behind a household aggregate).
+            // Attribute those to the members whose slots are unresolved.
+            if (m.path.startsWith('/members/*/')) {
+              const raw = effectiveResults[m.path]
+              memberIds.forEach((memberId, idx) => {
+                const slot = Array.isArray(raw) ? raw[idx] : undefined
+                const row = collections['/members']?.[idx]
+                if ((slot === null || slot === undefined) && !(row && m.path in row)) {
+                  addByMember(memberId, m)
+                }
+              })
+            }
+          }
+        }
+      }
+    }
+    response.missingInputs = [...allMissing.values()]
+    if (Object.keys(byMember).length > 0) {
+      response.missingInputsByMember = byMember
     }
 
     if (includeSet.has('missingInputInstances')) {

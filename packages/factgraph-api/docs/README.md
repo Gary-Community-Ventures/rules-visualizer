@@ -1,6 +1,6 @@
 # Documentation index
 
-Eleven files, three audiences. Start with the row that matches why you're here.
+A handful of documents, three audiences. Start with the row that matches why you're here.
 
 ## I'm integrating a caseworker tool / portal (the v1 adapter — frozen)
 
@@ -17,8 +17,9 @@ Read in this order — field catalog first, then the contract, then background i
 
 | Read | What it is |
 |---|---|
-| [`eligibility-adapter-v2-proposal-openapi.yaml`](./eligibility-adapter-v2-proposal-openapi.yaml) | The v2 contract — per-program endpoints, no-guess, per-member `missingInputs`. Live Swagger: `/v2/eligibility/docs` |
+| [`eligibility-v2-openapi.yaml`](./eligibility-v2-openapi.yaml) | The v2 contract — per-program endpoints, no-guess, per-member `missingInputs`. Live Swagger: `/v2/eligibility/docs` |
 | [engine-input catalog](https://gary-community-ventures.github.io/rules-visualizer/engine-inputs.html) | **The authoritative field list for the live v2 endpoints** — every accepted field, its type, enum values, and citations (machine-readable: `engine-inputs.json`) |
+| [`engine-inputs-changelog.md`](./engine-inputs-changelog.md) | Schema changelog for that field catalog — one entry per `schemaVersion` bump in `engine-inputs.json`, with links to the versioned snapshots |
 | [`input-dictionary.md`](./input-dictionary.md) | **Proposal document** — field-grouping/consolidation proposals with rule-authored definitions and citations. Its field names follow the earlier proposal, *not* the live v2 vocabulary (see its banner) |
 | [`request-field-proposal.md`](./request-field-proposal.md) | Background: the no-guess policy and the rationale for the domain-shaped request fields |
 | [`contract-gap-analysis.md`](./contract-gap-analysis.md) | Background: what the v1 ORCA contract carries vs. what the SNAP/Medicaid rules actually need (informed the v2 design) |
@@ -35,7 +36,9 @@ Read in this order — field catalog first, then the contract, then background i
 
 ## How the documents relate
 
-The **rules** are the source of truth: the input dictionary is generated from
-them, the v2 contract is shaped by them, and v1 translates the published
+The **rules** are the source of truth: the engine-input catalog is generated
+from them, the v2 contract is shaped by them, and v1 translates the published
 contract onto them. When a rule author adds an input, CI fails until the
-field map (and therefore the dictionary and contract) accounts for it.
+regenerated catalog (`engine-inputs.json`) accounts for it. The input
+dictionary is a standalone proposal document — it follows the earlier
+proposal's field names and is not part of that chain.

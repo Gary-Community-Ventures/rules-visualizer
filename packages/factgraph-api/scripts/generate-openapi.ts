@@ -32,7 +32,7 @@ const V2_OUT = path.resolve(
   __dirname,
   '..',
   'docs',
-  'eligibility-adapter-v2-proposal-openapi.yaml'
+  'eligibility-v2-openapi.yaml'
 )
 
 function banner(source: string): string {
@@ -56,7 +56,7 @@ export function renderConsumerOpenApiYaml(): string {
 
 export function renderV2OpenApiYaml(): string {
   return (
-    banner('v2-openapi.ts (buildV2OpenApiDocument) — DRAFT PROPOSAL') +
+    banner('v2-openapi.ts (buildV2OpenApiDocument)') +
     yaml.stringify(buildV2OpenApiDocument())
   )
 }

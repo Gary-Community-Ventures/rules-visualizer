@@ -28,9 +28,9 @@ covers the raw Fact Graph query API.
 
 | #   | Request                                   | Shows                                                                                             |
 | --- | ----------------------------------------- | ------------------------------------------------------------------------------------------------- |
-| 01  | SNAP determination — pending              | Partial inputs → `status "pending"` + `missingInputs` in the friendly request vocabulary          |
-| 02  | SNAP determination — approved             | Fully-specified household → `status "approved"`, benefit amounts                                  |
-| 03  | Medicaid determination — two-member       | Household-in / per-member-out: one determination per member, each with its own `missingInputs`    |
+| 01  | SNAP determination — pending              | Partial inputs → `status "pending"` + instanced `missingInputs` (each entry: `kind`, `requestPath`, `at` address) |
+| 02  | SNAP determination — approved             | Fully-answered household → `status "approved"`, `benefitAmount` + `proratedFirstMonthAmount` (pinned via `asOf`) |
+| 03  | Medicaid determination — two-member       | Household-in / per-member-out: one `approved` determination per member, in the Medicaid field vocabulary |
 | 04  | Expedited screening — destitute household | $0 income + $0 assets → `isExpedited true` (7 CFR §273.2(i))                                      |
 | 05  | Expedited screening — pending             | Income provided, assets missing → `isExpedited null` + `missingInputs`                           |
 

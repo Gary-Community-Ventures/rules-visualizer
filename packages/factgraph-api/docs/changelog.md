@@ -5,6 +5,58 @@ continuously rather than by tagged release, so entries are dated: a
 section's changes are live on the production API as of its date. Internal
 refactors without surface impact aren't logged here; see git history.
 
+## 2026-07-08 — final means final: the decision finality gate
+
+### Changed (behavior corrections a consumer may notice)
+
+- **A decided status is now only returned when no unanswered question
+  could change it.** The engine can technically compute a value past an
+  unknown — it skips eligibility tiers whose condition it cannot evaluate
+  and sums past incomplete collection rows — which previously produced
+  committed determinations that would flip on the next answer: a medicaid
+  `ineligible` that became `approved` once `pregnant` was asked, a SNAP
+  `denied` (failed_net_income_test) that became `approved` once
+  `receivesTanf` was asked, and an `approved` computed from an income row
+  that carried only an id. All three now come back `pending`, with the
+  blocking questions in `missingInputs` like any other gap. Fully-answered
+  requests are unaffected — decided statuses still decide.
+- **The medicaid ruleset no longer guesses.** Nine of its writables
+  (pregnant, monthly hours worked, immigrant status, SSI, …) carried
+  rules-level defaults that silently answered unasked questions —
+  contradicting the no-guess contract. The defaults are removed, so thin
+  medicaid requests that previously "decided" now come back `pending`
+  asking those questions. Note the pregnancy count feeds the MAGI
+  household size, so household FPL% (and therefore *every* member's
+  determination) resolves only once each member's `pregnant` is answered.
+- **Medicaid with no members is no longer a dead end.** An empty request
+  returns one household-scoped `pending` determination whose first
+  missing input is literally the members list, instead of
+  `determinations: []` with no guidance.
+- `status: "complete"` on `/query` now also requires resolved targets to
+  be *supported*; the new `conditionalTargets` response field names
+  targets that resolved only by stepping past unknowns.
+
+### Changed (stricter validation — previously-accepted bad input now 400s)
+
+- `asOf` must be a real `yyyy-mm-dd` date: nonexistent days
+  (`2026-02-30`) are rejected instead of silently rolling over to March 2
+  and skewing age derivation.
+- Member `id`s must be non-empty strings, unique across the household
+  *including* the positional `member-N` fallbacks (an explicit
+  `"member-1"` can no longer collide with an id-less member's fallback).
+  Row `id`s within a member's sub-collection must be unique, or instance
+  addresses would be ambiguous.
+
+### Added
+
+- Sending `caregiverRelationships` rows to a program whose rules have no
+  caregiver fields (medicaid) now earns a disclosure note instead of
+  silence.
+- The committed v2 spec snapshot is renamed
+  `eligibility-adapter-v2-proposal-openapi.yaml` →
+  **`eligibility-v2-openapi.yaml`** — it stopped being a proposal when it
+  became the served 2.0.0 contract. The served URLs are unchanged.
+
 ## 2026-07-07 — missingInputs is now instanced (BREAKING)
 
 The instanced shape introduced below as an opt-in experiment is now the
@@ -220,7 +272,7 @@ After (one entry per owing instance, addressed):
   first-class outcome fields and per-member `missingInputs`. Spec at
   `GET /v2/eligibility/openapi.{json,yaml}` + Swagger UI at
   `/v2/eligibility/docs` (committed snapshot:
-  `docs/eligibility-adapter-v2-proposal-openapi.yaml`):
+  `docs/eligibility-v2-openapi.yaml`):
   - `POST /v2/eligibility/snap/determination` — SNAP household determination,
     no-guess. Returns a single household-scoped determination; expedited
     screening folds in as `isExpedited`.

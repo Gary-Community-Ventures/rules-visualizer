@@ -56,7 +56,7 @@ the contract allows, plus more) · ⚠️ deliberate deviation (rationale given)
    (carried as `x-allotment` meanwhile).
 4. 🔎 **`isDisabled` is ambiguous across programs** (different legal
    definitions); the decomposed, self-attestable facts are proposed in the
-   [v2 draft](./eligibility-adapter-v2-proposal-openapi.yaml).
+   [v2 draft](./eligibility-v2-openapi.yaml).
 
 See [contract-gap-analysis.md](./contract-gap-analysis.md) for the full
 discussion and proposals.

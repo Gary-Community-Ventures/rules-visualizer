@@ -76,3 +76,60 @@ test('payload over the 10 MB limit is a 413 Problem Details, as JSON', async () 
   assert.equal(res.body.title, 'Payload too large')
   assert.equal(res.body.status, 413)
 })
+
+// ---------------------------------------------------------------------------
+// Identity/date validation (2026-07-08 batch)
+// ---------------------------------------------------------------------------
+
+test('empty-string and non-string member ids are 400s', async () => {
+  const empty = await request(app)
+    .post('/v2/eligibility/medicaid/determination')
+    .send({ members: [{ id: '', income: [] }] })
+  assert.equal(empty.status, 400)
+  assert.match(empty.body.detail, /non-empty string/)
+
+  const numeric = await request(app)
+    .post('/v2/eligibility/medicaid/determination')
+    .send({ members: [{ id: 42, income: [] }] })
+  assert.equal(numeric.status, 400)
+})
+
+test('an explicit id colliding with a positional fallback is a 400', async () => {
+  const res = await request(app)
+    .post('/v2/eligibility/snap/determination')
+    .send({ members: [{ id: 'member-1' }, {}] })
+  assert.equal(res.status, 400)
+  assert.match(res.body.detail, /member-1/)
+})
+
+test('duplicate row ids within a member are a 400', async () => {
+  const res = await request(app)
+    .post('/v2/eligibility/snap/determination')
+    .send({
+      members: [
+        {
+          id: 'a',
+          income: [
+            { id: 'pay-1', type: 'wages_and_salaries', amount: 1, frequency: 'monthly' },
+            { id: 'pay-1', type: 'wages_and_salaries', amount: 2, frequency: 'monthly' },
+          ],
+        },
+      ],
+    })
+  assert.equal(res.status, 400)
+  assert.match(res.body.detail, /duplicate income row id/)
+})
+
+test('asOf dates that would roll over are rejected, valid ones accepted', async () => {
+  const rollover = await request(app)
+    .post('/v2/eligibility/snap/determination')
+    .send({ asOf: '2026-02-30', members: [{ id: 'a' }] })
+  assert.equal(rollover.status, 400)
+  assert.match(rollover.body.detail, /2026-02-30/)
+
+  const valid = await request(app)
+    .post('/v2/eligibility/snap/determination')
+    .send({ asOf: '2026-02-28', members: [{ id: 'a' }] })
+  assert.equal(valid.status, 200)
+  assert.equal(valid.body.asOf, '2026-02-28')
+})

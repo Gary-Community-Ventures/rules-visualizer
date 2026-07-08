@@ -21,7 +21,7 @@ import {
   V2HouseholdRequestSchema,
   medicaidDeterminations,
 } from '../translate/v2.js'
-import { problem, run, isoDay, FIELDS_FORMAT_GONE } from './v2-helpers.js'
+import { problem, run, isoDay, parseAsOf, FIELDS_FORMAT_GONE } from './v2-helpers.js'
 
 const router = Router()
 
@@ -40,9 +40,14 @@ router.post('/determination', (req, res) => {
   }
   const body = parsed.data
   const metadata = body.metadata ?? {}
-  const asOf = body.asOf ? new Date(body.asOf) : new Date()
-  if (Number.isNaN(asOf.getTime())) {
-    problem(res, 400, 'Invalid asOf', `"${body.asOf}" is not a valid date.`)
+  const asOf = body.asOf ? parseAsOf(body.asOf) : new Date()
+  if (!asOf) {
+    problem(
+      res,
+      400,
+      'Invalid asOf',
+      `"${body.asOf}" is not a valid yyyy-mm-dd date (nonexistent days like 2026-02-30 are rejected rather than rolled over).`
+    )
     return
   }
 
@@ -69,6 +74,22 @@ router.post('/determination', (req, res) => {
     if (!det.memberId) continue
     const mine = instancedForMember(all, det.memberId)
     if (mine.length) det.missingInputs = mine
+  }
+
+  // No members yet → there is no one to determine, but the request is
+  // still valid and pending: a single household-scoped determination
+  // carries the root ask ({field: "members", at: []}) so an empty body
+  // gets the same progressive-disclosure loop as everything else,
+  // matching the SNAP endpoint.
+  if (dets.length === 0) {
+    dets.push({
+      program: 'medicaid',
+      scope: 'household',
+      status: 'pending',
+      path: 'auto',
+      ...(all.length ? { missingInputs: all } : {}),
+      ...(warnings.length ? { notes: warnings } : {}),
+    })
   }
 
   res.json({

@@ -22,7 +22,7 @@ import {
   V2HouseholdRequestSchema,
   snapDetermination,
 } from '../translate/v2.js'
-import { problem, run, isoDay, FIELDS_FORMAT_GONE } from './v2-helpers.js'
+import { problem, run, isoDay, parseAsOf, FIELDS_FORMAT_GONE } from './v2-helpers.js'
 
 const router = Router()
 
@@ -41,9 +41,14 @@ function parseHouseholdRequest(req: import('express').Request, res: import('expr
     return null
   }
   const body = parsed.data
-  const asOf = body.asOf ? new Date(body.asOf) : new Date()
-  if (Number.isNaN(asOf.getTime())) {
-    problem(res, 400, 'Invalid asOf', `"${body.asOf}" is not a valid date.`)
+  const asOf = body.asOf ? parseAsOf(body.asOf) : new Date()
+  if (!asOf) {
+    problem(
+      res,
+      400,
+      'Invalid asOf',
+      `"${body.asOf}" is not a valid yyyy-mm-dd date (nonexistent days like 2026-02-30 are rejected rather than rolled over).`
+    )
     return null
   }
   return { body, asOf }
@@ -112,7 +117,11 @@ router.post('/expedited-screening', (req, res) => {
   if (!query) return
 
   const isExpedited = query.values[SNAP_EXPEDITED_TARGET]
-  const resolved = typeof isExpedited === 'boolean'
+  // Finality gate: a screen answer that resolved only by stepping past
+  // unanswered questions is not an answer (see the determination endpoints).
+  const conditional =
+    (query.conditionalTargets?.[SNAP_EXPEDITED_TARGET]?.length ?? 0) > 0
+  const resolved = typeof isExpedited === 'boolean' && !conditional
   const missing = resolved
     ? []
     : composeInstancedMissing(query, memberIds, acknowledgment, model)
