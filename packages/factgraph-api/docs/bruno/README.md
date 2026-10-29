@@ -11,7 +11,7 @@ any request — no copy-paste, no JSON formatting.
 2. **Open this folder** — File → Open Collection, point at
    `packages/factgraph-api/docs/bruno/`.
 3. **Pick an environment** — top-right dropdown in Bruno. `local` points at
-   `http://localhost:5002`; `prod` points at the deployed Heroku URL.
+   `http://localhost:5002`; `prod` points at the deployed Railway URL.
 4. **Set the bearer token** — open the env editor in Bruno and paste the
    token into the `api_token` secret. See "Bearer-token auth" below.
 5. **For `local`**: start the API with `npm run dev:api` from the repo root.
@@ -95,7 +95,7 @@ correlate per-member response values back to specific rows.
 | Env     | `base_url`              | Notes                                                             |
 | ------- | ----------------------- | ----------------------------------------------------------------- |
 | `local` | `http://localhost:5002` | Run `npm run dev:api` from the repo root. Auth is off by default. |
-| `prod`  | The deployed Heroku URL | Bearer token required. Get the token from the team.               |
+| `prod`  | The deployed Railway URL | Bearer token required. Get the token from the team.               |
 
 Pick the environment in Bruno's top-right dropdown before clicking Send.
 

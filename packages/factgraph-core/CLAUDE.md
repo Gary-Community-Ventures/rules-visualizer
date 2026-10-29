@@ -50,7 +50,7 @@ faster on a 1k-scenario simulation worker sweep.
 
 `vendor/factgraph-rs/` holds the compiled artifact (`.wasm`, JS glue,
 TypeScript declarations). **Committed to this repo** so checkouts and
-the Heroku deploy don't need a Rust toolchain. To re-vendor:
+the deploy don't need a Rust toolchain. To re-vendor:
 
 ```sh
 # from rules-visualizer/, with factgraph-rs cloned next door

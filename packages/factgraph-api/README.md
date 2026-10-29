@@ -28,15 +28,15 @@ advanced/direct API users).
 
 |                                                            |                                                                                                                                            |
 | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| **API base**                                               | `https://rules-visualizer-factgraph-api-f0c14673cf3a.herokuapp.com`                                                                        |
-| **Eligibility v2 — Swagger UI**                            | [`/v2/eligibility/docs`](https://rules-visualizer-factgraph-api-f0c14673cf3a.herokuapp.com/v2/eligibility/docs)                            |
-| **Eligibility v2 — OpenAPI 3.1 (for codegen/diff)**        | [`/v2/eligibility/openapi.yaml`](https://rules-visualizer-factgraph-api-f0c14673cf3a.herokuapp.com/v2/eligibility/openapi.yaml)            |
-| **Eligibility v1 (frozen) — Swagger UI**                   | [`/v1/eligibility/docs`](https://rules-visualizer-factgraph-api-f0c14673cf3a.herokuapp.com/v1/eligibility/docs)                            |
-| **Eligibility v1 (frozen) — OpenAPI 3.1**                  | [`/v1/eligibility/openapi.yaml`](https://rules-visualizer-factgraph-api-f0c14673cf3a.herokuapp.com/v1/eligibility/openapi.yaml)            |
-| **Advanced API — Swagger UI (paste-token-and-try)**        | [`/v1/factgraph/docs`](https://rules-visualizer-factgraph-api-f0c14673cf3a.herokuapp.com/v1/factgraph/docs)                                |
+| **API base**                                               | `https://factgraph-api-production.up.railway.app`                                                                        |
+| **Eligibility v2 — Swagger UI**                            | [`/v2/eligibility/docs`](https://factgraph-api-production.up.railway.app/v2/eligibility/docs)                            |
+| **Eligibility v2 — OpenAPI 3.1 (for codegen/diff)**        | [`/v2/eligibility/openapi.yaml`](https://factgraph-api-production.up.railway.app/v2/eligibility/openapi.yaml)            |
+| **Eligibility v1 (frozen) — Swagger UI**                   | [`/v1/eligibility/docs`](https://factgraph-api-production.up.railway.app/v1/eligibility/docs)                            |
+| **Eligibility v1 (frozen) — OpenAPI 3.1**                  | [`/v1/eligibility/openapi.yaml`](https://factgraph-api-production.up.railway.app/v1/eligibility/openapi.yaml)            |
+| **Advanced API — Swagger UI (paste-token-and-try)**        | [`/v1/factgraph/docs`](https://factgraph-api-production.up.railway.app/v1/factgraph/docs)                                |
 | **Static docs site (Redoc, doesn't need API up)**          | [gary-community-ventures.github.io/rules-visualizer](https://gary-community-ventures.github.io/rules-visualizer/)                          |
 | **Target explorer (pick a fact, see its required inputs)** | [gary-community-ventures.github.io/rules-visualizer/explore.html](https://gary-community-ventures.github.io/rules-visualizer/explore.html) |
-| **OpenAPI 3.1 spec (for codegen)**                         | [`/v1/factgraph/openapi.yaml`](https://rules-visualizer-factgraph-api-f0c14673cf3a.herokuapp.com/v1/factgraph/openapi.yaml)                |
+| **OpenAPI 3.1 spec (for codegen)**                         | [`/v1/factgraph/openapi.yaml`](https://factgraph-api-production.up.railway.app/v1/factgraph/openapi.yaml)                |
 
 Every `/v1/*` and `/v2/*` determination request needs `Authorization: Bearer <token>`.
 Get the token from whoever set up your access. `/health`, OpenAPI specs, and Swagger UI
@@ -44,14 +44,14 @@ pages are unauthenticated.
 
 ```sh
 # Sanity check
-curl https://rules-visualizer-factgraph-api-f0c14673cf3a.herokuapp.com/health
+curl https://factgraph-api-production.up.railway.app/health
 
 # Real call
 curl -X POST \
   -H 'Authorization: Bearer <your-token>' \
   -H 'Content-Type: application/json' \
   -d '{"targets":["/eligible"]}' \
-  https://rules-visualizer-factgraph-api-f0c14673cf3a.herokuapp.com/v1/factgraph/snap-fy2026/query
+  https://factgraph-api-production.up.railway.app/v1/factgraph/snap-fy2026/query
 ```
 
 ## Quick start (local development)

@@ -70,8 +70,8 @@ test('OpenAPI spec documents the production server URL', async () => {
   const res = await request(app).get(JSON_PATH)
   const serverUrls = (res.body.servers as { url: string }[]).map((s) => s.url)
   assert.ok(
-    serverUrls.some((u) => u.includes('herokuapp.com')),
-    'production Heroku URL should appear in servers list'
+    serverUrls.some((u) => u.includes('up.railway.app')),
+    'production Railway URL should appear in servers list'
   )
   assert.ok(
     serverUrls.some((u) => u.includes('localhost:5002')),

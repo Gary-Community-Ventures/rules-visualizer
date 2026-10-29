@@ -575,7 +575,7 @@ writeFileSync(`${outDir}/explore.html`, readFileSync(explorerSrc, 'utf-8'))
 // Integration guide — prose + live sandbox for new integrators.
 // ---------------------------------------------------------------------------
 
-const PROD_API = 'https://rules-visualizer-factgraph-api-f0c14673cf3a.herokuapp.com'
+const PROD_API = 'https://factgraph-api-production.up.railway.app'
 
 const guideHtml = `<!DOCTYPE html>
 <html lang="en">

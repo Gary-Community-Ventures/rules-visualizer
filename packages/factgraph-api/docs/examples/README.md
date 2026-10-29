@@ -47,7 +47,7 @@ curl -X POST \
   -H 'Authorization: Bearer <token>' \
   -H 'Content-Type: application/json' \
   -d @snap-complete-minimal.query.json \
-  https://rules-visualizer-factgraph-api-f0c14673cf3a.herokuapp.com/v1/factgraph/snap-complete/query
+  https://factgraph-api-production.up.railway.app/v1/factgraph/snap-complete/query
 ```
 
 Regenerate after a graph change: `npm run gen:examples --workspace=rules-visualizer-factgraph-api`.

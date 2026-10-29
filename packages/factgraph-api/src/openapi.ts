@@ -541,7 +541,7 @@ export function buildOpenApiDocument() {
     },
     servers: [
       {
-        url: 'https://rules-visualizer-factgraph-api-f0c14673cf3a.herokuapp.com',
+        url: 'https://factgraph-api-production.up.railway.app',
         description: 'Production deploy',
       },
       {
