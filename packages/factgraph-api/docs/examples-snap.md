@@ -30,7 +30,7 @@ pass.
 Throughout this doc the base URL is the live API:
 
 ```
-https://rules-visualizer-factgraph-api-f0c14673cf3a.herokuapp.com
+https://factgraph-api-production.up.railway.app
 ```
 
 Every `/v1/*` example needs an `Authorization: Bearer <token>` header.
@@ -43,7 +43,7 @@ Examples omit it for brevity; add yours.
 ## 1. Discover the ruleset
 
 ```sh
-curl https://rules-visualizer-factgraph-api-f0c14673cf3a.herokuapp.com/v1/factgraph/rulesets
+curl https://factgraph-api-production.up.railway.app/v1/factgraph/rulesets
 ```
 
 ```json
@@ -509,7 +509,7 @@ defaulting policy. Two common ones:
 Pick whichever matches your application's workflow. The schema
 endpoint (`/v1/factgraph/snap-complete/schema`, filtered to writable
 nodes under `/members/*/`) lists every flag with its description; the
-[interactive docs](https://rules-visualizer-factgraph-api-f0c14673cf3a.herokuapp.com/v1/factgraph/docs)
+[interactive docs](https://factgraph-api-production.up.railway.app/v1/factgraph/docs)
 are the easiest place to browse them.
 
 ## Mapping table — adapter fields → `/query` fields
